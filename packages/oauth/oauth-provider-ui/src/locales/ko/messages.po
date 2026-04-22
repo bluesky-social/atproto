@@ -9,944 +9,944 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"Last-Translator: quiple\n"
+"Language-Team: quiple\n"
 "Plural-Forms: \n"
 
 #: src/hooks/use-date-ago.ts:35
 msgid "{deltaDays} days ago"
-msgstr ""
+msgstr "{deltaDays}일 전"
 
 #: src/hooks/use-date-ago.ts:27
 msgid "{deltaHours} hours ago"
-msgstr ""
+msgstr "{deltaHours}시간 전"
 
 #: src/hooks/use-date-ago.ts:19
 msgid "{deltaMinutes} minutes ago"
-msgstr ""
+msgstr "{deltaMinutes}분 전"
 
 #: src/routes/account/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
-msgstr ""
+msgstr "<0>AT 프로토콜</0> — 개발자를 위한 기술 문서"
 
 #: src/routes/account/about/page.tsx:128
 msgid "<0>Bluesky Social</0> — General information about the network"
-msgstr ""
+msgstr "<0>Bluesky 소셜</0> — 네트워크에 대한 일반 정보"
 
 #: src/routes/account/about/page.tsx:119
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
-msgstr ""
+msgstr "<0>더 알아보기</0><1>내 Atmosphere 계정 뒤편에 사용된 기술 및 네트워크에 대해 더 자세히 알아보고 싶으신가요?</1>"
 
 #: src/routes/account/about/page.tsx:84
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
-msgstr ""
+msgstr "<0>이 웹사이트: 계정 제어 센터</0><1>지금 보고 계신 웹사이트는 내 <2>계정 관리 허브</2>입니다. 여기에서 다음을 수행할 수 있습니다.</1><3><4>이메일 주소 및 비밀번호 변경</4><5>개인 데이터 및 보안 설정 관리</5><6>여러 기기(로그인된 브라우저)의 활성 세션 보기 및 관리</6></3><7>이곳은 <8>Bluesky 소셜 앱</8>의 프로필과 같은 앱별 세부 정보와는 별개로 Atmosphere 신원의 기본 사항을 관리하는 곳입니다.</7><9>현재 내 Atmosphere 계정은 Atmosphere 네트워크의 여러 호스팅 제공자 중 하나인 <10/>에서 호스팅됩니다. 내 계정, 식별 정보 또는 데이터를 잃지 않고 언제든지 다른 호스팅 제공자로 전환할 수 있습니다.</9>"
 
 #: src/routes/account/about/page.tsx:24
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
-msgstr ""
+msgstr "<0>여러 앱에서 사용하라</0><1>Atmosphere 계정은 <2>Bluesky 소셜 앱</2> 및 동일 네트워크 기반의 다른 소셜 앱과 연동됩니다.</1><3>같은 이메일 주소로 여러 웹사이트에 로그인할 수 있는 것처럼 Atmosphere 계정을 사용하면 동일한 신원, 연결 정보, 콘텐츠를 유지하면서 여러 소셜 앱에 로그인할 수 있습니다.</3><4>다른 앱에서 Atmosphere 계정 또는 ‘인터넷 핸들’로 로그인하는 옵션이 표시되면 새 계정을 만드는 대신 기존 계정을 사용할 수 있습니다.</5><6/></5></4>"
 
 #: src/routes/account/about/page.tsx:13
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
-msgstr ""
+msgstr "<0>Atmosphere 계정이란?</0><1><2>Atmosphere 계정</2>은 Atmosphere에서 사용하는 개인 식별 정보입니다. 특정 앱이나 회사에 종속되지 않고 진정으로 소유할 수 있는 디지털 여권이라고 생각하면 됩니다.</1>"
 
 #: src/routes/account/about/page.tsx:51
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
-msgstr ""
+msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특정 앱에 갇히지 않는다는 것입니다. 데이터가 플랫폼에 속하는 기존 소셜 미디어 계정과 달리 Atmosphere 계정을 사용하면 사용자의 신원과 데이터를 진정으로 소유할 수 있습니다.</1><2><3><4>신원을 소유한다</4>: 사용자 이름(핸들)과 영구 ID는 사용자의 소유입니다.</3><5><6>데이터 이동이 가능하다</6>: 게시물, 팔로우, 콘텐츠는 앱 데이터베이스에 갇히지 않고 개인 데이터 저장소에 저장됩니다.</5><7><8>자유롭게 이동할 수 있다</8>: 팔로워, 게시물, 연결을 잃지 않고 호스팅 제공자를 변경할 수 있습니다. 데이터 저장 위치가 중요한 경우 해당 국가의 제공자를 선택할 수도 있습니다.</7><9><10>여러 앱에서 하나의 신원 사용</10>: 동일한 네트워크 기반의 여러 앱에서 동일한 계정을 사용할 수 있습니다.</9></2>"
 
 #: src/hooks/use-date-ago.ts:24
 msgid "1 hour ago"
-msgstr ""
+msgstr "1시간 전"
 
 #: src/hooks/use-date-ago.ts:16
 msgid "1 minute ago"
-msgstr ""
+msgstr "1분 전"
 
 #: src/components/sign-in-form.tsx:248
 msgid "2FA Confirmation"
-msgstr ""
+msgstr "2단계 인증"
 
 #: src/hooks/use-oauth-client-name.ts:18
 msgid "A local app"
-msgstr ""
+msgstr "로컬 앱"
 
 #: src/hooks/use-error-message.ts:22
 msgid "A second authentication factor is required"
-msgstr ""
+msgstr "2단계 인증이 필요합니다"
 
 #: src/components/utils/scope-description.tsx:801
 msgid "A service controlled by <0>{domain}</0>"
-msgstr ""
+msgstr "<0>{domain}</0>(이)가 관리하는 서비스"
 
 #: src/account-page.tsx:89
 msgid "About"
-msgstr ""
+msgstr "정보"
 
 #: src/account-page.tsx:55
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
-msgstr ""
+msgstr "계정"
 
 #: src/components/utils/account-image.tsx:40
 msgid "Account avatar"
-msgstr ""
+msgstr "계정 아바타"
 
 #: src/components/utils/account-identifier.tsx:22
 msgid "Account identifier"
-msgstr ""
+msgstr "계정 아이디"
 
 #: src/components/utils/account-name.tsx:22
 msgid "Account name"
-msgstr ""
+msgstr "계정 이름"
 
 #: src/components/utils/account-selector.tsx:45
 msgid "Account overview"
-msgstr ""
+msgstr "계정 개요"
 
 #: src/components/utils/account-selector.tsx:25
 msgid "Account selector"
-msgstr ""
+msgstr "계정 선택기"
 
 #: src/components/reset-password-view.tsx:66
 msgid "Already have a code?"
-msgstr ""
+msgstr "이미 코드가 있나요?"
 
 #: src/components/utils/client-name.tsx:46
 msgid "An application on your device"
-msgstr ""
+msgstr "기기에 설치된 애플리케이션"
 
 #: src/components/error-view.tsx:20
 msgid "An error occurred"
-msgstr ""
+msgstr "오류가 발생했습니다"
 
 #: src/hooks/use-error-message.ts:75
 msgid "An unknown error occurred"
-msgstr ""
+msgstr "알 수 없는 오류가 발생했습니다"
 
 #: src/components/sign-in-picker.tsx:86
 msgid "Another account"
-msgstr ""
+msgstr "다른 계정"
 
 #: src/components/utils/scope-description.tsx:829
 msgid "Any collection"
-msgstr ""
+msgstr "모든 콜렉션"
 
 #: src/components/utils/scope-description.tsx:771
 msgid "Any method"
-msgstr ""
+msgstr "모든 메서드"
 
 #: src/components/utils/scope-description.tsx:810
 msgid "Any service"
-msgstr ""
+msgstr "모든 서비스"
 
 #: src/account-page.tsx:68
 msgid "Apps"
-msgstr ""
+msgstr "앱"
 
 #: src/routes/account/apps/page.tsx:56
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
-msgstr ""
+msgstr "앱은 사용자가 앱을 적극적으로 사용하지 않을 때에도 백그라운드에서 계정에 접근할 수 있습니다. (알림 확인, 데이터 동기화 등) 이는 정상적인 동작이며, 위에 표시된 ‘마지막 접근’ 시간이 업데이트됩니다."
 
 #: src/components/authenticate-welcome-view.tsx:19
 msgctxt "AuthenticationPage"
 msgid "Authenticate"
-msgstr ""
+msgstr "인증"
 
 #: src/components/utils/scope-description.tsx:442
 #: src/components/utils/scope-description.tsx:458
 msgctxt "OAuthScope"
 msgid "Authenticate"
-msgstr ""
+msgstr "인증"
 
-#: src/components/consent-view.tsx:39
 #: src/components/consent-form.tsx:85
+#: src/components/consent-view.tsx:39
 msgctxt "OAuthConsent"
 msgid "Authorize"
-msgstr ""
+msgstr "승인"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
 #: src/routes/account/apps/page.tsx:128
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
-msgstr ""
+msgstr "{0}에 승인됨"
 
-#: src/components/sign-in-picker.tsx:54
-#: src/components/sign-in-form.tsx:138
-#: src/components/reset-password-view.tsx:60
-#: src/components/reset-password-view.tsx:94
 #: src/components/consent-form.tsx:81
 #: src/components/forms/wizard-card.tsx:93
+#: src/components/reset-password-view.tsx:60
+#: src/components/reset-password-view.tsx:94
+#: src/components/sign-in-form.tsx:138
+#: src/components/sign-in-picker.tsx:54
 msgid "Back"
-msgstr ""
+msgstr "뒤로"
 
 #: src/components/sign-up-handle-form.tsx:125
 msgid "Between {minLength} and {maxLength} characters"
-msgstr ""
+msgstr "{minLength}~{maxLength}자 사이"
 
 #: src/components/utils/scope-description.tsx:695
 msgid "Blob storage"
-msgstr ""
+msgstr "Blob 스토리지"
 
 #: src/components/utils/scope-description.tsx:786
 msgid "Bluesky App services"
-msgstr ""
+msgstr "Bluesky 앱 서비스"
 
 #: src/components/utils/scope-description.tsx:793
 msgid "Bluesky Chat services"
-msgstr ""
+msgstr "Bluesky 대화 서비스"
 
 #: src/account-page.tsx:83
 msgid "Branding"
-msgstr ""
+msgstr "브랜딩"
 
 #: src/components/consent-form.tsx:151
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr ""
+msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr ""
+msgstr "계정을 만들면 {0} 및 {1}에 동의하는 것입니다."
 
 #: src/components/utils/scope-description.tsx:521
 msgctxt "RPC lxm"
 msgid "Call"
-msgstr ""
+msgstr "호출"
 
-#: src/contexts/authentication.tsx:173
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card-async.tsx:44
+#: src/contexts/authentication.tsx:173
 msgid "Cancel"
-msgstr ""
+msgstr "취소"
 
 #: src/routes/account/devices/page.tsx:117
 msgid "Cannot remove current device"
-msgstr ""
+msgstr "현재 기기를 제거할 수 없습니다"
 
 #: src/components/utils/scope-description.tsx:418
 msgid "Change your <0>@handle</0>"
-msgstr ""
+msgstr "<0>@핸들</0> 변경"
 
 #: src/account-page.tsx:76
 msgid "Change your account password"
-msgstr ""
+msgstr "계정 비밀번호를 변경합니다"
 
 #: src/components/utils/scope-description.tsx:378
 msgid "Chat"
-msgstr ""
+msgstr "대화"
 
 #. placeholder {0}: secondFactor.hint
 #: src/components/sign-in-form.tsx:261
 msgid "Check your {0} email for a login code and enter it here."
-msgstr ""
+msgstr "{0} 이메일에서 로그인 코드를 확인한 후 여기에 입력하세요."
 
 #: src/data/password.ts:29
 msgid "Check your inbox."
-msgstr ""
+msgstr "받은 편지함을 확인하세요."
 
 #: src/components/sign-up-view.tsx:81
 msgid "Choose a username"
-msgstr ""
+msgstr "사용자 이름 선택"
 
 #: src/components/utils/account-selector.tsx:65
 msgid "Close account selector"
-msgstr ""
+msgstr "계정 선택기 닫기"
 
 #: src/components/utils/description-card.tsx:83
 msgid "Close details"
-msgstr ""
+msgstr "세부 정보 닫기"
 
 #: src/components/utils/error-card.tsx:65
 msgid "Code"
-msgstr ""
+msgstr "코드"
 
 #: src/components/sign-in-form.tsx:145
 msgctxt "verb"
 msgid "Confirm"
-msgstr ""
+msgstr "확인"
 
 #: src/components/sign-in-view.tsx:58
 msgid "Confirm your password to continue"
-msgstr ""
+msgstr "계속하려면 비밀번호를 다시 한번 입력하세요"
 
 #: src/components/sign-in-form.tsx:252
 msgid "Confirmation code"
-msgstr ""
+msgstr "인증 코드"
 
 #: src/cookie-error-page.tsx:43
 msgid "Continue"
-msgstr ""
+msgstr "계속"
 
 #: src/cookie-error-page.tsx:37
 msgid "Cookie Error"
-msgstr ""
+msgstr "쿠키 오류"
 
 #: src/components/utils/scope-description.tsx:664
 msgid "Create"
-msgstr ""
+msgstr "생성"
 
 #: src/components/authenticate-welcome-view.tsx:38
 msgid "Create a new account"
-msgstr ""
+msgstr "새 계정 만들기"
 
 #: src/components/utils/scope-description.tsx:568
 msgid "Create, update, and delete any public data linked to your account"
-msgstr ""
+msgstr "계정에 연결된 공개 데이터를 생성, 갱신, 삭제할 수 있습니다"
 
 #: src/components/utils/scope-description.tsx:663
 msgid "Data"
-msgstr ""
+msgstr "데이터"
 
 #: src/components/utils/scope-description.tsx:666
 msgid "Delete"
-msgstr ""
+msgstr "삭제"
 
 #: src/components/consent-form.tsx:89
 msgctxt "OAuthConsent"
 msgid "Deny access"
-msgstr ""
+msgstr "접근 거부"
 
 #: src/components/utils/error-card.tsx:72
 msgid "Description"
-msgstr ""
+msgstr "설명"
 
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
-msgstr ""
+msgstr "세부 정보"
 
 #: src/account-page.tsx:61
 msgid "Devices"
-msgstr ""
+msgstr "기기"
 
 #: src/components/sign-up-account-form.tsx:114
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
-msgstr ""
+msgstr "이메일"
 
+#: src/components/forms/input-email-address.tsx:51
 #: src/components/reset-password-request-form.tsx:52
 #: src/components/reset-password-request-form.tsx:56
-#: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
-msgstr ""
+msgstr "이메일 주소"
 
 #: src/components/forms/input-new-password.tsx:44
 msgid "Enter a password"
-msgstr ""
+msgstr "비밀번호 입력"
 
 #: src/components/reset-password-view.tsx:78
 msgid "Enter the code you received to reset your password."
-msgstr ""
+msgstr "비밀번호를 재설정하려면 받은 코드를 입력하세요."
 
 #: src/components/reset-password-view.tsx:47
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr ""
+msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
 
 #: src/components/reset-password-request-form.tsx:55
 msgid "Enter your email address"
-msgstr ""
+msgstr "이메일 주소 입력"
 
 #: src/components/forms/input-new-password.tsx:45
 msgid "Enter your new password"
-msgstr ""
+msgstr "새 비밀번호 입력"
 
 #: src/components/sign-in-view.tsx:78
 msgid "Enter your password"
-msgstr ""
+msgstr "비밀번호 입력"
 
 #: src/components/sign-in-view.tsx:97
 #: src/components/sign-in-view.tsx:115
 msgid "Enter your username and password"
-msgstr ""
+msgstr "사용자 이름 및 비밀번호 입력"
 
 #: src/components/sign-up-account-form.tsx:102
 msgid "example-com-xxxxx-xxxxx"
-msgstr ""
+msgstr "example-com-xxxxx-xxxxx"
 
 #: src/components/utils/description-card.tsx:57
 msgid "Expand details"
-msgstr ""
+msgstr "세부 정보 펼치기"
 
 #: src/components/utils/password-strength-label.tsx:25
 msgid "Extra"
-msgstr ""
+msgstr "매우 강력"
 
-#: src/routes/account/devices/page.tsx:31
 #: src/routes/account/apps/page.tsx:32
+#: src/routes/account/devices/page.tsx:31
 msgid "Failed to load connected apps"
-msgstr ""
+msgstr "연결된 앱을 불러오지 못했습니다"
 
 #: src/routes/account/devices/page.tsx:91
 msgid "Failed to remove device"
-msgstr ""
+msgstr "기기를 제거하지 못했습니다"
 
 #: src/data/password.ts:36
 msgid "Failed to request password reset"
-msgstr ""
+msgstr "비밀번호 재설정을 요청하지 못했습니다"
 
 #: src/data/password.ts:64
 msgid "Failed to reset password"
-msgstr ""
+msgstr "비밀번호를 재설정하지 못했습니다"
 
 #: src/routes/account/apps/page.tsx:113
 msgid "Failed to revoke access"
-msgstr ""
+msgstr "접근 권한을 취소하지 못했습니다"
 
 #: src/components/reset-password-view.tsx:43
 msgid "Forgot Password"
-msgstr ""
+msgstr "비밀번호 분실"
 
 #: src/components/sign-in-form.tsx:214
 msgid "Forgot?"
-msgstr ""
+msgstr "분실"
 
 #: src/components/consent-view.tsx:41
 msgid "Grant access to your <0/> account"
-msgstr ""
+msgstr "<0/> 계정에 대한 접근 권한을 부여합니다"
 
 #: src/components/utils/help-card.tsx:33
 msgid "Having trouble? <0>Contact support</0>"
-msgstr ""
+msgstr "문제가 있나요? <0>지원팀에 연락하기</0>"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Hide"
-msgstr ""
+msgstr "숨기기"
 
 #: src/components/utils/link-title.tsx:16
 msgid "Home"
-msgstr ""
+msgstr "홈"
 
 #: src/components/sign-in-form.tsx:152
 msgid "Identifier"
-msgstr ""
+msgstr "아이디"
 
 #: src/components/utils/scope-description.tsx:411
 msgid "Identity"
-msgstr ""
+msgstr "신원"
 
 #: src/locales/locale-selector.tsx:47
 msgid "Interface language selector"
-msgstr ""
+msgstr "인터페이스 언어 선택기"
 
 #: src/components/sign-up-handle-form.tsx:254
 msgid "Invalid"
-msgstr ""
+msgstr "사용 불가"
 
 #: src/components/sign-up-account-form.tsx:96
 #: src/components/sign-up-account-form.tsx:101
 msgid "Invite code"
-msgstr ""
+msgstr "초대 코드"
 
 #: src/routes/account/apps/page.tsx:66
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
-msgstr ""
+msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
 
 #. placeholder {0}: url.hostname
 #: src/cookie-error-page.tsx:52
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
-msgstr ""
+msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
 #: src/hooks/use-date-ago.ts:11
 msgid "just now"
-msgstr ""
+msgstr "방금 전"
 
 #: src/routes/account/apps/page.tsx:137
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
-msgstr ""
+msgstr "<0/>에 마지막으로 접근함"
 
 #: src/routes/account/devices/page.tsx:107
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
-msgstr ""
+msgstr "{lastUsedAgo}에 마지막으로 확인됨"
 
 #: src/components/reset-password-view.tsx:44
 msgid "Let's get your password reset!"
-msgstr ""
+msgstr "비밀번호를 재설정해 봅시다!"
 
 #: src/authorization-page.tsx:120
 msgid "Login complete"
-msgstr ""
+msgstr "로그인 완료"
 
 #: src/components/sign-in-picker.tsx:81
 msgid "Login to account that is not listed"
-msgstr ""
+msgstr "목록에 없는 계정으로 로그인"
 
 #: src/components/layouts/layout-app.tsx:29
 msgid "Logo"
-msgstr ""
+msgstr "로고"
 
 #: src/routes/account/devices/page.tsx:60
 msgid "Looks like you aren't logged in on any other devices."
-msgstr ""
+msgstr "다른 기기에는 로그인되어 있지 않은 것 같습니다."
 
 #: src/hooks/use-oauth-client-identifier.ts:15
 msgid "loopback"
-msgstr ""
+msgstr "루프백"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
-msgstr ""
+msgstr "표시"
 
 #: src/account-page.tsx:69
 msgid "Manage applications that have access to your account"
-msgstr ""
+msgstr "내 계정에 접근 권한이 있는 애플리케이션을 관리합니다"
 
 #: src/components/utils/scope-description.tsx:414
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
-msgstr ""
+msgstr "<1>@핸들</1>을 포함한 내 <0>전체 신원</0> 관리"
 
 #: src/account-page.tsx:62
 msgid "Manage your active sessions"
-msgstr ""
+msgstr "내 활성 세션을 관리합니다"
 
 #: src/components/utils/scope-description.tsx:349
 msgid "Manage your profile, posts, likes and follows"
-msgstr ""
+msgstr "프로필, 게시물, 좋아요, 팔로우 관리"
 
 #: src/components/utils/scope-description.tsx:344
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
-msgstr ""
+msgstr "프로필, 게시물, 좋아요, 팔로우 관리 및 비공개 설정 읽기"
 
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
-msgstr ""
+msgstr "미입력"
 
 #: src/components/utils/password-strength-label.tsx:29
 msgid "Moderate"
-msgstr ""
+msgstr "보통"
 
 #: src/account-page.tsx:50
 msgid "My Atmosphere account"
-msgstr ""
+msgstr "내 Atmosphere 계정"
 
 #: src/components/reset-password-confirm-form.tsx:60
 msgid "New password"
-msgstr ""
+msgstr "새 비밀번호"
 
+#: src/components/forms/wizard-card.tsx:96
 #: src/components/reset-password-view.tsx:55
 #: src/components/reset-password-view.tsx:89
-#: src/components/forms/wizard-card.tsx:96
 msgid "Next"
-msgstr ""
+msgstr "다음"
 
 #: src/routes/account/password/page.tsx:19
 msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
-msgstr ""
+msgstr "이 계정에는 연결된 이메일 주소가 없습니다. 비밀번호를 재설정할 수 없습니다."
 
 #: src/components/reset-password-view.tsx:115
 msgid "Okay"
-msgstr ""
+msgstr "확인"
 
 #: src/components/sign-up-handle-form.tsx:130
 msgid "Only letters, numbers, and hyphens"
-msgstr ""
+msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/account-page.tsx:75
-#: src/components/sign-up-account-form.tsx:128
-#: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
+#: src/components/sign-in-form.tsx:194
+#: src/components/sign-up-account-form.tsx:128
 msgid "Password"
-msgstr ""
+msgstr "비밀번호"
 
 #: src/data/password.ts:28
 msgid "Password reset email sent"
-msgstr ""
+msgstr "비밀번호 재설정 이메일을 전송했습니다"
 
 #: src/data/password.ts:56
 msgid "Password reset successful"
-msgstr ""
+msgstr "비밀번호를 재설정했습니다"
 
 #: src/components/utils/password-strength-label.tsx:23
 msgid "Password strength"
-msgstr ""
+msgstr "비밀번호 강도"
 
 #: src/components/utils/password-strength-meter.tsx:45
 msgid "Password strength indicator"
-msgstr ""
+msgstr "비밀번호 강도 표시자"
 
 #: src/components/reset-password-view.tsx:104
 msgid "Password Updated"
-msgstr ""
+msgstr "비밀번호 변경됨"
 
 #: src/components/reset-password-view.tsx:109
 msgid "Password updated!"
-msgstr ""
+msgstr "비밀번호를 변경했습니다!"
 
 #: src/components/forms/input-new-password.tsx:46
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr ""
+msgstr "비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다"
 
 #: src/components/utils/scope-description.tsx:459
 msgid "Perform actions on your behalf"
-msgstr ""
+msgstr "나를 대신하여 작업 수행"
 
 #: src/components/utils/scope-description.tsx:444
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
-msgstr ""
+msgstr "귀하를 대신하여 <0>모든 서비스</0>에 대해 인증된 작업을 수행합니다"
 
 #: src/components/authenticate-welcome-view.tsx:27
 msgid "Please authenticate to continue"
-msgstr ""
+msgstr "계속하려면 인증하세요"
 
 #: src/data/password.ts:37
 msgid "Please check the email address and try again."
-msgstr ""
+msgstr "이메일 주소를 확인하고 다시 시도해 주세요."
 
 #: src/data/password.ts:65
 msgid "Please check your reset code and try again."
-msgstr ""
+msgstr "재설정 코드를 확인하고 다시 시도해 주세요."
 
 #: src/components/forms/button-cooldown.tsx:48
 msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr ""
+msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
 
 #: src/components/sign-up-disclaimer.tsx:39
 #: src/components/sign-up-disclaimer.tsx:42
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
-msgstr ""
+msgstr "개인정보 처리방침"
 
 #: src/components/utils/scope-description.tsx:582
 msgid "Publish changes"
-msgstr ""
+msgstr "변경 사항 게시"
 
 #: src/components/utils/scope-description.tsx:379
 msgid "Read and send messages"
-msgstr ""
+msgstr "메시지 읽기 및 보내기"
 
 #: src/components/utils/scope-description.tsx:229
 msgid "Read and update your account's email address"
-msgstr ""
+msgstr "내 계정의 이메일 주소 읽기 및 변경"
 
 #: src/components/utils/scope-description.tsx:231
 msgid "Read your account's email address"
-msgstr ""
+msgstr "내 계정의 이메일 주소 읽기"
 
 #: src/components/sign-in-form.tsx:235
 #: src/components/sign-in-form.tsx:240
 msgid "Remember this account on this device"
-msgstr ""
+msgstr "이 기기에서 이 계정 기억하기"
 
 #: src/components/utils/scope-description.tsx:566
 #: src/components/utils/scope-description.tsx:581
 msgid "Repository"
-msgstr ""
+msgstr "저장소"
 
 #: src/components/reset-password-confirm-form.tsx:46
 msgid "Reset code"
-msgstr ""
+msgstr "재설정 코드"
 
 #: src/components/reset-password-view.tsx:76
 msgid "Reset Password"
-msgstr ""
+msgstr "비밀번호 재설정"
 
 #: src/components/sign-in-form.tsx:212
 msgid "Reset your password"
-msgstr ""
+msgstr "비밀번호 재설정"
 
-#: src/routes/account/devices/page.tsx:29
-#: src/routes/account/apps/page.tsx:30
 #: src/components/utils/error-card.tsx:50
+#: src/routes/account/apps/page.tsx:30
+#: src/routes/account/devices/page.tsx:29
 msgid "Retry"
-msgstr ""
+msgstr "다시 시도"
 
 #: src/components/forms/button-cooldown.tsx:71
 msgid "Retry in {remainingSeconds}s"
-msgstr ""
+msgstr "{remainingSeconds}초 후에 다시 시도"
 
 #: src/routes/account/apps/page.tsx:148
 msgctxt "OAuthApp"
 msgid "Revoke access"
-msgstr ""
+msgstr "접근 권한 취소"
 
 #: src/components/utils/account-selector.tsx:58
 msgid "Select another account"
-msgstr ""
+msgstr "다른 계정 선택"
 
 #: src/components/sign-up-handle-form.tsx:169
 msgid "Select domain"
-msgstr ""
+msgstr "도메인 선택"
 
 #: src/components/sign-in-view.tsx:131
 msgid "Select from an existing account"
-msgstr ""
+msgstr "기존 계정에서 선택하기"
 
 #: src/routes/account/password/page.tsx:48
 msgctxt "PasswordReset"
 msgid "Send reset code"
-msgstr ""
+msgstr "재설정 코드 전송"
 
 #: src/components/sign-in-view.tsx:45
 msgctxt "AuthenticationPage"
 msgid "Sign in"
-msgstr ""
+msgstr "로그인"
 
-#: src/components/sign-in-form.tsx:147
 #: src/components/authenticate-welcome-view.tsx:48
+#: src/components/sign-in-form.tsx:147
 msgctxt "verb"
 msgid "Sign in"
-msgstr ""
+msgstr "로그인"
 
 #. placeholder {0}: session.account.name ?? getAccountHandle(session.account) ?? session.account.sub
 #: src/components/sign-in-picker.tsx:73
 msgid "Sign in as {0}"
-msgstr ""
+msgstr "{0}(으)로 로그인"
 
 #: src/components/sign-in-picker.tsx:59
 msgid "Sign in as..."
-msgstr ""
+msgstr "로그인"
+
+#: src/components/utils/account-selector.tsx:53
+msgid "Sign out"
+msgstr "로그아웃"
 
 #: src/routes/account/devices/page.tsx:120
 msgctxt "device list"
 msgid "Sign out"
-msgstr ""
+msgstr "로그아웃"
 
-#: src/components/utils/account-selector.tsx:53
-msgid "Sign out"
-msgstr ""
-
+#: src/components/sign-in-picker.tsx:48
 #: src/components/sign-up-view.tsx:66
 #: src/components/sign-up-view.tsx:70
-#: src/components/sign-in-picker.tsx:48
 msgid "Sign up"
-msgstr ""
+msgstr "가입"
 
 #: src/components/forms/wizard-card.tsx:106
 msgid "Step {currentPosition} of {count}"
-msgstr ""
+msgstr "{count}단계 중 {currentPosition}단계"
 
 #: src/components/utils/password-strength-label.tsx:27
 msgid "Strong"
-msgstr ""
+msgstr "강력"
 
 #: src/components/forms/form-card-async.tsx:41
 msgid "Submit"
-msgstr ""
+msgstr "제출"
 
 #: src/routes/account/devices/page.tsx:85
 msgid "Successfully removed device"
-msgstr ""
+msgstr "기기를 제거했습니다"
 
 #: src/routes/account/apps/page.tsx:106
 msgid "Successfully revoked access"
-msgstr ""
+msgstr "접근 권한을 취소했습니다"
 
 #: src/components/utils/link-title.tsx:19
 msgid "Support"
-msgstr ""
+msgstr "지원"
 
 #: src/components/consent-form.tsx:124
 msgid "Technical details"
-msgstr ""
+msgstr "기술 세부 정보"
 
 #: src/components/utils/scope-description.tsx:267
 msgid "Temporarily activate or deactivate your account"
-msgstr ""
+msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
 
 #: src/components/sign-up-disclaimer.tsx:31
 #: src/components/sign-up-disclaimer.tsx:34
 #: src/components/utils/link-title.tsx:18
 msgid "Terms of Service"
-msgstr ""
+msgstr "서비스 이용약관"
 
 #: src/hooks/use-error-message.ts:47
 msgid "That handle cannot be used"
-msgstr ""
+msgstr "사용할 수 없는 핸들입니다"
 
 #: src/components/utils/scope-description.tsx:190
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr ""
+msgstr "애플리케이션이 귀하의 네트워크 신원에 대한 전체 제어 권한을 요청하고 있습니다. 이는 계정을 <0>영구적으로 손상</0>시키거나 심지어 <1>탈취</1>할 수도 있음을 의미합니다. 반드시 진심으로 신뢰하는 애플리케이션에만 이 권한을 허용하세요."
 
 #: src/components/utils/scope-description.tsx:170
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
-msgstr ""
+msgstr "애플리케이션이 귀하를 대신하여 다음 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
 #: src/components/utils/scope-description.tsx:462
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
-msgstr ""
+msgstr "AT 프로토콜 네트워크는 외부 서비스와 통신할 때 사용자를 고유하게 식별할 수 있는 인증 메커니즘을 사용합니다. 이는 일반적으로 대화 메시지, 피드 또는 관리자 콘텐츠와 같이 계정과 연결된 데이터를 검색하거나 변경하는 데 사용됩니다. 애플리케이션은 사용자를 대신하여 다음과 같은 인증된 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
 #: src/hooks/use-error-message.ts:64
 msgid "The data you submitted is invalid. Please check the form and try again."
-msgstr ""
+msgstr "제출한 정보가 올바르지 않습니다. 입력 내용을 확인하고 다시 시도해 주세요."
 
 #: src/hooks/use-error-message.ts:38
 msgid "The domain name is not allowed"
-msgstr ""
+msgstr "허용되지 않는 도메인 이름입니다"
 
 #: src/hooks/use-error-message.ts:40
 msgid "The handle contains inappropriate language"
-msgstr ""
+msgstr "핸들에 부적절한 표현이 포함되어 있습니다"
 
 #: src/hooks/use-error-message.ts:45
 msgid "The handle is already in use"
-msgstr ""
+msgstr "이미 사용 중인 핸들입니다"
 
 #: src/hooks/use-error-message.ts:36
 msgid "The handle is invalid"
-msgstr ""
+msgstr "잘못된 핸들입니다"
 
 #: src/hooks/use-error-message.ts:30
 msgid "The invite code is not valid"
-msgstr ""
+msgstr "잘못된 초대 코드입니다"
 
 #: src/routes/account/apps/page.tsx:40
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr ""
+msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다. 여러 기기에서 동일한 앱을 사용하는 경우 동일한 앱이 여러 번 나타날 수 있습니다. 접근 권한을 취소하면 다시 로그인할 때까지 앱에서 로그아웃됩니다."
 
 #: src/components/consent-form.tsx:129
 msgid "This application is requesting the following permissions (scopes) to access your account:"
-msgstr ""
+msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음과 같은 권한(범위)을 요청합니다:"
 
 #: src/hooks/use-error-message.ts:68
 msgid "This authorization request has been denied. Please try again."
-msgstr ""
+msgstr "승인 요청이 거부되었습니다. 다시 시도해 주세요."
 
 #: src/hooks/use-error-message.ts:52
 msgid "This email is already used"
-msgstr ""
+msgstr "이미 사용 중인 이메일입니다"
 
 #: src/hooks/use-error-message.ts:43
 msgid "This handle is reserved"
-msgstr ""
+msgstr "예약된 핸들입니다"
 
 #: src/hooks/use-error-message.ts:60
 msgid "This sign-in session has expired"
-msgstr ""
+msgstr "로그인 세션이 만료되었습니다"
 
 #: src/routes/account/password/page.tsx:32
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
-msgstr ""
+msgstr "비밀번호를 재설정하려면 <0>{email}</0>(으)로 인증 코드가 전송된 후 아래에 코드를 입력하여 새 비밀번호를 설정하세요."
 
 #: src/components/utils/scope-description.tsx:524
 msgctxt "RPC aud"
 msgid "Towards"
-msgstr ""
+msgstr "대상"
 
 #: src/components/sign-up-handle-form.tsx:139
 msgid "Type your desired username"
-msgstr ""
+msgstr "원하는 사용자 이름을 입력하세요"
 
 #: src/contexts/session.tsx:152
 msgid "Unauthorized"
-msgstr ""
+msgstr "승인되지 않음"
 
 #: src/hooks/use-error-message.ts:72
 msgid "Unexpected server response"
-msgstr ""
+msgstr "예상치 못한 서버 응답입니다"
 
 #: src/routes/account/devices/page.tsx:102
 msgctxt "device list"
 msgid "Unknown user agent"
-msgstr ""
+msgstr "알 수 없는 사용자 에이전트"
 
 #: src/components/utils/scope-description.tsx:665
 msgid "Update"
-msgstr ""
+msgstr "갱신"
 
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
-msgstr ""
+msgstr "파일 업로드"
 
 #: src/components/sign-in-form.tsx:157
 msgid "Username or email address"
-msgstr ""
+msgstr "사용자 이름 또는 이메일 주소"
 
 #: src/components/sign-up-handle-form.tsx:249
 msgid "Valid"
-msgstr ""
+msgstr "사용 가능"
 
 #: src/components/sign-in-form.tsx:226
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr ""
+msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
 
 #: src/components/sign-up-view.tsx:122
 msgid "Verify you are human"
-msgstr ""
+msgstr "사람이 맞는지 확인"
 
 #: src/components/consent-form.tsx:117
 msgid "wants to access your <0/> account"
-msgstr ""
+msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
 
 #: src/components/consent-form.tsx:111
 msgid "wants to uniquely identify you through your <0/> account"
-msgstr ""
+msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
 
 #: src/components/sign-in-form.tsx:225
 msgid "Warning"
-msgstr ""
+msgstr "경고"
 
 #: src/components/sign-up-view.tsx:67
 msgid "We're so excited to have you join us!"
-msgstr ""
+msgstr "함께하게 되어 정말 기뻐요!"
 
 #: src/components/utils/password-strength-label.tsx:31
 msgid "Weak"
-msgstr ""
+msgstr "취약"
 
 #: src/components/authenticate-welcome-view.tsx:24
 msgid "Welcome"
-msgstr ""
+msgstr "환영합니다"
 
 #: src/routes/account/page.tsx:30
 msgid "What does this mean?"
-msgstr ""
+msgstr "이게 무슨 뜻인가요?"
 
 #: src/account-page.tsx:91
 msgid "What is an Atmosphere Account?"
-msgstr ""
+msgstr "Atmosphere 계정이란?"
 
 #: src/hooks/use-error-message.ts:26
 msgid "Wrong identifier or password"
-msgstr ""
+msgstr "잘못된 아이디 또는 비밀번호입니다"
 
 #: src/hooks/use-date-ago.ts:31
 msgid "yesterday"
-msgstr ""
+msgstr "어제"
 
 #: src/authorization-page.tsx:121
 msgid "You are being redirected..."
-msgstr ""
+msgstr "페이지 이동 중…"
 
 #: src/components/sign-up-handle-form.tsx:215
 msgid "You can change this username to any domain name you control after your account is set up."
-msgstr ""
+msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 도메인 이름으로 변경할 수 있습니다."
 
-#: src/data/password.ts:57
 #: src/components/reset-password-view.tsx:112
+#: src/data/password.ts:57
 msgid "You can now sign in with your new password."
-msgstr ""
+msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
 #: src/components/reset-password-view.tsx:82
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr ""
+msgstr "‘재설정 코드’가 포함된 이메일을 받게 되면 여기에 해당 코드를 입력한 다음 새 비밀번호를 입력하세요."
 
 #: src/components/sign-up-view.tsx:103
 msgid "Your account"
-msgstr ""
+msgstr "내 계정"
 
 #: src/routes/account/devices/page.tsx:39
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
-msgstr ""
+msgstr "아래 나열된 기기에서 계정에 로그인되어 있습니다. 계정이 해킹당한 경우 모든 기기에서 로그아웃하고 비밀번호를 변경한 다음 연결된 <0>앱</0>을 확인하세요."
 
 #: src/routes/account/page.tsx:23
 msgid "Your Atmosphere account is hosted by <0/>."
-msgstr ""
+msgstr "내 Atmosphere 계정은 <0/>에서 호스팅됩니다."
 
 #. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
 #: src/components/sign-up-handle-form.tsx:203
 msgid "Your full username will be: {0}"
-msgstr ""
+msgstr "내 전체 사용자 이름: {0}"
 
 #: src/components/reset-password-view.tsx:105
 msgid "Your password has been updated!"
-msgstr ""
+msgstr "비밀번호를 변경했습니다!"
 
 #: src/components/utils/scope-description.tsx:585
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
-msgstr ""
+msgstr "내 저장소에는 Bluesky 게시물, 좋아요, 팔로우 등 AT 프로토콜 네트워크에서 공개적으로 사용 가능한 모든 데이터가 포함되어 있습니다. 또한 이 계정으로 로그인한 다른 앱을 통해 생성된 데이터도 포함됩니다. 애플리케이션은 저장소에 다음 변경 사항을 게시하는 데 필요한 권한을 요청합니다."
 
 #: src/contexts/session.tsx:153
 msgid "Your session has expired. Please sign in again."
-msgstr ""
+msgstr "세션이 만료되었습니다. 다시 로그인해 주세요."
