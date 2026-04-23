@@ -149,9 +149,7 @@ export function Text({ children }: { children: ReactNode }) {
 }
 
 export function Actions({ children }: { children: ReactNode }) {
-  return (
-    <div className="-my-1 ml-auto flex-shrink-0 self-center">{children}</div>
-  )
+  return <div className="-my-1 ml-auto flex-shrink-0">{children}</div>
 }
 
 export function Action({
