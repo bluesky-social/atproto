@@ -1,6 +1,7 @@
 import { Selectable } from 'kysely'
 import {
   AppBskyActorDefs,
+  ToolsOzoneModerationDefs,
   ToolsOzoneQueueDefs,
   ToolsOzoneReportDefs,
 } from '@atproto/api'
@@ -92,6 +93,7 @@ export function buildReportView(
   report: ReportWithEvent,
   hydrated: HydratedReport,
   isModerator: boolean,
+  actions?: ToolsOzoneModerationDefs.ModEventView[],
 ) {
   const {
     partialRepos,
@@ -184,6 +186,7 @@ export function buildReportView(
       report.actionEventIds && Array.isArray(report.actionEventIds)
         ? (report.actionEventIds as number[])
         : undefined,
+    actions: actions && actions.length ? actions : undefined,
     actionNote: report.actionNote ?? undefined,
     assignment: assignmentView,
     queue:

@@ -23,18 +23,32 @@ export default function (server: Server, ctx: AppContext) {
 
       const queueService = ctx.queueService(db)
       const teamService = ctx.teamService(db)
-      const hydrated = await hydrateReportInfo(
-        [report],
-        modService.views,
-        (dids) => getPdsAccountInfos(ctx, dids),
-        (queueIds) => queueService.getViewsByIds(queueIds),
-        (dids) => teamService.viewByDids(dids),
-        labelers,
+      const [hydrated, actionEvents] = await Promise.all([
+        hydrateReportInfo(
+          [report],
+          modService.views,
+          (dids) => getPdsAccountInfos(ctx, dids),
+          (queueIds) => queueService.getViewsByIds(queueIds),
+          (dids) => teamService.viewByDids(dids),
+          labelers,
+        ),
+        Array.isArray(report.actionEventIds) && report.actionEventIds.length
+          ? modService.getEventsByIds(report.actionEventIds as number[])
+          : Promise.resolve([]),
+      ])
+
+      const actions = actionEvents.map((evt) =>
+        modService.views.formatEvent(evt),
       )
 
       return {
         encoding: 'application/json',
-        body: buildReportView(report, hydrated, auth.credentials.isModerator),
+        body: buildReportView(
+          report,
+          hydrated,
+          auth.credentials.isModerator,
+          actions,
+        ),
       }
     },
   })
