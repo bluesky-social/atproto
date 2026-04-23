@@ -21,8 +21,10 @@ export type QueryParams = {}
 export interface InputSchema {
   /** ID of the report to reassign */
   reportId: number
-  /** Target queue ID. Use -1 for 'unassigned'. */
+  /** Target queue ID. Use -1 to unassign from any queue. */
   queueId: number
+  /** Optional moderator-only note recorded on the resulting queueActivity as internalNote. */
+  comment?: string
 }
 
 export interface OutputSchema {
@@ -42,6 +44,45 @@ export interface Response {
   data: OutputSchema
 }
 
+export class ReportNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class ReportClosedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class AlreadyInTargetQueueError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class QueueNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class QueueDisabledError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'ReportNotFound') return new ReportNotFoundError(e)
+    if (e.error === 'ReportClosed') return new ReportClosedError(e)
+    if (e.error === 'AlreadyInTargetQueue')
+      return new AlreadyInTargetQueueError(e)
+    if (e.error === 'QueueNotFound') return new QueueNotFoundError(e)
+    if (e.error === 'QueueDisabled') return new QueueDisabledError(e)
+  }
+
   return e
 }
