@@ -215,7 +215,7 @@ msgstr "Call"
 
 #: src/contexts/authentication.tsx:173
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card-async.tsx:44
+#: src/components/forms/form-card-async.tsx:42
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -256,7 +256,7 @@ msgstr "Close account selector"
 msgid "Close details"
 msgstr "Close details"
 
-#: src/components/utils/error-card.tsx:59
+#: src/components/utils/error-details.tsx:76
 msgid "Code"
 msgstr "Code"
 
@@ -278,6 +278,7 @@ msgid "Continue"
 msgstr "Continue"
 
 #: src/cookie-error-page.tsx:37
+#: src/cookie-error-page.tsx:54
 msgid "Cookie Error"
 msgstr "Cookie Error"
 
@@ -305,10 +306,6 @@ msgstr "Delete"
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Deny access"
-
-#: src/components/utils/error-card.tsx:66
-msgid "Description"
-msgstr "Description"
 
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
@@ -441,7 +438,7 @@ msgid "It appears that you haven’t used this account to sign in to any apps ye
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
 
 #. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx:52
+#: src/cookie-error-page.tsx:56
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 
@@ -507,6 +504,10 @@ msgstr "Manage your profile, posts, likes and follows"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Manage your profile, posts, likes and follows as well as read your private preferences"
 
+#: src/components/utils/error-details.tsx:87
+msgid "Message"
+msgstr "Message"
+
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
 msgstr "Missing"
@@ -518,6 +519,10 @@ msgstr "Moderate"
 #: src/pages/account/(authenticated)/route.tsx:140
 msgid "My Atmosphere Account"
 msgstr "My Atmosphere Account"
+
+#: src/components/utils/error-details.tsx:67
+msgid "Name"
+msgstr "Name"
 
 #: src/components/reset-password-confirm-form.tsx:60
 msgid "New password"
@@ -647,7 +652,7 @@ msgstr "Reset your password"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:30
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:37
+#: src/components/utils/error-card.tsx:44
 msgid "Retry"
 msgstr "Retry"
 
@@ -712,6 +717,10 @@ msgstr "Sign out"
 msgid "Sign up"
 msgstr "Sign up"
 
+#: src/components/utils/error-details.tsx:96
+msgid "Stack"
+msgstr "Stack"
+
 #: src/components/forms/wizard-card.tsx:106
 msgid "Step {currentPosition} of {count}"
 msgstr "Step {currentPosition} of {count}"
@@ -720,7 +729,7 @@ msgstr "Step {currentPosition} of {count}"
 msgid "Strong"
 msgstr "Strong"
 
-#: src/components/forms/form-card-async.tsx:41
+#: src/components/forms/form-card-async.tsx:39
 msgid "Submit"
 msgstr "Submit"
 

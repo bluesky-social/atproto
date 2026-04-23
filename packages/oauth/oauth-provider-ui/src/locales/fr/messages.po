@@ -215,7 +215,7 @@ msgstr "Appeler"
 
 #: src/contexts/authentication.tsx:173
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card-async.tsx:44
+#: src/components/forms/form-card-async.tsx:42
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -256,7 +256,7 @@ msgstr "Fermer le sélecteur de compte"
 msgid "Close details"
 msgstr "Fermer les détails"
 
-#: src/components/utils/error-card.tsx:59
+#: src/components/utils/error-details.tsx:76
 msgid "Code"
 msgstr "Code"
 
@@ -278,6 +278,7 @@ msgid "Continue"
 msgstr "Continuer"
 
 #: src/cookie-error-page.tsx:37
+#: src/cookie-error-page.tsx:54
 msgid "Cookie Error"
 msgstr "Erreur de cookies"
 
@@ -305,10 +306,6 @@ msgstr "Supprimer"
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
-
-#: src/components/utils/error-card.tsx:66
-msgid "Description"
-msgstr "Description"
 
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
@@ -441,7 +438,7 @@ msgid "It appears that you haven’t used this account to sign in to any apps ye
 msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à des applications."
 
 #. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx:52
+#: src/cookie-error-page.tsx:56
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
 
@@ -507,6 +504,10 @@ msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements ainsi que lire vos préférences privées"
 
+#: src/components/utils/error-details.tsx:87
+msgid "Message"
+msgstr "Message"
+
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
 msgstr "Manquant"
@@ -518,6 +519,10 @@ msgstr "Modéré"
 #: src/pages/account/(authenticated)/route.tsx:140
 msgid "My Atmosphere Account"
 msgstr "Mon compte Atmosphère"
+
+#: src/components/utils/error-details.tsx:67
+msgid "Name"
+msgstr "Nom"
 
 #: src/components/reset-password-confirm-form.tsx:60
 msgid "New password"
@@ -647,7 +652,7 @@ msgstr "Réinitialisez votre mot de passe"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:30
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:37
+#: src/components/utils/error-card.tsx:44
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -712,6 +717,10 @@ msgstr "Se déconnecter"
 msgid "Sign up"
 msgstr "S'inscrire"
 
+#: src/components/utils/error-details.tsx:96
+msgid "Stack"
+msgstr "Pile d'appels"
+
 #: src/components/forms/wizard-card.tsx:106
 msgid "Step {currentPosition} of {count}"
 msgstr "Étape {currentPosition} sur {count}"
@@ -720,7 +729,7 @@ msgstr "Étape {currentPosition} sur {count}"
 msgid "Strong"
 msgstr "Fort"
 
-#: src/components/forms/form-card-async.tsx:41
+#: src/components/forms/form-card-async.tsx:39
 msgid "Submit"
 msgstr "Soumettre"
 

@@ -215,7 +215,7 @@ msgstr "呼び出し"
 
 #: src/contexts/authentication.tsx:173
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card-async.tsx:44
+#: src/components/forms/form-card-async.tsx:42
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -256,7 +256,7 @@ msgstr ""
 msgid "Close details"
 msgstr ""
 
-#: src/components/utils/error-card.tsx:59
+#: src/components/utils/error-details.tsx:76
 msgid "Code"
 msgstr "コード"
 
@@ -278,6 +278,7 @@ msgid "Continue"
 msgstr ""
 
 #: src/cookie-error-page.tsx:37
+#: src/cookie-error-page.tsx:54
 msgid "Cookie Error"
 msgstr ""
 
@@ -305,10 +306,6 @@ msgstr "削除"
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr ""
-
-#: src/components/utils/error-card.tsx:66
-msgid "Description"
-msgstr "説明"
 
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
@@ -441,7 +438,7 @@ msgid "It appears that you haven’t used this account to sign in to any apps ye
 msgstr ""
 
 #. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx:52
+#: src/cookie-error-page.tsx:56
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr ""
 
@@ -507,6 +504,10 @@ msgstr "あなたのプロフィール、投稿、いいね、フォローを管
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理し、あなたのプライベートな設定を読み取る"
 
+#: src/components/utils/error-details.tsx:87
+msgid "Message"
+msgstr ""
+
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
 msgstr "無し"
@@ -517,6 +518,10 @@ msgstr "中程度"
 
 #: src/pages/account/(authenticated)/route.tsx:140
 msgid "My Atmosphere Account"
+msgstr ""
+
+#: src/components/utils/error-details.tsx:67
+msgid "Name"
 msgstr ""
 
 #: src/components/reset-password-confirm-form.tsx:60
@@ -647,7 +652,7 @@ msgstr "パスワードをリセット"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:30
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:37
+#: src/components/utils/error-card.tsx:44
 msgid "Retry"
 msgstr ""
 
@@ -712,6 +717,10 @@ msgstr ""
 msgid "Sign up"
 msgstr "サインアップ"
 
+#: src/components/utils/error-details.tsx:96
+msgid "Stack"
+msgstr ""
+
 #: src/components/forms/wizard-card.tsx:106
 msgid "Step {currentPosition} of {count}"
 msgstr "ステップ {currentPosition} / {count}"
@@ -720,7 +729,7 @@ msgstr "ステップ {currentPosition} / {count}"
 msgid "Strong"
 msgstr "強い"
 
-#: src/components/forms/form-card-async.tsx:41
+#: src/components/forms/form-card-async.tsx:39
 msgid "Submit"
 msgstr "送信"
 
