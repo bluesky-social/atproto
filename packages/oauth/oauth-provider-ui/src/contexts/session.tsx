@@ -52,6 +52,7 @@ export type SessionContextType = {
 }
 
 const SessionContext = createContext<null | SessionContextType>(null)
+SessionContext.displayName = 'SessionContext'
 
 export enum InitialSelectedSession {
   First,

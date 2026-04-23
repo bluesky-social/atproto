@@ -48,7 +48,11 @@ function CookieErrorView() {
         {Array.from(new Map(url.searchParams)).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
-        <Admonition role="status">
+        <Admonition
+          role="alert"
+          variant="warning"
+          title={<Trans>Cookie Error</Trans>}
+        >
           <Trans>
             It seems that your browser is not accepting cookies. Press
             "Continue" to try again. If the error persists, please ensure that

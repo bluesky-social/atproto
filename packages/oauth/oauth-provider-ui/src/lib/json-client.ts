@@ -130,6 +130,8 @@ export type JsonErrorPayload<E extends string = string> = {
 export class JsonErrorResponse<
   P extends JsonErrorPayload = JsonErrorPayload,
 > extends Error {
+  name = 'JsonErrorResponse'
+
   constructor(
     public readonly payload: P,
     message = payload.error_description,
