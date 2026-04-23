@@ -11,6 +11,7 @@ import {
   type OmitKey,
 } from '../../../../util'
 import type * as ChatBskyConvoDefs from './defs.js'
+import type * as ChatBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -28,8 +29,11 @@ export interface OutputSchema {
   messages: (
     | $Typed<ChatBskyConvoDefs.MessageView>
     | $Typed<ChatBskyConvoDefs.DeletedMessageView>
+    | $Typed<ChatBskyConvoDefs.SystemMessageView>
     | { $type: string }
   )[]
+  /** Set of all members who authored or reacted to the returned messages. Members referred to by system messages are also included. */
+  relatedProfiles?: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 export interface CallOptions {
@@ -43,6 +47,16 @@ export interface Response {
   data: OutputSchema
 }
 
+export class InvalidConvoError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidConvo') return new InvalidConvoError(e)
+  }
+
   return e
 }

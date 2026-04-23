@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { HydrationData as FeHydrationData } from '@atproto/oauth-provider-frontend/hydration-data'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
@@ -7,7 +6,6 @@ import { Customization } from '../../customization/customization.js'
 import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
 import { declareHydrationData } from '../../lib/html/hydration-data.js'
 import { cssCode, html } from '../../lib/html/index.js'
-import { combineMiddlewares } from '../../lib/http/middleware.js'
 import { WriteResponseOptions } from '../../lib/http/response.js'
 import {
   CrossOriginEmbedderPolicy,
@@ -29,24 +27,18 @@ import { setupCsrfToken } from './csrf.js'
 const ui = parseAssetsManifest(
   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 )
-const fe = parseAssetsManifest(
-  require.resolve('@atproto/oauth-provider-frontend/bundle-manifest.json'),
-)
 
-type HydrationData = Simplify<UiHydrationData & FeHydrationData>
+type HydrationData = Simplify<UiHydrationData>
 
 function getAssets(entryName: keyof HydrationData) {
-  const assetRef = ui.getAssets(entryName) || fe.getAssets(entryName)
+  const assetRef = ui.getAssets(entryName)
   if (assetRef) return assetRef
 
   // Fool-proof. Should never happen.
   throw new Error(`Entry "${entryName}" not found in assets`)
 }
 
-export const assetsMiddleware = combineMiddlewares([
-  ui.assetsMiddleware,
-  fe.assetsMiddleware,
-])
+export const assetsMiddleware = ui.assetsMiddleware
 
 const SPA_CSP: CspConfig = {
   // API calls are made to the same origin
@@ -81,8 +73,24 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
 
   const csp = mergeCsp(
     SPA_CSP,
-    customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
+    customization.hcaptcha ? HCAPTCHA_CSP : undefined,
   )
+
+  const coep = customization.hcaptcha
+    ? // hCaptcha's implementation of COEP is currently broken. Let's disable it
+      // to avoid breaking the entire page.
+      //
+      // https://github.com/hCaptcha/react-hcaptcha/issues/259
+      // https://github.com/hCaptcha/react-hcaptcha/issues/380
+      CrossOriginEmbedderPolicy.unsafeNone
+    : // Since we are loading avatars form other origins, which might not have
+      // CORP headers, we need to use the "credentialless" value, which allows
+      // loading cross-origin resources without credentials (cookies, client
+      // certificates, etc.). This is a more secure alternative to
+      // "unsafe-none". Ideally, we would want to set COEP to "require-corp" and
+      // ensure that all cross-origin resources have the appropriate CORP
+      // headers.
+      CrossOriginEmbedderPolicy.credentialless
 
   return async function sendWebApp(
     req: IncomingMessage,
@@ -101,12 +109,9 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
     return writeHtml(
       res,
       mergeDefaults<WriteHtmlOptions>(defaults, options, {
-        bodyAttrs: {
-          class:
-            'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
-        },
+        bodyAttrs: { class: 'text-text-default bg-contrast-0' },
         csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
-        coep: options?.coep ?? CrossOriginEmbedderPolicy.credentialless,
+        coep: options?.coep ?? coep,
         meta: [{ name: 'robots', content: 'noindex' }],
         body: html`<div id="root"></div>`,
         scripts: [script, ...scripts],

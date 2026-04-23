@@ -100,41 +100,26 @@ export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: LexParseOptions = { strict: false },
 ): T {
-  return JSON.parse(input, function (key: string, value: JsonValue): LexValue {
-    switch (typeof value) {
-      case 'object':
-        if (value === null) return null
-        if (Array.isArray(value)) return value
-        return parseSpecialJsonObject(value, options) ?? value
-      case 'number':
-        if (Number.isSafeInteger(value)) return value
-        if (options.strict) {
-          throw new TypeError(`Invalid non-integer number: ${value}`)
-        }
-      // fallthrough
-      default:
-        return value
-    }
-  })
+  // @NOTE see ./lex-json.bench.ts for performance comparison of implementation
+  // that uses a reviver function in JSON.parse vs. the current implementation.
+  return jsonToLex(JSON.parse(input), options) as T
 }
 
 /**
- * Parses a `Uint8Array` containing JSON data into a Lex value.
+ * Parses a JSON string from a byte array into Lex values.
  */
 export function lexParseJsonBytes(
-  jsonBytes: Uint8Array,
+  bytes: Uint8Array,
   options?: LexParseOptions,
 ): LexValue {
-  // @TODO optimize this to avoid intermediate string. This requires a custom
-  // JSON parser that can operate on binary data, which is non-trivial, but
-  // could be a future improvement if performance is a concern. See the link
-  // below for an example of a JSON parser that operates on binary data in
-  // @ipld/dag-json
-
-  // https://github.com/ipld/js-dag-json/blob/57912da6e9d64a179f7d2384c3b6d7b07fbfb143/src/index.js#L161
-
-  const jsonString = utf8FromBytes(jsonBytes)
-  return lexParse(jsonString, options)
+  // @NOTE see ./json-bytes-decoder.bench.ts for performance comparison of
+  // implementation that uses a decoder class that operates directly on bytes
+  // vs. the current implementation that first decodes bytes to string and then
+  // parses JSON. For more common cases, it seems that the trivial
+  // implementation works better than the decoder based solution, while having a
+  // small overhead for slower cases (~2% difference). Because of this, we keep
+  // the trivial implementation:
+  return lexParse(utf8FromBytes(bytes), options)
 }
 
 /**
@@ -181,10 +166,8 @@ export function jsonToLex(
     }
     case 'number':
       if (Number.isSafeInteger(value)) return value
-      if (options.strict) {
-        throw new TypeError(`Invalid non-integer number: ${value}`)
-      }
-    // fallthrough
+      if (options.strict === false) return value
+      throw new TypeError(`Invalid non-integer number: ${value}`)
     case 'boolean':
     case 'string':
       return value
@@ -327,7 +310,10 @@ function encodeLexMap(input: LexMap): JsonObject {
   return copy ?? (input as JsonObject)
 }
 
-function parseSpecialJsonObject(
+/**
+ * @internal
+ */
+export function parseSpecialJsonObject(
   input: LexMap,
   options: LexParseOptions,
 ): Cid | Uint8Array | BlobRef | undefined {

@@ -31,8 +31,30 @@
                   "chat.bsky.convo.defs#logCreateMessage",
                   "chat.bsky.convo.defs#logDeleteMessage",
                   "chat.bsky.convo.defs#logReadMessage",
+
                   "chat.bsky.convo.defs#logAddReaction",
-                  "chat.bsky.convo.defs#logRemoveReaction"
+                  "chat.bsky.convo.defs#logRemoveReaction",
+                  "chat.bsky.convo.defs#logReadConvo",
+
+                  "chat.bsky.convo.defs#logAddMember",
+                  "chat.bsky.convo.defs#logRemoveMember",
+                  "chat.bsky.convo.defs#logMemberJoin",
+                  "chat.bsky.convo.defs#logMemberLeave",
+
+                  "chat.bsky.convo.defs#logLockConvo",
+                  "chat.bsky.convo.defs#logUnlockConvo",
+                  "chat.bsky.convo.defs#logLockConvoPermanently",
+                  "chat.bsky.convo.defs#logEditGroup",
+
+                  "chat.bsky.convo.defs#logCreateJoinLink",
+                  "chat.bsky.convo.defs#logEditJoinLink",
+                  "chat.bsky.convo.defs#logEnableJoinLink",
+                  "chat.bsky.convo.defs#logDisableJoinLink",
+
+                  "chat.bsky.convo.defs#logIncomingJoinRequest",
+                  "chat.bsky.convo.defs#logApproveJoinRequest",
+                  "chat.bsky.convo.defs#logRejectJoinRequest",
+                  "chat.bsky.convo.defs#logOutgoingJoinRequest"
                 ]
               }
             }

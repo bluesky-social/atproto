@@ -1,5 +1,11 @@
 # @atproto/lex-json
 
+## 0.0.16
+
+### Patch Changes
+
+- [#4836](https://github.com/bluesky-social/atproto/pull/4836) [`952354c`](https://github.com/bluesky-social/atproto/commit/952354c1dd458251f8b643d02f4b227d40c5df17) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of `lexParseJsonBytes` function
+
 ## 0.0.15
 
 ### Patch Changes

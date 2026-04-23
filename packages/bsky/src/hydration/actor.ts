@@ -45,6 +45,7 @@ export type Actor = {
   takedownRef?: string
   isLabeler: boolean
   allowIncomingChatsFrom?: string
+  allowGroupChatInvitesFrom?: string
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
@@ -298,6 +299,7 @@ export class ActorHydrator {
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
+        allowGroupChatInvitesFrom: actor.allowGroupChatInvitesFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: parseDate(actor.createdAt),
         priorityNotifications: actor.priorityNotifications,

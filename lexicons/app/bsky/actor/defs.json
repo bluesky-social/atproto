@@ -160,6 +160,10 @@
         "allowIncoming": {
           "type": "string",
           "knownValues": ["all", "none", "following"]
+        },
+        "allowGroupInvites": {
+          "type": "string",
+          "knownValues": ["all", "none", "following"]
         }
       }
     },

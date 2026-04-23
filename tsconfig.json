@@ -46,7 +46,6 @@
     { "path": "./packages/oauth/oauth-client-node" },
     { "path": "./packages/oauth/oauth-provider" },
     { "path": "./packages/oauth/oauth-provider-api" },
-    { "path": "./packages/oauth/oauth-provider-frontend" },
     { "path": "./packages/oauth/oauth-provider-ui" },
     { "path": "./packages/oauth/oauth-scopes" },
     { "path": "./packages/oauth/oauth-types" },

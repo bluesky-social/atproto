@@ -1,0 +1,31 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.group.getGroupPublicInfo",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Get public information about a group from an join link.",
+      "errors": [{ "name": "InvalidCode" }],
+      "parameters": {
+        "type": "params",
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["group"],
+          "properties": {
+            "group": {
+              "type": "ref",
+              "ref": "chat.bsky.group.defs#groupPublicView"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,21 @@
 # @atproto/oauth-provider-ui
 
+## 0.5.1
+
+### Patch Changes
+
+- [#4873](https://github.com/bluesky-social/atproto/pull/4873) [`84eb5ed`](https://github.com/bluesky-social/atproto/commit/84eb5ed95d145870a85ea380df3edf6c591c6310) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix reset password flow
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4820](https://github.com/bluesky-social/atproto/pull/4820) [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Unify account management and authorization pages into a signle package
+
+### Patch Changes
+
+- [#4820](https://github.com/bluesky-social/atproto/pull/4820) [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Account management interface improvements
+
 ## 0.4.3
 
 ### Patch Changes
