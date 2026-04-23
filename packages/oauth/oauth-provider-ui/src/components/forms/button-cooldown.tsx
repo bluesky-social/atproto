@@ -18,7 +18,7 @@ export function ButtonCooldown({
   // button
   children,
   onClick,
-  disabled,
+  disabled = false,
   className,
   ...props
 }: ButtonCooldownProps) {
@@ -29,7 +29,7 @@ export function ButtonCooldown({
   })
   const [isHovered, setIsHovered] = useState(false)
   const remainingSeconds = Math.ceil(action.remaining)
-  const isDisabledByCooldown = action.disabled
+  const isCoolingDown = !disabled && action.disabled
 
   return (
     <div
@@ -37,18 +37,18 @@ export function ButtonCooldown({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Popover.Root open={isDisabledByCooldown && isHovered}>
+      <Popover.Root open={isCoolingDown && isHovered}>
         <Popover.Trigger asChild>
           <Button
             onClick={action.trigger}
-            disabled={isDisabledByCooldown || disabled}
+            disabled={isCoolingDown || disabled}
             className={clsx('relative pr-9', className)}
             aria-label={
-              isDisabledByCooldown
+              isCoolingDown
                 ? t`Please wait ${remainingSeconds} seconds before trying again.`
                 : undefined
             }
-            aria-live={isDisabledByCooldown ? 'polite' : undefined}
+            aria-live={isCoolingDown ? 'polite' : undefined}
             aria-atomic="true"
             {...props}
           >
@@ -58,7 +58,7 @@ export function ButtonCooldown({
               startAngle={-90}
               className={clsx(
                 'absolute right-3 top-1/2 inline-block -translate-y-1/2 transform transition-opacity',
-                isDisabledByCooldown ? 'opacity-100' : 'opacity-0',
+                isCoolingDown ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden="true"
             />

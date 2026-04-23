@@ -102,9 +102,7 @@ export function NotificationsProvider({
 
   return (
     <ToastBase.Provider swipeDirection={swipeDirection} duration={0} {...props}>
-      <NotificationsContext.Provider value={value}>
-        {children}
-      </NotificationsContext.Provider>
+      <NotificationsContext value={value}>{children}</NotificationsContext>
 
       {notifications.map(
         ({ id, handler, options: { description, title, variant } }) => (

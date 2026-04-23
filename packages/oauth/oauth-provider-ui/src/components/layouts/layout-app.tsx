@@ -15,8 +15,7 @@ export type LayoutAppProps = {
 export function LayoutApp({ children, header, title }: LayoutAppProps) {
   const { _ } = useLingui()
   const { logo, name, links } = useCustomizationData()
-  const titleString =
-    typeof title === 'string' ? title : title ? _(title) : name
+  const titleString = typeof title === 'object' ? _(title) : title ?? name
 
   return (
     <div className="flex min-h-dvh w-full flex-col">
@@ -29,7 +28,7 @@ export function LayoutApp({ children, header, title }: LayoutAppProps) {
               alt={name || _(msg`Logo`)}
               className="mr-4 h-6 object-contain object-left"
             />
-            {titleString || name}
+            {titleString ?? name}
           </h1>
         )}
 

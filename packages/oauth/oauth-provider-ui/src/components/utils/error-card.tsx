@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useErrorMessage } from '#/hooks/use-error-message.ts'
 import { Api } from '#/lib/api.ts'
 import { JsonErrorResponse } from '#/lib/json-client.ts'
-import { Admonition } from './admonition.tsx'
+import { Action, Admonition } from './admonition.tsx'
 
 export type ErrorCardProps = {
   error: unknown
@@ -17,6 +17,32 @@ export function ErrorCard({ error, reset }: ErrorCardProps) {
 
   const errorMessage = useErrorMessage(error)
 
+  useEffect(() => {
+    // For debugging purposes
+    console.warn('Displayed error details:', error)
+
+    // Reset the input count when the error changes
+    setInputCount(0)
+  }, [error])
+
+  return (
+    <Admonition
+      role="alert"
+      onClick={() => setInputCount((c) => c + 1)}
+      title={errorMessage}
+      append={showDetails && <ErrorDetails error={error} />}
+      action={
+        reset != null && (
+          <Action onClick={() => reset()}>
+            <Trans>Retry</Trans>
+          </Action>
+        )
+      }
+    />
+  )
+}
+
+function ErrorDetails({ error }: { error: unknown }) {
   const parsedError = useMemo(
     () =>
       error instanceof JsonErrorResponse
@@ -27,56 +53,21 @@ export function ErrorCard({ error, reset }: ErrorCardProps) {
     [error],
   )
 
-  useEffect(() => {
-    // For debugging purposes
-    console.warn('Displayed error details:', parsedError)
+  return parsedError instanceof JsonErrorResponse ? (
+    <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
+      <dt className="font-semibold">
+        <Trans>Code</Trans>
+      </dt>
+      <dd>
+        <code>{parsedError.error}</code>
+      </dd>
 
-    // Reset the input count when the error changes
-    setInputCount(0)
-  }, [parsedError])
-
-  return (
-    <Admonition
-      onClick={(event) => {
-        if (!event.defaultPrevented) {
-          setInputCount((c) => c + 1)
-        }
-      }}
-      role="alert"
-      title={errorMessage}
-      action={
-        reset != null
-          ? {
-              children: <Trans>Retry</Trans>,
-              onClick: (event) => {
-                if (!event.defaultPrevented) {
-                  event.preventDefault()
-                  reset()
-                }
-              },
-            }
-          : undefined
-      }
-      append={
-        showDetails &&
-        (parsedError instanceof JsonErrorResponse ? (
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
-            <dt className="font-semibold">
-              <Trans>Code</Trans>
-            </dt>
-            <dd>
-              <code>{parsedError.error}</code>
-            </dd>
-
-            <dt className="font-semibold">
-              <Trans>Description</Trans>
-            </dt>
-            <dd>{parsedError.description}</dd>
-          </dl>
-        ) : (
-          <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
-        ))
-      }
-    />
+      <dt className="font-semibold">
+        <Trans>Description</Trans>
+      </dt>
+      <dd>{parsedError.description}</dd>
+    </dl>
+  ) : (
+    <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
   )
 }

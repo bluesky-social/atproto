@@ -1,6 +1,7 @@
 import { JSX, ReactNode, createContext, useMemo } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Override } from '#/lib/util.ts'
+import { useFormContext } from './form-card'
 
 export type FieldsetContextValue = {
   disabled: boolean
@@ -22,14 +23,17 @@ export type FormFieldProps = Override<
 export function FormField({
   label,
   children,
-  disabled,
+  disabled: disabledProp = false,
   ...props
 }: FormFieldProps) {
   const labelId = useRandomString({ prefix: 'form-field-' })
+  const formContext = useFormContext()
 
-  const contextValue = useMemo(
+  const disabled = formContext.disabled || disabledProp
+
+  const contextValue = useMemo<FieldsetContextValue>(
     () => ({
-      disabled: disabled ?? false,
+      disabled,
       labelId: label ? labelId : undefined,
     }),
     [disabled, label, labelId],

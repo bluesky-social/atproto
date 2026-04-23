@@ -1,5 +1,6 @@
 import { Trans } from '@lingui/react/macro'
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react'
+import { useState } from 'react'
 import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
 import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
@@ -10,6 +11,7 @@ import {
 } from '#/data/password.ts'
 
 export function Page() {
+  const [success, setSuccess] = useState(false)
   const { account } = useAuthenticatedSession()
 
   const { email } = account
@@ -41,6 +43,7 @@ export function Page() {
         }}
         cooldownSeconds={30}
         loading={resetPasswordRequest.isPending}
+        disabled={success}
         className="max-w-full"
       >
         <PaperPlaneTiltIcon aria-hidden className="mr-2" weight="bold" />
@@ -50,9 +53,10 @@ export function Page() {
       </ButtonCooldown>
 
       <ResetPasswordConfirmForm
-        disabled={resetPasswordConfirm.isPending}
+        disabled={success || resetPasswordConfirm.isPending}
         onSubmit={async (data) => {
           await resetPasswordConfirm.mutateAsync(data)
+          setSuccess(true)
         }}
       />
     </div>
