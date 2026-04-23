@@ -17,18 +17,17 @@ export interface NotificationHandler {
   close(): void
 }
 
-const dummyHandler: NotificationHandler = Object.freeze({
-  update() {},
-  close() {},
-})
-
 export type NotificationsValue = {
   notify(options: NotificationOptions): NotificationHandler
 }
 
 const NotificationsContext = createContext<NotificationsValue>({
-  notify: () => dummyHandler,
+  notify: (options) => {
+    console.warn('Notification triggered without a provider:', options)
+    return { update() {}, close() {} }
+  },
 })
+NotificationsContext.displayName = 'NotificationsContext'
 
 const borderColors: Record<Variant, string> = {
   success: 'border-success-200 dark:border-success-900',

@@ -87,6 +87,7 @@ export type AdmonitionContextValue = {
 export const AdmonitionContext = createContext<AdmonitionContextValue>({
   variant: 'info',
 })
+AdmonitionContext.displayName = 'AdmonitionContext'
 
 export function Card({
   role,
