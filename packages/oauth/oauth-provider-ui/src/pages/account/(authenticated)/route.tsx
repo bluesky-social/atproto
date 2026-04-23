@@ -20,10 +20,10 @@ import {
   LayoutPage,
   LayoutPageLink,
 } from '#/components/layouts/layout-page.tsx'
-import { AuthenticationProvider } from '#/contexts/authentication'
-import { useSessionContext } from '#/contexts/session'
+import { AuthenticationProvider } from '#/contexts/authentication.tsx'
+import { useSessionContext } from '#/contexts/session.tsx'
 import { Explicit } from '#/lib/util.ts'
-import { RootRoute } from '#/routes/account.tsx'
+import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
 import { Page as AccountOAuthPage } from './apps/page.tsx'
 import { Page as AccountDevicesPage } from './devices/page.tsx'
@@ -80,7 +80,7 @@ const DEFAULT_PAGES = {
   },
 } satisfies SubPages
 
-export function createRoutes<T extends `/${string}`>(
+export function buildRoutes<T extends `/${string}`>(
   path: T,
   customPages?: SubPages,
 ) {

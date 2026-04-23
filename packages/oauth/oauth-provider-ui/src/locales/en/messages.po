@@ -25,31 +25,31 @@ msgstr "{deltaHours} hours ago"
 msgid "{deltaMinutes} minutes ago"
 msgstr "{deltaMinutes} minutes ago"
 
-#: src/routes/account/(authenticated)/about/page.tsx:136
+#: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT Protocol</0> — Technical documentation for developers"
 
-#: src/routes/account/(authenticated)/about/page.tsx:128
+#: src/pages/account/(authenticated)/about/page.tsx:128
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr "<0>Bluesky Social</0> — General information about the network"
 
-#: src/routes/account/(authenticated)/about/page.tsx:119
+#: src/pages/account/(authenticated)/about/page.tsx:119
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 
-#: src/routes/account/(authenticated)/about/page.tsx:84
+#: src/pages/account/(authenticated)/about/page.tsx:84
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
 msgstr "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
 
-#: src/routes/account/(authenticated)/about/page.tsx:24
+#: src/pages/account/(authenticated)/about/page.tsx:24
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
 msgstr "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
 
-#: src/routes/account/(authenticated)/about/page.tsx:13
+#: src/pages/account/(authenticated)/about/page.tsx:13
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
 msgstr "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
 
-#: src/routes/account/(authenticated)/about/page.tsx:51
+#: src/pages/account/(authenticated)/about/page.tsx:51
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 
@@ -77,11 +77,11 @@ msgstr "A second authentication factor is required"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "A service controlled by <0>{domain}</0>"
 
-#: src/routes/account/(authenticated)/route.tsx:77
+#: src/pages/account/(authenticated)/route.tsx:77
 msgid "About"
 msgstr "About"
 
-#: src/routes/account/(authenticated)/route.tsx:50
+#: src/pages/account/(authenticated)/route.tsx:50
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Account"
@@ -138,11 +138,11 @@ msgstr "Any method"
 msgid "Any service"
 msgstr "Any service"
 
-#: src/routes/account/(authenticated)/route.tsx:63
+#: src/pages/account/(authenticated)/route.tsx:63
 msgid "Apps"
 msgstr "Apps"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:59
+#: src/pages/account/(authenticated)/apps/page.tsx:59
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 
@@ -164,7 +164,7 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/routes/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:131
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
@@ -194,7 +194,7 @@ msgstr "Bluesky App services"
 msgid "Bluesky Chat services"
 msgstr "Bluesky Chat services"
 
-#: src/account-page.tsx:33
+#: src/pages/router.tsx:20
 msgid "Branding"
 msgstr "Branding"
 
@@ -219,7 +219,7 @@ msgstr "Call"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:120
+#: src/pages/account/(authenticated)/devices/page.tsx:120
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
@@ -227,7 +227,7 @@ msgstr "Cannot remove current device"
 msgid "Change your <0>@handle</0>"
 msgstr "Change your <0>@handle</0>"
 
-#: src/routes/account/(authenticated)/route.tsx:71
+#: src/pages/account/(authenticated)/route.tsx:71
 msgid "Change your account password"
 msgstr "Change your account password"
 
@@ -314,7 +314,7 @@ msgstr "Description"
 msgid "Details"
 msgstr "Details"
 
-#: src/routes/account/(authenticated)/route.tsx:56
+#: src/pages/account/(authenticated)/route.tsx:56
 msgid "Devices"
 msgstr "Devices"
 
@@ -370,12 +370,12 @@ msgstr "Expand details"
 msgid "Extra"
 msgstr "Extra"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:34
-#: src/routes/account/(authenticated)/apps/page.tsx:35
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr "Failed to load connected apps"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:94
+#: src/pages/account/(authenticated)/devices/page.tsx:94
 msgid "Failed to remove device"
 msgstr "Failed to remove device"
 
@@ -387,7 +387,7 @@ msgstr "Failed to request password reset"
 msgid "Failed to reset password"
 msgstr "Failed to reset password"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:116
+#: src/pages/account/(authenticated)/apps/page.tsx:116
 msgid "Failed to revoke access"
 msgstr "Failed to revoke access"
 
@@ -436,7 +436,7 @@ msgstr "Invalid"
 msgid "Invite code"
 msgstr "Invite code"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:69
+#: src/pages/account/(authenticated)/apps/page.tsx:69
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
 
@@ -449,12 +449,12 @@ msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" 
 msgid "just now"
 msgstr "just now"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:140
+#: src/pages/account/(authenticated)/apps/page.tsx:140
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Last accessed <0/>"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:110
+#: src/pages/account/(authenticated)/devices/page.tsx:110
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Last seen {lastUsedAgo}"
@@ -475,7 +475,7 @@ msgstr "Login to account that is not listed"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:63
+#: src/pages/account/(authenticated)/devices/page.tsx:63
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
@@ -487,7 +487,7 @@ msgstr "loopback"
 msgid "Make visible"
 msgstr "Make visible"
 
-#: src/routes/account/(authenticated)/route.tsx:64
+#: src/pages/account/(authenticated)/route.tsx:64
 msgid "Manage applications that have access to your account"
 msgstr "Manage applications that have access to your account"
 
@@ -495,7 +495,7 @@ msgstr "Manage applications that have access to your account"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Manage your <0>full identity</0> including your <1>@handle</1>"
 
-#: src/routes/account/(authenticated)/route.tsx:57
+#: src/pages/account/(authenticated)/route.tsx:57
 msgid "Manage your active sessions"
 msgstr "Manage your active sessions"
 
@@ -515,7 +515,7 @@ msgstr "Missing"
 msgid "Moderate"
 msgstr "Moderate"
 
-#: src/routes/account/(authenticated)/route.tsx:140
+#: src/pages/account/(authenticated)/route.tsx:140
 msgid "My Atmosphere Account"
 msgstr "My Atmosphere Account"
 
@@ -529,7 +529,7 @@ msgstr "New password"
 msgid "Next"
 msgstr "Next"
 
-#: src/routes/account/(authenticated)/password/page.tsx:21
+#: src/pages/account/(authenticated)/password/page.tsx:21
 msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "No email associated with this account. Password reset is unavailable."
@@ -542,7 +542,7 @@ msgstr "Okay"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
-#: src/routes/account/(authenticated)/route.tsx:70
+#: src/pages/account/(authenticated)/route.tsx:70
 #: src/components/sign-up-account-form.tsx:128
 #: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
@@ -645,8 +645,8 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:30
-#: src/routes/account/(authenticated)/apps/page.tsx:31
+#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:31
 #: src/components/utils/error-card.tsx:37
 msgid "Retry"
 msgstr "Retry"
@@ -655,7 +655,7 @@ msgstr "Retry"
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:151
+#: src/pages/account/(authenticated)/apps/page.tsx:151
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Revoke access"
@@ -672,7 +672,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/routes/account/(authenticated)/password/page.tsx:51
+#: src/pages/account/(authenticated)/password/page.tsx:51
 msgctxt "PasswordReset"
 msgid "Send reset code"
 msgstr "Send reset code"
@@ -697,7 +697,7 @@ msgstr "Sign in as {0}"
 msgid "Sign in as..."
 msgstr "Sign in as..."
 
-#: src/routes/account/(authenticated)/devices/page.tsx:123
+#: src/pages/account/(authenticated)/devices/page.tsx:123
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
@@ -724,11 +724,11 @@ msgstr "Strong"
 msgid "Submit"
 msgstr "Submit"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:88
 msgid "Successfully removed device"
 msgstr "Successfully removed device"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:109
+#: src/pages/account/(authenticated)/apps/page.tsx:109
 msgid "Successfully revoked access"
 msgstr "Successfully revoked access"
 
@@ -790,7 +790,7 @@ msgstr "The handle is invalid"
 msgid "The invite code is not valid"
 msgstr "The invite code is not valid"
 
-#: src/routes/account/(authenticated)/apps/page.tsx:43
+#: src/pages/account/(authenticated)/apps/page.tsx:43
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
@@ -814,7 +814,7 @@ msgstr "This handle is reserved"
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
-#: src/routes/account/(authenticated)/password/page.tsx:34
+#: src/pages/account/(authenticated)/password/page.tsx:34
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
@@ -836,7 +836,7 @@ msgstr "Unauthorized"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:105
+#: src/pages/account/(authenticated)/devices/page.tsx:105
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
@@ -889,11 +889,11 @@ msgstr "Weak"
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/routes/account/(authenticated)/page.tsx:30
+#: src/pages/account/(authenticated)/page.tsx:30
 msgid "What does this mean?"
 msgstr "What does this mean?"
 
-#: src/routes/account/(authenticated)/route.tsx:79
+#: src/pages/account/(authenticated)/route.tsx:79
 msgid "What is an Atmosphere Account?"
 msgstr "What is an Atmosphere Account?"
 
@@ -926,11 +926,11 @@ msgstr "You will receive an email with a \"reset code\". Enter that code here th
 msgid "Your account"
 msgstr "Your account"
 
-#: src/routes/account/(authenticated)/devices/page.tsx:42
+#: src/pages/account/(authenticated)/devices/page.tsx:42
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
-#: src/routes/account/(authenticated)/page.tsx:23
+#: src/pages/account/(authenticated)/page.tsx:23
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Your Atmosphere account is hosted by <0/>."
 

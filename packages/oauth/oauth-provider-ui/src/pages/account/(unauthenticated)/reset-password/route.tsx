@@ -2,7 +2,7 @@ import { createRoute, useRouter } from '@tanstack/react-router'
 import { ErrorView } from '#/components/error-view'
 import { ResetPasswordView } from '#/components/reset-password-view'
 import { useSessionContext } from '#/contexts/session'
-import { RootRoute } from '#/routes/account.tsx'
+import { RootRoute } from '../../../route.tsx'
 
 export const Route = createRoute({
   getParentRoute: () => RootRoute,
