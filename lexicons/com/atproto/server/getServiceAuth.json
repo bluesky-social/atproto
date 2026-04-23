@@ -14,6 +14,10 @@
             "format": "did",
             "description": "The DID of the service that the token will be used to authenticate with"
           },
+          "aud_svc": {
+            "type": "string",
+            "description": "The id of the service endpoint under the 'aud' DID to authenticate with. In other words, the part after '#' in the DID document service endpoint 'id'. For sessions constrained to specific 'rpc' permissions, this field is required to match the name part of the 'aud' field on the permission."
+          },
           "exp": {
             "type": "integer",
             "description": "The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope."
