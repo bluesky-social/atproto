@@ -1,12 +1,21 @@
-import { expect, test } from 'vitest'
-import { LexValue, parseCid } from '@atproto/lex-data'
+import { describe, expect, it, test } from 'vitest'
+import { LexValue, lexEquals, parseCid } from '@atproto/lex-data'
+import { jsonToLex } from './json-to-lex.js'
 import { JsonValue } from './json.js'
+import { lexParse, lexParseJsonBytes } from './lex-parse.js'
+import { lexStringify } from './lex-stringify.js'
+import { lexToJson } from './lex-to-json.js'
 
-export const validVectors: Array<{
+// This file defined test vectors used across multiple test suites. It also
+// contains some cross-cutting tests that validate the consistency of the
+// various transformations between JSON and Lex formats, ensuring that the
+// round-trip conversions work as expected.
+
+describe.each<{
   name: string
   json: JsonValue
   lex: LexValue
-}> = [
+}>([
   {
     name: 'pure json',
     json: {
@@ -246,27 +255,124 @@ export const validVectors: Array<{
       b: 'valueB',
     },
   },
-]
+])('valid: $name', ({ json, lex }) => {
+  describe(lexParse, () => {
+    it('should parse JSON to LexValue', () => {
+      const parseResult = lexParse(JSON.stringify(json))
+      expect(lexEquals(parseResult, lex)).toBe(true)
+    })
 
-export const acceptableVectors: Array<{
-  note: string
+    it('should parse JSON to LexValue in strict mode', () => {
+      expect(
+        lexEquals(lex, lexParse(JSON.stringify(json), { strict: true })),
+      ).toBe(true)
+    })
+
+    it('should parse JSON to LexValue in non-strict mode', () => {
+      expect(
+        lexEquals(lex, lexParse(JSON.stringify(json), { strict: false })),
+      ).toBe(true)
+    })
+  })
+
+  describe(lexParseJsonBytes, () => {
+    it('should parse JSON bytes to LexValue', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json, undefined, 4))
+      expect(
+        lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
+      ).toBe(true)
+    })
+
+    it('should parse JSON bytes to LexValue in non-strict mode', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json))
+      expect(
+        lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
+      ).toBe(true)
+    })
+
+    it('should parse JSON bytes to LexValue in non-strict mode', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json))
+      expect(
+        lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: false })),
+      ).toBe(true)
+    })
+  })
+
+  describe(jsonToLex, () => {
+    it('should convert JSON to LexValue in strict mode', () => {
+      expect(lexEquals(jsonToLex(json, { strict: true }), lex)).toBe(true)
+      expect(lexEquals(lex, jsonToLex(json, { strict: true }))).toBe(true)
+    })
+
+    it('should convert JSON to LexValue in non-strict mode', () => {
+      expect(lexEquals(jsonToLex(json, { strict: false }), lex)).toBe(true)
+      expect(lexEquals(lex, jsonToLex(json, { strict: false }))).toBe(true)
+    })
+  })
+
+  describe(lexToJson, () => {
+    it('should convert LexValue to JSON', () => {
+      expect(lexToJson(lex)).toStrictEqual(json)
+    })
+  })
+
+  describe(lexEquals, () => {
+    it('should consider json equal to itself', () => {
+      expect(lexEquals(json, structuredClone(json))).toBe(true)
+      expect(lexEquals(structuredClone(json), json)).toBe(true)
+    })
+  })
+
+  describe(lexStringify, () => {
+    it('should stringify LexValue to JSON string', () => {
+      const stringifyResult = lexStringify(lex)
+      const composeResult = JSON.stringify(json)
+
+      // Both should parse to the similar value (ignoring whitespace
+      // differences, object key order, etc.)
+      expect(JSON.parse(stringifyResult)).toStrictEqual(
+        JSON.parse(composeResult),
+      )
+    })
+  })
+
+  describe('round-trip transformations', () => {
+    test('JsonValue > JSON (string) > LexValue > JsonValue', () => {
+      const jsonString = JSON.stringify(json, undefined, 4)
+      expect(lexToJson(lexParse(jsonString))).toStrictEqual(json)
+    })
+
+    test('JsonValue > JSON (string) > JSON (binary) > LexValue > JsonValue', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json, undefined, 4))
+      expect(lexToJson(lexParseJsonBytes(jsonBytes))).toStrictEqual(json)
+    })
+
+    test('LexValue > JsonValue > LexValue', () => {
+      expect(lexEquals(jsonToLex(lexToJson(lex)), lex)).toBe(true)
+      expect(lexEquals(lex, jsonToLex(lexToJson(lex)))).toBe(true)
+    })
+  })
+})
+
+describe.each<{
+  name: string
   json: JsonValue
-}> = [
+}>([
   {
-    note: 'non string $type',
+    name: 'non string $type',
     json: {
       $type: 3124,
       foo: 'bar',
     },
   },
   {
-    note: 'object with float values',
+    name: 'object with float values',
     json: {
       a: 1.5,
     },
   },
   {
-    note: 'blob with wrong field type',
+    name: 'blob with wrong field type',
     json: {
       $type: 'blob',
       ref: 'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
@@ -275,7 +381,7 @@ export const acceptableVectors: Array<{
     },
   },
   {
-    note: 'blob with missing key',
+    name: 'blob with missing key',
     json: {
       $type: 'blob',
       mimeType: 'image/jpeg',
@@ -283,7 +389,7 @@ export const acceptableVectors: Array<{
     },
   },
   {
-    note: 'blob with extra fields',
+    name: 'blob with extra fields',
     json: {
       $type: 'blob',
       ref: {
@@ -295,42 +401,42 @@ export const acceptableVectors: Array<{
     },
   },
   {
-    note: 'bytes with extra fields',
+    name: 'bytes with extra fields',
     json: {
       $bytes: 'nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0',
       other: 'blah',
     },
   },
   {
-    note: 'link with extra fields',
+    name: 'link with extra fields',
     json: {
       $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
       other: 'blah',
     },
   },
   {
-    note: '$bytes and $link',
+    name: '$bytes and $link',
     json: {
       $bytes: 'nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0',
       $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
     },
   },
   {
-    note: '$bytes and $type',
+    name: '$bytes and $type',
     json: {
       $type: 'bytes',
       $bytes: 'nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0',
     },
   },
   {
-    note: '$link and $type',
+    name: '$link and $type',
     json: {
       $type: 'blob',
       $link: 'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
     },
   },
   {
-    note: 'blob with CBOR CID ref',
+    name: 'blob with CBOR CID ref',
     json: {
       $type: 'blob',
       ref: {
@@ -341,50 +447,126 @@ export const acceptableVectors: Array<{
     },
   },
   {
-    note: 'object with empty $type',
+    name: 'object with empty $type',
     json: {
       $type: '',
       foo: 'bar',
     },
   },
-]
+])('acceptable: $name', ({ json }) => {
+  describe(lexParse, () => {
+    it('should throw in strict mode', () => {
+      expect(() => lexParse(JSON.stringify(json), { strict: true })).toThrow()
+    })
 
-export const invalidVectors: Array<{
-  note: string
+    it('should not throw in non-strict mode', () => {
+      expect(() =>
+        lexParse(JSON.stringify(json), { strict: false }),
+      ).not.toThrow()
+    })
+  })
+
+  describe(lexParseJsonBytes, () => {
+    it('should throw in strict mode', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json))
+      expect(() => lexParseJsonBytes(jsonBytes, { strict: true })).toThrow()
+    })
+
+    it('should not throw in non-strict mode', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json))
+      expect(() =>
+        lexParseJsonBytes(jsonBytes, { strict: false }),
+      ).not.toThrow()
+    })
+  })
+
+  describe(jsonToLex, () => {
+    it('should throw in strict mode', () => {
+      expect(() => jsonToLex(json, { strict: true })).toThrow()
+    })
+
+    it('should not throw in non-strict mode', () => {
+      expect(() => jsonToLex(json, { strict: false })).not.toThrow()
+    })
+  })
+
+  describe(lexStringify, () => {
+    it('should not throw', () => {
+      expect(() =>
+        lexStringify(jsonToLex(json, { strict: false })),
+      ).not.toThrow()
+    })
+  })
+
+  describe('round-trip consistency', () => {
+    test('JsonValue > LexValue > JsonValue', () => {
+      expect(lexToJson(jsonToLex(json))).toStrictEqual(json)
+    })
+  })
+})
+
+describe.each<{
+  name: string
   json: JsonValue
-}> = [
+}>([
   {
-    note: 'bytes with wrong field type',
+    name: 'bytes with wrong field type',
     json: {
       $bytes: [1, 2, 3],
     },
   },
   {
-    note: 'invalid base64 in $bytes',
+    name: 'invalid base64 in $bytes',
     json: {
       $bytes: '🐻',
     },
   },
   {
-    note: 'link with wrong field type',
+    name: 'link with wrong field type',
     json: {
       $link: 1234,
     },
   },
   {
-    note: 'link with bogus CID',
+    name: 'link with bogus CID',
     json: {
       $link: '.',
     },
   },
-]
+])('invalid: $name', ({ json }) => {
+  describe(lexParse, () => {
+    it('should throw in strict mode', () => {
+      expect(() => lexParse(JSON.stringify(json), { strict: true })).toThrow()
+    })
 
-test('validVectors has entries', () => {
-  expect(validVectors.length).toBeGreaterThan(0)
-})
-test('acceptableVectors has entries', () => {
-  expect(acceptableVectors.length).toBeGreaterThan(0)
-})
-test('invalidVectors has entries', () => {
-  expect(invalidVectors.length).toBeGreaterThan(0)
+    it('should throw in non-strict mode', () => {
+      expect(() =>
+        lexParse(JSON.stringify(json), { strict: false }),
+      ).not.toThrow()
+    })
+  })
+
+  describe(lexParseJsonBytes, () => {
+    it('should throw in strict mode', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json))
+      expect(() => lexParseJsonBytes(jsonBytes, { strict: true })).toThrow()
+    })
+
+    it('should not throw in non-strict mode', () => {
+      const jsonBytes = Buffer.from(JSON.stringify(json))
+      expect(() =>
+        lexParseJsonBytes(jsonBytes, { strict: false }),
+      ).not.toThrow()
+    })
+  })
+
+  describe(jsonToLex, () => {
+    it('should throw in strict mode', () => {
+      expect(() => jsonToLex(json, { strict: true })).toThrow()
+    })
+
+    it('should not throw in non-strict mode', () => {
+      expect(() => jsonToLex(json, { strict: false })).not.toThrow()
+    })
+  })
 })

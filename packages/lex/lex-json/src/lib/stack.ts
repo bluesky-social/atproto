@@ -5,10 +5,6 @@
 // The main purpose of this module is to support the implementation of
 // `iterativeTransform` and `jsonStringifyDeep`, which need to traverse and
 // transform deeply nested structures without hitting call stack limits.
-//
-// An added benefit of using a custom stack implementation is that it can
-// provide informative error messages when the input data is invalid (e.g. too
-// deeply nested, contains circular references, etc.).
 
 import {
   MAX_CBOR_CONTAINER_LEN,
@@ -75,8 +71,9 @@ export type StackOptions = {
  * checking.
  *
  * @internal
+ * @typeParam TCustom - A type for custom frames that can be pushed onto the stack
  */
-export class Stack<TCustom extends NonNullable<unknown> = never> {
+export class Stack<TCustom = never> {
   public readonly root: StackFrame
 
   private readonly stack: (StackFrame | TCustom)[]
@@ -209,9 +206,15 @@ export function isObjectFrame<T extends { type: string }>(
   return frame.type === 'object'
 }
 
+/** @internal */
 export function getCopy(frame: ArrayFrame): unknown[]
 export function getCopy(frame: ObjectFrame): Record<string, unknown>
 export function getCopy(frame: StackFrame): unknown {
+  // @NOTE If ArrayFrame and ObjectFrame were implemented as classes, this
+  // function could be implemented as a method on the base class, and we could
+  // avoid the need for type guards. Benchmarks have shown that the type guards
+  // based on the "type" property are faster than using "instanceof" checks on
+  // class instances, so we use the functional approach here.
   if (isArrayFrame(frame)) {
     return (frame.copy ??= performCopy(frame.parent, [...frame.input]))
   } else {
