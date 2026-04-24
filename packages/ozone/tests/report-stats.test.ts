@@ -434,7 +434,7 @@ describe('report-stats', () => {
 
       // Civic group has no seeded reports: all counts should be 0
       const stats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS.Civic
+        reportTypes: REPORT_TYPE_GROUPS.Civic,
       })
       expect(stats.inboundCount).toBe(0)
       expect(stats.pendingCount).toBe(0)
