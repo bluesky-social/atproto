@@ -38,14 +38,22 @@ export class ServerMailer {
     })
   }
 
-  async sendConfirmEmail(params: { token: string }, mailOpts: Mail.Options) {
+  async sendConfirmEmail(
+    params: { token: string; locale?: string },
+    mailOpts: Mail.Options,
+  ) {
+    // @TODO handle locale in the template
     await this.sendTemplate('confirmEmail', params, {
       subject: 'Email Confirmation',
       ...mailOpts,
     })
   }
 
-  async sendUpdateEmail(params: { token: string }, mailOpts: Mail.Options) {
+  async sendUpdateEmail(
+    params: { token: string; locale?: string },
+    mailOpts: Mail.Options,
+  ) {
+    // @TODO handle locale in the template
     await this.sendTemplate('updateEmail', params, {
       subject: 'Email Update Requested',
       ...mailOpts,

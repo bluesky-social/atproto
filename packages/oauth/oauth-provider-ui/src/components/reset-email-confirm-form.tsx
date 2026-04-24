@@ -5,42 +5,39 @@ import {
   FormCardAsyncProps,
 } from '#/components/forms/form-card-async.tsx'
 import { FormField } from '#/components/forms/form-field'
-import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { Override } from '#/lib/util.ts'
+import { InputEmailAddress } from './forms/input-email-address'
 
-export type ResetPasswordConfirmFormProps = Override<
+export type ResetEmailConfirmFormProps = Override<
   FormCardAsyncProps,
   {
-    onSubmit: (
-      data: {
-        token: string
-        password: string
-      },
-      signal: AbortSignal,
-    ) => void | PromiseLike<void>
+    onSubmit: (data: {
+      token: string
+      email: string
+    }) => void | PromiseLike<void>
   }
 >
 
-export function ResetPasswordConfirmForm({
+export function ResetEmailConfirmForm({
   onSubmit,
 
   // FormCardAsyncProps
   invalid,
   ...props
-}: ResetPasswordConfirmFormProps) {
-  const passwordRef = useRef<HTMLInputElement>(null)
+}: ResetEmailConfirmFormProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const [token, setToken] = useState<string | null>(null)
-  const [password, setPassword] = useState<string | undefined>(undefined)
+  const [email, setEmail] = useState<string | undefined>(undefined)
 
   return (
     <FormCardAsync
       {...props}
-      onSubmit={async (signal) => {
-        if (token && password) return onSubmit({ token, password }, signal)
+      onSubmit={async () => {
+        if (token && email) return onSubmit({ token, email })
       }}
-      invalid={invalid || !token || !password}
+      invalid={invalid || !token || !email}
     >
       <FormField label={<Trans>Reset code</Trans>}>
         <InputToken
@@ -51,19 +48,19 @@ export function ResetPasswordConfirmForm({
           onToken={(token) => {
             setToken(token)
             // Auto-focus next field when token is complete
-            if (token) passwordRef.current?.focus()
+            if (token) inputRef.current?.focus()
           }}
         />
       </FormField>
 
-      <FormField label={<Trans>New password</Trans>}>
-        <InputNewPassword
-          ref={passwordRef}
-          name="password"
+      <FormField label={<Trans>New email</Trans>}>
+        <InputEmailAddress
+          ref={inputRef}
+          name="email"
           enterKeyHint="done"
           required
-          password={password}
-          onPassword={setPassword}
+          value={email}
+          onEmail={setEmail}
         />
       </FormField>
     </FormCardAsync>

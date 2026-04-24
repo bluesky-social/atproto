@@ -41,6 +41,8 @@ import {
   TokenId,
   TokenInfo,
   TokenStore,
+  UpdateEmailConfirmInput,
+  UpdateEmailRequestInput,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
 import {
@@ -601,6 +603,66 @@ export class OAuthStore
   async findTokenByCode(code: Code): Promise<TokenInfo | null> {
     const row = await tokenHelper.findByQB(this.db, { code }).executeTakeFirst()
     return row ? this.toTokenInfo(row) : null
+  }
+
+  async updateEmailRequest({
+    locale,
+    sub,
+    email,
+  }: UpdateEmailRequestInput): Promise<void> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    const did = isDidString(sub) ? sub : null
+    assert(did, 'Invalid sub: not a valid DID string')
+
+    const accountRow = await accountHelper.getAccount(this.db, did, {
+      includeDeactivated: true,
+    })
+
+    if (!accountRow) throw new InvalidRequestError('Account not found')
+    if (accountRow.email && email && accountRow.email !== email) {
+      throw new InvalidRequestError(
+        'Email already associated with this account',
+      )
+    }
+    if (accountRow.email && !accountRow.emailConfirmedAt) {
+      throw new InvalidRequestError(
+        'Current email is not confirmed. Please confirm the current email before updating to a new one.',
+      )
+    }
+
+    // If the account doesn't have an associated email, we can allow the user to
+    // "set" their email by providing a valid email in the request.
+    const newEmail = accountRow.email ?? email
+    if (!newEmail) {
+      throw new InvalidRequestError('No email associated with this account')
+    }
+
+    // If the user is trying to change to a different email, we need to check if the new email is available
+    await this.verifyEmailAvailability(newEmail)
+
+    // @TODO Store & use the locale from the database:
+    // locale ??= (accountRow.locale ?? undefined)
+
+    if (accountRow.email && accountRow.emailConfirmedAt) {
+      const token = await this.accountManager.createEmailToken(
+        did,
+        'update_email',
+      )
+      await this.mailer.sendUpdateEmail({ token, locale }, { to: newEmail })
+    } else {
+      const token = await this.accountManager.createEmailToken(
+        did,
+        'confirm_email',
+      )
+      await this.mailer.sendConfirmEmail({ token, locale }, { to: newEmail })
+    }
+  }
+
+  async updateEmailConfirm(
+    data: UpdateEmailConfirmInput,
+  ): Promise<Account | null> {
+    data
+    throw new Error('Not implemented')
   }
 
   private async toTokenInfo(

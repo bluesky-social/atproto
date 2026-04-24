@@ -36,18 +36,26 @@ export type SessionContextType = {
 
   api: Api
 
+  /** @deprecated use api.fetch instead */
   doSignIn: (data: Omit<SignInInput, 'locale'>) => Promise<void>
+  /** @deprecated use api.fetch instead */
   doSignOut: (data: SignOutInput) => Promise<void>
+  /** @deprecated use api.fetch instead */
   doInitiatePasswordReset: (
     data: Omit<InitiatePasswordResetInput, 'locale'>,
   ) => Promise<void>
+  /** @deprecated use api.fetch instead */
   doConfirmResetPassword: (data: ConfirmResetPasswordInput) => Promise<void>
+  /** @deprecated use api.validateHandleAvailability() instead */
   doValidateNewHandle: (data: VerifyHandleAvailabilityInput) => Promise<void>
+  /** @deprecated use api.signUp() instead */
   doSignUp: (data: Omit<SignUpInput, 'locale'>) => Promise<void>
+  /** @deprecated use api.consent() instead */
   doConsent: (
     sub: string,
     scope?: string | undefined,
   ) => Promise<{ url: string }>
+  /** @deprecated use api.reject() instead */
   doReject: () => Promise<{ url: string }>
 }
 
@@ -136,10 +144,22 @@ export function SessionProvider({
     [setCurrent, setSessions],
   )
 
-  const removeSession = useCallback((sub: string) => {
-    setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
-    setCurrent((current) => (current === sub ? null : current))
-  }, [])
+  const removeSession = useCallback(
+    (sub: string | string[]) => {
+      if (Array.isArray(sub)) {
+        setSessions((sessions) =>
+          sessions.filter((s) => !sub.includes(s.account.sub)),
+        )
+        setCurrent((current) =>
+          current != null && sub.includes(current) ? null : current,
+        )
+      } else {
+        setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
+        setCurrent((current) => (current === sub ? null : current))
+      }
+    },
+    [setSessions, setCurrent],
+  )
 
   const api = useMemo(() => {
     return new Api({
@@ -156,68 +176,16 @@ export function SessionProvider({
         }
         throw err
       },
+      onFetchSuccess: {
+        '/sign-in': ({ json }) => upsertSession(json),
+        '/sign-up': ({ json }) => upsertSession(json),
+        '/sign-out': ({ input }) => removeSession(input.sub),
+      },
       headers: session?.ephemeralToken
         ? () => ({ Authorization: `Bearer ${session.ephemeralToken}` })
         : undefined,
     })
-  }, [session, showBoundary, setCurrent, notify, t])
-
-  const doSignIn = useCallback(
-    async (data: Omit<SignInInput, 'locale'>) => {
-      const response = await api.fetch('POST', '/sign-in', { ...data, locale })
-      upsertSession(response)
-    },
-    [api, locale, upsertSession],
-  )
-
-  const doInitiatePasswordReset = useCallback(
-    async (data: Omit<InitiatePasswordResetInput, 'locale'>) => {
-      await api.fetch('POST', '/reset-password-request', { ...data, locale })
-    },
-    [api, locale],
-  )
-
-  const doConfirmResetPassword = useCallback(
-    async (data: ConfirmResetPasswordInput) => {
-      await api.fetch('POST', '/reset-password-confirm', data)
-    },
-    [api],
-  )
-
-  const doValidateNewHandle = useCallback(
-    async (data: VerifyHandleAvailabilityInput) => {
-      await api.fetch('POST', '/verify-handle-availability', data)
-    },
-    [api],
-  )
-
-  const doSignUp = useCallback(
-    async (data: Omit<SignUpInput, 'locale'>) => {
-      const response = await api.fetch('POST', '/sign-up', { ...data, locale })
-      upsertSession(response)
-    },
-    [api, locale, upsertSession],
-  )
-
-  const doSignOut = useCallback(
-    async ({ sub }: SignOutInput) => {
-      await api.fetch('POST', '/sign-out', { sub })
-      setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
-      setCurrent((sessions) => (sessions === sub ? null : sessions))
-    },
-    [api],
-  )
-
-  const doConsent = useCallback(
-    async (sub: string, scope?: string) => {
-      return api.fetch('POST', '/consent', { sub, scope })
-    },
-    [api, sessions],
-  )
-
-  const doReject = useCallback(async () => {
-    return api.fetch('POST', '/reject', {})
-  }, [api])
+  }, [session, showBoundary, removeSession, upsertSession, notify, t])
 
   const value = useMemo<SessionContextType>(
     () => ({
@@ -227,29 +195,36 @@ export function SessionProvider({
       session,
       setSession,
 
-      doSignIn,
-      doSignOut,
-      doInitiatePasswordReset,
-      doConfirmResetPassword,
-      doValidateNewHandle,
-      doSignUp,
-      doConsent,
-      doReject,
+      // Deprecated helpers: Don't add new ones, use api.fetch(). Add
+      // specific methods to the API class if needed.
+      doSignIn: async (data: Omit<SignInInput, 'locale'>) => {
+        await api.signIn({ ...data, locale })
+      },
+      doSignOut: async ({ sub }: SignOutInput) => {
+        await api.signOut(sub)
+      },
+      doInitiatePasswordReset: async (
+        data: Omit<InitiatePasswordResetInput, 'locale'>,
+      ) => {
+        await api.initiatePasswordReset({ ...data, locale })
+      },
+      doConfirmResetPassword: async (data: ConfirmResetPasswordInput) => {
+        await api.confirmResetPassword(data)
+      },
+      doValidateNewHandle: async (data: VerifyHandleAvailabilityInput) => {
+        await api.validateHandleAvailability(data)
+      },
+      doSignUp: async (data: Omit<SignUpInput, 'locale'>) => {
+        await api.signUp({ ...data, locale })
+      },
+      doConsent: async (sub: string, scope?: string) => {
+        return api.consent(sub, scope)
+      },
+      doReject: async () => {
+        return api.fetch('POST', '/reject', {})
+      },
     }),
-    [
-      api,
-      sessions,
-      session,
-      setSession,
-      doSignIn,
-      doSignOut,
-      doInitiatePasswordReset,
-      doConfirmResetPassword,
-      doValidateNewHandle,
-      doSignUp,
-      doConsent,
-      doReject,
-    ],
+    [api, locale, sessions, session, setSession],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

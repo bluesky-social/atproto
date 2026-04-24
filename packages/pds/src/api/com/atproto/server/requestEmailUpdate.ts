@@ -50,8 +50,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('account does not have an email address')
       }
 
-      const tokenRequired = !!account.emailConfirmedAt
-      if (tokenRequired) {
+      const emailWasConfirmed = !!account.emailConfirmedAt
+      if (emailWasConfirmed) {
         const token = await ctx.accountManager.createEmailToken(
           did,
           'update_email',
@@ -62,7 +62,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          tokenRequired,
+          tokenRequired: emailWasConfirmed,
         },
       }
     },
