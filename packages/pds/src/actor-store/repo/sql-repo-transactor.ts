@@ -1,6 +1,7 @@
 import { chunkArray } from '@atproto/common'
 import { Cid, parseCid } from '@atproto/lex-data'
 import { BlockMap, CommitData, RepoStorage } from '@atproto/repo'
+import { StaleCommitError } from '../../repo/types'
 import { ActorDb, RepoBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
@@ -71,12 +72,17 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async applyCommit(commit: CommitData, isCreate?: boolean) {
-    await this.updateRoot(commit.cid, commit.rev, isCreate)
+    await this.updateRoot(commit.cid, commit.rev, isCreate, commit.since)
     await this.putMany(commit.newBlocks, commit.rev)
     await this.deleteMany(commit.removedCids.toList())
   }
 
-  async updateRoot(cid: Cid, rev: string, isCreate = false): Promise<void> {
+  async updateRoot(
+    cid: Cid,
+    rev: string,
+    isCreate = false,
+    prevRev?: string | null,
+  ): Promise<void> {
     if (isCreate) {
       await this.db.db
         .insertInto('repo_root')
@@ -88,14 +94,21 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
         })
         .execute()
     } else {
-      await this.db.db
+      let query = this.db.db
         .updateTable('repo_root')
         .set({
           cid: cid.toString(),
           rev: rev,
           indexedAt: this.now,
         })
-        .execute()
+      if (prevRev) {
+        query = query.where('rev', '=', prevRev)
+      }
+      const results = await query.execute()
+      const updated = results[0]?.numUpdatedRows ?? 0n
+      if (prevRev && updated < 1n) {
+        throw new StaleCommitError()
+      }
     }
   }
 

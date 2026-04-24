@@ -72,28 +72,36 @@ export default function (server: Server, ctx: AppContext) {
         rkey,
         swapCid: swapRecordCid,
       })
-      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const record = await actorTxn.record.getRecord(write.uri, null, true)
-        if (!record) {
-          return null // No-op if record already doesn't exist
-        }
+      const commit = await ctx.actorStore.transactRepo(
+        did,
+        async ({ store, transact }) => {
+          // Phase A — no lock held
+          const record = await store.record.getRecord(write.uri, null, true)
+          if (!record) {
+            return null // No-op if record already doesn't exist
+          }
 
-        const commit = await actorTxn.repo
-          .processWrites([write], swapCommitCid)
-          .catch((err) => {
-            if (
-              err instanceof BadCommitSwapError ||
-              err instanceof BadRecordSwapError
-            ) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
-            }
+          const precomputed = await store.repo
+            .prepareCommit([write], swapCommitCid)
+            .catch((err) => {
+              if (
+                err instanceof BadCommitSwapError ||
+                err instanceof BadRecordSwapError
+              ) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              } else {
+                throw err
+              }
+            })
+
+          // Phase B — SQLite txn, DB-only (no blobs to make permanent for deletes)
+          return transact(async (txn) => {
+            const commit = await txn.repo.applyPrecomputedWrites(precomputed, [write])
+            await ctx.sequencer.sequenceCommit(did, commit)
+            return commit
           })
-
-        await ctx.sequencer.sequenceCommit(did, commit)
-        return commit
-      })
+        },
+      )
 
       if (commit !== null) {
         await ctx.accountManager

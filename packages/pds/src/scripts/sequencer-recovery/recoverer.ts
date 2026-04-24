@@ -167,7 +167,7 @@ const processRepoCreation = async (
   await ctx.actorStore.transact(did, async (actorTxn) => {
     await actorTxn.repo.storage.applyCommit(commit, true)
     await actorTxn.repo.indexWrites(writes, commit.rev)
-    await actorTxn.repo.blob.processWriteBlobs(commit.rev, writes)
+    await actorTxn.repo.blob.processWriteBlobsInTxn(commit.rev, writes)
   })
   await trackNewAccount(ctx.recoveryDb, did)
 }

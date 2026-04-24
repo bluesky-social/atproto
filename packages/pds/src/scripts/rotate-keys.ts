@@ -92,7 +92,8 @@ const rotateKeysForRepos = async (
       let syncData: SyncEvtData
       try {
         syncData = await ctx.actorStore.transact(did, async (actorTxn) => {
-          await actorTxn.repo.processWrites([])
+          const commit = await actorTxn.repo.prepareCommit([])
+          await actorTxn.repo.applyPrecomputedWrites(commit, [])
           return actorTxn.repo.getSyncEventData()
         })
       } catch (err) {

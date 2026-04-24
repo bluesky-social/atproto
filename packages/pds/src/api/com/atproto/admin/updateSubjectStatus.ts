@@ -18,11 +18,12 @@ export default function (server: Server, ctx: AppContext) {
             await store.record.updateRecordTakedownStatus(uri, takedown)
           })
         } else if (com.atproto.admin.defs.repoBlobRef.$isTypeOf(subject)) {
+          const cid = parseCid(subject.cid)
           await ctx.actorStore.transact(subject.did, async (store) => {
-            await store.repo.blob.updateBlobTakedownStatus(
-              parseCid(subject.cid),
-              takedown,
-            )
+            await store.repo.blob.updateBlobTakedownStatus(cid, takedown)
+          })
+          await ctx.actorStore.read(subject.did, async (store) => {
+            await store.repo.blob.applyBlobTakedownToStore(cid, takedown)
           })
         } else {
           throw new InvalidRequestError(`Invalid subject (${subject.$type})`)

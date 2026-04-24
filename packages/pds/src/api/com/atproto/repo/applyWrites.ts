@@ -162,20 +162,32 @@ export default function (server: Server, ctx: AppContext) {
 
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 
-      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const commit = await actorTxn.repo
-          .processWrites(preparedWrites, swapCommitCid)
-          .catch((err) => {
-            if (err instanceof BadCommitSwapError) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
-            }
-          })
+      const commit = await ctx.actorStore.transactRepo(
+        did,
+        async ({ store, transact }) => {
+          // Phase A — no lock held
+          const precomputed = await store.repo
+            .prepareCommit(preparedWrites, swapCommitCid)
+            .catch((err) => {
+              if (err instanceof BadCommitSwapError) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              } else {
+                throw err
+              }
+            })
+          await store.repo.blob.makeWriteBlobsPermanent(preparedWrites)
 
-        await ctx.sequencer.sequenceCommit(did, commit)
-        return commit
-      })
+          // Phase B — SQLite txn, DB-only
+          return transact(async (txn) => {
+            const commit = await txn.repo.applyPrecomputedWrites(
+              precomputed,
+              preparedWrites,
+            )
+            await ctx.sequencer.sequenceCommit(did, commit)
+            return commit
+          })
+        },
+      )
 
       await ctx.accountManager
         .updateRepoRoot(did, commit.cid, commit.rev)

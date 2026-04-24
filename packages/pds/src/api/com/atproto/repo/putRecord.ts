@@ -92,15 +92,16 @@ export default function (server: Server, ctx: AppContext) {
       const swapRecordCid =
         typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord
 
-      const { commit, write } = await ctx.actorStore.transact(
+      const { commit, write } = await ctx.actorStore.transactRepo(
         did,
-        async (actorTxn) => {
-          const current = await actorTxn.record.getRecord(uri, null, true)
+        async ({ store, transact }) => {
+          // Phase A — no lock held
+          const current = await store.record.getRecord(uri, null, true)
           const isUpdate = current !== null
 
           // @TODO temporaray hack for legacy blob refs in profiles - remove after migrating legacy blobs
           if (isUpdate && collection === app.bsky.actor.profile.$type) {
-            await updateProfileLegacyBlobRef(actorTxn, record)
+            await updateProfileLegacyBlobRef(store, record)
           }
 
           const writeInfo = {
@@ -132,8 +133,8 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
 
-          const commit = await actorTxn.repo
-            .processWrites([write], swapCommitCid)
+          const precomputed = await store.repo
+            .prepareCommit([write], swapCommitCid)
             .catch((err) => {
               if (
                 err instanceof BadCommitSwapError ||
@@ -144,10 +145,14 @@ export default function (server: Server, ctx: AppContext) {
                 throw err
               }
             })
+          await store.repo.blob.makeWriteBlobsPermanent([write])
 
-          await ctx.sequencer.sequenceCommit(did, commit)
-
-          return { commit, write }
+          // Phase B — SQLite txn, DB-only
+          return transact(async (txn) => {
+            const commit = await txn.repo.applyPrecomputedWrites(precomputed, [write])
+            await ctx.sequencer.sequenceCommit(did, commit)
+            return { commit, write }
+          })
         },
       )
 

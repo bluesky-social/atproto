@@ -37,6 +37,7 @@ export default function (server: Server, ctx: AppContext) {
             // make the blob permanent if an associated record is already indexed
             if (await actorTxn.repo.blob.hasRecordsForBlob(blobRef.ref)) {
               await actorTxn.repo.blob.verifyBlobAndMakePermanent(blobRef)
+              await actorTxn.repo.blob.clearBlobTempKey(blobRef)
             }
 
             return blobRef

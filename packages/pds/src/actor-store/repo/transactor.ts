@@ -57,7 +57,7 @@ export class RepoTransactor extends RepoReader {
     )
     await this.storage.applyCommit(commit, true)
     await this.indexWrites(writes, commit.rev)
-    await this.blob.processWriteBlobs(commit.rev, writes)
+    await this.blob.processWriteBlobsInTxn(commit.rev, writes)
 
     const ops = writes.map((w) => ({
       action: 'create' as const,
@@ -71,11 +71,10 @@ export class RepoTransactor extends RepoReader {
     }
   }
 
-  async processWrites(
+  async prepareCommit(
     writes: PreparedWrite[],
     swapCommitCid?: Cid,
   ): Promise<CommitDataWithOps> {
-    this.db.assertTransaction()
     if (writes.length > 200) {
       throw new InvalidRequestError('Too many writes. Max: 200')
     }
@@ -86,12 +85,20 @@ export class RepoTransactor extends RepoReader {
       throw new InvalidRequestError('Too many writes. Max event size: 2MB')
     }
 
+    return commit
+  }
+
+  async applyPrecomputedWrites(
+    commit: CommitDataWithOps,
+    writes: PreparedWrite[],
+  ): Promise<CommitDataWithOps> {
+    this.db.assertTransaction()
     // persist the commit to repo storage
     await this.storage.applyCommit(commit)
     // & send to indexing
     await this.indexWrites(writes, commit.rev)
-    // process blobs
-    await this.blob.processWriteBlobs(commit.rev, writes)
+    // process blob db state
+    await this.blob.processWriteBlobsInTxn(commit.rev, writes)
 
     return commit
   }

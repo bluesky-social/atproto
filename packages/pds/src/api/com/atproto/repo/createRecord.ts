@@ -86,33 +86,43 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const backlinkConflicts =
-          validate !== false
-            ? await actorTxn.record.getBacklinkConflicts(
-                write.uri,
-                write.record,
-              )
-            : []
-        const backlinkDeletions = backlinkConflicts.map((uri) =>
-          prepareDelete({
-            did: uri.did,
-            collection: uri.collectionSafe,
-            rkey: uri.rkeySafe,
-          }),
-        )
-        const writes = [...backlinkDeletions, write]
-        const commit = await actorTxn.repo
-          .processWrites(writes, swapCommitCid)
-          .catch((err) => {
-            if (err instanceof BadCommitSwapError) {
-              throw new InvalidRequestError(err.message, 'InvalidSwap')
-            }
-            throw err
+      const commit = await ctx.actorStore.transactRepo(
+        did,
+        async ({ store, transact }) => {
+          // Phase A — no lock held
+          const backlinkConflicts =
+            validate !== false
+              ? await store.record.getBacklinkConflicts(
+                  write.uri,
+                  write.record,
+                )
+              : []
+          const backlinkDeletions = backlinkConflicts.map((uri) =>
+            prepareDelete({
+              did: uri.did,
+              collection: uri.collectionSafe,
+              rkey: uri.rkeySafe,
+            }),
+          )
+          const writes = [...backlinkDeletions, write]
+          const precomputed = await store.repo
+            .prepareCommit(writes, swapCommitCid)
+            .catch((err) => {
+              if (err instanceof BadCommitSwapError) {
+                throw new InvalidRequestError(err.message, 'InvalidSwap')
+              }
+              throw err
+            })
+          await store.repo.blob.makeWriteBlobsPermanent(writes)
+
+          // Phase B — SQLite txn, DB-only
+          return transact(async (txn) => {
+            const commit = await txn.repo.applyPrecomputedWrites(precomputed, writes)
+            await ctx.sequencer.sequenceCommit(did, commit)
+            return commit
           })
-        await ctx.sequencer.sequenceCommit(did, commit)
-        return commit
-      })
+        },
+      )
 
       await ctx.accountManager
         .updateRepoRoot(did, commit.cid, commit.rev)

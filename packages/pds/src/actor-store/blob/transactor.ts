@@ -11,7 +11,7 @@ import {
   getBlobCidString,
   parseCid,
 } from '@atproto/lex-data'
-import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
+import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
@@ -109,13 +109,9 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
-    await this.deleteDereferencedBlobs(writes)
-
+  async makeWriteBlobsPermanent(writes: PreparedWrite[]) {
     const ac = new AbortController()
 
-    // Limit the number of parallel requests made to the BlobStore by using a
-    // a queue with concurrency management.
     type Task = () => Promise<void>
     const tasks: Task[] = []
 
@@ -124,27 +120,37 @@ export class BlobTransactor extends BlobReader {
         for (const blob of write.blobs) {
           tasks.push(async () => {
             if (ac.signal.aborted) return
-            await this.associateBlob(blob, write.uri)
             await this.verifyBlobAndMakePermanent(blob, ac.signal)
           })
         }
       }
     }
 
+    if (!tasks.length) return
+
     try {
       const queue = new PQueue({
         concurrency: 20,
-        // The blob store should already limit the time of every operation. We
-        // add a timeout here as an extra precaution.
         timeout: 60 * SECOND,
         throwOnTimeout: true,
       })
-
-      // Will reject as soon as any task fails, causing the "finally" block
-      // below to run, aborting every other pending tasks.
       await queue.addAll(tasks)
     } finally {
       ac.abort()
+    }
+  }
+
+  async processWriteBlobsInTxn(rev: string, writes: PreparedWrite[]) {
+    this.db.assertTransaction()
+    await this.deleteDereferencedBlobs(writes)
+
+    for (const write of writes) {
+      if (isCreate(write) || isUpdate(write)) {
+        for (const blob of write.blobs) {
+          await this.associateBlob(blob, write.uri)
+          await this.clearBlobTempKey(blob)
+        }
+      }
     }
   }
 
@@ -160,26 +166,6 @@ export class BlobTransactor extends BlobReader {
       .set({ takedownRef })
       .where('cid', '=', cid.toString())
       .executeTakeFirst()
-
-    try {
-      // @NOTE find a way to not perform i/o operations during the transaction
-      // (typically by using a state in the "blob" table, and another process to
-      // handle the actual i/o)
-      if (takedown.applied) {
-        await this.blobstore.quarantine(cid)
-      } else {
-        await this.blobstore.unquarantine(cid)
-      }
-    } catch (err) {
-      if (!(err instanceof BlobNotFoundError)) {
-        log.error(
-          { err, cid: cid.toString() },
-          'could not update blob takedown status',
-        )
-
-        throw err
-      }
-    }
   }
 
   async deleteDereferencedBlobs(
@@ -264,14 +250,6 @@ export class BlobTransactor extends BlobReader {
     if (found.tempKey) {
       verifyBlob(blob, found)
 
-      // @NOTE it is less than ideal to perform async (i/o) operations during a
-      // transaction. Especially since there have been instances of the actor-db
-      // being locked, requiring to kick the processes.
-
-      // The better solution would be to update the blob state in the database
-      // (e.g. "makeItPermanent") and to process those updates outside of the
-      // transaction.
-
       await this.blobstore
         .makePermanent(found.tempKey, blob.ref)
         .catch((err) => {
@@ -284,13 +262,16 @@ export class BlobTransactor extends BlobReader {
         })
 
       signal?.throwIfAborted()
-
-      await this.db.db
-        .updateTable('blob')
-        .set({ tempKey: null })
-        .where('tempKey', '=', found.tempKey)
-        .execute()
     }
+  }
+
+  async clearBlobTempKey(blob: TypedBlobRef): Promise<void> {
+    await this.db.db
+      .updateTable('blob')
+      .set({ tempKey: null })
+      .where('cid', '=', blob.ref.toString())
+      .where('tempKey', 'is not', null)
+      .execute()
   }
 
   async insertBlobMetadata(blob: TypedBlobRef): Promise<void> {

@@ -63,3 +63,9 @@ export class BadRecordSwapError extends Error {
     super(`Record was at ${cid?.toString() ?? 'null'}`)
   }
 }
+
+export class StaleCommitError extends Error {
+  constructor() {
+    super('Repo root was updated by another write')
+  }
+}

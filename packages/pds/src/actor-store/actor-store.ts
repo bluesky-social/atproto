@@ -6,7 +6,7 @@ import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreConfig } from '../config'
-import { retrySqlite } from '../db'
+import { retrySqlite, retryRepoWrite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
 import { blobStoreLogger } from '../logger'
 import { ActorStoreReader } from './actor-store-reader'
@@ -85,6 +85,36 @@ export class ActorStore {
     try {
       return await db.transaction((dbTxn) => {
         return fn(new ActorStoreTransactor(did, dbTxn, keypair, this.resources))
+      })
+    } finally {
+      db.close()
+    }
+  }
+
+  async transactRepo<T>(
+    did: string,
+    fn: (ctx: {
+      store: ActorStoreWriter
+      transact: <R>(
+        fn: (txn: ActorStoreTransactor) => Promise<R>,
+      ) => Promise<R>
+    }) => Promise<T>,
+  ) {
+    const keypair = await this.keypair(did)
+    const db = await this.openDb(did)
+    try {
+      return await retryRepoWrite(async () => {
+        const store = new ActorStoreWriter(did, db, keypair, this.resources)
+        const transact = <R>(
+          fn: (txn: ActorStoreTransactor) => Promise<R>,
+        ): Promise<R> => {
+          return db.transactionNoRetry((dbTxn) => {
+            return fn(
+              new ActorStoreTransactor(did, dbTxn, keypair, this.resources),
+            )
+          })
+        }
+        return fn({ store, transact })
       })
     } finally {
       db.close()

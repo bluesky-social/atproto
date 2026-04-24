@@ -4,6 +4,7 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
+import { blobStoreLogger as log } from '../../logger'
 import { com } from '../../lexicons/index.js'
 import { ActorDb } from '../db'
 
@@ -21,6 +22,7 @@ export class BlobReader {
       .selectFrom('blob')
       .selectAll()
       .where('blob.cid', '=', cid.toString())
+      .where('blob.tempKey', 'is', null)
       .where(notSoftDeletedClause(ref('blob')))
       .executeTakeFirst()
     if (!found) {
@@ -153,5 +155,27 @@ export class BlobReader {
   async getBlobCids() {
     const blobRows = await this.db.db.selectFrom('blob').select('cid').execute()
     return blobRows.map((row) => parseCid(row.cid))
+  }
+
+  async applyBlobTakedownToStore(
+    cid: Cid,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
+    try {
+      if (takedown.applied) {
+        await this.blobstore.quarantine(cid)
+      } else {
+        await this.blobstore.unquarantine(cid)
+      }
+    } catch (err) {
+      if (!(err instanceof BlobNotFoundError)) {
+        log.error(
+          { err, cid: cid.toString() },
+          'could not update blob takedown status',
+        )
+
+        throw err
+      }
+    }
   }
 }

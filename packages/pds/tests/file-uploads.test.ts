@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { createHash } from 'node:crypto'
 import fs from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
@@ -7,6 +8,7 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { Client, DidString } from '@atproto/lex'
 import {
   TypedBlobRef,
+  cidForRawHash,
   getBlobCidString,
   isTypedBlobRef,
 } from '@atproto/lex-data'
@@ -297,5 +299,67 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('application/json')
+  })
+
+  it('does not serve a blob while its row has tempKey set', async () => {
+    // A blob uploaded but never referenced stays with tempKey IS NOT NULL,
+    // and the getBlobMetadata gate must refuse to serve it.
+    const content = await randomBytes(512)
+    const { body: upload } = await client.uploadBlob(content, {
+      headers: sc.getHeaders(alice),
+      encoding: 'application/octet-stream',
+    })
+    assert(isTypedBlobRef(upload.blob))
+    const cidStr = getBlobCidString(upload.blob)
+
+    const found = await aliceDb.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', cidStr)
+      .executeTakeFirstOrThrow()
+    expect(found.tempKey).not.toBeNull()
+
+    await expect(client.getBlob(alice, cidStr)).rejects.toThrow(/Blob not found/)
+  })
+
+  it('clears tempKey when uploading a blob already referenced by a record_blob row', async () => {
+    // Regression: after importRepo inserts record_blob rows without blob
+    // rows, a subsequent uploadBlob for the same CID must finalize the blob
+    // AND clear tempKey, or the new getBlobMetadata gate will leave it
+    // unservable.
+    const content = await randomBytes(1024)
+    const cid = cidForRawHash(createHash('sha256').update(content).digest())
+    const cidStr = cid.toString()
+    const fakeRecordUri = `at://${alice}/app.bsky.feed.post/imported-record-rkey`
+
+    await aliceDb.db
+      .insertInto('record_blob')
+      .values({ blobCid: cidStr, recordUri: fakeRecordUri })
+      .execute()
+
+    try {
+      const { body: upload } = await client.uploadBlob(content, {
+        headers: sc.getHeaders(alice),
+        encoding: 'application/octet-stream',
+      })
+      assert(isTypedBlobRef(upload.blob))
+      expect(getBlobCidString(upload.blob)).toEqual(cidStr)
+
+      const blobRow = await aliceDb.db
+        .selectFrom('blob')
+        .selectAll()
+        .where('cid', '=', cidStr)
+        .executeTakeFirstOrThrow()
+      expect(blobRow.tempKey).toBeNull()
+
+      const { headers, body } = await client.getBlob(alice, cidStr)
+      expect(headers.get('content-type')).toEqual('application/octet-stream')
+      expect(uint8arrays.equals(body, content)).toBe(true)
+    } finally {
+      await aliceDb.db
+        .deleteFrom('record_blob')
+        .where('recordUri', '=', fakeRecordUri)
+        .execute()
+    }
   })
 })

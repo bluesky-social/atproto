@@ -11,6 +11,7 @@ import {
   sql,
 } from 'kysely'
 import { retry } from '@atproto/common'
+import { StaleCommitError } from '../repo/types'
 
 // Applies to repo_root or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
@@ -54,6 +55,14 @@ export const retrySqlite = <T>(fn: () => Promise<T>): Promise<T> => {
     retryable: retryableSqlite,
     getWaitMs: getWaitMsSqlite,
     maxRetries: 60, // a safety measure: getWaitMsSqlite() times out before this after 5000ms of waiting.
+  })
+}
+
+export const retryRepoWrite = <T>(fn: () => Promise<T>): Promise<T> => {
+  return retry(fn, {
+    retryable: (err) => retryableSqlite(err) || err instanceof StaleCommitError,
+    getWaitMs: getWaitMsSqlite,
+    maxRetries: 60,
   })
 }
 
