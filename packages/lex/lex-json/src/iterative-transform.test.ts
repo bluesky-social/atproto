@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
+import { MAX_CBOR_NESTED_LEVELS } from '@atproto/lex-data'
 import {
   IterativeTransformOptions,
   iterativeTransform,
@@ -248,98 +249,102 @@ describe(iterativeTransform, () => {
   })
 
   describe('depth limits', () => {
-    it('handles deeply nested arrays (5000 levels)', () => {
-      // maxNestedLevels: 5000 allows depths 0-5000
-      // Root object at depth 0, then arrays at depths 1-5000 (5000 arrays total)
-      // Starting with nested=[] and wrapping N times creates N+1 arrays
-      // So wrap 4999 times to get 5000 arrays
-      let nested: unknown = []
-      for (let i = 0; i < 4999; i++) {
-        nested = [nested]
+    it('handles deeply nested objects', () => {
+      const LIMIT = 5000
+
+      // maxNestedLevels: LIMIT allows depths [0;LIMIT]. Starting with nested=[]
+      // and wrapping N times creates N+1 arrays, so wrapping LIMIT-1 times to
+      // get LIMIT nesting levels in total
+      type Nested = { nested: Nested } | { end: boolean }
+      let nested: Nested = { end: true }
+      for (let i = 0; i <= LIMIT - 1; i++) {
+        nested = { nested }
       }
 
-      const input = { nested }
-      // The deepest array is at depth 5000
-      const result = iterativeTransform(input, () => {}, {
-        maxNestedLevels: 5000,
-      })
+      const result = iterativeTransform(
+        nested,
+        (val) => {
+          // Transform the innermost object
+          if ('end' in val) return { end: false }
+        },
+        { maxNestedLevels: LIMIT },
+      ) as { nested: Nested }
 
-      // Verify structure (5000 arrays)
-      let check = (result as any).nested
-      for (let i = 0; i < 4999; i++) {
-        expect(Array.isArray(check)).toBe(true)
-        check = check[0]
+      // Object was copied due to transformation
+      assert(result !== nested)
+
+      // This should throw due to exceeding maxNestedLevels (we are wrapping one
+      // more time to get depth = LIMIT + 1)
+      expect(() =>
+        iterativeTransform({ nested }, noop, { maxNestedLevels: LIMIT }),
+      ).toThrow('Input is too deeply nested')
+
+      // unwrap result to check the transformation was applied correctly
+      let check: Nested = result
+      for (let i = 0; i < LIMIT; i++) {
+        assert('nested' in check)
+        check = check.nested
       }
-      expect(Array.isArray(check)).toBe(true)
-      expect(check).toStrictEqual([])
+      expect(check).toStrictEqual({ end: false })
+
+      // Original input should be unchanged
+      for (let i = 0; i < LIMIT; i++) {
+        assert('nested' in nested)
+        nested = nested.nested
+      }
+      expect(nested).toStrictEqual({ end: true })
     })
 
-    it('handles deeply nested objects', () => {
-      // maxNestedLevels: 5000 allows depths 0-5000
-      // Root object at depth 0, then nested objects at depths 1-5000 (5000 objects)
-      // Starting with nested={end:true} and wrapping N times creates N+1 objects
-      // So wrap 4999 times to get 5000 nested objects
-      let nested: unknown = { end: true }
-      for (let i = 0; i < 4999; i++) {
-        nested = { child: nested }
-      }
+    it('uses MAX_CBOR_NESTED_LEVELS by default', () => {
+      const LIMIT = MAX_CBOR_NESTED_LEVELS
 
-      const input = { nested }
-      // The deepest object is at depth 5000
-      const result = iterativeTransform(input, () => {}, {
-        maxNestedLevels: 5000,
-      })
+      let nested: unknown = []
+      for (let i = 0; i <= LIMIT - 1; i++) nested = [nested]
 
-      // Verify structure (5000 objects)
-      let check = (result as any).nested
-      for (let i = 0; i < 4999; i++) {
-        expect(check).toHaveProperty('child')
-        check = check.child
-      }
-      expect(check).toStrictEqual({ end: true })
+      expect(() => iterativeTransform(nested, noop)).not.toThrow()
+
+      nested = [nested]
+
+      expect(() => iterativeTransform(nested, noop)).toThrow(
+        'Input is too deeply nested',
+      )
     })
 
     it('enforces custom maxNestedLevels option', () => {
-      let nested: unknown = []
-      for (let i = 0; i <= 10; i++) {
-        nested = [nested]
-      }
+      const LIMIT = 10
+
+      type Nested = [Nested] | []
+      let nested: Nested = []
+      for (let i = 0; i <= LIMIT - 1; i++) nested = [nested]
 
       expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: 10 }),
+        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
+      ).not.toThrow()
+
+      nested = [nested]
+
+      expect(() =>
+        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
       ).toThrow('Input is too deeply nested')
     })
 
-    it('uses strict maxNestedLevels (32) in strict mode', () => {
-      let nested: unknown = []
-      // MAX_CBOR_NESTED_LEVELS = 32, so 33 levels should fail
-      for (let i = 0; i <= 32; i++) {
-        nested = [nested]
-      }
+    it('enforces very deep nesting limits', () => {
+      const LIMIT = 1_000_000
+
+      type Nested = [Nested] | []
+      let nested: Nested = []
+      for (let i = 0; i <= LIMIT - 1; i++) nested = [nested]
 
       expect(() =>
-        iterativeTransform(nested, noop, { allowNonSafeIntegers: false }),
-      ).toThrow(/Input is too deeply nested/)
-    })
-
-    it('uses lenient maxNestedLevels (5000) in non-strict mode', () => {
-      let nested: unknown = []
-      // maxNestedLevels: 5000 allows depths 0-5000
-      // Start with [] and wrap 5000 times creates 5001 arrays at depths 0-5000
-      for (let i = 0; i < 5000; i++) {
-        nested = [nested]
-      }
-
-      // Should not throw at exactly the limit (depth 5000)
-      expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: 5000 }),
+        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
       ).not.toThrow()
 
-      // Wrap one more time creates depth 5001, which should throw
+      // Wrap one more time creates depth = LIMIT + 1
       nested = [nested]
+
       expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: 5000 }),
-      ).toThrow(/Input is too deeply nested/)
+        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
+      ).toThrow('Input is too deeply nested')
     })
   })
 
