@@ -135,17 +135,17 @@ export async function generateMockSetup(env: TestNetwork) {
 
   await Promise.all([
     createQueue({
-      name: 'Spam Accounts',
+      name: 'Spammy Accounts',
       subjectTypes: ['account'],
       reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
     }),
     createQueue({
-      name: 'Harassment Accounts',
+      name: 'Threatening Accounts',
       subjectTypes: ['account'],
-      reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+      reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
     }),
     createQueue({
-      name: 'Spam Posts',
+      name: 'Spammy Posts',
       subjectTypes: ['record'],
       reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
       collection: 'app.bsky.feed.post',
@@ -173,8 +173,8 @@ export async function generateMockSetup(env: TestNetwork) {
     subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.did },
   })
   await bob.com.atproto.moderation.createReport({
-    reasonType: 'com.atproto.moderation.defs#reasonHarassment',
-    reason: 'Harassing behavior',
+    reasonType: 'tools.ozone.report.defs#reasonViolenceThreats',
+    reason: 'Threatened me',
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
       did: carla.did,

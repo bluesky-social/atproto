@@ -15,7 +15,7 @@ describe('report-stats', () => {
   let sc: SeedClient
   let modClient: ModeratorClient
   let spamQueueId: number
-  let harassmentQueueId: number
+  let threatQueueId: number
 
   const createQueue = async (input: {
     name: string
@@ -81,13 +81,13 @@ describe('report-stats', () => {
       subjectTypes: ['account'],
       reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
     })
-    const harassmentQueue = await createQueue({
-      name: 'Stats: Harassment Accounts',
+    const threatQueue = await createQueue({
+      name: 'Stats: Threat Accounts',
       subjectTypes: ['account'],
-      reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+      reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
     })
     spamQueueId = spamQueue.id
-    harassmentQueueId = harassmentQueue.id
+    threatQueueId = threatQueue.id
 
     // seed reports
     await sc.createReport({
@@ -107,7 +107,7 @@ describe('report-stats', () => {
       reportedBy: sc.dids.alice,
     })
     await sc.createReport({
-      reasonType: 'com.atproto.moderation.defs#reasonHarassment',
+      reasonType: 'tools.ozone.report.defs#reasonViolenceThreats',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.carol,
@@ -197,8 +197,8 @@ describe('report-stats', () => {
       expect(stats.inboundCount).toBeGreaterThanOrEqual(2)
     })
 
-    it('returns per-queue stats for harassment queue', async () => {
-      const stats = await getLiveStats({ queueId: harassmentQueueId })
+    it('returns per-queue stats for threat queue', async () => {
+      const stats = await getLiveStats({ queueId: threatQueueId })
       expect(stats.pendingCount).toBeGreaterThanOrEqual(1)
     })
 
@@ -369,7 +369,7 @@ describe('report-stats', () => {
       })
       const allStats = await getLiveStats()
 
-      // Legacy group includes spam, harassment, etc. seeded above
+      // Legacy group includes spam, etc. seeded above
       expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(3)
 
       // Aggregate should be >= legacy group
@@ -384,10 +384,16 @@ describe('report-stats', () => {
       const legacyStats = await getLiveStats({
         reportTypes: REPORT_TYPE_GROUPS['Legacy'],
       })
+      const violenceStats = await getLiveStats({
+        reportTypes: REPORT_TYPE_GROUPS['Violence'],
+      })
 
-      // Legacy group should include all seeded spam + harassment + misleading + other reports
-      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(3)
+      // Legacy group should include spam + misleading
+      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(2)
       expect(legacyStats.pendingCount).toBeGreaterThanOrEqual(0)
+      // Violence group should only include threats
+      expect(violenceStats.inboundCount).toBeGreaterThanOrEqual(1)
+      expect(violenceStats.pendingCount).toBeGreaterThanOrEqual(1)
     })
 
     it('tracks escalated counts within group', async () => {
@@ -426,9 +432,9 @@ describe('report-stats', () => {
     it('returns zeroed stats for unused report type group', async () => {
       await modClient.computeStats()
 
-      // Violence group has no seeded reports: all counts should be 0
+      // Civic group has no seeded reports: all counts should be 0
       const stats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS['Violence'],
+        reportTypes: REPORT_TYPE_GROUPS.Civic,
       })
       expect(stats.inboundCount).toBe(0)
       expect(stats.pendingCount).toBe(0)

@@ -8,7 +8,7 @@ import {
 import { ids } from '../src/lexicon/lexicons'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
-const REASON_HARASSMENT = 'com.atproto.moderation.defs#reasonHarassment'
+const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
 const REASON_MISLEADING = 'com.atproto.moderation.defs#reasonMisleading'
 
 describe('queue-router', () => {
@@ -203,7 +203,7 @@ describe('queue-router', () => {
     it('returns a newer report after creating one', async () => {
       const first = await getLatest()
 
-      await reportAccount(sc.dids.alice, REASON_HARASSMENT)
+      await reportAccount(sc.dids.alice, REASON_THREAT)
 
       const second = await getLatest()
       expect(second.id).toBeGreaterThan(first.id)
