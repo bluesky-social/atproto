@@ -39,6 +39,6 @@
   "devDependencies": {
     "@types/ws": "^8.5.4",
     "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   }
 }
