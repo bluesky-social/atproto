@@ -11,6 +11,8 @@ export type IntrospectConfig = {
 export type PlcConfig = {
   port?: number
   version?: string
+  /** Postgres connection URL. When set, uses a real DB instead of the in-memory mock. */
+  dbUrl?: string
 }
 
 export type PdsConfig = Partial<pds.ServerEnvironment> & {
