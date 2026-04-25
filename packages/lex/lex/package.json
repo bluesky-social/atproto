@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex",
   "version": "0.0.26",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [

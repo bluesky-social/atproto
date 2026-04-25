@@ -1,6 +1,9 @@
 {
   "name": "@atproto/oauth-client-browser-example",
   "version": "0.0.10",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Example single page application app using ATPROTO OAuth",
   "keywords": [

@@ -27,7 +27,7 @@
     "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",

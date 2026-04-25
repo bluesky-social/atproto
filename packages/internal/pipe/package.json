@@ -1,6 +1,9 @@
 {
   "name": "@atproto-labs/pipe",
   "version": "0.1.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Library for combining multiple functions into a single function.",
   "keywords": [

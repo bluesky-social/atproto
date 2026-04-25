@@ -1,6 +1,9 @@
 {
   "name": "@atproto/oauth-types",
   "version": "0.6.3",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "OAuth typing & validation library",
   "keywords": [

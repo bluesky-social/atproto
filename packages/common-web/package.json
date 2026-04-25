@@ -1,6 +1,9 @@
 {
   "name": "@atproto/common-web",
   "version": "0.4.21",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
