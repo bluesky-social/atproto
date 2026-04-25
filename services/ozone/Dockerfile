@@ -1,4 +1,4 @@
-FROM node:18-alpine AS build
+FROM node:22-alpine3.23 AS build
 
 RUN corepack enable
 
@@ -58,7 +58,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --
 WORKDIR services/ozone
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:22-alpine3.23
 
 RUN apk add --update dumb-init
 
