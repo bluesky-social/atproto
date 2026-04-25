@@ -6,7 +6,7 @@ RUN corepack enable
 WORKDIR /app
 
 COPY ./package.json ./
-RUN corepack prepare --activate
+RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
