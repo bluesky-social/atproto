@@ -12,7 +12,7 @@ function toAscii(bytes: Uint8Array): string {
   return string
 }
 
-function fromAscii(str: string): Uint8Array {
+function fromAscii(str: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(str.length)
   for (let i = 0; i < str.length; i++) {
     bytes[i] = str.charCodeAt(i)

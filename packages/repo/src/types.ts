@@ -34,7 +34,7 @@ const commit = z.object({
   data: cidSchema,
   rev: z.string(),
   prev: cidSchema.nullable(),
-  sig: z.instanceof(Uint8Array),
+  sig: z.instanceof(Uint8Array<ArrayBufferLike>),
 })
 export type Commit = z.infer<typeof commit>
 
@@ -44,7 +44,7 @@ const legacyV2Commit = z.object({
   data: cidSchema,
   rev: z.string().optional(),
   prev: cidSchema.nullable(),
-  sig: z.instanceof(Uint8Array),
+  sig: z.instanceof(Uint8Array<ArrayBufferLike>),
 })
 export type LegacyV2Commit = z.infer<typeof legacyV2Commit>
 
@@ -60,7 +60,7 @@ export const schema = {
     version: z.literal(1),
     roots: z.array(cidSchema),
   }),
-  bytes: z.instanceof(Uint8Array),
+  bytes: z.instanceof(Uint8Array<ArrayBufferLike>),
   string: z.string(),
   array: z.array(z.unknown()),
   map: z.record(z.string(), z.unknown()),

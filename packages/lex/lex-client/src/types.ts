@@ -48,11 +48,11 @@ export type Service = `${DidString}#${DidServiceIdentifier}`
  * ```
  */
 export type BinaryBodyInit =
-  | Uint8Array
+  | Uint8Array<ArrayBuffer>
   | ArrayBuffer
   | Blob
-  | ReadableStream<Uint8Array>
-  | AsyncIterable<Uint8Array>
+  | ReadableStream<Uint8Array<ArrayBuffer>>
+  | AsyncIterable<Uint8Array<ArrayBuffer>>
   | string
 
 export type EncodingString = `${string}/${string}`
@@ -64,7 +64,7 @@ export function isEncodingString(
 }
 
 export type XrpcUnknownResponsePayload<
-  TBinary extends BinaryBodyInit = Uint8Array,
+  TBinary extends BinaryBodyInit = Uint8Array<ArrayBuffer>,
 > = {
   encoding: EncodingString
   body: LexValue | TBinary

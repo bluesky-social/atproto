@@ -25,7 +25,7 @@ export type CarHeader = z.infer<typeof carHeader>
 export const schema = {
   cid: cidSchema,
   carHeader,
-  bytes: z.instanceof(Uint8Array),
+  bytes: z.instanceof(Uint8Array<ArrayBufferLike>),
   string: z.string(),
   array: z.array(z.unknown()),
   map: z.record(z.string(), z.unknown()),

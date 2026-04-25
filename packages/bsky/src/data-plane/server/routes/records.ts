@@ -61,7 +61,7 @@ export const getRecords = (db: Database, ns?: l.Main<l.RecordSchema>) => {
         : undefined
       const recordBytes = ui8.fromString(json, 'utf8')
       return new Record({
-        record: recordBytes,
+        record: recordBytes as Uint8Array<ArrayBuffer>,
         cid: row?.cid,
         createdAt,
         indexedAt,
