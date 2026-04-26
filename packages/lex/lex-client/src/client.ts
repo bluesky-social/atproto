@@ -63,12 +63,26 @@ export type {
 /**
  * Configuration options for creating a {@link Client}.
  *
+ * @property {@link ClientOptions.labelers} - An iterable of labeler DIDs to include in requests. These will be combined with any global app labelers configured via {@link Client.configure}.
+ * @property {@link ClientOptions.service} - An optional service identifier (DID or URL) for routing requests with service proxying.
+ * @property {@link ClientOptions.headers} - Custom headers to include in all requests made by this client instance.
+ * @property {@link ClientOptions.validateRequest} - If true, validates request bodies against their lexicon schemas before sending. Defaults to false for performance.
+ * @property {@link ClientOptions.validateResponse} - If false, skips validation of response bodies against their lexicon schemas. Defaults to true to catch errors, but can be disabled for performance if you trust the server responses. Note that defaults will not be applied if validation is disabled, which can cause typing inconsistencies, so use with caution.
+ * @property {@link ClientOptions.strictResponseProcessing} - If false, relaxes certain validation rules during response processing (e.g., allowing floats, deeper nesting, etc.). Defaults to true for strict compliance with {@link https://atproto.com/specs/data-model lexicon data model}, but can be disabled to handle non-compliant responses.
+ *
+ * @see {@link XrpcRequestHeadersOptions}
+ * @see {@link XrpcRequestProcessingOptions}
+ * @see {@link XrpcResponseOptions}
+ *
  * @example
  * ```typescript
  * const options: ClientOptions = {
  *   labelers: ['did:plc:labeler1'],
  *   service: 'did:web:api.bsky.app#bsky_appview',
- *   headers: { 'X-Custom-Header': 'value' }
+ *   headers: { 'X-Custom-Header': 'value' },
+ *   validateRequest: false,
+ *   validateResponse: true,
+ *   strictResponseProcessing: false,
  * }
  * ```
  */
@@ -223,6 +237,7 @@ export type RecordKeyOptions<
 /**
  * Type-safe options for {@link Client.create}, combining record options with key requirements.
  * @typeParam T - The record schema type
+ * @see {@link CreateRecordOptions}
  */
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
   RecordKeyOptions<T, 'tid' | 'any'>
@@ -321,9 +336,10 @@ export type ListRecord<Value extends LexMap> =
  * services. It provides type-safe methods for XRPC calls, record operations,
  * and blob handling.
  *
- * @example // Basic usage
+ * @example
  * ```typescript
  * import { Client } from '@atproto/lex'
+ * import { app } from '#/lexicons
  *
  * const client = new Client(oauthSession)
  *
