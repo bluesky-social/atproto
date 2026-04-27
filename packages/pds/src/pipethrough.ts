@@ -56,7 +56,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+      const aud = computeProxyTo(ctx, req, lxm)
+      const { url: origin, did: jwtAud } = await parseProxyInfo(ctx, req, lxm)
 
       const authResult = await performAuth({ req, res, params: { lxm, aud } })
 
@@ -80,7 +81,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, jwtAud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
