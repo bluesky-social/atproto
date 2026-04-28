@@ -5,7 +5,7 @@ import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   $Typed,
   LexValidationError,
-  toDatetimeString,
+  currentDatetimeString,
 } from '@atproto/lex-schema'
 import {
   Action,
@@ -465,7 +465,7 @@ describe('Client', () => {
       const aliceGenerator = await client.create(app.bsky.feed.generator, {
         did,
         displayName: 'Alice Generator',
-        createdAt: toDatetimeString(new Date()),
+        createdAt: currentDatetimeString(),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(1)
@@ -485,7 +485,7 @@ describe('Client', () => {
 
       const newPost = await client.create(app.bsky.feed.post, {
         text: 'Hello, world!',
-        createdAt: toDatetimeString(new Date()),
+        createdAt: currentDatetimeString(),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(2)
@@ -638,7 +638,7 @@ describe('Client', () => {
               // @ts-expect-error invalid DID
               did: 'not-a-did',
               displayName: 'Test',
-              createdAt: toDatetimeString(new Date()),
+              createdAt: currentDatetimeString(),
             },
             { rkey: 'test', validateRequest: true },
           ),
@@ -666,7 +666,7 @@ describe('Client', () => {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
             displayName: 'Test',
-            createdAt: toDatetimeString(new Date()),
+            createdAt: currentDatetimeString(),
           },
           { rkey: 'test', validateRequest: false },
         )
@@ -689,7 +689,7 @@ describe('Client', () => {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
             displayName: 'Test',
-            createdAt: toDatetimeString(new Date()),
+            createdAt: currentDatetimeString(),
           },
           { rkey: 'test' },
         )
@@ -730,7 +730,7 @@ describe('Client', () => {
               did,
               // @ts-expect-error wrong type
               displayName: 123,
-              createdAt: toDatetimeString(new Date()),
+              createdAt: currentDatetimeString(),
             },
             { rkey: 'test', validateRequest: true },
           ),
@@ -848,7 +848,7 @@ describe('Client', () => {
           (ops) => {
             ops.create(app.bsky.feed.post, {
               text: 'Hello, world!',
-              createdAt: toDatetimeString(new Date()),
+              createdAt: currentDatetimeString(),
             })
 
             ops.update(app.bsky.actor.profile, {
@@ -911,7 +911,7 @@ describe('Client', () => {
             // @ts-expect-error
             ops.update(app.bsky.feed.post, {
               text: 'Alice',
-              createdAt: toDatetimeString(new Date()),
+              createdAt: currentDatetimeString(),
             })
           }).toThrow()
 

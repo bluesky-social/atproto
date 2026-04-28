@@ -749,6 +749,49 @@ if (result.cursor) {
 }
 ```
 
+#### `client.applyWrites()`
+
+Perform an atomic batch of create, update, and delete operations in a single request.
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const response = await client.applyWrites((ops) => {
+  // Create a new post
+  ops.create(app.bsky.feed.post, {
+    text: 'Hello, world!',
+    createdAt: l.toDatetimeString(new Date()),
+  })
+
+  // Update profile
+  ops.update(app.bsky.actor.profile, {
+    displayName: 'Alice',
+    description: 'Updated bio',
+  })
+
+  // Delete a post by rkey
+  ops.delete(app.bsky.feed.post, {
+    rkey: '3jxf7z2k3q2',
+  })
+})
+
+// Check results
+for (const result of response.body.results) {
+  console.log(result.uri, result.cid)
+}
+```
+
+Options:
+
+- `repo` - Repository identifier (defaults to authenticated user's DID)
+- `validate` - Asks the PDS to validate records against schema
+- `swapCommit` - CID for optimistic concurrency control
+
+> [!NOTE]
+>
+> All operations in an `applyWrites()` call are atomic - they either all succeed or all fail together. This is useful for maintaining consistency when making multiple related changes.
+
 ### Error Handling
 
 By default, all client methods throw errors when requests fail. For more ergonomic error handling, the client provides "Safe" variants that return errors instead of throwing them.
