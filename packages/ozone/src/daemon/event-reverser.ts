@@ -67,9 +67,10 @@ export class EventReverser {
 
     // We shouldn't have too many actions due for reversal at any given time, so running in parallel is probably fine
     // Internally, each reversal runs within its own transaction
-    await Promise.all(subjectsDueForReversal.map(this.revertState.bind(this)))
-
-    await this.findAndRevertExpiredTags()
+    await Promise.all([
+      ...subjectsDueForReversal.map(this.revertState.bind(this)),
+      this.findAndRevertExpiredTags(),
+    ])
   }
 
   async findAndRevertExpiredTags() {
