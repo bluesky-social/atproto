@@ -25,6 +25,7 @@ import * as scheduledAction from './scheduled-action'
 import * as setting from './setting'
 import * as signingKey from './signing_key'
 import * as verification from './verification'
+import * as publicSubjectStatus from './public_subject_status'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -51,7 +52,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   safelink.PartialDB &
   scheduledAction.PartialDB &
   moderatorAssignment.PartialDB &
-  reportStat.PartialDB
+  reportStat.PartialDB &
+  publicSubjectStatus.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

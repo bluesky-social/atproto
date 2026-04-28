@@ -16,6 +16,10 @@ import { OzoneConfig, OzoneSecrets } from './config'
 import { EventPusher } from './daemon'
 import { BlobDiverter } from './daemon/blob-diverter'
 import { Database } from './db'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from './history/status'
 import { ImageInvalidator } from './image-invalidator'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
 import {
@@ -57,6 +61,7 @@ export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  modStatusHistoryService: ModerationStatusHistoryCreator
   moderationServiceProfile: ModerationServiceProfileCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   safelinkRuleService: SafelinkRuleServiceCreator
@@ -156,6 +161,11 @@ export class AppContext {
     const strikeService = StrikeService.creator()
     const verificationService = VerificationService.creator()
     const verificationIssuer = VerificationIssuer.creator()
+    // As we introduce more automated services, we will need to carefully add their dids here only
+    // when we want end users to see their actions as automated mod actions
+    const modStatusHistoryService = ModerationStatusHistory.creator([
+      cfg.service.did,
+    ])
     const moderationServiceProfile = ModerationServiceProfile.creator(
       cfg,
       appviewAgent,
@@ -171,6 +181,7 @@ export class AppContext {
       createAuthHeaders,
       strikeService,
       overrides?.imgInvalidator,
+      modStatusHistoryService,
     )
     const assignmentService = AssignmentService.creator(
       {
@@ -194,6 +205,7 @@ export class AppContext {
         db,
         cfg,
         modService,
+        modStatusHistoryService,
         moderationServiceProfile,
         communicationTemplateService,
         safelinkRuleService,
@@ -242,6 +254,10 @@ export class AppContext {
 
   get modService(): ModerationServiceCreator {
     return this.opts.modService
+  }
+
+  get modStatusHistoryService(): ModerationStatusHistoryCreator {
+    return this.opts.modStatusHistoryService
   }
 
   get blobDiverter(): BlobDiverter | undefined {

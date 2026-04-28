@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.history.getReportedSubjects",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Fetch all subjects reported by the account.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "account": { "type": "string", "format": "did" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 50,
+            "maximum": 100
+          },
+          "sortDirection": {
+            "type": "string",
+            "knownValues": ["asc", "desc"],
+            "default": "desc"
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subjects"],
+          "properties": {
+            "subjects": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.history.defs#subjectBasicView"
+              }
+            },
+            "cursor": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -16,6 +16,10 @@ import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { LabelChannel } from '../db/schema/label'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { jsonb } from '../db/types'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from '../history/status'
 import { ImageInvalidator } from '../image-invalidator'
 import { ids } from '../lexicon/lexicons'
 import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
@@ -94,6 +98,7 @@ export class ModerationService {
     ) => Promise<AuthHeaders>,
     public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
+    public statusHistory?: ModerationStatusHistory,
   ) {}
 
   static creator(
@@ -107,6 +112,7 @@ export class ModerationService {
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
+    statusHistoryService?: ModerationStatusHistoryCreator,
   ) {
     return (db: Database) => {
       const strikeService = strikeServiceCreator(db)
@@ -122,6 +128,7 @@ export class ModerationService {
         createAuthHeaders,
         strikeService,
         imgInvalidator,
+        statusHistoryService?.(db),
       )
     }
   }
@@ -660,11 +667,12 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    const subjectStatus = await adjustModerationSubjectStatus(
-      this.db,
-      modEvent,
-      subject.blobCids,
-    )
+    const [subjectStatus] = await Promise.all([
+      adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids),
+      this.statusHistory
+        ? this.statusHistory.adjustForModEvent(modEvent)
+        : Promise.resolve(),
+    ])
 
     if (isAgeAssurancePurgeEvent(event)) {
       await this.purgeAgeAssuranceEvents(subjectInfo.subjectDid)
