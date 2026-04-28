@@ -46,6 +46,7 @@ import {
 import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
 import { httpLogger as log } from '../logger'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
+import { insertExpiringTags, removeExpiringTags } from './expiring-tags'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
@@ -665,6 +666,31 @@ export class ModerationService {
       modEvent,
       subject.blobCids,
     )
+
+    // Manage expiring tag rows for temporary tags
+    if (isModEventTag(event)) {
+      if (event.durationInHours && event.add.length > 0) {
+        const expiresAt = addHoursToDate(
+          event.durationInHours,
+          createdAt,
+        ).toISOString()
+        await insertExpiringTags(this.db, {
+          eventId: modEvent.id,
+          did: subjectInfo.subjectDid,
+          recordPath: subjectInfo.subjectUri ?? '',
+          tags: event.add,
+          expiresAt,
+          createdBy,
+        })
+      }
+      if (event.remove.length > 0) {
+        await removeExpiringTags(this.db, {
+          did: subjectInfo.subjectDid,
+          recordPath: subjectInfo.subjectUri ?? '',
+          tags: event.remove,
+        })
+      }
+    }
 
     if (isAgeAssurancePurgeEvent(event)) {
       await this.purgeAgeAssuranceEvents(subjectInfo.subjectDid)

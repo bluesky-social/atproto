@@ -16,6 +16,7 @@ import * as recordEventsStats from './record_events_stats'
 import * as recordPushEvent from './record_push_event'
 import * as repoPushEvent from './repo_push_event'
 import * as safelink from './safelink'
+import * as expiringTag from './expiring_tag'
 import * as scheduledAction from './scheduled-action'
 import * as setting from './setting'
 import * as signingKey from './signing_key'
@@ -41,7 +42,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   firehoseCursor.PartialDB &
   jobCursor.PartialDB &
   safelink.PartialDB &
-  scheduledAction.PartialDB
+  scheduledAction.PartialDB &
+  expiringTag.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
