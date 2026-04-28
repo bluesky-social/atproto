@@ -805,5 +805,124 @@ describe('Client', () => {
         expect(fetchHandler).toHaveBeenCalled()
       })
     })
+
+    describe('applyWrites()', () => {
+      it('allows applying multiple writes in a single request', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (path, init) => {
+          const request = new Request(new URL(path, 'http://localhost'), init)
+          expect(request.method).toBe('POST')
+
+          const payload = com.atproto.repo.applyWrites.main.input.schema.parse(
+            lexParse(await request.text()),
+          )
+
+          let cid = 0
+          const body: com.atproto.repo.applyWrites.$OutputBody = {
+            results: payload.writes.map((write) => {
+              if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
+                return com.atproto.repo.applyWrites.createResult.$build({
+                  uri: `at://${did}/${write.collection}/${write.rkey ?? '2222222222222'}`,
+                  cid: `${++cid}`,
+                })
+              }
+              if (com.atproto.repo.applyWrites.update.$isTypeOf(write)) {
+                return com.atproto.repo.applyWrites.updateResult.$build({
+                  uri: `at://${did}/${write.collection}/${write.rkey}`,
+                  cid: `${++cid}`,
+                })
+              }
+              if (com.atproto.repo.applyWrites.delete.$isTypeOf(write)) {
+                return com.atproto.repo.applyWrites.deleteResult.$build({
+                  uri: `at://${did}/${write.collection}/${write.rkey}`,
+                })
+              }
+
+              throw new Error('Unknown write type')
+            }),
+          }
+          return Response.json(body)
+        })
+        const client = new Client({ fetchHandler, did })
+
+        const { body } = await client.applyWrites(
+          (ops) => {
+            ops.create(app.bsky.feed.post, {
+              text: 'Hello, world!',
+              createdAt: toDatetimeString(new Date()),
+            })
+
+            ops.update(app.bsky.actor.profile, {
+              displayName: 'Alice',
+            })
+
+            ops.delete(app.bsky.feed.post, {
+              rkey: 'old-post',
+            })
+
+            ops.delete(app.bsky.actor.profile)
+          },
+          {
+            validateResponse: false,
+          },
+        )
+
+        expect(fetchHandler).toHaveBeenCalledTimes(1)
+        expect(body.results).toEqual([
+          {
+            $type: 'com.atproto.repo.applyWrites#createResult',
+            uri: `at://${did}/app.bsky.feed.post/2222222222222`,
+            cid: '1',
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#updateResult',
+            uri: `at://${did}/app.bsky.actor.profile/self`,
+            cid: '2',
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#deleteResult',
+            uri: `at://${did}/app.bsky.feed.post/old-post`,
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#deleteResult',
+            uri: `at://${did}/app.bsky.actor.profile/self`,
+          },
+        ])
+      })
+
+      it('expects an options argument when rkey is needed', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (path, init) => {
+          const request = new Request(new URL(path, 'http://localhost'), init)
+          expect(request.method).toBe('POST')
+          const payload = com.atproto.repo.applyWrites.main.input.schema.parse(
+            lexParse(await request.text()),
+          )
+
+          expect(payload.writes).toHaveLength(2)
+
+          return Response.json({})
+        })
+        const client = new Client({ fetchHandler, did })
+
+        await client.applyWrites((ops) => {
+          ops.delete(app.bsky.actor.profile)
+          ops.update(app.bsky.actor.profile, { displayName: 'Alice' })
+
+          expect(() => {
+            // @ts-expect-error
+            ops.update(app.bsky.feed.post, {
+              text: 'Alice',
+              createdAt: toDatetimeString(new Date()),
+            })
+          }).toThrow()
+
+          expect(() => {
+            // @ts-expect-error
+            ops.delete(app.bsky.feed.post)
+          }).toThrow()
+        })
+
+        expect(fetchHandler).toHaveBeenCalledTimes(1)
+      })
+    })
   })
 })
