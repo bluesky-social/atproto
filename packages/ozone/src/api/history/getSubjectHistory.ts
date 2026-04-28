@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
-import { publishableModEvents } from '../../history/status'
+import { publishableEventTypes, modEventToEventView } from '../../history/views'
 import { Server } from '../../lexicon'
 import { EventView } from '../../lexicon/types/tools/ozone/history/defs'
 
@@ -33,13 +33,12 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const modHistoryService = ctx.modStatusHistoryService(db)
       const modService = ctx.modService(db)
       const results = await modService.getEvents({
         subject,
         limit,
         cursor,
-        types: publishableModEvents,
+        types: [...publishableEventTypes],
         addedLabels: [],
         removedLabels: [],
         addedTags: [],
@@ -49,9 +48,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const events: EventView[] = []
-
       for (const item of results.events) {
-        const view = modHistoryService.eventView(item)
+        const view = modEventToEventView(item)
         if (view) events.push(view)
       }
 

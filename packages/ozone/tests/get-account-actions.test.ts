@@ -1,7 +1,4 @@
-import AtpAgent, {
-  ToolsOzoneHistoryGetAccountActions,
-  ToolsOzoneHistoryGetSubjectHistory,
-} from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -12,27 +9,15 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { MODACTIONLABEL } from '../src/lexicon/types/tools/ozone/history/defs'
 import { forSnapshot } from './_util'
-
-type UserWithAgent = {
-  agent?: AtpAgent
-  token: string
-}
 
 describe('get-account-actions', () => {
   let network: TestNetwork
   let sc: SeedClient
-  const alice: UserWithAgent = {
-    token: '',
-  }
-  const carol: UserWithAgent = {
-    token: '',
-  }
-  const bob: UserWithAgent = {
-    token: '',
-  }
   let modClient: ModeratorClient
+  let aliceAgent: AtpAgent
+  let bobAgent: AtpAgent
+  let carolAgent: AtpAgent
 
   const seedReports = async () => {
     await sc.createReport({
@@ -73,57 +58,11 @@ describe('get-account-actions', () => {
       reason: 'alice says bob cannot post',
       reportedBy: sc.dids.alice,
     })
-    await sc.createReport({
-      subject: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: sc.posts[sc.dids.bob][0].ref.uriStr,
-        cid: sc.posts[sc.dids.bob][0].ref.cidStr,
-      },
-      reasonType: REASONSPAM,
-      reason: 'carol also says bob cannot post',
-      reportedBy: sc.dids.carol,
-    })
   }
 
-  const getActions = async (
-    user: UserWithAgent,
-    params: ToolsOzoneHistoryGetAccountActions.QueryParams,
-  ) => {
-    if (!user.agent) {
-      throw new Error('User agent not set')
-    }
-    const { data } = await user.agent.tools.ozone.history.getAccountActions(
-      params,
-      {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
-        },
-      },
-    )
-
-    return data.subjects
-  }
-
-  const getSubjectHistory = async (
-    user: UserWithAgent,
-    params: ToolsOzoneHistoryGetSubjectHistory.QueryParams,
-  ) => {
-    if (!user.agent) {
-      throw new Error('User agent not set')
-    }
-    const { data } = await user.agent.tools.ozone.history.getSubjectHistory(
-      params,
-      {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
-        },
-      },
-    )
-
-    return data.events
-  }
+  const proxyHeaders = () => ({
+    'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
+  })
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -134,42 +73,46 @@ describe('get-account-actions', () => {
     await basicSeed(sc)
     await network.processAll()
     await seedReports()
-    alice.agent = network.pds.getClient()
-    const { data: alicesLogin } = await alice.agent.login({
+
+    aliceAgent = network.pds.getAgent()
+    await aliceAgent.login({
       identifier: sc.accounts[sc.dids.alice].handle,
       password: sc.accounts[sc.dids.alice].password,
     })
-    carol.agent = network.pds.getClient()
-    const { data: carolsLogin } = await carol.agent.login({
-      identifier: sc.accounts[sc.dids.carol].handle,
-      password: sc.accounts[sc.dids.carol].password,
-    })
-    bob.agent = network.pds.getClient()
-    const { data: bobsLogin } = await bob.agent.login({
+    bobAgent = network.pds.getAgent()
+    await bobAgent.login({
       identifier: sc.accounts[sc.dids.bob].handle,
       password: sc.accounts[sc.dids.bob].password,
     })
-    alice.token = alicesLogin.accessJwt
-    carol.token = carolsLogin.accessJwt
-    carol.token = carolsLogin.accessJwt
-    bob.token = bobsLogin.accessJwt
+    carolAgent = network.pds.getAgent()
+    await carolAgent.login({
+      identifier: sc.accounts[sc.dids.carol].handle,
+      password: sc.accounts[sc.dids.carol].password,
+    })
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  it("returns all subjects that were actioned on the caller's account", async () => {
-    const [actionsOnCarol, actionsOnBob] = await Promise.all([
-      getActions(carol, {}),
-      getActions(bob, {}),
-    ])
+  it('returns empty actions when no mod actions have been taken', async () => {
+    const { data: carolData } =
+      await carolAgent.tools.ozone.history.getAccountActions(
+        {},
+        { headers: proxyHeaders() },
+      )
+    const { data: bobData } =
+      await bobAgent.tools.ozone.history.getAccountActions(
+        {},
+        { headers: proxyHeaders() },
+      )
 
-    expect(forSnapshot(actionsOnCarol)).toMatchSnapshot()
-    expect(forSnapshot(actionsOnBob)).toMatchSnapshot()
+    // No mod actions (takedown/label/reverseTakedown) have been taken yet
+    expect(carolData.events).toEqual([])
+    expect(bobData.events).toEqual([])
   })
 
-  it('returns updated subject status after mod action', async () => {
+  it('returns action events after mod action', async () => {
     const bobsPostSubject = {
       $type: 'com.atproto.repo.strongRef',
       uri: sc.posts[sc.dids.bob][0].ref.uriStr,
@@ -186,36 +129,34 @@ describe('get-account-actions', () => {
       },
       'admin',
     )
-    await modClient.emitEvent(
-      {
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subject: bobsPostSubject,
-      },
-      'admin',
+
+    const { data } = await bobAgent.tools.ozone.history.getAccountActions(
+      {},
+      { headers: proxyHeaders() },
     )
 
-    const actionsOnBob = await getActions(bob, {})
-
-    const actionOnBobsPost = actionsOnBob.find(
-      (item) => item.subject === sc.posts[sc.dids.bob][0].ref.uriStr,
-    )?.modAction
-
-    expect(actionOnBobsPost).toEqual(MODACTIONLABEL)
+    expect(data.events.length).toBe(1)
+    expect(data.events[0].event.$type).toBe(
+      'tools.ozone.history.defs#eventLabel',
+    )
+    expect(forSnapshot(data.events)).toMatchSnapshot()
   })
 
   it('shows subject history for a specific subject', async () => {
-    const history = await getSubjectHistory(bob, {
-      subject: sc.posts[sc.dids.bob][0].ref.uriStr,
-    })
-    expect(forSnapshot(history)).toMatchSnapshot()
+    const { data } = await bobAgent.tools.ozone.history.getSubjectHistory(
+      { subject: sc.posts[sc.dids.bob][0].ref.uriStr },
+      { headers: proxyHeaders() },
+    )
+
+    expect(forSnapshot(data.events)).toMatchSnapshot()
   })
+
   it('does not show subject history of a different user', async () => {
     await expect(
-      getSubjectHistory(carol, {
-        subject: sc.posts[sc.dids.bob][0].ref.uriStr,
-      }),
+      carolAgent.tools.ozone.history.getSubjectHistory(
+        { subject: sc.posts[sc.dids.bob][0].ref.uriStr },
+        { headers: proxyHeaders() },
+      ),
     ).rejects.toThrow('Unauthorized')
   })
 })

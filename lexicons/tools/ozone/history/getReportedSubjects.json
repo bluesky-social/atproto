@@ -33,7 +33,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "tools.ozone.history.defs#subjectBasicView"
+                "ref": "tools.ozone.history.defs#reportedSubjectView"
               }
             },
             "cursor": { "type": "string" }

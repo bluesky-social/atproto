@@ -1,8 +1,13 @@
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
+import { TimeIdKeyset, paginate } from '../../db/pagination'
+import {
+  actionEventTypes,
+  modEventToEventView,
+} from '../../history/views'
 import { Server } from '../../lexicon'
-import * as ActorDefs from '../../lexicon/types/app/bsky/actor/defs'
-import { SubjectBasicView } from '../../lexicon/types/tools/ozone/history/defs'
+import { ReportedSubjectView } from '../../lexicon/types/tools/ozone/history/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.history.getReportedSubjects({
@@ -25,54 +30,79 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('unauthorized')
       }
 
-      const modHistoryService = ctx.modStatusHistoryService(db)
-      const modService = ctx.modService(db)
-      const results = await modHistoryService.getStatuses({
-        viewerDid,
-        forAuthor: false,
+      const { ref } = db.db.dynamic
+      const builder = db.db
+        .selectFrom('report')
+        .where('createdBy', '=', viewerDid)
+        .selectAll()
+
+      const keyset = new TimeIdKeyset(
+        ref('report.createdAt'),
+        ref('report.id'),
+      )
+      const paginatedBuilder = paginate(builder, {
         limit,
         cursor,
-        sortDirection: sortDirection === 'asc' ? 'asc' : 'desc',
+        keyset,
+        direction: sortDirection === 'asc' ? 'asc' : 'desc',
       })
 
-      const subjects: SubjectBasicView[] = []
-      const dids = new Set<string>()
-      const uris = new Set<string>()
+      const reports = await paginatedBuilder.execute()
 
-      for (const item of results.statuses) {
-        dids.add(item.did)
-        uris.add(modHistoryService.atUriFromStatus(item))
+      // Collect all actionEventIds to batch-fetch events
+      const allEventIds = new Set<number>()
+      for (const report of reports) {
+        if (report.actionEventIds) {
+          for (const id of report.actionEventIds) {
+            allEventIds.add(id)
+          }
+        }
       }
 
-      const [accountInfos, labels] = await Promise.all([
-        modService.views.getAccoutInfosByDid(Array.from(dids)),
-        modService.views.labels(Array.from(uris)),
-      ])
+      // Batch fetch action events
+      const eventMap = new Map<number, ReturnType<typeof modEventToEventView>>()
+      if (allEventIds.size > 0) {
+        const events = await db.db
+          .selectFrom('moderation_event')
+          .where('id', 'in', Array.from(allEventIds))
+          .where('action', 'in', [...actionEventTypes])
+          .selectAll()
+          .execute()
 
-      for (const item of results.statuses) {
-        const view = modHistoryService.basicView(item)
-        const accountInfo = accountInfos.get(item.did)
-        const subjectProfile = accountInfo?.relatedRecords?.find(
-          ActorDefs.isProfileViewBasic,
-        )
-
-        subjects.push({
-          ...view,
-          subjectProfile,
-          labels: labels.get(view.subject),
-          status: accountInfo
-            ? accountInfo?.deactivatedAt
-              ? 'deactivated'
-              : 'active'
-            : 'deleted',
-        })
+        for (const event of events) {
+          const view = modEventToEventView(event)
+          if (view) {
+            eventMap.set(event.id, view)
+          }
+        }
       }
+
+      const subjects: ReportedSubjectView[] = reports.map((report) => {
+        const subject = report.recordPath
+          ? AtUri.make(
+              report.did,
+              ...report.recordPath.split('/'),
+            ).toString()
+          : report.did
+
+        const actions = (report.actionEventIds || [])
+          .map((id) => eventMap.get(id))
+          .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined)
+
+        return {
+          subject,
+          comment: report.comment || undefined,
+          createdAt: report.createdAt,
+          status: report.status,
+          actions,
+        }
+      })
 
       return {
         encoding: 'application/json',
         body: {
           subjects,
-          cursor: results.cursor,
+          cursor: keyset.packFromResult(reports),
         },
       }
     },

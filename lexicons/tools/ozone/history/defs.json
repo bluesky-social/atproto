@@ -2,37 +2,30 @@
   "lexicon": 1,
   "id": "tools.ozone.history.defs",
   "defs": {
-    "subjectBasicView": {
+    "reportedSubjectView": {
       "type": "object",
-      "required": ["subject", "status", "modAction"],
+      "required": ["subject", "createdAt", "status"],
       "properties": {
         "subject": {
           "type": "string",
           "format": "uri"
         },
+        "comment": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
         "status": {
           "type": "string",
-          "knownValues": ["deactivated", "active", "deleted"]
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"]
         },
-        "modAction": {
-          "type": "string",
-          "knownValues": [
-            "tools.ozone.history.defs#modActionPending",
-            "tools.ozone.history.defs#modActionLabel",
-            "tools.ozone.history.defs#modActionResolve",
-            "tools.ozone.history.defs#modActionSuspend",
-            "tools.ozone.history.defs#modActionTakedown"
-          ]
-        },
-        "subjectProfile": {
-          "type": "union",
-          "refs": []
-        },
-        "labels": {
+        "actions": {
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "com.atproto.label.defs#label"
+            "ref": "tools.ozone.history.defs#eventView"
           }
         }
       }
@@ -56,10 +49,9 @@
           "type": "union",
           "refs": [
             "tools.ozone.history.defs#eventTakedown",
+            "tools.ozone.history.defs#eventReverseTakedown",
             "tools.ozone.history.defs#eventLabel",
-            "tools.ozone.history.defs#eventReport",
-            "tools.ozone.history.defs#eventEmail",
-            "tools.ozone.history.defs#eventResolve"
+            "tools.ozone.history.defs#eventEmail"
           ]
         }
       }
@@ -74,6 +66,15 @@
         "durationInHours": {
           "type": "integer",
           "description": "Indicates how long the takedown should be in effect before automatically expiring."
+        }
+      }
+    },
+    "eventReverseTakedown": {
+      "type": "object",
+      "description": "Takedown reversed on the subject",
+      "properties": {
+        "comment": {
+          "type": "string"
         }
       }
     },
@@ -99,20 +100,6 @@
         }
       }
     },
-    "eventReport": {
-      "type": "object",
-      "description": "Subject reported",
-      "required": ["reportType"],
-      "properties": {
-        "comment": {
-          "type": "string"
-        },
-        "reportType": {
-          "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
-        }
-      }
-    },
     "eventEmail": {
       "type": "object",
       "description": "Moderation email sent to the author of the subject",
@@ -131,36 +118,6 @@
           "description": "Additional comment about the outgoing comm."
         }
       }
-    },
-    "eventResolve": {
-      "type": "object",
-      "description": "Reports on the subject acknowledged by a moderator",
-      "properties": {
-        "comment": {
-          "type": "string",
-          "description": "Describe the resolution or acknowledgment."
-        }
-      }
-    },
-    "modActionPending": {
-      "type": "token",
-      "description": "Awaiting moderator review on the reported subject"
-    },
-    "modActionResolve": {
-      "type": "token",
-      "description": "Moderator acknowledged report and marked as resolved the subject without action"
-    },
-    "modActionLabel": {
-      "type": "token",
-      "description": "Moderator added or removed label(s) on the reported subject"
-    },
-    "modActionTakedown": {
-      "type": "token",
-      "description": "Moderator permanently took down the reported subject"
-    },
-    "modActionSuspend": {
-      "type": "token",
-      "description": "Moderator temporarily took down the reported subject"
     }
   }
 }

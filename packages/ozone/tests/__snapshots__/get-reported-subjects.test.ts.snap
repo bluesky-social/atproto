@@ -1,40 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`get-reported-subjects returns reported subjects 1`] = `
+exports[`get-reported-subjects returns reported subjects with comments and status 1`] = `
 Array [
   Object {
+    "actions": Array [],
+    "comment": "alice says bob cannot post",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "modAction": "tools.ozone.history.defs#modActionPending",
-    "status": "active",
+    "status": "open",
     "subject": "record(0)",
   },
   Object {
+    "actions": Array [],
+    "comment": "alice says bob is bad",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "modAction": "tools.ozone.history.defs#modActionPending",
-    "status": "active",
+    "status": "open",
     "subject": "user(0)",
   },
   Object {
+    "actions": Array [],
+    "comment": "alice says carol cannot post",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "modAction": "tools.ozone.history.defs#modActionPending",
-    "status": "active",
+    "status": "open",
     "subject": "record(1)",
   },
   Object {
+    "actions": Array [],
+    "comment": "alice says carol is bad",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "modAction": "tools.ozone.history.defs#modActionPending",
-    "status": "active",
+    "status": "open",
     "subject": "user(1)",
   },
 ]
 `;
 
-exports[`get-reported-subjects returns reported subjects 2`] = `
+exports[`get-reported-subjects returns reported subjects with comments and status 2`] = `
 Array [
   Object {
+    "actions": Array [],
+    "comment": "carol also says bob cannot post",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "modAction": "tools.ozone.history.defs#modActionPending",
-    "status": "active",
+    "status": "open",
     "subject": "record(0)",
   },
 ]

@@ -24,7 +24,7 @@ export type QueryParams = {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subjects: ToolsOzoneHistoryDefs.SubjectBasicView[]
+  events: ToolsOzoneHistoryDefs.EventView[]
   cursor?: string
 }
 

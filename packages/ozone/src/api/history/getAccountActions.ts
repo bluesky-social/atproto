@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
+import { actionEventTypes, modEventToEventView } from '../../history/views'
 import { Server } from '../../lexicon'
-import * as ActorDefs from '../../lexicon/types/app/bsky/actor/defs'
-import { SubjectBasicView } from '../../lexicon/types/tools/ozone/history/defs'
+import { EventView } from '../../lexicon/types/tools/ozone/history/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.history.getAccountActions({
@@ -27,51 +27,31 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('unauthorized')
       }
 
-      const modHistoryService = ctx.modStatusHistoryService(db)
       const modService = ctx.modService(db)
-      const results = await modHistoryService.getStatuses({
-        viewerDid,
-        forAuthor: true,
+      const results = await modService.getEvents({
+        subject: viewerDid,
         limit,
         cursor,
+        types: [...actionEventTypes],
         sortDirection: sortDirection === 'asc' ? 'asc' : 'desc',
+        addedLabels: [],
+        removedLabels: [],
+        addedTags: [],
+        removedTags: [],
+        collections: [],
+        includeAllUserRecords: true,
       })
 
-      const subjects: SubjectBasicView[] = []
-      const uris = new Set<string>()
-
-      for (const item of results.statuses) {
-        uris.add(modHistoryService.atUriFromStatus(item))
-      }
-
-      const [accountInfos, labels] = await Promise.all([
-        modService.views.getAccoutInfosByDid([viewerDid]),
-        modService.views.labels(Array.from(uris)),
-      ])
-
-      for (const item of results.statuses) {
-        const view = modHistoryService.basicView(item)
-        const accountInfo = accountInfos.get(item.did)
-        const subjectProfile = accountInfo?.relatedRecords?.find(
-          ActorDefs.isProfileViewBasic,
-        )
-
-        subjects.push({
-          ...view,
-          subjectProfile,
-          labels: labels.get(view.subject),
-          status: accountInfo
-            ? accountInfo?.deactivatedAt
-              ? 'deactivated'
-              : 'active'
-            : 'deleted',
-        })
+      const events: EventView[] = []
+      for (const item of results.events) {
+        const view = modEventToEventView(item)
+        if (view) events.push(view)
       }
 
       return {
         encoding: 'application/json',
         body: {
-          subjects,
+          events,
           cursor: results.cursor,
         },
       }

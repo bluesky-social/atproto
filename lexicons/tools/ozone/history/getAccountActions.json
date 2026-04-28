@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch all subjects from a single account with mod subjects.",
+      "description": "Fetch moderation actions taken on subjects owned by the account.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -27,13 +27,13 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subjects"],
+          "required": ["events"],
           "properties": {
-            "subjects": {
+            "events": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "tools.ozone.history.defs#subjectBasicView"
+                "ref": "tools.ozone.history.defs#eventView"
               }
             },
             "cursor": { "type": "string" }

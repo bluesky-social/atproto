@@ -15,6 +15,8 @@ export interface Report {
   did: string // Denormalized from moderation_event.subjectDid
   recordPath: string // '' = account/message, 'collection/rkey' = record
   subjectMessageId: string | null // Denormalized from moderation_event.subjectMessageId
+  createdBy: string // Denormalized from moderation_event.createdBy (reporter DID)
+  comment: string | null // Denormalized from moderation_event.comment (reporter's comment)
   createdAt: string
   updatedAt: string
   assignedTo: string | null // DID of permanently assigned moderator, null if unassigned

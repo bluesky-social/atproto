@@ -284,6 +284,8 @@ const handleModerationEvent = async ({
           did: subject.did,
           recordPath: subject.isRecord() ? subject.recordPath : '',
           subjectMessageId: subject.isMessage() ? subject.messageId : null,
+          createdBy: result.event.createdBy,
+          comment: result.event.comment || null,
           createdAt: now,
           updatedAt: now,
         })

@@ -9,36 +9,34 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
-import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.history.defs'
 
-export interface SubjectBasicView {
-  $type?: 'tools.ozone.history.defs#subjectBasicView'
+export interface ReportedSubjectView {
+  $type?: 'tools.ozone.history.defs#reportedSubjectView'
   subject: string
-  status: 'deactivated' | 'active' | 'deleted' | (string & {})
-  modAction:
-    | 'tools.ozone.history.defs#modActionPending'
-    | 'tools.ozone.history.defs#modActionLabel'
-    | 'tools.ozone.history.defs#modActionResolve'
-    | 'tools.ozone.history.defs#modActionSuspend'
-    | 'tools.ozone.history.defs#modActionTakedown'
+  comment?: string
+  createdAt: string
+  status:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
     | (string & {})
-  subjectProfile?: { $type: string }
-  labels?: ComAtprotoLabelDefs.Label[]
+  actions?: EventView[]
 }
 
-const hashSubjectBasicView = 'subjectBasicView'
+const hashReportedSubjectView = 'reportedSubjectView'
 
-export function isSubjectBasicView<V>(v: V) {
-  return is$typed(v, id, hashSubjectBasicView)
+export function isReportedSubjectView<V>(v: V) {
+  return is$typed(v, id, hashReportedSubjectView)
 }
 
-export function validateSubjectBasicView<V>(v: V) {
-  return validate<SubjectBasicView & V>(v, id, hashSubjectBasicView)
+export function validateReportedSubjectView<V>(v: V) {
+  return validate<ReportedSubjectView & V>(v, id, hashReportedSubjectView)
 }
 
 export interface EventView {
@@ -48,10 +46,9 @@ export interface EventView {
   isAutomated: boolean
   event:
     | $Typed<EventTakedown>
+    | $Typed<EventReverseTakedown>
     | $Typed<EventLabel>
-    | $Typed<EventReport>
     | $Typed<EventEmail>
-    | $Typed<EventResolve>
     | { $type: string }
 }
 
@@ -83,6 +80,22 @@ export function validateEventTakedown<V>(v: V) {
   return validate<EventTakedown & V>(v, id, hashEventTakedown)
 }
 
+/** Takedown reversed on the subject */
+export interface EventReverseTakedown {
+  $type?: 'tools.ozone.history.defs#eventReverseTakedown'
+  comment?: string
+}
+
+const hashEventReverseTakedown = 'eventReverseTakedown'
+
+export function isEventReverseTakedown<V>(v: V) {
+  return is$typed(v, id, hashEventReverseTakedown)
+}
+
+export function validateEventReverseTakedown<V>(v: V) {
+  return validate<EventReverseTakedown & V>(v, id, hashEventReverseTakedown)
+}
+
 /** Label(s) applied/negated */
 export interface EventLabel {
   $type?: 'tools.ozone.history.defs#eventLabel'
@@ -99,23 +112,6 @@ export function isEventLabel<V>(v: V) {
 
 export function validateEventLabel<V>(v: V) {
   return validate<EventLabel & V>(v, id, hashEventLabel)
-}
-
-/** Subject reported */
-export interface EventReport {
-  $type?: 'tools.ozone.history.defs#eventReport'
-  comment?: string
-  reportType: ComAtprotoModerationDefs.ReasonType
-}
-
-const hashEventReport = 'eventReport'
-
-export function isEventReport<V>(v: V) {
-  return is$typed(v, id, hashEventReport)
-}
-
-export function validateEventReport<V>(v: V) {
-  return validate<EventReport & V>(v, id, hashEventReport)
 }
 
 /** Moderation email sent to the author of the subject */
@@ -138,31 +134,3 @@ export function isEventEmail<V>(v: V) {
 export function validateEventEmail<V>(v: V) {
   return validate<EventEmail & V>(v, id, hashEventEmail)
 }
-
-/** Reports on the subject acknowledged by a moderator */
-export interface EventResolve {
-  $type?: 'tools.ozone.history.defs#eventResolve'
-  /** Describe the resolution or acknowledgment. */
-  comment?: string
-}
-
-const hashEventResolve = 'eventResolve'
-
-export function isEventResolve<V>(v: V) {
-  return is$typed(v, id, hashEventResolve)
-}
-
-export function validateEventResolve<V>(v: V) {
-  return validate<EventResolve & V>(v, id, hashEventResolve)
-}
-
-/** Awaiting moderator review on the reported subject */
-export const MODACTIONPENDING = `${id}#modActionPending`
-/** Moderator acknowledged report and marked as resolved the subject without action */
-export const MODACTIONRESOLVE = `${id}#modActionResolve`
-/** Moderator added or removed label(s) on the reported subject */
-export const MODACTIONLABEL = `${id}#modActionLabel`
-/** Moderator permanently took down the reported subject */
-export const MODACTIONTAKEDOWN = `${id}#modActionTakedown`
-/** Moderator temporarily took down the reported subject */
-export const MODACTIONSUSPEND = `${id}#modActionSuspend`
