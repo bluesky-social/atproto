@@ -397,7 +397,7 @@ function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
  * const app = express()
  *
  * // Mount the XRPC router
- * app.use('/xrpc', toRequestListener(router.fetch))
+ * app.use(toRequestListener(router.fetch))
  * ```
  */
 export function toRequestListener<
