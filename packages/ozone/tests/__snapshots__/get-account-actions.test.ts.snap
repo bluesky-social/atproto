@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`get-account-actions returns action events after mod action 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "event": Object {
+      "$type": "tools.ozone.history.defs#eventLabel",
+      "createLabelVals": Array [
+        "spam",
+      ],
+      "negateLabelVals": Array [],
+    },
+    "isAutomated": false,
+    "subject": "record(0)",
+  },
+]
+`;
+
+exports[`get-account-actions shows subject history for a specific subject 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "event": Object {
+      "$type": "tools.ozone.history.defs#eventLabel",
+      "createLabelVals": Array [
+        "spam",
+      ],
+      "negateLabelVals": Array [],
+    },
+    "isAutomated": false,
+    "subject": "record(0)",
+  },
+]
+`;

@@ -250,6 +250,9 @@ import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
+import * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions.js'
+import * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects.js'
+import * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
@@ -3595,6 +3598,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
+  history: ToolsOzoneHistoryNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
   queue: ToolsOzoneQueueNS
@@ -3610,6 +3614,7 @@ export class ToolsOzoneNS {
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
+    this.history = new ToolsOzoneHistoryNS(server)
     this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.queue = new ToolsOzoneQueueNS(server)
@@ -3676,6 +3681,50 @@ export class ToolsOzoneCommunicationNS {
     >,
   ) {
     const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneHistoryNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAccountActions<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneHistoryGetAccountActions.QueryParams,
+      ToolsOzoneHistoryGetAccountActions.HandlerInput,
+      ToolsOzoneHistoryGetAccountActions.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getAccountActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getReportedSubjects<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneHistoryGetReportedSubjects.QueryParams,
+      ToolsOzoneHistoryGetReportedSubjects.HandlerInput,
+      ToolsOzoneHistoryGetReportedSubjects.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getReportedSubjects' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubjectHistory<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneHistoryGetSubjectHistory.QueryParams,
+      ToolsOzoneHistoryGetSubjectHistory.HandlerInput,
+      ToolsOzoneHistoryGetSubjectHistory.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getSubjectHistory' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

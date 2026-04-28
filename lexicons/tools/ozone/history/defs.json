@@ -1,0 +1,123 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.history.defs",
+  "defs": {
+    "reportedSubjectView": {
+      "type": "object",
+      "required": ["subject", "createdAt", "status"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "format": "uri"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "status": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"]
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "tools.ozone.history.defs#eventView"
+          }
+        }
+      }
+    },
+    "eventView": {
+      "type": "object",
+      "required": ["subject", "createdAt", "event", "isAutomated"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "isAutomated": {
+          "type": "boolean"
+        },
+        "event": {
+          "type": "union",
+          "refs": [
+            "tools.ozone.history.defs#eventTakedown",
+            "tools.ozone.history.defs#eventReverseTakedown",
+            "tools.ozone.history.defs#eventLabel",
+            "tools.ozone.history.defs#eventEmail"
+          ]
+        }
+      }
+    },
+    "eventTakedown": {
+      "type": "object",
+      "description": "Permanently or temporarily taken down",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the takedown should be in effect before automatically expiring."
+        }
+      }
+    },
+    "eventReverseTakedown": {
+      "type": "object",
+      "description": "Takedown reversed on the subject",
+      "properties": {
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "eventLabel": {
+      "type": "object",
+      "description": "Label(s) applied/negated",
+      "required": ["createLabelVals", "negateLabelVals"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "createLabelVals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "negateLabelVals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "eventEmail": {
+      "type": "object",
+      "description": "Moderation email sent to the author of the subject",
+      "required": ["subjectLine"],
+      "properties": {
+        "subjectLine": {
+          "type": "string",
+          "description": "The subject line of the email sent to the user."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the email sent to the user."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Additional comment about the outgoing comm."
+        }
+      }
+    }
+  }
+}

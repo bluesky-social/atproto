@@ -31,6 +31,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('recordPath', 'varchar', (col) => col.notNull().defaultTo('')) // '' = account/message, 'collection/rkey' = record
     .addColumn('subjectMessageId', 'varchar') // NULL for non-message subjects
 
+    // Denormalized from moderation_event for reporter info
+    .addColumn('createdBy', 'varchar', (col) => col.notNull())
+    .addColumn('comment', 'text')
+
     // Timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
@@ -120,6 +124,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`CREATE INDEX idx_report_queue_pending ON report ("queueId") WHERE status != 'closed'`.execute(
     db,
   )
+
+  // Reporter lookup for getReportedSubjects
+  await db.schema
+    .createIndex('idx_report_created_by')
+    .on('report')
+    .columns(['createdBy', 'createdAt', 'id'])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

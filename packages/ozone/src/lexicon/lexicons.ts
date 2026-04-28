@@ -17924,6 +17924,283 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneHistoryDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.history.defs',
+    defs: {
+      reportedSubjectView: {
+        type: 'object',
+        required: ['subject', 'createdAt', 'status'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'uri',
+          },
+          comment: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+          },
+          actions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.history.defs#eventView',
+            },
+          },
+        },
+      },
+      eventView: {
+        type: 'object',
+        required: ['subject', 'createdAt', 'event', 'isAutomated'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'uri',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          isAutomated: {
+            type: 'boolean',
+          },
+          event: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.history.defs#eventTakedown',
+              'lex:tools.ozone.history.defs#eventReverseTakedown',
+              'lex:tools.ozone.history.defs#eventLabel',
+              'lex:tools.ozone.history.defs#eventEmail',
+            ],
+          },
+        },
+      },
+      eventTakedown: {
+        type: 'object',
+        description: 'Permanently or temporarily taken down',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+        },
+      },
+      eventReverseTakedown: {
+        type: 'object',
+        description: 'Takedown reversed on the subject',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      eventLabel: {
+        type: 'object',
+        description: 'Label(s) applied/negated',
+        required: ['createLabelVals', 'negateLabelVals'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      eventEmail: {
+        type: 'object',
+        description: 'Moderation email sent to the author of the subject',
+        required: ['subjectLine'],
+        properties: {
+          subjectLine: {
+            type: 'string',
+            description: 'The subject line of the email sent to the user.',
+          },
+          content: {
+            type: 'string',
+            description: 'The content of the email sent to the user.',
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about the outgoing comm.',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneHistoryGetAccountActions: {
+    lexicon: 1,
+    id: 'tools.ozone.history.getAccountActions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Fetch moderation actions taken on subjects owned by the account.',
+        parameters: {
+          type: 'params',
+          properties: {
+            account: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              default: 50,
+              maximum: 100,
+            },
+            sortDirection: {
+              type: 'string',
+              knownValues: ['asc', 'desc'],
+              default: 'desc',
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.history.defs#eventView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneHistoryGetReportedSubjects: {
+    lexicon: 1,
+    id: 'tools.ozone.history.getReportedSubjects',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch all subjects reported by the account.',
+        parameters: {
+          type: 'params',
+          properties: {
+            account: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              default: 50,
+              maximum: 100,
+            },
+            sortDirection: {
+              type: 'string',
+              knownValues: ['asc', 'desc'],
+              default: 'desc',
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjects'],
+            properties: {
+              subjects: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.history.defs#reportedSubjectView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneHistoryGetSubjectHistory: {
+    lexicon: 1,
+    id: 'tools.ozone.history.getSubjectHistory',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch the history of events for a specific subject.',
+        parameters: {
+          type: 'params',
+          required: ['subject'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              default: 50,
+              maximum: 100,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.history.defs#eventView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneHostingGetAccountHistory: {
     lexicon: 1,
     id: 'tools.ozone.hosting.getAccountHistory',
@@ -24899,6 +25176,11 @@ export const ids = {
     'tools.ozone.communication.listTemplates',
   ToolsOzoneCommunicationUpdateTemplate:
     'tools.ozone.communication.updateTemplate',
+  ToolsOzoneHistoryDefs: 'tools.ozone.history.defs',
+  ToolsOzoneHistoryGetAccountActions: 'tools.ozone.history.getAccountActions',
+  ToolsOzoneHistoryGetReportedSubjects:
+    'tools.ozone.history.getReportedSubjects',
+  ToolsOzoneHistoryGetSubjectHistory: 'tools.ozone.history.getSubjectHistory',
   ToolsOzoneHostingGetAccountHistory: 'tools.ozone.hosting.getAccountHistory',
   ToolsOzoneModerationCancelScheduledActions:
     'tools.ozone.moderation.cancelScheduledActions',
