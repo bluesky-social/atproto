@@ -22,7 +22,7 @@ export class AuthorizationServerMetadataCache extends MMKVSimpleStoreTTL<OAuthAu
   }
 }
 
-export class ProtectedResourceMetadataCache extends MMKVSimpleStoreTTL<OAuthProtectedResourceMetadata> {
+export class ProtectedResourceMetadataCache extends MMKVSimpleStoreTTL<OAuthProtectedResourceMetadata | null> {
   constructor() {
     super({
       id: `${MMKV_ID}.protectedResourceMetadata`,

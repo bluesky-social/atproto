@@ -287,13 +287,19 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
 
   async signInPopup(
     input: string,
-    options?: Omit<AuthorizeOptions, 'state'>,
+    options?: Omit<AuthorizeOptions, 'state'> & {
+      popupName?: string
+      popupFeatures?: string
+    },
   ): Promise<OAuthSession> {
+    const popupTarget = options?.popupName ?? '_blank'
+
     // Open new window asap to prevent popup busting by browsers
-    const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'
+    const popupFeatures =
+      options?.popupFeatures ?? 'width=600,height=600,menubar=no,toolbar=no'
     let popup: Window | null = window.open(
       'about:blank',
-      '_blank',
+      popupTarget,
       popupFeatures,
     )
 
@@ -310,7 +316,7 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
     if (popup) {
       popup.window.location.href = url.href
     } else {
-      popup = window.open(url.href, '_blank', popupFeatures)
+      popup = window.open(url.href, popupTarget, popupFeatures)
     }
 
     popup?.focus()
