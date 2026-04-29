@@ -19072,6 +19072,11 @@ export const schemaDict = {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added.',
+          },
         },
       },
       accountEvent: {

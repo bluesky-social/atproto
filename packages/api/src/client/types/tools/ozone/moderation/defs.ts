@@ -701,6 +701,8 @@ export interface ModEventTag {
   remove: string[]
   /** Additional comment about added/removed tags. */
   comment?: string
+  /** Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added. */
+  durationInHours?: number
 }
 
 const hashModEventTag = 'modEventTag'
