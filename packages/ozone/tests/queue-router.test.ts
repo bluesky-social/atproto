@@ -8,7 +8,7 @@ import {
 import { ids } from '../src/lexicon/lexicons'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
-const REASON_HARASSMENT = 'com.atproto.moderation.defs#reasonHarassment'
+const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
 const REASON_MISLEADING = 'com.atproto.moderation.defs#reasonMisleading'
 
 describe('queue-router', () => {
@@ -108,11 +108,11 @@ describe('queue-router', () => {
 
   describe('with queues configured', () => {
     let spamAccountQueueId: number
-    let harassmentAccountQueueId: number
+    let threatAccountQueueId: number
     let spamPostQueueId: number
 
     beforeAll(async () => {
-      const [spamAccountQueue, harassmentAccountQueue, spamPostQueue] =
+      const [spamAccountQueue, threatAccountQueue, spamPostQueue] =
         await Promise.all([
           createQueue({
             name: 'QR: Spam Accounts',
@@ -120,9 +120,9 @@ describe('queue-router', () => {
             reportTypes: [REASON_SPAM],
           }),
           createQueue({
-            name: 'QR: Harassment Accounts',
+            name: 'QR: Threat Accounts',
             subjectTypes: ['account'],
-            reportTypes: [REASON_HARASSMENT],
+            reportTypes: [REASON_THREAT],
           }),
           createQueue({
             name: 'QR: Spam Posts',
@@ -132,14 +132,14 @@ describe('queue-router', () => {
           }),
         ])
       spamAccountQueueId = spamAccountQueue.id
-      harassmentAccountQueueId = harassmentAccountQueue.id
+      threatAccountQueueId = threatAccountQueue.id
       spamPostQueueId = spamPostQueue.id
     })
 
     afterAll(async () => {
       await Promise.all([
         deleteQueue(spamAccountQueueId).catch(() => {}),
-        deleteQueue(harassmentAccountQueueId).catch(() => {}),
+        deleteQueue(threatAccountQueueId).catch(() => {}),
         deleteQueue(spamPostQueueId).catch(() => {}),
       ])
     })
@@ -179,9 +179,9 @@ describe('queue-router', () => {
     it('routes a record report to a queue with null collection (matches all)', async () => {
       // Create a catch-all record queue with no collection filter
       const catchAllQueue = await createQueue({
-        name: 'QR: All Records Harassment',
+        name: 'QR: All Records Threat',
         subjectTypes: ['record'],
-        reportTypes: [REASON_HARASSMENT],
+        reportTypes: [REASON_THREAT],
       })
 
       // Use a different post than the collection-filter test to avoid subject overlap
@@ -189,7 +189,7 @@ describe('queue-router', () => {
       const postUri = bobPost.ref.uriStr
       const postCid = bobPost.ref.cidStr
 
-      await reportRecord(postUri, postCid, REASON_HARASSMENT)
+      await reportRecord(postUri, postCid, REASON_THREAT)
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
       const report = await queryLatestReportForSubject(postUri)
@@ -227,13 +227,13 @@ describe('queue-router', () => {
     })
 
     it('advances cursor so already-processed reports are skipped on subsequent runs', async () => {
-      await reportAccount(sc.dids.dan, REASON_HARASSMENT)
+      await reportAccount(sc.dids.dan, REASON_THREAT)
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
       const report = await queryLatestReportForSubject(sc.dids.dan)
       expect(report).toBeDefined()
-      expect(report.queue?.id).toBe(harassmentAccountQueueId)
+      expect(report.queue?.id).toBe(threatAccountQueueId)
 
       const cursorAfterFirst =
         await network.ozone.daemon.ctx.queueRouter.getCursor()
@@ -258,28 +258,28 @@ describe('queue-router', () => {
     })
 
     it('skips disabled queues when routing', async () => {
-      // Disable the harassment queue and create the report concurrently
+      // Disable the threat queue and create the report concurrently
       await Promise.all([
         agent.tools.ozone.queue.updateQueue(
-          { queueId: harassmentAccountQueueId, enabled: false },
+          { queueId: threatAccountQueueId, enabled: false },
           {
             encoding: 'application/json',
             headers: await modHeaders(ids.ToolsOzoneQueueUpdateQueue),
           },
         ),
-        reportAccount(sc.dids.alice, REASON_HARASSMENT),
+        reportAccount(sc.dids.alice, REASON_THREAT),
       ])
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
       const report = await queryLatestReportForSubject(sc.dids.alice)
       expect(report).toBeDefined()
-      // Harassment queue is disabled, so no match → queue is absent
+      // Threat queue is disabled, so no match → queue is absent
       expect(report.queue).toBeUndefined()
 
       // Re-enable the queue for subsequent tests
       await agent.tools.ozone.queue.updateQueue(
-        { queueId: harassmentAccountQueueId, enabled: true },
+        { queueId: threatAccountQueueId, enabled: true },
         {
           encoding: 'application/json',
           headers: await modHeaders(ids.ToolsOzoneQueueUpdateQueue),

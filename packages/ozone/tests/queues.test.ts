@@ -179,17 +179,17 @@ describe('ozone-queues', () => {
 
     it('rejects conflicting queue - same subject type and report type', async () => {
       const { data: q1 } = await createQueue({
-        name: 'CQ: Harassment Accounts',
+        name: 'CQ: Threat Accounts',
         subjectTypes: ['account'],
-        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+        reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
       })
       createdIds.push(q1.queue.id)
 
       await expect(
         createQueue({
-          name: 'CQ: Harassment Accounts Duplicate',
+          name: 'CQ: Threat Accounts Duplicate',
           subjectTypes: ['account'],
-          reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+          reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
         }),
       ).rejects.toMatchObject({ error: 'ConflictingQueue' })
     })
@@ -217,18 +217,18 @@ describe('ozone-queues', () => {
         name: 'CQ: Mixed Reports',
         subjectTypes: ['account'],
         reportTypes: [
-          'com.atproto.moderation.defs#reasonHarassment',
+          'tools.ozone.report.defs#reasonViolenceThreats',
           'com.atproto.moderation.defs#reasonMisleading',
         ],
       })
       createdIds.push(q1.queue.id)
 
-      // reasonHarassment overlaps = conflict
+      // threat overlaps = conflict
       await expect(
         createQueue({
-          name: 'CQ: Just Harassment',
+          name: 'CQ: Just Threat',
           subjectTypes: ['account'],
-          reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+          reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
         }),
       ).rejects.toMatchObject({ error: 'ConflictingQueue' })
     })
@@ -285,9 +285,9 @@ describe('ozone-queues', () => {
         reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
       })
       const q2 = await createQueue({
-        name: 'LQ: Harassment',
+        name: 'LQ: Threat',
         subjectTypes: ['account'],
-        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+        reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
       })
       const q3 = await createQueue({
         name: 'LQ: Sexual Posts',
@@ -372,7 +372,7 @@ describe('ozone-queues', () => {
           'com.atproto.moderation.defs#reasonSpam',
         ],
       })
-      // q1 (spam) and q3 (sexual) should appear, q2 (harassment) should not
+      // q1 (spam) and q3 (sexual) should appear, q2 (threat) should not
       expect(byReportTypes.queues.some((q) => q.id === queueIds[0])).toBe(true)
       expect(byReportTypes.queues.some((q) => q.id === queueIds[2])).toBe(true)
       expect(byReportTypes.queues.some((q) => q.id === queueIds[1])).toBe(false)
@@ -548,7 +548,7 @@ describe('ozone-queues', () => {
 
   describe('report migration on delete', () => {
     const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
-    const REASON_HARASSMENT = 'com.atproto.moderation.defs#reasonHarassment'
+    const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
 
     const reportAccount = async (did: string, reportType: string) => {
       await modClient.emitEvent({
@@ -576,9 +576,9 @@ describe('ozone-queues', () => {
           reportTypes: [REASON_SPAM],
         }),
         createQueue({
-          name: 'M: Harassment Accounts',
+          name: 'M: Threat Accounts',
           subjectTypes: ['account'],
-          reportTypes: [REASON_HARASSMENT],
+          reportTypes: [REASON_THREAT],
         }),
       ])
 
@@ -657,7 +657,7 @@ describe('ozone-queues', () => {
       } = await createQueue({
         name: 'M: Reusable Config',
         subjectTypes: ['account'],
-        reportTypes: [REASON_HARASSMENT],
+        reportTypes: [REASON_THREAT],
       })
       await deleteQueue(original.id)
 
@@ -667,7 +667,7 @@ describe('ozone-queues', () => {
       } = await createQueue({
         name: 'M: Reusable Config',
         subjectTypes: ['account'],
-        reportTypes: [REASON_HARASSMENT],
+        reportTypes: [REASON_THREAT],
       })
       expect(replacement.id).not.toBe(original.id)
 
