@@ -24,7 +24,25 @@ import queryStatuses from './moderation/queryStatuses'
 import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
+import assignQueueModerator from './queue/assignModerator'
+import createQueue from './queue/createQueue'
+import deleteQueue from './queue/deleteQueue'
+import getQueueAssignments from './queue/getAssignments'
+import listQueues from './queue/listQueues'
+import routeReports from './queue/routeReports'
+import updateQueue from './queue/updateQueue'
+import assignReportModerator from './report/assignModerator'
+import createActivity from './report/createActivity'
 import createReport from './report/createReport'
+import getReportAssignments from './report/getAssignments'
+import getHistoricalStats from './report/getHistoricalStats'
+import getLatestReport from './report/getLatestReport'
+import getLiveStats from './report/getLiveStats'
+import getReport from './report/getReport'
+import listActivities from './report/listActivities'
+import queryReports from './report/queryReports'
+import refreshStats from './report/refreshStats'
+import unassignReportModerator from './report/unassignModerator'
 import addSafelinkRule from './safelink/addRule'
 import querySafelinkEvents from './safelink/queryEvents'
 import querySafelinkRules from './safelink/queryRules'
@@ -62,6 +80,8 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
+  getReport(server, ctx)
+  queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
@@ -77,6 +97,10 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
+  createQueue(server, ctx)
+  listQueues(server, ctx)
+  updateQueue(server, ctx)
+  deleteQueue(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)
@@ -100,5 +124,17 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
+  routeReports(server, ctx)
+  getLiveStats(server, ctx)
+  getHistoricalStats(server, ctx)
+  refreshStats(server, ctx)
+  assignQueueModerator(server, ctx)
+  getQueueAssignments(server, ctx)
+  getLatestReport(server, ctx)
+  assignReportModerator(server, ctx)
+  unassignReportModerator(server, ctx)
+  getReportAssignments(server, ctx)
+  createActivity(server, ctx)
+  listActivities(server, ctx)
   return server
 }

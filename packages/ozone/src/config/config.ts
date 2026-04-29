@@ -90,6 +90,15 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
         }
       : null
 
+  const assignmentsCfg: OzoneConfig['assignments'] = {
+    queueDurationMs: env.assignmentQueueDurationMs ?? 5 * MINUTE,
+    reportDurationMs: env.assignmentReportDurationMs ?? 5 * MINUTE,
+  }
+
+  const statsCfg: OzoneConfig['stats'] = {
+    computerIntervalMinutes: env.statsComputerIntervalMinutes ?? 15,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -101,6 +110,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     blobDivert: blobDivertServiceCfg,
     access: accessCfg,
     verifier: verifierCfg,
+    assignments: assignmentsCfg,
+    stats: statsCfg,
     jetstreamUrl: env.jetstreamUrl,
   }
 }
@@ -115,8 +126,19 @@ export type OzoneConfig = {
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
+  assignments: AssignmentsConfig
+  stats: StatsConfig
   jetstreamUrl?: string
   verifier: VerifierConfig | null
+}
+
+export type StatsConfig = {
+  /**
+   * Minutes between stats computer cycles.
+   * Defaults to 15. Minimum is 1.
+   * Set to -1 to disable the stats computer.
+   */
+  computerIntervalMinutes: number
 }
 
 export type ServiceConfig = {
@@ -181,4 +203,9 @@ export type VerifierConfig = {
   password: string
   jetstreamUrl?: string
   issuersToIndex?: string[]
+}
+
+export type AssignmentsConfig = {
+  queueDurationMs: number
+  reportDurationMs: number
 }

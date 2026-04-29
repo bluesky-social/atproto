@@ -9,6 +9,10 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ToolsOzoneTeamDefs from '../team/defs.js'
+import type * as ToolsOzoneModerationDefs from '../moderation/defs.js'
+import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+import type * as ToolsOzoneQueueDefs from '../queue/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -137,3 +141,326 @@ export const REASONSELFHARMSTUNTS = `${id}#reasonSelfHarmStunts`
 export const REASONSELFHARMSUBSTANCES = `${id}#reasonSelfHarmSubstances`
 /** Other dangerous content */
 export const REASONSELFHARMOTHER = `${id}#reasonSelfHarmOther`
+
+/** Information about the moderator currently assigned to a report. */
+export interface ReportAssignment {
+  $type?: 'tools.ozone.report.defs#reportAssignment'
+  /** DID of the assigned moderator */
+  did: string
+  moderator?: ToolsOzoneTeamDefs.Member
+  /** When the report was assigned */
+  assignedAt: string
+}
+
+const hashReportAssignment = 'reportAssignment'
+
+export function isReportAssignment<V>(v: V) {
+  return is$typed(v, id, hashReportAssignment)
+}
+
+export function validateReportAssignment<V>(v: V) {
+  return validate<ReportAssignment & V>(v, id, hashReportAssignment)
+}
+
+export interface ReportView {
+  $type?: 'tools.ozone.report.defs#reportView'
+  /** Report ID */
+  id: number
+  /** ID of the moderation event that created this report */
+  eventId: number
+  /** Current status of the report */
+  status:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+  subject: ToolsOzoneModerationDefs.SubjectView
+  reportType: ComAtprotoModerationDefs.ReasonType
+  /** DID of the user who made the report */
+  reportedBy: string
+  reporter: ToolsOzoneModerationDefs.SubjectView
+  /** Comment provided by the reporter */
+  comment?: string
+  /** When the report was created */
+  createdAt: string
+  /** When the report was last updated */
+  updatedAt?: string
+  /** When the report was assigned to its current queue */
+  queuedAt?: string
+  /** Array of moderation event IDs representing actions taken on this report (sorted DESC, most recent first) */
+  actionEventIds?: number[]
+  /** Optional: expanded action events */
+  actions?: ToolsOzoneModerationDefs.ModEventView[]
+  /** Note sent to reporter when report was actioned */
+  actionNote?: string
+  subjectStatus?: ToolsOzoneModerationDefs.SubjectStatusView
+  /** Number of other pending reports on the same subject */
+  relatedReportCount?: number
+  assignment?: ReportAssignment
+  queue?: ToolsOzoneQueueDefs.QueueView
+  /** Whether this report is muted. A report is muted if the reporter was muted or the subject was muted at the time the report was created. */
+  isMuted?: boolean
+}
+
+const hashReportView = 'reportView'
+
+export function isReportView<V>(v: V) {
+  return is$typed(v, id, hashReportView)
+}
+
+export function validateReportView<V>(v: V) {
+  return validate<ReportView & V>(v, id, hashReportView)
+}
+
+/** Activity recording a report being routed to a queue. */
+export interface QueueActivity {
+  $type?: 'tools.ozone.report.defs#queueActivity'
+  /** The report's status before this activity. Populated automatically from the report row; not required in input. */
+  previousStatus?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+}
+
+const hashQueueActivity = 'queueActivity'
+
+export function isQueueActivity<V>(v: V) {
+  return is$typed(v, id, hashQueueActivity)
+}
+
+export function validateQueueActivity<V>(v: V) {
+  return validate<QueueActivity & V>(v, id, hashQueueActivity)
+}
+
+/** Activity recording a moderator being assigned to a report. */
+export interface AssignmentActivity {
+  $type?: 'tools.ozone.report.defs#assignmentActivity'
+  /** The report's status before this activity. Populated automatically from the report row; not required in input. */
+  previousStatus?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+}
+
+const hashAssignmentActivity = 'assignmentActivity'
+
+export function isAssignmentActivity<V>(v: V) {
+  return is$typed(v, id, hashAssignmentActivity)
+}
+
+export function validateAssignmentActivity<V>(v: V) {
+  return validate<AssignmentActivity & V>(v, id, hashAssignmentActivity)
+}
+
+/** Activity recording a report being escalated. */
+export interface EscalationActivity {
+  $type?: 'tools.ozone.report.defs#escalationActivity'
+  /** The report's status before this activity. Populated automatically from the report row; not required in input. */
+  previousStatus?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+}
+
+const hashEscalationActivity = 'escalationActivity'
+
+export function isEscalationActivity<V>(v: V) {
+  return is$typed(v, id, hashEscalationActivity)
+}
+
+export function validateEscalationActivity<V>(v: V) {
+  return validate<EscalationActivity & V>(v, id, hashEscalationActivity)
+}
+
+/** Activity recording a report being closed. */
+export interface CloseActivity {
+  $type?: 'tools.ozone.report.defs#closeActivity'
+  /** The report's status before this activity. Populated automatically from the report row; not required in input. */
+  previousStatus?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+}
+
+const hashCloseActivity = 'closeActivity'
+
+export function isCloseActivity<V>(v: V) {
+  return is$typed(v, id, hashCloseActivity)
+}
+
+export function validateCloseActivity<V>(v: V) {
+  return validate<CloseActivity & V>(v, id, hashCloseActivity)
+}
+
+/** Activity recording a closed report being reopened. Only valid when the report is in 'closed' status. */
+export interface ReopenActivity {
+  $type?: 'tools.ozone.report.defs#reopenActivity'
+  /** The report's status before this activity. Populated automatically from the report row; not required in input. */
+  previousStatus?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+}
+
+const hashReopenActivity = 'reopenActivity'
+
+export function isReopenActivity<V>(v: V) {
+  return is$typed(v, id, hashReopenActivity)
+}
+
+export function validateReopenActivity<V>(v: V) {
+  return validate<ReopenActivity & V>(v, id, hashReopenActivity)
+}
+
+/** Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both). */
+export interface NoteActivity {
+  $type?: 'tools.ozone.report.defs#noteActivity'
+}
+
+const hashNoteActivity = 'noteActivity'
+
+export function isNoteActivity<V>(v: V) {
+  return is$typed(v, id, hashNoteActivity)
+}
+
+export function validateNoteActivity<V>(v: V) {
+  return validate<NoteActivity & V>(v, id, hashNoteActivity)
+}
+
+/** A single activity entry on a report. */
+export interface ReportActivityView {
+  $type?: 'tools.ozone.report.defs#reportActivityView'
+  /** Activity ID */
+  id: number
+  /** ID of the report this activity belongs to */
+  reportId: number
+  activity:
+    | $Typed<QueueActivity>
+    | $Typed<AssignmentActivity>
+    | $Typed<EscalationActivity>
+    | $Typed<CloseActivity>
+    | $Typed<ReopenActivity>
+    | $Typed<NoteActivity>
+    | { $type: string }
+  /** Optional moderator-only note. Not visible to reporters. */
+  internalNote?: string
+  /** Optional public note, potentially visible to the reporter. */
+  publicNote?: string
+  /** Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId). */
+  meta?: { [_ in string]: unknown }
+  /** True if this activity was created by an automated process (e.g. queue router) rather than a direct human action. */
+  isAutomated: boolean
+  /** DID of the actor who created this activity, or the service DID for automated activities. */
+  createdBy: string
+  moderator?: ToolsOzoneTeamDefs.Member
+  /** When this activity was created */
+  createdAt: string
+}
+
+const hashReportActivityView = 'reportActivityView'
+
+export function isReportActivityView<V>(v: V) {
+  return is$typed(v, id, hashReportActivityView)
+}
+
+export function validateReportActivityView<V>(v: V) {
+  return validate<ReportActivityView & V>(v, id, hashReportActivityView)
+}
+
+/** Live statistics for reports for the current calendar day, filterable by queue, moderator, or report type. */
+export interface LiveStats {
+  $type?: 'tools.ozone.report.defs#liveStats'
+  /** Number of reports currently not closed. */
+  pendingCount?: number
+  /** Number of reports closed today. */
+  actionedCount?: number
+  /** Number of reports escalated today. */
+  escalatedCount?: number
+  /** Reports received today. */
+  inboundCount?: number
+  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
+  actionRate?: number
+  /** Average time in seconds from report creation (or moderator assignment) to close. */
+  avgHandlingTimeSec?: number
+  /** When these statistics were last computed. */
+  lastUpdated?: string
+}
+
+const hashLiveStats = 'liveStats'
+
+export function isLiveStats<V>(v: V) {
+  return is$typed(v, id, hashLiveStats)
+}
+
+export function validateLiveStats<V>(v: V) {
+  return validate<LiveStats & V>(v, id, hashLiveStats)
+}
+
+/** A single daily snapshot of report statistics for a calendar date. */
+export interface HistoricalStats {
+  $type?: 'tools.ozone.report.defs#historicalStats'
+  /** The calendar date this snapshot covers (YYYY-MM-DD). */
+  date: string
+  /** When this snapshot was last computed. */
+  computedAt?: string
+  /** Number of reports not closed at time of computation. */
+  pendingCount?: number
+  /** Number of reports closed during this day. */
+  actionedCount?: number
+  /** Number of reports escalated during this day. */
+  escalatedCount?: number
+  /** Reports received during this day. */
+  inboundCount?: number
+  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
+  actionRate?: number
+  /** Average time in seconds from report creation (or moderator assignment) to close. */
+  avgHandlingTimeSec?: number
+}
+
+const hashHistoricalStats = 'historicalStats'
+
+export function isHistoricalStats<V>(v: V) {
+  return is$typed(v, id, hashHistoricalStats)
+}
+
+export function validateHistoricalStats<V>(v: V) {
+  return validate<HistoricalStats & V>(v, id, hashHistoricalStats)
+}
+
+export interface AssignmentView {
+  $type?: 'tools.ozone.report.defs#assignmentView'
+  id: number
+  did: string
+  moderator?: ToolsOzoneTeamDefs.Member
+  queue?: ToolsOzoneQueueDefs.QueueView
+  reportId: number
+  startAt: string
+  endAt?: string
+}
+
+const hashAssignmentView = 'assignmentView'
+
+export function isAssignmentView<V>(v: V) {
+  return is$typed(v, id, hashAssignmentView)
+}
+
+export function validateAssignmentView<V>(v: V) {
+  return validate<AssignmentView & V>(v, id, hashAssignmentView)
+}

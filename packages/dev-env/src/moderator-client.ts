@@ -4,6 +4,7 @@ import {
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  ToolsOzoneReportQueryReports as QueryModerationReports,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
@@ -12,6 +13,7 @@ import { TestOzone } from './ozone'
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams
 type QueryEventsParams = QueryModerationEvents.QueryParams
+type QueryReportsParams = QueryModerationReports.QueryParams
 type ModLevel = 'admin' | 'moderator' | 'triage'
 
 export class ModeratorClient {
@@ -69,6 +71,16 @@ export class ModeratorClient {
     return result.data
   }
 
+  async queryReports(input: QueryReportsParams, role?: ModLevel) {
+    const result = await this.agent.tools.ozone.report.queryReports(input, {
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.report.queryReports',
+        role,
+      ),
+    })
+    return result.data
+  }
+
   async emitEvent(
     opts: {
       event: TakeActionInput['event']
@@ -79,6 +91,7 @@ export class ModeratorClient {
       meta?: unknown
       modTool?: ToolsOzoneModerationDefs.ModTool
       externalId?: string
+      reportAction?: TakeActionInput['reportAction']
     },
     role?: ModLevel,
   ) {
@@ -89,6 +102,7 @@ export class ModeratorClient {
       createdBy = 'did:example:admin',
       modTool,
       externalId,
+      reportAction,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -98,6 +112,7 @@ export class ModeratorClient {
         createdBy,
         modTool,
         externalId,
+        reportAction,
       },
       {
         encoding: 'application/json',
@@ -227,5 +242,11 @@ export class ModeratorClient {
     )
 
     return data
+  }
+
+  async computeStats() {
+    const db = this.ozone.ctx.db
+    const statsService = this.ozone.ctx.reportStatsService(db)
+    await statsService.materializeAll({ force: true })
   }
 }

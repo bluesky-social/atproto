@@ -19812,6 +19812,12 @@ export const schemaDict = {
                 description:
                   'An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject.',
               },
+              reportAction: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.emitEvent#reportAction',
+                description:
+                  'Optional report-level targeting. If provided, this event will be linked to specific reports and reporters may be notified.',
+              },
             },
           },
         },
@@ -19832,6 +19838,36 @@ export const schemaDict = {
               'An event with the same external ID already exists for the subject.',
           },
         ],
+      },
+      reportAction: {
+        type: 'object',
+        description: 'Target specific reports when emitting a moderation event',
+        properties: {
+          ids: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+            description: 'Target specific report IDs',
+          },
+          types: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              'Target reports matching these report types on the subject (fully qualified NSIDs)',
+          },
+          all: {
+            type: 'boolean',
+            description: 'Target ALL reports on the subject',
+          },
+          note: {
+            type: 'string',
+            description:
+              'Note to send to reporter(s) when actioning their report',
+          },
+        },
       },
     },
   },
@@ -20933,6 +20969,690 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueAssignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.assignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Assign a user to a queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId', 'did'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to assign the user to.',
+              },
+              did: {
+                type: 'string',
+                description: 'DID to be assigned.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description:
+              'The specified queue does not exist or is not enabled.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueCreateQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.createQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Create a new moderation queue. Will fail if the queue configuration conflicts with an existing queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name', 'subjectTypes', 'reportTypes'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Display name for the queue (must be unique)',
+              },
+              subjectTypes: {
+                type: 'array',
+                minLength: 1,
+                items: {
+                  type: 'string',
+                  knownValues: ['account', 'record', 'message'],
+                },
+                description: 'Subject types this queue accepts',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description:
+                  "Collection name for record subjects. Required if subjectTypes includes 'record'.",
+              },
+              reportTypes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minLength: 1,
+                maxLength: 25,
+                description: 'Report reason types (fully qualified NSIDs)',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queue'],
+            properties: {
+              queue: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.queue.defs#queueView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ConflictingQueue',
+            description:
+              'The queue configuration conflicts with an existing queue',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.defs',
+    defs: {
+      queueView: {
+        type: 'object',
+        required: [
+          'id',
+          'name',
+          'subjectTypes',
+          'reportTypes',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+          'enabled',
+          'stats',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Queue ID',
+          },
+          name: {
+            type: 'string',
+            description: 'Display name of the queue',
+          },
+          subjectTypes: {
+            type: 'array',
+            minLength: 1,
+            items: {
+              type: 'string',
+              knownValues: ['account', 'record', 'message'],
+            },
+            description: 'Subject types this queue accepts.',
+          },
+          collection: {
+            type: 'string',
+            format: 'nsid',
+            description:
+              "Collection name for record subjects (e.g., 'app.bsky.feed.post')",
+          },
+          reportTypes: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            minLength: 1,
+            description:
+              'Report reason types this queue accepts (fully qualified NSIDs)',
+          },
+          description: {
+            type: 'string',
+            description: 'Optional description of the queue',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of moderator who created this queue',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          enabled: {
+            type: 'boolean',
+            description: 'Whether this queue is currently active',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the queue was deleted, if applicable',
+          },
+          stats: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueStats',
+            description: 'Statistics about this queue',
+          },
+        },
+      },
+      queueStats: {
+        type: 'object',
+        required: [],
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'open' status",
+          },
+          actionedCount: {
+            type: 'integer',
+            description: "Number of reports in 'closed' status",
+          },
+          escalatedCount: {
+            type: 'integer',
+            description: "Number of reports in 'escalated' status",
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received in this queue in the last 24 hours.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation to close, for reports closed in this period.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed',
+          },
+        },
+      },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'queue', 'startAt', 'endAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'The moderator assigned to this queue',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueDeleteQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.deleteQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Delete a moderation queue. Optionally migrate reports to another queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'ID of the queue to delete',
+              },
+              migrateToQueueId: {
+                type: 'integer',
+                description:
+                  'Optional: migrate all reports to this queue. If not specified, reports will be set to unassigned (-1).',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['deleted'],
+            properties: {
+              deleted: {
+                type: 'boolean',
+              },
+              reportsMigrated: {
+                type: 'integer',
+                description:
+                  'Number of reports that were migrated (if migration occurred)',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get moderator assignments, optionally filtered by active status, queue, or moderator.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActive: {
+              type: 'boolean',
+              default: true,
+              description: 'When true, only returns active assignments.',
+            },
+            queueIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              description:
+                'If specified, returns assignments for these queues only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.queue.defs#assignmentView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueListQueues: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.listQueues',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all configured moderation queues with statistics.',
+        parameters: {
+          type: 'params',
+          properties: {
+            enabled: {
+              type: 'boolean',
+              description:
+                'Filter by enabled status. If not specified, returns all queues.',
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                "Filter queues that handle this subject type ('account' or 'record').",
+            },
+            collection: {
+              type: 'string',
+              description:
+                "Filter queues by collection name (e.g. 'app.bsky.feed.post').",
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              maxLength: 10,
+              description:
+                'Filter queues that handle any of these report reason types.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queues'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              queues: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.queue.defs#queueView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueRouteReports: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.routeReports',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Route reports within an ID range to matching queues based.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startReportId', 'endReportId'],
+            properties: {
+              startReportId: {
+                type: 'integer',
+                description: 'Start of report ID range (inclusive).',
+              },
+              endReportId: {
+                type: 'integer',
+                description:
+                  'End of report ID range (inclusive). Difference between start and end must be less than 5,000.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assigned', 'unmatched'],
+            properties: {
+              assigned: {
+                type: 'integer',
+                description: 'The number of reports assigned to a queue.',
+              },
+              unmatched: {
+                type: 'integer',
+                description: 'The number of reports with no matching queue.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'OutOfRange',
+            description:
+              'The request is invalid, such as missing required fields or invalid field values.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueUpdateQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.updateQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update queue properties. Currently only supports updating the name and enabled status to prevent configuration conflicts.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'ID of the queue to update',
+              },
+              name: {
+                type: 'string',
+                description: 'New display name for the queue',
+              },
+              enabled: {
+                type: 'boolean',
+                description: 'Enable or disable the queue',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queue'],
+            properties: {
+              queue: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.queue.defs#queueView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportAssignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.report.assignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Assign a report to a user. Defaults to the caller. Admins may assign to any moderator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to assign.',
+              },
+              queueId: {
+                type: 'integer',
+                description:
+                  'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description:
+                  "DID to be assigned. Defaults to the caller's DID. Admins may assign to any moderator.",
+              },
+              isPermanent: {
+                type: 'boolean',
+                description:
+                  'When true, the assignment has no expiry (endAt is null). Throws AlreadyAssigned if another user already has a permanent assignment on this report.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'AlreadyAssigned',
+            description: 'The report is already assigned to another user.',
+          },
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID or queue ID is invalid.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportCreateActivity: {
+    lexicon: 1,
+    id: 'tools.ozone.report.createActivity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Register an activity on a report. For state-change activity types, validates the transition and updates report.status atomically.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId', 'activity'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'ID of the report to record activity on',
+              },
+              activity: {
+                type: 'union',
+                refs: [
+                  'lex:tools.ozone.report.defs#queueActivity',
+                  'lex:tools.ozone.report.defs#assignmentActivity',
+                  'lex:tools.ozone.report.defs#escalationActivity',
+                  'lex:tools.ozone.report.defs#closeActivity',
+                  'lex:tools.ozone.report.defs#reopenActivity',
+                  'lex:tools.ozone.report.defs#noteActivity',
+                ],
+                description: 'The type of activity to record.',
+              },
+              internalNote: {
+                type: 'string',
+                description:
+                  'Optional moderator-only note. Not visible to reporters.',
+              },
+              publicNote: {
+                type: 'string',
+                description:
+                  'Optional public-facing note, potentially visible to the reporter.',
+              },
+              isAutomated: {
+                type: 'boolean',
+                description:
+                  'Set true when this activity is triggered by an automated process. Defaults to false.',
+                default: false,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activity'],
+            properties: {
+              activity: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportActivityView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReportNotFound',
+            description: 'No report exists with the given reportId',
+          },
+          {
+            name: 'InvalidStateTransition',
+            description:
+              "The requested state transition is not permitted from the report's current status",
+          },
+          {
+            name: 'AlreadyInTargetState',
+            description:
+              'The report is already in the status implied by this activity type',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneReportDefs: {
     lexicon: 1,
     id: 'tools.ozone.report.defs',
@@ -21145,6 +21865,944 @@ export const schemaDict = {
       reasonSelfHarmOther: {
         type: 'token',
         description: 'Other dangerous content',
+      },
+      reportAssignment: {
+        type: 'object',
+        description:
+          'Information about the moderator currently assigned to a report.',
+        required: ['did', 'assignedAt'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the assigned moderator',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'Full member record of the assigned moderator',
+          },
+          assignedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was assigned',
+          },
+        },
+      },
+      reportView: {
+        type: 'object',
+        required: [
+          'id',
+          'eventId',
+          'status',
+          'subject',
+          'reportType',
+          'reportedBy',
+          'reporter',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Report ID',
+          },
+          eventId: {
+            type: 'integer',
+            description: 'ID of the moderation event that created this report',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description: 'Current status of the report',
+          },
+          subject: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectView',
+            description: 'The subject that was reported with full details',
+          },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+            description: 'Type of report',
+          },
+          reportedBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who made the report',
+          },
+          reporter: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectView',
+            description: 'Full subject view of the reporter account',
+          },
+          comment: {
+            type: 'string',
+            description: 'Comment provided by the reporter',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was last updated',
+          },
+          queuedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was assigned to its current queue',
+          },
+          actionEventIds: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+            description:
+              'Array of moderation event IDs representing actions taken on this report (sorted DESC, most recent first)',
+          },
+          actions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.defs#modEventView',
+            },
+            description: 'Optional: expanded action events',
+          },
+          actionNote: {
+            type: 'string',
+            description: 'Note sent to reporter when report was actioned',
+          },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
+            description: 'Current status of the reported subject',
+          },
+          relatedReportCount: {
+            type: 'integer',
+            description: 'Number of other pending reports on the same subject',
+          },
+          assignment: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#reportAssignment',
+            description:
+              'Information about moderator currently assigned to this report (if any)',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+            description: 'The queue this report is assigned to (if any)',
+          },
+          isMuted: {
+            type: 'boolean',
+            description:
+              'Whether this report is muted. A report is muted if the reporter was muted or the subject was muted at the time the report was created.',
+          },
+        },
+      },
+      queueActivity: {
+        type: 'object',
+        description: 'Activity recording a report being routed to a queue.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      assignmentActivity: {
+        type: 'object',
+        description:
+          'Activity recording a moderator being assigned to a report.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      escalationActivity: {
+        type: 'object',
+        description: 'Activity recording a report being escalated.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      closeActivity: {
+        type: 'object',
+        description: 'Activity recording a report being closed.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      reopenActivity: {
+        type: 'object',
+        description:
+          "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      noteActivity: {
+        type: 'object',
+        description:
+          'Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both).',
+        properties: {},
+      },
+      reportActivityView: {
+        type: 'object',
+        description: 'A single activity entry on a report.',
+        required: [
+          'id',
+          'reportId',
+          'activity',
+          'isAutomated',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Activity ID',
+          },
+          reportId: {
+            type: 'integer',
+            description: 'ID of the report this activity belongs to',
+          },
+          activity: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.report.defs#queueActivity',
+              'lex:tools.ozone.report.defs#assignmentActivity',
+              'lex:tools.ozone.report.defs#escalationActivity',
+              'lex:tools.ozone.report.defs#closeActivity',
+              'lex:tools.ozone.report.defs#reopenActivity',
+              'lex:tools.ozone.report.defs#noteActivity',
+            ],
+            description: 'The typed activity object describing what occurred.',
+          },
+          internalNote: {
+            type: 'string',
+            description:
+              'Optional moderator-only note. Not visible to reporters.',
+          },
+          publicNote: {
+            type: 'string',
+            description:
+              'Optional public note, potentially visible to the reporter.',
+          },
+          meta: {
+            type: 'unknown',
+            description:
+              'Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId).',
+          },
+          isAutomated: {
+            type: 'boolean',
+            description:
+              'True if this activity was created by an automated process (e.g. queue router) rather than a direct human action.',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description:
+              'DID of the actor who created this activity, or the service DID for automated activities.',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description:
+              'Full member record of the moderator who created this activity',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this activity was created',
+          },
+        },
+      },
+      liveStats: {
+        description:
+          'Live statistics for reports for the current calendar day, filterable by queue, moderator, or report type.',
+        type: 'object',
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: 'Number of reports currently not closed.',
+          },
+          actionedCount: {
+            type: 'integer',
+            description: 'Number of reports closed today.',
+          },
+          escalatedCount: {
+            type: 'integer',
+            description: 'Number of reports escalated today.',
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received today.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation (or moderator assignment) to close.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed.',
+          },
+        },
+      },
+      historicalStats: {
+        description:
+          'A single daily snapshot of report statistics for a calendar date.',
+        type: 'object',
+        required: ['date'],
+        properties: {
+          date: {
+            type: 'string',
+            description: 'The calendar date this snapshot covers (YYYY-MM-DD).',
+          },
+          computedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this snapshot was last computed.',
+          },
+          pendingCount: {
+            type: 'integer',
+            description: 'Number of reports not closed at time of computation.',
+          },
+          actionedCount: {
+            type: 'integer',
+            description: 'Number of reports closed during this day.',
+          },
+          escalatedCount: {
+            type: 'integer',
+            description: 'Number of reports escalated during this day.',
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received during this day.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation (or moderator assignment) to close.',
+          },
+        },
+      },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'reportId', 'startAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'The moderator assigned to this report',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+          },
+          reportId: {
+            type: 'integer',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get assignments for reports.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActive: {
+              type: 'boolean',
+              default: true,
+              description: 'When true, only returns active assignments.',
+            },
+            reportIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              maxLength: 50,
+              description:
+                'If specified, returns assignments for these reports only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              maxLength: 50,
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#assignmentView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetHistoricalStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getHistoricalStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get historical daily report statistics. Returns a paginated list of daily stat snapshots, newest first. Filter by queue, moderator, or report type.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Use -1 for unqueued reports.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'Filter stats by moderator DID.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter stats by report types.',
+            },
+            startDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Earliest date to include (inclusive).',
+            },
+            endDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Latest date to include (inclusive).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 30,
+              description: 'Maximum number of entries to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#historicalStats',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetLatestReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLatestReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the most recent report.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportGetLiveStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLiveStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get live report statistics from the past 24 hours. Filter by queue, moderator, or report type. Omit all parameters for aggregate stats.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Use -1 for unqueued reports.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'Filter stats by moderator DID.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter stats by report types.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#liveStats',
+                description: 'Statistics for the requested filter.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about a single moderation report by ID.',
+        parameters: {
+          type: 'params',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'The ID of the report to retrieve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#reportView',
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportListActivities: {
+    lexicon: 1,
+    id: 'tools.ozone.report.listActivities',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List all activities for a report, sorted most-recent-first.',
+        parameters: {
+          type: 'params',
+          required: ['reportId'],
+          properties: {
+            reportId: {
+              type: 'integer',
+              description: 'ID of the report whose activities to list',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activities'],
+            properties: {
+              activities: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#reportActivityView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportQueryReports: {
+    lexicon: 1,
+    id: 'tools.ozone.report.queryReports',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'View moderation reports. Reports are individual instances of content being reported, as opposed to subject statuses which aggregate reports at the subject level.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description: 'Filter by queue ID. Use -1 for unassigned reports.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'Filter by report types (fully qualified string in the format of com.atproto.moderation.defs#reason<name>).',
+            },
+            status: {
+              type: 'string',
+              knownValues: [
+                'open',
+                'closed',
+                'escalated',
+                'queued',
+                'assigned',
+              ],
+              description: 'Filter by report status.',
+            },
+            subject: {
+              type: 'string',
+              format: 'uri',
+              description: 'Filter by subject DID or AT-URI.',
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                'If specified, reports of the given type (account or record) will be returned.',
+              knownValues: ['account', 'record'],
+            },
+            collections: {
+              type: 'array',
+              maxLength: 20,
+              description:
+                "If specified, reports where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve reports created after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve reports created before a given timestamp',
+            },
+            isMuted: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Filter by muted status. true returns only muted reports, false returns only unmuted reports. Defaults to false.',
+            },
+            reviewedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter by moderator who reviewed/actioned the report',
+            },
+            assignedTo: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter by the DID of the moderator permanently assigned to the report.',
+            },
+            sortField: {
+              type: 'string',
+              default: 'createdAt',
+              enum: ['createdAt', 'updatedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reports'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              reports: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#reportView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportReassignQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.report.reassignQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Manually reassign a report to a different queue (admin action).',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId', 'queueId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'ID of the report to reassign',
+              },
+              queueId: {
+                type: 'integer',
+                description: "Target queue ID. Use -1 for 'unassigned'.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportRefreshStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.refreshStats',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Recompute report statistics for a date range. Useful for backfilling after failures or data corrections.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startDate', 'endDate'],
+            properties: {
+              startDate: {
+                type: 'string',
+                description:
+                  'Start date for recomputation, inclusive (YYYY-MM-DD).',
+              },
+              endDate: {
+                type: 'string',
+                description:
+                  'End date for recomputation, inclusive (YYYY-MM-DD).',
+              },
+              queueIds: {
+                type: 'array',
+                items: {
+                  type: 'integer',
+                },
+                description:
+                  'Optional list of queue IDs to recompute. Omit to recompute all groups.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportUnassignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.report.unassignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove report assignment.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to unassign.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID is invalid.',
+          },
+        ],
       },
     },
   },
@@ -23332,7 +24990,27 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneQueueAssignModerator: 'tools.ozone.queue.assignModerator',
+  ToolsOzoneQueueCreateQueue: 'tools.ozone.queue.createQueue',
+  ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
+  ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
+  ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
+  ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
+  ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
+  ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
+  ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
+  ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
+  ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
+  ToolsOzoneReportGetHistoricalStats: 'tools.ozone.report.getHistoricalStats',
+  ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
+  ToolsOzoneReportGetLiveStats: 'tools.ozone.report.getLiveStats',
+  ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
+  ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
+  ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
+  ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
+  ToolsOzoneReportRefreshStats: 'tools.ozone.report.refreshStats',
+  ToolsOzoneReportUnassignModerator: 'tools.ozone.report.unassignModerator',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
   ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',

@@ -5,6 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { AssignmentService } from './assignment'
 import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import {
@@ -22,6 +23,8 @@ import {
   ModerationServiceProfileCreator,
 } from './mod-service/profile'
 import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
+import { QueueService, QueueServiceCreator } from './queue/service'
+import { ReportStatsService, ReportStatsServiceCreator } from './report/stats'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
@@ -58,6 +61,8 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   safelinkRuleService: SafelinkRuleServiceCreator
   scheduledActionService: ScheduledActionServiceCreator
+  queueService: QueueServiceCreator
+  reportStatsService: ReportStatsServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   strikeService: StrikeServiceCreator
@@ -73,6 +78,7 @@ export type AppContextOptions = {
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
+  assignmentService: AssignmentService
   authVerifier: AuthVerifier
   verificationService: VerificationServiceCreator
   verificationIssuer: VerificationIssuerCreator
@@ -143,6 +149,8 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
+    const queueService = QueueService.creator()
+    const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
     const strikeService = StrikeService.creator()
@@ -164,6 +172,14 @@ export class AppContext {
       strikeService,
       overrides?.imgInvalidator,
     )
+    const assignmentService = AssignmentService.creator(
+      {
+        queueDurationMs: cfg.assignments.queueDurationMs,
+        reportDurationMs: cfg.assignments.reportDurationMs,
+      },
+      queueService,
+      teamService,
+    )(db)
 
     const sequencer = new Sequencer(modService(db))
 
@@ -183,6 +199,8 @@ export class AppContext {
         safelinkRuleService,
         scheduledActionService,
         teamService,
+        queueService,
+        reportStatsService,
         setService,
         settingService,
         strikeService,
@@ -195,6 +213,7 @@ export class AppContext {
         idResolver,
         backgroundQueue,
         sequencer,
+        assignmentService,
         authVerifier,
         blobDiverter,
         verificationService,
@@ -243,6 +262,14 @@ export class AppContext {
 
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
+  }
+
+  get queueService(): QueueServiceCreator {
+    return this.opts.queueService
+  }
+
+  get reportStatsService(): ReportStatsServiceCreator {
+    return this.opts.reportStatsService
   }
 
   get setService(): SetServiceCreator {
@@ -307,6 +334,10 @@ export class AppContext {
 
   get sequencer(): Sequencer {
     return this.opts.sequencer
+  }
+
+  get assignmentService(): AssignmentService {
+    return this.opts.assignmentService
   }
 
   get authVerifier(): AuthVerifier {
