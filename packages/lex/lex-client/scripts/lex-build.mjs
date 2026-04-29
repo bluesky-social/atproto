@@ -13,6 +13,7 @@ Promise.all([
     out: join(__dirname, '..', 'src', 'lexicons'),
     clear: true,
     include: [
+      'com.atproto.repo.applyWrites',
       'com.atproto.repo.createRecord',
       'com.atproto.repo.deleteRecord',
       'com.atproto.repo.getRecord',
@@ -34,6 +35,7 @@ Promise.all([
     clear: true,
     include: [
       'app.bsky.*',
+      'com.atproto.repo.applyWrites',
       'com.atproto.repo.createRecord',
       'com.atproto.repo.getRecord',
       'com.atproto.repo.uploadBlob',
