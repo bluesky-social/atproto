@@ -1,3 +1,4 @@
+export * from './constants.js'
 export * from './blob.js'
 export * from './cid.js'
 export * from './lex-equals.js'

@@ -34,7 +34,7 @@ export const forSnapshot = (obj: unknown) => {
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
   const unknown = { [kTake]: 'unknown' }
-  const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
+  const toWalk = obj === undefined ? undefined : lexToJson(obj as any) // remove any blobrefs/cids
   return mapLeafValues(toWalk, (item) => {
     // @TODO this should never happen since lexToJson removes cids (can we
     // simply remove this check?)

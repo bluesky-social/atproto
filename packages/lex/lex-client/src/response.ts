@@ -1,4 +1,4 @@
-import { LexParseOptions, jsonToLex } from '@atproto/lex-json'
+import { JsonToLexOptions, jsonToLex } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
   InferOutput,
@@ -111,7 +111,7 @@ export type XrpcResponseOptions = {
    * the response even if the server returns invalid Lex data.
    *
    * @default true
-   * @see {@link LexParseOptions.strict}
+   * @see {@link JsonToLexOptions.strict}
    */
   strictResponseProcessing?: boolean
 }
@@ -284,7 +284,7 @@ type ReadPayloadOptions = {
    *
    * @default false
    */
-  parse?: false | LexParseOptions
+  parse?: false | JsonToLexOptions
 }
 
 /**

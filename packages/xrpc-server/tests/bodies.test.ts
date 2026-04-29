@@ -92,6 +92,33 @@ const LEXICONS = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.deeplyNestedStructure',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              value: { type: 'unknown' },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              value: { type: 'unknown' },
+            },
+          },
+        },
+      },
+    },
+  },
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
@@ -118,6 +145,22 @@ const handlers = {
       body: { cid: cid.toString() },
     }
   },
+  'io.example.deeplyNestedStructure': async (
+    ctx: xrpcServer.HandlerContext,
+  ) => {
+    return {
+      encoding: 'application/json',
+      body: {
+        value:
+          (ctx.input?.body as any)?.value ??
+          (() => {
+            let nested: [] | unknown = []
+            for (let i = 0; i < 4000; i++) nested = [nested]
+            return { nested }
+          })(),
+      },
+    }
+  },
 }
 
 for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
@@ -127,6 +170,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     let url: string
     beforeAll(async () => {
       const server = await buildServer(LEXICONS, handlers, {
+        validateResponse: false,
         payload: {
           blobLimit: BLOB_LIMIT,
         },
@@ -569,6 +613,27 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         error: 'InvalidRequest',
         message: 'Request encoding (Content-Type) required but not provided',
       })
+    })
+
+    it.only('handles deeply nested output', async () => {
+      // @NOTE not using the client to avoid any potential issues with JSON
+      // processing in the client.
+      const res = await fetch(`${url}/xrpc/io.example.deeplyNestedStructure`, {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      const json = await res.json()
+      if (!res.ok) {
+        console.error('Response not OK:', res.status, json)
+      }
+      expect(res.ok).toBe(true)
+      let { nested } = json.value
+      for (let i = 0; i < 4000; i++) {
+        assert(Array.isArray(nested))
+        nested = nested[0]
+      }
     })
   })
 }

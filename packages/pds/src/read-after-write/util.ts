@@ -1,6 +1,6 @@
 import express from 'express'
 import { LexValue, l } from '@atproto/lex'
-import { lexParse } from '@atproto/lex-json'
+import { lexParseJsonBytes } from '@atproto/lex-json'
 import {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
@@ -63,7 +63,7 @@ export const pipethroughReadAfterWrite = async <
 
       const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
 
-      const lex = lexParse(buffer.toString('utf8'), { strict: false })
+      const lex = lexParseJsonBytes(buffer, { strict: false })
 
       const result = method.output.schema.safeValidate(lex, { strict: false })
 

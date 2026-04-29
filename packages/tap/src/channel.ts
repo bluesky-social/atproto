@@ -1,6 +1,6 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable } from '@atproto/common'
-import { lexParse } from '@atproto/lex'
+import { lexParse, lexParseJsonBytes } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
 import { formatAdminAuthHeader, isCausedBySignal } from './util'
@@ -110,6 +110,7 @@ export class TapChannel implements AsyncDisposable {
     this.abortController.signal.throwIfAborted()
     try {
       for await (const chunk of this.ws) {
+        // @NOTE types are wrong. chunks are actually string (at least in tests)
         await this.processWsEvent(chunk)
       }
     } catch (err) {
@@ -121,13 +122,13 @@ export class TapChannel implements AsyncDisposable {
     }
   }
 
-  private async processWsEvent(chunk: Uint8Array) {
+  private async processWsEvent(chunk: Uint8Array | string) {
     let evt: TapEvent
     try {
-      const data = lexParse(chunk.toString(), {
-        // Reject invalid CIDs and blobs
-        strict: true,
-      })
+      const data =
+        typeof chunk === 'string'
+          ? lexParse(chunk, { strict: true })
+          : lexParseJsonBytes(chunk, { strict: true })
       evt = parseTapEvent(data)
     } catch (cause) {
       const error = new Error(`Failed to parse message`, { cause })

@@ -1121,6 +1121,12 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex/lex-json
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -17117,7 +17123,7 @@ packages:
       fast-json-stringify: 5.8.0
       fast-printf: 1.6.9
       globalthis: 1.0.3
-      safe-stable-stringify: 2.4.3
+      safe-stable-stringify: 2.5.0
       semver-compare: 1.0.0
 
   /rollup@4.34.9:
@@ -17228,6 +17234,10 @@ packages:
 
   /safe-stable-stringify@2.4.3:
     resolution: {integrity: sha512-e2bDA2WJT0wxseVd4lsDP4+3ONX6HpMXQa1ZhFQ7SU+GjvORCmShbCMltrtIDfkYhVHrOcPtj+KhmDBdPdZD1g==}
+    engines: {node: '>=10'}
+
+  /safe-stable-stringify@2.5.0:
+    resolution: {integrity: sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==}
     engines: {node: '>=10'}
 
   /safer-buffer@2.1.2:

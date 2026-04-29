@@ -17,7 +17,7 @@ import {
   LexXrpcSubscription,
   LexiconDoc,
   Lexicons,
-  lexToJson,
+  stringifyLex,
 } from '@atproto/lexicon'
 import {
   InternalServerError,
@@ -483,8 +483,11 @@ export class Server {
             // a stream, which would be a bug.
             await pipeline(output.body, res)
           } else if (encoding === 'application/json') {
-            const json = lexToJson(output.body)
-            res.json(json)
+            // @NOTE using "stringifyLex" instead of
+            // "JSON.stringify(lexToJson(...))" because stringifyLex handles
+            // deeply nested LexValues better.
+            res.header('Content-Type', `${encoding}; charset=utf-8`)
+            res.send(stringifyLex(output.body))
           } else {
             res.send(
               Buffer.isBuffer(output.body)
