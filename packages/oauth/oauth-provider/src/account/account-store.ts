@@ -1,6 +1,8 @@
 import type {
   Account,
+  ConfirmEmailUpdateInput,
   ConfirmResetPasswordInput,
+  InitiateEmailUpdateInput,
   InitiatePasswordResetInput,
 } from '@atproto/oauth-provider-api'
 import { OAuthScope } from '@atproto/oauth-types'
@@ -44,6 +46,9 @@ export {
 
 export type ResetPasswordRequestInput = InitiatePasswordResetInput
 export type ResetPasswordConfirmInput = ConfirmResetPasswordInput
+
+export type UpdateEmailRequestInput = InitiateEmailUpdateInput
+export type UpdateEmailConfirmInput = ConfirmEmailUpdateInput
 
 export type CreateAccountData = {
   locale: string
@@ -187,6 +192,9 @@ export interface AccountStore {
     data: ResetPasswordConfirmInput,
   ): Awaitable<null | Account>
 
+  updateEmailRequest(data: UpdateEmailRequestInput): Awaitable<void>
+  updateEmailConfirm(data: UpdateEmailConfirmInput): Awaitable<Account | null>
+
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
@@ -204,6 +212,8 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'listDeviceAccounts',
   'resetPasswordRequest',
   'resetPasswordConfirm',
+  'updateEmailRequest',
+  'updateEmailConfirm',
   'verifyHandleAvailability',
 ])
 

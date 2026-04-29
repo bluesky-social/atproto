@@ -86,6 +86,16 @@ export type ApiEndpoints = {
     input: RevokeAccountSessionInput
     output: { success: true }
   }
+  '/update-email-request': {
+    method: 'POST'
+    input: InitiateEmailUpdateInput
+    output: { success: true }
+  }
+  '/update-email-confirm': {
+    method: 'POST'
+    input: ConfirmEmailUpdateInput
+    output: { success: true }
+  }
   '/consent': {
     method: 'POST'
     input: ConsentInput
@@ -149,6 +159,23 @@ export type InitiatePasswordResetInput = {
 export type ConfirmResetPasswordInput = {
   token: string
   password: string
+}
+
+export type InitiateEmailUpdateInput = {
+  sub: string
+  /**
+   * If the user does not have an email, this can be used instead to "set" the
+   * email
+   */
+  email?: string
+  locale?: string
+}
+
+export type ConfirmEmailUpdateInput = {
+  sub: string
+  token: string
+  email: string
+  locale?: string
 }
 
 export type VerifyHandleAvailabilityInput = {
