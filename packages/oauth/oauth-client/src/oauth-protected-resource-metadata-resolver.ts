@@ -19,7 +19,7 @@ export type { GetCachedOptions, OAuthProtectedResourceMetadata }
 
 export type ProtectedResourceMetadataCache = SimpleStore<
   string,
-  OAuthProtectedResourceMetadata
+  OAuthProtectedResourceMetadata | null
 >
 
 export type OAuthProtectedResourceMetadataResolverConfig = {
@@ -31,7 +31,7 @@ export type OAuthProtectedResourceMetadataResolverConfig = {
  */
 export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   string,
-  OAuthProtectedResourceMetadata
+  OAuthProtectedResourceMetadata | null
 > {
   private readonly fetch: Fetch<unknown>
   private readonly allowHttpResource: boolean
@@ -50,7 +50,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   async get(
     resource: string | URL,
     options?: GetCachedOptions,
-  ): Promise<OAuthProtectedResourceMetadata> {
+  ): Promise<OAuthProtectedResourceMetadata | null> {
     const { protocol, origin } = new URL(resource)
 
     if (protocol !== 'https:' && protocol !== 'http:') {
@@ -71,7 +71,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   private async fetchMetadata(
     origin: string,
     options?: GetCachedOptions,
-  ): Promise<OAuthProtectedResourceMetadata> {
+  ): Promise<OAuthProtectedResourceMetadata | null> {
     const url = new URL(`/.well-known/oauth-protected-resource`, origin)
     const request = new Request(url, {
       signal: options?.signal,
@@ -81,6 +81,11 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     })
 
     const response = await this.fetch(request)
+
+    if (response.status === 404) {
+      await cancelBody(response, 'log')
+      return null
+    }
 
     // https://www.rfc-editor.org/rfc/rfc9728.html#section-3.2
     if (response.status !== 200) {
