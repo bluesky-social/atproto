@@ -2,27 +2,38 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { getReportById } from '../../mod-service/report'
+import { reassignReportQueue } from '../../report/reassign'
 import { buildReportView, hydrateReportInfo } from '../../report/views'
-import { getPdsAccountInfos } from '../util'
+import { getAuthDid, getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.getReport({
+  server.tools.ozone.report.reassignQueue({
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ input, auth, req }) => {
+      const createdBy =
+        getAuthDid(auth, ctx.cfg.service.did) ?? ctx.cfg.service.did
       const db = ctx.db
-      const modService = ctx.modService(db)
-      const labelers = ctx.reqLabelers(req)
+      const queueService = ctx.queueService(db)
 
-      const report = await getReportById(db, params.id)
+      await reassignReportQueue(db, queueService, {
+        reportId: input.body.reportId,
+        toQueueId: input.body.queueId,
+        comment: input.body.comment,
+        createdBy,
+      })
+
+      const report = await getReportById(db, input.body.reportId)
       if (!report) {
         throw new InvalidRequestError(
-          `Report not found: ${params.id}`,
-          'NotFound',
+          `Report ${input.body.reportId} not found after reassignment`,
+          'ReportNotFound',
         )
       }
 
-      const queueService = ctx.queueService(db)
+      const modService = ctx.modService(db)
       const teamService = ctx.teamService(db)
+      const labelers = ctx.reqLabelers(req)
+
       const [hydrated, actionEvents] = await Promise.all([
         hydrateReportInfo(
           [report],
@@ -43,12 +54,14 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: buildReportView(
-          report,
-          hydrated,
-          auth.credentials.isModerator,
-          actions,
-        ),
+        body: {
+          report: buildReportView(
+            report,
+            hydrated,
+            auth.credentials.isModerator,
+            actions,
+          ),
+        },
       }
     },
   })

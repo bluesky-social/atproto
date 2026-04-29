@@ -61,6 +61,7 @@ import {
 import {
   ModEventType,
   ModerationEventRow,
+  ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
   ReporterStats,
@@ -373,6 +374,29 @@ export class ModerationService {
     }))
 
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
+  }
+
+  async getEventsByIds(ids: number[]): Promise<ModerationEventRowWithHandle[]> {
+    if (!ids.length) return []
+
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute()
+
+    if (!result.length) return []
+
+    const infos = await this.views.getAccoutInfosByDid([
+      ...result.map((row) => row.subjectDid),
+      ...result.map((row) => row.createdBy),
+    ])
+
+    return result.map((r) => ({
+      ...r,
+      creatorHandle: infos.get(r.createdBy)?.handle,
+      subjectHandle: infos.get(r.subjectDid)?.handle,
+    }))
   }
 
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
