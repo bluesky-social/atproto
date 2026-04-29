@@ -156,6 +156,18 @@ describe('repo sync', () => {
     currRoot = car.root
   })
 
+  it('advertises preorder-deterministic block order on full exports only', async () => {
+    const fullRes = await client.xrpc(com.atproto.sync.getRepo, {
+      params: { did },
+    })
+    expect(fullRes.headers.get('atproto-car-block-order')).toBe('mst-preorder')
+
+    const diffRes = await client.xrpc(com.atproto.sync.getRepo, {
+      params: { did, since: currRev },
+    })
+    expect(diffRes.headers.get('atproto-car-block-order')).toBeNull()
+  })
+
   it('sync a record proof', async () => {
     const collection = Object.keys(repoData)[0] as NsidString
     const rkey = Object.keys(repoData[collection])[0]

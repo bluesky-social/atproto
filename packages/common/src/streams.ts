@@ -55,6 +55,27 @@ export const streamToNodeBuffer = async (
   return Buffer.concat(chunks, totalLength)
 }
 
+// Wraps a byte iterable, coalescing small chunks into larger ones
+export async function* coalesceByteIterable(
+  it: AsyncIterable<Uint8Array>,
+  sizeThreshold = 0x4000,
+): AsyncGenerator<Uint8Array, void, unknown> {
+  let pending: Uint8Array[] = []
+  let pendingSize = 0
+  for await (const data of it) {
+    pending.push(data)
+    pendingSize += data.byteLength
+    if (pendingSize >= sizeThreshold) {
+      yield pending.length === 1 ? pending[0] : Buffer.concat(pending)
+      pending = []
+      pendingSize = 0
+    }
+  }
+  if (pendingSize > 0) {
+    yield pending.length === 1 ? pending[0] : Buffer.concat(pending)
+  }
+}
+
 export const byteIterableToStream = (
   iter: AsyncIterable<Uint8Array>,
 ): Readable => {

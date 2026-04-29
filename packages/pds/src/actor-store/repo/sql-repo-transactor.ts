@@ -1,6 +1,7 @@
+import { sql } from 'kysely'
 import { chunkArray } from '@atproto/common'
 import { Cid, parseCid } from '@atproto/lex-data'
-import { BlockMap, CommitData, RepoStorage } from '@atproto/repo'
+import { BlockMap, CommitData, PreorderOp, RepoStorage } from '@atproto/repo'
 import { ActorDb, RepoBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
@@ -74,6 +75,30 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
     await this.updateRoot(commit.cid, commit.rev, isCreate)
     await this.putMany(commit.newBlocks, commit.rev)
     await this.deleteMany(commit.removedCids.toList())
+    await this.applyPreorderOps(commit.preorderOps)
+  }
+
+  async applyPreorderOps(ops: PreorderOp[]): Promise<void> {
+    if (ops.length === 0) return
+    const inserts: { lpath: string; depth: number; cid: string }[] = []
+    const deletes: { lpath: string; depth: number }[] = []
+    for (const op of ops) {
+      if (op.action === 'insert') {
+        inserts.push({ lpath: op.lpath, depth: op.depth, cid: op.cid })
+      } else {
+        deletes.push({ lpath: op.lpath, depth: op.depth })
+      }
+    }
+    for (const batch of chunkArray(deletes, 50)) {
+      const tuples = batch.map((d) => sql`(${d.lpath}, ${d.depth})`)
+      await this.db.db
+        .deleteFrom('preorder_map')
+        .where(sql`(lpath, depth) in (${sql.join(tuples)})`)
+        .execute()
+    }
+    for (const batch of chunkArray(inserts, 50)) {
+      await this.db.db.insertInto('preorder_map').values(batch).execute()
+    }
   }
 
   async updateRoot(cid: Cid, rev: string, isCreate = false): Promise<void> {

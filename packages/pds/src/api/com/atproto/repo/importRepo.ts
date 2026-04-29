@@ -81,6 +81,14 @@ export default function (server: Server, ctx: AppContext) {
               )
             }
 
+            // This check is required to enforce domain separation between MST nodes and record blocks.
+            // i.e. a valid MST node can never be a valid record, and vice versa.
+            if (typeof parsedRecord['$type'] !== 'string') {
+              throw new InvalidRequestError(
+                `Record at '${write.collection}/${write.rkey}' is missing a $type field`,
+              )
+            }
+
             await store.record.indexRecord(
               uri,
               write.cid,
