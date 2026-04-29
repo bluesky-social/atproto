@@ -1,100 +1,73 @@
-import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { describe, expect, it } from 'vitest'
-import { InvalidDidError, ensureValidDid, ensureValidDidRegex } from '../src'
+import { describe, expect, test } from 'vitest'
+import { InvalidDidError, assertDidString, isDidString } from '../src'
+import { readLines } from './utils'
 
-describe('DID permissive validation', () => {
-  const expectValid = (h: string) => {
-    ensureValidDid(h)
-    ensureValidDidRegex(h)
+const ROOT_DIR = `${__dirname}/../../../`
+
+function testValidDid(value: string) {
+  test(value, () => {
+    expect(isDidString(value)).toBe(true)
+    expect(() => assertDidString(value)).not.toThrow()
+  })
+}
+function testInvalidDid(value: string) {
+  test(value, () => {
+    expect(isDidString(value)).toBe(false)
+    expect(() => assertDidString(value)).toThrow(InvalidDidError)
+  })
+}
+
+describe('additional tests (not covered by interop)', () => {
+  // @ts-expect-error
+  testInvalidDid(4)
+  // @ts-expect-error
+  testInvalidDid(true)
+  // @ts-expect-error
+  testInvalidDid(Symbol.iterator)
+  // @ts-expect-error
+  testInvalidDid(null)
+  // @ts-expect-error
+  testInvalidDid(undefined)
+  // @ts-expect-error
+  testInvalidDid([])
+  // @ts-expect-error
+  testInvalidDid({ toString: () => 'did:method:val' })
+})
+
+describe('length boundary', () => {
+  testValidDid('did:method:' + 'v'.repeat(2048 - 'did:method:'.length))
+  testInvalidDid('did:method:' + 'v'.repeat(2048 - 'did:method:'.length + 1))
+})
+
+describe('did_syntax_invalid.txt', () => {
+  for (const value of readLines(
+    `${ROOT_DIR}/interop-test-files/syntax/did_syntax_invalid.txt`,
+  )) {
+    testInvalidDid(value)
   }
-  const expectInvalid = (h: string) => {
-    expect(() => ensureValidDid(h)).toThrow(InvalidDidError)
-    expect(() => ensureValidDidRegex(h)).toThrow(InvalidDidError)
+})
+
+describe('did_syntax_valid.txt', () => {
+  for (const value of readLines(
+    `${ROOT_DIR}/interop-test-files/syntax/did_syntax_valid.txt`,
+  )) {
+    testValidDid(value)
   }
+})
 
-  it('enforces spec details', () => {
-    expectValid('did:method:val')
-    expectValid('did:method:VAL')
-    expectValid('did:method:val123')
-    expectValid('did:method:123')
-    expectValid('did:method:val-two')
-    expectValid('did:method:val_two')
-    expectValid('did:method:val.two')
-    expectValid('did:method:val:two')
-    expectValid('did:method:val%BB')
+describe('did_parse_invalid.txt', () => {
+  for (const value of readLines(
+    `${ROOT_DIR}/interop-test-files/syntax/did_parse_invalid.txt`,
+  )) {
+    // @NOTE While semantically invalid, these DIDs are syntactically valid
+    testValidDid(value)
+  }
+})
 
-    expectInvalid('did')
-    expectInvalid('didmethodval')
-    expectInvalid('method:did:val')
-    expectInvalid('did:method:')
-    expectInvalid('didmethod:val')
-    expectInvalid('did:methodval')
-    expectInvalid(':did:method:val')
-    expectInvalid('did.method.val')
-    expectInvalid('did:method:val:')
-    expectInvalid('did:method:val%')
-    expectInvalid('DID:method:val')
-    expectInvalid('did:METHOD:val')
-    expectInvalid('did:m123:val')
-
-    expectValid('did:method:' + 'v'.repeat(240))
-    expectInvalid('did:method:' + 'v'.repeat(8500))
-
-    expectValid('did:m:v')
-    expectValid('did:method::::val')
-    expectValid('did:method:-')
-    expectValid('did:method:-:_:.:%ab')
-    expectValid('did:method:.')
-    expectValid('did:method:_')
-    expectValid('did:method::.')
-
-    expectInvalid('did:method:val/two')
-    expectInvalid('did:method:val?two')
-    expectInvalid('did:method:val#two')
-    expectInvalid('did:method:val%')
-
-    expectValid(
-      'did:onion:2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid',
-    )
-  })
-
-  it('allows some real DID values', () => {
-    expectValid('did:example:123456789abcdefghi')
-    expectValid('did:plc:7iza6de2dwap2sbkpav7c6c6')
-    expectValid('did:web:example.com')
-    expectValid('did:web:localhost%3A1234')
-    expectValid('did:key:zQ3shZc2QzApp2oymGvQbzP8eKheVshBHbU4ZYjeXqwSKEn6N')
-    expectValid('did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a')
-  })
-
-  it('conforms to interop valid DIDs', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/did_syntax_valid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectValid(line)
-    })
-  })
-
-  it('conforms to interop invalid DIDs', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/did_syntax_invalid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectInvalid(line)
-    })
-  })
+describe('did_real.txt', () => {
+  for (const value of readLines(
+    `${ROOT_DIR}/interop-test-files/syntax/did_real.txt`,
+  )) {
+    testValidDid(value)
+  }
 })

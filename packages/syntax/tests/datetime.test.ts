@@ -1,4 +1,3 @@
-import * as fs from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import {
   InvalidDatetimeError,
@@ -7,6 +6,7 @@ import {
   normalizeDatetime,
   normalizeDatetimeAlways,
 } from '../src'
+import { readLines } from './utils'
 
 const interopValid = readLines(
   `${__dirname}/interop-files/datetime_syntax_valid.txt`,
@@ -246,10 +246,3 @@ describe(normalizeDatetimeAlways, () => {
     }
   })
 })
-
-function readLines(filePath: string): string[] {
-  return fs
-    .readFileSync(filePath, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.startsWith('#') && line.length > 0)
-}
