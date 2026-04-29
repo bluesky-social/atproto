@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.6.1
+
+### Patch Changes
+
+- [#4896](https://github.com/bluesky-social/atproto/pull/4896) [`087515e`](https://github.com/bluesky-social/atproto/commit/087515e6a414aedbf0b7bd36139ed020dc7e0dae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow using an oauth provider (e.g. Entryway) instead of a PDS url to initiate an OAuth sign-in/sign-up
+
 ## 0.6.0
 
 ### Minor Changes
