@@ -343,6 +343,7 @@ const SCENARIOS: SuiteScenarios = {
       avatar: ['blur'],
       banner: ['blur'],
       contentList: ['filter'],
+      contentMedia: ['blur'],
     },
   },
   "Blur-media label ('porn') on profile (hide)": {
@@ -385,6 +386,7 @@ const SCENARIOS: SuiteScenarios = {
       avatar: ['blur'],
       banner: ['blur'],
       contentList: ['filter'],
+      contentMedia: ['blur'],
     },
   },
 
@@ -396,6 +398,7 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {
       avatar: ['blur'],
       banner: ['blur'],
+      contentMedia: ['blur'],
     },
   },
   "Blur-media label ('porn') on profile (warn)": {
@@ -435,6 +438,7 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {
       avatar: ['blur'],
       banner: ['blur'],
+      contentMedia: ['blur'],
     },
   },
 
@@ -484,6 +488,7 @@ const SCENARIOS: SuiteScenarios = {
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       contentList: ['filter'],
+      contentMedia: ['blur', 'noOverride'],
     },
   },
   'Adult-only label on profile when adult content is disabled': {
@@ -528,6 +533,7 @@ const SCENARIOS: SuiteScenarios = {
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       contentList: ['filter'],
+      contentMedia: ['blur', 'noOverride'],
     },
   },
 
@@ -787,6 +793,7 @@ const SCENARIOS: SuiteScenarios = {
       displayName: ['blur', 'noOverride'],
       contentList: ['filter', 'blur', 'noOverride'],
       contentView: ['blur', 'noOverride'],
+      contentMedia: ['blur'],
     },
   },
   "Merging: '!warn' and 'porn' labels on account (hide)": {
@@ -801,6 +808,7 @@ const SCENARIOS: SuiteScenarios = {
       banner: ['blur'],
       contentList: ['filter', 'blur'],
       contentView: ['blur'],
+      contentMedia: ['blur'],
     },
   },
   'Merging: !hide on account, !warn on profile': {
