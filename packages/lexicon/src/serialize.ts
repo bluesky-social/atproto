@@ -71,7 +71,6 @@ export const ipldToLex = (val: IpldValue): LexValue => {
       if (result.success) {
         return BlobRef.fromJsonRef(result.data)
       }
-      return BlobRef.fromJsonRef(val)
     }
     // retain cids, bytes
     if (isCid(val) || val instanceof Uint8Array) {
