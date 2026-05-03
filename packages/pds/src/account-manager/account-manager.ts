@@ -104,6 +104,13 @@ export class AccountManager {
     return account.getAccountByEmail(this.db, email, flags)
   }
 
+  async searchAccounts(
+    opts: { email?: string; cursor?: string; limit: number },
+    flags?: account.AvailabilityFlags,
+  ): Promise<ActorAccount[]> {
+    return account.searchAccounts(this.db, opts, flags)
+  }
+
   async isAccountActivated(did: DidString): Promise<boolean> {
     const account = await this.getAccount(did, { includeDeactivated: true })
     if (!account) return false
