@@ -114,7 +114,7 @@ export class AuthVerifier {
 
     // @NOTE this auth method is typically used as fallback when no other auth
     // method is applicable. This means that the presence of an "authorization"
-    // header means that that header is invalid (as it did not match any of the
+    // header means that header is invalid (as it did not match any of the
     // other auth methods).
     if (ctx.req.headers['authorization']) {
       throw new AuthRequiredError('Invalid authorization header')
