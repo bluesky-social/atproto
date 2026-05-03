@@ -1,0 +1,45 @@
+---
+description: Testing standards and TDD workflow for atproto-custom (PDS + PLC + AppView)
+globs: ["packages/**/*.ts", "services/**/*.ts"]
+alwaysApply: false
+---
+
+# Testing Standards
+
+## Stack
+- **Integration tests**: `services/pds-plc-tests/integration.test.ts` using native `fetch`
+- **Unit tests**: Jest (via `@swc/jest`) for package-level logic
+- Run integration tests: `pnpm --filter @atproto/pds-plc-tests test:integration`
+- Set `PDS_URL=https://pds.sokaa.app` to run against the live deployment
+
+## Test-First Workflow (TDD)
+Before implementing any new PDS/PLC/AppView feature:
+1. **Write the integration test first** — describe the HTTP request/response contract
+2. **Run it and confirm it fails** with a 404 or 400 (not an unexpected error)
+3. **Implement** the XRPC handler or record type
+4. **Re-run** until green
+
+```typescript
+// ✅ GOOD — test the contract before implementing
+it('create_post — creates an app.sokaa.feed.post record', async () => {
+  const res = await xrpcPost('com.atproto.repo.createRecord', accessJwt, {
+    repo: did,
+    collection: 'app.sokaa.feed.post',
+    record: { caption: 'hello', $type: 'app.sokaa.feed.post' },
+  })
+  expect(res.status).toBe(200)
+  const body = await res.json()
+  expect(body.uri).toMatch(/^at:\/\//)
+})
+
+// ❌ BAD — ship the handler, add a test later
+```
+
+## Integration Test Rules
+- Each test run creates a **unique handle** (`testuser{timestamp}.sokaa.app`) — never reuse handles across runs
+- Tests are **sequential within a describe block** — they share `did`, `accessJwt`, and `handle` via outer scope
+- Do NOT import `@atproto/api` in integration tests — use native `fetch` via `xrpcPost` / `xrpcGet` helpers
+
+## CI
+Integration tests run on every PR via `.github/workflows/integration-tests.yml`.
+The workflow builds the Docker image from the branch and tests against it — not the live deployment.
