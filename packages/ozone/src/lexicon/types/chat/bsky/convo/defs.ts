@@ -512,6 +512,7 @@ export interface GroupConvo {
   name: string
   /** The total number of members in the group conversation. */
   memberCount: number
+  createdAt: string
   joinLink?: ChatBskyGroupDefs.JoinLinkView
   lockStatus: ConvoLockStatus
 }

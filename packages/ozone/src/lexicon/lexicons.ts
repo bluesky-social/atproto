@@ -10356,7 +10356,7 @@ export const schemaDict = {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here].',
         type: 'object',
-        required: ['name', 'lockStatus', 'memberCount'],
+        required: ['name', 'lockStatus', 'memberCount', 'createdAt'],
         properties: {
           name: {
             type: 'string',
@@ -10368,6 +10368,10 @@ export const schemaDict = {
             type: 'integer',
             description:
               'The total number of members in the group conversation.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
           },
           joinLink: {
             type: 'ref',
