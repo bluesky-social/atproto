@@ -47,6 +47,9 @@ export type Service = `${DidString}#${DidServiceIdentifier}`
  * await client.xrpc(uploadMethod, { body: file })
  * ```
  */
+// Uint8Array is parameterized with ArrayBuffer (not ArrayBufferLike) because
+// fetch's BodyInit requires ArrayBuffer-backed views — SharedArrayBuffer is not
+// supported for network I/O.
 export type BinaryBodyInit =
   | Uint8Array<ArrayBuffer>
   | ArrayBuffer

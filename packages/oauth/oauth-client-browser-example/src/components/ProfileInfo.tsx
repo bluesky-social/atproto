@@ -65,7 +65,9 @@ function useBlobRefUrl(ref: l.BlobRef | null | undefined) {
   )
   const blob = useMemo(() => {
     return blobQuery.data
-      ? new Blob([blobQuery.data.body], { type: blobQuery.data.encoding })
+      ? new Blob([blobQuery.data.body as BlobPart], {
+          type: blobQuery.data.encoding,
+        })
       : null
   }, [blobQuery.data])
   const url = useBlobUrl(blob)

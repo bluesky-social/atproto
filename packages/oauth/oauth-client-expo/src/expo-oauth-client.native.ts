@@ -24,7 +24,8 @@ const isCustomUriScheme = (uri: string) => CUSTOM_URI_SCHEME_REGEX.test(uri)
 
 const runtimeImplementation: RuntimeImplementation = {
   createKey: async (algs) => ExpoKey.generate(algs),
-  digest: async (bytes, { name }) => NativeModule.digest(bytes, name),
+  digest: async (bytes, { name }) =>
+    NativeModule.digest(bytes, name) as Promise<Uint8Array<ArrayBuffer>>,
   getRandomValues: async (length) => NativeModule.getRandomValues(length),
 }
 

@@ -18,7 +18,7 @@ const cidSchema = z.unknown().transform((input, ctx): Cid => {
   return z.NEVER
 })
 
-const unsignedCommit = z.object({
+const _unsignedCommit = z.object({
   did: z.string(),
   version: z.literal(3),
   data: cidSchema,
@@ -26,7 +26,7 @@ const unsignedCommit = z.object({
   // `prev` added for backwards compatibility with v2, no requirement of keeping around history
   prev: cidSchema.nullable(),
 })
-export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
+export type UnsignedCommit = z.infer<typeof _unsignedCommit> & { sig?: never }
 
 const commit = z.object({
   did: z.string(),

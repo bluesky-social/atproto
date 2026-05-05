@@ -3,7 +3,9 @@ import * as uint8arrays from 'uint8arrays'
 import { SupportedEncodings } from 'uint8arrays/to-string'
 import { sha256 } from './sha'
 
-export const randomBytes = noble.randomBytes
+export const randomBytes = noble.randomBytes as (
+  bytesLength?: number,
+) => Uint8Array<ArrayBuffer>
 
 export const randomStr = (
   byteLength: number,
