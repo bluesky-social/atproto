@@ -45,7 +45,7 @@
     "kysely": "^0.22.0",
     "lande": "^1.0.10",
     "multiformats": "^13.0.0",
-    "p-queue": "^6.6.2",
+    "p-queue": "^8.0.0",
     "pg": "^8.10.0",
     "pino-http": "^8.2.1",
     "structured-headers": "^1.0.1",

@@ -281,8 +281,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       p-queue:
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^8.0.0
+        version: 8.1.1
       pg:
         specifier: ^8.10.0
         version: 8.10.0
@@ -1705,8 +1705,8 @@ importers:
         specifier: ^13.0.0
         version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       p-queue:
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^8.0.0
+        version: 8.1.1
       pg:
         specifier: ^8.10.0
         version: 8.10.0
@@ -1877,8 +1877,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       p-queue:
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^8.0.0
+        version: 8.1.1
       pino:
         specifier: ^8.21.0
         version: 8.21.0
@@ -2008,8 +2008,8 @@ importers:
         specifier: workspace:^
         version: link:../xrpc-server
       p-queue:
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^8.0.0
+        version: 8.1.1
       ws:
         specifier: ^8.12.0
         version: 8.18.0
@@ -11923,8 +11923,8 @@ packages:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
 
-  /eventemitter3@4.0.7:
-    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
+  /eventemitter3@5.0.4:
+    resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
     dev: false
 
   /events-universal@1.0.1:
@@ -15967,12 +15967,12 @@ packages:
       aggregate-error: 3.1.0
     dev: true
 
-  /p-queue@6.6.2:
-    resolution: {integrity: sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==}
-    engines: {node: '>=8'}
+  /p-queue@8.1.1:
+    resolution: {integrity: sha512-aNZ+VfjobsWryoiPnEApGGmf5WmNsCo9xu8dfaYamG5qaLP7ClhLN6NgsFe6SwJ2UbLEBK5dv9x8Mn5+RVhMWQ==}
+    engines: {node: '>=18'}
     dependencies:
-      eventemitter3: 4.0.7
-      p-timeout: 3.2.0
+      eventemitter3: 5.0.4
+      p-timeout: 6.1.4
     dev: false
 
   /p-timeout@3.2.0:
@@ -15980,6 +15980,11 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       p-finally: 1.0.0
+
+  /p-timeout@6.1.4:
+    resolution: {integrity: sha512-MyIV3ZA/PmyBN/ud8vV9XzwTrNtR4jFrObymZYnZqMmW0zA8Z17vnT0rBgFE/TlohB+YCHqXMgZzb3Csp49vqg==}
+    engines: {node: '>=14.16'}
+    dev: false
 
   /p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
