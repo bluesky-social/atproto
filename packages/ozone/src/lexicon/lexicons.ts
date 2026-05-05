@@ -10473,6 +10473,15 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
           },
+          relatedProfiles: {
+            description:
+              "Profiles referred to in the message view. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logDeleteMessage: {
@@ -10540,6 +10549,15 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionView',
           },
+          relatedProfiles: {
+            description:
+              "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logRemoveReaction: {
@@ -10563,6 +10581,15 @@ export const schemaDict = {
           reaction: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+          relatedProfiles: {
+            description:
+              "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
           },
         },
       },
