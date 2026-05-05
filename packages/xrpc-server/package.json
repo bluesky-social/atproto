@@ -50,7 +50,7 @@
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
-    "jose": "^4.15.4",
+    "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
     "multiformats": "^13.0.0",
     "typescript": "^6.0.3"
