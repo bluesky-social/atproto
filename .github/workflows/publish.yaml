@@ -21,6 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.9
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
