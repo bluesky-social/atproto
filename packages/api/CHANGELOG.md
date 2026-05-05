@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.19.13
+
+### Patch Changes
+
+- [#4906](https://github.com/bluesky-social/atproto/pull/4906) [`2879b56`](https://github.com/bluesky-social/atproto/commit/2879b56a04d37fc93d5afb51cf6131fb7c156b85) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4769](https://github.com/bluesky-social/atproto/pull/4769) [`02b8b32`](https://github.com/bluesky-social/atproto/commit/02b8b32d2fd57ade330d18fbfc8d0d25ed95e476) Thanks [@whyrusleeping](https://github.com/whyrusleeping)! - Update blur behaviors to be more comprehensive and cover more surfaces.
+
 ## 0.19.12
 
 ### Patch Changes
