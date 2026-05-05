@@ -33,7 +33,7 @@
     "@noble/curves": "^1.7.0",
     "key-encoder": "^2.0.3",
     "multiformats": "^13.0.0",
-    "uint8arrays": "3.0.0"
+    "uint8arrays": "^5.0.0"
   },
   "devDependencies": {
     "typescript": "^6.0.3"
