@@ -13,6 +13,7 @@ export default defineConfig({
     alias: {
       '#': resolve(__dirname, './src'),
     },
+    conditions: ['import', 'module', 'browser', 'default'],
   },
   plugins: [
     react({
@@ -70,6 +71,7 @@ export default defineConfig({
       '@atproto/oauth-scopes',
       '@atproto/oauth-types',
       '@atproto/syntax',
+      'multiformats',
     ],
   },
 })

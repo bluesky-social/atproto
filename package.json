@@ -9,21 +9,6 @@
     "node": ">=22"
   },
   "packageManager": "pnpm@8.15.9+sha512.499434c9d8fdd1a2794ebf4552b3b25c0a633abcee5bb15e7b5de90f32f47b513aca98cd5cfd001c31f0db454bc3804edccd578501e4ca293a6816166bbd9f81",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "onFail": "error"
-    }
-  },
-  "pnpm": {
-    "executionEnv": {
-      "nodeVersion": ">=22"
-    },
-    "overrides": {
-      "cookie": "^0.7.2",
-      "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
-    }
-  },
   "scripts": {
     "lint:fix": "pnpm lint --fix",
     "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
@@ -73,6 +58,15 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "^6.0.3",
     "vitest": "^4.0.16"
+  },
+  "pnpm": {
+    "overrides": {
+      "cookie": "^0.7.2",
+      "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
+    },
+    "patchedDependencies": {
+      "multiformats@13.4.2": "patches/multiformats@13.4.2.patch"
+    }
   },
   "workspace": [
     "packages/*",

@@ -1,0 +1,160 @@
+diff --git a/package.json b/package.json
+index 4ffb609fca39b03cc8088da42a17037ce5f4e928..c00861df4aee13b8109fa8e1d5e27602f24ca92c 100644
+--- a/package.json
++++ b/package.json
+@@ -48,125 +48,125 @@
+   "exports": {
+     ".": {
+       "types": "./dist/src/index.d.ts",
+-      "import": "./dist/src/index.js"
++      "default": "./dist/src/index.js"
+     },
+     "./bases/base10": {
+       "types": "./dist/src/bases/base10.d.ts",
+-      "import": "./dist/src/bases/base10.js"
++      "default": "./dist/src/bases/base10.js"
+     },
+     "./bases/base16": {
+       "types": "./dist/src/bases/base16.d.ts",
+-      "import": "./dist/src/bases/base16.js"
++      "default": "./dist/src/bases/base16.js"
+     },
+     "./bases/base2": {
+       "types": "./dist/src/bases/base2.d.ts",
+-      "import": "./dist/src/bases/base2.js"
++      "default": "./dist/src/bases/base2.js"
+     },
+     "./bases/base256emoji": {
+       "types": "./dist/src/bases/base256emoji.d.ts",
+-      "import": "./dist/src/bases/base256emoji.js"
++      "default": "./dist/src/bases/base256emoji.js"
+     },
+     "./bases/base32": {
+       "types": "./dist/src/bases/base32.d.ts",
+-      "import": "./dist/src/bases/base32.js"
++      "default": "./dist/src/bases/base32.js"
+     },
+     "./bases/base36": {
+       "types": "./dist/src/bases/base36.d.ts",
+-      "import": "./dist/src/bases/base36.js"
++      "default": "./dist/src/bases/base36.js"
+     },
+     "./bases/base58": {
+       "types": "./dist/src/bases/base58.d.ts",
+-      "import": "./dist/src/bases/base58.js"
++      "default": "./dist/src/bases/base58.js"
+     },
+     "./bases/base64": {
+       "types": "./dist/src/bases/base64.d.ts",
+-      "import": "./dist/src/bases/base64.js"
++      "default": "./dist/src/bases/base64.js"
+     },
+     "./bases/base8": {
+       "types": "./dist/src/bases/base8.d.ts",
+-      "import": "./dist/src/bases/base8.js"
++      "default": "./dist/src/bases/base8.js"
+     },
+     "./bases/identity": {
+       "types": "./dist/src/bases/identity.d.ts",
+-      "import": "./dist/src/bases/identity.js"
++      "default": "./dist/src/bases/identity.js"
+     },
+     "./bases/interface": {
+       "types": "./dist/src/bases/interface.d.ts",
+-      "import": "./dist/src/bases/interface.js"
++      "default": "./dist/src/bases/interface.js"
+     },
+     "./basics": {
+       "types": "./dist/src/basics.d.ts",
+-      "import": "./dist/src/basics.js"
++      "default": "./dist/src/basics.js"
+     },
+     "./block": {
+       "types": "./dist/src/block.d.ts",
+-      "import": "./dist/src/block.js"
++      "default": "./dist/src/block.js"
+     },
+     "./block/interface": {
+       "types": "./dist/src/block/interface.d.ts",
+-      "import": "./dist/src/block/interface.js"
++      "default": "./dist/src/block/interface.js"
+     },
+     "./bytes": {
+       "types": "./dist/src/bytes.d.ts",
+-      "import": "./dist/src/bytes.js"
++      "default": "./dist/src/bytes.js"
+     },
+     "./cid": {
+       "types": "./dist/src/cid.d.ts",
+-      "import": "./dist/src/cid.js"
++      "default": "./dist/src/cid.js"
+     },
+     "./codecs/interface": {
+       "types": "./dist/src/codecs/interface.d.ts",
+-      "import": "./dist/src/codecs/interface.js"
++      "default": "./dist/src/codecs/interface.js"
+     },
+     "./codecs/json": {
+       "types": "./dist/src/codecs/json.d.ts",
+-      "import": "./dist/src/codecs/json.js"
++      "default": "./dist/src/codecs/json.js"
+     },
+     "./codecs/raw": {
+       "types": "./dist/src/codecs/raw.d.ts",
+-      "import": "./dist/src/codecs/raw.js"
++      "default": "./dist/src/codecs/raw.js"
+     },
+     "./hashes/digest": {
+       "types": "./dist/src/hashes/digest.d.ts",
+-      "import": "./dist/src/hashes/digest.js"
++      "default": "./dist/src/hashes/digest.js"
+     },
+     "./hashes/hasher": {
+       "types": "./dist/src/hashes/hasher.d.ts",
+-      "import": "./dist/src/hashes/hasher.js"
++      "default": "./dist/src/hashes/hasher.js"
+     },
+     "./hashes/identity": {
+       "types": "./dist/src/hashes/identity.d.ts",
+-      "import": "./dist/src/hashes/identity.js"
++      "default": "./dist/src/hashes/identity.js"
+     },
+     "./hashes/interface": {
+       "types": "./dist/src/hashes/interface.d.ts",
+-      "import": "./dist/src/hashes/interface.js"
++      "default": "./dist/src/hashes/interface.js"
+     },
+     "./hashes/sha1": {
+       "types": "./dist/types/src/hashes/sha1.d.ts",
+       "browser": "./dist/src/hashes/sha1-browser.js",
+-      "import": "./dist/src/hashes/sha1.js"
++      "default": "./dist/src/hashes/sha1.js"
+     },
+     "./hashes/sha2": {
+       "types": "./dist/src/hashes/sha2.d.ts",
+       "browser": "./dist/src/hashes/sha2-browser.js",
+-      "import": "./dist/src/hashes/sha2.js"
++      "default": "./dist/src/hashes/sha2.js"
+     },
+     "./interface": {
+       "types": "./dist/src/interface.d.ts",
+-      "import": "./dist/src/interface.js"
++      "default": "./dist/src/interface.js"
+     },
+     "./link": {
+       "types": "./dist/src/link.d.ts",
+-      "import": "./dist/src/link.js"
++      "default": "./dist/src/link.js"
+     },
+     "./link/interface": {
+       "types": "./dist/src/link/interface.d.ts",
+-      "import": "./dist/src/link/interface.js"
++      "default": "./dist/src/link/interface.js"
+     },
+     "./traversal": {
+       "types": "./dist/src/traversal.d.ts",
+-      "import": "./dist/src/traversal.js"
++      "default": "./dist/src/traversal.js"
+     }
+   },
+   "eslintConfig": {

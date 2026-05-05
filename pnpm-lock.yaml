@@ -8,6 +8,11 @@ overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
 
+patchedDependencies:
+  multiformats@13.4.2:
+    hash: 4i6o6yurqzs3zyr237z3uystxe
+    path: patches/multiformats@13.4.2.patch
+
 importers:
 
   .:
@@ -106,8 +111,8 @@ importers:
         specifier: ^2.2.2
         version: 2.2.2
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       tlds:
         specifier: ^1.234.0
         version: 1.234.0
@@ -164,8 +169,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
@@ -419,8 +424,8 @@ importers:
         specifier: workspace:^
         version: link:../lex/lex-data
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       pino:
         specifier: ^8.21.0
         version: 8.21.0
@@ -536,8 +541,8 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
@@ -905,8 +910,8 @@ importers:
   packages/lex/lex-data:
     dependencies:
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -1129,8 +1134,8 @@ importers:
         specifier: ^2.2.2
         version: 2.2.2
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -1176,8 +1181,8 @@ importers:
   packages/oauth/jwk:
     dependencies:
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -1251,8 +1256,8 @@ importers:
         specifier: ^3
         version: 3.45.1
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -1697,8 +1702,8 @@ importers:
         specifier: ^1.0.10
         version: 1.0.10
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       p-queue:
         specifier: ^6.6.2
         version: 6.6.2
@@ -2186,8 +2191,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
+        specifier: ^13.0.0
+        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -3157,7 +3162,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/traverse': 7.28.4
-      '@babel/types': 7.28.4
+      '@babel/types': 7.28.5
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -3225,7 +3230,7 @@ packages:
     resolution: {integrity: sha512-URMGH08NzYFhubNSGJrpUEphGKQwMQYBySzat5cAByY1/YgIRkULnIy3tAMeszlL/so2HbeilYloUmSpd7GdVw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/types': 7.28.4
+      '@babel/types': 7.28.5
     dev: false
 
   /@babel/helper-plugin-utils@7.27.1:
@@ -3265,7 +3270,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/traverse': 7.28.4
-      '@babel/types': 7.28.4
+      '@babel/types': 7.28.5
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -15513,6 +15518,10 @@ packages:
       int64-buffer: 0.1.10
       isarray: 1.0.0
     dev: false
+
+  /multiformats@13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe):
+    resolution: {integrity: sha512-eh6eHCrRi1+POZ3dA+Dq1C6jhP1GNtr9CRINMb67OKzqW9I5DUuZM/3jLPlzhgpGeiNUlEGEbkCYChXMCc/8DQ==}
+    patched: true
 
   /multiformats@9.9.0:
     resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
