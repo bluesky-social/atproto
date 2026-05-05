@@ -31,7 +31,7 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "await-lock": "^2.2.2",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "tlds": "^1.234.0",
     "zod": "^3.23.8"
   },
