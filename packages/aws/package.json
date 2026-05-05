@@ -32,7 +32,7 @@
     "@aws-sdk/lib-storage": "3.879.0",
     "@noble/curves": "^1.7.0",
     "key-encoder": "^2.0.3",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
