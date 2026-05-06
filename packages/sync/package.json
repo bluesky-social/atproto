@@ -18,8 +18,6 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "codegen": "lex build --override --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
     "prebuild": "pnpm run codegen",
@@ -40,5 +38,12 @@
     "@types/ws": "^8.5.4",
     "jest": "^28.1.2",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

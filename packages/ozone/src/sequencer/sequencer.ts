@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events'
 import { Selectable } from 'kysely'
 import { PoolClient } from 'pg'
-import TypedEmitter from 'typed-emitter'
+import type TypedEmitter from 'typed-emitter'
 import { Database } from '../db/index.js'
 import { Label as LabelTable, LabelChannel } from '../db/schema/label.js'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'

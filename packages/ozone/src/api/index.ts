@@ -24,27 +24,7 @@ import queryStatuses from './moderation/queryStatuses.js'
 import scheduleAction from './moderation/scheduleAction.js'
 import searchRepos from './moderation/searchRepos.js'
 import proxied from './proxied.js'
-import assignQueueModerator from './queue/assignModerator.js'
-import createQueue from './queue/createQueue.js'
-import deleteQueue from './queue/deleteQueue.js'
-import getQueueAssignments from './queue/getAssignments.js'
-import listQueues from './queue/listQueues.js'
-import routeReports from './queue/routeReports.js'
-import unassignQueueModerator from './queue/unassignModerator.js'
-import updateQueue from './queue/updateQueue.js'
-import assignReportModerator from './report/assignModerator.js'
-import createActivity from './report/createActivity.js'
 import createReport from './report/createReport.js'
-import getReportAssignments from './report/getAssignments.js'
-import getHistoricalStats from './report/getHistoricalStats.js'
-import getLatestReport from './report/getLatestReport.js'
-import getLiveStats from './report/getLiveStats.js'
-import getReport from './report/getReport.js'
-import listActivities from './report/listActivities.js'
-import queryReports from './report/queryReports.js'
-import reassignQueue from './report/reassignQueue.js'
-import refreshStats from './report/refreshStats.js'
-import unassignReportModerator from './report/unassignModerator.js'
 import addSafelinkRule from './safelink/addRule.js'
 import querySafelinkEvents from './safelink/queryEvents.js'
 import querySafelinkRules from './safelink/queryRules.js'
@@ -82,8 +62,6 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
-  getReport(server, ctx)
-  queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
@@ -99,10 +77,6 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
-  createQueue(server, ctx)
-  listQueues(server, ctx)
-  updateQueue(server, ctx)
-  deleteQueue(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)
@@ -126,19 +100,5 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
-  routeReports(server, ctx)
-  getLiveStats(server, ctx)
-  getHistoricalStats(server, ctx)
-  refreshStats(server, ctx)
-  assignQueueModerator(server, ctx)
-  unassignQueueModerator(server, ctx)
-  getQueueAssignments(server, ctx)
-  getLatestReport(server, ctx)
-  assignReportModerator(server, ctx)
-  unassignReportModerator(server, ctx)
-  getReportAssignments(server, ctx)
-  createActivity(server, ctx)
-  listActivities(server, ctx)
-  reassignQueue(server, ctx)
   return server
 }

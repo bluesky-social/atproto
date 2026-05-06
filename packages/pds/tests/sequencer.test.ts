@@ -7,7 +7,7 @@ import {
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot } from '@atproto/repo'
-import { sequencer } from '../src/index.js'
+import { sequencer } from '../../pds.js'
 import { SeqEvt, Sequencer, formatSeqSyncEvt } from '../src/sequencer/index.js'
 import { Outbox } from '../src/sequencer/outbox.js'
 import userSeed from './seeds/users.js'

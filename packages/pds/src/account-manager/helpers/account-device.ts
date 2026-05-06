@@ -30,7 +30,7 @@ export function selectQB(
     sub?: string
     deviceId?: DeviceId
   },
-) {
+): any {
   assert(
     filter.sub != null || filter.deviceId != null,
     'Either sub or deviceId must be provided',
@@ -61,7 +61,7 @@ export function selectQB(
   )
 }
 
-export function removeQB(db: AccountDb, deviceId: DeviceId, did: string) {
+export function removeQB(db: AccountDb, deviceId: DeviceId, did: string): any {
   return db.db
     .deleteFrom('account_device')
     .where('deviceId', '=', deviceId)

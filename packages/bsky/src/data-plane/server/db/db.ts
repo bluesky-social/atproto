@@ -12,7 +12,7 @@ import {
   UnknownRow,
 } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import TypedEmitter from 'typed-emitter'
+import type TypedEmitter from 'typed-emitter'
 import { dbLogger } from '../../../logger.js'
 import { DatabaseSchema, DatabaseSchemaType } from './database-schema.js'
 import * as migrations from './migrations/index.js'

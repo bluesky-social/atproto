@@ -19,7 +19,7 @@ export function computeAgeAssuranceAccessOrThrow(
     regionCode?: string
     verifiedMinimumAge: number
   },
-) {
+): any {
   const region = getAgeAssuranceRegionConfig(config, {
     countryCode,
     regionCode,

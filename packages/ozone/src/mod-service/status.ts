@@ -211,7 +211,9 @@ const getSubjectStatusForRecordEvent = ({
   return {}
 }
 
-export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
+export const moderationSubjectStatusQueryBuilder = (
+  db: DatabaseSchema,
+): any => {
   // @NOTE: Using select() instead of selectAll() below because the materialized
   // views might be incomplete, and we don't want the null `did` columns to
   // interfere with the (never null) `did` column from the

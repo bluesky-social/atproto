@@ -1,4 +1,5 @@
-import { isValidISODateString } from 'iso-datestring-validator'
+import isoDatestringValidator from 'iso-datestring-validator'
+const { isValidISODateString } = isoDatestringValidator
 import { CID } from 'multiformats/cid'
 import { validateLanguage } from '@atproto/common-web'
 import {

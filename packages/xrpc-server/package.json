@@ -16,8 +16,6 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "build": "tsc --build tsconfig.build.json"
@@ -54,5 +52,12 @@
     "key-encoder": "^2.0.3",
     "multiformats": "^13.0.0",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

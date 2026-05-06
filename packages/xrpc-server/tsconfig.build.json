@@ -4,5 +4,8 @@
     "rootDir": "./src",
     "outDir": "./dist"
   },
-  "include": ["./src"]
+  "include": [
+    "./src",
+    "../../tsconfig/cjs-default-exports.d.ts"
+  ]
 }

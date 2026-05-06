@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const resultCursor = keyset.packFromResult(res)
       const codeDetails = res.map(
-        ({ disabled, createdAt, ...row }): CodeDetail => ({
+        ({ disabled, createdAt, ...row }: any): CodeDetail => ({
           ...row,
           createdAt,
           disabled: disabled === 1,

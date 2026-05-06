@@ -63,9 +63,6 @@
     "overrides": {
       "cookie": "^0.7.2",
       "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
-    },
-    "patchedDependencies": {
-      "multiformats@13.4.2": "patches/multiformats@13.4.2.patch"
     }
   },
   "workspace": [
@@ -81,5 +78,6 @@
       "packages/oauth/*",
       "packages/internal/*"
     ]
-  }
+  },
+  "type": "module"
 }

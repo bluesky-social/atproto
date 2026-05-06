@@ -8,11 +8,6 @@ overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
 
-patchedDependencies:
-  multiformats@13.4.2:
-    hash: 4i6o6yurqzs3zyr237z3uystxe
-    path: patches/multiformats@13.4.2.patch
-
 importers:
 
   .:
@@ -112,7 +107,7 @@ importers:
         version: 2.2.2
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       tlds:
         specifier: ^1.234.0
         version: 1.234.0
@@ -170,7 +165,7 @@ importers:
         version: 2.0.3
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       uint8arrays:
         specifier: ^5.0.0
         version: 5.1.1
@@ -425,7 +420,7 @@ importers:
         version: link:../lex/lex-data
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       pino:
         specifier: ^8.21.0
         version: 8.21.0
@@ -542,7 +537,7 @@ importers:
         version: 5.1.1
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       uint8arrays:
         specifier: ^5.0.0
         version: 5.1.1
@@ -911,13 +906,13 @@ importers:
     dependencies:
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
       uint8arrays:
-        specifier: 3.0.0
-        version: 3.0.0
+        specifier: ^5.0.0
+        version: 5.1.1
       unicode-segmenter:
         specifier: ^0.14.0
         version: 0.14.0
@@ -934,9 +929,6 @@ importers:
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex-schema
-      core-js:
-        specifier: ^3
-        version: 3.45.1
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -1135,7 +1127,7 @@ importers:
         version: 2.2.2
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -1182,7 +1174,7 @@ importers:
     dependencies:
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -1257,7 +1249,7 @@ importers:
         version: 3.45.1
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -1703,7 +1695,7 @@ importers:
         version: 1.0.10
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       p-queue:
         specifier: ^8.0.0
         version: 8.1.1
@@ -2192,7 +2184,7 @@ importers:
         version: 2.0.3
       multiformats:
         specifier: ^13.0.0
-        version: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+        version: 13.4.2
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -3193,7 +3185,7 @@ packages:
     dependencies:
       '@babel/core': 7.26.9
       '@babel/helper-module-imports': 7.25.9
-      '@babel/helper-validator-identifier': 7.25.9
+      '@babel/helper-validator-identifier': 7.28.5
       '@babel/traverse': 7.28.4
     transitivePeerDependencies:
       - supports-color
@@ -3287,10 +3279,6 @@ packages:
     resolution: {integrity: sha512-Ed61U6XJc3CVRfkERJWDz4dJwKe7iLmmJsbOGu9wSloNSFttHV0I8g6UAgb7qnK5ly5bGLPd4oXZlxCdANBOWQ==}
     engines: {node: '>=6.9.0'}
 
-  /@babel/helper-validator-identifier@7.27.1:
-    resolution: {integrity: sha512-D2hP9eA+Sqx1kBZgzxZh0y1trbuU+JoDkiEwqhQ36nodYqJwyEIhPSdMNd7lOm/4io72luTPWH20Yda0xOuUow==}
-    engines: {node: '>=6.9.0'}
-
   /@babel/helper-validator-identifier@7.28.5:
     resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
     engines: {node: '>=6.9.0'}
@@ -3319,7 +3307,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/template': 7.27.2
-      '@babel/types': 7.28.4
+      '@babel/types': 7.28.5
 
   /@babel/highlight@7.22.10:
     resolution: {integrity: sha512-78aUtVcT7MUscr0K5mIEnkwxPE0MaxkR5RxRwuHaQ+JuU5AmTPhY+do2mdzVTnIJJpyBglql2pehuBIWHug+WQ==}
@@ -3342,6 +3330,7 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.28.4
+    dev: false
 
   /@babel/parser@7.28.5:
     resolution: {integrity: sha512-KKBU1VGYR7ORr3At5HAtUQ+TV3SzRCXmA/8OdDZiLDBIZxVyzXuztPjfLd3BV1PRAQGCMWWSHYhL0F8d5uHBDQ==}
@@ -4145,8 +4134,8 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/parser': 7.28.4
-      '@babel/types': 7.28.4
+      '@babel/parser': 7.28.5
+      '@babel/types': 7.28.5
 
   /@babel/traverse@7.26.9:
     resolution: {integrity: sha512-ZYW7L+pL8ahU5fXmNbPF+iZFHCv5scFak7MZ9bwaRPLUhHh7QQEMjZUg0HevihoqCM5iSYHN61EyCoZvqC+bxg==}
@@ -4189,7 +4178,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-string-parser': 7.27.1
-      '@babel/helper-validator-identifier': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
 
   /@babel/types@7.28.5:
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
@@ -15514,9 +15503,8 @@ packages:
       isarray: 1.0.0
     dev: false
 
-  /multiformats@13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe):
+  /multiformats@13.4.2:
     resolution: {integrity: sha512-eh6eHCrRi1+POZ3dA+Dq1C6jhP1GNtr9CRINMb67OKzqW9I5DUuZM/3jLPlzhgpGeiNUlEGEbkCYChXMCc/8DQ==}
-    patched: true
 
   /multiformats@9.9.0:
     resolution: {integrity: sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==}
@@ -18527,7 +18515,7 @@ packages:
   /uint8arrays@5.1.1:
     resolution: {integrity: sha512-9muQwa4wZG4dKi9gMAIBtnk2Pw87SRpvWTH6lOGm19V2Uqxr4uomUf2PGqPnWc+qs06sN8owUU4jfcoWOcfwVQ==}
     dependencies:
-      multiformats: 13.4.2(patch_hash=4i6o6yurqzs3zyr237z3uystxe)
+      multiformats: 13.4.2
 
   /unbox-primitive@1.0.2:
     resolution: {integrity: sha512-61pPlCD9h51VoreyJ0BReideM3MDKMKnh6+V9L08331ipq6Q8OFXZYiqP6n/tbHx4s5I9uRhcye6BrbkizkBDw==}

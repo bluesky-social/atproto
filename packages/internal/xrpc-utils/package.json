@@ -21,9 +21,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/xrpc-utils"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
