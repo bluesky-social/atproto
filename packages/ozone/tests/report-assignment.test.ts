@@ -464,4 +464,51 @@ describe('report-assignment', () => {
       expect(result.assignments[0].endAt).toBeUndefined()
     })
   })
+
+  describe('unassign returns report to queue', () => {
+    const getReportStatus = async (reportId: number) => {
+      const row = await network.ozone.ctx.db.db
+        .selectFrom('report')
+        .select('status')
+        .where('id', '=', reportId)
+        .executeTakeFirstOrThrow()
+      return row.status
+    }
+
+    it('flips status from assigned back to queued and logs queueActivity', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, queueId, isPermanent: true }, 'moderator')
+      expect(await getReportStatus(reportId)).toBe('assigned')
+
+      await unassignReport({ reportId }, 'moderator')
+      expect(await getReportStatus(reportId)).toBe('queued')
+
+      const { activities } = await listActivities({ reportId })
+      const queueActivity = activities.find(
+        (a) => a.activity.$type === 'tools.ozone.report.defs#queueActivity',
+      )
+      expect(queueActivity).toBeDefined()
+      if ('previousStatus' in queueActivity!.activity) {
+        expect(queueActivity.activity.previousStatus).toBe('assigned')
+      }
+      expect(queueActivity!.createdBy).toBe(network.ozone.moderatorAccnt.did)
+      expect(queueActivity!.isAutomated).toBe(false)
+    })
+
+    it('flips status from assigned back to open when assignment had no queueId', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true }, 'moderator')
+      expect(await getReportStatus(reportId)).toBe('assigned')
+
+      await unassignReport({ reportId }, 'moderator')
+      // No queueId on the assignment, so the report goes back to 'open'.
+      expect(await getReportStatus(reportId)).toBe('open')
+
+      const { activities } = await listActivities({ reportId })
+      const queueActivity = activities.find(
+        (a) => a.activity.$type === 'tools.ozone.report.defs#queueActivity',
+      )
+      expect(queueActivity).toBeUndefined()
+    })
+  })
 })
