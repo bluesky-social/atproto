@@ -1,6 +1,7 @@
 {
   "name": "plc-service",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/pds": "workspace:^",

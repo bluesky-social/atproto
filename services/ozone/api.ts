@@ -1,32 +1,32 @@
-/* eslint-env node */
+/* eslint-disable import/order */
+import { createRequire } from 'node:module'
+import path from 'node:path'
 
-'use strict'
-
-require('dd-trace') // Only works with commonjs
+const require = createRequire(import.meta.url)
+require('dd-trace')
   .init({ logInjection: true })
   .tracer.use('express', {
     hooks: {
-      request: (span, req) => {
+      request: (span: any, req: any) => {
         maintainXrpcResource(span, req)
       },
     },
   })
 
 // Tracer code above must come before anything else
-const path = require('node:path')
-const {
+import {
   BunnyInvalidator,
   CloudfrontInvalidator,
   MultiImageInvalidator,
-} = require('@atproto/aws')
-const {
+} from '@atproto/aws'
+import {
   Database,
   OzoneService,
   envToCfg,
   envToSecrets,
   httpLogger,
   readEnv,
-} = require('@atproto/ozone')
+} from '@atproto/ozone'
 
 const main = async () => {
   const env = readEnv()
@@ -38,7 +38,7 @@ const main = async () => {
   const bunnyAccessKey = process.env.OZONE_BUNNY_ACCESS_KEY
   const cfDistributionId = process.env.OZONE_CF_DISTRIBUTION_ID
 
-  const imgInvalidators = []
+  const imgInvalidators: (BunnyInvalidator | CloudfrontInvalidator)[] = []
 
   if (bunnyAccessKey) {
     imgInvalidators.push(
@@ -89,7 +89,7 @@ const main = async () => {
   })
 }
 
-const maintainXrpcResource = (span, req) => {
+const maintainXrpcResource = (span: any, req: any) => {
   // Show actual xrpc method as resource rather than the route pattern
   if (span && req.originalUrl?.startsWith('/xrpc/')) {
     span.setTag(

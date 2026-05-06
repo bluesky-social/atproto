@@ -1,16 +1,11 @@
-/* eslint-env node */
+/* eslint-disable import/order */
+import { createRequire } from 'node:module'
 
-'use strict'
-
-require('dd-trace/init') // Only works with commonjs
+const require = createRequire(import.meta.url)
+require('dd-trace/init')
 
 // Tracer code above must come before anything else
-const {
-  OzoneDaemon,
-  envToCfg,
-  envToSecrets,
-  readEnv,
-} = require('@atproto/ozone')
+import { OzoneDaemon, envToCfg, envToSecrets, readEnv } from '@atproto/ozone'
 
 const main = async () => {
   const env = readEnv()
