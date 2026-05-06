@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.228
+
+### Patch Changes
+
+- [#4908](https://github.com/bluesky-social/atproto/pull/4908) [`5f37211`](https://github.com/bluesky-social/atproto/commit/5f37211cf550b31a693cb174f1fe1d0cfee78294) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update Age Assurance config
+
+- Updated dependencies [[`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1)]:
+  - @atproto/api@0.19.14
+
 ## 0.0.227
 
 ### Patch Changes

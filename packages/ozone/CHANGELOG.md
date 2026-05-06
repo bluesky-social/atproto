@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.173
+
+### Patch Changes
+
+- [#4894](https://github.com/bluesky-social/atproto/pull/4894) [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1) Thanks [@foysalit](https://github.com/foysalit)! - Add expiring tags in ozone
+
+- Updated dependencies [[`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1)]:
+  - @atproto/api@0.19.14
+
 ## 0.1.172
 
 ### Patch Changes
