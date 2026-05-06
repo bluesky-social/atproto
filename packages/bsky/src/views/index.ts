@@ -14,22 +14,22 @@ import {
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
-import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed'
-import { Follow, Verification } from '../hydration/graph'
-import { HydrationState } from '../hydration/hydrator'
-import { Label } from '../hydration/label'
-import { RecordInfo, parseString } from '../hydration/util'
-import { ImageUriBuilder } from '../image/uri'
+import { Actor, ProfileViewerState } from '../hydration/actor.js'
+import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
+import { Follow, Verification } from '../hydration/graph.js'
+import { HydrationState } from '../hydration/hydrator.js'
+import { Label } from '../hydration/label.js'
+import { RecordInfo, parseString } from '../hydration/util.js'
+import { ImageUriBuilder } from '../image/uri.js'
 import { app } from '../lexicons/index.js'
-import { Notification } from '../proto/bsky_pb'
+import { Notification } from '../proto/bsky_pb.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   safePinnedPost,
   uriToDid,
   uriToDid as creatorFromUri,
-} from '../util/uris'
+} from '../util/uris.js'
 import {
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
@@ -41,7 +41,7 @@ import {
   ThreadTree,
   ThreadTreeVisible,
   sortTrimFlattenThreadTree,
-} from './threads-v2'
+} from './threads-v2.js'
 import {
   ActivitySubscription,
   BlockedPost,
@@ -111,7 +111,7 @@ import {
   isSelfLabelsType,
   isVideoEmbedType,
 } from './types.js'
-import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util'
+import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util.js'
 
 const notificationDeletedRecord =
   app.bsky.notification.defs.recordDeleted.$build({})
@@ -121,13 +121,13 @@ const notificationDeletedRecordCid =
   'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim'
 
 export class Views {
-  public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
-  public videoUriBuilder: VideoUriBuilder = this.opts.videoUriBuilder
-  public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
-  private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
-  private threadTagsHide: readonly string[] = this.opts.threadTagsHide
-  private visibilityTagHide: string = this.opts.visibilityTagHide
-  private visibilityTagRankPrefix: string = this.opts.visibilityTagRankPrefix
+  public imgUriBuilder: ImageUriBuilder
+  public videoUriBuilder: VideoUriBuilder
+  public indexedAtEpoch: Date | undefined
+  private threadTagsBumpDown: readonly string[]
+  private threadTagsHide: readonly string[]
+  private visibilityTagHide: string
+  private visibilityTagRankPrefix: string
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
@@ -138,7 +138,15 @@ export class Views {
       visibilityTagHide: string
       visibilityTagRankPrefix: string
     },
-  ) {}
+  ) {
+    this.imgUriBuilder = opts.imgUriBuilder
+    this.videoUriBuilder = opts.videoUriBuilder
+    this.indexedAtEpoch = opts.indexedAtEpoch
+    this.threadTagsBumpDown = opts.threadTagsBumpDown
+    this.threadTagsHide = opts.threadTagsHide
+    this.visibilityTagHide = opts.visibilityTagHide
+    this.visibilityTagRankPrefix = opts.visibilityTagRankPrefix
+  }
 
   // Actor
   // ------------
@@ -2367,7 +2375,7 @@ export class Views {
 
   viewerPinned(uri: AtUriString, state: HydrationState, authorDid: string) {
     if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
-    const actor = state.actors?.get(authorDid)
+    const actor = state.actors?.get(authorDid as any)
     if (!actor) return
     const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
     if (!pinnedPost) return undefined

@@ -13,19 +13,24 @@ import {
 import {
   AccountManager,
   AccountStatus,
-} from '../../account-manager/account-manager'
-import { ActorStore } from '../../actor-store/actor-store'
-import { ActorStoreTransactor } from '../../actor-store/actor-store-transactor'
-import { countAll } from '../../db'
+} from '../../account-manager/account-manager.js'
+import { ActorStoreTransactor } from '../../actor-store/actor-store-transactor.js'
+import { ActorStore } from '../../actor-store/actor-store.js'
+import { countAll } from '../../db/index.js'
 import {
   PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
-} from '../../repo'
-import { AccountEvt, CommitEvt, SeqEvt, Sequencer } from '../../sequencer'
-import { RecoveryDb } from './recovery-db'
-import { UserQueues } from './user-queues'
+} from '../../repo/index.js'
+import {
+  AccountEvt,
+  CommitEvt,
+  SeqEvt,
+  Sequencer,
+} from '../../sequencer/index.js'
+import { RecoveryDb } from './recovery-db.js'
+import { UserQueues } from './user-queues.js'
 
 export type RecovererContextNoDb = {
   sequencer: Sequencer

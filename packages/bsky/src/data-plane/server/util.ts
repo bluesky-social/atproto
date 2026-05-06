@@ -1,8 +1,8 @@
 import { sql } from 'kysely'
-import { GateRecord, PostRecord, PostReplyRef } from '../../views/types'
-import { parseThreadGate } from '../../views/util'
-import { DatabaseSchema } from './db/database-schema'
-import { valuesList } from './db/util'
+import { GateRecord, PostRecord, PostReplyRef } from '../../views/types.js'
+import { parseThreadGate } from '../../views/util.js'
+import { DatabaseSchema } from './db/database-schema.js'
+import { valuesList } from './db/util.js'
 
 export const getDescendentsQb = (
   db: DatabaseSchema,
@@ -10,7 +10,7 @@ export const getDescendentsQb = (
     uri: string
     depth: number // required, protects against cycles
   },
-) => {
+): any => {
   const { uri, depth } = opts
   const query = db.withRecursive('descendent(uri, depth)', (cte) => {
     return cte
@@ -38,7 +38,7 @@ export const getAncestorsAndSelfQb = (
     uri: string
     parentHeight: number // required, protects against cycles
   },
-) => {
+): any => {
   const { uri, parentHeight } = opts
   const query = db.withRecursive(
     'ancestor(uri, ancestorUri, height)',

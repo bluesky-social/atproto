@@ -1,8 +1,8 @@
 import { AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { forSnapshot } from '../_util.js'
+import basicSeed from '../seeds/basic.js'
 
 describe('feedgen proxy view', () => {
   let network: TestNetwork

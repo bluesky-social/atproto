@@ -1,19 +1,19 @@
 import EventEmitter from 'node:events'
-import TypedEmitter from 'typed-emitter'
+import type TypedEmitter from 'typed-emitter'
 import { SECOND, wait } from '@atproto/common'
 import { decode as cborDecode } from '@atproto/lex-cbor'
 import { DatetimeString, DidString, HandleString } from '@atproto/syntax'
-import { AccountStatus } from '../account-manager/helpers/account'
-import { Crawlers } from '../crawlers'
-import { seqLogger as log } from '../logger'
-import { CommitDataWithOps, SyncEvtData } from '../repo'
+import { AccountStatus } from '../account-manager/helpers/account.js'
+import { Crawlers } from '../crawlers.js'
+import { seqLogger as log } from '../logger.js'
+import { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
 import {
   RepoSeqEntry,
   RepoSeqInsert,
   SequencerDb,
   getDb,
   getMigrator,
-} from './db'
+} from './db/index.js'
 import {
   AccountEvt,
   CommitEvt,
@@ -24,9 +24,9 @@ import {
   formatSeqCommit,
   formatSeqIdentityEvt,
   formatSeqSyncEvt,
-} from './events'
+} from './events.js'
 
-export * from './events'
+export * from './events.js'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   db: SequencerDb

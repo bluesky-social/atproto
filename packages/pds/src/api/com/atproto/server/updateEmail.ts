@@ -5,9 +5,9 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
-import { ACCESS_FULL } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account.js'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

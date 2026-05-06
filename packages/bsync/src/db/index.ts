@@ -12,12 +12,12 @@ import {
   UnknownRow,
 } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
-import TypedEmitter from 'typed-emitter'
-import { dbLogger } from '../logger'
-import * as migrations from './migrations'
-import { DbMigrationProvider } from './migrations/provider'
-import { DatabaseSchema, DatabaseSchemaType } from './schema'
-import { PgOptions } from './types'
+import type TypedEmitter from 'typed-emitter'
+import { dbLogger } from '../logger.js'
+import * as migrations from './migrations/index.js'
+import { DbMigrationProvider } from './migrations/provider.js'
+import { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
+import { PgOptions } from './types.js'
 
 export class Database {
   pool: PgPool

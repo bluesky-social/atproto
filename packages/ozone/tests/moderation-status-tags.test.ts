@@ -6,7 +6,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('moderation-status-tags', () => {
   let network: TestNetwork

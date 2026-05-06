@@ -6,8 +6,8 @@ import type {
   ResolvedHandle,
   Session,
 } from '@atproto/oauth-client'
-import { ExpoKey } from './expo-key'
-import { MMKVSimpleStoreTTL } from './mmkv-simple-store-ttl'
+import { ExpoKey } from './expo-key.js'
+import { MMKVSimpleStoreTTL } from './mmkv-simple-store-ttl.js'
 
 const MMKV_ID = 'expo-atproto-oauth-client'
 

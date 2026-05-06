@@ -1,13 +1,14 @@
-import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
+const { isModEventDivert } = ToolsOzoneModerationDefs
 import {
   AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
 } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ids } from '../../lexicon/lexicons'
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { ids } from '../../lexicon/lexicons.js'
 import {
   ModEventTag,
   isAgeAssuranceEvent,
@@ -23,17 +24,16 @@ import {
   isModEventTakedown,
   isModEventUnmuteReporter,
   isRevokeAccountCredentialsEvent,
-} from '../../lexicon/types/tools/ozone/moderation/defs'
-import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
-import { httpLogger } from '../../logger'
-import { processReportAction } from '../../mod-service/report'
-import { subjectFromInput } from '../../mod-service/subject'
-import { SettingService } from '../../setting/service'
-import { TagService } from '../../tag-service'
-import { getTagForReport } from '../../tag-service/util'
-import { retryHttp } from '../../util'
-import { getEventType } from '../util'
-import { assertProtectedTagAction, getProtectedTags } from './util'
+} from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import { httpLogger } from '../../logger.js'
+import { subjectFromInput } from '../../mod-service/subject.js'
+import { SettingService } from '../../setting/service.js'
+import { TagService } from '../../tag-service/index.js'
+import { getTagForReport } from '../../tag-service/util.js'
+import { retryHttp } from '../../util.js'
+import { getEventType } from '../util.js'
+import { assertProtectedTagAction, getProtectedTags } from './util.js'
 
 const handleModerationEvent = async ({
   ctx,
@@ -241,21 +241,6 @@ const handleModerationEvent = async ({
       }
     }
 
-    // Validate reportAction if provided (actual processing happens after event is logged)
-    if (input.body.reportAction) {
-      // Validate that at least one targeting criteria is provided
-      const { reportAction } = input.body
-      if (
-        !reportAction.ids?.length &&
-        !reportAction.types?.length &&
-        !reportAction.all
-      ) {
-        throw new InvalidRequestError(
-          'reportAction must specify ids, types, or all',
-        )
-      }
-    }
-
     const result = await moderationTxn.logEvent({
       event,
       subject,
@@ -263,28 +248,6 @@ const handleModerationEvent = async ({
       modTool: input.body.modTool,
       externalId,
     })
-
-    // Update reports if reportAction was provided
-    if (input.body.reportAction) {
-      const subjectUri = subject.isRecord() ? subject.uri : null
-      try {
-        await processReportAction({
-          db: dbTxn,
-          reportAction: input.body.reportAction,
-          subjectDid: subject.did,
-          subjectUri,
-          eventId: result.event.id,
-          eventType: event.$type,
-          createdBy,
-        })
-      } catch (err) {
-        throw new InvalidRequestError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to process report action',
-        )
-      }
-    }
 
     const tagService = new TagService(
       subject,

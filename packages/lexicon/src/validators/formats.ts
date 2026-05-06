@@ -1,4 +1,5 @@
-import { isValidISODateString } from 'iso-datestring-validator'
+import isoDatestringValidator from 'iso-datestring-validator'
+const { isValidISODateString } = isoDatestringValidator
 import { CID } from 'multiformats/cid'
 import { validateLanguage } from '@atproto/common-web'
 import {
@@ -10,7 +11,7 @@ import {
   isValidTid,
   isValidUri,
 } from '@atproto/syntax'
-import { ValidationError, ValidationResult } from '../types'
+import { ValidationError, ValidationResult } from '../types.js'
 
 export function datetime(path: string, value: string): ValidationResult {
   try {

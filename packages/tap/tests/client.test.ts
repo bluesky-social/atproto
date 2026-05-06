@@ -3,7 +3,7 @@ import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { default as express } from 'express'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { Tap } from '../src/client'
+import { Tap } from '../src/client.js'
 
 describe('Tap client', () => {
   describe('constructor', () => {

@@ -3,9 +3,9 @@ import { KeyObject } from 'node:crypto'
 import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
-import { AuthScope } from '../../auth-scope'
-import { AccountDb } from '../db'
-import { AppPassDescript } from './password'
+import { AuthScope } from '../../auth-scope.js'
+import { AccountDb } from '../db/index.js'
+import { AppPassDescript } from './password.js'
 
 export type AuthToken = {
   scope: AuthScope

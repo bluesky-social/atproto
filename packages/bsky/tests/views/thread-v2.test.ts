@@ -10,8 +10,8 @@ import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
 import {
   ThreadItemValuePost,
   ThreadOtherItemValuePost,
-} from '../../src/views/threads-v2'
-import { forSnapshot } from '../_util'
+} from '../../src/views/threads-v2.js'
+import { forSnapshot } from '../_util.js'
 
 type PostProps = Pick<
   AppBskyUnspeccedDefs.ThreadItemPost,

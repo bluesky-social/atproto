@@ -1,10 +1,10 @@
 import { mapDefined } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+import { AppContext } from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -12,9 +12,9 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActors = createPipeline(

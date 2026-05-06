@@ -17,7 +17,7 @@ import {
 import { CidString, Client } from '@atproto/lex'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, AtUriString, DidString } from '@atproto/syntax'
-import { TestNetworkNoAppView } from '../network-no-appview'
+import { TestNetworkNoAppView } from '../network-no-appview.js'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.

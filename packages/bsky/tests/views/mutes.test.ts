@@ -5,7 +5,7 @@ import {
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
+import { forSnapshot, paginateAll } from '../_util.js'
 
 describe('mute views', () => {
   let network: TestNetwork

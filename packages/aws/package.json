@@ -13,8 +13,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/aws"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
   },
@@ -37,5 +35,12 @@
   },
   "devDependencies": {
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

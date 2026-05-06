@@ -1,12 +1,12 @@
 import assert from 'node:assert'
 import { ToolsOzoneTeamDefs } from '@atproto/api'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
-import { AppContext } from '../../context'
-import { Member } from '../../db/schema/member'
-import { Server } from '../../lexicon'
-import { SettingService } from '../../setting/service'
-import { settingValidators } from '../../setting/validators'
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
+import { AppContext } from '../../context.js'
+import { Member } from '../../db/schema/member.js'
+import { Server } from '../../lexicon/index.js'
+import { SettingService } from '../../setting/service.js'
+import { settingValidators } from '../../setting/validators.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.upsertOption({

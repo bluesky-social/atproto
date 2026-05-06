@@ -1,6 +1,6 @@
-import { AppBskyGraphDefs } from '../client/index'
-import { LABELS } from './const/labels'
-import { MuteWordMatch } from './mutewords'
+import { AppBskyGraphDefs } from '../client/index.js'
+import { LABELS } from './const/labels.js'
+import { MuteWordMatch } from './mutewords.js'
 import {
   BLOCK_BEHAVIOR,
   CUSTOM_LABEL_VALUE_RE,
@@ -14,8 +14,8 @@ import {
   ModerationCause,
   ModerationOpts,
   NOOP_BEHAVIOR,
-} from './types'
-import { ModerationUI } from './ui'
+} from './types.js'
+import { ModerationUI } from './ui.js'
 
 enum ModerationBehaviorSeverity {
   High,

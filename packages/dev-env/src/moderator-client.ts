@@ -8,7 +8,7 @@ import {
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { TestOzone } from './ozone'
+import { TestOzone } from './ozone.js'
 
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams
@@ -48,7 +48,7 @@ export class ModeratorClient {
     return result.data
   }
 
-  async getReporterStats(dids: string[]) {
+  async getReporterStats(dids: string[]): Promise<any> {
     const result = await this.agent.tools.ozone.moderation.getReporterStats(
       { dids },
       {

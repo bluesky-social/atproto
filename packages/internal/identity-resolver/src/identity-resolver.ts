@@ -1,5 +1,5 @@
 import { AtprotoDid, AtprotoDidDocument } from '@atproto-labs/did-resolver'
-import { HANDLE_INVALID } from './constants'
+import { HANDLE_INVALID } from './constants.js'
 
 export type { AtprotoDid, AtprotoDidDocument }
 

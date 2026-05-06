@@ -1,9 +1,9 @@
 import * as id from '@atproto/identity'
 import { HandleString, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertRepoAvailability } from '../sync/util'
+import { assertRepoAvailability } from '../sync/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(

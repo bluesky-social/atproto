@@ -1,11 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../auth-verifier'
-import { AppContext } from '../context'
-import { Member } from '../db/schema/member'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { ids } from '../lexicon/lexicons'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
+import { AppContext } from '../context.js'
+import { Member } from '../db/schema/member.js'
+import { ModerationEvent } from '../db/schema/moderation_event.js'
+import { ids } from '../lexicon/lexicons.js'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs.js'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
@@ -13,25 +12,14 @@ import {
   REVIEWOPEN,
   RepoView,
   RepoViewDetail,
-} from '../lexicon/types/tools/ozone/moderation/defs'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
   ROLETRIAGE,
   ROLEVERIFIER,
-} from '../lexicon/types/tools/ozone/team/defs'
-import { ModerationSubjectStatusRow } from '../mod-service/types'
-
-export const getAuthDid = (
-  auth: ModeratorOutput | AdminTokenOutput,
-  serviceDid: string,
-): string | undefined => {
-  return auth.credentials.type === 'moderator'
-    ? auth.credentials.iss
-    : auth.credentials.type === 'admin_token'
-      ? serviceDid
-      : undefined
-}
+} from '../lexicon/types/tools/ozone/team/defs.js'
+import { ModerationSubjectStatusRow } from '../mod-service/types.js'
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,

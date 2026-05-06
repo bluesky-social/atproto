@@ -19,11 +19,10 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "preserveSymlinks": false,
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": false,
 
     "lib": [],
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "moduleResolution": "node16",
     "resolveJsonModule": true,
     "types": [],
 
@@ -33,8 +32,8 @@
     "inlineSources": true,
     "sourceMap": true,
     "jsx": "preserve",
-    "module": "CommonJS",
-    "target": "ES2020"
+    "module": "Node16",
+    "target": "ES2022"
   },
   "typeAcquisition": {
     "enable": false

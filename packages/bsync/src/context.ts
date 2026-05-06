@@ -1,10 +1,10 @@
 import { EventEmitter } from 'node:stream'
-import TypedEventEmitter from 'typed-emitter'
-import { ServerConfig } from './config'
-import { Database } from './db'
-import { createMuteOpChannel } from './db/schema/mute_op'
-import { createNotifOpChannel } from './db/schema/notif_op'
-import { createOperationChannel } from './db/schema/operation'
+import type TypedEventEmitter from 'typed-emitter'
+import { ServerConfig } from './config.js'
+import { Database } from './db/index.js'
+import { createMuteOpChannel } from './db/schema/mute_op.js'
+import { createNotifOpChannel } from './db/schema/notif_op.js'
+import { createOperationChannel } from './db/schema/operation.js'
 
 export type AppContextOptions = {
   db: Database

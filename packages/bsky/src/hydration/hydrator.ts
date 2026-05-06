@@ -1,18 +1,21 @@
 import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
-import { FeatureGatesClient, ScopedFeatureGatesClient } from '../feature-gates'
+import { DataPlaneClient } from '../data-plane/client/index.js'
+import {
+  FeatureGatesClient,
+  ScopedFeatureGatesClient,
+} from '../feature-gates/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { hydrationLogger } from '../logger'
+import { hydrationLogger } from '../logger.js'
 import {
   Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
   RecordRef,
-} from '../proto/bsky_pb'
-import { ParsedLabelers } from '../util'
-import { uriToDid, uriToDid as didFromUri } from '../util/uris'
+} from '../proto/bsky_pb.js'
+import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
+import { ParsedLabelers } from '../util.js'
 import {
   ProfileRecord,
   isListRuleType,
@@ -27,7 +30,7 @@ import {
   ProfileAggs,
   ProfileViewerState,
   ProfileViewerStates,
-} from './actor'
+} from './actor.js'
 import {
   FeedGenAggs,
   FeedGenViewerStates,
@@ -45,7 +48,7 @@ import {
   ThreadContexts,
   ThreadRef,
   Threadgates,
-} from './feed'
+} from './feed.js'
 import {
   BlockEntry,
   Follows,
@@ -60,14 +63,14 @@ import {
   StarterPackAggs,
   StarterPacks,
   Verifications,
-} from './graph'
+} from './graph.js'
 import {
   LabelHydrator,
   LabelerAggs,
   LabelerViewerStates,
   Labelers,
   Labels,
-} from './label'
+} from './label.js'
 import {
   HydrationMap,
   ItemRef,
@@ -77,18 +80,28 @@ import {
   mergeNestedMaps,
   parseDate,
   urisByCollection,
-} from './util'
+} from './util.js'
 
 export class HydrateCtx {
-  labelers = this.vals.labelers
-  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
-  includeTakedowns = this.vals.includeTakedowns
-  overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
-  include3pBlocks = this.vals.include3pBlocks
-  skipViewerBlocks = this.vals.skipViewerBlocks
-  includeDebugField = this.vals.includeDebugField
-  features = this.vals.features
-  constructor(private vals: HydrateCtxVals) {}
+  labelers
+  viewer
+  includeTakedowns
+  overrideIncludeTakedownsForActor
+  include3pBlocks
+  skipViewerBlocks
+  includeDebugField
+  features
+  constructor(private vals: HydrateCtxVals) {
+    this.labelers = vals.labelers
+    this.viewer = vals.viewer !== null ? serviceRefToDid(vals.viewer) : null
+    this.includeTakedowns = vals.includeTakedowns
+    this.overrideIncludeTakedownsForActor =
+      vals.overrideIncludeTakedownsForActor
+    this.include3pBlocks = vals.include3pBlocks
+    this.skipViewerBlocks = vals.skipViewerBlocks
+    this.includeDebugField = vals.includeDebugField
+    this.features = vals.features
+  }
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
     if (!this.viewer) return

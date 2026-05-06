@@ -507,7 +507,7 @@ export type LexRouterOptions = {
  * ```typescript
  * import { LexRouter } from '@atproto/lex-server'
  * import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
- * import { getProfile, createPost, subscribeRepos } from './lexicons'
+ * import { getProfile, createPost, subscribeRepos } from './lexicons.js'
  *
  * const router = new LexRouter({ upgradeWebSocket })
  *

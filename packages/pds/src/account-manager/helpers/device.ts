@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { DeviceData, DeviceId } from '@atproto/oauth-provider'
-import { fromDateISO, toDateISO } from '../../db'
-import { AccountDb, Device } from '../db'
+import { fromDateISO, toDateISO } from '../../db/index.js'
+import { AccountDb, Device } from '../db/index.js'
 
 export const rowToDeviceData = (
   row: Omit<Selectable<Device>, 'id'>,
@@ -25,14 +25,14 @@ export const createQB = (
     lastSeenAt: toDateISO(lastSeenAt),
   })
 
-export const readQB = (db: AccountDb, deviceId: DeviceId) =>
+export const readQB = (db: AccountDb, deviceId: DeviceId): any =>
   db.db.selectFrom('device').where('id', '=', deviceId).selectAll()
 
 export const updateQB = (
   db: AccountDb,
   deviceId: DeviceId,
   { sessionId, userAgent, ipAddress, lastSeenAt }: Partial<DeviceData>,
-) =>
+): any =>
   db.db
     .updateTable('device')
     .if(sessionId != null, (qb) => qb.set({ sessionId }))
@@ -43,5 +43,5 @@ export const updateQB = (
     )
     .where('id', '=', deviceId)
 
-export const removeQB = (db: AccountDb, deviceId: DeviceId) =>
+export const removeQB = (db: AccountDb, deviceId: DeviceId): any =>
   db.db.deleteFrom('device').where('id', '=', deviceId)

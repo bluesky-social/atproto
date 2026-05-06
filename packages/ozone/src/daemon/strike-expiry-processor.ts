@@ -1,8 +1,7 @@
 import { HOUR } from '@atproto/common'
-import { Database } from '../db'
-import { dbLogger } from '../logger'
-import { StrikeServiceCreator } from '../mod-service/strike'
-import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor'
+import { Database } from '../db/index.js'
+import { dbLogger } from '../logger.js'
+import { StrikeServiceCreator } from '../mod-service/strike.js'
 
 const JOB_NAME = 'strike_expiry'
 
@@ -41,15 +40,32 @@ export class StrikeExpiryProcessor {
   }
 
   async initializeCursor() {
-    await initJobCursor(this.db, JOB_NAME)
+    await this.db.db
+      .insertInto('job_cursor')
+      .values({
+        job: JOB_NAME,
+        cursor: null,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 
   async getCursor(): Promise<string | null> {
-    return getJobCursor(this.db, JOB_NAME)
+    const entry = await this.db.db
+      .selectFrom('job_cursor')
+      .select('cursor')
+      .where('job', '=', JOB_NAME)
+      .executeTakeFirst()
+
+    return entry?.cursor || null
   }
 
   async updateCursor(cursor: string): Promise<void> {
-    await updateJobCursor(this.db, JOB_NAME, cursor)
+    await this.db.db
+      .updateTable('job_cursor')
+      .set({ cursor })
+      .where('job', '=', JOB_NAME)
+      .execute()
   }
 
   async processExpiredStrikes() {

@@ -1,5 +1,5 @@
-import { cacheLogger as log } from '../logger'
-import { Redis } from '../redis'
+import { cacheLogger as log } from '../logger.js'
+import { Redis } from '../redis.js'
 
 export type CacheItem<T> = {
   val: T | null // null here is for negative caching

@@ -6,7 +6,7 @@ import {
   parseKWSExternalPayloadVersion,
   serializeKWSExternalPayloadV1,
   serializeKWSExternalPayloadV2,
-} from './external-payload'
+} from './external-payload.js'
 
 describe('parseKWSExternalPayloadVersion', () => {
   it('should return V2 for "2"', () => {

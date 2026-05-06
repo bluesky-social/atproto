@@ -1,76 +1,56 @@
-import { AppContext } from '../context'
-import { Server } from '../lexicon'
-import chat from './chat'
-import createTemplate from './communication/createTemplate'
-import deleteTemplate from './communication/deleteTemplate'
-import listTemplates from './communication/listTemplates'
-import updateTemplate from './communication/updateTemplate'
-import fetchLabels from './label/fetchLabels'
-import queryLabels from './label/queryLabels'
-import subscribeLabels from './label/subscribeLabels'
-import cancelScheduledActions from './moderation/cancelScheduledActions'
-import emitEvent from './moderation/emitEvent'
-import getAccountTimeline from './moderation/getAccountTimeline'
-import getEvent from './moderation/getEvent'
-import adminGetRecord from './moderation/getRecord'
-import adminGetRecords from './moderation/getRecords'
-import getRepo from './moderation/getRepo'
-import getReporterStats from './moderation/getReporterStats'
-import getRepos from './moderation/getRepos'
-import getSubjects from './moderation/getSubjects'
-import listScheduledActions from './moderation/listScheduledActions'
-import queryEvents from './moderation/queryEvents'
-import queryStatuses from './moderation/queryStatuses'
-import scheduleAction from './moderation/scheduleAction'
-import searchRepos from './moderation/searchRepos'
-import proxied from './proxied'
-import assignQueueModerator from './queue/assignModerator'
-import createQueue from './queue/createQueue'
-import deleteQueue from './queue/deleteQueue'
-import getQueueAssignments from './queue/getAssignments'
-import listQueues from './queue/listQueues'
-import routeReports from './queue/routeReports'
-import unassignQueueModerator from './queue/unassignModerator'
-import updateQueue from './queue/updateQueue'
-import assignReportModerator from './report/assignModerator'
-import createActivity from './report/createActivity'
-import createReport from './report/createReport'
-import getReportAssignments from './report/getAssignments'
-import getHistoricalStats from './report/getHistoricalStats'
-import getLatestReport from './report/getLatestReport'
-import getLiveStats from './report/getLiveStats'
-import getReport from './report/getReport'
-import listActivities from './report/listActivities'
-import queryReports from './report/queryReports'
-import reassignQueue from './report/reassignQueue'
-import refreshStats from './report/refreshStats'
-import unassignReportModerator from './report/unassignModerator'
-import addSafelinkRule from './safelink/addRule'
-import querySafelinkEvents from './safelink/queryEvents'
-import querySafelinkRules from './safelink/queryRules'
-import removeSafelinkRule from './safelink/removeRule'
-import updateSafelinkRule from './safelink/updateRule'
-import getConfig from './server/getConfig'
-import setAddValues from './set/addValues'
-import deleteSet from './set/deleteSet'
-import setDeleteValues from './set/deleteValues'
-import setGetValues from './set/getValues'
-import querySets from './set/querySets'
-import upsertSet from './set/upsertSet'
-import listOptions from './setting/listOptions'
-import removeOptions from './setting/removeOptions'
-import upsertOption from './setting/upsertOption'
-import addMember from './team/addMember'
-import deleteMember from './team/deleteMember'
-import listMembers from './team/listMembers'
-import updateMember from './team/updateMember'
-import grantVerifications from './verification/grantVerifications'
-import listVerifications from './verification/listVerifications'
-import revokeVerifications from './verification/revokeVerifications'
+import { AppContext } from '../context.js'
+import { Server } from '../lexicon/index.js'
+import chat from './chat/index.js'
+import createTemplate from './communication/createTemplate.js'
+import deleteTemplate from './communication/deleteTemplate.js'
+import listTemplates from './communication/listTemplates.js'
+import updateTemplate from './communication/updateTemplate.js'
+import fetchLabels from './label/fetchLabels.js'
+import queryLabels from './label/queryLabels.js'
+import subscribeLabels from './label/subscribeLabels.js'
+import cancelScheduledActions from './moderation/cancelScheduledActions.js'
+import emitEvent from './moderation/emitEvent.js'
+import getAccountTimeline from './moderation/getAccountTimeline.js'
+import getEvent from './moderation/getEvent.js'
+import adminGetRecord from './moderation/getRecord.js'
+import adminGetRecords from './moderation/getRecords.js'
+import getRepo from './moderation/getRepo.js'
+import getReporterStats from './moderation/getReporterStats.js'
+import getRepos from './moderation/getRepos.js'
+import getSubjects from './moderation/getSubjects.js'
+import listScheduledActions from './moderation/listScheduledActions.js'
+import queryEvents from './moderation/queryEvents.js'
+import queryStatuses from './moderation/queryStatuses.js'
+import scheduleAction from './moderation/scheduleAction.js'
+import searchRepos from './moderation/searchRepos.js'
+import proxied from './proxied.js'
+import createReport from './report/createReport.js'
+import addSafelinkRule from './safelink/addRule.js'
+import querySafelinkEvents from './safelink/queryEvents.js'
+import querySafelinkRules from './safelink/queryRules.js'
+import removeSafelinkRule from './safelink/removeRule.js'
+import updateSafelinkRule from './safelink/updateRule.js'
+import getConfig from './server/getConfig.js'
+import setAddValues from './set/addValues.js'
+import deleteSet from './set/deleteSet.js'
+import setDeleteValues from './set/deleteValues.js'
+import setGetValues from './set/getValues.js'
+import querySets from './set/querySets.js'
+import upsertSet from './set/upsertSet.js'
+import listOptions from './setting/listOptions.js'
+import removeOptions from './setting/removeOptions.js'
+import upsertOption from './setting/upsertOption.js'
+import addMember from './team/addMember.js'
+import deleteMember from './team/deleteMember.js'
+import listMembers from './team/listMembers.js'
+import updateMember from './team/updateMember.js'
+import grantVerifications from './verification/grantVerifications.js'
+import listVerifications from './verification/listVerifications.js'
+import revokeVerifications from './verification/revokeVerifications.js'
 
-export * as health from './health'
+export * as health from './health.js'
 
-export * as wellKnown from './well-known'
+export * as wellKnown from './well-known.js'
 
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
@@ -82,8 +62,6 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
-  getReport(server, ctx)
-  queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
@@ -99,10 +77,6 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
-  createQueue(server, ctx)
-  listQueues(server, ctx)
-  updateQueue(server, ctx)
-  deleteQueue(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)
@@ -126,19 +100,5 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
-  routeReports(server, ctx)
-  getLiveStats(server, ctx)
-  getHistoricalStats(server, ctx)
-  refreshStats(server, ctx)
-  assignQueueModerator(server, ctx)
-  unassignQueueModerator(server, ctx)
-  getQueueAssignments(server, ctx)
-  getLatestReport(server, ctx)
-  assignReportModerator(server, ctx)
-  unassignReportModerator(server, ctx)
-  getReportAssignments(server, ctx)
-  createActivity(server, ctx)
-  listActivities(server, ctx)
-  reassignQueue(server, ctx)
   return server
 }

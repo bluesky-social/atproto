@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
-import { InvalidAtUriError, assertAtUriString, isAtUriString } from '../src'
+import {
+  InvalidAtUriError,
+  assertAtUriString,
+  isAtUriString,
+} from '../src/index.js'
 
 describe('valid interop', () => {
   for (const value of readLines(

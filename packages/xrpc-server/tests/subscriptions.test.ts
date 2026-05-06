@@ -3,8 +3,14 @@ import { AddressInfo } from 'node:net'
 import { WebSocket, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
-import { ErrorFrame, Frame, MessageFrame, Subscription, byFrame } from '../src'
-import * as xrpcServer from '../src'
+import {
+  ErrorFrame,
+  Frame,
+  MessageFrame,
+  Subscription,
+  byFrame,
+} from '../src/index.js'
+import * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   buildAddLexicons,
@@ -12,7 +18,7 @@ import {
   closeServer,
   createBasicAuth,
   createServer,
-} from './_util'
+} from './_util.js'
 
 const LEXICONS = [
   {

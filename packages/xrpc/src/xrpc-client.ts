@@ -4,7 +4,7 @@ import {
   FetchHandlerObject,
   FetchHandlerOptions,
   buildFetchHandler,
-} from './fetch-handler'
+} from './fetch-handler.js'
 import {
   CallOptions,
   Gettable,
@@ -14,7 +14,7 @@ import {
   XRPCInvalidResponseError,
   XRPCResponse,
   httpResponseCodeToEnum,
-} from './types'
+} from './types.js'
 import {
   combineHeaders,
   constructMethodCallHeaders,
@@ -23,7 +23,7 @@ import {
   getMethodSchemaHTTPMethod,
   httpResponseBodyParse,
   isErrorResponseBody,
-} from './util'
+} from './util.js'
 
 export class XrpcClient {
   readonly fetchHandler: FetchHandler

@@ -1,4 +1,4 @@
-export * from './mst'
-export * from './diff'
-export * from './walker'
-export * as mstUtil from './util'
+export * from './mst.js'
+export * from './diff.js'
+export * from './walker.js'
+export * as mstUtil from './util.js'

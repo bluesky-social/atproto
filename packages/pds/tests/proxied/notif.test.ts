@@ -6,7 +6,7 @@ import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createServer, verifyJwt } from '@atproto/xrpc-server'
 import { app } from '../../src/lexicons/index.js'
-import usersSeed from '../seeds/users'
+import usersSeed from '../seeds/users.js'
 
 describe('notif service proxy', () => {
   let network: TestNetworkNoAppView

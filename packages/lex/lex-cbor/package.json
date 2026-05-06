@@ -29,15 +29,12 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.cjs",
+  "type": "module",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.mjs",
-      "import": "./dist/index.mjs",
       "default": "./dist/index.cjs"
     }
   },

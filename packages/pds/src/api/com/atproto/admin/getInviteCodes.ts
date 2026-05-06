@@ -2,14 +2,14 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   CodeDetail,
   selectInviteCodesQb,
-} from '../../../../account-manager/helpers/invite'
-import { AppContext } from '../../../../context'
+} from '../../../../account-manager/helpers/invite.js'
+import { AppContext } from '../../../../context.js'
 import {
   Cursor,
   GenericKeyset,
   LabeledResult,
   paginate,
-} from '../../../../db/pagination'
+} from '../../../../db/pagination.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const resultCursor = keyset.packFromResult(res)
       const codeDetails = res.map(
-        ({ disabled, createdAt, ...row }): CodeDetail => ({
+        ({ disabled, createdAt, ...row }: any): CodeDetail => ({
           ...row,
           createdAt,
           disabled: disabled === 1,

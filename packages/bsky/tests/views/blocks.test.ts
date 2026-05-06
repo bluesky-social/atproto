@@ -7,7 +7,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { assertIsThreadViewPost, forSnapshot } from '../_util'
+import { assertIsThreadViewPost, forSnapshot } from '../_util.js'
 
 describe('pds views with blocking', () => {
   let network: TestNetwork

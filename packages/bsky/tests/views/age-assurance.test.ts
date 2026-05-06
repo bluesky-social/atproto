@@ -9,11 +9,11 @@ import {
   KwsExternalPayload,
   KwsVerificationQuery,
   KwsWebhookBody,
-} from '../../src/api/kws/types'
+} from '../../src/api/kws/types.js'
 import {
   parseExternalPayload,
   serializeExternalPayload,
-} from '../../src/api/kws/util'
+} from '../../src/api/kws/util.js'
 
 type Database = TestNetwork['bsky']['db']
 

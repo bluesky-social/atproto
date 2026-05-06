@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isValidLanguage, parseLanguageString } from '../src'
+import { isValidLanguage, parseLanguageString } from '../src/index.js'
 
 describe(isValidLanguage, () => {
   it('validates BCP 47', () => {

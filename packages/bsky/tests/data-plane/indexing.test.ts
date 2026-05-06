@@ -14,8 +14,8 @@ import { Cid } from '@atproto/lex'
 import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../../src/data-plane/server/db'
-import { forSnapshot } from '../_util'
+import { Database } from '../../src/data-plane/server/db/index.js'
+import { forSnapshot } from '../_util.js'
 
 describe('indexing', () => {
   let network: TestNetwork

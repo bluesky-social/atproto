@@ -1,9 +1,9 @@
 import { xrpc } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { AuthScope } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough'
+import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.moderation.createReport, {

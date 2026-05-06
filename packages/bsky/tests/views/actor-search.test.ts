@@ -1,7 +1,7 @@
 import { AppBskyActorSearchActors, AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface

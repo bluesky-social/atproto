@@ -8,8 +8,8 @@ import {
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
-import { countAll } from '../../db'
-import { ActorDb } from '../db'
+import { countAll } from '../../db/index.js'
+import { ActorDb } from '../db/index.js'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()
@@ -107,7 +107,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     } while (cursor)
   }
 
-  async getBlockRange(since?: string, cursor?: RevCursor) {
+  async getBlockRange(since?: string, cursor?: RevCursor): Promise<any> {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('repo_block')

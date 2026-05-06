@@ -1,9 +1,9 @@
 import assert from 'node:assert'
 import { DeviceId } from '@atproto/oauth-provider'
 import { DidString } from '@atproto/syntax'
-import { toDateISO } from '../../db'
-import { AccountDb } from '../db'
-import { selectAccountQB } from './account'
+import { toDateISO } from '../../db/index.js'
+import { AccountDb } from '../db/index.js'
+import { selectAccountQB } from './account.js'
 
 export function upsertQB(db: AccountDb, deviceId: DeviceId, did: string) {
   const now = new Date()
@@ -30,7 +30,7 @@ export function selectQB(
     sub?: string
     deviceId?: DeviceId
   },
-) {
+): any {
   assert(
     filter.sub != null || filter.deviceId != null,
     'Either sub or deviceId must be provided',
@@ -61,7 +61,7 @@ export function selectQB(
   )
 }
 
-export function removeQB(db: AccountDb, deviceId: DeviceId, did: string) {
+export function removeQB(db: AccountDb, deviceId: DeviceId, did: string): any {
   return db.db
     .deleteFrom('account_device')
     .where('deviceId', '=', deviceId)

@@ -8,16 +8,16 @@ import { TID } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../lexicons/index.js'
-import { httpLogger } from '../../logger'
-import { Service } from '../../proto/bsync_connect'
+import { httpLogger } from '../../logger.js'
+import { Service } from '../../proto/bsync_connect.js'
 import {
   Method,
   MuteOperation_Type,
   PutOperationRequest,
-} from '../../proto/bsync_pb'
-import { Namespaces } from '../../stash'
-import { Database } from '../server/db'
-import { countAll, excluded } from '../server/db/util'
+} from '../../proto/bsync_pb.js'
+import { Namespaces } from '../../stash.js'
+import { Database } from '../server/db/index.js'
+import { countAll, excluded } from '../server/db/util.js'
 
 export class MockBsync {
   constructor(public server: http.Server) {}

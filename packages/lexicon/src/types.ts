@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { validateLanguage } from '@atproto/common-web'
 import { isValidNsid } from '@atproto/syntax'
-import { requiredPropertiesRefinement } from './util'
+import { requiredPropertiesRefinement } from './util.js'
 
 export const languageSchema = z
   .string()

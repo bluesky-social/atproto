@@ -1,4 +1,4 @@
-import { ScheduledActionType } from '../api/util'
+import { ScheduledActionType } from '../api/util.js'
 
 export type ExecutionSchedule =
   | {

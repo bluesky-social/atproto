@@ -1,9 +1,9 @@
 import { chunkArray } from '@atproto/common'
 import { DatetimeString, DidString, currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { countAll } from '../../db'
+import { countAll } from '../../db/index.js'
 import { com } from '../../lexicons/index.js'
-import { AccountDb, InviteCode } from '../db'
+import { AccountDb, InviteCode } from '../db/index.js'
 
 export type CodeDetail = com.atproto.server.defs.InviteCode
 export type CodeUse = com.atproto.server.defs.InviteCodeUse
@@ -121,7 +121,7 @@ export const ensureInviteIsAvailable = async (
   }
 }
 
-export const selectInviteCodesQb = (db: AccountDb) => {
+export const selectInviteCodesQb = (db: AccountDb): any => {
   const ref = db.db.dynamic.ref
   const builder = db.db
     .selectFrom('invite_code')
@@ -207,7 +207,7 @@ export const getInvitedByForAccounts = async (
     codeDetailsRes.map((row) => row.code),
   )
   const codeDetails = codeDetailsRes.map(
-    ({ uses: _, disabled, createdAt, ...row }): CodeDetail => ({
+    ({ uses: _, disabled, createdAt, ...row }: any): CodeDetail => ({
       ...row,
       createdAt,
       uses: uses[row.code] ?? [],

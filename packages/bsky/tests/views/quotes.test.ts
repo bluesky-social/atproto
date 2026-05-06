@@ -1,6 +1,6 @@
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
+import { forSnapshot } from '../_util.js'
 
 describe('pds quote views', () => {
   let network: TestNetwork

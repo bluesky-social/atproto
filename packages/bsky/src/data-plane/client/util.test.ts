@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { callerInterceptor } from './util'
+import { callerInterceptor } from './util.js'
 
 describe('callerInterceptor', () => {
   it('sets x-atlantis-caller header on the request', async () => {

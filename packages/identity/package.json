@@ -14,8 +14,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/identity"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "test:log": "cat test.log | pino-pretty",
@@ -36,5 +34,12 @@
     "get-port": "^6.1.2",
     "jest": "^28.1.2",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

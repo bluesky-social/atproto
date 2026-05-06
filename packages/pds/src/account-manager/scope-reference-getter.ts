@@ -1,4 +1,4 @@
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { DAY, backoffMs, retry } from '@atproto/common'
 import { Client, XrpcError } from '@atproto/lex'
 import { InvalidTokenError, OAuthScope } from '@atproto/oauth-provider'

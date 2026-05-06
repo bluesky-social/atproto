@@ -2,17 +2,17 @@
 
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { isAppealReport } from '../api/util'
-import { Database } from '../db'
-import { DatabaseSchema } from '../db/schema'
-import { jsonb } from '../db/types'
+import { isAppealReport } from '../api/util.js'
+import { Database } from '../db/index.js'
+import { DatabaseSchema } from '../db/schema/index.js'
+import { jsonb } from '../db/types.js'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
   REVIEWOPEN,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
@@ -211,7 +211,9 @@ const getSubjectStatusForRecordEvent = ({
   return {}
 }
 
-export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
+export const moderationSubjectStatusQueryBuilder = (
+  db: DatabaseSchema,
+): any => {
   // @NOTE: Using select() instead of selectAll() below because the materialized
   // views might be incomplete, and we don't want the null `did` columns to
   // interfere with the (never null) `did` column from the
