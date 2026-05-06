@@ -21466,6 +21466,41 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueUnassignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.unassignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Remove a user's assignment from a queue.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId', 'did'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to unassign the user from.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'DID to be unassigned.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description:
+              'No active assignment exists for the given queue and user.',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneQueueUpdateQueue: {
     lexicon: 1,
     id: 'tools.ozone.queue.updateQueue',
@@ -24997,6 +25032,7 @@ export const ids = {
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
+  ToolsOzoneQueueUnassignModerator: 'tools.ozone.queue.unassignModerator',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',

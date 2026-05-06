@@ -1,6 +1,7 @@
 import AtpAgent, {
   ToolsOzoneQueueAssignModerator,
   ToolsOzoneQueueGetAssignments,
+  ToolsOzoneQueueUnassignModerator,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
@@ -39,6 +40,19 @@ describe('queue', () => {
       ),
     })
     return data
+  }
+
+  const unassign = async (
+    input: ToolsOzoneQueueUnassignModerator.InputSchema,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) => {
+    await agent.tools.ozone.queue.unassignModerator(input, {
+      encoding: 'application/json',
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneQueueUnassignModerator,
+        callerRole,
+      ),
+    })
   }
 
   const clearAssignments = async () => {
@@ -345,6 +359,70 @@ describe('queue', () => {
         'triage',
       )
       await expect(p).rejects.toThrow('Unauthorized')
+    })
+  })
+
+  describe('unassign', () => {
+    it('moderator can unassign self and assignment becomes inactive', async () => {
+      await clearAssignments()
+      await assign(
+        { queueId: q1, did: network.ozone.moderatorAccnt.did },
+        'moderator',
+      )
+
+      await unassign(
+        { queueId: q1, did: network.ozone.moderatorAccnt.did },
+        'moderator',
+      )
+
+      const active = await getAssignments({
+        queueIds: [q1],
+        dids: [network.ozone.moderatorAccnt.did],
+        onlyActive: true,
+      })
+      expect(active.assignments.length).toBe(0)
+    })
+
+    it('admin can unassign another moderator', async () => {
+      await clearAssignments()
+      await assign({ queueId: q1, did: sc.dids.bob }, 'admin')
+
+      await unassign({ queueId: q1, did: sc.dids.bob }, 'admin')
+
+      const active = await getAssignments({
+        queueIds: [q1],
+        dids: [sc.dids.bob],
+        onlyActive: true,
+      })
+      expect(active.assignments.length).toBe(0)
+    })
+
+    it('moderator cannot unassign another user', async () => {
+      await clearAssignments()
+      await assign({ queueId: q1, did: sc.dids.bob }, 'admin')
+
+      const p = unassign({ queueId: q1, did: sc.dids.bob }, 'moderator')
+      await expect(p).rejects.toThrow('Unauthorized')
+    })
+
+    it('triage cannot unassign', async () => {
+      await clearAssignments()
+      await assign({ queueId: q1, did: network.ozone.triageAccnt.did }, 'admin')
+
+      const p = unassign(
+        { queueId: q1, did: network.ozone.triageAccnt.did },
+        'triage',
+      )
+      await expect(p).rejects.toThrow('Unauthorized')
+    })
+
+    it('throws InvalidAssignment when no active assignment exists', async () => {
+      await clearAssignments()
+      const p = unassign(
+        { queueId: q1, did: network.ozone.moderatorAccnt.did },
+        'moderator',
+      )
+      await expect(p).rejects.toThrow('No active assignment')
     })
   })
 })

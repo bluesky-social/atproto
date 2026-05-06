@@ -30,6 +30,7 @@ import deleteQueue from './queue/deleteQueue'
 import getQueueAssignments from './queue/getAssignments'
 import listQueues from './queue/listQueues'
 import routeReports from './queue/routeReports'
+import unassignQueueModerator from './queue/unassignModerator'
 import updateQueue from './queue/updateQueue'
 import assignReportModerator from './report/assignModerator'
 import createActivity from './report/createActivity'
@@ -129,6 +130,7 @@ export default function (server: Server, ctx: AppContext) {
   getHistoricalStats(server, ctx)
   refreshStats(server, ctx)
   assignQueueModerator(server, ctx)
+  unassignQueueModerator(server, ctx)
   getQueueAssignments(server, ctx)
   getLatestReport(server, ctx)
   assignReportModerator(server, ctx)

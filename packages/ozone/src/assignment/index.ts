@@ -28,6 +28,10 @@ export interface AssignQueueInput {
   did: string
   queueId: number
 }
+export interface UnassignQueueInput {
+  did: string
+  queueId: number
+}
 
 // Report
 export interface GetReportAssignmentsInput {
@@ -314,6 +318,33 @@ export class AssignmentService {
 
     const memberViews = await this.fetchMemberViews([result.did])
     return this.viewQueueAssignment(row, memberViews.get(result.did))
+  }
+
+  async unassignQueue(input: UnassignQueueInput): Promise<void> {
+    const { did, queueId } = input
+    const now = new Date()
+
+    const existing = await this.db.db
+      .selectFrom('moderator_assignment')
+      .selectAll()
+      .where('did', '=', did)
+      .where('queueId', '=', queueId)
+      .where('reportId', 'is', null)
+      .where('endAt', '>', now.toISOString())
+      .executeTakeFirst()
+
+    if (!existing) {
+      throw new InvalidRequestError(
+        'No active assignment found',
+        'InvalidAssignment',
+      )
+    }
+
+    await this.db.db
+      .updateTable('moderator_assignment')
+      .set({ endAt: now.toISOString() })
+      .where('id', '=', existing.id)
+      .execute()
   }
 
   async assignReport(

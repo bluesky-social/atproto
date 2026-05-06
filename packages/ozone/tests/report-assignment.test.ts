@@ -489,7 +489,7 @@ describe('report-assignment', () => {
       )
       expect(queueActivity).toBeDefined()
       if ('previousStatus' in queueActivity!.activity) {
-        expect(queueActivity.activity.previousStatus).toBe('assigned')
+        expect(queueActivity!.activity.previousStatus).toBe('assigned')
       }
       expect(queueActivity!.createdBy).toBe(network.ozone.moderatorAccnt.did)
       expect(queueActivity!.isAutomated).toBe(false)

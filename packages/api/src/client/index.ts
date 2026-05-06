@@ -323,6 +323,7 @@ import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQue
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
+import * as ToolsOzoneQueueUnassignModerator from './types/tools/ozone/queue/unassignModerator.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
@@ -683,6 +684,7 @@ export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQue
 export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 export * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
+export * as ToolsOzoneQueueUnassignModerator from './types/tools/ozone/queue/unassignModerator.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 export * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
@@ -5895,6 +5897,17 @@ export class ToolsOzoneQueueNS {
       .call('tools.ozone.queue.routeReports', opts?.qp, data, opts)
       .catch((e) => {
         throw ToolsOzoneQueueRouteReports.toKnownErr(e)
+      })
+  }
+
+  unassignModerator(
+    data?: ToolsOzoneQueueUnassignModerator.InputSchema,
+    opts?: ToolsOzoneQueueUnassignModerator.CallOptions,
+  ): Promise<ToolsOzoneQueueUnassignModerator.Response> {
+    return this._client
+      .call('tools.ozone.queue.unassignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueUnassignModerator.toKnownErr(e)
       })
   }
 
