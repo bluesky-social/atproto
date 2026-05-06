@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { CID } from 'multiformats/cid'
 import {
   AppBskyActorProfile,
@@ -26,6 +27,7 @@ let AVATAR_IMG: Uint8Array | undefined
 
 // AVATAR_PATH is defined in a non-CWD-dependant way, so this works
 // for any consumer of this package, even outside the atproto repo.
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const AVATAR_PATH = path.resolve(
   __dirname,
   '../../assets/key-portrait-small.jpg',
