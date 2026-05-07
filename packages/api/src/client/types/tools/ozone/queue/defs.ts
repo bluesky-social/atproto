@@ -85,7 +85,7 @@ export interface AssignmentView {
   moderator?: ToolsOzoneTeamDefs.Member
   queue: QueueView
   startAt: string
-  endAt: string
+  endAt?: string
 }
 
 const hashAssignmentView = 'assignmentView'

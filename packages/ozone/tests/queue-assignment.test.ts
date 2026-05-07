@@ -336,12 +336,12 @@ describe('queue', () => {
       await expect(p).rejects.toThrow('Unauthorized')
     })
 
-    it('defaults to assign when param is omitted', async () => {
+    it('assigns permanently with no endAt', async () => {
       const assignment = await assign(
         { queueId: q1, did: network.ozone.moderatorAccnt.did },
         'moderator',
       )
-      expect(new Date(assignment.endAt).getTime()).toBeGreaterThan(Date.now())
+      expect(assignment.endAt).toBeUndefined()
     })
   })
 

@@ -237,6 +237,25 @@ export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
       secondary: cursor.secondary,
     }
   }
+  // Override to substitute the PERMANENT_ENDSAT sentinel for NULL endAt rows
+  // so cursor pagination works across permanent (endAt IS NULL) assignments.
+  getSql(labeled?: Cursor, direction?: 'asc' | 'desc', tryIndex?: boolean) {
+    if (labeled === undefined) return
+    const primaryRef = sql`COALESCE(${this.primary}, ${PERMANENT_ENDSAT})`
+    if (tryIndex) {
+      if (direction === 'asc') {
+        return sql`((${primaryRef}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+      } else {
+        return sql`((${primaryRef}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+      }
+    } else {
+      if (direction === 'asc') {
+        return sql`((${primaryRef} > ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+      } else {
+        return sql`((${primaryRef} < ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+      }
+    }
+  }
 }
 
 type ComputedAtIdKeysetParam = {

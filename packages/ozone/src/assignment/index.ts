@@ -128,7 +128,10 @@ export class AssignmentService {
       .where('queueId', 'is not', null)
 
     if (onlyActive) {
-      query = query.where('endAt', '>', new Date().toISOString())
+      const now = new Date().toISOString()
+      query = query.where((qb) =>
+        qb.where('endAt', 'is', null).orWhere('endAt', '>', now),
+      )
     }
 
     if (queueIds?.length) {
@@ -241,7 +244,6 @@ export class AssignmentService {
   ): Promise<ToolsOzoneQueueDefs.AssignmentView> {
     const { did, queueId } = input
     const now = new Date()
-    const endAt = new Date(now.getTime() + this.opts.queueDurationMs)
 
     // Check queue since we aren't using foreign keys
     const queue = await this.db.db
@@ -255,7 +257,8 @@ export class AssignmentService {
       throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
     }
 
-    // Make assignment
+    // Queue assignments are permanent (endAt = null). Upgrade any existing
+    // active expiry-based row to permanent; otherwise insert a new permanent row.
     const result = await this.db.transaction(async (dbTxn) => {
       const existing = await dbTxn.db
         .selectFrom('moderator_assignment')
@@ -263,14 +266,19 @@ export class AssignmentService {
         .where('did', '=', did)
         .where('queueId', '=', queueId)
         .where('reportId', 'is', null)
-        .where('endAt', '>', now.toISOString())
+        .where((qb) =>
+          qb
+            .where('endAt', 'is', null)
+            .orWhere('endAt', '>', now.toISOString()),
+        )
         .executeTakeFirst()
       if (existing) {
+        if (existing.endAt === null) {
+          return existing
+        }
         const updated = await dbTxn.db
           .updateTable('moderator_assignment')
-          .set({
-            endAt: endAt.toISOString(),
-          })
+          .set({ endAt: null })
           .where('id', '=', existing.id)
           .returningAll()
           .executeTakeFirstOrThrow()
@@ -282,7 +290,7 @@ export class AssignmentService {
           did,
           queueId,
           startAt: now.toISOString(),
-          endAt: endAt.toISOString(),
+          endAt: null,
         })
         .returningAll()
         .executeTakeFirstOrThrow()
@@ -330,7 +338,9 @@ export class AssignmentService {
       .where('did', '=', did)
       .where('queueId', '=', queueId)
       .where('reportId', 'is', null)
-      .where('endAt', '>', now.toISOString())
+      .where((qb) =>
+        qb.where('endAt', 'is', null).orWhere('endAt', '>', now.toISOString()),
+      )
       .executeTakeFirst()
 
     if (!existing) {
@@ -695,7 +705,7 @@ export class AssignmentService {
       ...(member ? { moderator: member } : {}),
       queue: queueView,
       startAt: row.startAt,
-      endAt: row.endAt ?? '',
+      ...(row.endAt !== null ? { endAt: row.endAt } : {}),
     }
   }
 

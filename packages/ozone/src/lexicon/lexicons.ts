@@ -21135,7 +21135,7 @@ export const schemaDict = {
       },
       assignmentView: {
         type: 'object',
-        required: ['id', 'did', 'queue', 'startAt', 'endAt'],
+        required: ['id', 'did', 'queue', 'startAt'],
         properties: {
           id: {
             type: 'integer',
