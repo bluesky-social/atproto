@@ -2749,6 +2749,117 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the external content was created, if available. Example: a publication date, for an article.',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the external content was updated, if available.',
+          },
+          readingTime: {
+            type: 'integer',
+            description:
+              'Estimated reading time in minutes, if applicable and available.',
+          },
+          source: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#viewExternalSource',
+          },
+          associatedRecord: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+            description:
+              'A ref to the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
+          },
+          associatedBskyPost: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+            description:
+              'A ref to the Bluesky post that is the primary or canonical embedding location of the external content.',
+          },
+        },
+      },
+      viewExternalSource: {
+        type: 'object',
+        description:
+          'The source of an external embed, such as a standard.site publication.',
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'uri',
+          },
+          icon: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'Fully-qualified URL where an icon representing the source can be fetched. For example, CDN location provided by the App View.',
+          },
+          name: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          theme: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#viewExternalSourceTheme',
+          },
+          associatedRecord: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+            description:
+              'A ref to the Atmosphere record representing this external content source, if it exists. Example: a site.standard.publication record.',
+          },
+        },
+      },
+      viewExternalSourceTheme: {
+        type: 'object',
+        description:
+          'The theme colors of an external source, such as a site.standard.publication. These colors may be used when rendering an embed from that source.',
+        properties: {
+          background: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#colorRGB',
+          },
+          foreground: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#colorRGB',
+          },
+          accent: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#colorRGB',
+          },
+          accentForeground: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#colorRGB',
+          },
+        },
+      },
+      colorRGB: {
+        type: 'object',
+        description:
+          'RGB color definition, inspired by site.standard.theme.color#rgb',
+        required: ['r', 'g', 'b'],
+        properties: {
+          r: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 255,
+          },
+          g: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 255,
+          },
+          b: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 255,
+          },
         },
       },
     },
