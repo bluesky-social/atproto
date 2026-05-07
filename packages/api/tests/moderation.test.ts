@@ -1,5 +1,5 @@
-import { ModerationOpts } from '../dist.js'
 import {
+  ModerationOpts,
   interpretLabelValueDefinition,
   mock,
   moderatePost,

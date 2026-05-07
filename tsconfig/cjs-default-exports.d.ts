@@ -5,6 +5,23 @@
  * TypeScript's Node16 resolution doesn't interpret the default import correctly.
  */
 
+declare module 'nodemailer/lib/mailer' {
+  namespace Mail {
+    interface Options {
+      from?: string | { name?: string; address: string }
+      to?: string | string[]
+      subject?: string
+      text?: string
+      html?: string
+      [key: string]: any
+    }
+  }
+  class Mail {
+    constructor(transporter: any)
+  }
+  export = Mail
+}
+
 declare module 'await-lock' {
   export default class AwaitLock {
     get acquired(): boolean

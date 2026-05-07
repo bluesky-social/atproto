@@ -1,9 +1,9 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
+import { ComAtprotoServerCreateAccount } from '../src/index.js'
 
 describe('errors', () => {
   let network: TestNetworkNoAppView
-  let client: AtpAgent
+  let client: ReturnType<TestNetworkNoAppView['pds']['getAgent']>
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

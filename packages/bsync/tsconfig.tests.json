@@ -3,5 +3,8 @@
   "compilerOptions": {
     "rootDir": "."
   },
-  "include": ["./tests"]
+  "include": [
+    "./tests",
+    "../../tsconfig/cjs-default-exports.d.ts"
+  ]
 }

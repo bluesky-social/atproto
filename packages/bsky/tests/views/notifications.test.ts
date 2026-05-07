@@ -8,8 +8,12 @@ import {
   AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
+import {
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+  seedThreadV2,
+} from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications.js'
 import { Namespaces } from '../../src/stash.js'
 import { forSnapshot, paginateAll } from '../_util.js'
@@ -39,7 +43,7 @@ describe('notification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
       bsky: {
-        threadTagsHide: new Set([TAG_HIDE]),
+        threadTagsHide: new Set([seedThreadV2.TAG_HIDE]),
       },
     })
     db = network.bsky.db
@@ -797,7 +801,10 @@ describe('notification views', () => {
         'no thanks',
       )
       await network.processAll()
-      await createTag(db, { uri: eveReply.ref.uri.toString(), val: TAG_HIDE })
+      await createTag(db, {
+        uri: eveReply.ref.uri.toString(),
+        val: seedThreadV2.TAG_HIDE,
+      })
     })
 
     it('filters posts with hide tag', async () => {
