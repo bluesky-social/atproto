@@ -22534,6 +22534,7 @@ export const schemaDict = {
           'View moderation reports. Reports are individual instances of content being reported, as opposed to subject statuses which aggregate reports at the subject level.',
         parameters: {
           type: 'params',
+          required: ['status'],
           properties: {
             queueId: {
               type: 'integer',

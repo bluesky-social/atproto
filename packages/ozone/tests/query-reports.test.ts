@@ -95,8 +95,8 @@ describe('query-reports', () => {
   })
 
   describe('queryReports', () => {
-    it('returns all reports when no filters are provided', async () => {
-      const response = await modClient.queryReports({})
+    it('returns all open reports when only status is provided', async () => {
+      const response = await modClient.queryReports({ status: 'open' })
 
       // We created 7 reports total (3 on bob's account, 2 on alice's account, 1 on bob's post, 1 on alice's post)
       expect(response.reports.length).toBe(7)
@@ -115,6 +115,7 @@ describe('query-reports', () => {
 
     it('filters reports by subjectType (account)', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         subjectType: 'account',
       })
 
@@ -130,6 +131,7 @@ describe('query-reports', () => {
 
     it('filters reports by subjectType (record)', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         subjectType: 'record',
       })
 
@@ -145,6 +147,7 @@ describe('query-reports', () => {
 
     it('filters reports by specific subject DID', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         subject: sc.dids.bob,
       })
 
@@ -160,6 +163,7 @@ describe('query-reports', () => {
       const bobsPostUri = sc.posts[sc.dids.bob][0].ref.uriStr
 
       const response = await modClient.queryReports({
+        status: 'open',
         subject: bobsPostUri,
       })
 
@@ -170,6 +174,7 @@ describe('query-reports', () => {
 
     it('filters reports by report type', async () => {
       const spamResponse = await modClient.queryReports({
+        status: 'open',
         reportTypes: [REASONSPAM],
       })
 
@@ -180,6 +185,7 @@ describe('query-reports', () => {
       })
 
       const misleadingResponse = await modClient.queryReports({
+        status: 'open',
         reportTypes: [REASONMISLEADING],
       })
 
@@ -192,6 +198,7 @@ describe('query-reports', () => {
 
     it('filters reports by collection', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         collections: ['app.bsky.feed.post'],
       })
 
@@ -225,6 +232,7 @@ describe('query-reports', () => {
 
     it('supports pagination with limit and cursor', async () => {
       const firstPage = await modClient.queryReports({
+        status: 'open',
         limit: 3,
       })
 
@@ -232,6 +240,7 @@ describe('query-reports', () => {
       expect(firstPage.cursor).toBeDefined()
 
       const secondPage = await modClient.queryReports({
+        status: 'open',
         limit: 3,
         cursor: firstPage.cursor,
       })
@@ -249,7 +258,7 @@ describe('query-reports', () => {
     })
 
     it('sorts reports by createdAt descending by default', async () => {
-      const response = await modClient.queryReports({})
+      const response = await modClient.queryReports({ status: 'open' })
 
       // Check that reports are sorted by createdAt descending
       for (let i = 0; i < response.reports.length - 1; i++) {
@@ -261,6 +270,7 @@ describe('query-reports', () => {
 
     it('supports sorting by createdAt ascending', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         sortField: 'createdAt',
         sortDirection: 'asc',
       })
@@ -275,6 +285,7 @@ describe('query-reports', () => {
 
     it('includes subject details in report view', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         limit: 1,
       })
 
@@ -295,6 +306,7 @@ describe('query-reports', () => {
 
     it('combines multiple filters correctly', async () => {
       const response = await modClient.queryReports({
+        status: 'open',
         subjectType: 'account',
         reportTypes: [REASONSPAM],
       })
@@ -336,6 +348,7 @@ describe('query-reports', () => {
 
       // Find the report we just created (most recent)
       const allReports = await modClient.queryReports({
+        status: 'open',
         isMuted: true,
       })
       mutedReporterReportId = allReports.reports[0].id
@@ -375,13 +388,17 @@ describe('query-reports', () => {
 
       // Find the muted subject report
       const mutedReports = await modClient.queryReports({
+        status: 'open',
         isMuted: true,
       })
       mutedSubjectReportId = mutedReports.reports[0].id
     })
 
     it('marks reports as muted when reporter is muted', async () => {
-      const allMuted = await modClient.queryReports({ isMuted: true })
+      const allMuted = await modClient.queryReports({
+        status: 'open',
+        isMuted: true,
+      })
       const mutedReport = allMuted.reports.find(
         (r) => r.id === mutedReporterReportId,
       )
@@ -390,7 +407,10 @@ describe('query-reports', () => {
     })
 
     it('marks reports as muted when subject is muted', async () => {
-      const allMuted = await modClient.queryReports({ isMuted: true })
+      const allMuted = await modClient.queryReports({
+        status: 'open',
+        isMuted: true,
+      })
       const mutedReport = allMuted.reports.find(
         (r) => r.id === mutedSubjectReportId,
       )
@@ -399,7 +419,10 @@ describe('query-reports', () => {
     })
 
     it('excludes muted reports by default (isMuted=false)', async () => {
-      const response = await modClient.queryReports({ isMuted: false })
+      const response = await modClient.queryReports({
+        status: 'open',
+        isMuted: false,
+      })
       response.reports.forEach((report) => {
         expect(report.isMuted).toBe(false)
       })
@@ -410,7 +433,10 @@ describe('query-reports', () => {
     })
 
     it('returns only muted reports when isMuted=true', async () => {
-      const response = await modClient.queryReports({ isMuted: true })
+      const response = await modClient.queryReports({
+        status: 'open',
+        isMuted: true,
+      })
       expect(response.reports.length).toBeGreaterThanOrEqual(2)
       response.reports.forEach((report) => {
         expect(report.isMuted).toBe(true)
@@ -420,8 +446,11 @@ describe('query-reports', () => {
     it('defaults to excluding muted reports when isMuted is not specified', async () => {
       // The lexicon default for isMuted is false, so calling without it
       // should behave the same as isMuted=false
-      const defaultReports = await modClient.queryReports({})
-      const explicitFalse = await modClient.queryReports({ isMuted: false })
+      const defaultReports = await modClient.queryReports({ status: 'open' })
+      const explicitFalse = await modClient.queryReports({
+        status: 'open',
+        isMuted: false,
+      })
       expect(defaultReports.reports.length).toBe(explicitFalse.reports.length)
       defaultReports.reports.forEach((report) => {
         expect(report.isMuted).toBe(false)
@@ -465,7 +494,10 @@ describe('query-reports', () => {
     beforeAll(async () => {
       // Get all current non-muted reports and permanently assign the first 2
       // The admin caller's own DID is used as the assignee (not the ozone service DID)
-      const allReports = await modClient.queryReports({ isMuted: false })
+      const allReports = await modClient.queryReports({
+        status: 'open',
+        isMuted: false,
+      })
       assignedReportIds = allReports.reports.slice(0, 2).map((r) => r.id)
 
       for (const reportId of assignedReportIds) {
@@ -476,6 +508,7 @@ describe('query-reports', () => {
     it('filters reports by assignedTo DID', async () => {
       const adminDid = network.ozone.adminAccnt.did
       const response = await modClient.queryReports({
+        status: 'assigned',
         assignedTo: adminDid,
       })
 
@@ -492,6 +525,7 @@ describe('query-reports', () => {
 
     it('returns empty when filtering by a DID with no assignments', async () => {
       const response = await modClient.queryReports({
+        status: 'assigned',
         assignedTo: 'did:plc:nonexistent',
       })
 
@@ -521,6 +555,7 @@ describe('query-reports', () => {
       await unassignReport({ reportId: reportIdToUnassign })
 
       const response = await modClient.queryReports({
+        status: 'assigned',
         assignedTo: adminDid,
       })
 

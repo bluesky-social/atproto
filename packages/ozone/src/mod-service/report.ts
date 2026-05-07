@@ -40,9 +40,7 @@ export async function queryReports(
     builder = builder.where('r.queueId', '=', params.queueId)
   }
 
-  if (params.status) {
-    builder = builder.where('r.status', '=', params.status)
-  }
+  builder = builder.where('r.status', '=', params.status)
 
   if (params.subject) {
     const isRecord = params.subject.startsWith('at://')

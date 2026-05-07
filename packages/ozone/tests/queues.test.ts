@@ -561,8 +561,17 @@ describe('ozone-queues', () => {
       })
     }
 
-    const queryLatestReportForSubject = async (subjectOrUri: string) => {
+    const queryLatestReportForSubject = async (
+      subjectOrUri: string,
+      status:
+        | 'open'
+        | 'closed'
+        | 'escalated'
+        | 'queued'
+        | 'assigned' = 'queued',
+    ) => {
       const { reports } = await modClient.queryReports({
+        status,
         subject: subjectOrUri,
       })
       return reports[0]
@@ -647,7 +656,10 @@ describe('ozone-queues', () => {
       expect(data.reportsMigrated).toBe(0)
 
       // Closed report remains assigned to the soft-deleted queue for historical reference
-      const reportAfter = await queryLatestReportForSubject(sc.dids.carol)
+      const reportAfter = await queryLatestReportForSubject(
+        sc.dids.carol,
+        'closed',
+      )
       expect(reportAfter.queue?.id).toBe(queue.id)
     })
 

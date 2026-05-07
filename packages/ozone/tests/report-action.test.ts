@@ -53,6 +53,7 @@ describe('report-action', () => {
 
       // Query to get the actual report table IDs
       const allBobReports = await modClient.queryReports({
+        status: 'open',
         subject: sc.dids.bob,
       })
       const reportIds = allBobReports.reports.map((r) => r.id)
@@ -67,15 +68,25 @@ describe('report-action', () => {
         },
       })
 
-      // Query reports and verify status
-      const allReports = await modClient.queryReports({
+      // Query reports and verify status — split by expected status since
+      // queryReports requires a status filter
+      const closedBobReports = await modClient.queryReports({
+        status: 'closed',
+        subject: sc.dids.bob,
+      })
+      const openBobReports = await modClient.queryReports({
+        status: 'open',
         subject: sc.dids.bob,
       })
 
       // First 2 should be closed, third should still be open
-      const report1 = allReports.reports.find((r) => r.id === reportIds[0])
-      const report2 = allReports.reports.find((r) => r.id === reportIds[1])
-      const report3 = allReports.reports.find((r) => r.id === reportIds[2])
+      const report1 = closedBobReports.reports.find(
+        (r) => r.id === reportIds[0],
+      )
+      const report2 = closedBobReports.reports.find(
+        (r) => r.id === reportIds[1],
+      )
+      const report3 = openBobReports.reports.find((r) => r.id === reportIds[2])
 
       expect(report1?.status).toBe('closed')
       expect(report1?.actionNote).toBe('Reviewed and found no violation')
@@ -142,10 +153,12 @@ describe('report-action', () => {
 
       // Query and verify
       const spamReports = await modClient.queryReports({
+        status: 'closed',
         subject: sc.dids.alice,
         reportTypes: [REASONSPAM],
       })
       const misleadingReports = await modClient.queryReports({
+        status: 'escalated',
         subject: sc.dids.alice,
         reportTypes: [REASONMISLEADING],
       })
@@ -211,6 +224,7 @@ describe('report-action', () => {
 
       // Query reports on this post
       const postReports = await modClient.queryReports({
+        status: 'closed',
         subject: carolsPost.uri,
       })
 
@@ -254,9 +268,11 @@ describe('report-action', () => {
 
       // Query to get actual report table IDs
       const carolReports = await modClient.queryReports({
+        status: 'open',
         subject: sc.dids.carol,
       })
       const danReports = await modClient.queryReports({
+        status: 'open',
         subject: sc.dids.dan,
       })
 
@@ -279,6 +295,7 @@ describe('report-action', () => {
 
       // Verify carol's report was not affected
       const carolReportsAfter = await modClient.queryReports({
+        status: 'open',
         subject: sc.dids.carol,
       })
       const report = carolReportsAfter.reports.find(

@@ -68,8 +68,12 @@ describe('queue-router', () => {
 
   // Returns the most recent report for a subject using the queryReports API.
   // Pass a DID for account subjects or an at:// URI for record subjects.
-  const queryLatestReportForSubject = async (subjectOrUri: string) => {
+  const queryLatestReportForSubject = async (
+    subjectOrUri: string,
+    status: 'open' | 'closed' | 'escalated' | 'queued' | 'assigned' = 'queued',
+  ) => {
     const { reports } = await modClient.queryReports({
+      status,
       subject: subjectOrUri,
     })
     return reports[0]
@@ -101,7 +105,7 @@ describe('queue-router', () => {
     expect(cursor).toBeNull()
 
     // Report must remain unassigned (queue absent from API response when null)
-    const report = await queryLatestReportForSubject(sc.dids.alice)
+    const report = await queryLatestReportForSubject(sc.dids.alice, 'open')
     expect(report).toBeDefined()
     expect(report.queue).toBeUndefined()
   })
@@ -206,7 +210,7 @@ describe('queue-router', () => {
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
-      const report = await queryLatestReportForSubject(sc.dids.carol)
+      const report = await queryLatestReportForSubject(sc.dids.carol, 'open')
       expect(report).toBeDefined()
       expect(report.queue).toBeUndefined()
       expect(report.queuedAt).toBeUndefined()
@@ -214,14 +218,17 @@ describe('queue-router', () => {
 
     it('skips unmatched reports (queueId = -1)', async () => {
       // The previous test already set carol's report to queueId = -1 (REASON_MISLEADING)
-      const report = await queryLatestReportForSubject(sc.dids.carol)
+      const report = await queryLatestReportForSubject(sc.dids.carol, 'open')
       expect(report).toBeDefined()
       expect(report.queue).toBeUndefined() // queueId = -1
 
       // Run the routing again
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
-      const reportAfter = await queryLatestReportForSubject(sc.dids.carol)
+      const reportAfter = await queryLatestReportForSubject(
+        sc.dids.carol,
+        'open',
+      )
       expect(reportAfter.queue).toBeUndefined() // still unmatched, was skipped
       expect(reportAfter.id).toBe(report.id) // same report, unchanged
     })
@@ -272,7 +279,7 @@ describe('queue-router', () => {
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
-      const report = await queryLatestReportForSubject(sc.dids.alice)
+      const report = await queryLatestReportForSubject(sc.dids.alice, 'open')
       expect(report).toBeDefined()
       // Threat queue is disabled, so no match → queue is absent
       expect(report.queue).toBeUndefined()
