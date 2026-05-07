@@ -22622,7 +22622,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Manually reassign a report to a different queue (admin action).',
+          'Manually reassign a report to a different queue (or unassign it). Records a queueActivity entry on the report.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -22635,7 +22635,13 @@ export const schemaDict = {
               },
               queueId: {
                 type: 'integer',
-                description: "Target queue ID. Use -1 for 'unassigned'.",
+                description:
+                  'Target queue ID. Use -1 to unassign from any queue.',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional moderator-only note recorded on the resulting queueActivity as internalNote.',
               },
             },
           },
@@ -22653,6 +22659,29 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'ReportNotFound',
+            description: 'No report exists with the given reportId',
+          },
+          {
+            name: 'ReportClosed',
+            description: 'The report is closed and cannot be reassigned',
+          },
+          {
+            name: 'AlreadyInTargetQueue',
+            description: 'The report is already assigned to the target queue',
+          },
+          {
+            name: 'QueueNotFound',
+            description: 'No active queue exists with the given queueId',
+          },
+          {
+            name: 'QueueDisabled',
+            description:
+              'The target queue is disabled and cannot receive new assignments',
+          },
+        ],
       },
     },
   },

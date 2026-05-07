@@ -20,8 +20,10 @@ export type QueryParams = {}
 export interface InputSchema {
   /** ID of the report to reassign */
   reportId: number
-  /** Target queue ID. Use -1 for 'unassigned'. */
+  /** Target queue ID. Use -1 to unassign from any queue. */
   queueId: number
+  /** Optional moderator-only note recorded on the resulting queueActivity as internalNote. */
+  comment?: string
 }
 
 export interface OutputSchema {
@@ -42,6 +44,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?:
+    | 'ReportNotFound'
+    | 'ReportClosed'
+    | 'AlreadyInTargetQueue'
+    | 'QueueNotFound'
+    | 'QueueDisabled'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

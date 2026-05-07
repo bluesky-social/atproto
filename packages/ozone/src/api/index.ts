@@ -41,6 +41,7 @@ import getLiveStats from './report/getLiveStats'
 import getReport from './report/getReport'
 import listActivities from './report/listActivities'
 import queryReports from './report/queryReports'
+import reassignQueue from './report/reassignQueue'
 import refreshStats from './report/refreshStats'
 import unassignReportModerator from './report/unassignModerator'
 import addSafelinkRule from './safelink/addRule'
@@ -136,5 +137,6 @@ export default function (server: Server, ctx: AppContext) {
   getReportAssignments(server, ctx)
   createActivity(server, ctx)
   listActivities(server, ctx)
+  reassignQueue(server, ctx)
   return server
 }

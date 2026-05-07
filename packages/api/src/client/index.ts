@@ -6026,12 +6026,11 @@ export class ToolsOzoneReportNS {
     data?: ToolsOzoneReportReassignQueue.InputSchema,
     opts?: ToolsOzoneReportReassignQueue.CallOptions,
   ): Promise<ToolsOzoneReportReassignQueue.Response> {
-    return this._client.call(
-      'tools.ozone.report.reassignQueue',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.report.reassignQueue', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportReassignQueue.toKnownErr(e)
+      })
   }
 
   refreshStats(
