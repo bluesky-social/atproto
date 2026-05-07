@@ -22633,6 +22633,12 @@ export const schemaDict = {
               format: 'uri',
               description: 'Filter by subject DID or AT-URI.',
             },
+            did: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter to reports where the subject is this DID or any record owned by this DID. Unlike `subject` (which scopes to a specific account or record), this returns all reports tied to the DID across both account-level and record-level subjects.',
+            },
             subjectType: {
               type: 'string',
               description:

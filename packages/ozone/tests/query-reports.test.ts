@@ -159,6 +159,38 @@ describe('query-reports', () => {
       })
     })
 
+    it('filters reports by did across account and record subjects', async () => {
+      // Bob has 3 account reports and 1 report on his post — 4 total tied to his DID
+      const response = await modClient.queryReports({
+        status: 'open',
+        did: sc.dids.bob,
+      })
+
+      expect(response.reports.length).toBe(4)
+
+      // Each returned report's subject should resolve to bob:
+      // - account subjects have subject === bob's DID
+      // - record subjects are at-uris hosted by bob's DID
+      response.reports.forEach((report) => {
+        if (report.subject.type === 'account') {
+          expect(report.subject.subject).toBe(sc.dids.bob)
+        } else {
+          const uri = new AtUri(report.subject.subject)
+          expect(uri.host).toBe(sc.dids.bob)
+        }
+      })
+
+      // Mix of subject types — 3 account, 1 record
+      const accountCount = response.reports.filter(
+        (r) => r.subject.type === 'account',
+      ).length
+      const recordCount = response.reports.filter(
+        (r) => r.subject.type === 'record',
+      ).length
+      expect(accountCount).toBe(3)
+      expect(recordCount).toBe(1)
+    })
+
     it('filters reports by specific subject URI', async () => {
       const bobsPostUri = sc.posts[sc.dids.bob][0].ref.uriStr
 

@@ -30,6 +30,8 @@ export type QueryParams = {
     | (string & {})
   /** Filter by subject DID or AT-URI. */
   subject?: string
+  /** Filter to reports where the subject is this DID or any record owned by this DID. Unlike `subject` (which scopes to a specific account or record), this returns all reports tied to the DID across both account-level and record-level subjects. */
+  did?: string
   /** If specified, reports of the given type (account or record) will be returned. */
   subjectType?: 'account' | 'record' | (string & {})
   /** If specified, reports where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored. */

@@ -56,6 +56,10 @@ export async function queryReports(
     }
   }
 
+  if (params.did) {
+    builder = builder.where('r.did', '=', params.did)
+  }
+
   if (params.subjectType) {
     const normalizedType = params.subjectType as 'account' | 'record'
     if (normalizedType === 'account') {
