@@ -42,6 +42,8 @@ export interface HandlerError {
   status: number
   message?: string
   error?:
+    | 'InvalidConvo'
+    | 'ReactionNotAllowed'
     | 'ReactionMessageDeleted'
     | 'ReactionLimitReached'
     | 'ReactionInvalidValue'

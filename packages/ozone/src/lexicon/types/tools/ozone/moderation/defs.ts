@@ -46,6 +46,7 @@ export interface ModEventView {
     | $Typed<ModEventPriorityScore>
     | $Typed<AgeAssuranceEvent>
     | $Typed<AgeAssuranceOverrideEvent>
+    | $Typed<AgeAssurancePurgeEvent>
     | $Typed<RevokeAccountCredentialsEvent>
     | $Typed<ScheduleTakedownEvent>
     | $Typed<CancelScheduledTakedownEvent>
@@ -98,6 +99,7 @@ export interface ModEventViewDetail {
     | $Typed<ModEventPriorityScore>
     | $Typed<AgeAssuranceEvent>
     | $Typed<AgeAssuranceOverrideEvent>
+    | $Typed<AgeAssurancePurgeEvent>
     | $Typed<RevokeAccountCredentialsEvent>
     | $Typed<ScheduleTakedownEvent>
     | $Typed<CancelScheduledTakedownEvent>
@@ -503,6 +505,23 @@ export function validateAgeAssuranceOverrideEvent<V>(v: V) {
   )
 }
 
+/** Purges all age assurance events for the subject. Only works on DID subjects. Moderator-only. */
+export interface AgeAssurancePurgeEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssurancePurgeEvent'
+  /** Comment describing the reason for the purge. */
+  comment: string
+}
+
+const hashAgeAssurancePurgeEvent = 'ageAssurancePurgeEvent'
+
+export function isAgeAssurancePurgeEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssurancePurgeEvent)
+}
+
+export function validateAgeAssurancePurgeEvent<V>(v: V) {
+  return validate<AgeAssurancePurgeEvent & V>(v, id, hashAgeAssurancePurgeEvent)
+}
+
 /** Account credentials revocation by moderators. Only works on DID subjects. */
 export interface RevokeAccountCredentialsEvent {
   $type?: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
@@ -682,6 +701,8 @@ export interface ModEventTag {
   remove: string[]
   /** Additional comment about added/removed tags. */
   comment?: string
+  /** Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added. */
+  durationInHours?: number
 }
 
 const hashModEventTag = 'modEventTag'

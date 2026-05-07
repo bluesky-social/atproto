@@ -1,12 +1,10 @@
-import { AtpAgent } from '@atproto/api'
+import { AppBskyGraphGetMutes, AtpAgent, ids } from '@atproto/api'
 import {
   SeedClient,
   TestNetwork,
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetMutesOutputSchema } from '../../src/lexicon/types/app/bsky/graph/getMutes'
 import { forSnapshot, paginateAll } from '../_util'
 
 describe('mute views', () => {
@@ -24,7 +22,7 @@ describe('mute views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_mutes',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await usersBulkSeed(sc, 10)
@@ -212,7 +210,7 @@ describe('mute views', () => {
   })
 
   it('paginates.', async () => {
-    const results = (results: GetMutesOutputSchema[]) =>
+    const results = (results: AppBskyGraphGetMutes.OutputSchema[]) =>
       results.flatMap((res) => res.mutes)
     const paginator = async (cursor?: string) => {
       const { data: view } = await agent.api.app.bsky.graph.getMutes(

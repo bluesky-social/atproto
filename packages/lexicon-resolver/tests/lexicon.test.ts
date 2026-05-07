@@ -42,7 +42,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('resolves Lexicon.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     const lex = await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.name1' },
       { id: 'example.alice.name1', lexicon: 1, defs: {} },
@@ -64,7 +64,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on mismatched id.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.mismatch' },
       { id: 'example.test1.mismatch.bad', lexicon: 1, defs: {} },
@@ -80,7 +80,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on missing DNS entry.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.bob, rkey: 'example.bob.name' },
       { id: 'example.bob.name', lexicon: 1, defs: {} },
@@ -104,7 +104,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on bad verification.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     const alicekey = await network.pds.ctx.actorStore.keypair(sc.dids.alice)
     const bobkey = await network.pds.ctx.actorStore.keypair(sc.dids.bob)
     await client.com.atproto.lexicon.schema.create(
@@ -142,7 +142,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('fails on invalid Lexicon document.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.baddoc' },
       { id: 'example.alice.baddoc', lexicon: 999, defs: {} },
@@ -164,7 +164,7 @@ describe('Lexicon resolution', () => {
   })
 
   it('resolves Lexicon based on override authority.', async () => {
-    const client = network.pds.getClient()
+    const client = network.pds.getAgent()
     await client.com.atproto.lexicon.schema.create(
       { repo: sc.dids.alice, rkey: 'example.alice.override' },
       {

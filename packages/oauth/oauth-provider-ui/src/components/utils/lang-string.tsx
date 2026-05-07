@@ -1,7 +1,7 @@
 import { ReactNode, useMemo } from 'react'
+import type { MultiLangString } from '@atproto/oauth-provider-api'
 import { getLangString } from '#/lib/lang'
 import { useCurrentLocale } from '#/locales/locale-provider'
-import type { MultiLangString } from '@atproto/oauth-provider-api'
 
 export type LangStringProps = {
   value?: string | MultiLangString

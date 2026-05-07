@@ -1,11 +1,11 @@
-import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
+import { Cid } from '@atproto/lex'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {
   const endpoint = 'https://example.com/img'
   let uriBuilder: ImageUriBuilder
-  let cid: CID
+  let cid: Cid
   const did = 'did:plc:xyz'
 
   beforeAll(async () => {
@@ -39,12 +39,12 @@ describe('image uri builder', () => {
 
   it('parses options.', () => {
     expect(
-      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@webp`),
+      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@jpeg`),
     ).toEqual({
       did: 'did:plc:xyz',
       cid: cid.toString(),
       fit: 'cover',
-      format: 'webp',
+      format: 'jpeg',
       height: 1000,
       min: true,
       preset: 'banner',
@@ -78,39 +78,6 @@ describe('image uri builder', () => {
       preset: 'feed_thumbnail',
       width: 2000,
     })
-  })
-
-  it('includes format in path based on level', () => {
-    const did = 'did:example:alice'
-    const base = `https://example.com/img/avatar/plain/${did}`
-    let builder = new ImageUriBuilder(endpoint, 0)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(`${base}/bafka`)
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(`${base}/bafk7`)
-    builder = new ImageUriBuilder(endpoint, 1)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(
-      `${base}/bafka@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkb')).toBe(
-      `${base}/bafkb@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkc')).toBe(`${base}/bafkc`)
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(`${base}/bafk7`)
-    builder = new ImageUriBuilder(endpoint, 8)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(
-      `${base}/bafka@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkp')).toBe(
-      `${base}/bafkp@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkq')).toBe(`${base}/bafkq`)
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(`${base}/bafk7`)
-    builder = new ImageUriBuilder(endpoint, 16)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(
-      `${base}/bafka@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(
-      `${base}/bafk7@webp`,
-    )
   })
 
   it('errors on bad url pattern.', () => {

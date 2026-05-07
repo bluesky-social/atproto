@@ -1,6 +1,5 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies'
 
 describe('feed hidden replies', () => {
@@ -14,8 +13,8 @@ describe('feed hidden replies', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_feed_hidden_replies',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
 
     const result = await feedHiddenRepliesSeed(sc)

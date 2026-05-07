@@ -33,6 +33,23 @@ export interface OutputSchema {
     | $Typed<ChatBskyConvoDefs.LogReadMessage>
     | $Typed<ChatBskyConvoDefs.LogAddReaction>
     | $Typed<ChatBskyConvoDefs.LogRemoveReaction>
+    | $Typed<ChatBskyConvoDefs.LogReadConvo>
+    | $Typed<ChatBskyConvoDefs.LogAddMember>
+    | $Typed<ChatBskyConvoDefs.LogRemoveMember>
+    | $Typed<ChatBskyConvoDefs.LogMemberJoin>
+    | $Typed<ChatBskyConvoDefs.LogMemberLeave>
+    | $Typed<ChatBskyConvoDefs.LogLockConvo>
+    | $Typed<ChatBskyConvoDefs.LogUnlockConvo>
+    | $Typed<ChatBskyConvoDefs.LogLockConvoPermanently>
+    | $Typed<ChatBskyConvoDefs.LogEditGroup>
+    | $Typed<ChatBskyConvoDefs.LogCreateJoinLink>
+    | $Typed<ChatBskyConvoDefs.LogEditJoinLink>
+    | $Typed<ChatBskyConvoDefs.LogEnableJoinLink>
+    | $Typed<ChatBskyConvoDefs.LogDisableJoinLink>
+    | $Typed<ChatBskyConvoDefs.LogIncomingJoinRequest>
+    | $Typed<ChatBskyConvoDefs.LogApproveJoinRequest>
+    | $Typed<ChatBskyConvoDefs.LogRejectJoinRequest>
+    | $Typed<ChatBskyConvoDefs.LogOutgoingJoinRequest>
     | { $type: string }
   )[]
 }

@@ -34,7 +34,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           return {
             actorDid,
             namespace:
-              Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+              Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+                .$type,
             key: '',
             post: undefined,
             reply: undefined,
@@ -45,7 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         return {
           actorDid,
           namespace:
-            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription,
+            Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type,
           key: subject.key,
           post: subject.post ? {} : undefined,
           reply: subject.reply ? {} : undefined,

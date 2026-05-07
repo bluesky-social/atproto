@@ -25,7 +25,7 @@ describe('report reason', () => {
     await basicSeed(sc)
 
     // Login with ozone's service account owner and update the service profile definition
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     await pdsAgent.login({
       identifier: 'mod-authority.test',
       password: 'hunter2',

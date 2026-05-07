@@ -163,19 +163,52 @@ export function toDatetimeString(date: Date): DatetimeString {
  * One use-case is a consistent, sortable string. Another is to work with older
  * invalid createdAt datetimes.
  *
+ * @note This function might return different normalized strings for the same
+ * input depending on the timezone of the machine it is run on, since it will
+ * attempt to parse the input "as is" if it fails to parse with an explicit
+ * timezone.
+ *
  * @returns ISODatetimeString - a valid atproto datetime with millisecond precision (3 sub-second digits) and UTC timezone with trailing 'Z' syntax.
  * @throws InvalidDatetimeError - if the input string could not be parsed as a datetime, even with permissive parsing.
  */
 export function normalizeDatetime(dtStr: string): ISODatetimeString {
-  // Parse the string as is
-  const date = new Date(dtStr)
-  if (isAtprotoDate(date)) {
-    return date.toISOString()
-  }
+  if (
+    // Explicit timezone offset
+    /[+-]\d\d:?\d\d/.test(dtStr) ||
+    // 'Z' timezone designator
+    /\dZ\b/.test(dtStr) ||
+    // Timezone abbreviation (eg. "EST", "PST", "UTC", "GMT", etc), as in:
+    // > Tue Mar 17 2026 16:38:44 PST (Pacific Standard Time)
+    /\b[A-Z]{3,4}\b/.test(dtStr)
+  ) {
+    // Since we do have a timezone designator, we can try parsing "as is" and
+    // should get consistent results regardless of local timezone.
 
-  // if dtStr is not a valid date, try parsing again with a timezone
-  if (isNaN(date.getTime()) && !/.*(([+-]\d\d:?\d\d)|[a-zA-Z])$/.test(dtStr)) {
-    const date = new Date(`${dtStr}Z`)
+    // @NOTE NodeJS will reject dates with an un-recognized timezone designator
+    // (like "AFT"), even if we add a well-known timezone abbreviation like
+    // "UTC" or "Z".
+    const date = new Date(dtStr)
+    if (isAtprotoDate(date)) {
+      return date.toISOString()
+    }
+  } else {
+    // If there is no timezone information, try parsing as UTC using two
+    // different syntaxes, falling back to parsing "as is".
+
+    const dateZ = new Date(`${dtStr}Z`)
+    if (isAtprotoDate(dateZ)) {
+      return dateZ.toISOString()
+    }
+
+    const dateUTC = new Date(`${dtStr} UTC`)
+    if (isAtprotoDate(dateUTC)) {
+      return dateUTC.toISOString()
+    }
+
+    // Despite our best efforts to parse as a consistent value, appending "Z" or
+    // " UTC" did not work, so we will try parsing "as is", which may yield
+    // different results depending on the local timezone of the machine.
+    const date = new Date(dtStr)
     if (isAtprotoDate(date)) {
       return date.toISOString()
     }
@@ -296,9 +329,6 @@ function parseDate(date: Date): Result<AtprotoDate> {
   }
   if (fullYear > 9999) {
     return failure('datetime year is too far in the future')
-  }
-  if (fullYear < 10) {
-    return failure('datetime so close to year zero not allowed')
   }
   return success(date as AtprotoDate)
 }

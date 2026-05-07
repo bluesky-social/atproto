@@ -1,10 +1,10 @@
 import { clsx } from 'clsx'
 import { JSX, ReactNode, useContext, useRef } from 'react'
-import { useRandomString } from '../../hooks/use-random-string.ts'
-import { mergeRefs } from '../../lib/ref.ts'
-import { Override } from '../../lib/util.ts'
+import { useRandomString } from '#/hooks/use-random-string.ts'
+import { mergeRefs } from '#/lib/ref.ts'
+import { Override } from '#/lib/util.ts'
 import { Checkbox } from './checkbox.tsx'
-import { FieldsetContext } from './fieldset.tsx'
+import { FieldsetContext } from './form-field.tsx'
 import { InputContainer } from './input-container.tsx'
 
 export type InputCheckboxProps = Override<
@@ -22,7 +22,7 @@ export function InputCheckbox({
   // input
   id,
   ref,
-  disabled,
+  disabled: disabledProp,
   title,
   'aria-label': ariaLabel = title,
   'aria-labelledby': ariaLabelledBy,
@@ -34,6 +34,7 @@ export function InputCheckbox({
   const ctx = useContext(FieldsetContext)
 
   const inputId = id ?? htmlFor
+  const disabled = disabledProp ?? ctx.disabled
 
   return (
     <InputContainer
@@ -41,7 +42,8 @@ export function InputCheckbox({
       icon={
         <Checkbox
           {...props}
-          disabled={disabled ?? ctx.disabled}
+          className="size-4"
+          disabled={disabled}
           title={title}
           aria-label={ariaLabel}
           aria-labelledby={
@@ -55,10 +57,10 @@ export function InputCheckbox({
         />
       }
       tabIndex={-1}
-      onClick={({ target }) => {
+      onClick={(event) => {
         // Native behavior of clicking the label should toggle the checkbox.
-        if (target === labelRef.current) return
-        if (target === inputRef.current) return
+        if (event.target === labelRef.current) return
+        if (event.target === inputRef.current) return
 
         inputRef.current?.click()
         inputRef.current?.focus()

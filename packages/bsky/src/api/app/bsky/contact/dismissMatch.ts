@@ -1,9 +1,10 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.contact.dismissMatch({
+  server.add(app.bsky.contact.dismissMatch, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       assertRolodexOrThrowUnimplemented(ctx)

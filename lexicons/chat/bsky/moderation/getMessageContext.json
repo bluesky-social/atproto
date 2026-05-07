@@ -29,7 +29,8 @@
                 "type": "union",
                 "refs": [
                   "chat.bsky.convo.defs#messageView",
-                  "chat.bsky.convo.defs#deletedMessageView"
+                  "chat.bsky.convo.defs#deletedMessageView",
+                  "chat.bsky.convo.defs#systemMessageView"
                 ]
               }
             }

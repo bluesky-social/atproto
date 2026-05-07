@@ -1,5 +1,7 @@
+import assert from 'node:assert'
 import readline from 'node:readline/promises'
 import { TID } from '@atproto/common'
+import { DidString, isDidString } from '@atproto/lex'
 import {
   BlockMap,
   CidSet,
@@ -22,15 +24,13 @@ export const rebuildRepoScript = async (
   args: string[],
 ) => {
   const did = args[0]
-  if (!did || !did.startsWith('did:')) {
-    throw new Error('Expected DID as argument')
-  }
+  assert(isDidString(did), 'Expected DID as argument')
   return rebuildRepo(ctx, did, true)
 }
 
 export const rebuildRepo = async (
   ctx: RebuildContext,
-  did: string,
+  did: DidString,
   promptUser: boolean,
 ) => {
   const memoryStore = new MemoryBlockstore()

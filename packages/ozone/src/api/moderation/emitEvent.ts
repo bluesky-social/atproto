@@ -1,5 +1,9 @@
 import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
@@ -8,6 +12,7 @@ import {
   ModEventTag,
   isAgeAssuranceEvent,
   isAgeAssuranceOverrideEvent,
+  isAgeAssurancePurgeEvent,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -67,6 +72,17 @@ const handleModerationEvent = async ({
     if (!auth.credentials.isModerator) {
       throw new AuthRequiredError(
         'Must be a full moderator to override age assurance',
+      )
+    }
+  }
+
+  if (isAgeAssurancePurgeEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new ForbiddenError(
+        'Must be a moderator to purge age assurance events',
       )
     }
   }

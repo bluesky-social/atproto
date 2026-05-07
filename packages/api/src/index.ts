@@ -10,11 +10,13 @@ export {
   stringifyLex,
 } from '@atproto/lexicon'
 export { parseLanguage } from '@atproto/common-web'
+export { XRPCError } from '@atproto/xrpc'
+
 export * from './types'
 export * from './const'
 export * from './util'
 export * from './client'
-export { schemas } from './client/lexicons'
+export { ids, schemas } from './client/lexicons'
 export type { $Typed, Un$Typed } from './client/util'
 export { asPredicate } from './client/util'
 export * from './rich-text/rich-text'

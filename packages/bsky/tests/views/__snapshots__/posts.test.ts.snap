@@ -111,7 +111,7 @@ Object {
         },
         "video": Object {
           "$type": "blob",
-          "mimeType": "image/mp4",
+          "mimeType": "video/mp4",
           "ref": Object {
             "$link": "cids(3)",
           },
@@ -192,7 +192,7 @@ Object {
       },
       "video": Object {
         "$type": "blob",
-        "mimeType": "image/mp4",
+        "mimeType": "video/mp4",
         "ref": Object {
           "$link": "cids(3)",
         },

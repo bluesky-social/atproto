@@ -88,10 +88,6 @@ export class AtpAgent extends Agent {
     return this.sessionManager.hasSession
   }
 
-  get did() {
-    return this.sessionManager.did
-  }
-
   get serviceUrl() {
     return this.sessionManager.serviceUrl
   }

@@ -2,6 +2,7 @@ import { AtpAgent, ComAtprotoServerCreateAccount } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { toDatetimeString } from '@atproto/lex'
 import { AppContext } from '../src'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
 
@@ -21,7 +22,7 @@ describe('account', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {
@@ -176,7 +177,7 @@ describe('account', () => {
     const account = await makeLoggedInAccount(network, agent)
 
     // first, pretend account was made 2 days ago & get those two codes
-    const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
+    const twoDaysAgo = toDatetimeString(new Date(Date.now() - 2 * DAY))
     await ctx.accountManager.db.db
       .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
@@ -210,7 +211,7 @@ describe('account', () => {
       disabled: 0 as const,
       forAccount: account.accountDid,
       createdBy: account.accountDid,
-      createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
+      createdAt: toDatetimeString(new Date(Date.now() - 5 * DAY)),
     }))
     await ctx.accountManager.db.db
       .insertInto('invite_code')
@@ -227,8 +228,8 @@ describe('account', () => {
       .values(
         inviteRows.map((row) => ({
           code: row.code,
-          usedBy: 'did:example:test',
-          usedAt: new Date().toISOString(),
+          usedBy: 'did:example:test' as const,
+          usedAt: toDatetimeString(new Date()),
         })),
       )
       .execute()
@@ -357,7 +358,7 @@ const makeLoggedInAccount = async (
 ) => {
   const code = await createInviteCode(network, inviterAgent, 1)
   const account = await createAccountWithInvite(inviterAgent, code)
-  const agent = network.pds.getClient()
+  const agent = network.pds.getAgent()
   await agent.login({
     identifier: account.handle,
     password: account.password,

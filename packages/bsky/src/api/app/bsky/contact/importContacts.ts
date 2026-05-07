@@ -1,13 +1,13 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { MatchAndContactIndex } from '../../../../lexicon/types/app/bsky/contact/defs'
-import { InputSchema } from '../../../../lexicon/types/app/bsky/contact/importContacts'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   SkeletonFnInput,
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, //
     presentation,
   )
-  server.app.bsky.contact.importContacts({
+  server.add(app.bsky.contact.importContacts, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)
@@ -38,10 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await importContacts(
-        { ...input.body, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await importContacts({ ...input.body, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -74,7 +71,7 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { matches } = skeleton
-  const subjects = matches.map((m) => m.subject)
+  const subjects = matches.map((m) => m.subject as DidString)
   return ctx.hydrator.hydrateProfiles(subjects, params.hydrateCtx)
 }
 
@@ -87,8 +84,11 @@ const presentation = (input: {
   const { ctx, skeleton, hydration } = input
   const matchesAndContactIndexes = mapDefined(
     skeleton.matches,
-    ({ subject, inputIndex }): MatchAndContactIndex | undefined => {
-      const profile = ctx.views.profile(subject, hydration)
+    ({
+      subject,
+      inputIndex,
+    }): app.bsky.contact.defs.MatchAndContactIndex | undefined => {
+      const profile = ctx.views.profile(subject as DidString, hydration)
 
       if (!profile) {
         return undefined
@@ -109,7 +109,7 @@ type Context = {
   views: Views
 }
 
-type Params = InputSchema & {
+type Params = app.bsky.contact.importContacts.$InputBody & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 

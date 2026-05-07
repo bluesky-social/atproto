@@ -15,11 +15,23 @@ import {
   StreamConfigOrHandler,
 } from '../src'
 
+// @ts-expect-error
+Symbol.asyncDispose ??= Symbol.for('nodejs.asyncDispose')
+
 export async function createServer({ router }: Server): Promise<http.Server> {
   const app = express()
   app.use(router)
   const httpServer = app.listen(0)
   await once(httpServer, 'listening')
+  // @NOTE Types define `http.Server` as `AsyncDisposable`, but not all
+  // environments seem to support it.
+  if (!(Symbol.asyncDispose in httpServer)) {
+    Object.defineProperty(httpServer, Symbol.asyncDispose, {
+      value: async function (this: http.Server) {
+        return closeServer(this)
+      },
+    })
+  }
   return httpServer
 }
 

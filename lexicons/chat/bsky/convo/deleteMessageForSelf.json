@@ -4,6 +4,14 @@
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Marks a message as deleted for the viewer, so they won't see that message in future enumerations.",
+      "errors": [
+        { "name": "InvalidConvo" },
+        {
+          "name": "MessageDeleteNotAllowed",
+          "description": "Indicates that this message cannot be deleted, e.g. because it is a system message."
+        }
+      ],
       "input": {
         "encoding": "application/json",
         "schema": {

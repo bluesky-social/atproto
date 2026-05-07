@@ -1,8 +1,10 @@
-import { AtpAgent } from '@atproto/api'
+import {
+  AppBskyGraphGetFollowers,
+  AppBskyGraphGetFollows,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
 import { SeedClient, TestNetwork, followsSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetFollowersOutputSchema } from '../../src/lexicon/types/app/bsky/graph/getFollowers'
-import { OutputSchema as GetFollowsOutputSchema } from '../../src/lexicon/types/app/bsky/graph/getFollows'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds follow views', () => {
@@ -17,7 +19,7 @@ describe('pds follow views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_follows',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await followsSeed(sc)
     await network.processAll()
@@ -116,7 +118,7 @@ describe('pds follow views', () => {
   })
 
   it('paginates followers', async () => {
-    const results = (results: GetFollowersOutputSchema[]) =>
+    const results = (results: AppBskyGraphGetFollowers.OutputSchema[]) =>
       results.flatMap((res) => res.followers)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.graph.getFollowers(
@@ -280,7 +282,7 @@ describe('pds follow views', () => {
   })
 
   it('paginates follows', async () => {
-    const results = (results: GetFollowsOutputSchema[]) =>
+    const results = (results: AppBskyGraphGetFollows.OutputSchema[]) =>
       results.flatMap((res) => res.follows)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.graph.getFollows(

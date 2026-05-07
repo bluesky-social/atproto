@@ -1,5 +1,5 @@
 import { BskyAppView } from '../bsky-app-view'
-import { ids } from '../lexicon/lexicons'
+import { com } from '../lexicons/index.js'
 
 export class ImageUrlBuilder {
   constructor(
@@ -10,7 +10,7 @@ export class ImageUrlBuilder {
   build(pattern: string, did: string, cid: string): string {
     return (
       this.bskyAppView?.getImageUrl(pattern, did, cid) ??
-      `https://${this.pdsHostname}/xrpc/${ids.ComAtprotoSyncGetBlob}?did=${did}&cid=${cid}`
+      `https://${this.pdsHostname}/xrpc/${com.atproto.sync.getBlob.$lxm}?did=${did}&cid=${cid}`
     )
   }
 }

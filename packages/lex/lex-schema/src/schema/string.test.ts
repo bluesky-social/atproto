@@ -265,6 +265,69 @@ describe('StringSchema', () => {
       const result = schema.safeParse('12/25/2023')
       expect(result.success).toBe(false)
     })
+
+    it('rejects datetime without timezone', () => {
+      const result = schema.safeParse('2023-12-25T12:00:00')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects date-only strings', () => {
+      // Date-only is not a valid datetime in either strict or loose mode
+      const result = schema.safeParse('2023-12-25')
+      expect(result.success).toBe(false)
+    })
+
+    describe('loose validation', () => {
+      it('accepts datetime without timezone', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts datetime without separator', () => {
+        const result = schema.safeParse('20231225T120000', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('rejects datetime with "-00:00" timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00-00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects date-only strings', () => {
+        const result = schema.safeParse('2023-12-25', { strict: false })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts datetime with timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00+05:30', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('still rejects completely invalid strings', () => {
+        expect(schema.safeParse('not a date', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('12/25/2023', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('', { strict: false }).success).toBe(false)
+      })
+
+      it('uses strict mode by default', () => {
+        // Datetime without timezone is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25T12:00:00').success).toBe(false)
+        // Date-only is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25').success).toBe(false)
+        // With timezone offset (AT Protocol compliant)
+        expect(schema.safeParse('2023-12-25T12:00:00+05:30').success).toBe(true)
+      })
+    })
   })
 
   describe('format: uri', () => {

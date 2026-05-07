@@ -12,12 +12,12 @@ describe('com.example.byteLength', () => {
         $type: 'com.example.byteLength',
         bytes: new Uint8Array([1]),
       }),
-    ).toThrow('bytes too small (minimum 2) at $.bytes (got 1)')
+    ).toThrow('bytes too small (minimum 2, got 1) at $.bytes')
     expect(() =>
       com.example.byteLength.$parse({
         $type: 'com.example.byteLength',
         bytes: new Uint8Array([1, 2, 3, 4, 5]),
       }),
-    ).toThrow('bytes too big (maximum 4) at $.bytes (got 5)')
+    ).toThrow('bytes too big (maximum 4, got 5) at $.bytes')
   })
 })

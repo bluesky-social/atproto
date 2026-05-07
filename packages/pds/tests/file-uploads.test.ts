@@ -1,22 +1,28 @@
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
-import { AtpAgent } from '@atproto/api'
 import { randomBytes } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { BlobRef } from '@atproto/lexicon'
+import { Client, DidString } from '@atproto/lex'
+import {
+  TypedBlobRef,
+  getBlobCidString,
+  isTypedBlobRef,
+} from '@atproto/lex-data'
 import { AppContext } from '../src'
 import { ActorDb } from '../src/actor-store/db'
 import { DiskBlobStore } from '../src/disk-blobstore'
+import { app } from '../src/lexicons/index.js'
 import { users } from './seeds/users'
 
 describe('file uploads', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let aliceDb: ActorDb
-  let alice: string
-  let bob: string
-  let agent: AtpAgent
+  let alice: DidString
+  let bob: DidString
+  let client: Client
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -25,7 +31,7 @@ describe('file uploads', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await sc.createAccount('alice', users.alice)
     await sc.createAccount('bob', users.bob)
@@ -39,7 +45,7 @@ describe('file uploads', () => {
     await network.close()
   })
 
-  let smallBlob: BlobRef
+  let smallBlob: TypedBlobRef
   let smallFile: Uint8Array
 
   it('handles client abort', async () => {
@@ -73,11 +79,12 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
-    const res = await agent.com.atproto.repo.uploadBlob(smallFile, {
+    const res = await client.uploadBlob(smallFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
-    smallBlob = res.data.blob
+    assert(isTypedBlobRef(res.body.blob))
+    smallBlob = res.body.blob
 
     const found = await aliceDb.db
       .selectFrom('blob')
@@ -110,28 +117,29 @@ describe('file uploads', () => {
   })
 
   it('can fetch the file after being referenced', async () => {
-    const { headers, data } = await agent.com.atproto.sync.getBlob({
-      did: alice,
-      cid: smallBlob.ref.toString(),
-    })
-    expect(headers['content-type']).toEqual('image/jpeg')
-    expect(headers['content-security-policy']).toEqual(
+    const { headers, body } = await client.getBlob(
+      alice,
+      smallBlob.ref.toString(),
+    )
+    expect(headers.get('content-type')).toEqual('image/jpeg')
+    expect(headers.get('content-security-policy')).toEqual(
       `default-src 'none'; sandbox`,
     )
-    expect(headers['x-content-type-options']).toEqual('nosniff')
-    expect(uint8arrays.equals(smallFile, new Uint8Array(data))).toBeTruthy()
+    expect(headers.get('x-content-type-options')).toEqual('nosniff')
+    expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
   })
 
-  let largeBlob: BlobRef
+  let largeBlob: TypedBlobRef
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('../dev-env/assets/hd-key.jpg')
-    const res = await agent.com.atproto.repo.uploadBlob(largeFile, {
+    const res = await client.uploadBlob(largeFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
-    largeBlob = res.data.blob
+    assert(isTypedBlobRef(res.body.blob))
+    largeBlob = res.body.blob
 
     const profilePromise = sc.updateProfile(alice, {
       avatar: largeBlob,
@@ -156,75 +164,72 @@ describe('file uploads', () => {
 
   it('permits duplicate uploads of the same file', async () => {
     const file = await fs.readFile('../dev-env/assets/key-landscape-small.jpg')
-    const { data: uploadA } = await agent.com.atproto.repo.uploadBlob(file, {
+    const { body: uploadA } = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
-    } as any)
-    const { data: uploadB } = await agent.com.atproto.repo.uploadBlob(file, {
+    })
+    const { body: uploadB } = await client.uploadBlob(file, {
       headers: sc.getHeaders(bob),
       encoding: 'image/jpeg',
-    } as any)
+    })
     expect(uploadA).toEqual(uploadB)
 
     await sc.updateProfile(alice, {
       displayName: 'Alice',
       avatar: uploadA.blob,
     })
-    const profileA = await agent.app.bsky.actor.profile.get({
+    const profileA = await client.get(app.bsky.actor.profile, {
       repo: alice,
       rkey: 'self',
     })
     // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
-    expect((profileA.value as any).avatar.cid).toEqual(uploadA.cid)
+    expect(profileA.value.avatar.cid).toEqual(uploadA.cid)
     await sc.updateProfile(bob, {
       displayName: 'Bob',
       avatar: uploadB.blob,
     })
-    const profileB = await agent.app.bsky.actor.profile.get({
+    const profileB = await client.get(app.bsky.actor.profile, {
       repo: bob,
       rkey: 'self',
     })
     // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
-    expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
-    const { data: uploadAfterPermanent } =
-      await agent.com.atproto.repo.uploadBlob(file, {
-        headers: sc.getHeaders(alice),
-        encoding: 'image/jpeg',
-      } as any)
+    expect(profileB.value.avatar.cid).toEqual(uploadA.cid)
+    const { body: uploadAfterPermanent } = await client.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
+      encoding: 'image/jpeg',
+    })
     expect(uploadAfterPermanent).toEqual(uploadA)
     const blob = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(uploadAfterPermanent.blob))
       .executeTakeFirstOrThrow()
     expect(blob.tempKey).toEqual(null)
   })
 
   it('supports compression during upload', async () => {
-    const { data: uploaded } = await agent.com.atproto.repo.uploadBlob(
-      gzipSync(smallFile),
-      {
-        encoding: 'image/jpeg',
-        headers: {
-          ...sc.getHeaders(alice),
-          'content-encoding': 'gzip',
-        },
-      } as any,
-    )
+    const { body: uploaded } = await client.uploadBlob(gzipSync(smallFile), {
+      encoding: 'image/jpeg',
+      headers: {
+        ...sc.getHeaders(alice),
+        'content-encoding': 'gzip',
+      },
+    })
+    assert(isTypedBlobRef(uploaded.blob))
     expect(uploaded.blob.ref.equals(smallBlob.ref)).toBeTruthy()
   })
 
   it('corrects a bad mimetype', async () => {
     const file = await fs.readFile('../dev-env/assets/key-landscape-large.jpg')
-    const res = await agent.com.atproto.repo.uploadBlob(file, {
+    const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'video/mp4',
-    } as any)
+    })
 
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.data.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/jpeg')
@@ -232,7 +237,7 @@ describe('file uploads', () => {
 
   it('handles pngs', async () => {
     const file = await fs.readFile('../dev-env/assets/at.png')
-    const res = await agent.com.atproto.repo.uploadBlob(file, {
+    const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'image/png',
     })
@@ -240,7 +245,7 @@ describe('file uploads', () => {
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.data.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/png')
@@ -248,15 +253,15 @@ describe('file uploads', () => {
 
   it('handles unknown mimetypes', async () => {
     const file = await randomBytes(20000)
-    const res = await agent.com.atproto.repo.uploadBlob(file, {
+    const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'test/fake',
-    } as any)
+    })
 
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.data.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('test/fake')
@@ -264,15 +269,15 @@ describe('file uploads', () => {
 
   it('handles text', async () => {
     const file = 'hello world!'
-    const res = await agent.com.atproto.repo.uploadBlob(file, {
+    const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'text/plain',
-    } as any)
+    })
 
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.data.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('text/plain')
@@ -280,15 +285,15 @@ describe('file uploads', () => {
 
   it('handles json', async () => {
     const file = '{"hello":"world"}'
-    const res = await agent.com.atproto.repo.uploadBlob(file, {
+    const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'application/json',
-    } as any)
+    })
 
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.data.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('application/json')

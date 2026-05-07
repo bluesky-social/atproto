@@ -1,93 +1,56 @@
 import { Trans } from '@lingui/react/macro'
-import { memo, useEffect, useMemo, useState } from 'react'
-import { useRandomString } from '../../hooks/use-random-string.ts'
-import { Api } from '../../lib/api.ts'
-import { JsonErrorResponse } from '../../lib/json-client.ts'
-import { Override } from '../../lib/util.ts'
-import { Admonition, AdmonitionProps } from './admonition.tsx'
-import { ErrorMessage } from './error-message.tsx'
+import { ReactNode, useEffect, useState } from 'react'
+import { useErrorMessage } from '#/hooks/use-error-message.ts'
+import { Action, Admonition } from './admonition.tsx'
+import { ErrorDetails } from './error-details.tsx'
 
-export type ErrorCardProps = Override<
-  Omit<AdmonitionProps, 'role'>,
-  {
-    error: unknown
-  }
->
-export const ErrorCard = memo(function ErrorCard({
+export type ErrorCardProps = {
+  className?: string
+  children?: ReactNode
+  error: unknown
+  reset?: () => void
+}
+
+export function ErrorCard({
   error,
-
-  // Admonition
+  reset,
+  className,
   children,
-  onClick,
-  onKeyDown,
-  ...props
 }: ErrorCardProps) {
   const [inputCount, setInputCount] = useState(0)
   // Every 5th input will toggle showing the details
   const showDetails = ((inputCount / 5) | 0) % 2 === 1
 
-  const detailsDivId = useRandomString('error-card-')
-
-  const parsedError = useMemo(
-    () =>
-      error instanceof JsonErrorResponse
-        ? // Already parsed:
-          error
-        : // If "error" is a json object, try parsing it as a JsonErrorResponse:
-          Api.parseError(error) ?? error,
-    [error],
-  )
+  const errorMessage = useErrorMessage(error)
 
   useEffect(() => {
     // For debugging purposes
-    console.warn('Displayed error details:', parsedError)
+    console.warn('Displayed error details:', error)
 
     // Reset the input count when the error changes
     setInputCount(0)
-  }, [parsedError])
+  }, [error])
 
   return (
     <Admonition
-      prominent
-      {...props}
-      aria-controls={detailsDivId}
-      tabIndex={0}
-      onKeyDown={(event) => {
-        onKeyDown?.(event)
-        if (!event.defaultPrevented) {
-          setInputCount((c) => c + 1)
-        }
-      }}
-      onClick={(event) => {
-        onClick?.(event)
-        if (!event.defaultPrevented) {
-          setInputCount((c) => c + 1)
-        }
-      }}
-      type="alert"
-      title={<ErrorMessage error={parsedError} />}
+      role="alert"
+      className={className}
+      onClick={() => setInputCount((c) => c + 1)}
+      title={errorMessage}
+      append={showDetails && <ErrorDetails error={error} />}
+      action={
+        reset != null && (
+          <Action onClick={() => reset()}>
+            <Trans>Retry</Trans>
+          </Action>
+        )
+      }
     >
-      {children && <div className="mt-2">{children}</div>}
-
-      <div hidden={!showDetails} id={detailsDivId} aria-hidden={!showDetails}>
-        {parsedError instanceof JsonErrorResponse ? (
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
-            <dt className="font-semibold">
-              <Trans>Code</Trans>
-            </dt>
-            <dd>
-              <code>{parsedError.error}</code>
-            </dd>
-
-            <dt className="font-semibold">
-              <Trans>Description</Trans>
-            </dt>
-            <dd>{parsedError.description}</dd>
-          </dl>
-        ) : (
-          <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
-        )}
-      </div>
+      {children}
     </Admonition>
   )
-})
+}
+
+export const errorCardRender = (props: ErrorCardProps) => (
+  <ErrorCard {...props} />
+)

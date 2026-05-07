@@ -1,15 +1,15 @@
 import stream from 'node:stream'
 import { byteIterableToStream } from '@atproto/common'
 import * as repo from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
 import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getRecord({
+  server.add(com.atproto.sync.getRecord, {
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       authorize: () => {
         // always allow
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       carStream.on('close', closeDb)
 
       return {
-        encoding: 'application/vnd.ipld.car',
+        encoding: 'application/vnd.ipld.car' as const,
         body: carStream,
       }
     },

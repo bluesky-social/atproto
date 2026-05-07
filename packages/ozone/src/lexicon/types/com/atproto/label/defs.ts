@@ -133,14 +133,11 @@ export function validateLabelValueDefinitionStrings<V>(v: V) {
 
 export type LabelValue =
   | '!hide'
-  | '!no-promote'
   | '!warn'
   | '!no-unauthenticated'
-  | 'dmca-violation'
-  | 'doxxing'
   | 'porn'
   | 'sexual'
   | 'nudity'
-  | 'nsfl'
-  | 'gore'
+  | 'graphic-media'
+  | 'bot'
   | (string & {})

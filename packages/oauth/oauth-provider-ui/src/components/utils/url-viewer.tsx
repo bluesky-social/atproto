@@ -1,5 +1,5 @@
 import { JSX, useMemo } from 'react'
-import { Override } from '../../lib/util.ts'
+import { Override } from '#/lib/util.ts'
 
 export type UrlPartRenderingOptions = {
   faded?: boolean

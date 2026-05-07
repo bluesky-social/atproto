@@ -177,6 +177,7 @@ export type RouteOptions = {
   blobLimit?: number
   jsonLimit?: number
   textLimit?: number
+  paramsParseLoose?: boolean
 }
 
 export type MethodAuth<

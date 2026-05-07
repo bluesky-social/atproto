@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.group.createGroup",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Creates a group convo, specifying the members to be added to it. Unlike getConvoForMembers, this isn't idempotent. It will create new groups even if the membership is identical to pre-existing groups. Will create 'pending' membership for all members, except the owner who is 'accepted'.",
+      "errors": [
+        { "name": "AccountSuspended" },
+        { "name": "BlockedActor" },
+        { "name": "GroupInvitesDisabled" },
+        { "name": "NotFollowedBySender" },
+        { "name": "RecipientNotFound" }
+      ],
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["members", "name"],
+          "properties": {
+            "members": {
+              "type": "array",
+              "maxLength": 49,
+              "items": {
+                "type": "string",
+                "format": "did"
+              }
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxGraphemes": 128,
+              "maxLength": 1280
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["convo"],
+          "properties": {
+            "convo": {
+              "type": "ref",
+              "ref": "chat.bsky.convo.defs#convoView"
+            }
+          }
+        }
+      }
+    }
+  }
+}

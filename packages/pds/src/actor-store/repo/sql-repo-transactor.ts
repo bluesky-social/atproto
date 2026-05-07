@@ -1,11 +1,11 @@
-import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
+import { Cid, parseCid } from '@atproto/lex-data'
 import { BlockMap, CommitData, RepoStorage } from '@atproto/repo'
 import { ActorDb, RepoBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
 export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
-  cache: BlockMap = new BlockMap()
+  cache = new BlockMap()
   now: string
 
   constructor(
@@ -26,11 +26,11 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
       .limit(15)
       .execute()
     for (const row of res) {
-      this.cache.set(CID.parse(row.cid), row.content)
+      this.cache.set(parseCid(row.cid), row.content)
     }
   }
 
-  async putBlock(cid: CID, block: Uint8Array, rev: string): Promise<void> {
+  async putBlock(cid: Cid, block: Uint8Array, rev: string): Promise<void> {
     await this.db.db
       .insertInto('repo_block')
       .values({
@@ -61,7 +61,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
     }
   }
 
-  async deleteMany(cids: CID[]) {
+  async deleteMany(cids: Cid[]) {
     if (cids.length < 1) return
     const cidStrs = cids.map((c) => c.toString())
     await this.db.db
@@ -76,7 +76,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
     await this.deleteMany(commit.removedCids.toList())
   }
 
-  async updateRoot(cid: CID, rev: string, isCreate = false): Promise<void> {
+  async updateRoot(cid: Cid, rev: string, isCreate = false): Promise<void> {
     if (isCreate) {
       await this.db.db
         .insertInto('repo_root')

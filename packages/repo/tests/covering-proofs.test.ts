@@ -1,4 +1,4 @@
-import { CID } from 'multiformats'
+import { parseCid } from '@atproto/lex-data'
 import { BlockMap } from '../src'
 import { MST } from '../src/mst'
 import { MemoryBlockstore } from '../src/storage'
@@ -25,7 +25,7 @@ describe('covering proofs', () => {
    */
   it('two deep split ', async () => {
     const storage = new MemoryBlockstore()
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
     )
 
@@ -65,7 +65,7 @@ describe('covering proofs', () => {
    */
   it('two deep leafless splits ', async () => {
     const storage = new MemoryBlockstore()
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
     )
 
@@ -103,7 +103,7 @@ describe('covering proofs', () => {
    */
   it('add on edge with neighbor two layers down', async () => {
     const storage = new MemoryBlockstore()
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
     )
 
@@ -140,7 +140,7 @@ describe('covering proofs', () => {
    */
   it('merge and split in multi op commit', async () => {
     const storage = new MemoryBlockstore()
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
     )
 
@@ -206,7 +206,7 @@ describe('covering proofs', () => {
    */
   it('complex multi-op commit', async () => {
     const storage = new MemoryBlockstore()
-    const cid = CID.parse(
+    const cid = parseCid(
       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
     )
 

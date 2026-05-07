@@ -32,11 +32,7 @@ export type RefSchemaGetter<out TValidator extends Validator> = () => TValidator
  * ```
  */
 export class RefSchema<const TValidator extends Validator>
-  extends Schema<
-    InferInput<TValidator>,
-    InferOutput<TValidator>,
-    TValidator['__lex']
-  >
+  extends Schema<InferInput<TValidator>, InferOutput<TValidator>>
   implements WrappedValidator<TValidator>
 {
   readonly type = 'ref' as const

@@ -17,7 +17,7 @@ type ModLevel = 'admin' | 'moderator' | 'triage'
 export class ModeratorClient {
   agent: AtpAgent
   constructor(public ozone: TestOzone) {
-    this.agent = ozone.getClient()
+    this.agent = ozone.getAgent()
   }
 
   async getEvent(id: number, role?: ModLevel) {

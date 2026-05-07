@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { BlockMap } from '../block-map'
 import { readCarWithRoot } from '../car'
 import { DataDiff } from '../data-diff'
@@ -25,7 +25,7 @@ export const verifyRepoCar = async (
 
 export const verifyRepo = async (
   blocks: BlockMap,
-  head: CID,
+  head: Cid,
   did?: string,
   signingKey?: string,
   opts?: { ensureLeaves?: boolean },
@@ -52,7 +52,7 @@ export const verifyDiffCar = async (
 export const verifyDiff = async (
   repo: ReadableRepo | null,
   updateBlocks: BlockMap,
-  updateRoot: CID,
+  updateRoot: Cid,
   did?: string,
   signingKey?: string,
   opts?: { ensureLeaves?: boolean },
@@ -103,7 +103,7 @@ export const verifyDiff = async (
 // @NOTE only verifies the root, not the repo contents
 const verifyRepoRoot = async (
   storage: ReadableBlockstore,
-  head: CID,
+  head: Cid,
   did?: string,
   signingKey?: string,
 ): Promise<ReadableRepo> => {
@@ -155,7 +155,7 @@ export const verifyProofs = async (
         unverified.push(claim)
       }
     } else {
-      if (claim.cid.equals(found)) {
+      if (found?.equals(claim.cid)) {
         verified.push(claim)
       } else {
         unverified.push(claim)

@@ -1,5 +1,5 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../context'
-import { Server } from '../../../lexicon'
 import admin from './admin'
 import identity from './identity'
 import moderation from './moderation'

@@ -1,34 +1,34 @@
-import { CID } from 'multiformats'
+import { Cid, parseCid } from '@atproto/lex-data'
 
-export class CidSet {
+export class CidSet implements Iterable<Cid> {
   private set: Set<string>
 
-  constructor(arr: CID[] = []) {
+  constructor(arr: Cid[] = []) {
     const strArr = arr.map((c) => c.toString())
     this.set = new Set(strArr)
   }
 
-  add(cid: CID): CidSet {
+  add(cid: Cid): CidSet {
     this.set.add(cid.toString())
     return this
   }
 
   addSet(toMerge: CidSet): CidSet {
-    toMerge.toList().map((c) => this.add(c))
+    for (const c of toMerge.set) this.set.add(c)
     return this
   }
 
   subtractSet(toSubtract: CidSet): CidSet {
-    toSubtract.toList().map((c) => this.delete(c))
+    for (const c of toSubtract.set) this.set.delete(c)
     return this
   }
 
-  delete(cid: CID) {
+  delete(cid: Cid) {
     this.set.delete(cid.toString())
     return this
   }
 
-  has(cid: CID): boolean {
+  has(cid: Cid): boolean {
     return this.set.has(cid.toString())
   }
 
@@ -41,8 +41,14 @@ export class CidSet {
     return this
   }
 
-  toList(): CID[] {
-    return [...this.set].map((c) => CID.parse(c))
+  toList(): Cid[] {
+    return Array.from(this)
+  }
+
+  *[Symbol.iterator](): Generator<Cid, void, unknown> {
+    for (const c of this.set) {
+      yield parseCid(c)
+    }
   }
 }
 

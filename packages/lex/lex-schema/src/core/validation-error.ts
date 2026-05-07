@@ -23,14 +23,21 @@ import {
  *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
  * ])
  * console.log(error.message)
- * // "Expected number value type at $.user.age (got string)"
+ * // "Expected integer value type (got "some-string") at $.user.age"
  *
  * console.log(error.issues.length) // 1
  * console.log(error.toJSON())
  * // { error: 'InvalidRequest', message: '...', issues: [...] }
  * ```
+ *
+ * @note this class implements {@link ResultFailure} to allow it to be used
+ * directly as a failure reason in validation results, avoiding the need for
+ * wrapping it in an additional object.
  */
-export class LexValidationError extends LexError<'InvalidRequest'> {
+export class LexValidationError
+  extends LexError<'InvalidRequest'>
+  implements ResultFailure<LexValidationError>
+{
   name = 'LexValidationError'
 
   /**
@@ -39,7 +46,7 @@ export class LexValidationError extends LexError<'InvalidRequest'> {
    * Issues are aggregated when possible (e.g., multiple invalid type issues
    * at the same path are combined into a single issue listing all expected types).
    */
-  readonly issues: Issue[]
+  readonly issues: readonly Issue[]
 
   /**
    * Creates a new validation error from a list of issues.
@@ -54,6 +61,14 @@ export class LexValidationError extends LexError<'InvalidRequest'> {
     const issuesAgg = aggregateIssues(issues)
     super('InvalidRequest', issuesAgg.join(', '), options)
     this.issues = issuesAgg
+  }
+
+  /** @see {ResultFailure.success} */
+  readonly success = false as const
+
+  /** @see {ResultFailure.reason} */
+  get reason() {
+    return this
   }
 
   /**

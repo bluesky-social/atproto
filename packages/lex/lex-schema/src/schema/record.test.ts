@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest'
-import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { DidString, Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import { integer } from './integer.js'
 import { object } from './object.js'
+import { optional } from './optional.js'
 import { record } from './record.js'
 import { string } from './string.js'
 
@@ -123,41 +125,157 @@ describe('RecordSchema', () => {
     })
   })
 
-  describe('build method', () => {
+  describe('build() method', () => {
     const schema = record(
       'any',
-      'app.bsky.feed.post',
+      'io.example.record',
       object({
-        $type: string(),
-        text: string(),
+        actor: string({ format: 'did' }),
+        text: optional(string()),
       }),
     )
 
-    it('adds correct $type to input', () => {
-      const result = schema.build({ text: 'Hello world' })
-      expect(result.$type).toBe('app.bsky.feed.post')
-      expect(result.text).toBe('Hello world')
+    it('adds $type to input', () => {
+      const result = schema.build({
+        actor: 'did:foo:bar',
+        text: 'Hello',
+      })
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+        text: 'Hello',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
+    })
+
+    it('causes a type error for invalid values', () => {
+      const result = schema.build({
+        // @ts-expect-error
+        actor: 3,
+        text: 'Hello',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
     })
 
     it('preserves existing properties', () => {
       const result = schema.build({
-        text: 'Hello world',
+        actor: 'did:foo:bar',
         // @ts-expect-error
         extra: 'value',
       })
-      expect(result.$type).toBe('app.bsky.feed.post')
-      expect(result.text).toBe('Hello world')
-      // @ts-expect-error
-      expect(result.extra).toBe('value')
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+        extra: 'value',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        actor: `did:${string}:${string}`
+        text?: string | undefined
+        $type: 'io.example.record'
+      }>()
     })
 
     it('overwrites existing $type', () => {
       const result = schema.build({
         // @ts-expect-error
         $type: 'wrong.type',
-        text: 'Hello world',
+        actor: 'did:foo:bar',
       })
-      expect(result.$type).toBe('app.bsky.feed.post')
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
+    })
+
+    describe('build() does not validate', () => {
+      const schema = record(
+        'any',
+        'io.example.record',
+        object({
+          actor: string({ format: 'did' }),
+          count: integer(),
+        }),
+      )
+
+      it('does not throw for invalid data', () => {
+        const result = schema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(result.$type).toBe('io.example.record')
+        expect(result.actor).toBe('not-a-did')
+        expect(result.count).toBe(123)
+      })
+
+      it('does not throw for invalid types', () => {
+        const result = schema.build({
+          actor: 'did:plc:abc123',
+          // @ts-expect-error
+          count: 'not-a-number',
+        })
+
+        expect(result.$type).toBe('io.example.record')
+        expect(result.count).toBe('not-a-number')
+      })
+
+      it('does not throw for missing required fields', () => {
+        // @ts-expect-error
+        const result = schema.build({})
+
+        expect(result.$type).toBe('io.example.record')
+        expect(result.actor).toBeUndefined()
+        expect(result.count).toBeUndefined()
+      })
+
+      it('does not throw for extra fields', () => {
+        const result = schema.build({
+          actor: 'did:plc:abc123',
+          count: 42,
+          // @ts-expect-error
+          extra: 'unexpected',
+        })
+
+        expect(result.$type).toBe('io.example.record')
+
+        // @ts-expect-error
+        expect(result.extra).toBe('unexpected')
+      })
+
+      it('parse() still validates after build()', () => {
+        const built = schema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(() => schema.parse(built)).toThrow('Invalid DID')
+      })
+
+      it('safeParse() can detect validation errors after build()', () => {
+        const built = schema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        const result = schema.safeParse(built)
+        expect(result.success).toBe(false)
+      })
     })
   })
 

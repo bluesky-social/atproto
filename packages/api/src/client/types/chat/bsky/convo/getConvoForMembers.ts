@@ -36,6 +36,45 @@ export interface Response {
   data: OutputSchema
 }
 
+export class AccountSuspendedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class BlockedActorError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class MessagesDisabledError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class NotFollowedBySenderError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class RecipientNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'AccountSuspended') return new AccountSuspendedError(e)
+    if (e.error === 'BlockedActor') return new BlockedActorError(e)
+    if (e.error === 'MessagesDisabled') return new MessagesDisabledError(e)
+    if (e.error === 'NotFollowedBySender')
+      return new NotFollowedBySenderError(e)
+    if (e.error === 'RecipientNotFound') return new RecipientNotFoundError(e)
+  }
+
   return e
 }

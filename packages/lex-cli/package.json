@@ -14,7 +14,7 @@
     "directory": "packages/lex-cli"
   },
   "bin": {
-    "lex": "dist/index.js"
+    "lex": "bin.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

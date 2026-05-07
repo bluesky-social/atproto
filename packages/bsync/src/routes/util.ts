@@ -3,6 +3,7 @@ import {
   InvalidDidError,
   ensureValidAtUri,
   ensureValidDid,
+  ensureValidNsid,
 } from '@atproto/syntax'
 
 export const validCursor = (cursor: string): number | null => {
@@ -47,5 +48,20 @@ export const isValidAtUri = (uri: string) => {
     return true
   } catch {
     return false
+  }
+}
+
+export const validateNamespace = (namespace: string): void => {
+  const parts = namespace.split('#')
+
+  if (parts.length !== 1 && parts.length !== 2) {
+    throw new Error('namespace must be in the format "nsid[#fragment]"')
+  }
+
+  const [nsid, fragment] = parts
+
+  ensureValidNsid(nsid)
+  if (fragment && !/^[a-zA-Z][a-zA-Z0-9]*$/.test(fragment)) {
+    throw new Error('namespace fragment must be a valid identifier')
   }
 }

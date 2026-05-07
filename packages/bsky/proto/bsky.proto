@@ -498,6 +498,7 @@ message ActorInfo {
   optional AgeAssuranceStatus age_assurance_status = 19;
   reserved 20; // DO NOT REMOVE - see dataplane repo
   Record germ_record = 21;
+  string allow_group_chat_invites_from = 22;
 }
 
 message AgeAssuranceStatus {

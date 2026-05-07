@@ -20,7 +20,7 @@ describe('admin repo search view', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_admin_repo_search',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await usersBulkSeed(sc)

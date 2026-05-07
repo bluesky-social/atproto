@@ -124,7 +124,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       s = await createServer(server)
       const { port } = s.address() as AddressInfo
       url = `http://localhost:${port}`
-      client = new XrpcClient(url, LEXICONS)
+      client = new XrpcClient(url, structuredClone(LEXICONS))
     })
     afterAll(async () => {
       if (s) await closeServer(s)

@@ -1,12 +1,12 @@
 import { TID } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { Bookmark } from '../../../../lexicon/types/app/bsky/bookmark/defs'
+import { app } from '../../../../lexicons/index.js'
 import { Namespaces } from '../../../../stash'
 import { validateUri } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.bookmark.createBookmark({
+  server.add(app.bsky.bookmark.createBookmark, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
             cid,
             uri,
           },
-        } satisfies Bookmark,
+        } satisfies app.bsky.bookmark.defs.Bookmark,
         key: TID.nextStr(),
       })
     },

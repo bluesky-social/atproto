@@ -67,7 +67,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       return {
         ref: {
           actorDid,
-          namespace: Namespaces.AppBskyBookmarkDefsBookmark,
+          namespace: Namespaces.AppBskyBookmarkDefsBookmark.$type,
           key: bookmark.key,
         },
         subjectUri: bookmark.subjectUri,

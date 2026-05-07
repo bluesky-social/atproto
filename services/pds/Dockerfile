@@ -34,7 +34,6 @@ COPY ./packages/oauth/oauth-client-browser-example ./packages/oauth/oauth-client
 COPY ./packages/oauth/oauth-client-browser ./packages/oauth/oauth-client-browser
 COPY ./packages/oauth/oauth-client ./packages/oauth/oauth-client
 COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
-COPY ./packages/oauth/oauth-provider-frontend ./packages/oauth/oauth-provider-frontend
 COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
 COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes

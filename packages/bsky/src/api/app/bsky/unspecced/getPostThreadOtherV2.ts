@@ -1,9 +1,10 @@
+import { AtUriString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -31,10 +32,10 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.bsky.unspecced.getPostThreadOtherV2({
+  server.add(app.bsky.unspecced.getPostThreadOtherV2, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns, include3pBlocks } =
+      const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -42,6 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
+        skipViewerBlocks,
       })
 
       return {
@@ -55,7 +57,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const anchor = await ctx.hydrator.resolveUri(params.anchor)
   try {
@@ -66,7 +70,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     })
     return {
       anchor,
-      uris: res.uris,
+      uris: res.uris as AtUriString[],
     }
   } catch (err) {
     if (isDataplaneError(err, Code.NotFound)) {
@@ -108,9 +112,11 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.unspecced.getPostThreadOtherV2.$Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type Skeleton = {
-  anchor: string
-  uris: string[]
+  anchor: AtUriString
+  uris: AtUriString[]
 }

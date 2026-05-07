@@ -1,11 +1,12 @@
+import { Server } from '@atproto/xrpc-server'
 import { isUserOrAdmin } from '../../../../../auth-verifier'
 import { AppContext } from '../../../../../context'
-import { Server } from '../../../../../lexicon'
+import { com } from '../../../../../lexicons/index.js'
 import { getCarStream } from '../getRepo'
 import { assertRepoAvailability } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getCheckout({
+  server.add(com.atproto.sync.getCheckout, {
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       authorize: () => {
         // always allow
@@ -18,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       const carStream = await getCarStream(ctx, did)
 
       return {
-        encoding: 'application/vnd.ipld.car',
+        encoding: 'application/vnd.ipld.car' as const,
         body: carStream,
       }
     },

@@ -38,6 +38,7 @@
             "#modEventPriorityScore",
             "#ageAssuranceEvent",
             "#ageAssuranceOverrideEvent",
+            "#ageAssurancePurgeEvent",
             "#revokeAccountCredentialsEvent",
             "#scheduleTakedownEvent",
             "#cancelScheduledTakedownEvent"
@@ -95,6 +96,7 @@
             "#modEventPriorityScore",
             "#ageAssuranceEvent",
             "#ageAssuranceOverrideEvent",
+            "#ageAssurancePurgeEvent",
             "#revokeAccountCredentialsEvent",
             "#scheduleTakedownEvent",
             "#cancelScheduledTakedownEvent"
@@ -587,6 +589,18 @@
         }
       }
     },
+    "ageAssurancePurgeEvent": {
+      "type": "object",
+      "description": "Purges all age assurance events for the subject. Only works on DID subjects. Moderator-only.",
+      "required": ["comment"],
+      "properties": {
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Comment describing the reason for the purge."
+        }
+      }
+    },
     "revokeAccountCredentialsEvent": {
       "type": "object",
       "description": "Account credentials revocation by moderators. Only works on DID subjects.",
@@ -725,6 +739,10 @@
         "comment": {
           "type": "string",
           "description": "Additional comment about added/removed tags."
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added."
         }
       }
     },

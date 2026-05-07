@@ -147,7 +147,11 @@ export function isLocale(v: unknown): v is Locale {
   return typeof v === 'string' && Object.hasOwn(locales, v)
 }
 
-export function asLocale(locale: string): Locale | undefined {
+export function asLocale(locale?: string): Locale | undefined {
+  if (!locale) {
+    return undefined
+  }
+
   if (isLocale(locale)) {
     return locale
   }

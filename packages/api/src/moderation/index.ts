@@ -4,6 +4,7 @@ import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideNotification } from './subjects/notification'
 import { decidePost } from './subjects/post'
 import { decideProfile } from './subjects/profile'
+import { decideStatus } from './subjects/status'
 import { decideUserList } from './subjects/user-list'
 import {
   ModerationOpts,
@@ -58,4 +59,11 @@ export function moderateUserList(
   opts: ModerationOpts,
 ): ModerationDecision {
   return decideUserList(subject, opts)
+}
+
+export function moderateStatus(
+  subject: ModerationSubjectProfile,
+  opts: ModerationOpts,
+): ModerationDecision {
+  return decideStatus(subject, opts)
 }

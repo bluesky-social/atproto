@@ -77,11 +77,11 @@ describe('ArraySchema', () => {
     it('rejects single values', () => {
       const schema = array(string())
       const result = schema.safeValidate(3)
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         success: false,
         reason: expect.objectContaining({
           message: expect.stringContaining(
-            'Expected array value type at $ (got integer)',
+            'Expected array value type (got 3) at $',
           ),
         }),
       })

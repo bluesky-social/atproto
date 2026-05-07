@@ -9,6 +9,7 @@ import {
   Subscription,
   object,
   optional,
+  regexp,
   string,
 } from './schema.js'
 
@@ -103,7 +104,12 @@ export type InferMethodError<
   M extends Procedure | Query | Subscription = Procedure | Query | Subscription,
 > = M extends { errors: readonly (infer E extends string)[] } ? E : never
 
+/**
+ * @see {@link https://atproto.com/specs/xrpc#error-responses}
+ */
 export const lexErrorDataSchema = object({
-  error: string({ minLength: 1 }),
+  // type name of the error (generic ASCII constant, no whitespace)
+  error: regexp(/^[\w_-]+$/, 'Expected ASCII constant with no whitespace'),
+  // description of the error, appropriate for display to humans
   message: optional(string()),
 }) satisfies Schema<LexErrorData>

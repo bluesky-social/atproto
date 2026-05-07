@@ -1,4 +1,5 @@
-import { IncludeFormatLevel, Options, shouldIncludeFormat } from './util'
+import { UriString, isUriString } from '@atproto/lex'
+import { Options } from './util'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
 export type ImagePreset =
@@ -10,10 +11,14 @@ export type ImagePreset =
 const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)(?:@(.+?))?$/
 
 export class ImageUriBuilder {
-  constructor(
-    public endpoint: string,
-    public includeFormatLevel?: IncludeFormatLevel,
-  ) {}
+  public endpoint: UriString
+
+  constructor(endpoint: string) {
+    if (!isUriString(endpoint)) {
+      throw new Error('ImageUriBuilder endpoint must be a valid UriString')
+    }
+    this.endpoint = endpoint
+  }
 
   static presets: ImagePreset[] = [
     'avatar',
@@ -22,35 +27,23 @@ export class ImageUriBuilder {
     'feed_fullsize',
   ]
 
-  getPresetUri(id: ImagePreset, did: string, cid: string): string {
+  getPresetUri(id: ImagePreset, did: string, cid: string): UriString {
     const options = presets[id]
     if (!options) {
       throw new Error(`Unrecognized requested common uri type: ${id}`)
     }
-    return (
-      this.endpoint +
-      ImageUriBuilder.getPath({
-        preset: id,
-        did,
-        cid,
-        includeFormatLevel: this.includeFormatLevel,
-      })
-    )
+
+    const path = ImageUriBuilder.getPath({
+      preset: id,
+      did,
+      cid,
+    })
+
+    return `${this.endpoint}${path}`
   }
 
-  static getPath(
-    opts: { preset: ImagePreset } & BlobLocation & {
-        includeFormatLevel?: IncludeFormatLevel
-      },
-  ) {
-    const { format } = presets[opts.preset]
-    const includeFormat =
-      opts.includeFormatLevel != null &&
-      shouldIncludeFormat(opts.cid, opts.includeFormatLevel)
-    return (
-      `/${opts.preset}/plain/${opts.did}/${opts.cid}` +
-      (includeFormat ? `@${format}` : '')
-    )
+  static getPath(opts: { preset: ImagePreset } & BlobLocation) {
+    return `/${opts.preset}/plain/${opts.did}/${opts.cid}`
   }
 
   static getOptions(
@@ -87,6 +80,8 @@ type BlobLocation = { cid: string; did: string }
 
 export class BadPathError extends Error {}
 
+// @NOTE these prefix settings don't get used anywhere in this package,
+// but they serve as soft documentation of the behavior in production.
 export const presets: Record<ImagePreset, Options> = {
   avatar: {
     format: 'webp',

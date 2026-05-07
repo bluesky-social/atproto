@@ -1,12 +1,12 @@
 import { TID } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { isActivitySubscriptionEnabled } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 import { Namespaces } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.putActivitySubscription({
+  server.add(app.bsky.notification.putActivitySubscription, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss

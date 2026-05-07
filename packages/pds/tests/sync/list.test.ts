@@ -11,7 +11,7 @@ describe('sync listing', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sync_list',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
   })

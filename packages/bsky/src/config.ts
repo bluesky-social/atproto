@@ -1,9 +1,10 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
+import { DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
-  did: string
+  did: DidString
   domains: string[]
 }[]
 
@@ -67,7 +68,6 @@ export interface ServerConfigValues {
   topicsUrl?: string
   topicsApiKey?: string
   cdnUrl?: string
-  cdnIncludeFormatLevel?: CdnIncludeFormatLevel
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
   blobRateLimitBypassKey?: string
@@ -147,14 +147,6 @@ export class ServerConfig {
     )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
     // Values 0 through 16
-    const cdnIncludeFormatLevel = process.env.BSKY_CDN_INCLUDE_FORMAT_LEVEL
-      ? parseInt(process.env.BSKY_CDN_INCLUDE_FORMAT_LEVEL, 10)
-      : undefined
-    assert(
-      cdnIncludeFormatLevel == null ||
-        isCdnIncludeFormatLevel(cdnIncludeFormatLevel),
-      'BSKY_CDN_INCLUDE_FORMAT_LEVEL must be an integer between 0 and 16 inclusive',
-    )
     const etcdHosts =
       overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
@@ -363,7 +355,6 @@ export class ServerConfig {
       labelsFromIssuerDids,
       handleResolveNameservers,
       cdnUrl,
-      cdnIncludeFormatLevel,
       videoPlaylistUrlPattern,
       videoThumbnailUrlPattern,
       blobCacheLocation,
@@ -545,10 +536,6 @@ export class ServerConfig {
     return this.cfg.cdnUrl
   }
 
-  get cdnIncludeFormatLevel() {
-    return this.cfg.cdnIncludeFormatLevel
-  }
-
   get videoPlaylistUrlPattern() {
     return this.cfg.videoPlaylistUrlPattern
   }
@@ -582,7 +569,7 @@ export class ServerConfig {
   }
 
   get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
+    return (this.cfg.labelsFromIssuerDids ?? []) as DidString[]
   }
 
   get blobCacheLocation() {
@@ -703,33 +690,9 @@ function isLiveNowConfig(data: any): data is LiveNowConfig {
         typeof item === 'object' &&
         item !== null &&
         typeof item.did === 'string' &&
+        isDidString(item.did) &&
         Array.isArray(item.domains) &&
         item.domains.every((domain: any) => typeof domain === 'string'),
     )
   )
 }
-
-function isCdnIncludeFormatLevel(
-  value: number,
-): value is CdnIncludeFormatLevel {
-  return Number.isInteger(value) && 0 <= value && value <= 16
-}
-
-type CdnIncludeFormatLevel =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16

@@ -1,19 +1,20 @@
+import { AtIdentifierString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorAccount } from '../../../../account-manager/helpers/account'
 import { AppContext } from '../../../../context'
 
 export const assertRepoAvailability = async (
   ctx: AppContext,
-  did: string,
+  handleOrDid: AtIdentifierString,
   isAdminOrSelf: boolean,
 ): Promise<ActorAccount> => {
-  const account = await ctx.accountManager.getAccount(did, {
+  const account = await ctx.accountManager.getAccount(handleOrDid, {
     includeDeactivated: true,
     includeTakenDown: true,
   })
   if (!account) {
     throw new InvalidRequestError(
-      `Could not find repo for DID: ${did}`,
+      `Could not find repo for DID: ${handleOrDid}`,
       'RepoNotFound',
     )
   }
@@ -22,13 +23,13 @@ export const assertRepoAvailability = async (
   }
   if (account.takedownRef) {
     throw new InvalidRequestError(
-      `Repo has been takendown: ${did}`,
+      `Repo has been takendown: ${handleOrDid}`,
       'RepoTakendown',
     )
   }
   if (account.deactivatedAt) {
     throw new InvalidRequestError(
-      `Repo has been deactivated: ${did}`,
+      `Repo has been deactivated: ${handleOrDid}`,
       'RepoDeactivated',
     )
   }

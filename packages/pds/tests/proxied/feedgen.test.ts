@@ -14,7 +14,7 @@ describe('feedgen proxy view', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_feedgen',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
 
