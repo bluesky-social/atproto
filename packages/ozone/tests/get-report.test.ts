@@ -46,7 +46,7 @@ describe('ozone-get-report', () => {
 
     // Fetch the report list to get the report ID
     const { data: list } = await agent.tools.ozone.report.queryReports(
-      { subject: sc.dids.alice },
+      { status: 'open', subject: sc.dids.alice },
       { headers: await modHeaders(ids.ToolsOzoneReportQueryReports) },
     )
     expect(list.reports.length).toBeGreaterThan(0)

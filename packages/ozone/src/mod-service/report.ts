@@ -40,9 +40,7 @@ export async function queryReports(
     builder = builder.where('r.queueId', '=', params.queueId)
   }
 
-  if (params.status) {
-    builder = builder.where('r.status', '=', params.status)
-  }
+  builder = builder.where('r.status', '=', params.status)
 
   if (params.subject) {
     const isRecord = params.subject.startsWith('at://')
@@ -56,6 +54,10 @@ export async function queryReports(
         .where('r.did', '=', params.subject)
         .where('r.recordPath', '=', '')
     }
+  }
+
+  if (params.did) {
+    builder = builder.where('r.did', '=', params.did)
   }
 
   if (params.subjectType) {

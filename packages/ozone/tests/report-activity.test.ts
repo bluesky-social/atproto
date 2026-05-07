@@ -25,7 +25,7 @@ describe('report-activity', () => {
     await network.processAll()
 
     const { data } = await agent.tools.ozone.report.queryReports(
-      { subject: subjectDid },
+      { status: 'open', subject: subjectDid },
       { headers: await modHeaders(ids.ToolsOzoneReportQueryReports) },
     )
     const report = data.reports[0]

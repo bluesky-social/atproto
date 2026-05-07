@@ -42,7 +42,7 @@ export const VALID_TRANSITIONS: Record<string, string[]> = {
   closed: ['open'],
   escalated: ['open', 'closed'],
   queued: ['assigned', 'open'],
-  assigned: ['open', 'closed', 'escalated'],
+  assigned: ['open', 'closed', 'escalated', 'queued'],
 }
 
 /** Activity types that map to a specific target status */

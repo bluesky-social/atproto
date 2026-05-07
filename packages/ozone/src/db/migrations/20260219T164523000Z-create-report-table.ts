@@ -47,44 +47,66 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('eventId')
     .execute()
 
-  // Covering indexes for queryReports pagination.
-  // Btree columns: equality filters (prefix) + sort + tiebreaker.
-  // INCLUDE columns: stored in leaf pages for index-level filtering without heap access.
-  // Postgres scans the btree in sort order and checks INCLUDE columns before visiting the heap,
-  // so selective filters like reportType or did skip heap fetches for non-matching rows.
+  // ─── Hot path: active reports (status != 'closed') ───
+  // Partial filter keeps these tight even as closed reports accumulate (~90% of table long-term).
+  // No isMuted in key (low cardinality, rarely filtered) and no INCLUDE columns
+  // (display data comes from moderation_event JOIN anyway).
 
-  // Queue + status + muted, sorted by createdAt (most common query pattern)
-  await sql`CREATE INDEX idx_report_queue_status_created ON report
-    ("queueId", status, "isMuted", "createdAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
-    db,
-  )
+  // queryReports: queueId + status, paginated by createdAt
+  await sql`CREATE INDEX idx_report_active_queue_created ON report
+    ("queueId", status, "createdAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
 
-  // Queue + status + muted, sorted by updatedAt
-  await sql`CREATE INDEX idx_report_queue_status_updated ON report
-    ("queueId", status, "isMuted", "updatedAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
-    db,
-  )
+  // queryReports: queueId + status, paginated by updatedAt
+  await sql`CREATE INDEX idx_report_active_queue_updated ON report
+    ("queueId", status, "updatedAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
 
-  // Status + muted, sorted by createdAt (when queueId not specified)
-  await sql`CREATE INDEX idx_report_status_created ON report
-    (status, "isMuted", "createdAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
-    db,
-  )
+  // queryReports: status only, paginated by createdAt
+  await sql`CREATE INDEX idx_report_active_status_created ON report
+    (status, "createdAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
 
-  // Status + muted, sorted by updatedAt (when queueId not specified)
-  await sql`CREATE INDEX idx_report_status_updated ON report
-    (status, "isMuted", "updatedAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
-    db,
-  )
+  // queryReports: status only, paginated by updatedAt
+  await sql`CREATE INDEX idx_report_active_status_updated ON report
+    (status, "updatedAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
 
-  // Subject-specific lookups (findReportsForSubject, queryReports with subject filter).
-  // did + recordPath identify the subject; status enables open/escalated filtering.
-  await sql`CREATE INDEX idx_report_subject ON report
-    (did, "recordPath", status, "createdAt", id)`.execute(db)
+  // Active reports for a specific account (with optional queueId post-filter)
+  await sql`CREATE INDEX idx_report_active_did_created ON report
+    (did, status, "createdAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
+
+  // A moderator's active workload (with optional queueId post-filter)
+  await sql`CREATE INDEX idx_report_active_assigned_created ON report
+    ("assignedTo", status, "createdAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
+
+  // findReportsForSubject hot path — always filters NOT IN ('closed').
+  // did + recordPath identify the subject (account or specific record).
+  await sql`CREATE INDEX idx_report_subject_active ON report
+    (did, "recordPath", "createdAt" DESC, id DESC)
+    WHERE status != 'closed'`.execute(db)
+
+  // ─── Closed history (status = 'closed') ───
+  // Closed reports are terminal; only sort by createdAt.
+
+  // Closed pagination per queue
+  await sql`CREATE INDEX idx_report_closed_queue_created ON report
+    ("queueId", "createdAt" DESC, id DESC)
+    WHERE status = 'closed'`.execute(db)
+
+  // Closed history for an account
+  await sql`CREATE INDEX idx_report_closed_did_created ON report
+    (did, "createdAt" DESC, id DESC)
+    WHERE status = 'closed'`.execute(db)
+
+  // Moderator's closed-report history
+  await sql`CREATE INDEX idx_report_closed_assigned_created ON report
+    ("assignedTo", "createdAt" DESC, id DESC)
+    WHERE status = 'closed'`.execute(db)
+
+  // ─── Other access patterns ───
 
   // Collection prefix queries: left-anchored LIKE 'app.bsky.feed.post/%' or 'app.bsky.%'
   // text_pattern_ops enables btree-scannable prefix matching (supported since Postgres 8.x)
@@ -99,11 +121,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('actionEventIds')
     .execute()
 
-  // Partial index for the queue-router background job.
-  // Only indexes unassigned rows (queueId IS NULL), so it shrinks as reports are routed.
-  await sql`CREATE INDEX idx_report_unassigned_id ON report (id) WHERE "queueId" IS NULL`.execute(
-    db,
-  )
+  // Queue-router covering partial: index-only scan over unrouted, non-closed rows.
+  // Selects exactly the columns the router reads, eliminating heap fetches per batch.
+  await sql`CREATE INDEX idx_report_unassigned_id ON report (id)
+    INCLUDE (status, "reportType", "recordPath", "subjectMessageId")
+    WHERE "queueId" IS NULL AND status != 'closed'`.execute(db)
 
   // Index for report statistics
   await db.schema

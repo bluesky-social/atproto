@@ -21204,7 +21204,7 @@ export const schemaDict = {
       },
       assignmentView: {
         type: 'object',
-        required: ['id', 'did', 'queue', 'startAt', 'endAt'],
+        required: ['id', 'did', 'queue', 'startAt'],
         properties: {
           id: {
             type: 'integer',
@@ -21461,6 +21461,41 @@ export const schemaDict = {
             name: 'OutOfRange',
             description:
               'The request is invalid, such as missing required fields or invalid field values.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueUnassignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.unassignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Remove a user's assignment from a queue.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId', 'did'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to unassign the user from.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'DID to be unassigned.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description:
+              'No active assignment exists for the given queue and user.',
           },
         ],
       },
@@ -22568,6 +22603,7 @@ export const schemaDict = {
           'View moderation reports. Reports are individual instances of content being reported, as opposed to subject statuses which aggregate reports at the subject level.',
         parameters: {
           type: 'params',
+          required: ['status'],
           properties: {
             queueId: {
               type: 'integer',
@@ -22596,6 +22632,12 @@ export const schemaDict = {
               type: 'string',
               format: 'uri',
               description: 'Filter by subject DID or AT-URI.',
+            },
+            did: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter to reports where the subject is this DID or any record owned by this DID. Unlike `subject` (which scopes to a specific account or record), this returns all reports tied to the DID across both account-level and record-level subjects.',
             },
             subjectType: {
               type: 'string',
@@ -25026,6 +25068,7 @@ export const ids = {
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
+  ToolsOzoneQueueUnassignModerator: 'tools.ozone.queue.unassignModerator',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',
