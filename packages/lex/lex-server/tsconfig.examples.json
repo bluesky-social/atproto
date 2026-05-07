@@ -17,6 +17,7 @@
     "rewriteRelativeImportExtensions": true,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
+    "ignoreDeprecations": "6.0",
     "rootDir": ".",
     "baseUrl": "."
   }
