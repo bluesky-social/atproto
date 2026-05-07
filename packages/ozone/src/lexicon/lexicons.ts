@@ -2710,6 +2710,12 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
+          associatedRecord: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
+          },
         },
       },
       view: {
