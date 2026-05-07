@@ -1382,6 +1382,18 @@ message StashRef {
   string key = 3;
 }
 
+// Standard.site documents
+message DocumentWithPublication {
+  Record document = 1;
+  Record publication = 2;
+}
+message GetSiteStandardDocumentsWithPublicationRequest {
+  repeated string uris = 1;
+}
+message GetSiteStandardDocumentsWithPublicationResponse {
+  repeated DocumentWithPublication results = 1;
+}
+
 service Service {
   //
   // Read Path
@@ -1573,6 +1585,9 @@ service Service {
   rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
+
+  // Standard.site documents
+  rpc GetSiteStandardDocumentsWithPublication(GetSiteStandardDocumentsWithPublicationRequest) returns (GetSiteStandardDocumentsWithPublicationResponse);
 }
 
 

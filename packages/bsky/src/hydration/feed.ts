@@ -1,3 +1,4 @@
+import * as ui8 from 'uint8arrays'
 import { dedupeStrs } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
@@ -91,6 +92,12 @@ export type Threadgate = RecordInfo<GateRecord>
 export type Threadgates = HydrationMap<AtUriString, Threadgate>
 export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<AtUriString, Postgate>
+
+export type SiteStandardRecord = {
+  document?: unknown
+  publication?: unknown
+}
+export type SiteStandardRecords = HydrationMap<AtUriString, SiteStandardRecord>
 
 export type ThreadRef = ItemRef & { threadRoot: AtUriString }
 
@@ -358,6 +365,28 @@ export class FeedHydrator {
     return map
   }
 
+  async getSiteStandardRecords(
+    uris: AtUriString[],
+  ): Promise<SiteStandardRecords> {
+    const map: SiteStandardRecords = new HydrationMap()
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getSiteStandardDocumentsWithPublication({
+      uris,
+    })
+    for (let i = 0; i < uris.length; i++) {
+      const result = res.results[i]
+      const document = parseRecordBytes(result?.document?.record)
+      const publication = parseRecordBytes(result?.publication?.record)
+      map.set(
+        uris[i],
+        document || publication ? { document, publication } : null,
+      )
+    }
+
+    return map
+  }
+
   async getThreadgatesForPosts(
     postUris: AtUriString[],
     includeTakedowns = false,
@@ -453,4 +482,9 @@ export class FeedHydrator {
 
     return map
   }
+}
+
+const parseRecordBytes = (bytes?: Uint8Array): unknown => {
+  if (!bytes || bytes.byteLength === 0) return undefined
+  return JSON.parse(ui8.toString(bytes, 'utf8'))
 }

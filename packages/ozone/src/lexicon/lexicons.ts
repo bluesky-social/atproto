@@ -2864,6 +2864,36 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedGetEmbedExternalView: {
+    lexicon: 1,
+    id: 'app.bsky.embed.getEmbedExternalView',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a hydrated view of an external embed for a given AT-URI.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'AT-URI of the record whose external embed view should be returned. Example: a site.standard.document record.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.external#view',
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedImages: {
     lexicon: 1,
     id: 'app.bsky.embed.images',
@@ -25442,6 +25472,7 @@ export const ids = {
   AppBskyDraftUpdateDraft: 'app.bsky.draft.updateDraft',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
+  AppBskyEmbedGetEmbedExternalView: 'app.bsky.embed.getEmbedExternalView',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',

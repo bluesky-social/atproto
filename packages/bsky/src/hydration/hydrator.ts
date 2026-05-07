@@ -15,6 +15,7 @@ import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
   ProfileRecord,
+  isExternalEmbedType,
   isListRuleType,
   isRecordEmbedType,
   isRecordWithMediaType,
@@ -42,6 +43,7 @@ import {
   Postgates,
   Posts,
   Reposts,
+  SiteStandardRecords,
   ThreadContexts,
   ThreadRef,
   Threadgates,
@@ -148,6 +150,7 @@ export type HydrationState = {
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
   bookmarks?: Bookmarks
+  siteStandardRecords?: SiteStandardRecords
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -598,6 +601,7 @@ export class Hydrator {
       labelerState,
       starterPackState,
       postgates,
+      siteStandardRecords,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
@@ -611,6 +615,13 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
+      this.feed.getSiteStandardRecords(
+        siteStandardDocumentUrisFromPosts(
+          postsLayer0,
+          postsLayer1,
+          postsLayer2,
+        ),
+      ),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -630,6 +641,7 @@ export class Hydrator {
         labels,
         threadgates,
         postgates,
+        siteStandardRecords,
         ctx,
       },
     )
@@ -1477,6 +1489,37 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   return uris
 }
 
+const SITE_STANDARD_DOCUMENT_NSID = 'site.standard.document'
+
+const externalAssociatedRecordUri = (
+  post: Post['record'],
+): AtUriString | undefined => {
+  const embed = post?.embed
+  if (!embed) return
+  if (isExternalEmbedType(embed)) {
+    return embed.external.associatedRecord
+  }
+  if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
+    return embed.media.external.associatedRecord
+  }
+}
+
+const siteStandardDocumentUrisFromPosts = (
+  ...postLayers: Posts[]
+): AtUriString[] => {
+  const out: AtUriString[] = []
+  for (const layer of postLayers) {
+    for (const item of layer.values()) {
+      if (!item) continue
+      const uri = externalAssociatedRecordUri(item.record)
+      if (uri && new AtUri(uri).collection === SITE_STANDARD_DOCUMENT_NSID) {
+        out.push(uri)
+      }
+    }
+  }
+  return out
+}
+
 const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
   const uris: AtUriString[] = []
   for (const gate of gates.values()) {
@@ -1557,6 +1600,10 @@ export const mergeStates = (
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
     bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
+    siteStandardRecords: mergeMaps(
+      stateA.siteStandardRecords,
+      stateB.siteStandardRecords,
+    ),
   }
 }
 

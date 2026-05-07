@@ -43,6 +43,7 @@ import * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
 import * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
+import * as AppBskyEmbedGetEmbedExternalView from './types/app/bsky/embed/getEmbedExternalView.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record.js'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia.js'
@@ -404,6 +405,7 @@ export * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
 export * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
+export * as AppBskyEmbedGetEmbedExternalView from './types/app/bsky/embed/getEmbedExternalView.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record.js'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia.js'
@@ -1399,6 +1401,18 @@ export class AppBskyEmbedNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  getEmbedExternalView(
+    params?: AppBskyEmbedGetEmbedExternalView.QueryParams,
+    opts?: AppBskyEmbedGetEmbedExternalView.CallOptions,
+  ): Promise<AppBskyEmbedGetEmbedExternalView.Response> {
+    return this._client.call(
+      'app.bsky.embed.getEmbedExternalView',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 

@@ -35,6 +35,7 @@ import * as AppBskyDraftCreateDraft from './types/app/bsky/draft/createDraft.js'
 import * as AppBskyDraftDeleteDraft from './types/app/bsky/draft/deleteDraft.js'
 import * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
 import * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
+import * as AppBskyEmbedGetEmbedExternalView from './types/app/bsky/embed/getEmbedExternalView.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
@@ -829,6 +830,18 @@ export class AppBskyEmbedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getEmbedExternalView<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyEmbedGetEmbedExternalView.QueryParams,
+      AppBskyEmbedGetEmbedExternalView.HandlerInput,
+      AppBskyEmbedGetEmbedExternalView.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.embed.getEmbedExternalView' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
