@@ -1,4 +1,9 @@
-import { ClientOptions, WebSocket, createWebSocketStream } from 'ws'
+import type { ClientOptions, WebSocket as WebSocketType } from 'ws'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import ws from 'ws'
+// eslint-disable-next-line import/no-named-as-default-member
+const { WebSocket, createWebSocketStream } = ws
+type WebSocket = WebSocketType
 import { SECOND, isErrnoException, wait } from '@atproto/common'
 
 export class WebSocketKeepAlive {
