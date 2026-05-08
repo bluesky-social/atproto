@@ -71,7 +71,9 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
 })
 
 jest.mock('../../dist/api/age-assurance/kws/const.js', () => {
-  const actual = jest.requireActual('../../dist/api/age-assurance/kws/const.js') as Record<string, unknown>
+  const actual = jest.requireActual(
+    '../../dist/api/age-assurance/kws/const.js',
+  ) as Record<string, unknown>
   const KWS_V2_COUNTRIES = new Set(['AA'])
   return {
     ...actual,

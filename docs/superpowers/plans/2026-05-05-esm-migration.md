@@ -13,6 +13,7 @@
 ### Task 1: Upgrade multiformats 9→13
 
 **Files:**
+
 - Modify: `packages/api/package.json`, `packages/aws/package.json`, `packages/common/package.json`, `packages/dev-env/package.json`, `packages/lexicon/package.json`, `packages/ozone/package.json`, `packages/xrpc-server/package.json`, `packages/lex/lex-data/package.json`, `packages/oauth/jwk/package.json`, `packages/oauth/oauth-client/package.json`
 - Modify: all source files importing from `multiformats/*`
 
@@ -31,6 +32,7 @@ pnpm install
 - [ ] **Step 3: Fix import paths**
 
 multiformats 13 maintains `multiformats/cid`, `multiformats/hashes/sha2`, `multiformats/hashes/digest` subpath exports. Verify existing imports still resolve. Key patterns in use:
+
 - `import { CID } from 'multiformats/cid'` — still valid in v13
 - `import * as Block from 'multiformats/block'` — still valid
 - `import { sha256 } from 'multiformats/hashes/sha2'` — still valid
@@ -41,6 +43,7 @@ Fix any import path changes required by the v13 API.
 - [ ] **Step 4: Fix any type/API changes**
 
 Key API differences in v13:
+
 - `CID` class is now generic: `CID<Code, Alg, Version>`. Most usage is via `CID.parse()` / `CID.asCID()` which should remain compatible.
 - `MultihashDigest` type may have moved — check usages.
 - The `bytes` module export path changed — verify.
@@ -64,6 +67,7 @@ git commit -m "Upgrade multiformats from ^9 to ^13"
 ### Task 2: Upgrade uint8arrays 3→5
 
 **Files:**
+
 - Modify: `packages/bsky/package.json`, `packages/aws/package.json`, `packages/common/package.json`, `packages/crypto/package.json`, `packages/dev-env/package.json`, `packages/lex/lex-data/package.json`, `packages/ozone/package.json`, `packages/pds/package.json`
 - Modify: all source files importing from `uint8arrays` or `uint8arrays/*`
 
@@ -80,6 +84,7 @@ pnpm install
 - [ ] **Step 3: Fix import paths**
 
 uint8arrays 5 subpath exports:
+
 - `import * as uint8arrays from 'uint8arrays'` — still valid (barrel export)
 - `import { fromString } from 'uint8arrays/from-string'` — still valid
 - `import { toString } from 'uint8arrays/to-string'` — still valid
@@ -110,6 +115,7 @@ git commit -m "Upgrade uint8arrays from 3 to ^5"
 ### Task 3: Upgrade p-queue 6→9
 
 **Files:**
+
 - Modify: `packages/bsky/package.json`, `packages/ozone/package.json`, `packages/pds/package.json`, `packages/sync/package.json`
 - Modify: source files importing `p-queue` (9 files)
 
@@ -141,6 +147,7 @@ git commit -m "Upgrade p-queue from ^6 to ^8"
 ### Task 4: Upgrade jose 4→5 in xrpc-server
 
 **Files:**
+
 - Modify: `packages/xrpc-server/package.json`
 - Modify: `packages/xrpc-server/src/auth.ts` (likely — verify jose import usage)
 
@@ -153,6 +160,7 @@ Change `"jose": "^4.15.4"` → `"jose": "^5.0.1"` in `packages/xrpc-server/packa
 - [ ] **Step 3: Fix any API changes**
 
 jose v4→v5 key differences:
+
 - `jwtVerify` options slightly restructured
 - `importJWK` / `exportJWK` unchanged
 - Check `packages/xrpc-server/src/auth.ts` for specific usage
@@ -175,6 +183,7 @@ git commit -m "Upgrade jose from ^4 to ^5 in xrpc-server"
 ### Task 5: Switch tsconfig to Node16 module + ES2022 target
 
 **Files:**
+
 - Modify: `tsconfig/base.json`
 - Modify: `tsconfig/nodenext.json` (verify, likely no change needed)
 
@@ -191,6 +200,7 @@ git commit -m "Upgrade jose from ^4 to ^5 in xrpc-server"
 ```
 
 Remove:
+
 - `"module": "CommonJS"`
 - `"moduleResolution": "node"`
 - `"ignoreDeprecations": "6.0"`
@@ -219,6 +229,7 @@ git commit -m "Switch tsconfig to Node16 module resolution + ES2022 target"
 ### Task 6: Add .js extensions to all relative imports
 
 **Files:**
+
 - Modify: ~4200 relative imports across all `packages/*/src/**/*.ts` and `packages/*/*/src/**/*.ts` files
 
 This is a bulk mechanical transform. Use a script or codemod.
@@ -254,6 +265,7 @@ console.log("Fixed", totalFixed, "files")
 ```
 
 **Important edge cases:**
+
 - Directory imports (`from './utils'` meaning `./utils/index.ts`) → must become `from './utils/index.js'`
 - Re-exports: `export { x } from './foo'` → `export { x } from './foo.js'`
 - Dynamic imports: `import('./foo')` → `import('./foo.js')`
@@ -293,11 +305,13 @@ git commit -m "Add .js extensions to all relative imports"
 ### Task 7: Set "type": "module" and "exports" in all package.json files
 
 **Files:**
+
 - Modify: all ~60 published `package.json` files + root `package.json`
 
 - [ ] **Step 1: Write and run the package.json update script**
 
 For each package:
+
 1. Set `"type": "module"`
 2. Add/update `"exports"` field:
    ```json
@@ -340,6 +354,7 @@ git commit -m "Set type: module and exports in all package.json files"
 ### Task 8: Fix CJS-isms in source
 
 **Files:**
+
 - Modify: `packages/oauth/oauth-provider/src/router/assets/assets-manifest.ts`
 - Modify: `packages/dev-env/src/seed/client.ts`
 - Modify: `packages/lex/lex-builder/src/ts-lang.ts` (verify if actually needed)
@@ -357,7 +372,7 @@ const require = createRequire(import.meta.url)
 const manifest = require(manifestPath) as Manifest
 ```
 
-- [ ] **Step 2: Fix __dirname in dev-env**
+- [ ] **Step 2: Fix \_\_dirname in dev-env**
 
 ```ts
 // Before
@@ -381,7 +396,7 @@ const { default: lande } = await import('lande')
 import lande from 'lande'
 ```
 
-- [ ] **Step 4: Verify lex-builder __dirname/__filename references**
+- [ ] **Step 4: Verify lex-builder **dirname/**filename references**
 
 Check if these are string literals in codegen output templates (not actual runtime usage). If so, no change needed.
 
@@ -404,6 +419,7 @@ git commit -m "Replace CJS patterns with ESM equivalents"
 ### Task 9: Convert services to TypeScript + ESM
 
 **Files:**
+
 - Rewrite: `services/pds/index.js` → `services/pds/index.ts`
 - Rewrite: `services/pds/tracer.js` → `services/pds/tracer.ts`
 - Rewrite: `services/pds/run-script.js` → `services/pds/run-script.ts`
@@ -426,7 +442,12 @@ Convert `require()` calls to `import` statements. The structure stays the same �
 import { PDS, envToCfg, envToSecrets, httpLogger, readEnv } from '@atproto/pds'
 import { readFileSync } from 'node:fs'
 
-const pkg = JSON.parse(readFileSync(new URL('../packages/pds/package.json', import.meta.url), 'utf8'))
+const pkg = JSON.parse(
+  readFileSync(
+    new URL('../packages/pds/package.json', import.meta.url),
+    'utf8',
+  ),
+)
 
 const main = async () => {
   const env = readEnv()
@@ -456,10 +477,9 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 import ddTrace from 'dd-trace'
 import path from 'node:path'
 
-const tracer = ddTrace.init({ logInjection: true })
-  .use('express', {
-    hooks: { request: maintainXrpcResource },
-  })
+const tracer = ddTrace.init({ logInjection: true }).use('express', {
+  hooks: { request: maintainXrpcResource },
+})
 
 // ... rest of tracer setup
 ```
@@ -498,6 +518,7 @@ git commit -m "Convert service entrypoints to TypeScript + ESM"
 ### Task 10: Jest ESM compatibility
 
 **Files:**
+
 - Modify: `packages/pds/package.json` (test script)
 - Modify: `packages/bsky/package.json` (test script)
 - Modify: `packages/ozone/package.json` (test script)
@@ -522,6 +543,7 @@ cd packages/pds && pnpm test:sqlite -- --maxWorkers=2 2>&1 | tail -20
 ```
 
 If tests fail with ESM-related errors, troubleshoot:
+
 - Missing `--experimental-vm-modules`
 - Transform not emitting ESM
 - Dynamic imports in test setup
@@ -538,6 +560,7 @@ git commit -m "Configure Jest for ESM module loading"
 ### Task 11: Final verification + changeset
 
 **Files:**
+
 - Create: `.changeset/esm-migration.md`
 - Modify: `pnpm-lock.yaml` (from all dep upgrades)
 

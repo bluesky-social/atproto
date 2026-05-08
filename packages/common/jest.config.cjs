@@ -2,7 +2,10 @@
 module.exports = {
   displayName: 'Common',
   transform: {
-    '^.+\\.(t|j)s$': ['@swc/jest', { jsc: { transform: {} }, module: { type: 'es6' } }],
+    '^.+\\.(t|j)s$': [
+      '@swc/jest',
+      { jsc: { transform: {} }, module: { type: 'es6' } },
+    ],
   },
   extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: [],
