@@ -1,28 +1,28 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`bsky actor likes feed views does include users with creator block relationship in reference lists for creator 1`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "frankie.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": true,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -33,25 +33,25 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(1)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(3)",
       "handle": "eve.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -62,28 +62,28 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does include users with creator block relationship in reference lists for creator 2`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "frankie.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": true,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -94,25 +94,25 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(1)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(3)",
       "handle": "eve.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -123,116 +123,116 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include reference lists in getActorLists 1`] = `
-Array [
-  Object {
+[
+  {
     "cid": "cids(0)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "mod2",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
   },
-  Object {
+  {
     "cid": "cids(1)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "mod1",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(1)",
   },
-  Object {
+  {
     "cid": "cids(2)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 2,
     "name": "mod0",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(2)",
   },
-  Object {
+  {
     "cid": "cids(3)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "cur2",
     "purpose": "app.bsky.graph.defs#curatelist",
     "uri": "record(3)",
   },
-  Object {
+  {
     "cid": "cids(4)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "cur1",
     "purpose": "app.bsky.graph.defs#curatelist",
     "uri": "record(4)",
   },
-  Object {
+  {
     "cid": "cids(5)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 3,
     "name": "cur0",
     "purpose": "app.bsky.graph.defs#curatelist",
@@ -242,11 +242,11 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include users with creator block relationship in reference and curate lists for signed-out viewers 1`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -257,20 +257,20 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(2)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "uri": "record(1)",
   },
@@ -278,11 +278,11 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include users with creator block relationship in reference and curate lists for signed-out viewers 2`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -293,20 +293,20 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(2)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "uri": "record(1)",
   },
@@ -314,11 +314,11 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, in-list viewers 1`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -329,25 +329,25 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(2)",
       "handle": "eve.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "blocking": "record(2)",
         "muted": false,
@@ -359,11 +359,11 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, in-list viewers 2`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -374,25 +374,25 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(2)",
       "handle": "eve.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "blocking": "record(2)",
         "muted": false,
@@ -404,11 +404,11 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers 1`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -419,25 +419,25 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(2)",
       "handle": "eve.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -448,11 +448,11 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers 2`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -463,25 +463,25 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(2)",
       "handle": "eve.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -492,35 +492,35 @@ Array [
 `;
 
 exports[`bsky actor likes feed views does return all users regardless of creator block relationship in moderation lists 1`] = `
-Array [
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+[
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "greta.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
     "uri": "record(0)",
   },
-  Object {
-    "subject": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  {
+    "subject": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(1)",
       "handle": "frankie.test",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -531,116 +531,116 @@ Array [
 `;
 
 exports[`bsky actor likes feed views supports using a handle as getList actor param 1`] = `
-Array [
-  Object {
+[
+  {
     "cid": "cids(0)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "mod2",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
   },
-  Object {
+  {
     "cid": "cids(1)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "mod1",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(1)",
   },
-  Object {
+  {
     "cid": "cids(2)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 2,
     "name": "mod0",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(2)",
   },
-  Object {
+  {
     "cid": "cids(3)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "cur2",
     "purpose": "app.bsky.graph.defs#curatelist",
     "uri": "record(3)",
   },
-  Object {
+  {
     "cid": "cids(4)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 0,
     "name": "cur1",
     "purpose": "app.bsky.graph.defs#curatelist",
     "uri": "record(4)",
   },
-  Object {
+  {
     "cid": "cids(5)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
       "did": "user(0)",
       "handle": "eve.test",
-      "labels": Array [],
+      "labels": [],
     },
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 3,
     "name": "cur0",
     "purpose": "app.bsky.graph.defs#curatelist",

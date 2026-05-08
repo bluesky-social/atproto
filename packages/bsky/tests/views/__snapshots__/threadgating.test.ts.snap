@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`views with thread gating applies gate after root post is deleted. 1`] = `undefined`;
 
 exports[`views with thread gating applies gate for empty rules. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [],
+    "allow": [],
     "createdAt": "1970-01-01T00:00:00.000Z",
     "post": "record(1)",
   },
@@ -17,13 +17,13 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for follower rule. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [
-      Object {
+    "allow": [
+      {
         "$type": "app.bsky.feed.threadgate#followerRule",
       },
     ],
@@ -35,13 +35,13 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for following rule. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [
-      Object {
+    "allow": [
+      {
         "$type": "app.bsky.feed.threadgate#followingRule",
       },
     ],
@@ -53,42 +53,42 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for list rule. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [
-    Object {
+  "lists": [
+    {
       "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "listItemCount": 1,
       "name": "list a",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(2)",
-      "viewer": Object {
+      "viewer": {
         "muted": false,
       },
     },
-    Object {
+    {
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "listItemCount": 1,
       "name": "list b",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
-      "viewer": Object {
+      "viewer": {
         "muted": false,
       },
     },
   ],
-  "record": Object {
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [
-      Object {
+    "allow": [
+      {
         "$type": "app.bsky.feed.threadgate#listRule",
         "list": "record(2)",
       },
-      Object {
+      {
         "$type": "app.bsky.feed.threadgate#listRule",
         "list": "record(3)",
       },
@@ -101,13 +101,13 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for mention rule. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [
-      Object {
+    "allow": [
+      {
         "$type": "app.bsky.feed.threadgate#mentionRule",
       },
     ],
@@ -119,10 +119,10 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for missing rules, takes no action. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "post": "record(1)",
@@ -132,19 +132,19 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for multiple rules. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [
-      Object {
+    "allow": [
+      {
         "$type": "app.bsky.feed.threadgate#mentionRule",
       },
-      Object {
+      {
         "$type": "app.bsky.feed.threadgate#followerRule",
       },
-      Object {
+      {
         "$type": "app.bsky.feed.threadgate#followingRule",
       },
     ],
@@ -156,13 +156,13 @@ Object {
 `;
 
 exports[`views with thread gating applies gate for unknown list rule. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [
-      Object {
+    "allow": [
+      {
         "$type": "app.bsky.feed.threadgate#listRule",
         "list": "record(1)",
       },
@@ -175,12 +175,12 @@ Object {
 `;
 
 exports[`views with thread gating does not apply gate to original poster. 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "lists": Array [],
-  "record": Object {
+  "lists": [],
+  "record": {
     "$type": "app.bsky.feed.threadgate",
-    "allow": Array [],
+    "allow": [],
     "createdAt": "1970-01-01T00:00:00.000Z",
     "post": "record(1)",
   },
