@@ -661,17 +661,20 @@ export class ReportStatsService {
     await this.db.transaction(async (dbTxn) => {
       for (const r of rows) {
         let del = dbTxn.db.deleteFrom('report_stat').where('date', '=', r.date)
-        del = r.queueId !== null
-          ? del.where('queueId', '=', r.queueId)
-          : del.where('queueId', 'is', null)
-        del = r.moderatorDid !== null
-          ? del.where('moderatorDid', '=', r.moderatorDid)
-          : del.where('moderatorDid', 'is', null)
-        del = r.reportTypes !== null
-          ? del.where(
-              sql`"reportTypes"::jsonb = ${jsonb(r.reportTypes)}::jsonb`,
-            )
-          : del.where('reportTypes', 'is', null)
+        del =
+          r.queueId !== null
+            ? del.where('queueId', '=', r.queueId)
+            : del.where('queueId', 'is', null)
+        del =
+          r.moderatorDid !== null
+            ? del.where('moderatorDid', '=', r.moderatorDid)
+            : del.where('moderatorDid', 'is', null)
+        del =
+          r.reportTypes !== null
+            ? del.where(
+                sql`"reportTypes"::jsonb = ${jsonb(r.reportTypes)}::jsonb`,
+              )
+            : del.where('reportTypes', 'is', null)
         await del.execute()
 
         await dbTxn.db
@@ -680,8 +683,7 @@ export class ReportStatsService {
             date: r.date,
             queueId: r.queueId,
             moderatorDid: r.moderatorDid,
-            reportTypes:
-              r.reportTypes !== null ? jsonb(r.reportTypes) : null,
+            reportTypes: r.reportTypes !== null ? jsonb(r.reportTypes) : null,
             inboundCount: r.inboundCount,
             pendingCount: r.pendingCount,
             actionedCount: r.actionedCount,
