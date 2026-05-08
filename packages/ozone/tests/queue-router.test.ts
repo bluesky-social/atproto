@@ -94,17 +94,20 @@ describe('queue-router', () => {
     await network.close()
   })
 
-  it('skips routing and leaves cursor null when no queues are configured', async () => {
-    // This test intentionally runs before any queues are created
+  it('inserts report rows with no queue assignment when no queues are configured', async () => {
+    // This test intentionally runs before any queues are created. The daemon
+    // still inserts the report row (with queueId = -1) so the invariant
+    // "every modEventReport has a corresponding report row" holds.
     await reportAccount(sc.dids.alice, REASON_SPAM)
 
     await network.ozone.daemon.ctx.queueRouter.routeReports()
 
-    // Cursor must stay null — early exit occurred before any DB writes
+    // Cursor advances past the processed event
     const cursor = await network.ozone.daemon.ctx.queueRouter.getCursor()
-    expect(cursor).toBeNull()
+    expect(cursor).not.toBeNull()
+    expect(cursor!).toBeGreaterThan(0)
 
-    // Report must remain unassigned (queue absent from API response when null)
+    // Report row exists with no queue (queueId = -1 surfaces as undefined)
     const report = await queryLatestReportForSubject(sc.dids.alice, 'open')
     expect(report).toBeDefined()
     expect(report.queue).toBeUndefined()
@@ -233,7 +236,7 @@ describe('queue-router', () => {
       expect(reportAfter.id).toBe(report.id) // same report, unchanged
     })
 
-    it('advances cursor so already-processed reports are skipped on subsequent runs', async () => {
+    it('advances cursor so already-processed events are skipped on subsequent runs', async () => {
       await reportAccount(sc.dids.dan, REASON_THREAT)
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
@@ -245,23 +248,29 @@ describe('queue-router', () => {
       const cursorAfterFirst =
         await network.ozone.daemon.ctx.queueRouter.getCursor()
       expect(cursorAfterFirst).not.toBeNull()
-      expect(cursorAfterFirst).toBeGreaterThanOrEqual(report.id)
 
-      // Manually clear the queueId to simulate an unprocessed state —
-      // there is no API surface for this, so a direct DB write is necessary
+      // Delete the report row to simulate an unprocessed state — there is no
+      // API surface for this, so a direct DB write is necessary. The cursor
+      // (which points at the moderation_event id) stays past this event, so
+      // the daemon must not re-insert.
       await network.ozone.daemon.ctx.db.db
-        .updateTable('report')
-        .set({ queueId: null })
+        .deleteFrom('report')
         .where('id', '=', report.id)
         .execute()
 
-      // A second run must not reprocess the report because its id is below the cursor
+      // A second run must not reprocess the event because its id is below the cursor
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
       const reportAfterSecondRun = await queryLatestReportForSubject(
         sc.dids.dan,
       )
-      expect(reportAfterSecondRun.queue).toBeUndefined()
+      // No report row should have been re-inserted
+      expect(reportAfterSecondRun).toBeUndefined()
+
+      // Cursor unchanged — second run found nothing past it
+      const cursorAfterSecond =
+        await network.ozone.daemon.ctx.queueRouter.getCursor()
+      expect(cursorAfterSecond).toBe(cursorAfterFirst)
     })
 
     it('skips disabled queues when routing', async () => {

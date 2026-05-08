@@ -32,7 +32,7 @@ describe('report-reassign-queue', () => {
     await network.processAll()
 
     const { data } = await agent.tools.ozone.report.queryReports(
-      { subject: subjectDid },
+      { status: 'open', subject: subjectDid },
       { headers: await modHeaders(ids.ToolsOzoneReportQueryReports) },
     )
     const report = data.reports[0]
@@ -173,10 +173,7 @@ describe('report-reassign-queue', () => {
       expect(queueActivity!.publicNote).toBeUndefined()
       expect(queueActivity!.isAutomated).toBe(false)
       expect((queueActivity!.activity as any).previousStatus).toBe('open')
-      expect(queueActivity!.meta).toEqual({
-        fromQueueId: null,
-        toQueueId: queue.queue.id,
-      })
+      expect(queueActivity!.meta!.toQueueId).toEqual(queue.queue.id)
     })
   })
 

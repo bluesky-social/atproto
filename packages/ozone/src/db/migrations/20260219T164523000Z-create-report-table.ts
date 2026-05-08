@@ -142,8 +142,15 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`CREATE INDEX idx_report_queue_pending ON report ("queueId") WHERE status != 'closed'`.execute(
     db,
   )
+
+  // Queue-router event-source partial: scans new modEventReport rows by id
+  // for the daemon that inserts report rows from moderation_event.
+  await sql`CREATE INDEX moderation_event_report_id_idx
+    ON moderation_event (id)
+    WHERE action = 'tools.ozone.moderation.defs#modEventReport'`.execute(db)
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.dropIndex('moderation_event_report_id_idx').execute()
   await db.schema.dropTable('report').execute()
 }
