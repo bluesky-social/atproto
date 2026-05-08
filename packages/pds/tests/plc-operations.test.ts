@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
-import { EventEmitter } from 'node:stream'
+import { EventEmitter } from 'node:events'
 import * as plc from '@did-plc/lib'
 import { SendMailOptions } from 'nodemailer'
 import { AtpAgent } from '@atproto/api'
