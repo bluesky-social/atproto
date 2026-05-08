@@ -17,7 +17,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -47,7 +47,7 @@
     "@types/mime-types": "^2.1.4",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
     "multiformats": "^13.0.0",

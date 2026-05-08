@@ -35,6 +35,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.mjs",
+      "import": "./dist/index.mjs",
       "default": "./dist/index.cjs"
     }
   },

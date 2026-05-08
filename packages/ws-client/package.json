@@ -17,7 +17,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "typescript": "^6.0.3"
   },
   "type": "module",

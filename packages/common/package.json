@@ -13,7 +13,7 @@
     "directory": "packages/common"
   },
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "engines": {
@@ -27,7 +27,7 @@
     "pino": "^8.21.0"
   },
   "devDependencies": {
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "typescript": "^6.0.3",
     "uint8arrays": "^5.0.0"
   },

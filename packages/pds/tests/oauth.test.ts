@@ -156,7 +156,7 @@ describe('oauth', () => {
 
     expect(sendTemplateMock).toHaveBeenCalledTimes(1)
 
-    const [params] = sendTemplateMock.mock.lastCall
+    const [params] = sendTemplateMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'alice.test',
       token: expect.any(String),
