@@ -11,6 +11,7 @@ require('esbuild').build({
   outdir: 'dist/mailer/templates',
   platform: 'node',
   format: 'esm',
+  bundle: true,
   plugins: [
     hbsPlugin({
       filter: /\.(hbs)$/,
