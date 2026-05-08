@@ -1,4 +1,4 @@
-import { EventEmitter } from 'node:stream'
+import { EventEmitter } from 'node:events'
 import type TypedEventEmitter from 'typed-emitter'
 import { ServerConfig } from './config.js'
 import { Database } from './db/index.js'

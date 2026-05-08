@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
+import { jest } from '@jest/globals'
 import {
   AppBskyEmbedExternal,
   AtpAgent,

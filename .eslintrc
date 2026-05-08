@@ -85,7 +85,7 @@
       "rules": {
         "n/no-extraneous-import": [
           "error",
-          { "allowModules": ["@atproto/dev-env"] }
+          { "allowModules": ["@atproto/dev-env", "@jest/globals"] }
         ],
         "@typescript-eslint/no-unused-vars": [
           "error",
