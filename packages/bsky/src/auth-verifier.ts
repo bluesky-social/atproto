@@ -1,7 +1,10 @@
 import crypto, { KeyObject } from 'node:crypto'
 import express from 'express'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+// eslint-disable-next-line import/default
+import _KeyEncoder from 'key-encoder'
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = (_KeyEncoder as any).default ?? _KeyEncoder
 import * as ui8 from 'uint8arrays'
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import { DidString, isDidString } from '@atproto/lex'

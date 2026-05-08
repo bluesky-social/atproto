@@ -1,6 +1,9 @@
 import * as aws from '@aws-sdk/client-kms'
 import { secp256k1 as noble } from '@noble/curves/secp256k1'
-import KeyEncoder from 'key-encoder'
+// eslint-disable-next-line import/default
+import _KeyEncoder from 'key-encoder'
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = (_KeyEncoder as any).default ?? _KeyEncoder
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
 
