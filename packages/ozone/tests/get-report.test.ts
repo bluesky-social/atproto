@@ -79,7 +79,7 @@ describe('ozone-get-report', () => {
     await network.processAll()
 
     const { data: list } = await agent.tools.ozone.report.queryReports(
-      { subject: sc.dids.bob },
+      { status: 'open', subject: sc.dids.bob },
       { headers: await modHeaders(ids.ToolsOzoneReportQueryReports) },
     )
     const reportId = list.reports[0].id
@@ -120,7 +120,7 @@ describe('ozone-get-report', () => {
     await network.processAll()
 
     const { data: list } = await agent.tools.ozone.report.queryReports(
-      { subject: sc.dids.carol },
+      { status: 'open', subject: sc.dids.carol },
       { headers: await modHeaders(ids.ToolsOzoneReportQueryReports) },
     )
     const reportId = list.reports[0].id
