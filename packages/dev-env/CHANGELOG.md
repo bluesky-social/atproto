@@ -1,5 +1,15 @@
 # @atproto/dev-env
 
+## 0.4.7
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+- Updated dependencies [[`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3)]:
+  - @atproto/ozone@0.1.174
+  - @atproto/api@0.19.16
+
 ## 0.4.6
 
 ### Patch Changes
