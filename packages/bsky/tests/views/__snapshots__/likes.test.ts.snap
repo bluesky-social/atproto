@@ -1,20 +1,20 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`pds like views fetches post likes 1`] = `
-Object {
+{
   "cursor": "0000000000000__bafycid",
-  "likes": Array [
-    Object {
-      "actor": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+  "likes": [
+    {
+      "actor": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
         "did": "user(0)",
         "handle": "eve.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
@@ -22,20 +22,20 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
-    Object {
-      "actor": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "actor": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
-          "chat": Object {
+          "chat": {
             "allowIncoming": "none",
           },
         },
         "did": "user(1)",
         "handle": "dan.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "following": "record(0)",
           "muted": false,
@@ -44,17 +44,17 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
-    Object {
-      "actor": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "actor": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
         "did": "user(2)",
         "handle": "carol.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
@@ -64,10 +64,10 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
-    Object {
-      "actor": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "actor": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
@@ -78,8 +78,8 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(4)",
           "following": "record(3)",
@@ -95,20 +95,20 @@ Object {
 `;
 
 exports[`pds like views fetches reply likes 1`] = `
-Object {
+{
   "cursor": "0000000000000__bafycid",
-  "likes": Array [
-    Object {
-      "actor": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+  "likes": [
+    {
+      "actor": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
         "did": "user(0)",
         "handle": "carol.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(1)",
           "following": "record(0)",

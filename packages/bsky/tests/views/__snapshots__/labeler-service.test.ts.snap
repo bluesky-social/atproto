@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`labeler service views fetches labelers 1`] = `
-Object {
-  "views": Array [
-    Object {
+{
+  "views": [
+    {
       "$type": "app.bsky.labeler.defs#labelerView",
       "cid": "cids(0)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
           "labeler": true,
@@ -20,15 +20,15 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
+        "labels": [
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
           },
-          Object {
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
@@ -36,7 +36,7 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "viewer": Object {
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
@@ -44,19 +44,19 @@ Object {
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 1,
       "uri": "record(0)",
-      "viewer": Object {
+      "viewer": {
         "like": "record(4)",
       },
     },
-    Object {
+    {
       "$type": "app.bsky.labeler.defs#labelerView",
       "cid": "cids(3)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
           "labeler": true,
@@ -68,31 +68,31 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": {},
     },
   ],
 }
 `;
 
 exports[`labeler service views fetches labelers detailed 1`] = `
-Object {
-  "views": Array [
-    Object {
+{
+  "views": [
+    {
       "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(0)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
           "labeler": true,
@@ -104,15 +104,15 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
+        "labels": [
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
           },
-          Object {
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
@@ -120,7 +120,7 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "viewer": Object {
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
@@ -128,10 +128,10 @@ Object {
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 1,
-      "policies": Object {
-        "labelValues": Array [
+      "policies": {
+        "labelValues": [
           "spam",
           "!hide",
           "scam",
@@ -139,16 +139,16 @@ Object {
         ],
       },
       "uri": "record(0)",
-      "viewer": Object {
+      "viewer": {
         "like": "record(4)",
       },
     },
-    Object {
+    {
       "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(3)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
           "labeler": true,
@@ -160,73 +160,73 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 0,
-      "policies": Object {
-        "labelValues": Array [
+      "policies": {
+        "labelValues": [
           "nudity",
           "sexual",
           "porn",
         ],
       },
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": {},
     },
   ],
 }
 `;
 
 exports[`labeler service views returns additional labeler data 1`] = `
-Object {
-  "views": Array [
-    Object {
+{
+  "views": [
+    {
       "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(0)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
           "labeler": true,
         },
         "did": "user(0)",
         "handle": "carol.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "following": "record(1)",
           "muted": false,
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 0,
-      "policies": Object {
-        "labelValues": Array [
+      "policies": {
+        "labelValues": [
           "spam",
           "!hide",
           "scam",
           "impersonation",
         ],
       },
-      "reasonTypes": Array [
+      "reasonTypes": [
         "com.atproto.moderation.defs#reasonOther",
       ],
-      "subjectCollections": Array [
+      "subjectCollections": [
         "app.bsky.feed.post",
       ],
-      "subjectTypes": Array [
+      "subjectTypes": [
         "record",
       ],
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": {},
     },
   ],
 }

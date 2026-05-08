@@ -1,30 +1,30 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": -1,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -32,10 +32,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -43,7 +43,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -51,27 +51,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 0,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
             "handle": "simple-alice.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -79,18 +79,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -100,7 +100,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -113,30 +113,30 @@ Object {
 `;
 
 exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": -1,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -144,10 +144,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -155,7 +155,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -163,27 +163,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 0,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
             "handle": "simple-bob.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -191,18 +191,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -212,7 +212,7 @@ Object {
           "replyCount": 1,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -220,27 +220,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 1,
       "uri": "record(2)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
             "handle": "simple-alice.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -248,18 +248,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(1)",
                 "uri": "record(1)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -269,7 +269,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(2)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -282,30 +282,30 @@ Object {
 `;
 
 exports[`appview thread views v2 simple thread returns thread anchored on 2.0 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": -2,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -313,10 +313,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -324,7 +324,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -332,27 +332,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": -1,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
             "handle": "simple-bob.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -360,18 +360,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -381,7 +381,7 @@ Object {
           "replyCount": 1,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -389,27 +389,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 0,
       "uri": "record(2)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
             "handle": "simple-alice.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -417,18 +417,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(1)",
                 "uri": "record(1)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -438,7 +438,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(2)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -451,30 +451,30 @@ Object {
 `;
 
 exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": -1,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -482,10 +482,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -493,7 +493,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -501,27 +501,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 0,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
             "handle": "simple-carol.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -529,18 +529,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -550,7 +550,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -563,30 +563,30 @@ Object {
 `;
 
 exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": -1,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -594,10 +594,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -605,7 +605,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -613,27 +613,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 0,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -641,18 +641,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -662,7 +662,7 @@ Object {
           "replyCount": 1,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -670,27 +670,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 1,
       "uri": "record(2)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -698,18 +698,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(1)",
                 "uri": "record(1)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -719,7 +719,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(2)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -732,30 +732,30 @@ Object {
 `;
 
 exports[`appview thread views v2 simple thread returns thread anchored on r 0.0 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": -2,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -763,10 +763,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -774,7 +774,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -782,27 +782,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": -1,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -810,18 +810,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -831,7 +831,7 @@ Object {
           "replyCount": 1,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -839,27 +839,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 0,
       "uri": "record(2)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -867,18 +867,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(1)",
                 "uri": "record(1)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -888,7 +888,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(2)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -901,30 +901,30 @@ Object {
 `;
 
 exports[`appview thread views v2 simple thread returns thread anchored on root 1`] = `
-Object {
+{
   "hasOtherReplies": false,
-  "thread": Array [
-    Object {
+  "thread": [
+    {
       "depth": 0,
       "uri": "record(0)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -932,10 +932,10 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "root",
@@ -943,7 +943,7 @@ Object {
           "replyCount": 4,
           "repostCount": 0,
           "uri": "record(0)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -951,27 +951,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 1,
       "uri": "record(1)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -979,18 +979,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -1000,7 +1000,7 @@ Object {
           "replyCount": 1,
           "repostCount": 0,
           "uri": "record(1)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -1008,27 +1008,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 2,
       "uri": "record(2)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(0)",
             "handle": "simple-op.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -1036,18 +1036,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(1)",
                 "uri": "record(1)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -1057,7 +1057,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(2)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -1065,27 +1065,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 1,
       "uri": "record(3)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
             "handle": "simple-alice.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -1093,18 +1093,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -1114,7 +1114,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(3)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -1122,27 +1122,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 1,
       "uri": "record(4)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(2)",
             "handle": "simple-bob.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -1150,18 +1150,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(4)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -1171,7 +1171,7 @@ Object {
           "replyCount": 1,
           "repostCount": 0,
           "uri": "record(4)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -1179,27 +1179,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 2,
       "uri": "record(5)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(1)",
             "handle": "simple-alice.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -1207,18 +1207,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(5)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(4)",
                 "uri": "record(4)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -1228,7 +1228,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(5)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
@@ -1236,27 +1236,27 @@ Object {
         },
       },
     },
-    Object {
+    {
       "depth": 1,
       "uri": "record(6)",
-      "value": Object {
+      "value": {
         "$type": "app.bsky.unspecced.defs#threadItemPost",
         "hiddenByThreadgate": false,
         "moreParents": false,
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": false,
-        "post": Object {
-          "author": Object {
-            "associated": Object {
-              "activitySubscription": Object {
+        "post": {
+          "author": {
+            "associated": {
+              "activitySubscription": {
                 "allowSubscriptions": "followers",
               },
             },
             "did": "user(3)",
             "handle": "simple-carol.test",
-            "labels": Array [],
-            "viewer": Object {
+            "labels": [],
+            "viewer": {
               "blockedBy": false,
               "muted": false,
             },
@@ -1264,18 +1264,18 @@ Object {
           "bookmarkCount": 0,
           "cid": "cids(6)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
+          "labels": [],
           "likeCount": 0,
           "quoteCount": 0,
-          "record": Object {
+          "record": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "reply": Object {
-              "parent": Object {
+            "reply": {
+              "parent": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
-              "root": Object {
+              "root": {
                 "cid": "cids(0)",
                 "uri": "record(0)",
               },
@@ -1285,7 +1285,7 @@ Object {
           "replyCount": 0,
           "repostCount": 0,
           "uri": "record(6)",
-          "viewer": Object {
+          "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
             "threadMuted": false,
