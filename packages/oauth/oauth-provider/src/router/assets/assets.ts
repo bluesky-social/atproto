@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { fileURLToPath } from 'node:url'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
@@ -24,10 +25,10 @@ import { setupCsrfToken } from './csrf.js'
 //   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 // )
 
-import { fileURLToPath } from 'node:url'
-
 const ui = parseAssetsManifest(
-  fileURLToPath(import.meta.resolve('@atproto/oauth-provider-ui/bundle-manifest.json')),
+  fileURLToPath(
+    import.meta.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
+  ),
 )
 
 type HydrationData = Simplify<UiHydrationData>
