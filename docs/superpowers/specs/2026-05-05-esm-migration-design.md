@@ -11,23 +11,28 @@ The repo currently emits CommonJS from `tsc` via `"module": "CommonJS"` in the b
 ### 1. tsconfig changes
 
 **`tsconfig/base.json`:**
+
 - `"module": "Node16"` (replaces `"CommonJS"`)
 - `"moduleResolution": "node16"` (replaces `"node"`)
 - Remove `"ignoreDeprecations": "6.0"` (no longer needed once moduleResolution is node16)
 - `"target": "ES2022"` (bumped from ES2020 — enables top-level await, native class fields, and private field syntax without downleveling. Supported since Node 16.)
 
 **`tsconfig/nodenext.json`:**
+
 - Already uses `"module": "Node16"`, `"moduleResolution": "Node16"`. No change needed.
 
 **`tsconfig/isomorphic.json`, `tsconfig/node.json`:**
+
 - Inherit base. No changes needed beyond what base provides.
 
 **`tsconfig/bundler.json`:**
+
 - Already uses `"module": "ESNext"`, `"moduleResolution": "Bundler"`. No change needed (used only by vite-built UI packages).
 
 ### 2. package.json updates (all ~60 published packages)
 
 Each package gets:
+
 ```json
 {
   "type": "module",
@@ -46,6 +51,7 @@ Each package gets:
 ### 3. Source imports: add `.js` extensions
 
 Every relative import in `.ts` source:
+
 ```ts
 // Before
 import { x } from './foo'
@@ -62,12 +68,12 @@ This is required by Node16 module resolution. TypeScript resolves `./foo.js` to 
 
 ### 4. Upgrade dependencies for ESM
 
-| Package | From | To | Notes |
-|---------|------|------|-------|
-| `multiformats` | `^9.9.0` | `^13.0.0` | Pure ESM, proper subpath exports. Used in ~10 packages. |
-| `uint8arrays` | `3.0.0` | `^5.0.0` | Pure ESM, proper TypeScript types. Used in ~8 packages. |
-| `p-queue` | `^6.6.2` | `^9.0.0` | Pure ESM with exports. Used in pds, bsky, ozone, sync. v6 is CJS without exports field. |
-| `jose` (xrpc-server only) | `^4.15.4` | `^5.0.1` | Align with rest of repo (pds/bsky/oauth already on ^5). v4 is CJS-only. |
+| Package                   | From      | To        | Notes                                                                                   |
+| ------------------------- | --------- | --------- | --------------------------------------------------------------------------------------- |
+| `multiformats`            | `^9.9.0`  | `^13.0.0` | Pure ESM, proper subpath exports. Used in ~10 packages.                                 |
+| `uint8arrays`             | `3.0.0`   | `^5.0.0`  | Pure ESM, proper TypeScript types. Used in ~8 packages.                                 |
+| `p-queue`                 | `^6.6.2`  | `^9.0.0`  | Pure ESM with exports. Used in pds, bsky, ozone, sync. v6 is CJS without exports field. |
+| `jose` (xrpc-server only) | `^4.15.4` | `^5.0.1`  | Align with rest of repo (pds/bsky/oauth already on ^5). v4 is CJS-only.                 |
 
 **multiformats 9→13:** The CID API changed between versions. `CID.parse()`, `CID.asCID()` usage may need updates. Hash functions moved from `multiformats/hashes/sha2` to a different import path.
 
@@ -79,18 +85,19 @@ This is required by Node16 module resolution. TypeScript resolves `./foo.js` to 
 
 ### 5. Fix CJS-isms in source
 
-| File | Pattern | Fix |
-|------|---------|-----|
-| `packages/oauth/oauth-provider/src/router/assets/assets-manifest.ts` | `require(manifestPath)` | `createRequire(import.meta.url)(manifestPath)` |
-| `packages/dev-env/src/seed/client.ts` | `__dirname` | `path.dirname(fileURLToPath(import.meta.url))` |
-| `packages/lex/lex-builder/src/ts-lang.ts` | References `__dirname`/`__filename` in codegen output | These are string literals in generated code, not actual usage — verify and leave if so |
-| `packages/ozone/src/tag-service/language-tagger.ts` | `await import('lande')` | Static `import lande from 'lande'` — was a CJS workaround since lande is ESM-only |
+| File                                                                 | Pattern                                               | Fix                                                                                    |
+| -------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `packages/oauth/oauth-provider/src/router/assets/assets-manifest.ts` | `require(manifestPath)`                               | `createRequire(import.meta.url)(manifestPath)`                                         |
+| `packages/dev-env/src/seed/client.ts`                                | `__dirname`                                           | `path.dirname(fileURLToPath(import.meta.url))`                                         |
+| `packages/lex/lex-builder/src/ts-lang.ts`                            | References `__dirname`/`__filename` in codegen output | These are string literals in generated code, not actual usage — verify and leave if so |
+| `packages/ozone/src/tag-service/language-tagger.ts`                  | `await import('lande')`                               | Static `import lande from 'lande'` — was a CJS workaround since lande is ESM-only      |
 
 ### 6. Services → TypeScript + ESM
 
 Each service directory (`services/pds`, `services/bsky`, `services/bsync`, `services/ozone`):
 
 **package.json:**
+
 ```json
 {
   "type": "module",
@@ -103,6 +110,7 @@ Each service directory (`services/pds`, `services/bsky`, `services/bsync`, `serv
 **Tracer files:** rewrite `tracer.js` → `tracer.ts` using `import`.
 
 **Dockerfile CMD:**
+
 ```dockerfile
 CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "index.ts"]
 ```

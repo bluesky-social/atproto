@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url)
 require('dd-trace').init({ logInjection: true })
 
 // Tracer code above must come before anything else
-import BsyncService, { envToCfg, httpLogger, readEnv } from '@atproto/bsync'
+import { BsyncService, envToCfg, httpLogger, readEnv } from '@atproto/bsync'
 
 const main = async () => {
   const env = readEnv()
