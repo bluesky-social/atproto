@@ -1,6 +1,8 @@
 import EventEmitter from 'node:events'
 import { Selectable } from 'kysely'
-import { PoolClient } from 'pg'
+// eslint-disable-next-line import/default
+import pg from 'pg'
+type PoolClient = pg.PoolClient
 import type TypedEmitter from 'typed-emitter'
 import { Database } from '../db/index.js'
 import { Label as LabelTable, LabelChannel } from '../db/schema/label.js'

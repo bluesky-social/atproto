@@ -1,14 +1,16 @@
-/// <reference types="jest" />
+import { jest } from '@jest/globals'
 import { callerInterceptor } from './util.js'
+
+type NextFn = (req: unknown) => Promise<unknown>
 
 describe('callerInterceptor', () => {
   it('sets x-atlantis-caller header on the request', async () => {
     const interceptor = callerInterceptor('appview')
     const expectedResponse = { status: 'ok' }
-    const next = jest.fn().mockResolvedValue(expectedResponse)
+    const next = jest.fn<NextFn>().mockResolvedValue(expectedResponse)
 
     const req = { header: new Headers() }
-    const handler = interceptor(next)
+    const handler = interceptor(next as any)
     const res = await handler(req as any)
 
     expect(req.header.get('x-atlantis-caller')).toBe('appview')
@@ -18,20 +20,20 @@ describe('callerInterceptor', () => {
 
   it('uses the provided caller value', async () => {
     const interceptor = callerInterceptor('feed-generator')
-    const next = jest.fn().mockResolvedValue({})
+    const next = jest.fn<NextFn>().mockResolvedValue({})
 
     const req = { header: new Headers() }
-    await interceptor(next)(req as any)
+    await interceptor(next as any)(req as any)
 
     expect(req.header.get('x-atlantis-caller')).toBe('feed-generator')
   })
 
   it('does not overwrite other existing headers', async () => {
     const interceptor = callerInterceptor('appview')
-    const next = jest.fn().mockResolvedValue({})
+    const next = jest.fn<NextFn>().mockResolvedValue({})
 
     const req = { header: new Headers({ 'x-other': 'value' }) }
-    await interceptor(next)(req as any)
+    await interceptor(next as any)(req as any)
 
     expect(req.header.get('x-atlantis-caller')).toBe('appview')
     expect(req.header.get('x-other')).toBe('value')
