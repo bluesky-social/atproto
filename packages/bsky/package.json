@@ -18,7 +18,7 @@
     "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-redis-and-db.sh jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
@@ -84,7 +84,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "ts-node": "^10.8.2",
     "typescript": "^6.0.3"
   },

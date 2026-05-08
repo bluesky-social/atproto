@@ -17,8 +17,8 @@
     "directory": "packages/repo"
   },
   "scripts": {
-    "test": "jest",
-    "test:profile": "node --inspect ../../node_modules/.bin/jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -32,7 +32,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "typescript": "^6.0.3"
   },
   "type": "module",

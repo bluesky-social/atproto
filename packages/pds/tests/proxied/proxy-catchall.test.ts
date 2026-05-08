@@ -132,7 +132,7 @@ describe('proxy header', () => {
   })
 
   it('handles failing upstream requests', async () => {
-    await expect(alice.call('com.example.error')).rejects.toThrowError(
+    await expect(alice.call('com.example.error')).rejects.toThrow(
       expect.objectContaining({
         status: 502,
         error: 'FooBar',

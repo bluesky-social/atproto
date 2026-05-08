@@ -224,7 +224,7 @@ describe('age assurance views', () => {
       lastInitiatedAt: expect.any(String),
     })
 
-    await expect(initAgeAssurance(actor)).rejects.toThrowError(
+    await expect(initAgeAssurance(actor)).rejects.toThrow(
       `Cannot initiate age assurance flow from current state: assured`,
     )
   })

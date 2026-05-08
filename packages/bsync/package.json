@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-db.sh jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
@@ -43,7 +43,7 @@
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@types/pg": "^8.6.6",
     "get-port": "^5.1.1",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "ts-node": "^10.8.2",
     "typescript": "^6.0.3"
   },
