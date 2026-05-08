@@ -1,7 +1,11 @@
 import events from 'node:events'
 import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
+// eslint-disable-next-line import/no-named-as-default-member
+const { createHttpTerminator } = httpTerminator
+type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { ServerConfig } from './config.js'
 import { AppContext, AppContextOptions } from './context.js'
 import { createMuteOpChannel } from './db/schema/mute_op.js'
