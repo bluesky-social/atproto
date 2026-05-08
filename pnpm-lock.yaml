@@ -106,8 +106,8 @@ importers:
         specifier: workspace:^
         version: link:../xrpc
       await-lock:
-        specifier: ^2.2.2
-        version: 2.2.2
+        specifier: ^3.0.0
+        version: 3.0.0
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
@@ -9984,8 +9984,8 @@ packages:
       possible-typed-array-names: 1.0.0
     dev: true
 
-  /await-lock@2.2.2:
-    resolution: {integrity: sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==}
+  /await-lock@3.0.0:
+    resolution: {integrity: sha512-eO6fLiSnrJrMdjWMNK8zbVRXPs2TKJg78iKZd9wDpN3na5tcoV6EoeiOlMgk2QaAQ1gIrK1YuMsJHXWqz89tSA==}
     dev: false
 
   /axios@1.6.7:

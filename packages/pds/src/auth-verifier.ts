@@ -1,7 +1,10 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+// eslint-disable-next-line import/default
+import _KeyEncoder from 'key-encoder'
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = (_KeyEncoder as any).default ?? _KeyEncoder
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import { AtIdentifierString, DidString, isDidString } from '@atproto/lex'

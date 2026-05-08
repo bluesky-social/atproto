@@ -22,15 +22,6 @@ declare module 'nodemailer/lib/mailer' {
   export = Mail
 }
 
-declare module 'await-lock' {
-  export default class AwaitLock {
-    get acquired(): boolean
-    acquireAsync(opts?: { timeout?: number }): Promise<void>
-    tryAcquire(): boolean
-    release(): void
-  }
-}
-
 declare module 'key-encoder' {
   export default class KeyEncoder {
     constructor(algorithmOrOptions: string | object)
