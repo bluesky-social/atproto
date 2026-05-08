@@ -151,6 +151,13 @@ export class Notification extends Message<Notification> {
    */
   clientControlled = false;
 
+  /**
+   * Maps to iOS's `thread-id`: https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification.
+   *
+   * @generated from field: string thread_id = 10;
+   */
+  threadId = "";
+
   constructor(data?: PartialMessage<Notification>) {
     super();
     proto3.util.initPartial(data, this);
@@ -168,6 +175,7 @@ export class Notification extends Message<Notification> {
     { no: 7, name: "timestamp", kind: "message", T: Timestamp },
     { no: 8, name: "additional", kind: "message", T: Struct },
     { no: 9, name: "client_controlled", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 10, name: "thread_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Notification {
