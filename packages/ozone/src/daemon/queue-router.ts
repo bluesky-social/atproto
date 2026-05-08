@@ -2,7 +2,7 @@ import { MINUTE } from '@atproto/common'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { QueueServiceCreator } from '../queue/service'
-import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor'
+import { initJobCursor } from './job-cursor'
 
 const JOB_NAME = 'queue_router'
 const BATCH_SIZE = 100
@@ -15,7 +15,6 @@ export class QueueRouter {
   constructor(
     private db: Database,
     private queueServiceCreator: QueueServiceCreator,
-    private serviceDid: string,
   ) {}
 
   start() {
@@ -45,40 +44,58 @@ export class QueueRouter {
   }
 
   async getCursor(): Promise<number | null> {
-    const cursor = await getJobCursor(this.db, JOB_NAME)
-    return cursor ? parseInt(cursor, 10) : null
-  }
-
-  async updateCursor(lastId: number): Promise<void> {
-    await updateJobCursor(this.db, JOB_NAME, String(lastId))
+    const row = await this.db.db
+      .selectFrom('job_cursor')
+      .select('cursor')
+      .where('job', '=', JOB_NAME)
+      .executeTakeFirst()
+    return row?.cursor ? parseInt(row.cursor, 10) : null
   }
 
   async routeReports() {
-    const queueService = this.queueServiceCreator(this.db)
-    const lastId = await this.getCursor()
+    await this.db.transaction(async (txn) => {
+      // Acquire row lock on the job_cursor row. A second daemon instance
+      // hitting this same query blocks here until the first transaction
+      // commits, then reads the now-advanced cursor and processes the next
+      // range. The lock is held for the whole batch (~50–200ms).
+      const row = await txn.db
+        .selectFrom('job_cursor')
+        .selectAll()
+        .where('job', '=', JOB_NAME)
+        .forUpdate()
+        .executeTakeFirst()
+      if (!row) return
+      const cursor = row.cursor ? parseInt(row.cursor, 10) : null
 
-    const result = await queueService.assignReportBatch(
-      { cursor: lastId, limit: BATCH_SIZE },
-      { serviceDid: this.serviceDid },
-    )
+      const queueService = this.queueServiceCreator(txn)
+      const result = await queueService.insertReportsFromEvents({
+        cursor,
+        limit: BATCH_SIZE,
+      })
 
-    if (result.processed === 0) {
-      dbLogger.info('no unassigned reports to route')
-      return
-    }
+      if (result.processed === 0) {
+        dbLogger.info('no new report events to route')
+        return
+      }
 
-    await this.updateCursor(result.maxId)
+      await txn.db
+        .updateTable('job_cursor')
+        .set({ cursor: String(result.maxEventId) })
+        .where('job', '=', JOB_NAME)
+        .execute()
 
-    dbLogger.info(
-      {
-        processed: result.processed,
-        assigned: result.assigned,
-        unmatched: result.unmatched,
-      },
-      'queue routing completed',
-    )
+      dbLogger.info(
+        {
+          processed: result.processed,
+          assigned: result.assigned,
+          unmatched: result.unmatched,
+          maxEventId: result.maxEventId,
+        },
+        'queue routing completed',
+      )
+    })
   }
 }
 
-// Poll every 5 minutes
-const getInterval = (): number => 5 * MINUTE
+// Poll every 1 minute
+const getInterval = (): number => 1 * MINUTE

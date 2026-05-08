@@ -378,6 +378,10 @@ describe('query-reports', () => {
         },
       })
 
+      // Report rows are inserted asynchronously by the queue-router daemon —
+      // drain it before querying.
+      await network.processAll()
+
       // Find the report we just created (most recent)
       const allReports = await modClient.queryReports({
         status: 'open',
@@ -417,6 +421,10 @@ describe('query-reports', () => {
           did: sc.dids.alice,
         },
       })
+
+      // Report rows are inserted asynchronously by the queue-router daemon —
+      // drain it before querying.
+      await network.processAll()
 
       // Find the muted subject report
       const mutedReports = await modClient.queryReports({

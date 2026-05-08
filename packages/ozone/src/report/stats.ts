@@ -330,21 +330,22 @@ export class ReportStatsService {
     const dayStart = `${date}T00:00:00.000Z`
     const dayEnd = `${nextDate(date)}T00:00:00.000Z`
 
-    // Pending count is a snapshot of all non-closed reports at time of computation
-    const queuePending = await this.db.db
-      .selectFrom('report')
-      .select(['queueId', sql<string>`count(*)`.as('count')])
-      .where('status', '!=', 'closed')
-      .where('queueId', 'is not', null)
-      .groupBy('queueId')
-      .execute()
-
-    // Aggregate pending (includes all reports, even un-routed)
-    const aggregatePending = await this.db.db
-      .selectFrom('report')
-      .select(sql<string>`count(*)`.as('count'))
-      .where('status', '!=', 'closed')
-      .executeTakeFirst()
+    const [queuePending, aggregatePending] = await Promise.all([
+      // Pending count is a snapshot of all non-closed reports at time of computation
+      this.db.db
+        .selectFrom('report')
+        .select(['queueId', sql<string>`count(*)`.as('count')])
+        .where('status', '!=', 'closed')
+        .where('queueId', 'is not', null)
+        .groupBy('queueId')
+        .execute(),
+      // Aggregate pending (includes all reports, even un-routed)
+      this.db.db
+        .selectFrom('report')
+        .select(sql<string>`count(*)`.as('count'))
+        .where('status', '!=', 'closed')
+        .executeTakeFirst(),
+    ])
 
     const queueWindow = await this.db.db
       .selectFrom('report')

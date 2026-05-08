@@ -264,31 +264,11 @@ const handleModerationEvent = async ({
       externalId,
     })
 
-    // Create report entry if this is a report event
-    if (isModEventReport(event)) {
-      const isReporterMuted = !!result.event.meta?.isReporterMuted
-      const isSubjectMuted = await moderationTxn.isSubjectMuted(subject.did)
-      const isMuted = isReporterMuted || isSubjectMuted
-
-      const now = new Date().toISOString()
-      await dbTxn.db
-        .insertInto('report')
-        .values({
-          eventId: result.event.id,
-          queueId: null, // Will be assigned by background job in future iteration
-          actionEventIds: null,
-          actionNote: null,
-          isMuted,
-          status: 'open',
-          reportType: event.reportType,
-          did: subject.did,
-          recordPath: subject.isRecord() ? subject.recordPath : '',
-          subjectMessageId: subject.isMessage() ? subject.messageId : null,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .execute()
-    }
+    // Report rows for modEventReport events are created asynchronously by
+    // the queue-router daemon, which reads from moderation_event and inserts
+    // into report with queue assignment already resolved. The reporter-muted
+    // and subject-muted flags are captured on `meta` inside `logEvent` so the
+    // daemon can populate `report.isMuted` later without races.
 
     // Update reports if reportAction was provided
     if (input.body.reportAction) {

@@ -614,6 +614,13 @@ export class ModerationService {
       if (isReportingMuted) {
         meta.isReporterMuted = true
       }
+      // Also capture whether the subject was muted at event-creation time, so
+      // the queue-router daemon can populate report.isMuted later without
+      // racing against subsequent mute/unmute changes.
+      const isSubjectMuted = await this.isSubjectMuted(subject.did)
+      if (isSubjectMuted) {
+        meta.isSubjectMuted = true
+      }
     }
 
     const subjectInfo = subject.info()
@@ -1033,7 +1040,10 @@ export class ModerationService {
       modTool,
     } = info
 
-    const result = await this.logEvent({
+    // The corresponding `report` row is no longer inserted here. The
+    // queue-router daemon walks moderation_event for modEventReport rows and
+    // inserts report rows asynchronously with `queueId` already resolved.
+    return await this.logEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: reasonType,
@@ -1044,33 +1054,6 @@ export class ModerationService {
       createdAt,
       modTool,
     })
-
-    // Create report entry
-    // A report is muted if either the reporter was muted or the subject was muted at creation time
-    const isReporterMuted = !!result.event.meta?.isReporterMuted
-    const isSubjectMuted = await this.isSubjectMuted(subject.did)
-    const isMuted = isReporterMuted || isSubjectMuted
-
-    const now = new Date().toISOString()
-    await this.db.db
-      .insertInto('report')
-      .values({
-        eventId: result.event.id,
-        queueId: null, // Will be assigned by background job in future iteration
-        actionEventIds: null,
-        actionNote: null,
-        isMuted,
-        status: 'open',
-        reportType: reasonType,
-        did: subject.did,
-        recordPath: subject.isRecord() ? subject.recordPath : '',
-        subjectMessageId: subject.isMessage() ? subject.messageId : null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .execute()
-
-    return result
   }
 
   async getSubjectStatuses({

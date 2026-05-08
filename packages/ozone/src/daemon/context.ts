@@ -118,7 +118,7 @@ export class DaemonContext {
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
     const queueService = QueueService.creator()
-    const queueRouter = new QueueRouter(db, queueService, cfg.service.did)
+    const queueRouter = new QueueRouter(db, queueService)
 
     const reportStatsService = ReportStatsService.creator()
     const statsComputer = new StatsComputer(
@@ -218,6 +218,10 @@ export class DaemonContext {
   async processAll() {
     // Sequential because the materialized view values depend on the events.
     await this.eventPusher.processAll()
+    // Drain pending modEventReport rows into the report table so test code
+    // that calls processAll() after creating reports sees the report rows
+    // immediately (in production this happens via the 1-min poll).
+    await this.queueRouter.routeReports()
     await this.materializedViewRefresher.run()
     await this.teamProfileSynchronizer.run()
   }

@@ -126,14 +126,43 @@ describe('queue-router', () => {
   })
 
   it('routes unassigned AND unmatched reports to a newly created queue', async () => {
-    // Create unmatchable report (queueId will be set to -1)
+    // Create unmatchable report (queueId will be set to -1 by daemon)
     await reportAccount(sc.dids.bob, REASON_MISLEADING)
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     const unmatchedReport = await getLatestReportForSubject(sc.dids.bob)
     expect(unmatchedReport.queueId).toBe(-1)
 
-    // Create an unassigned report
+    // Create an unassigned (queueId IS NULL) report — this state no longer
+    // arises from the normal flow, since the daemon always sets a queueId,
+    // but the manual routeReports endpoint still handles legacy NULL rows.
+    // Simulate it via a direct DB insert of a report event + report row.
     await reportAccount(sc.dids.carol, REASON_MISLEADING)
+    const carolEvent = await network.ozone.daemon.ctx.db.db
+      .selectFrom('moderation_event')
+      .select(['id', 'subjectDid', 'meta'])
+      .where('subjectDid', '=', sc.dids.carol)
+      .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirstOrThrow()
+    const now = new Date().toISOString()
+    await network.ozone.daemon.ctx.db.db
+      .insertInto('report')
+      .values({
+        eventId: carolEvent.id,
+        queueId: null,
+        actionEventIds: null,
+        actionNote: null,
+        isMuted: false,
+        status: 'open',
+        reportType: REASON_MISLEADING,
+        did: carolEvent.subjectDid,
+        recordPath: '',
+        subjectMessageId: null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .execute()
     const unassignedReport = await getLatestReportForSubject(sc.dids.carol)
     expect(unassignedReport.queueId).toBeNull()
 
@@ -190,6 +219,9 @@ describe('queue-router', () => {
     it('returns latest report', async () => {
       // Create a new report so we know what the latest should be
       await reportAccount(sc.dids.dan, REASON_SPAM)
+      // Report rows are inserted asynchronously by the queue-router daemon —
+      // drain it before querying.
+      await network.processAll()
 
       const latest = await getLatest()
       expect(latest).toBeDefined()
@@ -204,6 +236,7 @@ describe('queue-router', () => {
       const first = await getLatest()
 
       await reportAccount(sc.dids.alice, REASON_THREAT)
+      await network.processAll()
 
       const second = await getLatest()
       expect(second.id).toBeGreaterThan(first.id)
