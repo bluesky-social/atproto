@@ -1,15 +1,6 @@
 import { IncomingMessage } from 'node:http'
-import type {
-  ServerOptions,
-  WebSocket as WebSocketType,
-  WebSocketServer as WebSocketServerType,
-} from 'ws'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
-import ws from 'ws'
-// eslint-disable-next-line import/no-named-as-default-member
-const { WebSocket, WebSocketServer } = ws
-type WebSocket = WebSocketType
-type WebSocketServer = WebSocketServerType
+import type { ServerOptions } from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
 import { CloseCode, DisconnectError } from '@atproto/ws-client'
 import { ErrorFrame, Frame } from './frames.js'
 import { logger } from './logger.js'

@@ -1,10 +1,5 @@
 import { DuplexOptions } from 'node:stream'
-import type { WebSocket as WebSocketType } from 'ws'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
-import ws from 'ws'
-// eslint-disable-next-line import/no-named-as-default-member
-const { WebSocket, createWebSocketStream } = ws
-type WebSocket = WebSocketType
+import { WebSocket, createWebSocketStream } from 'ws'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { Frame, MessageFrame } from './frames.js'
 
