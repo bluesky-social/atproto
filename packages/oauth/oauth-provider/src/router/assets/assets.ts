@@ -24,8 +24,10 @@ import { setupCsrfToken } from './csrf.js'
 //   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 // )
 
+import { fileURLToPath } from 'node:url'
+
 const ui = parseAssetsManifest(
-  require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
+  fileURLToPath(import.meta.resolve('@atproto/oauth-provider-ui/bundle-manifest.json')),
 )
 
 type HydrationData = Simplify<UiHydrationData>
