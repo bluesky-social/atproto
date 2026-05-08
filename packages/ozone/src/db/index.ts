@@ -11,7 +11,11 @@ import {
   RootOperationNode,
   UnknownRow,
 } from 'kysely'
-import { Pool as PgPool, types as pgTypes } from 'pg'
+// eslint-disable-next-line import/default
+import pg from 'pg'
+// eslint-disable-next-line import/no-named-as-default-member
+const { Pool: PgPool, types: pgTypes } = pg
+type PgPool = InstanceType<typeof PgPool>
 import type TypedEmitter from 'typed-emitter'
 import { dbLogger } from '../logger.js'
 import * as migrations from './migrations/index.js'
