@@ -15107,6 +15107,12 @@ export const schemaDict = {
               format: 'uri',
               description: 'Reference to the space.',
             },
+            repo: {
+              type: 'string',
+              format: 'did',
+              description:
+                'The DID of the member whose repo to read from. If omitted, defaults to the authenticated user (OAuth auth). Required when using space-credential auth.',
+            },
             collection: {
               type: 'string',
               format: 'nsid',
@@ -15381,6 +15387,12 @@ export const schemaDict = {
               type: 'string',
               format: 'uri',
               description: 'Reference to the space.',
+            },
+            repo: {
+              type: 'string',
+              format: 'did',
+              description:
+                'The DID of the member whose repo to read from. If omitted, defaults to the authenticated user (OAuth auth). Required when using space-credential auth.',
             },
             collection: {
               type: 'string',

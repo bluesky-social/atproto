@@ -4,6 +4,7 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
+import { fireNotifyWrite } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.putRecord, {
@@ -31,10 +32,12 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
 
-        await actorTxn.space.applyRepoCommit(space, commit)
+        const rev = await actorTxn.space.applyRepoCommit(space, commit)
         const cid = await cidForLex(record)
-        return { cid: cid.toString() }
+        return { cid: cid.toString(), rev }
       })
+
+      await fireNotifyWrite(ctx, space, did, result.rev)
 
       return {
         encoding: 'application/json' as const,

@@ -375,10 +375,10 @@ describe('spaces', () => {
       )
       expect(grantRes.grant).toBeDefined()
 
-      const credRes = await client.call(
-        com.atproto.space.getSpaceCredential,
-        { space: credSpaceUri, grant: grantRes.grant },
-      )
+      const credRes = await client.call(com.atproto.space.getSpaceCredential, {
+        space: credSpaceUri,
+        grant: grantRes.grant,
+      })
       expect(credRes.credential).toBeDefined()
       credential = credRes.credential
     })
@@ -475,10 +475,10 @@ describe('spaces', () => {
         { space: syncSpaceUri },
         { headers: bobHeaders },
       )
-      const credRes = await client.call(
-        com.atproto.space.getSpaceCredential,
-        { space: syncSpaceUri, grant: grantRes.grant },
-      )
+      const credRes = await client.call(com.atproto.space.getSpaceCredential, {
+        space: syncSpaceUri,
+        grant: grantRes.grant,
+      })
       syncCredential = credRes.credential
     })
 

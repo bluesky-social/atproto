@@ -18,6 +18,8 @@ const id = 'com.atproto.space.listRecords'
 export type QueryParams = {
   /** Reference to the space. */
   space: string
+  /** The DID of the member whose repo to read from. If omitted, defaults to the authenticated user (OAuth auth). Required when using space-credential auth. */
+  repo?: string
   /** The NSID of the record type. */
   collection?: string
   /** The number of records to return. */

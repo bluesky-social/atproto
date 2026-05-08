@@ -428,6 +428,25 @@ export class AuthVerifier {
     }
   }
 
+  public authorizationOrSpaceCredential<P extends Params>(
+    options: VerifiedOptions &
+      ScopedOptions &
+      ExtraScopedOptions &
+      AuthorizedOptions<P>,
+  ): MethodAuthVerifier<
+    SpaceCredentialOutput | OAuthOutput | AccessOutput,
+    P
+  > {
+    const authorizationVerifier = this.authorization(options)
+    return async (ctx) => {
+      if (isSpaceCredentialAuth(ctx.req)) {
+        return this.spaceCredentialAuth(ctx)
+      } else {
+        return authorizationVerifier(ctx)
+      }
+    }
+  }
+
   protected oauth<P extends Params>({
     authorize,
     ...verifyStatusOptions
@@ -724,6 +743,17 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   if (!token) return false
   const payload = jose.decodeJwt(token)
   return payload['lxm'] != null
+}
+
+const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {
+  const token = bearerTokenFromReq(req)
+  if (!token) return false
+  try {
+    const header = jose.decodeProtectedHeader(token)
+    return header.typ === 'space_credential'
+  } catch {
+    return false
+  }
 }
 
 const extractAuthType = (req: IncomingMessage): AuthType | null => {

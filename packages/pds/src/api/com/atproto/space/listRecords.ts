@@ -1,17 +1,33 @@
 import { NsidString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRecords, {
-    auth: ctx.authVerifier.authorization({ authorize: () => {} }),
+    auth: ctx.authVerifier.authorizationOrSpaceCredential({
+      authorize: () => {},
+    }),
     handler: async ({ params, auth }) => {
-      const did = auth.credentials.did
-      const { space, collection, limit, cursor, reverse } = params
+      const { space, collection, limit, cursor, reverse, repo } = params
+
+      let repoDid: string
+      if (auth.credentials.type === 'space_credential') {
+        if (auth.credentials.space !== space) {
+          throw new InvalidRequestError('Credential space mismatch')
+        }
+        if (!repo) {
+          throw new InvalidRequestError(
+            'repo is required for space credential auth',
+          )
+        }
+        repoDid = repo
+      } else {
+        repoDid = repo ?? auth.credentials.did
+      }
 
       if (collection) {
-        const records = await ctx.actorStore.read(did, (store) =>
+        const records = await ctx.actorStore.read(repoDid, (store) =>
           store.space.listRecords(space, collection, {
             limit: limit ?? 50,
             cursor,
@@ -32,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // List across all collections
-      const collections = await ctx.actorStore.read(did, (store) =>
+      const collections = await ctx.actorStore.read(repoDid, (store) =>
         store.space.listCollections(space),
       )
       const allRecords: {
@@ -41,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
         cid: string
       }[] = []
       for (const col of collections) {
-        const records = await ctx.actorStore.read(did, (store) =>
+        const records = await ctx.actorStore.read(repoDid, (store) =>
           store.space.listRecords(space, col, {
             limit: limit ?? 50,
           }),

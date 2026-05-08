@@ -3,6 +3,7 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
+import { fireNotifyWrite } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.deleteRecord, {
@@ -11,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       const did = auth.credentials.did
       const { space, collection, rkey, swapCommit } = input.body
 
-      await ctx.actorStore.transact(did, async (actorTxn) => {
+      const rev = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new SqlRepoStorage(actorTxn.space, space)
         const repo = await SpaceRepo.loadOrCreate(storage, did)
         const commit = await repo.formatCommit({
@@ -27,8 +28,10 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
 
-        await actorTxn.space.applyRepoCommit(space, commit)
+        return actorTxn.space.applyRepoCommit(space, commit)
       })
+
+      await fireNotifyWrite(ctx, space, did, rev)
 
       return {
         encoding: 'application/json' as const,

@@ -4,6 +4,7 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
+import { fireNotifyWrite } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.applyWrites, {
@@ -37,21 +38,26 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Unknown write type')
       })
 
-      const results = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const storage = new SqlRepoStorage(actorTxn.space, space)
-        const repo = await SpaceRepo.loadOrCreate(storage, did)
-        const commit = await repo.formatCommit(ops)
+      const { results, rev } = await ctx.actorStore.transact(
+        did,
+        async (actorTxn) => {
+          const storage = new SqlRepoStorage(actorTxn.space, space)
+          const repo = await SpaceRepo.loadOrCreate(storage, did)
+          const commit = await repo.formatCommit(ops)
 
-        if (swapCommit) {
-          const state = await actorTxn.space.getRepoState(space)
-          if (state?.rev !== swapCommit) {
-            throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
+          if (swapCommit) {
+            const state = await actorTxn.space.getRepoState(space)
+            if (state?.rev !== swapCommit) {
+              throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
+            }
           }
-        }
 
-        await actorTxn.space.applyRepoCommit(space, commit)
-        return commit.writes
-      })
+          const rev = await actorTxn.space.applyRepoCommit(space, commit)
+          return { results: commit.writes, rev }
+        },
+      )
+
+      await fireNotifyWrite(ctx, space, did, rev)
 
       return {
         encoding: 'application/json' as const,
