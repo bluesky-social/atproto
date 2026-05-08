@@ -113,14 +113,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`CREATE INDEX idx_report_record_path_pattern ON report
     ("recordPath" text_pattern_ops)`.execute(db)
 
-  // GIN index for reviewedBy queries (ANY operator on array)
-  await db.schema
-    .createIndex('idx_report_action_event_ids_gin')
-    .on('report')
-    .using('gin')
-    .column('actionEventIds')
-    .execute()
-
   // Queue-router covering partial: index-only scan over unrouted, non-closed rows.
   // Selects exactly the columns the router reads, eliminating heap fetches per batch.
   await sql`CREATE INDEX idx_report_unassigned_id ON report (id)
@@ -148,6 +140,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`CREATE INDEX moderation_event_report_id_idx
     ON moderation_event (id)
     WHERE action = 'tools.ozone.moderation.defs#modEventReport'`.execute(db)
+
+  // Stats windowed queries: aggregate/typeWindow filter by createdAt range and
+  // include both open and closed reports, so they cannot use the partial indexes
+  // above. (createdAt, reportType) ordering serves the date-range scan and
+  // satisfies GROUP BY reportType from the index without a heap fetch.
+  await sql`CREATE INDEX idx_report_created_type
+    ON report ("createdAt", "reportType")`.execute(db)
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

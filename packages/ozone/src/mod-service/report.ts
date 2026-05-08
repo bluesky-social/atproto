@@ -93,16 +93,6 @@ export async function queryReports(
     builder = builder.where('r.createdAt', '<', params.reportedBefore)
   }
 
-  if (params.reviewedBy) {
-    // Filter by moderator who actioned the report
-    // Check if any action event IDs belong to events created by the specified moderator
-    builder = builder.where(sql`EXISTS (
-      SELECT 1 FROM moderation_event AS action_event
-      WHERE action_event."createdBy" = ${params.reviewedBy}
-      AND action_event.id = ANY(r.actionEventIds)
-    )`)
-  }
-
   if (params.assignedTo) {
     builder = builder.where('r.assignedTo', '=', params.assignedTo)
   }

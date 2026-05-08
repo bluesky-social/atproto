@@ -22644,12 +22644,6 @@ export const schemaDict = {
               description:
                 'Filter by muted status. true returns only muted reports, false returns only unmuted reports. Defaults to false.',
             },
-            reviewedBy: {
-              type: 'string',
-              format: 'did',
-              description:
-                'Filter by moderator who reviewed/actioned the report',
-            },
             assignedTo: {
               type: 'string',
               format: 'did',

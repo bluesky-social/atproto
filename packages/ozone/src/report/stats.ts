@@ -164,6 +164,20 @@ type BatchedStats = {
   moderator: ModeratorWindowRow[]
 }
 
+type UpsertRow = {
+  date: string
+  queueId: number | null
+  moderatorDid: string | null
+  reportTypes: string[] | null
+  inboundCount: number | null
+  pendingCount: number | null
+  actionedCount: number | null
+  escalatedCount: number | null
+  actionRate: number | null
+  avgHandlingTimeSec: number | null
+  computedAt: string
+}
+
 export class ReportStatsService {
   constructor(public db: Database) {}
 
@@ -226,6 +240,7 @@ export class ReportStatsService {
       if (opts.queueIds?.length) {
         // Recompute only specific queue groups for this date
         const batched = await this.computeBatchedStats(dateStr)
+        const rows: UpsertRow[] = []
         for (const queueId of opts.queueIds) {
           const group: ReportStatGroup = {
             queueId,
@@ -233,8 +248,9 @@ export class ReportStatsService {
             reportTypes: null,
           }
           const stats = this.resolveGroupStats(group, batched)
-          await this.upsertGroup(dateStr, group, stats)
+          rows.push(this.buildUpsertRow(dateStr, group, stats))
         }
+        await this.bulkUpsert(rows)
       } else {
         await this.materializeDate(dateStr, { force: true })
       }
@@ -251,10 +267,16 @@ export class ReportStatsService {
     const today = toDateString(new Date())
     const isToday = date === today
 
+    // Batch the cache check so we don't issue one SELECT per group.
+    const existingByKey = !opts?.force
+      ? await this.fetchExistingStatsByKey(date)
+      : null
+
+    const rows: UpsertRow[] = []
     for (const group of groups) {
       try {
-        if (!opts?.force) {
-          const cached = await this.getStatForDate(date, group)
+        if (existingByKey) {
+          const cached = existingByKey.get(groupKey(group))
           if (cached) {
             // Historical dates: never recompute. Today: recompute if stale.
             if (!isToday) continue
@@ -263,14 +285,39 @@ export class ReportStatsService {
           }
         }
         const stats = this.resolveGroupStats(group, batched)
-        await this.upsertGroup(date, group, stats)
+        rows.push(this.buildUpsertRow(date, group, stats))
       } catch (err) {
         dbLogger.error(
           { err, group, date },
-          'error materializing report stats group',
+          'error preparing report stats group',
         )
       }
     }
+
+    await this.bulkUpsert(rows)
+  }
+
+  /** Fetch all stat rows for a date, keyed by groupKey for O(1) lookup. */
+  private async fetchExistingStatsByKey(
+    date: string,
+  ): Promise<Map<string, Selectable<ReportStat>>> {
+    const existing = await this.db.db
+      .selectFrom('report_stat')
+      .selectAll()
+      .where('date', '=', date)
+      .execute()
+    const map = new Map<string, Selectable<ReportStat>>()
+    for (const row of existing) {
+      map.set(
+        groupKey({
+          queueId: row.queueId,
+          moderatorDid: row.moderatorDid,
+          reportTypes: row.reportTypes,
+        }),
+        row,
+      )
+    }
+    return map
   }
 
   /** List out the groups to compute stats for. */
@@ -576,62 +623,75 @@ export class ReportStatsService {
     return { inboundCount, actionedCount, avgHandlingTimeSec }
   }
 
-  /** Write or overwrite a stat row for a specific date + group. */
-  private async upsertGroup(
+  /** Build an upsert row from (date, group, stats). */
+  private buildUpsertRow(
     date: string,
     group: ReportStatGroup,
     stats: ReportStatistics,
-  ): Promise<Selectable<ReportStat>> {
-    const { queueId, moderatorDid, reportTypes } = group
-    const computedAt = new Date().toISOString()
-
+  ): UpsertRow {
     const pendingCount =
       'pendingCount' in stats ? stats.pendingCount ?? null : null
     const escalatedCount =
       'escalatedCount' in stats ? stats.escalatedCount ?? null : null
     const actionRate = 'actionRate' in stats ? stats.actionRate ?? null : null
 
-    const values = {
+    return {
       date,
-      queueId,
-      moderatorDid,
-      reportTypes: reportTypes !== null ? jsonb(reportTypes) : null,
+      queueId: group.queueId,
+      moderatorDid: group.moderatorDid,
+      reportTypes: group.reportTypes,
       inboundCount: stats.inboundCount ?? null,
       pendingCount,
       actionedCount: stats.actionedCount ?? null,
       escalatedCount,
       actionRate,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
-      computedAt,
+      computedAt: new Date().toISOString(),
     }
+  }
 
-    return this.db.transaction(async (dbTxn) => {
-      // Delete existing row for this date + group
-      let del = dbTxn.db.deleteFrom('report_stat').where('date', '=', date)
-      if (queueId !== null) {
-        del = del.where('queueId', '=', queueId)
-      } else {
-        del = del.where('queueId', 'is', null)
-      }
-      if (moderatorDid) {
-        del = del.where('moderatorDid', '=', moderatorDid)
-      } else {
-        del = del.where('moderatorDid', 'is', null)
-      }
-      if (reportTypes !== null) {
-        del = del.where(
-          sql`"reportTypes"::jsonb = ${jsonb(reportTypes)}::jsonb`,
-        )
-      } else {
-        del = del.where('reportTypes', 'is', null)
-      }
-      await del.execute()
+  /**
+   * Wraps a DELETE+INSERT for each row in a single transaction so we pay one
+   * commit per cycle instead of one per group. NULL-aware WHERE clauses match
+   * the existing PG <15 NULL semantics without needing a unique index.
+   */
+  private async bulkUpsert(rows: UpsertRow[]): Promise<void> {
+    if (!rows.length) return
 
-      return dbTxn.db
-        .insertInto('report_stat')
-        .values(values)
-        .returningAll()
-        .executeTakeFirstOrThrow()
+    await this.db.transaction(async (dbTxn) => {
+      for (const r of rows) {
+        let del = dbTxn.db.deleteFrom('report_stat').where('date', '=', r.date)
+        del = r.queueId !== null
+          ? del.where('queueId', '=', r.queueId)
+          : del.where('queueId', 'is', null)
+        del = r.moderatorDid !== null
+          ? del.where('moderatorDid', '=', r.moderatorDid)
+          : del.where('moderatorDid', 'is', null)
+        del = r.reportTypes !== null
+          ? del.where(
+              sql`"reportTypes"::jsonb = ${jsonb(r.reportTypes)}::jsonb`,
+            )
+          : del.where('reportTypes', 'is', null)
+        await del.execute()
+
+        await dbTxn.db
+          .insertInto('report_stat')
+          .values({
+            date: r.date,
+            queueId: r.queueId,
+            moderatorDid: r.moderatorDid,
+            reportTypes:
+              r.reportTypes !== null ? jsonb(r.reportTypes) : null,
+            inboundCount: r.inboundCount,
+            pendingCount: r.pendingCount,
+            actionedCount: r.actionedCount,
+            escalatedCount: r.escalatedCount,
+            actionRate: r.actionRate,
+            avgHandlingTimeSec: r.avgHandlingTimeSec,
+            computedAt: r.computedAt,
+          })
+          .execute()
+      }
     })
   }
 
@@ -760,6 +820,19 @@ function num(val: string | undefined | null): number {
 /** Sum a numeric string field across rows. */
 function sumNum<T>(rows: T[], field: keyof T): number {
   return rows.reduce((sum, r) => sum + Number(r[field] ?? 0), 0)
+}
+
+/**
+ * Stable cache-key for a stat group. Used to look up an existing row in the
+ * batched cache map without issuing per-group SELECTs. Report types are
+ * stringified in stored order, which matches REPORT_TYPE_GROUPS.
+ */
+function groupKey(g: ReportStatGroup): string {
+  return [
+    g.queueId ?? 'null',
+    g.moderatorDid ?? 'null',
+    g.reportTypes ? JSON.stringify(g.reportTypes) : 'null',
+  ].join('|')
 }
 
 /** Convert a Date to an ISO date string (YYYY-MM-DD). */

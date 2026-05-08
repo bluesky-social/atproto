@@ -43,8 +43,6 @@ export type QueryParams = {
   reportedBefore?: string
   /** Filter by muted status. true returns only muted reports, false returns only unmuted reports. Defaults to false. */
   isMuted?: boolean
-  /** Filter by moderator who reviewed/actioned the report */
-  reviewedBy?: string
   /** Filter by the DID of the moderator permanently assigned to the report. */
   assignedTo?: string
   sortField?: 'createdAt' | 'updatedAt'
