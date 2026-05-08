@@ -332,7 +332,7 @@
     "groupConvo": {
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
-      "required": ["name", "lockStatus", "memberCount"],
+      "required": ["name", "lockStatus", "memberCount", "createdAt"],
       "properties": {
         "name": {
           "type": "string",
@@ -343,6 +343,10 @@
         "memberCount": {
           "type": "integer",
           "description": "The total number of members in the group conversation."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
         },
         "joinLink": {
           "type": "ref",
@@ -410,6 +414,14 @@
         "message": {
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
+        },
+        "relatedProfiles": {
+          "description": "Profiles referred to in the message view. This isn't required for compatibility, because it was added later, but should generally be present.",
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "chat.bsky.actor.defs#profileViewBasic"
+          }
         }
       }
     },
@@ -450,7 +462,15 @@
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
         },
-        "reaction": { "type": "ref", "ref": "#reactionView" }
+        "reaction": { "type": "ref", "ref": "#reactionView" },
+        "relatedProfiles": {
+          "description": "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "chat.bsky.actor.defs#profileViewBasic"
+          }
+        }
       }
     },
     "logRemoveReaction": {
@@ -464,7 +484,15 @@
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
         },
-        "reaction": { "type": "ref", "ref": "#reactionView" }
+        "reaction": { "type": "ref", "ref": "#reactionView" },
+        "relatedProfiles": {
+          "description": "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "chat.bsky.actor.defs#profileViewBasic"
+          }
+        }
       }
     },
     "logReadConvo": {

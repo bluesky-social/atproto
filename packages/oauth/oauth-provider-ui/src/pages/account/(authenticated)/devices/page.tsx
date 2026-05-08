@@ -2,7 +2,7 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
 import type { ActiveAccountSession } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
-import { Admonition } from '#/components/utils/admonition.tsx'
+import { Action, Admonition } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
@@ -14,7 +14,6 @@ import { useBrowserName } from '#/hooks/use-browser-name'
 import { useDateAgo } from '#/hooks/use-date-ago'
 
 export function Page() {
-  const { t } = useLingui()
   const { account } = useAuthenticatedSession()
   const { data, refetch, isLoading } = useAccountSessionsQuery(account)
 
@@ -26,7 +25,11 @@ export function Page() {
     return (
       <Admonition
         role="status"
-        action={{ children: t`Retry`, onClick: () => refetch() }}
+        action={
+          <Action onClick={() => refetch()}>
+            <Trans>Retry</Trans>
+          </Action>
+        }
       >
         <Trans>Failed to load connected apps</Trans>
       </Admonition>

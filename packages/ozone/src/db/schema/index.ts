@@ -5,6 +5,7 @@ import * as accountRecordStatusStats from './account_record_status_stats'
 import * as accountStrike from './account_strike'
 import * as blobPushEvent from './blob_push_event'
 import * as communicationTemplate from './communication_template'
+import * as expiringTag from './expiring_tag'
 import * as firehoseCursor from './firehose_cursor'
 import * as jobCursor from './job_cursor'
 import * as label from './label'
@@ -51,7 +52,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   safelink.PartialDB &
   scheduledAction.PartialDB &
   moderatorAssignment.PartialDB &
-  reportStat.PartialDB
+  reportStat.PartialDB &
+  expiringTag.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

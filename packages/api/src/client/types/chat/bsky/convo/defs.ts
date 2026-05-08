@@ -512,6 +512,7 @@ export interface GroupConvo {
   name: string
   /** The total number of members in the group conversation. */
   memberCount: number
+  createdAt: string
   joinLink?: ChatBskyGroupDefs.JoinLinkView
   lockStatus: ConvoLockStatus
 }
@@ -617,6 +618,8 @@ export interface LogCreateMessage {
   rev: string
   convoId: string
   message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
+  /** Profiles referred to in the message view. This isn't required for compatibility, because it was added later, but should generally be present. */
+  relatedProfiles?: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogCreateMessage = 'logCreateMessage'
@@ -676,6 +679,8 @@ export interface LogAddReaction {
   convoId: string
   message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
   reaction: ReactionView
+  /** Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present. */
+  relatedProfiles?: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogAddReaction = 'logAddReaction'
@@ -695,6 +700,8 @@ export interface LogRemoveReaction {
   convoId: string
   message: $Typed<MessageView> | $Typed<DeletedMessageView> | { $type: string }
   reaction: ReactionView
+  /** Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present. */
+  relatedProfiles?: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogRemoveReaction = 'logRemoveReaction'

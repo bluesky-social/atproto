@@ -36,6 +36,8 @@ export interface External {
   title: string
   description: string
   thumb?: BlobRef
+  /** The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record. */
+  associatedRecord?: string
 }
 
 const hashExternal = 'external'

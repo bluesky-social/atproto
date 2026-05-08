@@ -1,17 +1,15 @@
 import { Trans } from '@lingui/react/macro'
 import { FormEvent, ReactNode, useCallback } from 'react'
+import { errorCardRender } from '#/components/utils/error-card.tsx'
 import {
   UseAsyncActionOptions,
   useAsyncAction,
 } from '#/hooks/use-async-action.ts'
 import { Override } from '#/lib/util.ts'
-import { ErrorCard } from '../utils/error-card.tsx'
 import { Button } from './button.tsx'
 import { FormCard, FormCardProps } from './form-card.tsx'
 
 export type { AsyncActionController } from '#/hooks/use-async-action.ts'
-
-export type ErrorRender = (data: { error: Error }) => ReactNode
 
 export type FormCardAsyncProps = Override<
   Override<
@@ -29,7 +27,7 @@ export type FormCardAsyncProps = Override<
     onCancel?: () => void
     cancelLabel?: ReactNode
 
-    errorRender?: ErrorRender
+    errorRender?: (props: { error: Error }) => ReactNode
   }
 >
 
@@ -43,7 +41,7 @@ export function FormCardAsync({
   onCancel = undefined,
   cancelLabel = <Trans>Cancel</Trans>,
 
-  errorRender = ({ error }) => <ErrorCard error={error} />,
+  errorRender = errorCardRender,
 
   // UseAsyncActionOptions
   ref,

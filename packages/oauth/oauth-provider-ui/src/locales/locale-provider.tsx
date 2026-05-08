@@ -20,6 +20,7 @@ export type LocaleContextValue = {
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
+LocaleContext.displayName = 'LocaleContext'
 
 export function useLocaleContext(): LocaleContextValue {
   const context = useContext(LocaleContext)
@@ -105,8 +106,8 @@ export function LocaleProvider({
   )
 
   return (
-    <LocaleContext value={value}>
+    <LocaleContext.Provider value={value}>
       <I18nProvider i18n={i18n}>{initialized && children}</I18nProvider>
-    </LocaleContext>
+    </LocaleContext.Provider>
   )
 }

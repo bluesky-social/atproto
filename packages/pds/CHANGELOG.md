@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.221
+
+### Patch Changes
+
+- [#4757](https://github.com/bluesky-social/atproto/pull/4757) [`877e629`](https://github.com/bluesky-social/atproto/commit/877e6293b93b2c32342b2023ab4f0c0e1cce643a) Thanks [@devinivy](https://github.com/devinivy)! - Remove legacy JWT typ check.
+
+- Updated dependencies [[`5d3e248`](https://github.com/bluesky-social/atproto/commit/5d3e248c262f45e3ca471d8d2381830a4cd896ae)]:
+  - @atproto/oauth-provider@0.16.3
+
 ## 0.4.220
 
 ### Patch Changes

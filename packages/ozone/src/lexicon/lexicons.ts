@@ -2710,6 +2710,12 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
+          associatedRecord: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
+          },
         },
       },
       view: {
@@ -10356,7 +10362,7 @@ export const schemaDict = {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here].',
         type: 'object',
-        required: ['name', 'lockStatus', 'memberCount'],
+        required: ['name', 'lockStatus', 'memberCount', 'createdAt'],
         properties: {
           name: {
             type: 'string',
@@ -10368,6 +10374,10 @@ export const schemaDict = {
             type: 'integer',
             description:
               'The total number of members in the group conversation.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
           },
           joinLink: {
             type: 'ref',
@@ -10469,6 +10479,15 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
           },
+          relatedProfiles: {
+            description:
+              "Profiles referred to in the message view. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logDeleteMessage: {
@@ -10536,6 +10555,15 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionView',
           },
+          relatedProfiles: {
+            description:
+              "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logRemoveReaction: {
@@ -10559,6 +10587,15 @@ export const schemaDict = {
           reaction: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+          relatedProfiles: {
+            description:
+              "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
           },
         },
       },
@@ -19002,6 +19039,11 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added.',
           },
         },
       },

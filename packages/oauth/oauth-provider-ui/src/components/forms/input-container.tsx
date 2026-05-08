@@ -121,7 +121,7 @@ export function InputContainer({
           <div
             className={clsx(
               'flex shrink-0 grow-0 items-center justify-center',
-              'mx-2',
+              'mx-2 size-5',
               hasFocus ? 'text-primary' : 'text-text-light',
             )}
           >
