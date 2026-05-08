@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { DidString, NSID } from '@atproto/syntax'
 import {

@@ -21,7 +21,9 @@ describe('signatures', () => {
 
   beforeAll(() => {
     vectors = JSON.parse(
-      fs.readFileSync(`${import.meta.dirname}/signature-fixtures.json`).toString(),
+      fs
+        .readFileSync(`${import.meta.dirname}/signature-fixtures.json`)
+        .toString(),
     )
   })
 

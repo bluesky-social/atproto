@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { HandleResolver } from '../src/index.js'
 
 jest.mock('node:dns/promises', () => {

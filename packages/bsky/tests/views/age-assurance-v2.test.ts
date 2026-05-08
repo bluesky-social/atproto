@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
+import { jest } from '@jest/globals'
 import express, { Application, json } from 'express'
 import {
   AppBskyAgeassuranceBegin,

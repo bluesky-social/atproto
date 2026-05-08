@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'

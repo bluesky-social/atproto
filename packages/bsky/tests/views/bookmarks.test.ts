@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { jest } from '@jest/globals'
 import {
   $Typed,
   AppBskyBookmarkCreateBookmark,
