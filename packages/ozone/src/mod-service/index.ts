@@ -1040,9 +1040,6 @@ export class ModerationService {
       modTool,
     } = info
 
-    // The corresponding `report` row is no longer inserted here. The
-    // queue-router daemon walks moderation_event for modEventReport rows and
-    // inserts report rows asynchronously with `queueId` already resolved.
     return await this.logEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventReport',

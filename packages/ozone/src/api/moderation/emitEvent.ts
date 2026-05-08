@@ -264,12 +264,6 @@ const handleModerationEvent = async ({
       externalId,
     })
 
-    // Report rows for modEventReport events are created asynchronously by
-    // the queue-router daemon, which reads from moderation_event and inserts
-    // into report with queue assignment already resolved. The reporter-muted
-    // and subject-muted flags are captured on `meta` inside `logEvent` so the
-    // daemon can populate `report.isMuted` later without races.
-
     // Update reports if reportAction was provided
     if (input.body.reportAction) {
       const subjectUri = subject.isRecord() ? subject.uri : null
