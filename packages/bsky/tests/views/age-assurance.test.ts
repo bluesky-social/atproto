@@ -32,8 +32,8 @@ describe('age assurance views', () => {
   let actorDid: string
 
   let kwsServer: MockKwsServer
-  const authMock = jest.fn()
-  const sendEmailMock = jest.fn()
+  const authMock = jest.fn<MockHandler>()
+  const sendEmailMock = jest.fn<MockHandler>()
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
@@ -363,6 +363,8 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
+type MockHandler = (req: express.Request, res: express.Response) => void
+
 class MockKwsServer {
   private verificationSecret: string
   private webhookSecret: string
@@ -377,8 +379,8 @@ class MockKwsServer {
   }: {
     verificationSecret: string
     webhookSecret: string
-    authMock: jest.Mock
-    sendEmailMock: jest.Mock
+    authMock: ReturnType<typeof jest.fn<MockHandler>>
+    sendEmailMock: ReturnType<typeof jest.fn<MockHandler>>
   }) {
     this.verificationSecret = verificationSecret
     this.webhookSecret = webhookSecret

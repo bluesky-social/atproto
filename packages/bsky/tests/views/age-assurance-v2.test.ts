@@ -71,7 +71,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
 })
 
 jest.mock('../../dist/api/age-assurance/kws/const.js', () => {
-  const actual = jest.requireActual('../../dist/api/age-assurance/kws/const.js')
+  const actual = jest.requireActual('../../dist/api/age-assurance/kws/const.js') as Record<string, unknown>
   const KWS_V2_COUNTRIES = new Set(['AA'])
   return {
     ...actual,
@@ -86,9 +86,9 @@ describe('age assurance v2 views', () => {
   let sc: SeedClient
   let kws: MockKwsServer
 
-  const kwsOauthMock = jest.fn()
-  const kwsSendAgeVerifiedFlowEmailMock = jest.fn()
-  const kwsSendAdultVerifiedFlowEmailMock = jest.fn()
+  const kwsOauthMock = jest.fn<MockHandler>()
+  const kwsSendAgeVerifiedFlowEmailMock = jest.fn<MockHandler>()
+  const kwsSendAdultVerifiedFlowEmailMock = jest.fn<MockHandler>()
   const actor = {
     did: '',
     email: '',
@@ -646,6 +646,8 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
+type MockHandler = (req: express.Request, res: express.Response) => void
+
 class MockKwsServer {
   verificationSecret = 'verificationSecret' // unused here
   webhookSecret = 'webhookSecret' // unused here
@@ -661,9 +663,9 @@ class MockKwsServer {
     sendAgeVerifiedFlowEmailMock,
     sendAdultVerifiedFlowEmailMock,
   }: {
-    oauthMock: jest.Mock
-    sendAgeVerifiedFlowEmailMock: jest.Mock
-    sendAdultVerifiedFlowEmailMock: jest.Mock
+    oauthMock: ReturnType<typeof jest.fn<MockHandler>>
+    sendAgeVerifiedFlowEmailMock: ReturnType<typeof jest.fn<MockHandler>>
+    sendAdultVerifiedFlowEmailMock: ReturnType<typeof jest.fn<MockHandler>>
   }) {
     this.app = express()
       .use(json())
