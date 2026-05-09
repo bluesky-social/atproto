@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`notification views does not generate self notifications for likes via own repost 1`] = `
+exports[`notification views > does not generate self notifications for likes via own repost 1`] = `
 [
   {
     "author": {
@@ -96,7 +96,7 @@ exports[`notification views does not generate self notifications for likes via o
 ]
 `;
 
-exports[`notification views does not generate self notifications for likes via own repost 2`] = `
+exports[`notification views > does not generate self notifications for likes via own repost 2`] = `
 [
   {
     "author": {
@@ -158,7 +158,7 @@ exports[`notification views does not generate self notifications for likes via o
 ]
 `;
 
-exports[`notification views fetches notifications omitting mentions and replies for taken-down posts 1`] = `
+exports[`notification views > fetches notifications omitting mentions and replies for taken-down posts 1`] = `
 [
   {
     "author": {
@@ -589,7 +589,7 @@ exports[`notification views fetches notifications omitting mentions and replies 
 ]
 `;
 
-exports[`notification views fetches notifications with default priority 1`] = `
+exports[`notification views > fetches notifications with default priority 1`] = `
 {
   "cursor": "1970-01-01T00:00:00.000Z",
   "notifications": [
@@ -815,7 +815,7 @@ exports[`notification views fetches notifications with default priority 1`] = `
 }
 `;
 
-exports[`notification views fetches notifications with explicit priority 1`] = `
+exports[`notification views > fetches notifications with explicit priority 1`] = `
 {
   "cursor": "1970-01-01T00:00:00.000Z",
   "notifications": [
@@ -1041,7 +1041,7 @@ exports[`notification views fetches notifications with explicit priority 1`] = `
 }
 `;
 
-exports[`notification views fetches notifications with explicit priority 2`] = `
+exports[`notification views > fetches notifications with explicit priority 2`] = `
 {
   "cursor": "1970-01-01T00:00:00.000Z",
   "notifications": [
@@ -1389,7 +1389,7 @@ exports[`notification views fetches notifications with explicit priority 2`] = `
 }
 `;
 
-exports[`notification views fetches notifications without a last-seen 1`] = `
+exports[`notification views > fetches notifications without a last-seen 1`] = `
 [
   {
     "author": {
@@ -1912,7 +1912,7 @@ exports[`notification views fetches notifications without a last-seen 1`] = `
 ]
 `;
 
-exports[`notification views filters notifications by multiple reasons 1`] = `
+exports[`notification views > filters notifications by multiple reasons 1`] = `
 {
   "notifications": [
     {
@@ -2124,12 +2124,12 @@ exports[`notification views filters notifications by multiple reasons 1`] = `
       "uri": "record(9)",
     },
   ],
-  "priority": false,
+  "priority": true,
   "seenAt": "1970-01-01T00:00:00.000Z",
 }
 `;
 
-exports[`notification views filters notifications by reason 1`] = `
+exports[`notification views > filters notifications by reason 1`] = `
 {
   "notifications": [
     {
@@ -2185,12 +2185,12 @@ exports[`notification views filters notifications by reason 1`] = `
       "uri": "record(0)",
     },
   ],
-  "priority": false,
+  "priority": true,
   "seenAt": "1970-01-01T00:00:00.000Z",
 }
 `;
 
-exports[`notification views generates notifications for likes 1`] = `
+exports[`notification views > generates notifications for likes 1`] = `
 [
   {
     "author": {
@@ -2372,7 +2372,7 @@ exports[`notification views generates notifications for likes 1`] = `
 ]
 `;
 
-exports[`notification views generates notifications for likes via repost 1`] = `
+exports[`notification views > generates notifications for likes via repost 1`] = `
 [
   {
     "author": {
@@ -2433,7 +2433,7 @@ exports[`notification views generates notifications for likes via repost 1`] = `
 ]
 `;
 
-exports[`notification views generates notifications for likes via repost 2`] = `
+exports[`notification views > generates notifications for likes via repost 2`] = `
 [
   {
     "author": {
@@ -2495,7 +2495,7 @@ exports[`notification views generates notifications for likes via repost 2`] = `
 ]
 `;
 
-exports[`notification views generates notifications for quotes 1`] = `
+exports[`notification views > generates notifications for quotes 1`] = `
 [
   {
     "author": {
@@ -2643,7 +2643,7 @@ exports[`notification views generates notifications for quotes 1`] = `
 ]
 `;
 
-exports[`notification views generates notifications for reposts 1`] = `
+exports[`notification views > generates notifications for reposts 1`] = `
 [
   {
     "author": {
@@ -2718,7 +2718,7 @@ exports[`notification views generates notifications for reposts 1`] = `
 ]
 `;
 
-exports[`notification views generates notifications for reposts via repost 1`] = `
+exports[`notification views > generates notifications for reposts via repost 1`] = `
 [
   {
     "author": {
@@ -2810,7 +2810,7 @@ exports[`notification views generates notifications for reposts via repost 1`] =
 ]
 `;
 
-exports[`notification views generates notifications for reposts via repost 2`] = `
+exports[`notification views > generates notifications for reposts via repost 2`] = `
 [
   {
     "author": {
@@ -2872,7 +2872,7 @@ exports[`notification views generates notifications for reposts via repost 2`] =
 ]
 `;
 
-exports[`notification views generates notifications for verification created and removed 1`] = `
+exports[`notification views > generates notifications for verification created and removed 1`] = `
 [
   {
     "author": {
@@ -2928,7 +2928,7 @@ exports[`notification views generates notifications for verification created and
 ]
 `;
 
-exports[`notification views generates notifications for verification created and removed 2`] = `
+exports[`notification views > generates notifications for verification created and removed 2`] = `
 [
   {
     "author": {
@@ -3027,9 +3027,9 @@ exports[`notification views generates notifications for verification created and
 ]
 `;
 
-exports[`notification views handles hide tag filters filters posts with hide tag 1`] = `[]`;
+exports[`notification views > handles hide tag filters > filters posts with hide tag 1`] = `[]`;
 
-exports[`notification views handles hide tag filters shows posts with hide tag if they are followed 1`] = `
+exports[`notification views > handles hide tag filters > shows posts with hide tag if they are followed 1`] = `
 [
   {
     "author": {

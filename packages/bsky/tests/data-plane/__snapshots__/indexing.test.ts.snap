@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`indexing indexRepo updates indexes when records change. 1`] = `
+exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
 [
   {
     "associated": {
@@ -617,7 +617,7 @@ exports[`indexing indexRepo updates indexes when records change. 1`] = `
 ]
 `;
 
-exports[`indexing indexes posts. 1`] = `
+exports[`indexing > indexes posts. 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -694,7 +694,7 @@ exports[`indexing indexes posts. 1`] = `
 }
 `;
 
-exports[`indexing indexes posts. 2`] = `
+exports[`indexing > indexes posts. 2`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -771,7 +771,7 @@ exports[`indexing indexes posts. 2`] = `
 }
 `;
 
-exports[`indexing indexes posts. 3`] = `
+exports[`indexing > indexes posts. 3`] = `
 {
   "createNotifications": [
     {
@@ -801,7 +801,7 @@ exports[`indexing indexes posts. 3`] = `
 }
 `;
 
-exports[`indexing indexes profiles. 1`] = `
+exports[`indexing > indexes profiles. 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -830,7 +830,7 @@ exports[`indexing indexes profiles. 1`] = `
 }
 `;
 
-exports[`indexing indexes profiles. 2`] = `
+exports[`indexing > indexes profiles. 2`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -859,7 +859,7 @@ exports[`indexing indexes profiles. 2`] = `
 }
 `;
 
-exports[`indexing indexes profiles. 3`] = `
+exports[`indexing > indexes profiles. 3`] = `
 {
   "associated": {
     "activitySubscription": {

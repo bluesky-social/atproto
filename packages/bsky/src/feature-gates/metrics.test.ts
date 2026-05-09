@@ -1,10 +1,10 @@
-/// <reference types="jest" />
+import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { featureGatesLogger } from '../logger.js'
 import { MetricsClient } from './metrics.js'
 
-jest.mock('../logger', () => ({
+vi.mock('../logger', () => ({
   featureGatesLogger: {
-    error: jest.fn(),
+    error: vi.fn(),
   },
 }))
 
@@ -17,14 +17,14 @@ type TestEvents = {
 const flushPromises = () => new Promise((r) => setImmediate(r))
 
 describe('MetricsClient', () => {
-  let fetchMock: jest.Mock
+  let fetchMock: Mock
   let fetchRequests: { body: any }[]
   let client: MetricsClient<TestEvents>
 
   beforeEach(() => {
-    jest.useFakeTimers({ doNotFake: ['setImmediate', 'performance'] })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval'] })
     fetchRequests = []
-    fetchMock = jest.fn().mockImplementation(async (_url, options) => {
+    fetchMock = vi.fn().mockImplementation(async (_url, options) => {
       const body = JSON.parse(options.body)
       fetchRequests.push({ body })
       return { ok: true, status: 200, text: async () => '' }
@@ -34,8 +34,8 @@ describe('MetricsClient', () => {
 
   afterEach(() => {
     client?.stop()
-    jest.useRealTimers()
-    jest.clearAllMocks()
+    vi.useRealTimers()
+    vi.clearAllMocks()
   })
 
   it('flushes events on interval', async () => {
@@ -48,7 +48,7 @@ describe('MetricsClient', () => {
     expect(fetchRequests).toHaveLength(0)
 
     // Advance past the 10 second interval
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -93,7 +93,7 @@ describe('MetricsClient', () => {
     client.track('click', { button: 'submit' })
 
     // Trigger flush via interval
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -122,7 +122,7 @@ describe('MetricsClient', () => {
     client.track('click', { button: 'submit' })
 
     // Trigger flush - should not throw
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -158,7 +158,7 @@ describe('MetricsClient', () => {
     client.track('click', { button: 'submit' })
 
     // Trigger flush via interval
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).not.toHaveBeenCalled()
@@ -175,7 +175,7 @@ describe('MetricsClient', () => {
     client.start()
 
     // Advance past interval - should only flush once
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -188,7 +188,7 @@ describe('MetricsClient', () => {
     client.start()
 
     // Advance past interval with empty queue
-    jest.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(10_000)
     await flushPromises()
 
     expect(fetchMock).not.toHaveBeenCalled()

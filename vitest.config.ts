@@ -11,6 +11,6 @@ export default defineConfig({
         '**/tests/**',
       ],
     },
-    projects: ['packages/lex/*', 'packages/syntax', 'packages/tap'],
+    projects: ['packages/bsky', 'packages/lex/*', 'packages/syntax', 'packages/tap'],
   },
 })

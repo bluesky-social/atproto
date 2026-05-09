@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds profile views fetches multiple profiles 1`] = `
+exports[`pds profile views > fetches multiple profiles 1`] = `
 [
   {
     "associated": {
@@ -312,7 +312,7 @@ exports[`pds profile views fetches multiple profiles 1`] = `
 ]
 `;
 
-exports[`pds profile views fetches other's profile, with a follow 1`] = `
+exports[`pds profile views > fetches other's profile, with a follow 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -378,7 +378,7 @@ exports[`pds profile views fetches other's profile, with a follow 1`] = `
 }
 `;
 
-exports[`pds profile views fetches other's profile, without a follow 1`] = `
+exports[`pds profile views > fetches other's profile, without a follow 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -445,7 +445,7 @@ exports[`pds profile views fetches other's profile, without a follow 1`] = `
 }
 `;
 
-exports[`pds profile views fetches own profile 1`] = `
+exports[`pds profile views > fetches own profile 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -529,14 +529,14 @@ exports[`pds profile views fetches own profile 1`] = `
 }
 `;
 
-exports[`pds profile views germ returns germ record if it does exist 1`] = `
+exports[`pds profile views > germ > returns germ record if it does exist 1`] = `
 {
   "messageMeUrl": "https://chat.example.com/start-conversation",
   "showButtonTo": "everyone",
 }
 `;
 
-exports[`pds profile views presents avatars & banners 1`] = `
+exports[`pds profile views > presents avatars & banners 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -605,7 +605,7 @@ exports[`pds profile views presents avatars & banners 1`] = `
 }
 `;
 
-exports[`pds profile views returns empty profile for actor that exists but has no profile 1`] = `
+exports[`pds profile views > returns empty profile for actor that exists but has no profile 1`] = `
 {
   "profiles": [
     {
@@ -684,7 +684,7 @@ exports[`pds profile views returns empty profile for actor that exists but has n
 }
 `;
 
-exports[`pds profile views returns empty profile if actor exists but has no profile 1`] = `
+exports[`pds profile views > returns empty profile if actor exists but has no profile 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -708,7 +708,7 @@ exports[`pds profile views returns empty profile if actor exists but has no prof
 }
 `;
 
-exports[`pds profile views status returns active status when within the duration 1`] = `
+exports[`pds profile views > status > returns active status when within the duration 1`] = `
 {
   "cid": "cids(0)",
   "embed": {
@@ -742,7 +742,7 @@ exports[`pds profile views status returns active status when within the duration
 }
 `;
 
-exports[`pds profile views status when outside the duration returns inactive status 1`] = `
+exports[`pds profile views > status > when outside the duration > returns inactive status 1`] = `
 {
   "cid": "cids(0)",
   "embed": {
@@ -776,7 +776,7 @@ exports[`pds profile views status when outside the duration returns inactive sta
 }
 `;
 
-exports[`pds profile views status when taken down it returns the live status with isDisabled=true for status owner 1`] = `
+exports[`pds profile views > status > when taken down > it returns the live status with isDisabled=true for status owner 1`] = `
 {
   "cid": "cids(0)",
   "embed": {

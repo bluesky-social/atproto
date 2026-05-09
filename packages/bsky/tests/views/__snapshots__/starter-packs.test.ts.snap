@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`starter packs does include users with creator block relationship in list sample for creator 1`] = `
+exports[`starter packs > does include users with creator block relationship in list sample for creator 1`] = `
 [
   {
     "subject": {
@@ -76,7 +76,7 @@ exports[`starter packs does include users with creator block relationship in lis
 ]
 `;
 
-exports[`starter packs does not include users with creator block relationship in list sample for non-creator, in-list viewers 1`] = `
+exports[`starter packs > does not include users with creator block relationship in list sample for non-creator, in-list viewers 1`] = `
 [
   {
     "subject": {
@@ -136,7 +136,7 @@ exports[`starter packs does not include users with creator block relationship in
 ]
 `;
 
-exports[`starter packs does not include users with creator block relationship in list sample for non-creator, not-in-list viewers 1`] = `
+exports[`starter packs > does not include users with creator block relationship in list sample for non-creator, not-in-list viewers 1`] = `
 [
   {
     "subject": {
@@ -197,7 +197,7 @@ exports[`starter packs does not include users with creator block relationship in
 ]
 `;
 
-exports[`starter packs does not include users with creator block relationship in list sample for signed-out viewers 1`] = `
+exports[`starter packs > does not include users with creator block relationship in list sample for signed-out viewers 1`] = `
 [
   {
     "subject": {
@@ -248,7 +248,7 @@ exports[`starter packs does not include users with creator block relationship in
 ]
 `;
 
-exports[`starter packs generates notifications 1`] = `
+exports[`starter packs > generates notifications 1`] = `
 [
   {
     "author": {
@@ -403,7 +403,7 @@ exports[`starter packs generates notifications 1`] = `
 ]
 `;
 
-exports[`starter packs gets actor starter packs. 1`] = `
+exports[`starter packs > gets actor starter packs. 1`] = `
 [
   {
     "cid": "cids(0)",
@@ -541,7 +541,7 @@ exports[`starter packs gets actor starter packs. 1`] = `
 ]
 `;
 
-exports[`starter packs gets starter pack details 1`] = `
+exports[`starter packs > gets starter pack details 1`] = `
 {
   "cid": "cids(0)",
   "creator": {
@@ -690,7 +690,7 @@ exports[`starter packs gets starter pack details 1`] = `
 }
 `;
 
-exports[`starter packs gets starter pack details 2`] = `
+exports[`starter packs > gets starter pack details 2`] = `
 [
   {
     "cid": "cids(0)",
@@ -785,7 +785,7 @@ exports[`starter packs gets starter pack details 2`] = `
 ]
 `;
 
-exports[`starter packs gets starter pack used on profile detail 1`] = `
+exports[`starter packs > gets starter pack used on profile detail 1`] = `
 {
   "cid": "cids(0)",
   "creator": {

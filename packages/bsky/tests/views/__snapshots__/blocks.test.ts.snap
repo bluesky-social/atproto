@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds views with blocking blocks record embeds 1`] = `
+exports[`pds views with blocking > blocks record embeds 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -152,7 +152,7 @@ exports[`pds views with blocking blocks record embeds 1`] = `
 }
 `;
 
-exports[`pds views with blocking blocks thread parent 1`] = `
+exports[`pds views with blocking > blocks thread parent 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -288,7 +288,7 @@ exports[`pds views with blocking blocks thread parent 1`] = `
 }
 `;
 
-exports[`pds views with blocking blocks thread reply 1`] = `
+exports[`pds views with blocking > blocks thread reply 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",

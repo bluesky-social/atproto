@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { jest } from '@jest/globals'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   $Typed,
   AppBskyBookmarkCreateBookmark,
@@ -44,7 +52,7 @@ describe('appview bookmarks views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearPrivateData(db)
     await clearBookmarks(db)
   })

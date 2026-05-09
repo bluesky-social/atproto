@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds follow views fetches followers 1`] = `
+exports[`pds follow views > fetches followers 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "followers": [
@@ -111,7 +111,7 @@ exports[`pds follow views fetches followers 1`] = `
 }
 `;
 
-exports[`pds follow views fetches followers 2`] = `
+exports[`pds follow views > fetches followers 2`] = `
 {
   "cursor": "0000000000000__bafycid",
   "followers": [
@@ -180,7 +180,7 @@ exports[`pds follow views fetches followers 2`] = `
 }
 `;
 
-exports[`pds follow views fetches followers 3`] = `
+exports[`pds follow views > fetches followers 3`] = `
 {
   "cursor": "0000000000000__bafycid",
   "followers": [
@@ -270,7 +270,7 @@ exports[`pds follow views fetches followers 3`] = `
 }
 `;
 
-exports[`pds follow views fetches followers 4`] = `
+exports[`pds follow views > fetches followers 4`] = `
 {
   "cursor": "0000000000000__bafycid",
   "followers": [
@@ -318,7 +318,7 @@ exports[`pds follow views fetches followers 4`] = `
 }
 `;
 
-exports[`pds follow views fetches followers 5`] = `
+exports[`pds follow views > fetches followers 5`] = `
 {
   "cursor": "0000000000000__bafycid",
   "followers": [
@@ -387,7 +387,7 @@ exports[`pds follow views fetches followers 5`] = `
 }
 `;
 
-exports[`pds follow views fetches follows 1`] = `
+exports[`pds follow views > fetches follows 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "follows": [
@@ -498,7 +498,7 @@ exports[`pds follow views fetches follows 1`] = `
 }
 `;
 
-exports[`pds follow views fetches follows 2`] = `
+exports[`pds follow views > fetches follows 2`] = `
 {
   "cursor": "0000000000000__bafycid",
   "follows": [
@@ -567,7 +567,7 @@ exports[`pds follow views fetches follows 2`] = `
 }
 `;
 
-exports[`pds follow views fetches follows 3`] = `
+exports[`pds follow views > fetches follows 3`] = `
 {
   "cursor": "0000000000000__bafycid",
   "follows": [
@@ -615,7 +615,7 @@ exports[`pds follow views fetches follows 3`] = `
 }
 `;
 
-exports[`pds follow views fetches follows 4`] = `
+exports[`pds follow views > fetches follows 4`] = `
 {
   "cursor": "0000000000000__bafycid",
   "follows": [
@@ -705,7 +705,7 @@ exports[`pds follow views fetches follows 4`] = `
 }
 `;
 
-exports[`pds follow views fetches follows 5`] = `
+exports[`pds follow views > fetches follows 5`] = `
 {
   "cursor": "0000000000000__bafycid",
   "follows": [
@@ -774,7 +774,7 @@ exports[`pds follow views fetches follows 5`] = `
 }
 `;
 
-exports[`pds follow views fetches relationships between users 1`] = `
+exports[`pds follow views > fetches relationships between users 1`] = `
 {
   "actor": "user(0)",
   "relationships": [

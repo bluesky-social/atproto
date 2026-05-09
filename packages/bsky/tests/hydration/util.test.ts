@@ -1,4 +1,5 @@
 import { Timestamp } from '@bufbuild/protobuf'
+import { describe, expect, it } from 'vitest'
 import {
   HydrationMap,
   mergeManyMaps,

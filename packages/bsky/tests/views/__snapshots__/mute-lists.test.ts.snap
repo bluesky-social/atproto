@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`bsky views with mutes from mute lists embeds lists in posts 1`] = `
+exports[`bsky views with mutes from mute lists > embeds lists in posts 1`] = `
 {
   "author": {
     "associated": {
@@ -114,7 +114,7 @@ exports[`bsky views with mutes from mute lists embeds lists in posts 1`] = `
 }
 `;
 
-exports[`bsky views with mutes from mute lists flags mutes in threads 1`] = `
+exports[`bsky views with mutes from mute lists > flags mutes in threads 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -350,7 +350,7 @@ exports[`bsky views with mutes from mute lists flags mutes in threads 1`] = `
 }
 `;
 
-exports[`bsky views with mutes from mute lists returns a users own list mutes 1`] = `
+exports[`bsky views with mutes from mute lists > returns a users own list mutes 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "lists": [
@@ -455,7 +455,7 @@ exports[`bsky views with mutes from mute lists returns a users own list mutes 1`
 }
 `;
 
-exports[`bsky views with mutes from mute lists returns lists associated with a user 1`] = `
+exports[`bsky views with mutes from mute lists > returns lists associated with a user 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "lists": [
@@ -560,7 +560,7 @@ exports[`bsky views with mutes from mute lists returns lists associated with a u
 }
 `;
 
-exports[`bsky views with mutes from mute lists returns the contents of a list 1`] = `
+exports[`bsky views with mutes from mute lists > returns the contents of a list 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "items": [

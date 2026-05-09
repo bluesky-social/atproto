@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`feed generation does not embed taken-down feed generator records in posts 1`] = `
+exports[`feed generation > does not embed taken-down feed generator records in posts 1`] = `
 {
   "author": {
     "associated": {
@@ -56,7 +56,7 @@ exports[`feed generation does not embed taken-down feed generator records in pos
 }
 `;
 
-exports[`feed generation does not embed taken-down starter pack records in posts 1`] = `
+exports[`feed generation > does not embed taken-down starter pack records in posts 1`] = `
 {
   "author": {
     "associated": {
@@ -112,7 +112,7 @@ exports[`feed generation does not embed taken-down starter pack records in posts
 }
 `;
 
-exports[`feed generation embeds feed generator records in posts 1`] = `
+exports[`feed generation > embeds feed generator records in posts 1`] = `
 {
   "author": {
     "associated": {
@@ -213,7 +213,7 @@ exports[`feed generation embeds feed generator records in posts 1`] = `
 }
 `;
 
-exports[`feed generation embeds starter pack records in posts 1`] = `
+exports[`feed generation > embeds starter pack records in posts 1`] = `
 {
   "author": {
     "associated": {
@@ -316,7 +316,7 @@ exports[`feed generation embeds starter pack records in posts 1`] = `
 }
 `;
 
-exports[`feed generation getActorFeeds fetches feed generators by actor. 1`] = `
+exports[`feed generation > getActorFeeds fetches feed generators by actor. 1`] = `
 [
   {
     "cid": "cids(0)",
@@ -701,7 +701,7 @@ exports[`feed generation getActorFeeds fetches feed generators by actor. 1`] = `
 ]
 `;
 
-exports[`feed generation getFeed paginates, handling replies and reposts. 1`] = `
+exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`] = `
 [
   {
     "feedContext": "item-0",
@@ -1344,7 +1344,7 @@ exports[`feed generation getFeed paginates, handling replies and reposts. 1`] = 
 ]
 `;
 
-exports[`feed generation getFeed resolves basic feed contents without auth. 1`] = `
+exports[`feed generation > getFeed > resolves basic feed contents without auth. 1`] = `
 [
   {
     "feedContext": "item-0",
@@ -1665,7 +1665,7 @@ exports[`feed generation getFeed resolves basic feed contents without auth. 1`] 
 ]
 `;
 
-exports[`feed generation getFeed resolves basic feed contents. 1`] = `
+exports[`feed generation > getFeed > resolves basic feed contents. 1`] = `
 [
   {
     "feedContext": "item-0",
@@ -2042,7 +2042,7 @@ exports[`feed generation getFeed resolves basic feed contents. 1`] = `
 ]
 `;
 
-exports[`feed generation getFeedGenerator describes a feed gen & returns acceptsInteractions when true 1`] = `
+exports[`feed generation > getFeedGenerator > describes a feed gen & returns acceptsInteractions when true 1`] = `
 {
   "isOnline": true,
   "isValid": true,
@@ -2097,7 +2097,7 @@ exports[`feed generation getFeedGenerator describes a feed gen & returns accepts
 }
 `;
 
-exports[`feed generation getFeedGenerator describes a feed gen & returns content mode 1`] = `
+exports[`feed generation > getFeedGenerator > describes a feed gen & returns content mode 1`] = `
 {
   "isOnline": true,
   "isValid": true,
@@ -2152,7 +2152,7 @@ exports[`feed generation getFeedGenerator describes a feed gen & returns content
 }
 `;
 
-exports[`feed generation getFeedGenerator describes a feed gen & returns online status 1`] = `
+exports[`feed generation > getFeedGenerator > describes a feed gen & returns online status 1`] = `
 {
   "isOnline": true,
   "isValid": true,
@@ -2208,7 +2208,7 @@ exports[`feed generation getFeedGenerator describes a feed gen & returns online 
 }
 `;
 
-exports[`feed generation getFeedGenerators describes multiple feed gens 1`] = `
+exports[`feed generation > getFeedGenerators > describes multiple feed gens 1`] = `
 {
   "feeds": [
     {
@@ -2311,7 +2311,7 @@ exports[`feed generation getFeedGenerators describes multiple feed gens 1`] = `
 }
 `;
 
-exports[`feed generation getSuggestedFeeds returns list of suggested feed generators 1`] = `
+exports[`feed generation > getSuggestedFeeds > returns list of suggested feed generators 1`] = `
 {
   "cursor": "4",
   "feeds": [
