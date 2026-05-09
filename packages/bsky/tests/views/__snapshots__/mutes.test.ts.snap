@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mute views fetches mutes for the logged-in user. 1`] = `
+exports[`mute views > fetches mutes for the logged-in user. 1`] = `
 [
   {
     "associated": {
@@ -144,7 +144,7 @@ exports[`mute views fetches mutes for the logged-in user. 1`] = `
 ]
 `;
 
-exports[`mute views flags mutes in threads 1`] = `
+exports[`mute views > flags mutes in threads 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {

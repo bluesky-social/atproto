@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on 1 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [
@@ -112,7 +112,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 1 1`] 
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on 2 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [
@@ -281,7 +281,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 2 1`] 
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on 2.0 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on 2.0 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [
@@ -450,7 +450,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 2.0 1`
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on 3 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [
@@ -562,7 +562,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on 3 1`] 
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on r 0 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [
@@ -731,7 +731,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on r 0 1`
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on r 0.0 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on r 0.0 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [
@@ -900,7 +900,7 @@ exports[`appview thread views v2 simple thread returns thread anchored on r 0.0 
 }
 `;
 
-exports[`appview thread views v2 simple thread returns thread anchored on root 1`] = `
+exports[`appview thread views v2 > simple thread > returns thread anchored on root 1`] = `
 {
   "hasOtherReplies": false,
   "thread": [

@@ -2,8 +2,17 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { jest } from '@jest/globals'
 import express, { Application } from 'express'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
@@ -32,8 +41,8 @@ describe('age assurance views', () => {
   let actorDid: string
 
   let kwsServer: MockKwsServer
-  const authMock = jest.fn<MockHandler>()
-  const sendEmailMock = jest.fn<MockHandler>()
+  const authMock = vi.fn<MockHandler>()
+  const sendEmailMock = vi.fn<MockHandler>()
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
@@ -88,7 +97,7 @@ describe('age assurance views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -379,8 +388,8 @@ class MockKwsServer {
   }: {
     verificationSecret: string
     webhookSecret: string
-    authMock: ReturnType<typeof jest.fn<MockHandler>>
-    sendEmailMock: ReturnType<typeof jest.fn<MockHandler>>
+    authMock: ReturnType<typeof vi.fn<MockHandler>>
+    sendEmailMock: ReturnType<typeof vi.fn<MockHandler>>
   }) {
     this.verificationSecret = verificationSecret
     this.webhookSecret = webhookSecret

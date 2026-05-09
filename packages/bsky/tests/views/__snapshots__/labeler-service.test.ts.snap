@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`labeler service views fetches labelers 1`] = `
+exports[`labeler service views > fetches labelers 1`] = `
 {
   "views": [
     {
@@ -84,7 +84,7 @@ exports[`labeler service views fetches labelers 1`] = `
 }
 `;
 
-exports[`labeler service views fetches labelers detailed 1`] = `
+exports[`labeler service views > fetches labelers detailed 1`] = `
 {
   "views": [
     {
@@ -183,7 +183,7 @@ exports[`labeler service views fetches labelers detailed 1`] = `
 }
 `;
 
-exports[`labeler service views returns additional labeler data 1`] = `
+exports[`labeler service views > returns additional labeler data 1`] = `
 {
   "views": [
     {

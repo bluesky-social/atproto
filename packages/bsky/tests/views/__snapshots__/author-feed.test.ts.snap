@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 1`] = `
+exports[`pds author feed views > fetches full author feeds for self (sorted, minimal viewer state). 1`] = `
 [
   {
     "post": {
@@ -577,7 +577,7 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 2`] = `
+exports[`pds author feed views > fetches full author feeds for self (sorted, minimal viewer state). 2`] = `
 [
   {
     "post": {
@@ -873,7 +873,7 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 3`] = `
+exports[`pds author feed views > fetches full author feeds for self (sorted, minimal viewer state). 3`] = `
 [
   {
     "post": {
@@ -1384,7 +1384,7 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 4`] = `
+exports[`pds author feed views > fetches full author feeds for self (sorted, minimal viewer state). 4`] = `
 [
   {
     "post": {
@@ -1973,7 +1973,7 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 ]
 `;
 
-exports[`pds author feed views pins cannot pin someone else's post 1`] = `
+exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
 [
   {
     "post": {
@@ -3003,7 +3003,7 @@ exports[`pds author feed views pins cannot pin someone else's post 1`] = `
 ]
 `;
 
-exports[`pds author feed views pins params.includePins = false 1`] = `
+exports[`pds author feed views > pins > params.includePins = false 1`] = `
 [
   {
     "post": {
@@ -3977,7 +3977,7 @@ exports[`pds author feed views pins params.includePins = false 1`] = `
 ]
 `;
 
-exports[`pds author feed views pins params.includePins = true, pin is NOT in first page of results 1`] = `
+exports[`pds author feed views > pins > params.includePins = true, pin is NOT in first page of results 1`] = `
 [
   {
     "post": {
@@ -4153,7 +4153,7 @@ exports[`pds author feed views pins params.includePins = true, pin is NOT in fir
 ]
 `;
 
-exports[`pds author feed views pins params.includePins = true, pin is NOT in first page of results 2`] = `
+exports[`pds author feed views > pins > params.includePins = true, pin is NOT in first page of results 2`] = `
 [
   {
     "post": {
@@ -4959,7 +4959,7 @@ exports[`pds author feed views pins params.includePins = true, pin is NOT in fir
 ]
 `;
 
-exports[`pds author feed views pins params.includePins = true, pin is in first page of results 1`] = `
+exports[`pds author feed views > pins > params.includePins = true, pin is in first page of results 1`] = `
 [
   {
     "post": {
@@ -5712,7 +5712,7 @@ exports[`pds author feed views pins params.includePins = true, pin is in first p
 ]
 `;
 
-exports[`pds author feed views reflects fetching user's state in the feed. 1`] = `
+exports[`pds author feed views > reflects fetching user's state in the feed. 1`] = `
 [
   {
     "post": {

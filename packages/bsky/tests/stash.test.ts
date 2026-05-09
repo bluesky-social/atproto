@@ -1,3 +1,10 @@
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it } from 'vitest'
 import { TestNetwork } from '@atproto/dev-env'
 import { lexStringify } from '@atproto/lex'
 import { StashClient } from '../dist/stash.js'

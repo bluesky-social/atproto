@@ -2,8 +2,17 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { jest } from '@jest/globals'
 import express, { Application, json } from 'express'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyAgeassuranceBegin,
   AppBskyAgeassuranceDefs,
@@ -28,7 +37,7 @@ type Database = TestNetwork['bsky']['db']
 
 const BSKY_REDIRECT_URL = 'http://bsky'
 
-jest.mock('../../dist/api/age-assurance/const.js', () => {
+vi.mock('../../dist/api/age-assurance/const.js', () => {
   const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     regions: [
       {
@@ -70,10 +79,10 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
   }
 })
 
-jest.mock('../../dist/api/age-assurance/kws/const.js', () => {
-  const actual = jest.requireActual(
+vi.mock('../../dist/api/age-assurance/kws/const.js', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
     '../../dist/api/age-assurance/kws/const.js',
-  ) as Record<string, unknown>
+  )
   const KWS_V2_COUNTRIES = new Set(['AA'])
   return {
     ...actual,
@@ -88,9 +97,9 @@ describe('age assurance v2 views', () => {
   let sc: SeedClient
   let kws: MockKwsServer
 
-  const kwsOauthMock = jest.fn<MockHandler>()
-  const kwsSendAgeVerifiedFlowEmailMock = jest.fn<MockHandler>()
-  const kwsSendAdultVerifiedFlowEmailMock = jest.fn<MockHandler>()
+  const kwsOauthMock = vi.fn<MockHandler>()
+  const kwsSendAgeVerifiedFlowEmailMock = vi.fn<MockHandler>()
+  const kwsSendAdultVerifiedFlowEmailMock = vi.fn<MockHandler>()
   const actor = {
     did: '',
     email: '',
@@ -158,7 +167,7 @@ describe('age assurance v2 views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -665,9 +674,9 @@ class MockKwsServer {
     sendAgeVerifiedFlowEmailMock,
     sendAdultVerifiedFlowEmailMock,
   }: {
-    oauthMock: ReturnType<typeof jest.fn<MockHandler>>
-    sendAgeVerifiedFlowEmailMock: ReturnType<typeof jest.fn<MockHandler>>
-    sendAdultVerifiedFlowEmailMock: ReturnType<typeof jest.fn<MockHandler>>
+    oauthMock: ReturnType<typeof vi.fn<MockHandler>>
+    sendAgeVerifiedFlowEmailMock: ReturnType<typeof vi.fn<MockHandler>>
+    sendAdultVerifiedFlowEmailMock: ReturnType<typeof vi.fn<MockHandler>>
   }) {
     this.app = express()
       .use(json())

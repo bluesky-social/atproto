@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`views with thread gating applies gate after root post is deleted. 1`] = `undefined`;
+exports[`views with thread gating > applies gate after root post is deleted. 1`] = `undefined`;
 
-exports[`views with thread gating applies gate for empty rules. 1`] = `
+exports[`views with thread gating > applies gate for empty rules. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -16,7 +16,7 @@ exports[`views with thread gating applies gate for empty rules. 1`] = `
 }
 `;
 
-exports[`views with thread gating applies gate for follower rule. 1`] = `
+exports[`views with thread gating > applies gate for follower rule. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -34,7 +34,7 @@ exports[`views with thread gating applies gate for follower rule. 1`] = `
 }
 `;
 
-exports[`views with thread gating applies gate for following rule. 1`] = `
+exports[`views with thread gating > applies gate for following rule. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -52,7 +52,7 @@ exports[`views with thread gating applies gate for following rule. 1`] = `
 }
 `;
 
-exports[`views with thread gating applies gate for list rule. 1`] = `
+exports[`views with thread gating > applies gate for list rule. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [
@@ -100,7 +100,7 @@ exports[`views with thread gating applies gate for list rule. 1`] = `
 }
 `;
 
-exports[`views with thread gating applies gate for mention rule. 1`] = `
+exports[`views with thread gating > applies gate for mention rule. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -118,7 +118,7 @@ exports[`views with thread gating applies gate for mention rule. 1`] = `
 }
 `;
 
-exports[`views with thread gating applies gate for missing rules, takes no action. 1`] = `
+exports[`views with thread gating > applies gate for missing rules, takes no action. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -131,7 +131,7 @@ exports[`views with thread gating applies gate for missing rules, takes no actio
 }
 `;
 
-exports[`views with thread gating applies gate for multiple rules. 1`] = `
+exports[`views with thread gating > applies gate for multiple rules. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -155,7 +155,7 @@ exports[`views with thread gating applies gate for multiple rules. 1`] = `
 }
 `;
 
-exports[`views with thread gating applies gate for unknown list rule. 1`] = `
+exports[`views with thread gating > applies gate for unknown list rule. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],
@@ -174,7 +174,7 @@ exports[`views with thread gating applies gate for unknown list rule. 1`] = `
 }
 `;
 
-exports[`views with thread gating does not apply gate to original poster. 1`] = `
+exports[`views with thread gating > does not apply gate to original poster. 1`] = `
 {
   "cid": "cids(0)",
   "lists": [],

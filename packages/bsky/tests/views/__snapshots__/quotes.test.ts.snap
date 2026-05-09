@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds quote views decrements quote count when a quote is deleted 1`] = `
+exports[`pds quote views > decrements quote count when a quote is deleted 1`] = `
 {
   "posts": [
     {
@@ -96,7 +96,7 @@ exports[`pds quote views decrements quote count when a quote is deleted 1`] = `
 }
 `;
 
-exports[`pds quote views does not return post when quote is deleted 1`] = `
+exports[`pds quote views > does not return post when quote is deleted 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "posts": [
@@ -215,7 +215,7 @@ exports[`pds quote views does not return post when quote is deleted 1`] = `
 }
 `;
 
-exports[`pds quote views fetches post quotes 1`] = `
+exports[`pds quote views > fetches post quotes 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "posts": [

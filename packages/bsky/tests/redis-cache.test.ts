@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common'
 import { Redis } from '../src//index.js'
 import { ReadThroughCache } from '../src/cache/read-through.js'

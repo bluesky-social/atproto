@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`appview thread views fetches ancestors 1`] = `
+exports[`appview thread views > fetches ancestors 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": {
@@ -231,7 +231,7 @@ exports[`appview thread views fetches ancestors 1`] = `
 }
 `;
 
-exports[`appview thread views fetches deep post thread 1`] = `
+exports[`appview thread views > fetches deep post thread 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -519,7 +519,7 @@ exports[`appview thread views fetches deep post thread 1`] = `
 }
 `;
 
-exports[`appview thread views fetches shallow post thread 1`] = `
+exports[`appview thread views > fetches shallow post thread 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -731,7 +731,7 @@ exports[`appview thread views fetches shallow post thread 1`] = `
 }
 `;
 
-exports[`appview thread views fetches thread with handle in uri 1`] = `
+exports[`appview thread views > fetches thread with handle in uri 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -943,7 +943,7 @@ exports[`appview thread views fetches thread with handle in uri 1`] = `
 }
 `;
 
-exports[`appview thread views handles deleted posts correctly 1`] = `
+exports[`appview thread views > handles deleted posts correctly 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -1131,7 +1131,7 @@ exports[`appview thread views handles deleted posts correctly 1`] = `
 }
 `;
 
-exports[`appview thread views handles deleted posts correctly 2`] = `
+exports[`appview thread views > handles deleted posts correctly 2`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -1194,7 +1194,7 @@ exports[`appview thread views handles deleted posts correctly 2`] = `
 }
 `;
 
-exports[`appview thread views handles deleted posts correctly 3`] = `
+exports[`appview thread views > handles deleted posts correctly 3`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": {
@@ -1272,7 +1272,7 @@ exports[`appview thread views handles deleted posts correctly 3`] = `
 }
 `;
 
-exports[`appview thread views listblock doesn't apply listblock if list was taken down by private takedown 1`] = `
+exports[`appview thread views > listblock > doesn't apply listblock if list was taken down by private takedown 1`] = `
 {
   "$type": "app.bsky.feed.defs#blockedPost",
   "author": {
@@ -1286,7 +1286,7 @@ exports[`appview thread views listblock doesn't apply listblock if list was take
 }
 `;
 
-exports[`appview thread views listblock doesn't apply listblock if list was taken down by private takedown 2`] = `
+exports[`appview thread views > listblock > doesn't apply listblock if list was taken down by private takedown 2`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": {
@@ -1382,7 +1382,7 @@ exports[`appview thread views listblock doesn't apply listblock if list was take
 }
 `;
 
-exports[`appview thread views listblock doesn't apply listblock if list was taken down by takedown label 1`] = `
+exports[`appview thread views > listblock > doesn't apply listblock if list was taken down by takedown label 1`] = `
 {
   "$type": "app.bsky.feed.defs#blockedPost",
   "author": {
@@ -1396,7 +1396,7 @@ exports[`appview thread views listblock doesn't apply listblock if list was take
 }
 `;
 
-exports[`appview thread views listblock doesn't apply listblock if list was taken down by takedown label 2`] = `
+exports[`appview thread views > listblock > doesn't apply listblock if list was taken down by takedown label 2`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": {
@@ -1492,7 +1492,7 @@ exports[`appview thread views listblock doesn't apply listblock if list was take
 }
 `;
 
-exports[`appview thread views takedown blocks ancestors by actor 1`] = `
+exports[`appview thread views > takedown > blocks ancestors by actor 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": {
@@ -1573,7 +1573,7 @@ exports[`appview thread views takedown blocks ancestors by actor 1`] = `
 }
 `;
 
-exports[`appview thread views takedown blocks ancestors by record 1`] = `
+exports[`appview thread views > takedown > blocks ancestors by record 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": {
@@ -1654,7 +1654,7 @@ exports[`appview thread views takedown blocks ancestors by record 1`] = `
 }
 `;
 
-exports[`appview thread views takedown blocks replies by actor 1`] = `
+exports[`appview thread views > takedown > blocks replies by actor 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {
@@ -1889,7 +1889,7 @@ exports[`appview thread views takedown blocks replies by actor 1`] = `
 }
 `;
 
-exports[`appview thread views takedown blocks replies by record 1`] = `
+exports[`appview thread views > takedown > blocks replies by record 1`] = `
 {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": {

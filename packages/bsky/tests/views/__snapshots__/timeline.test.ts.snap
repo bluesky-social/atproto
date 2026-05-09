@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`timeline views blocks posts, reposts, replies by actor takedown 1`] = `
+exports[`timeline views > blocks posts, reposts, replies by actor takedown 1`] = `
 [
   {
     "post": {
@@ -735,7 +735,7 @@ exports[`timeline views blocks posts, reposts, replies by actor takedown 1`] = `
 ]
 `;
 
-exports[`timeline views blocks posts, reposts, replies by record takedown. 1`] = `
+exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`] = `
 [
   {
     "post": {
@@ -1747,7 +1747,7 @@ exports[`timeline views blocks posts, reposts, replies by record takedown. 1`] =
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 1`] = `
+exports[`timeline views > fetches authenticated user's home feed w/ reverse-chronological algorithm 1`] = `
 [
   {
     "post": {
@@ -3773,7 +3773,7 @@ exports[`timeline views fetches authenticated user's home feed w/ reverse-chrono
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 2`] = `
+exports[`timeline views > fetches authenticated user's home feed w/ reverse-chronological algorithm 2`] = `
 [
   {
     "post": {
@@ -5210,7 +5210,7 @@ exports[`timeline views fetches authenticated user's home feed w/ reverse-chrono
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 3`] = `
+exports[`timeline views > fetches authenticated user's home feed w/ reverse-chronological algorithm 3`] = `
 [
   {
     "post": {
@@ -6344,7 +6344,7 @@ exports[`timeline views fetches authenticated user's home feed w/ reverse-chrono
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 4`] = `
+exports[`timeline views > fetches authenticated user's home feed w/ reverse-chronological algorithm 4`] = `
 [
   {
     "post": {

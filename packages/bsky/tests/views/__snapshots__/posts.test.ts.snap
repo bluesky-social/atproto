@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds posts views embeds video with record. 1`] = `
+exports[`pds posts views > embeds video with record. 1`] = `
 {
   "author": {
     "associated": {
@@ -133,7 +133,7 @@ exports[`pds posts views embeds video with record. 1`] = `
 }
 `;
 
-exports[`pds posts views embeds video. 1`] = `
+exports[`pds posts views > embeds video. 1`] = `
 {
   "author": {
     "associated": {
@@ -207,7 +207,7 @@ exports[`pds posts views embeds video. 1`] = `
 }
 `;
 
-exports[`pds posts views fetches posts 1`] = `
+exports[`pds posts views > fetches posts 1`] = `
 [
   {
     "author": {

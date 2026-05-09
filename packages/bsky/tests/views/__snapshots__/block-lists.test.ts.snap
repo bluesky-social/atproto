@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds views with blocking from block lists blocks record embeds 1`] = `
+exports[`pds views with blocking from block lists > blocks record embeds 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -152,7 +152,7 @@ exports[`pds views with blocking from block lists blocks record embeds 1`] = `
 }
 `;
 
-exports[`pds views with blocking from block lists blocks thread parent 1`] = `
+exports[`pds views with blocking from block lists > blocks thread parent 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -238,7 +238,7 @@ exports[`pds views with blocking from block lists blocks thread parent 1`] = `
 }
 `;
 
-exports[`pds views with blocking from block lists blocks thread reply 1`] = `
+exports[`pds views with blocking from block lists > blocks thread reply 1`] = `
 {
   "thread": {
     "$type": "app.bsky.feed.defs#threadViewPost",
@@ -329,7 +329,7 @@ exports[`pds views with blocking from block lists blocks thread reply 1`] = `
 }
 `;
 
-exports[`pds views with blocking from block lists returns a users own list blocks 1`] = `
+exports[`pds views with blocking from block lists > returns a users own list blocks 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "lists": [
@@ -436,7 +436,7 @@ exports[`pds views with blocking from block lists returns a users own list block
 }
 `;
 
-exports[`pds views with blocking from block lists returns lists associated with a user 1`] = `
+exports[`pds views with blocking from block lists > returns lists associated with a user 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "lists": [
@@ -542,7 +542,7 @@ exports[`pds views with blocking from block lists returns lists associated with 
 }
 `;
 
-exports[`pds views with blocking from block lists returns the contents of a list 1`] = `
+exports[`pds views with blocking from block lists > returns the contents of a list 1`] = `
 {
   "cursor": "0000000000000__bafycid",
   "items": [

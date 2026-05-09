@@ -1,4 +1,12 @@
-import { jest } from '@jest/globals'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyActorDefs,
   AppBskyNotificationDeclaration,
@@ -872,19 +880,11 @@ describe('notification views', () => {
 
       // @NOTE: Use fake timers after inserting seed data,
       // to avoid inserting all notifications with the same timestamp.
-      jest.useFakeTimers({
-        doNotFake: [
-          'nextTick',
-          'performance',
-          'setImmediate',
-          'setInterval',
-          'setTimeout',
-        ],
-      })
+      vi.useFakeTimers({ toFake: ['Date'] })
     })
 
     afterAll(async () => {
-      jest.useRealTimers()
+      vi.useRealTimers()
       await delayNetwork.close()
     })
 
@@ -897,7 +897,7 @@ describe('notification views', () => {
         .executeTakeFirstOrThrow()
       // Sets the system time to when the first notification happened.
       // At this point we won't have any notifications that already crossed the delay threshold.
-      jest.setSystemTime(new Date(firstNotification.sortAt))
+      vi.setSystemTime(new Date(firstNotification.sortAt))
 
       const results = (
         results: AppBskyNotificationListNotifications.OutputSchema[],
@@ -944,7 +944,7 @@ describe('notification views', () => {
         .executeTakeFirstOrThrow()
       // Sets the system time to when the last notification happened and the delay has elapsed.
       // At this point we all notifications already crossed the delay threshold.
-      jest.setSystemTime(
+      vi.setSystemTime(
         new Date(
           new Date(lastNotification.sortAt).getTime() +
             notificationsDelayMs +
@@ -983,12 +983,12 @@ describe('notification views', () => {
       const nowMinus8s = '2021-01-01T00:59:52.000Z'
 
       beforeAll(async () => {
-        jest.useFakeTimers({ doNotFake: ['performance'] })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       describe('for undefined cursor', () => {

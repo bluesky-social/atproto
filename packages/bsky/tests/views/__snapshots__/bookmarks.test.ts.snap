@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`appview bookmarks views listing shows posts and blocked posts correctly 1`] = `
+exports[`appview bookmarks views > listing > shows posts and blocked posts correctly 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -216,7 +216,7 @@ exports[`appview bookmarks views listing shows posts and blocked posts correctly
 ]
 `;
 
-exports[`appview bookmarks views listing shows posts and blocked posts correctly 2`] = `
+exports[`appview bookmarks views > listing > shows posts and blocked posts correctly 2`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
