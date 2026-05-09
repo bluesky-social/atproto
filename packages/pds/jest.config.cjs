@@ -2,14 +2,19 @@
 module.exports = {
   displayName: 'PDS',
   transform: {
-    '^.+\\.(t|j)s$': [
+    '^.+\\.ts$': [
       '@swc/jest',
       { jsc: { transform: {} }, module: { type: 'es6' } },
     ],
   },
   extensionsToTreatAsEsm: ['.ts'],
-  transformIgnorePatterns: [],
+  transformIgnorePatterns: [
+    'node_modules/.pnpm/(?!(multiformats|uint8arrays))',
+  ],
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
-  moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
+  moduleNameMapper: {
+    '^(\\.\\.?\\/.*templates/.+\\.js)$': '$1',
+    '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'],
+  },
 }
