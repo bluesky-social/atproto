@@ -2,7 +2,6 @@ import { MINUTE } from '@atproto/common'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { QueueServiceCreator } from '../queue/service'
-import { initJobCursor } from './job-cursor'
 
 const JOB_NAME = 'queue_router'
 const BATCH_SIZE = 100
@@ -40,7 +39,22 @@ export class QueueRouter {
   }
 
   async initializeCursor() {
-    await initJobCursor(this.db, JOB_NAME)
+    // Get latest event
+    const latest = await this.db.db
+      .selectFrom('moderation_event')
+      .select('id')
+      .orderBy('id', 'desc')
+      .executeTakeFirst()
+    const cursor = String(latest?.id ?? 0)
+    dbLogger.info({ cursor }, 'initializing queue router cursor')
+
+    // Initialize cursor row to last event ID
+    // Conflict check ensures parallel safety
+    await this.db.db
+      .insertInto('job_cursor')
+      .values({ job: JOB_NAME, cursor })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 
   async getCursor(): Promise<number | null> {
@@ -74,7 +88,7 @@ export class QueueRouter {
       })
 
       if (result.processed === 0) {
-        dbLogger.info('no new report events to route')
+        dbLogger.info({}, 'no new report events to route')
         return
       }
 
