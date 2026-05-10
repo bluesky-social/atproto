@@ -60,6 +60,12 @@ export default function (server: Server, ctx: AppContext) {
           emailConfirmed: !!user.emailConfirmedAt,
           active,
           status,
+          wsocialVerified:
+            user.accountType === 'unverified'
+              ? undefined
+              : user.accountType === 'personal'
+                ? 'wid'
+                : 'admin',
         },
       }
     },

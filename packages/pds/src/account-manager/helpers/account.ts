@@ -107,7 +107,7 @@ export const registerActor = async (
     accountType?: import('../db/schema/actor').AccountType
   },
 ) => {
-  const { did, handle, deactivated, accountType = 'organization' } = opts
+  const { did, handle, deactivated, accountType = 'unverified' } = opts
   const now = Date.now()
   const createdAt = new Date(now).toISOString()
   const [registered] = await db.executeWithRetry(

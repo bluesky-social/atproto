@@ -444,7 +444,7 @@ msgid "Reset your password"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:311
-msgid "Scan this QR code with your WID app to sign in."
+msgid "Scan this QR code with your W Identity app to sign in."
 msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:196
@@ -477,7 +477,7 @@ msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:193
 msgctxt "verb"
-msgid "Sign in with WID"
+msgid "Sign in with W Identity"
 msgstr ""
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:88
@@ -643,11 +643,11 @@ msgid "Weak"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:296
-msgid "WID Authentication"
+msgid "W Identity Authentication"
 msgstr ""
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:307
-msgid "WID QR code"
+msgid "W Identity QR code"
 msgstr ""
 
 #: src/components/utils/error-message.tsx:31

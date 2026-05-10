@@ -14336,6 +14336,11 @@ export const schemaDict = {
                   'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
                 knownValues: ['takendown', 'suspended', 'deactivated'],
               },
+              wsocialVerified: {
+                type: 'string',
+                description:
+                  "W Identity verification status for the account. Null means unverified. 'wid' means verified via W Identity. 'admin' means admin-provisioned.",
+              },
             },
           },
         },
@@ -15964,6 +15969,88 @@ export const schemaDict = {
               account: {
                 type: 'string',
                 format: 'at-identifier',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  EuWsocialQuickloginLinkWid: {
+    lexicon: 1,
+    id: 'eu.wsocial.quicklogin.linkWid',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate a W Identity link for the authenticated unverified account. Returns a QR code URL and session token. The client polls io.trustanchor.quicklogin.status until status='completed', then uses the returned tokens to refresh its session.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sessionId', 'sessionToken', 'qrCodeUrl', 'expiresAt'],
+            properties: {
+              sessionId: {
+                type: 'string',
+                description:
+                  'Session ID — pass to io.trustanchor.quicklogin.status to poll.',
+              },
+              sessionToken: {
+                type: 'string',
+                description:
+                  'Secret token — pass to io.trustanchor.quicklogin.status to authenticate the poll.',
+              },
+              qrCodeUrl: {
+                type: 'string',
+                description: 'Data URL of the QR code image to display.',
+              },
+              expiresAt: {
+                type: 'string',
+                description:
+                  'ISO timestamp after which the session is expired.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  EuWsocialServerCheckHandleAvailability: {
+    lexicon: 1,
+    id: 'eu.wsocial.server.checkHandleAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Check whether a handle is available on this PDS. No authentication required.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              description:
+                "The handle to check, without a domain suffix (e.g. 'alice' or 'alice.wsocial.eu').",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['available'],
+            properties: {
+              available: {
+                type: 'boolean',
+                description:
+                  'True if the handle is available for registration.',
               },
             },
           },
@@ -22686,6 +22773,9 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  EuWsocialQuickloginLinkWid: 'eu.wsocial.quicklogin.linkWid',
+  EuWsocialServerCheckHandleAvailability:
+    'eu.wsocial.server.checkHandleAvailability',
   IoTrustanchorAdminClearInventory: 'io.trustanchor.admin.clearInventory',
   IoTrustanchorAdminCreateAccountSession:
     'io.trustanchor.admin.createAccountSession',

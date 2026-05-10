@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 
-export type AccountType = 'bot' | 'personal' | 'test' | 'organization'
+export type AccountType = 'bot' | 'personal' | 'test' | 'organization' | 'unverified'
 
 export interface Actor {
   did: string

@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "eu.wsocial.quicklogin.linkWid",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Initiate a W Identity link for the authenticated unverified account. Returns a QR code URL and session token. The client polls io.trustanchor.quicklogin.status until status='completed', then uses the returned tokens to refresh its session.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["sessionId", "sessionToken", "qrCodeUrl", "expiresAt"],
+          "properties": {
+            "sessionId": {
+              "type": "string",
+              "description": "Session ID — pass to io.trustanchor.quicklogin.status to poll."
+            },
+            "sessionToken": {
+              "type": "string",
+              "description": "Secret token — pass to io.trustanchor.quicklogin.status to authenticate the poll."
+            },
+            "qrCodeUrl": {
+              "type": "string",
+              "description": "Data URL of the QR code image to display."
+            },
+            "expiresAt": {
+              "type": "string",
+              "description": "ISO timestamp after which the session is expired."
+            }
+          }
+        }
+      }
+    }
+  }
+}

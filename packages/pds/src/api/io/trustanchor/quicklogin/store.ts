@@ -12,7 +12,7 @@ export type QuickLoginSession = {
   result?: QuickLoginResult
   error?: string
   // Approval mode fields (set for non-login sessions)
-  purpose?: 'login' | 'delete_account' | 'plc_operation'
+  purpose?: 'login' | 'delete_account' | 'plc_operation' | 'link_wid'
   approvalDid?: string // DID of the account being approved
   approvalToken?: string // email-style token created after QR scan
   debugNeuro?: QuickLoginDebugInfo

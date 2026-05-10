@@ -79,6 +79,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError()
       }
 
+      await ctx.accountManager.assertWriteAllowed(did)
+
       if (writes.length > 200) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
