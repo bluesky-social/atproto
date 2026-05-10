@@ -2,7 +2,7 @@
 module.exports = {
   displayName: 'Ozone',
   transform: {
-    '^.+\\.(t|j)s$': [
+    '^.+\\.ts$': [
       '@swc/jest',
       { jsc: { transform: {} }, module: { type: 'es6' } },
     ],
