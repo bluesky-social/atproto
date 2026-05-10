@@ -12,7 +12,7 @@
     "lexicon"
   ],
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json",
     "prebuild": "pnpm run codegen",
     "codegen": "lex build --override --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@atproto/lex-cbor": "workspace:^",
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.16"
   }
 }

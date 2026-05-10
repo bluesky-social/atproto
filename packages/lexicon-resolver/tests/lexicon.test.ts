@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { DidString, NSID } from '@atproto/syntax'
 import {
@@ -8,11 +9,15 @@ import {
 
 const dnsEntries: [entry: string, ...result: string[][]][] = []
 
-const resolveTxt = (entry: string) => {
-  const found = dnsEntries.find(([e]) => e === entry)
-  if (found) return Promise.resolve(found.slice(1) as string[][])
-  return Promise.resolve([] as string[][])
-}
+vi.mock('node:dns/promises', () => {
+  return {
+    resolveTxt: (entry: string) => {
+      const found = dnsEntries.find(([e]) => e === entry)
+      if (found) return found.slice(1)
+      return []
+    },
+  }
+})
 
 describe('Lexicon resolution', () => {
   let network: TestNetworkNoAppView
@@ -44,7 +49,6 @@ describe('Lexicon resolution', () => {
       sc.getHeaders(sc.dids.alice),
     )
     const result = await resolveLexicon('example.alice.name1', {
-      resolveTxt,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.alice)
@@ -68,7 +72,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.alice.mismatch', {
-        resolveTxt,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -85,7 +88,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.bob.name', {
-        resolveTxt,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -96,7 +98,6 @@ describe('Lexicon resolution', () => {
   it('fails on missing record.', async () => {
     await expect(
       resolveLexicon('example.alice.missing', {
-        resolveTxt,
         forceRefresh: true,
       }),
     ).rejects.toThrow('Could not resolve Lexicon schema record')
@@ -119,7 +120,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.alice.badsig', {
-        resolveTxt,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -150,7 +150,6 @@ describe('Lexicon resolution', () => {
     )
     await expect(
       resolveLexicon('example.alice.baddoc', {
-        resolveTxt,
         forceRefresh: true,
       }),
     ).rejects.toThrow(
@@ -185,7 +184,6 @@ describe('Lexicon resolution', () => {
       sc.getHeaders(sc.dids.carol),
     )
     const result = await resolveLexicon('example.alice.override', {
-      resolveTxt,
       didAuthority: sc.dids.carol as DidString,
       forceRefresh: true,
     })
@@ -204,9 +202,7 @@ describe('Lexicon resolution', () => {
   describe('DID authority', () => {
     it('handles a simple DNS resolution', async () => {
       dnsEntries.push(['_lexicon.simple.test', ['did=did:example:simpleDid']])
-      const did = await resolveLexiconDidAuthority('test.simple.name', {
-        resolveTxt,
-      })
+      const did = await resolveLexiconDidAuthority('test.simple.name')
       expect(did).toBe('did:example:simpleDid')
     })
 
@@ -222,9 +218,7 @@ describe('Lexicon resolution', () => {
           'apsodfiuweproiasudfpoasidfu',
         ],
       ])
-      const did = await resolveLexiconDidAuthority('test.noisy.name', {
-        resolveTxt,
-      })
+      const did = await resolveLexiconDidAuthority('test.noisy.name')
       expect(did).toBe('did:example:noisyDid')
     })
 
@@ -239,9 +233,7 @@ describe('Lexicon resolution', () => {
           'apsodfiuweproiasudfpoasidfu',
         ],
       ])
-      const did = await resolveLexiconDidAuthority('test.bad.name', {
-        resolveTxt,
-      })
+      const did = await resolveLexiconDidAuthority('test.bad.name')
       expect(did).toBeUndefined()
     })
 
@@ -251,31 +243,26 @@ describe('Lexicon resolution', () => {
         ['did=did:example:firstDid'],
         ['did=did:example:secondDid'],
       ])
-      const did = await resolveLexiconDidAuthority('test.multi.name', {
-        resolveTxt,
-      })
+      const did = await resolveLexiconDidAuthority('test.multi.name')
       expect(did).toBeUndefined()
     })
 
     it('fails on invalid NSID', async () => {
       // @ts-expect-error testing invalid input
-      await expect(
-        resolveLexiconDidAuthority('not an nsid', { resolveTxt }),
-      ).rejects.toThrow('Disallowed characters in NSID')
+      await expect(resolveLexiconDidAuthority('not an nsid')).rejects.toThrow(
+        'Disallowed characters in NSID',
+      )
     })
 
     it('fails on invalid DID result', async () => {
       dnsEntries.push(['_lexicon.invalid.test', ['did=not:a:did']])
-      const did = await resolveLexiconDidAuthority('test.invalid.name', {
-        resolveTxt,
-      })
+      const did = await resolveLexiconDidAuthority('test.invalid.name')
       expect(did).toBeUndefined()
     })
 
     it('accepts NSID object', async () => {
       const did = await resolveLexiconDidAuthority(
         NSID.parse('test.simple.name'),
-        { resolveTxt },
       )
       expect(did).toBe('did:example:simpleDid')
     })

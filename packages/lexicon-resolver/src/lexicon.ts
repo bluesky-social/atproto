@@ -35,7 +35,6 @@ export type BuildLexiconResolverOptions = BuildRecordResolverOptions
 
 export type ResolveLexiconOptions = ResolveRecordOptions & {
   didAuthority?: DidString
-  resolveTxt?: (hostname: string) => Promise<string[][]>
 }
 
 export type LexiconResolution = {
@@ -98,20 +97,15 @@ export function buildLexiconResolver(
 
 export const resolveLexicon = buildLexiconResolver()
 
-export type ResolveLexiconDidAuthorityOptions = {
-  resolveTxt?: (hostname: string) => Promise<string[][]>
-}
-
 /**
  * Resolve the DID authority for a Lexicon from the network using DNS, based on its NSID.
  * @param input NSID or string representing one for which to lookup its Lexicon DID authority.
  */
 export async function resolveLexiconDidAuthority(
   input: NSID | NsidString,
-  opts?: ResolveLexiconDidAuthorityOptions,
 ): Promise<DidString | undefined> {
   const nsid = NSID.from(input)
-  const did = await resolveDns(nsid.authority, opts?.resolveTxt)
+  const did = await resolveDns(nsid.authority)
   if (did == null || !l.isDidString(did)) return
   return did
 }
@@ -140,9 +134,7 @@ async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
   if (options.didAuthority) {
     return options.didAuthority
   }
-  const did = await resolveLexiconDidAuthority(nsid, {
-    resolveTxt: options.resolveTxt,
-  })
+  const did = await resolveLexiconDidAuthority(nsid)
   if (!did) {
     throw new LexiconResolutionError(
       nsid,
@@ -152,15 +144,10 @@ async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
   return did
 }
 
-async function resolveDns(
-  authority: string,
-  resolveTxt?: (hostname: string) => Promise<string[][]>,
-): Promise<string | undefined> {
+async function resolveDns(authority: string): Promise<string | undefined> {
   let chunkedResults: string[][]
   try {
-    chunkedResults = await (resolveTxt ?? dns.resolveTxt)(
-      `${DNS_SUBDOMAIN}.${authority}`,
-    )
+    chunkedResults = await dns.resolveTxt(`${DNS_SUBDOMAIN}.${authority}`)
   } catch (err) {
     return undefined
   }
