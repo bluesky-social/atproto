@@ -1,17 +1,17 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`admin get repo view gets a repo by did, even when taken down. 1`] = `
-Object {
+{
   "did": "user(0)",
   "email": "alice@test.com",
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "invites": Array [],
+  "invites": [],
   "invitesDisabled": false,
-  "labels": Array [
-    Object {
+  "labels": [
+    {
       "cts": "1970-01-01T00:00:00.000Z",
-      "sig": Object {
+      "sig": {
         "$bytes": "sig(0)",
       },
       "src": "user(2)",
@@ -20,9 +20,9 @@ Object {
       "ver": 1,
     },
   ],
-  "moderation": Object {
-    "subjectStatus": Object {
-      "accountStats": Object {
+  "moderation": {
+    "subjectStatus": {
+      "accountStats": {
         "$type": "tools.ozone.moderation.defs#accountStats",
         "appealCount": 0,
         "escalateCount": 0,
@@ -32,7 +32,7 @@ Object {
       },
       "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "hosting": Object {
+      "hosting": {
         "$type": "tools.ozone.moderation.defs#accountHosting",
         "status": "unknown",
       },
@@ -41,17 +41,17 @@ Object {
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
       "priorityScore": 0,
-      "recordsStats": Object {
+      "recordsStats": {
         "$type": "tools.ozone.moderation.defs#recordsStats",
       },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-      "subject": Object {
+      "subject": {
         "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(0)",
       },
-      "subjectBlobCids": Array [],
+      "subjectBlobCids": [],
       "subjectRepoHandle": "alice.test",
-      "tags": Array [
+      "tags": [
         "lang:und",
         "report:spam",
         "report:other",
@@ -60,13 +60,13 @@ Object {
       "updatedAt": "1970-01-01T00:00:00.000Z",
     },
   },
-  "relatedRecords": Array [
-    Object {
+  "relatedRecords": [
+    {
       "$type": "app.bsky.actor.profile",
-      "avatar": Object {
+      "avatar": {
         "$type": "blob",
         "mimeType": "image/jpeg",
-        "ref": Object {
+        "ref": {
           "$link": "cids(0)",
         },
         "size": 3976,
@@ -74,13 +74,13 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "displayName": "ali",
-      "labels": Object {
+      "labels": {
         "$type": "com.atproto.label.defs#selfLabels",
-        "values": Array [
-          Object {
+        "values": [
+          {
             "val": "self-label-a",
           },
-          Object {
+          {
             "val": "self-label-b",
           },
         ],
