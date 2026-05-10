@@ -14,7 +14,7 @@ module.exports = {
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: {
-    '^(\\.\\.?\\/.*templates/.+\\.js)$': '$1',
+    '^\\.\\/templates/(.+\\.js)$': '<rootDir>/dist/mailer/templates/$1',
     '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'],
   },
 }
