@@ -469,7 +469,7 @@ export async function handleQuickLoginCallback(
 
 /**
  * Handle a QuickLogin callback for a non-login approval session
- * (delete_account, plc_operation). Creates an internal email-style token
+ * (delete_account, plc_operation, link_wid). Creates an internal email-style token
  * and stores it in the session for the client to retrieve via status polling.
  *
  * SECURITY: Verifies that the JID scanning the QR code matches the account owner's JID.
@@ -491,6 +491,53 @@ async function handleApprovalCallback(
       status: 'failed',
       error: 'Approval session missing DID',
     })
+    return
+  }
+
+  // link_wid: upgrade an unverified account to a personal account.
+  // No pre-existing link to verify JID against — the link is being CREATED here.
+  if (purpose === 'link_wid') {
+    log.info(
+      { did: approvalDid, jid: jid.substring(0, 8) + '...' },
+      'link_wid QR scanned — upgrading unverified account',
+    )
+    try {
+      await ctx.accountManager.upgradeUnverifiedToPersonalAccount(
+        jid,
+        approvalDid,
+      )
+      // Issue fresh tokens so the client's session reflects the new accountType
+      const tokens = await ctx.accountManager.createSession(
+        approvalDid,
+        null,
+        false,
+        jid,
+      )
+      const handle = await ctx.accountManager
+        .getAccount(approvalDid)
+        .then((a) => a?.handle ?? '')
+      ctx.quickloginStore.updateSession(session.sessionId, {
+        status: 'completed',
+        result: {
+          did: approvalDid,
+          handle,
+          accessJwt: tokens.accessJwt,
+          refreshJwt: tokens.refreshJwt,
+          created: false,
+        },
+      })
+      log.info({ did: approvalDid }, 'link_wid upgrade completed successfully')
+    } catch (err) {
+      const code = (err as any)?.error ?? (err as Error).message
+      log.warn(
+        { sessionId: session.sessionId, error: code },
+        'link_wid upgrade failed',
+      )
+      ctx.quickloginStore.updateSession(session.sessionId, {
+        status: 'failed',
+        error: code,
+      })
+    }
     return
   }
 

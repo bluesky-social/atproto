@@ -414,7 +414,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       accentColor: env.emailAccentColor ?? '#1DF2BA',
     },
     wsocial: {
-      organizationDids: env.wsocialOrganizationDids || [],
       defaultSubscribeLists: env.wsocialDefaultSubscribeLists || [],
       defaultThreadPref: parseThreadPref(env.wsocialDefaultThreadPref),
     },
@@ -637,7 +636,6 @@ export type EmailBrandingConfig = {
 }
 
 export type WSocialConfig = {
-  organizationDids: string[] // DIDs that should be marked as "organization" account type
   defaultSubscribeLists: string[] // AT-URIs of lists to auto-subscribe human/test accounts on creation
   defaultThreadPref: {
     enabled: boolean

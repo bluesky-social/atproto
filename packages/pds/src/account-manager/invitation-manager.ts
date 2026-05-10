@@ -169,12 +169,14 @@ export class InvitationManager {
 
   /**
    * Get active invitation by email hash (for create-or-reuse flow)
-   * Returns row with JID if it exists and is reusable
+   * Returns row with JID if it exists and is reusable.
+   * Only returns invitations with at least 7 days of remaining lifetime.
    */
   async getActiveInvitationByEmailHash(
     emailHash: string,
   ): Promise<PendingInvitationEntry | null> {
     const normalizedHash = this.normalizeHash(emailHash)
+    const minExpiresAt = new Date(Date.now() + 7 * DAY).toISOString()
 
     const invitation = await this.db.db
       .selectFrom('pending_invitations')
@@ -187,6 +189,7 @@ export class InvitationManager {
         'email_failed',
       ])
       .where('jid', 'is not', null)
+      .where('expires_at', '>', minExpiresAt)
       .executeTakeFirst()
 
     return invitation || null

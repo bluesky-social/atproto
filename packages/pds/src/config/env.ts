@@ -198,7 +198,6 @@ export function readEnv() {
     emailAccentColor: envStr('PDS_EMAIL_ACCENT_COLOR'),
 
     // W Social extensions
-    wsocialOrganizationDids: envList('PDS_WSOCIAL_ORGANIZATION_DIDS'),
     wsocialDefaultSubscribeLists: envList(
       'PDS_WSOCIAL_DEFAULT_SUBSCRIBE_LISTS',
     ),

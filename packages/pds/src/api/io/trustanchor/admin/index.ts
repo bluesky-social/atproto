@@ -12,6 +12,7 @@ import listInvitations from './listInvitations'
 import loadInventory from './loadInventory'
 import purgeInvitations from './purgeInvitations'
 import setAccountPassword from './setAccountPassword'
+import setAccountType from './setAccountType'
 import setThreadViewPreferences from './setThreadViewPreferences'
 import subscribeToLists from './subscribeToLists'
 import updateInvitationEmailStatus from './updateInvitationEmailStatus'
@@ -25,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   createBotAccount(server, ctx)
   createAccountSession(server, ctx)
   setAccountPassword(server, ctx)
+  setAccountType(server, ctx)
   subscribeToLists(server, ctx)
   setThreadViewPreferences(server, ctx)
   getInventoryStatus(server, ctx)

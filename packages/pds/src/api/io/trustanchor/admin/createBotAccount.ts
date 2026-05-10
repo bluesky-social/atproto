@@ -68,6 +68,7 @@ export default function (server: Server, ctx: AppContext) {
         password: undefined, // Bot accounts authenticate with app password only
         repoCid: commit.cid,
         repoRev: commit.rev,
+        accountType: 'bot',
       })
 
       // Mark email as confirmed (skip verification for bot accounts)
