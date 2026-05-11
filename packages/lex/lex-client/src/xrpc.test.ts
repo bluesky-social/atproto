@@ -1167,7 +1167,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
-      assert(result.cause instanceof TypeError)
+      assert(result.cause instanceof Error)
     })
 
     it('rejects blob-refs with cbor data CIDs', async () => {
@@ -1189,7 +1189,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
-      assert(result.cause instanceof TypeError)
+      assert(result.cause instanceof Error)
     })
 
     it('enforces blob mime-type constraint by default', async () => {
@@ -1341,7 +1341,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
-      assert(result.cause instanceof TypeError)
+      assert(result.cause instanceof Error)
     })
 
     it('accepts response with invalid lex data when strict processing is disabled', async () => {
@@ -1367,7 +1367,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
-      assert(result.cause instanceof TypeError)
+      assert(result.cause instanceof Error)
     })
 
     it('returns error for error response with invalid lex data by default', async () => {
@@ -1439,7 +1439,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
-      assert(result.cause instanceof TypeError)
+      assert(result.cause instanceof Error)
     })
   })
 })

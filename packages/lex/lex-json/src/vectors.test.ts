@@ -283,7 +283,7 @@ describe.each<{
       ).toBe(true)
     })
 
-    it('should parse JSON bytes to LexValue in non-strict mode', () => {
+    it('should parse JSON bytes to LexValue in strict mode', () => {
       const jsonBytes = Buffer.from(JSON.stringify(json))
       expect(
         lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
@@ -539,7 +539,7 @@ describe.each<{
       expect(() => lexParse(JSON.stringify(json), { strict: true })).toThrow()
     })
 
-    it('should throw in non-strict mode', () => {
+    it('should not throw in non-strict mode', () => {
       expect(() =>
         lexParse(JSON.stringify(json), { strict: false }),
       ).not.toThrow()

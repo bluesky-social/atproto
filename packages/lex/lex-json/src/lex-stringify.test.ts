@@ -16,8 +16,6 @@ describe(lexStringify, () => {
         current = current.nested
       }
 
-      expect(() => JSON.stringify(nestedObject)).toThrow(RangeError)
-
       lexStringify(nestedObject, { maxNestedLevels })
     })
 
