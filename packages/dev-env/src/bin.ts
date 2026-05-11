@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import './env'
 import { generateMockSetup } from './mock'
 import { TestNetwork } from './network'
