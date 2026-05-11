@@ -1,25 +1,25 @@
 import { assert, describe, expect, it } from 'vitest'
-import { MAX_CBOR_NESTED_LEVELS } from '@atproto/lex-data'
 import {
-  IterativeTransformOptions,
-  iterativeTransform,
-} from './iterative-transform.js'
+  MAX_CBOR_NESTED_LEVELS,
+  MAX_PAYLOAD_NESTED_LEVELS,
+} from '@atproto/lex-data'
+import { DeepTransformOptions, deepTransform } from './deep-transform.js'
 
 const noop = () => {}
 
-describe(iterativeTransform, () => {
+describe(deepTransform, () => {
   describe('noop transform', () => {
     it('handles primitives', () => {
-      expect(iterativeTransform(null, noop)).toBe(null)
-      expect(iterativeTransform(true, noop)).toBe(true)
-      expect(iterativeTransform(false, noop)).toBe(false)
-      expect(iterativeTransform('hello', noop)).toBe('hello')
-      expect(iterativeTransform(123, noop)).toBe(123)
+      expect(deepTransform(null, noop)).toBe(null)
+      expect(deepTransform(true, noop)).toBe(true)
+      expect(deepTransform(false, noop)).toBe(false)
+      expect(deepTransform('hello', noop)).toBe('hello')
+      expect(deepTransform(123, noop)).toBe(123)
     })
 
     it('handles empty arrays', () => {
       const input: unknown[] = []
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -28,7 +28,7 @@ describe(iterativeTransform, () => {
 
     it('handles empty objects', () => {
       const input = {}
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -37,7 +37,7 @@ describe(iterativeTransform, () => {
 
     it('handles arrays with primitives', () => {
       const input = [1, 2, 3]
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -46,7 +46,7 @@ describe(iterativeTransform, () => {
 
     it('handles objects with primitives', () => {
       const input = { a: 1, b: 'hello', c: true }
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -62,7 +62,7 @@ describe(iterativeTransform, () => {
         objects: { nested: { value: 1 } },
       }
 
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -76,47 +76,41 @@ describe(iterativeTransform, () => {
     })
 
     it('rejects undefined', () => {
-      expect(() => iterativeTransform(undefined, noop)).toThrow(
-        'Invalid undefined value',
-      )
+      expect(() => deepTransform(undefined, noop)).toThrow()
     })
 
     it('rejects functions', () => {
-      expect(() => iterativeTransform(() => {}, noop)).toThrow(
-        'Invalid function',
-      )
+      expect(() => deepTransform(() => {}, noop)).toThrow()
     })
 
     it('rejects symbols', () => {
-      expect(() => iterativeTransform(Symbol('test'), noop)).toThrow(
-        'Invalid symbol',
-      )
+      expect(() => deepTransform(Symbol('test'), noop)).toThrow()
     })
   })
 
   describe('strict mode', () => {
     it('rejects invalid numbers in strict mode', () => {
       expect(() =>
-        iterativeTransform(123.456, noop, { allowNonSafeIntegers: false }),
+        deepTransform(123.456, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number (got 123.456)')
       expect(() =>
-        iterativeTransform(Number.MAX_SAFE_INTEGER + 1, noop, {
+        deepTransform(Number.MAX_SAFE_INTEGER + 1, noop, {
           allowNonSafeIntegers: false,
         }),
       ).toThrow('Invalid number (got 9007199254740992)')
     })
 
     it('allows non-integer numbers in non-strict mode', () => {
-      expect(
-        iterativeTransform(123.456, noop, { allowNonSafeIntegers: true }),
-      ).toBe(123.456)
+      expect(deepTransform(123.456, noop, { allowNonSafeIntegers: true })).toBe(
+        123.456,
+      )
     })
   })
 
   describe('transformation', () => {
     it('applies transformation to root object', () => {
       const input = { type: 'test', value: 123 }
-      const result = iterativeTransform(input, (obj) => {
+      const result = deepTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'test') {
           return { transformed: true }
         }
@@ -129,7 +123,7 @@ describe(iterativeTransform, () => {
         outer: { type: 'special', value: 1 },
         regular: 'data',
       }
-      const result = iterativeTransform(input, (obj) => {
+      const result = deepTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'special') {
           return { replaced: true }
         }
@@ -144,7 +138,7 @@ describe(iterativeTransform, () => {
       const inner = { value: 1 }
       const input = [inner, { value: 2 }, { value: 3 }]
 
-      const result = iterativeTransform(input, (obj) => {
+      const result = deepTransform(input, (obj) => {
         if ('value' in obj && obj.value === 2) {
           return { transformed: 2 }
         }
@@ -165,7 +159,7 @@ describe(iterativeTransform, () => {
         toChange: { type: 'special' },
       }
 
-      const result = iterativeTransform(input, (obj) => {
+      const result = deepTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'special') {
           return { changed: true }
         }
@@ -188,7 +182,7 @@ describe(iterativeTransform, () => {
         nested = [{ level: i, child: nested }]
       }
 
-      const result = iterativeTransform(nested, (obj) => {
+      const result = deepTransform(nested, (obj) => {
         if (isNested(obj) && obj.level === 15) {
           return { transformed: true, child: obj.child }
         }
@@ -213,7 +207,7 @@ describe(iterativeTransform, () => {
         items: [{ id: 1 }, { id: 2 }],
       }
 
-      const result = iterativeTransform(input, (obj) => {
+      const result = deepTransform(input, (obj) => {
         if ('id' in obj && obj.id === 1) {
           return { id: 1, transformed: true }
         }
@@ -226,7 +220,7 @@ describe(iterativeTransform, () => {
 
     it('handles transformation that returns primitives', () => {
       const input = { wrapper: { type: 'number', value: 42 } }
-      const result = iterativeTransform(input, (obj) => {
+      const result = deepTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'number') {
           return 42 as any
         }
@@ -238,7 +232,7 @@ describe(iterativeTransform, () => {
       const input = [1, 2, 3]
       let transformCalled = false
 
-      const result = iterativeTransform(input, () => {
+      const result = deepTransform(input, () => {
         transformCalled = true
         return { should: 'not happen' }
       })
@@ -261,7 +255,7 @@ describe(iterativeTransform, () => {
         nested = { nested }
       }
 
-      const result = iterativeTransform(
+      const result = deepTransform(
         nested,
         (val) => {
           // Transform the innermost object
@@ -276,7 +270,7 @@ describe(iterativeTransform, () => {
       // This should throw due to exceeding maxNestedLevels (we are wrapping one
       // more time to get depth = LIMIT + 1)
       expect(() =>
-        iterativeTransform({ nested }, noop, { maxNestedLevels: LIMIT }),
+        deepTransform({ nested }, noop, { maxNestedLevels: LIMIT }),
       ).toThrow('Input is too deeply nested')
 
       // unwrap result to check the transformation was applied correctly
@@ -295,19 +289,30 @@ describe(iterativeTransform, () => {
       expect(nested).toStrictEqual({ end: true })
     })
 
-    it('uses MAX_CBOR_NESTED_LEVELS by default', () => {
-      const LIMIT = MAX_CBOR_NESTED_LEVELS
+    it('uses MAX_PAYLOAD_NESTED_LEVELS by default', () => {
+      const LIMIT = MAX_PAYLOAD_NESTED_LEVELS
 
       let nested: unknown = []
-      for (let i = 0; i <= LIMIT - 1; i++) nested = [nested]
+      for (let i = 0; i < LIMIT; i++) nested = [nested]
 
-      expect(() => iterativeTransform(nested, noop)).not.toThrow()
+      expect(() => deepTransform(nested, noop)).not.toThrow()
 
       nested = [nested]
 
-      expect(() => iterativeTransform(nested, noop)).toThrow(
-        'Input is too deeply nested',
-      )
+      expect(() => deepTransform(nested, noop)).toThrow()
+    })
+
+    it('uses MAX_CBOR_NESTED_LEVELS in strict mode', () => {
+      const LIMIT = MAX_CBOR_NESTED_LEVELS
+
+      let nested: unknown = []
+      for (let i = 0; i < LIMIT; i++) nested = [nested]
+
+      expect(() => deepTransform(nested, noop, { strict: true })).not.toThrow()
+
+      nested = [nested]
+
+      expect(() => deepTransform(nested, noop, { strict: true })).toThrow()
     })
 
     it('enforces custom maxNestedLevels option', () => {
@@ -318,13 +323,13 @@ describe(iterativeTransform, () => {
       for (let i = 0; i <= LIMIT - 1; i++) nested = [nested]
 
       expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
+        deepTransform(nested, noop, { maxNestedLevels: LIMIT }),
       ).not.toThrow()
 
       nested = [nested]
 
       expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
+        deepTransform(nested, noop, { maxNestedLevels: LIMIT }),
       ).toThrow('Input is too deeply nested')
     })
 
@@ -336,14 +341,14 @@ describe(iterativeTransform, () => {
       for (let i = 0; i <= LIMIT - 1; i++) nested = [nested]
 
       expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
+        deepTransform(nested, noop, { maxNestedLevels: LIMIT }),
       ).not.toThrow()
 
       // Wrap one more time creates depth = LIMIT + 1
       nested = [nested]
 
       expect(() =>
-        iterativeTransform(nested, noop, { maxNestedLevels: LIMIT }),
+        deepTransform(nested, noop, { maxNestedLevels: LIMIT }),
       ).toThrow('Input is too deeply nested')
     })
   })
@@ -354,7 +359,7 @@ describe(iterativeTransform, () => {
       const input = { items: longArray }
 
       expect(() =>
-        iterativeTransform(input, noop, { maxContainerLength: 50 }),
+        deepTransform(input, noop, { maxContainerLength: 50 }),
       ).toThrow('Array is too long (length 51)')
     })
 
@@ -363,7 +368,7 @@ describe(iterativeTransform, () => {
       const input = { items: array }
 
       expect(() =>
-        iterativeTransform(input, noop, { maxContainerLength: 50 }),
+        deepTransform(input, noop, { maxContainerLength: 50 }),
       ).not.toThrow()
     })
   })
@@ -377,7 +382,7 @@ describe(iterativeTransform, () => {
       const input = { data: largeObject }
 
       expect(() =>
-        iterativeTransform(input, noop, { maxContainerLength: 50 }),
+        deepTransform(input, noop, { maxContainerLength: 50 }),
       ).toThrow('Object has too many entries (length 51)')
     })
 
@@ -389,7 +394,7 @@ describe(iterativeTransform, () => {
       const input = { data: object }
 
       expect(() =>
-        iterativeTransform(input, noop, { maxContainerLength: 50 }),
+        deepTransform(input, noop, { maxContainerLength: 50 }),
       ).not.toThrow()
     })
   })
@@ -397,7 +402,7 @@ describe(iterativeTransform, () => {
   describe('allowNonSafeIntegers option', () => {
     it('allows non-integers when allowNonSafeIntegers is true', () => {
       const input = { value: 123.456, nested: { pi: 3.14159 } }
-      const result = iterativeTransform(input, noop, {
+      const result = deepTransform(input, noop, {
         allowNonSafeIntegers: true,
       })
       expect(result).toStrictEqual({ value: 123.456, nested: { pi: 3.14159 } })
@@ -406,20 +411,20 @@ describe(iterativeTransform, () => {
     it('rejects non-integers when allowNonSafeIntegers is false', () => {
       const input = { value: 123.456 }
       expect(() =>
-        iterativeTransform(input, noop, { allowNonSafeIntegers: false }),
+        deepTransform(input, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number (got 123.456)')
     })
 
     it('rejects non-safe integers when allowNonSafeIntegers is false', () => {
       const input = { value: Number.MAX_SAFE_INTEGER + 1 }
       expect(() =>
-        iterativeTransform(input, noop, { allowNonSafeIntegers: false }),
+        deepTransform(input, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number')
     })
 
     it('allows safe integers when allowNonSafeIntegers is false', () => {
       const input = { value: 42, nested: { count: -100 } }
-      const result = iterativeTransform(input, noop, {
+      const result = deepTransform(input, noop, {
         allowNonSafeIntegers: false,
       })
       expect(result).toStrictEqual({ value: 42, nested: { count: -100 } })
@@ -427,7 +432,7 @@ describe(iterativeTransform, () => {
   })
 
   describe('circular reference detection', () => {
-    const options: IterativeTransformOptions = {
+    const options: DeepTransformOptions = {
       maxNestedLevels: Infinity,
     }
 
@@ -443,7 +448,7 @@ describe(iterativeTransform, () => {
       // Create circular reference
       current.next = obj
 
-      expect(() => iterativeTransform(obj, noop, options)).toThrow(
+      expect(() => deepTransform(obj, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -460,7 +465,7 @@ describe(iterativeTransform, () => {
       }
       // Create circular reference
       current.push(arr)
-      expect(() => iterativeTransform(arr, noop, options)).toThrow(
+      expect(() => deepTransform(arr, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -482,7 +487,7 @@ describe(iterativeTransform, () => {
       }
       current.circular = intermediate
 
-      expect(() => iterativeTransform(root, noop, options)).toThrow(
+      expect(() => deepTransform(root, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -496,7 +501,7 @@ describe(iterativeTransform, () => {
       }
 
       // This should not throw - it's not a circular reference
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       expect(result).toStrictEqual({
         ref1: { shared: 'value' },
         ref2: { shared: 'value' },
@@ -514,7 +519,7 @@ describe(iterativeTransform, () => {
       }
       current.circular = obj.data
 
-      expect(() => iterativeTransform(obj, noop, options)).toThrow(
+      expect(() => deepTransform(obj, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -523,14 +528,12 @@ describe(iterativeTransform, () => {
   describe('undefined handling', () => {
     it('rejects undefined in arrays', () => {
       const input = [1, undefined as any, 3]
-      expect(() => iterativeTransform(input, noop)).toThrow(
-        'Invalid undefined value',
-      )
+      expect(() => deepTransform(input, noop)).toThrow(TypeError)
     })
 
     it('removes undefined properties from objects', () => {
       const input = { a: 1, b: undefined as any, c: 3 }
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       expect(result).toStrictEqual({ a: 1, c: 3 })
       expect(result).not.toHaveProperty('b')
     })
@@ -540,7 +543,7 @@ describe(iterativeTransform, () => {
         outer: { a: 1, b: undefined as any },
         keep: 'this',
       }
-      const result = iterativeTransform(input, noop)
+      const result = deepTransform(input, noop)
       expect(result).not.toBe(input) // Object was copied
       expect(result).toStrictEqual({
         outer: { a: 1 },

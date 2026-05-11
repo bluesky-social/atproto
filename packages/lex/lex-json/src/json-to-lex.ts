@@ -1,28 +1,14 @@
-import {
-  LexValue,
-  MAX_CBOR_CONTAINER_LEN,
-  MAX_CBOR_NESTED_LEVELS,
-  MAX_CBOR_OBJECT_KEY_LEN,
-  MAX_PAYLOAD_NESTED_LEVELS,
-} from '@atproto/lex-data'
-import {
-  IterativeTransformOptions,
-  iterativeTransform,
-} from './iterative-transform.js'
+import { LexValue } from '@atproto/lex-data'
+import { DeepTransformOptions, deepTransform } from './deep-transform.js'
 import { JsonValue } from './json.js'
-import {
-  SpecialJsonObjectOptions,
-  parseSpecialJsonObject,
-} from './special-objects.js'
+import { parseSpecialJsonObject } from './special-objects.js'
 
 /**
  * Options for {@link jsonToLex} function
  *
- * @see {@link IterativeTransformOptions}
- * @see {@link SpecialJsonObjectOptions}
+ * @see {@link DeepTransformOptions}
  */
-export type JsonToLexOptions = IterativeTransformOptions &
-  SpecialJsonObjectOptions
+export type JsonToLexOptions = DeepTransformOptions
 
 /**
  * Converts a parsed JSON representation of Lexicon value ({@link JsonValue})
@@ -77,25 +63,9 @@ export type JsonToLexOptions = IterativeTransformOptions &
  */
 export function jsonToLex(
   input: JsonValue,
-  {
-    strict = false,
-    allowNonSafeIntegers = !strict,
-    maxNestedLevels = strict
-      ? MAX_CBOR_NESTED_LEVELS
-      : MAX_PAYLOAD_NESTED_LEVELS,
-    maxContainerLength = strict ? MAX_CBOR_CONTAINER_LEN : Infinity,
-    maxObjectKeyLen = strict ? MAX_CBOR_OBJECT_KEY_LEN : Infinity,
-  }: JsonToLexOptions = {},
+  options?: JsonToLexOptions,
 ): LexValue {
-  const options: Required<JsonToLexOptions> = {
-    strict,
-    allowNonSafeIntegers,
-    maxNestedLevels,
-    maxContainerLength,
-    maxObjectKeyLen,
-  }
-  // See ./json-to-lex.bench.ts for performance comparison between recursive and
-  // iterative implementations of this function. The performance difference is
-  // minimal, so we won't use a hybrid approach here.
-  return iterativeTransform(input, parseSpecialJsonObject, options) as LexValue
+  // Run "pnpm exec vitest bench --run json-to-lex" for performance comparison
+  // between recursive and iterative implementations of this function.
+  return deepTransform(input, parseSpecialJsonObject, options) as LexValue
 }

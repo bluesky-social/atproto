@@ -8,8 +8,9 @@ import {
 } from '@atproto/common-web'
 import { LexValue, MAX_PAYLOAD_NESTED_LEVELS } from '@atproto/lex-data'
 import {
-  IterativeTransformOptions,
-  iterativeTransform,
+  DeepTransformOptions,
+  MAX_RECURSION_DEPTH_DEFAULT,
+  deepTransform,
   lexParse,
   lexStringify,
 } from '@atproto/lex-json'
@@ -35,18 +36,21 @@ export type RepoRecord = Record<string, LegacyLexValue>
  *
  * @internal
  */
-const IPLD_TRANSFORM_OPTS: IterativeTransformOptions = Object.freeze({
+const IPLD_TRANSFORM_OPTS: DeepTransformOptions = Object.freeze({
+  strict: false,
   allowNonSafeIntegers: true,
+  initialNestedLevel: 0,
   maxContainerLength: Infinity,
   maxNestedLevels: MAX_PAYLOAD_NESTED_LEVELS,
   maxObjectKeyLen: Infinity,
-} satisfies Required<IterativeTransformOptions>)
+  maxRecursionDepth: MAX_RECURSION_DEPTH_DEFAULT,
+} satisfies Required<DeepTransformOptions>)
 
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
 export const lexToIpld = (input: LegacyLexValue): IpldValue => {
-  return iterativeTransform(input, lexObjectToIpld, IPLD_TRANSFORM_OPTS)
+  return deepTransform(input, lexObjectToIpld, IPLD_TRANSFORM_OPTS)
 }
 
 /**
@@ -67,7 +71,7 @@ function lexObjectToIpld(value: object): IpldValue | void {
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
  */
 export const ipldToLex = (input: IpldValue): LegacyLexValue => {
-  return iterativeTransform(input, ipldObjectToLex, IPLD_TRANSFORM_OPTS)
+  return deepTransform(input, ipldObjectToLex, IPLD_TRANSFORM_OPTS)
 }
 
 /** @internal */

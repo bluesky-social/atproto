@@ -23,12 +23,11 @@ describe(lexStringify, () => {
 
     it('throws error when structure exceeds max depth', () => {
       const maxNestedLevels = 50_000
-      const objectNesting = maxNestedLevels + 1
 
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 1; i < objectNesting; i++) {
+      for (let i = 0; i <= maxNestedLevels; i++) {
         current.nested = { level: i }
         current = current.nested
       }
@@ -42,7 +41,7 @@ describe(lexStringify, () => {
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 1; i < MAX_CBOR_NESTED_LEVELS + 1; i++) {
+      for (let i = 0; i <= MAX_CBOR_NESTED_LEVELS; i++) {
         current.nested = { level: i }
         current = current.nested
       }
@@ -53,7 +52,7 @@ describe(lexStringify, () => {
 
       expect(() =>
         lexStringify(nestedObject, {
-          maxNestedLevels: MAX_CBOR_NESTED_LEVELS + 2,
+          maxNestedLevels: MAX_CBOR_NESTED_LEVELS + 1,
         }),
       ).not.toThrow()
     })

@@ -8,6 +8,7 @@ import { JsonValue } from './json.js'
 
 const UNSAFE_JSON_STRINGIFY_OPTIONS: Required<JsonStringifyDeepOptions> = {
   allowNonSafeIntegers: true,
+  initialNestedLevel: 0,
   maxContainerLength: Infinity,
   maxNestedLevels: Infinity,
   maxObjectKeyLen: Infinity,

@@ -8,7 +8,7 @@ import {
   MAX_CBOR_OBJECT_KEY_LEN,
   MAX_PAYLOAD_NESTED_LEVELS,
 } from '@atproto/lex-data'
-import { iterativeTransform } from './iterative-transform.js'
+import { DeepTransformOptions, deepTransform } from './deep-transform.js'
 import { jsonToLex } from './json-to-lex.js'
 import { JsonObject, JsonValue } from './json.js'
 import { LexToJsonOptions, lexToJson } from './lex-to-json.js'
@@ -145,9 +145,10 @@ export function lexToJsonIterative(
       : MAX_PAYLOAD_NESTED_LEVELS,
     maxContainerLength = strict ? MAX_CBOR_CONTAINER_LEN : Infinity,
     maxObjectKeyLen = strict ? MAX_CBOR_OBJECT_KEY_LEN : Infinity,
-  }: LexToJsonOptions = {},
+  }: DeepTransformOptions = {},
 ): JsonValue {
-  return iterativeTransform(input, encodeSpecialJsonObject, {
+  return deepTransform(input, encodeSpecialJsonObject, {
+    maxRecursionDepth: 0,
     allowNonSafeIntegers,
     maxNestedLevels,
     maxContainerLength,
@@ -155,7 +156,7 @@ export function lexToJsonIterative(
   }) as JsonValue
 }
 
-type RecursionContext = Required<LexToJsonOptions> & {
+type RecursionContext = Required<DeepTransformOptions> & {
   currentDepth: number
 }
 
@@ -178,6 +179,7 @@ function lexToJsonRecursive(
     maxContainerLength,
     maxObjectKeyLen,
     currentDepth: 1,
+    initialNestedLevel: 0, // unused here
     maxRecursionDepth: Infinity, // unused here
   })
 }

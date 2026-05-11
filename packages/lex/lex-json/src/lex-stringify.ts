@@ -21,6 +21,7 @@ import { LexToJsonOptions, lexToJson } from './lex-to-json.js'
  */
 const JSON_STRINGIFY_DEEP_OPTIONS: Required<JsonStringifyDeepOptions> = {
   allowNonSafeIntegers: true,
+  initialNestedLevel: 0,
   maxContainerLength: Infinity,
   maxNestedLevels: Infinity,
   maxObjectKeyLen: Infinity,

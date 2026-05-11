@@ -7,22 +7,32 @@ import {
 } from './lib/stack.js'
 
 const OMIT = Symbol('OMIT')
-const OBJECT = Symbol('object')
+const NESTED = Symbol('NESTED')
 
 const OPEN_BRACKET = '['
 const OPEN_BRACE = '{'
 
-export type JsonStringifyDeepOptions = StackOptions & EncodePrimitiveOptions
+export type JsonStringifyDeepOptions = StackOptions & {
+  /**
+   * AT Protocol spec does not allow numbers outside of the safe integer range
+   * (-(2^53 - 1) to 2^53 - 1)). This options allows to disable the check for
+   * safe integers, which can be useful for processing data in "non-strict"
+   * mode.
+   *
+   * @default true
+   */
+  allowNonSafeIntegers?: boolean
+}
 
 type RawFrame = { type: 'raw'; string: string }
 function rawFrame(string: string): RawFrame {
   return { type: 'raw', string }
 }
 
-const COMMA_FRAME = Object.freeze(rawFrame(','))
-const NULL_FRAME = Object.freeze(rawFrame('null'))
-const CLOSE_BRACKET_FRAME = Object.freeze(rawFrame(']'))
-const CLOSE_BRACE_FRAME = Object.freeze(rawFrame('}'))
+const COMMA_FRAME = rawFrame(',')
+const NULL_FRAME = rawFrame('null')
+const CLOSE_BRACKET_FRAME = rawFrame(']')
+const CLOSE_BRACE_FRAME = rawFrame('}')
 
 /**
  * A custom JSON stringifier that can handle deeply nested structures without
@@ -42,7 +52,7 @@ export function jsonStringifyDeep(
   const valueJson = hasToJSON(input) ? input.toJSON() : input
   const valueEnc = encodePrimitive(valueJson, options)
 
-  if (valueEnc !== OBJECT) {
+  if (valueEnc !== NESTED) {
     if (valueEnc === OMIT) {
       // @NOTE That JSON.stringify(undefined) returns undefined (although it is
       // not typed as such in TypeScript, and not valid JSON). We disallow this
@@ -57,12 +67,13 @@ export function jsonStringifyDeep(
 
   let result = ''
 
-  // The idea of this loop is to move items from the stack to the result string.
-  // When we encounter an object or array, we push its children onto the stack,
-  // (after adding the opening bracket/brace). The stack is a
-  // "last-in-first-out" structure, so we push the children in reverse order to
-  // ensure they are processed in the correct order.
-  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
+  // The idea of this loop is to move items from the stack to the result string
+  // by browsing the input structure with a depth-first traversal. When we
+  // encounter an object or array, we push its children onto the stack, (after
+  // adding the opening bracket/brace). The stack is a "last-in-first-out"
+  // structure, so we push the children in reverse order to ensure they are
+  // processed in the correct order.
+  for (const frame of stack) {
     if (isArrayFrame(frame)) {
       if (frame.input.length === 0) {
         result += '[]'
@@ -81,7 +92,7 @@ export function jsonStringifyDeep(
           stack.push(COMMA_FRAME)
         }
 
-        if (valueEnc === OBJECT) {
+        if (valueEnc === NESTED) {
           stack.pushNested(valueJson as object, { frame, index })
         } else if (valueEnc === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
@@ -118,7 +129,7 @@ export function jsonStringifyDeep(
 
         const key = entries[index][0]
 
-        if (valueEnc === OBJECT) {
+        if (valueEnc === NESTED) {
           stack.pushNested(valueJson as object, { frame, index })
           stack.push(rawFrame(`${JSON.stringify(key)}:`))
         } else {
@@ -138,18 +149,6 @@ function hasToJSON(value: unknown): value is { toJSON: () => unknown } {
   return typeof (value as any)?.toJSON === 'function'
 }
 
-type EncodePrimitiveOptions = {
-  /**
-   * AT Protocol spec does not allow numbers outside of the safe integer range
-   * (-(2^53 - 1) to 2^53 - 1)). This options allows to disable the check for
-   * safe integers, which can be useful for processing data in "non-strict"
-   * mode.
-   *
-   * @default true
-   */
-  allowNonSafeIntegers?: boolean
-}
-
 /**
  * Encodes a value into either a JSON string (for primitives) or
  * indicates it needs further processing (for complex types).
@@ -157,12 +156,13 @@ type EncodePrimitiveOptions = {
  */
 function encodePrimitive(
   value: unknown,
-  options?: EncodePrimitiveOptions,
-): string | typeof OMIT | typeof OBJECT {
+  options?: JsonStringifyDeepOptions,
+): string | typeof OMIT | typeof NESTED {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
-      return OBJECT
+      // Input is an object or array that needs further processing.
+      return NESTED
     case 'number':
       if (options?.allowNonSafeIntegers ?? true) return JSON.stringify(value)
       if (Number.isSafeInteger(value)) return JSON.stringify(value)
@@ -171,10 +171,12 @@ function encodePrimitive(
     case 'boolean':
       return JSON.stringify(value)
     case 'undefined':
+    case 'symbol':
     case 'function':
-      // JSON.stringify omits undefined and function values
+      // Return sentinel to indicate this property should be omitted
+      // (matching JSON.stringify behavior for object properties)
       return OMIT
     default:
-      throw new TypeError(`Unsupported type: ${typeof value}`)
+      throw new TypeError(`Do not know how to serialize a ${typeof value}`)
   }
 }

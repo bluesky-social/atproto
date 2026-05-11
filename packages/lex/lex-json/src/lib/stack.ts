@@ -3,7 +3,7 @@
 // nested structures (instead of recursion).
 //
 // The main purpose of this module is to support the implementation of
-// `iterativeTransform` and `jsonStringifyDeep`, which need to traverse and
+// `deepTransform` and `jsonStringifyDeep`, which need to traverse and
 // transform deeply nested structures without hitting call stack limits.
 
 import {
@@ -63,6 +63,14 @@ export type StackOptions = {
    * @default MAX_CBOR_OBJECT_KEY_LEN
    */
   maxObjectKeyLen?: number
+
+  /**
+   * The initial nesting level of the input structure. This is used to calculate
+   * the current nesting level when processing nested structures.
+   *
+   * @default 0
+   */
+  initialNestedLevel?: number
 }
 
 /**
@@ -85,18 +93,27 @@ export class Stack<TCustom = never> {
       maxNestedLevels = MAX_CBOR_NESTED_LEVELS,
       maxContainerLength = MAX_CBOR_CONTAINER_LEN,
       maxObjectKeyLen = MAX_CBOR_OBJECT_KEY_LEN,
+      initialNestedLevel = 0,
     }: StackOptions = {},
   ) {
-    // @NOTE createFrame requires the options to be set on the instance.
+    // @NOTE this.options must be set before calling createFrame
     this.options = {
       maxNestedLevels,
       maxContainerLength,
       maxObjectKeyLen,
+      initialNestedLevel,
     }
 
     const frame = this.createFrame(input)
     this.root = frame
     this.stack = [frame]
+  }
+
+  *[Symbol.iterator](): Generator<StackFrame | TCustom, void, unknown> {
+    const { stack } = this
+    for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
+      yield frame
+    }
   }
 
   pop(): StackFrame | TCustom | undefined {
@@ -116,8 +133,8 @@ export class Stack<TCustom = never> {
 
     if (
       options.maxNestedLevels === Infinity &&
-      parent.frame.depth > 100 &&
-      parent.frame.depth % 100 === 0
+      parent.frame.depth > 256 &&
+      parent.frame.depth % 256 === 0
     ) {
       // @NOTE Traversing the parentRef chain on every frame creation can add
       // significant overhead (O(n^2)) to processing large structures especially
@@ -155,7 +172,9 @@ export class Stack<TCustom = never> {
 
       return {
         type: 'array',
-        depth: parent ? parent.frame.depth + 1 : 0,
+        depth: parent
+          ? parent.frame.depth + 1
+          : this.options.initialNestedLevel,
         parent,
         input,
         copy: undefined,
@@ -182,7 +201,9 @@ export class Stack<TCustom = never> {
 
       return {
         type: 'object',
-        depth: parent ? parent.frame.depth + 1 : 0,
+        depth: parent
+          ? parent.frame.depth + 1
+          : this.options.initialNestedLevel,
         parent,
         input,
         entries,

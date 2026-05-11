@@ -1,6 +1,6 @@
 import { bench, describe } from 'vitest'
 import { LexMap, LexValue, utf8Len } from '@atproto/lex-data'
-import { iterativeTransform } from './iterative-transform.js'
+import { DeepTransformOptions, deepTransform } from './deep-transform.js'
 import { JsonToLexOptions, jsonToLex } from './json-to-lex.js'
 import { JsonObject, JsonValue } from './json.js'
 import { parseSpecialJsonObject } from './special-objects.js'
@@ -111,19 +111,21 @@ function benchData(data: JsonValue) {
     })
   })
 
-  // Skipped because the default implementation is the same.
-  bench.skip(jsonToLexIterative, () => {
+  bench(jsonToLexIterative, () => {
     jsonToLexIterative(data, {
       strict: true,
       allowNonSafeIntegers: false,
       maxContainerLength: 1000,
       maxNestedLevels: 10_000,
       maxObjectKeyLen: 100,
+      maxRecursionDepth: 0,
     })
   })
 
-  bench(jsonToLexRecursive, () => {
-    jsonToLexRecursive(data, {
+  // Useful as baseline but skipped since it is not the same implementation and
+  // can be misleading to compare against.
+  bench.skip(jsonToLexRecursiveNoCheck, () => {
+    jsonToLexRecursiveNoCheck(data, {
       strict: true,
       allowNonSafeIntegers: false,
       maxContainerLength: 1000,
@@ -135,22 +137,22 @@ function benchData(data: JsonValue) {
 
 function jsonToLexIterative(
   input: JsonValue,
-  options: JsonToLexOptions = {},
+  options: DeepTransformOptions,
 ): LexValue {
-  return iterativeTransform(input, parseSpecialJsonObject, options) as LexValue
+  return deepTransform(input, parseSpecialJsonObject, options) as LexValue
 }
 
-function jsonToLexRecursive(
+function jsonToLexRecursiveNoCheck(
   value: JsonValue,
   options?: JsonToLexOptions,
 ): LexValue {
   switch (typeof value) {
     case 'object': {
       if (value === null) return null
-      if (Array.isArray(value)) return jsonArrayToLex(value, options)
+      if (Array.isArray(value)) return jsonArrayToLexNoCheck(value, options)
       return (
         parseSpecialJsonObject(value, options) ??
-        jsonObjectToLexMap(value, options)
+        jsonObjectToLexMapNoCheck(value, options)
       )
     }
     case 'number':
@@ -165,7 +167,7 @@ function jsonToLexRecursive(
   }
 }
 
-function jsonArrayToLex(
+function jsonArrayToLexNoCheck(
   input: JsonValue[],
   options?: JsonToLexOptions,
 ): LexValue[] {
@@ -183,7 +185,7 @@ function jsonArrayToLex(
 
   for (let i = 0; i < input.length; i++) {
     const inputItem = input[i]
-    const item = jsonToLexRecursive(inputItem, options)
+    const item = jsonToLexRecursiveNoCheck(inputItem, options)
     if (item !== inputItem) {
       copy ??= Array.from(input)
       copy[i] = item
@@ -192,7 +194,7 @@ function jsonArrayToLex(
   return copy ?? input
 }
 
-function jsonObjectToLexMap(
+function jsonObjectToLexMapNoCheck(
   input: JsonObject,
   options?: JsonToLexOptions,
 ): LexMap {
@@ -236,7 +238,7 @@ function jsonObjectToLexMap(
       continue
     }
 
-    const value = jsonToLexRecursive(jsonValue!, options)
+    const value = jsonToLexRecursiveNoCheck(jsonValue!, options)
     if (value !== jsonValue) {
       copy ??= { ...input }
       copy[key] = value
