@@ -1,7 +1,10 @@
 import './env'
+import { IntrospectServer } from './introspect'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { TestPds } from './pds'
 import { mockMailer } from './util'
+
+const INTROSPECT_PORT = 2581
 
 const parsePdsCount = (): number => {
   const arg = process.argv[2]
@@ -41,6 +44,12 @@ const run = async () => {
     mockMailer(extra)
   }
 
+  const introspect = await IntrospectServer.start(INTROSPECT_PORT, network.plc, [
+    network.pds,
+    ...network.extraPdses,
+  ])
+
+  console.log(`🔍 Introspection server http://localhost:${introspect.port}`)
   console.log(`👤 DID Placeholder server http://localhost:${network.plc.port}`)
 
   const allPdses: { label: string; pds: TestPds; domain: string }[] = [
