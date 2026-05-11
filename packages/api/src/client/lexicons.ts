@@ -11480,6 +11480,12 @@ export const schemaDict = {
               description: 'Filter by conversation kind.',
               knownValues: ['direct', 'group'],
             },
+            lockStatus: {
+              type: 'string',
+              description:
+                'Filter by conversation lock status. Values follow chat.bsky.convo.defs#convoLockStatus.',
+              knownValues: ['unlocked', 'locked', 'locked-permanently'],
+            },
           },
         },
         output: {
