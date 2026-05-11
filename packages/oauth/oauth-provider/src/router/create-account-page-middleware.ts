@@ -41,7 +41,7 @@ export function createAccountPageMiddleware<
   const router = new Router<Ctx, Req, Res>(issuerUrl)
 
   // Create password reset discovery endpoint
-  // https://w3c.github.io/webappsec-change-password-url/
+  // https://www.w3.org/TR/change-password-url/
   router.get('/.well-known/change-password', (_req, res) => {
     writeRedirect(res, new URL('/account/reset-password', issuerUrl).toString())
   })

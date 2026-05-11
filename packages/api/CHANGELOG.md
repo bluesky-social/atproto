@@ -1,5 +1,43 @@
 # @atproto/api
 
+## 0.19.16
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+## 0.19.15
+
+### Patch Changes
+
+- [#4912](https://github.com/bluesky-social/atproto/pull/4912) [`450f26a`](https://github.com/bluesky-social/atproto/commit/450f26ac854cf53484dd887204447c8ead78d3b2) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `associatedRecord` to `app.bsky.embed.external` record.
+
+## 0.19.14
+
+### Patch Changes
+
+- [#4894](https://github.com/bluesky-social/atproto/pull/4894) [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1) Thanks [@foysalit](https://github.com/foysalit)! - Add expiring tags in ozone
+
+## 0.19.13
+
+### Patch Changes
+
+- [#4906](https://github.com/bluesky-social/atproto/pull/4906) [`2879b56`](https://github.com/bluesky-social/atproto/commit/2879b56a04d37fc93d5afb51cf6131fb7c156b85) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4769](https://github.com/bluesky-social/atproto/pull/4769) [`02b8b32`](https://github.com/bluesky-social/atproto/commit/02b8b32d2fd57ade330d18fbfc8d0d25ed95e476) Thanks [@whyrusleeping](https://github.com/whyrusleeping)! - Update blur behaviors to be more comprehensive and cover more surfaces.
+
+## 0.19.12
+
+### Patch Changes
+
+- [#4903](https://github.com/bluesky-social/atproto/pull/4903) [`3f1cb53`](https://github.com/bluesky-social/atproto/commit/3f1cb5374cec92b4422bbb9a7d6f06dba77396ae) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.11
+
+### Patch Changes
+
+- [#4876](https://github.com/bluesky-social/atproto/pull/4876) [`03445ee`](https://github.com/bluesky-social/atproto/commit/03445eef45d9fba66d48ea5ca86742685d91faa5) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.19.10
 
 ### Patch Changes

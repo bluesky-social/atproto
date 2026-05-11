@@ -1,8 +1,8 @@
 import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
-import { Button } from './forms/button.tsx'
-import { LayoutTitle } from './layouts/layout-title.tsx'
+import { Button } from '#/components/forms/button.tsx'
+import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
 import { ResetPasswordConfirmForm } from './reset-password-confirm-form.tsx'
 import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
 
@@ -19,7 +19,7 @@ export type ResetPasswordViewProps = {
     },
     signal: AbortSignal,
   ) => void | PromiseLike<void>
-  onBack: () => void
+  onBack?: () => void
 }
 
 enum View {
@@ -92,7 +92,7 @@ export function ResetPasswordView({
             if (!signal.aborted) setView(View.PasswordUpdated)
           }}
           cancelLabel={<Trans>Back</Trans>}
-          onCancel={onBack}
+          onCancel={() => setView(View.RequestReset)}
         />
       </LayoutTitle>
     )
@@ -111,9 +111,11 @@ export function ResetPasswordView({
           <p className="pb-4">
             <Trans>You can now sign in with your new password.</Trans>
           </p>
-          <Button color="primary" onClick={onBack}>
-            <Trans>Okay</Trans>
-          </Button>
+          {onBack && (
+            <Button color="primary" onClick={() => onBack()}>
+              <Trans>Okay</Trans>
+            </Button>
+          )}
         </center>
       </LayoutTitle>
     )

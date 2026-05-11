@@ -1,5 +1,14 @@
 # @atproto/oauth-client-browser
 
+## 0.3.42
+
+### Patch Changes
+
+- [#4896](https://github.com/bluesky-social/atproto/pull/4896) [`087515e`](https://github.com/bluesky-social/atproto/commit/087515e6a414aedbf0b7bd36139ed020dc7e0dae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow configuring the popupName and popupFeatures
+
+- Updated dependencies [[`087515e`](https://github.com/bluesky-social/atproto/commit/087515e6a414aedbf0b7bd36139ed020dc7e0dae)]:
+  - @atproto/oauth-client@0.6.1
+
 ## 0.3.41
 
 ### Patch Changes

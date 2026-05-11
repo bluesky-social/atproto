@@ -5,16 +5,22 @@ import * as accountRecordStatusStats from './account_record_status_stats'
 import * as accountStrike from './account_strike'
 import * as blobPushEvent from './blob_push_event'
 import * as communicationTemplate from './communication_template'
+import * as expiringTag from './expiring_tag'
 import * as firehoseCursor from './firehose_cursor'
 import * as jobCursor from './job_cursor'
 import * as label from './label'
 import * as member from './member'
 import * as modEvent from './moderation_event'
 import * as modSubjectStatus from './moderation_subject_status'
+import * as moderatorAssignment from './moderator_assignment'
 import * as set from './ozone_set'
 import * as recordEventsStats from './record_events_stats'
 import * as recordPushEvent from './record_push_event'
 import * as repoPushEvent from './repo_push_event'
+import * as report from './report'
+import * as reportActivity from './report_activity'
+import * as reportQueue from './report_queue'
+import * as reportStat from './report_stat'
 import * as safelink from './safelink'
 import * as scheduledAction from './scheduled-action'
 import * as setting from './setting'
@@ -23,6 +29,9 @@ import * as verification from './verification'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
+  report.PartialDB &
+  reportActivity.PartialDB &
+  reportQueue.PartialDB &
   label.PartialDB &
   signingKey.PartialDB &
   repoPushEvent.PartialDB &
@@ -41,7 +50,10 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   firehoseCursor.PartialDB &
   jobCursor.PartialDB &
   safelink.PartialDB &
-  scheduledAction.PartialDB
+  scheduledAction.PartialDB &
+  moderatorAssignment.PartialDB &
+  reportStat.PartialDB &
+  expiringTag.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

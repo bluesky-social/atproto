@@ -37,6 +37,14 @@
                   "chat.bsky.convo.defs#systemMessageView"
                 ]
               }
+            },
+            "relatedProfiles": {
+              "description": "Set of all members who authored or reacted to the returned messages. Members referred to by system messages are also included.",
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "chat.bsky.actor.defs#profileViewBasic"
+              }
             }
           }
         }

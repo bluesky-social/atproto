@@ -5,7 +5,14 @@ import { Override } from '#/lib/util.ts'
 export type ButtonProps = Override<
   JSX.IntrinsicElements['button'],
   {
-    color?: 'primary' | 'gray' | 'darkGrey' | 'error' | 'warning' | 'info'
+    color?:
+      | 'primary'
+      | 'gray'
+      | 'darkGrey'
+      | 'error'
+      | 'warning'
+      | 'info'
+      | 'success'
     loading?: boolean
     transparent?: boolean
     shape?: 'padded' | 'rounded' | 'circle'
@@ -108,6 +115,14 @@ export function Button({
               transparent
                 ? 'text-error bg-transparent'
                 : 'bg-error-500 dark:bg-error-700 text-error-contrast',
+            )
+          : undefined,
+        color === 'success'
+          ? clsx(
+              'accent-success-100',
+              transparent
+                ? 'text-success bg-transparent'
+                : 'bg-success-500 dark:bg-success-700 text-success-contrast',
             )
           : undefined,
         color === 'warning'

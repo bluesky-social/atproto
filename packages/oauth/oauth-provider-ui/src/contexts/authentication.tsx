@@ -32,6 +32,7 @@ export type AuthenticationContextType = {
 const AuthenticationContext = createContext<null | AuthenticationContextType>(
   null,
 )
+AuthenticationContext.displayName = 'AuthenticationContext'
 
 export type AuthenticationProviderProps = {
   disableRemember?: boolean
