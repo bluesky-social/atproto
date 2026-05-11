@@ -1,5 +1,11 @@
 # @atproto/lex-schema
 
+## 0.0.20
+
+### Patch Changes
+
+- [#4925](https://github.com/bluesky-social/atproto/pull/4925) [`2fd8d62`](https://github.com/bluesky-social/atproto/commit/2fd8d62708dc23de6ed21cbcccfebab68b19f588) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Increase string preview validation error
+
 ## 0.0.19
 
 ### Patch Changes

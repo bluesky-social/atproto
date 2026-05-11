@@ -1,5 +1,13 @@
 # @atproto/lexicon-resolver
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.26
+  - @atproto/lex-document@0.0.21
+
 ## 0.3.5
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.19.17
+
+### Patch Changes
+
+- [#4924](https://github.com/bluesky-social/atproto/pull/4924) [`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4926](https://github.com/bluesky-social/atproto/pull/4926) [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.19.16
 
 ### Patch Changes
