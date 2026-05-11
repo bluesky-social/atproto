@@ -100,19 +100,27 @@ for (const utf8Len of [utf8LenNode!, utf8LenCompute!] as const) {
 
 ### Type narrowing with `assert`
 
-Use `assert()` from vitest for type narrowing and boolean checks:
+Use `assert()` from vitest for type narrowing and boolean checks. **Always prefer `assert(result.success)` over `expect(result.success).toBe(true)`** — the `assert` provides type narrowing in TypeScript, which allows the rest of the test to access narrowed properties without additional type guards.
 
 ```ts
 // Narrow to a specific type before further assertions
 assert(err instanceof XrpcFetchError)
 expect(err.cause).toBeInstanceOf(TypeError)
 
-// Discriminated union checks
+// Discriminated union checks - PREFERRED
 assert(result.success)
 expect(result.body).toEqual({ value: 'hello' })
+// TypeScript now knows result.body exists
 
 assert(!result.success)
 expect(result).toBeInstanceOf(XrpcResponseError)
+// TypeScript now knows result has error properties
+
+// DON'T do this - it doesn't narrow types
+expect(result.success).toBe(true) // ❌ No type narrowing
+if (result.success) {
+  expect(result.body).toEqual({ value: 'hello' }) // Still need type guard
+}
 ```
 
 ### Error assertions with `rejects.toSatisfy`

@@ -1,5 +1,55 @@
 # @atproto/pds
 
+## 0.4.221
+
+### Patch Changes
+
+- [#4757](https://github.com/bluesky-social/atproto/pull/4757) [`877e629`](https://github.com/bluesky-social/atproto/commit/877e6293b93b2c32342b2023ab4f0c0e1cce643a) Thanks [@devinivy](https://github.com/devinivy)! - Remove legacy JWT typ check.
+
+- Updated dependencies [[`5d3e248`](https://github.com/bluesky-social/atproto/commit/5d3e248c262f45e3ca471d8d2381830a4cd896ae)]:
+  - @atproto/oauth-provider@0.16.3
+
+## 0.4.220
+
+### Patch Changes
+
+- [#4857](https://github.com/bluesky-social/atproto/pull/4857) [`c531144`](https://github.com/bluesky-social/atproto/commit/c531144d248f3b88b417fe2bf99b3260225a8cbe) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Support `InvalidCredentialsError` in PDS oauth store
+
+- Updated dependencies [[`c531144`](https://github.com/bluesky-social/atproto/commit/c531144d248f3b88b417fe2bf99b3260225a8cbe)]:
+  - @atproto/oauth-provider@0.16.1
+
+## 0.4.219
+
+### Patch Changes
+
+- [#4816](https://github.com/bluesky-social/atproto/pull/4816) [`61e75af`](https://github.com/bluesky-social/atproto/commit/61e75af39e63217d915850b2f8ac8db5f92eed0b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use request logger instead of global one when performing service proxying
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55), [`0cfb16b`](https://github.com/bluesky-social/atproto/commit/0cfb16b2bfead81284317f2f893838384070d219), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`952354c`](https://github.com/bluesky-social/atproto/commit/952354c1dd458251f8b643d02f4b227d40c5df17), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+  - @atproto/oauth-provider@0.16.0
+  - @atproto/lex-json@0.0.16
+  - @atproto/lex@0.0.25
+  - @atproto/xrpc-server@0.10.20
+  - @atproto/lex-cbor@0.0.16
+
+## 0.4.218
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0)]:
+  - @atproto/lex-data@0.0.15
+  - @atproto/lex@0.0.24
+  - @atproto/lex-json@0.0.15
+  - @atproto/common@0.5.16
+  - @atproto/lex-cbor@0.0.16
+  - @atproto/repo@0.9.1
+  - @atproto/xrpc-server@0.10.19
+  - @atproto/oauth-provider@0.15.16
+
 ## 0.4.217
 
 ### Patch Changes

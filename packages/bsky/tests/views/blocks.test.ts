@@ -817,4 +817,73 @@ describe('pds views with blocking', () => {
     expect(knownFollowers?.count).toBe(1)
     expect(knownFollowers?.followers).toHaveLength(0)
   })
+
+  describe('mod service sees through blocks', () => {
+    let modServiceDid: string
+
+    beforeAll(async () => {
+      modServiceDid = network.bsky.ctx.cfg.modServiceDid
+      // alice blocks the mod service
+      await pdsAgent.app.bsky.graph.block.create(
+        { repo: alice },
+        { createdAt: new Date().toISOString(), subject: modServiceDid },
+        sc.getHeaders(alice),
+      )
+      await network.processAll()
+    })
+
+    it('mod service viewer preserves block state on getProfile', async () => {
+      // alice blocked the mod service, mod service views alice's profile
+      const res = await agent.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            modServiceDid,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      // block state is still present on the viewer
+      expect(res.data.viewer?.blockedBy).toBe(true)
+      expect(res.data.viewer?.blocking).toBeUndefined()
+    })
+
+    it('mod service sees through blocks on getPostThread', async () => {
+      // alice has posts; mod service should see them even though alice blocked mod service
+      const { data } = await agent.app.bsky.feed.getPostThread(
+        { depth: 1, uri: sc.posts[alice][0].ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            modServiceDid,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
+      )
+      assertIsThreadViewPost(data.thread)
+      expect(data.thread.post.uri).toBe(sc.posts[alice][0].ref.uriStr)
+    })
+
+    it('mod service sees through blocks on getPostThreadV2', async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { anchor: sc.posts[alice][0].ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            modServiceDid,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      expect(data.thread).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            uri: sc.posts[alice][0].ref.uriStr,
+            depth: 0,
+            value: expect.objectContaining({
+              $type: 'app.bsky.unspecced.defs#threadItemPost',
+            }),
+          }),
+        ]),
+      )
+    })
+  })
 })

@@ -26,12 +26,14 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.actor.searchActors, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         viewer,
         labelers,
         includeTakedowns,
+        skipViewerBlocks,
       })
       const results = await searchActors({ ...params, hydrateCtx }, ctx)
       return {

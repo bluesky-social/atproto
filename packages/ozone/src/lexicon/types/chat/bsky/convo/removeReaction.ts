@@ -41,7 +41,11 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'ReactionMessageDeleted' | 'ReactionInvalidValue'
+  error?:
+    | 'InvalidConvo'
+    | 'ReactionNotAllowed'
+    | 'ReactionMessageDeleted'
+    | 'ReactionInvalidValue'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

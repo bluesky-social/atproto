@@ -1,4 +1,4 @@
-import { LexMap, UriString } from '@atproto/lex'
+import { LexMap, UriString, getBlobCidString } from '@atproto/lex'
 import { AtUri, DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { AccountManager } from '../account-manager/account-manager'
@@ -70,7 +70,7 @@ export class LocalViewer {
       handle: (accountRes.handle ?? INVALID_HANDLE) as HandleString,
       displayName: profileRes?.displayName,
       avatar: profileRes?.avatar
-        ? this.getImageUrl('avatar', profileRes.avatar.ref.toString())
+        ? this.getImageUrl('avatar', getBlobCidString(profileRes.avatar))
         : undefined,
     }
   }
@@ -142,8 +142,11 @@ export class LocalViewer {
   formatImageEmbed(embed: app.bsky.embed.images.Main) {
     const images = embed.images.map(
       (img): app.bsky.embed.images.ViewImage => ({
-        thumb: this.getImageUrl('feed_thumbnail', img.image.ref.toString()),
-        fullsize: this.getImageUrl('feed_fullsize', img.image.ref.toString()),
+        thumb: this.getImageUrl('feed_thumbnail', getBlobCidString(img.image)),
+        fullsize: this.getImageUrl(
+          'feed_fullsize',
+          getBlobCidString(img.image),
+        ),
         aspectRatio: img.aspectRatio,
         alt: img.alt,
       }),
@@ -159,7 +162,7 @@ export class LocalViewer {
         title,
         description,
         thumb: thumb
-          ? this.getImageUrl('feed_thumbnail', thumb.ref.toString())
+          ? this.getImageUrl('feed_thumbnail', getBlobCidString(thumb))
           : undefined,
       },
     })
@@ -256,7 +259,7 @@ export class LocalViewer {
       ...view,
       displayName: record.displayName,
       avatar: record.avatar
-        ? this.getImageUrl('avatar', record.avatar.ref.toString())
+        ? this.getImageUrl('avatar', getBlobCidString(record.avatar))
         : undefined,
     }
   }
@@ -280,7 +283,7 @@ export class LocalViewer {
     return {
       ...this.updateProfileView(view, record),
       banner: record.banner
-        ? this.getImageUrl('banner', record.banner.ref.toString())
+        ? this.getImageUrl('banner', getBlobCidString(record.banner))
         : undefined,
     }
   }

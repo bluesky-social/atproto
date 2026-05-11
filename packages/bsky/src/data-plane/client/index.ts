@@ -10,6 +10,7 @@ import {
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import { Service } from '../../proto/bsky_connect'
 import { HostList } from './hosts'
+import { callerInterceptor } from './util'
 
 export * from './hosts'
 export * from './util'
@@ -105,6 +106,7 @@ const createBaseClient = (
     httpVersion,
     acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
+    interceptors: [callerInterceptor('appview')],
   })
   return createPromiseClient(Service, transport)
 }

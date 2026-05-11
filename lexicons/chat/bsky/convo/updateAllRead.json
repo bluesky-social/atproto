@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Sets conversations from a user as read to the latest message, with filters.",
       "input": {
         "encoding": "application/json",
         "schema": {

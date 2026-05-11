@@ -82,6 +82,9 @@ import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
 import getSuggestedOnboardingUsers from './app/bsky/unspecced/getSuggestedOnboardingUsers'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
 import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
+import getSuggestedUsersForDiscover from './app/bsky/unspecced/getSuggestedUsersForDiscover'
+import getSuggestedUsersForExplore from './app/bsky/unspecced/getSuggestedUsersForExplore'
+import getSuggestedUsersForSeeMore from './app/bsky/unspecced/getSuggestedUsersForSeeMore'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
@@ -169,6 +172,9 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestedOnboardingUsers(server, ctx)
   getSuggestedStarterPacks(server, ctx)
   getSuggestedUsers(server, ctx)
+  getSuggestedUsersForDiscover(server, ctx)
+  getSuggestedUsersForExplore(server, ctx)
+  getSuggestedUsersForSeeMore(server, ctx)
   getUnspeccedSuggestedFeeds(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)

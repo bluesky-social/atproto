@@ -1,5 +1,11 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
-import { $Typed, Un$Typed, Unknown$TypedObject, UriString } from '@atproto/lex'
+import {
+  $Typed,
+  Un$Typed,
+  Unknown$TypedObject,
+  UriString,
+  getBlobCidString,
+} from '@atproto/lex'
 import {
   AtUri,
   AtUriString,
@@ -66,6 +72,7 @@ import {
   PostRecord,
   PostView,
   ProfileAssociatedActivitySubscription,
+  ProfileAssociatedChat,
   ProfileRecord,
   ProfileView,
   ProfileViewBasic,
@@ -104,12 +111,7 @@ import {
   isSelfLabelsType,
   isVideoEmbedType,
 } from './types.js'
-import {
-  VideoUriBuilder,
-  cidFromBlobJson,
-  parsePostgate,
-  parseThreadGate,
-} from './util'
+import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util'
 
 const notificationDeletedRecord =
   app.bsky.notification.defs.recordDeleted.$build({})
@@ -169,6 +171,7 @@ export class Views {
   }
 
   viewerBlockExists(did: DidString, state: HydrationState): boolean {
+    if (state.ctx?.skipViewerBlocks) return false
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return false
     return !!(
@@ -277,7 +280,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'banner',
             did,
-            cidFromBlobJson(actor.profile.banner),
+            getBlobCidString(actor.profile.banner),
           )
         : undefined,
       followersCount: profileAggs?.followers ?? 0,
@@ -288,10 +291,7 @@ export class Views {
         feedgens: profileAggs?.feeds,
         starterPacks: profileAggs?.starterPacks,
         labeler: actor.isLabeler,
-        // @TODO apply default chat policy?
-        chat: actor.allowIncomingChatsFrom
-          ? { allowIncoming: actor.allowIncomingChatsFrom }
-          : undefined,
+        chat: this.profileAssociatedChat(actor),
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
         germ: actor.germ?.record.messageMe
           ? {
@@ -356,17 +356,14 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             did,
-            cidFromBlobJson(actor.profile.avatar),
+            getBlobCidString(actor.profile.avatar),
           )
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
       associated: {
         labeler: actor.isLabeler ? true : undefined,
-        // @TODO apply default chat policy?
-        chat: actor.allowIncomingChatsFrom
-          ? { allowIncoming: actor.allowIncomingChatsFrom }
-          : undefined,
+        chat: this.profileAssociatedChat(actor),
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
         germ: actor.germ?.record.messageMe
           ? {
@@ -383,6 +380,14 @@ export class Views {
       verification: this.verification(did, state),
       status: this.status(did, state),
       debug: state.ctx?.includeDebugField ? actor.debug : undefined,
+    }
+  }
+
+  profileAssociatedChat(actor: Actor): ProfileAssociatedChat | undefined {
+    if (!actor.allowIncomingChatsFrom) return undefined
+    return {
+      allowIncoming: actor.allowIncomingChatsFrom,
+      allowGroupInvites: actor.allowGroupChatInvitesFrom,
     }
   }
 
@@ -576,6 +581,7 @@ export class Views {
     }
 
     const uri = AtUri.make(did, app.bsky.actor.status.$nsid, 'self').toString()
+    const labels = state.labels?.getBySubject(uri)
 
     const minDuration = 5 * MINUTE
     const maxDuration = 4 * HOUR
@@ -602,6 +608,7 @@ export class Views {
         record.embed && isExternalEmbedType(record.embed)
           ? this.externalEmbed(did, record.embed)
           : undefined,
+      labels,
       expiresAt,
       isActive,
     }
@@ -672,7 +679,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creator,
-            cidFromBlobJson(list.record.avatar),
+            getBlobCidString(list.record.avatar),
           )
         : undefined,
       listItemCount: listAgg?.listItems ?? 0,
@@ -916,7 +923,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creatorDid,
-            cidFromBlobJson(feedgen.record.avatar),
+            getBlobCidString(feedgen.record.avatar),
           )
         : undefined,
       likeCount: aggs?.likes ?? 0,
@@ -2076,12 +2083,12 @@ export class Views {
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
         did,
-        cidFromBlobJson(img.image),
+        getBlobCidString(img.image),
       ),
       fullsize: this.imgUriBuilder.getPresetUri(
         'feed_fullsize',
         did,
-        cidFromBlobJson(img.image),
+        getBlobCidString(img.image),
       ),
       alt: img.alt,
       aspectRatio: img.aspectRatio,
@@ -2092,7 +2099,7 @@ export class Views {
   }
 
   videoEmbed(did: DidString, embed: VideoEmbed): $Typed<VideoEmbedView> {
-    const cid = cidFromBlobJson(embed.video)
+    const cid = getBlobCidString(embed.video)
     return app.bsky.embed.video.view.$build({
       cid,
       playlist: this.videoUriBuilder.playlist({ did, cid }),
@@ -2117,7 +2124,7 @@ export class Views {
           ? this.imgUriBuilder.getPresetUri(
               'feed_thumbnail',
               did,
-              cidFromBlobJson(thumb),
+              getBlobCidString(thumb),
             )
           : undefined,
       },

@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtxWithViewer, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -22,10 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getBlocks(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getBlocks({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -85,7 +82,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getBlocks.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

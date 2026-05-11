@@ -40,6 +40,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidConvo'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

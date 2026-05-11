@@ -6,15 +6,26 @@ import { TestBsky } from './bsky'
 import { TestPds } from './pds'
 import { DidAndKey } from './types'
 
-export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
-  mockResolvers(pds.ctx.idResolver, pds)
+export const mockNetworkUtilities = (
+  pds: TestPds | TestPds[],
+  bsky?: TestBsky,
+) => {
+  const pdses = Array.isArray(pds) ? pds : [pds]
+  for (const p of pdses) {
+    mockResolvers(p.ctx.idResolver, pdses)
+  }
   if (bsky) {
-    mockResolvers(bsky.ctx.idResolver, pds)
-    mockResolvers(bsky.dataplane.idResolver, pds)
+    mockResolvers(bsky.ctx.idResolver, pdses)
+    mockResolvers(bsky.dataplane.idResolver, pdses)
   }
 }
 
-export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
+export const mockResolvers = (
+  idResolver: IdResolver,
+  pds: TestPds | TestPds[],
+) => {
+  const pdses = Array.isArray(pds) ? pds : [pds]
+
   // Map pds public url to its local url when resolving from plc
   const origResolveDid = idResolver.did.resolveNoCache
   idResolver.did.resolveNoCache = async (did: string) => {
@@ -24,24 +35,28 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     ) as ReturnType<typeof origResolveDid>)
     const service = result?.service?.find((svc) => svc.id === '#atproto_pds')
     if (typeof service?.serviceEndpoint === 'string') {
-      service.serviceEndpoint = service.serviceEndpoint.replace(
-        pds.ctx.cfg.service.publicUrl,
-        `http://localhost:${pds.port}`,
-      )
+      for (const p of pdses) {
+        service.serviceEndpoint = service.serviceEndpoint.replace(
+          p.ctx.cfg.service.publicUrl,
+          `http://localhost:${p.port}`,
+        )
+      }
     }
     return result
   }
 
   const origResolveHandleDns = idResolver.handle.resolveDns
   idResolver.handle.resolve = async (handle: string) => {
-    const isPdsHandle = pds.ctx.cfg.identity.serviceHandleDomains.some(
-      (domain) => handle.endsWith(domain),
+    // Handle domains across PDSes are disjoint suffixes (.test, .test2, ...);
+    // first match wins.
+    const match = pdses.find((p) =>
+      p.ctx.cfg.identity.serviceHandleDomains.some((d) => handle.endsWith(d)),
     )
-    if (!isPdsHandle) {
+    if (!match) {
       return origResolveHandleDns.call(idResolver.handle, handle)
     }
 
-    const url = new URL(`/.well-known/atproto-did`, pds.url)
+    const url = new URL(`/.well-known/atproto-did`, match.url)
     try {
       const res = await request(url, { headers: { host: handle } })
       if (res.statusCode !== 200) {

@@ -1,4 +1,4 @@
-import { LexParseOptions, lexParse } from '@atproto/lex-json'
+import { LexParseOptions, jsonToLex } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
   InferOutput,
@@ -117,9 +117,26 @@ export type XrpcResponseOptions = {
 }
 
 /**
- * Small container for XRPC response data.
+ * Small container for XRPC response.
  *
  * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
+ *
+ * @example
+ *
+ * ```typescript
+ * import { app } from '#/lexicons'
+ * import { XrpcResponse } from '@atproto/lex-client'
+ *
+ * const fetchResponse = await fetch('https://example.com/xrpc/app.bsky.feed.getTimeline')
+ *
+ * const response = await XrpcResponse.fromFetchResponse(
+ *   app.bsky.feed.getTimeline.main,
+ *   fetchResponse,
+ * )
+ *
+ * // Fully typed (validated) response body, according to the method's output schema
+ * const { cursor, feed } = response.body
+ * ```
  */
 export class XrpcResponse<M extends Procedure | Query>
   implements ResultSuccess<XrpcResponse<M>>
@@ -323,19 +340,10 @@ async function readPayload(
     }
 
     if (options?.parse && encoding === CONTENT_TYPE_JSON) {
-      // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
-      // perform the lex parsing using cborg/json, allowing to do
-      // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
-      // This would require adding encode/decode utilities to lex-json (similar
-      // to @ipld/dag-json)
-      const text = await response.text()
-
-      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
-      // using a reviver function during JSON.parse should be faster than
-      // parsing to JSON then converting to Lex (?)
-
-      // @TODO verify statement above
-      return { encoding, body: lexParse(text, options.parse) }
+      // @NOTE See ./response.bench.ts to comparison of different parsing approaches.
+      const json = await response.json()
+      const body = jsonToLex(json, options.parse)
+      return { encoding, body }
     }
 
     const arrayBuffer = await response.arrayBuffer()

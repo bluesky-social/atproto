@@ -1,7 +1,7 @@
 import {
-  BlobRef,
   LegacyBlobRef,
   LexMap,
+  TypedBlobRef,
   isLegacyBlobRef,
   parseCid,
 } from '@atproto/lex-data'
@@ -196,7 +196,7 @@ async function updateProfileLegacyBlobRef(
 async function upgradeLegacyBlob(
   actorStore: ActorStoreTransactor,
   legacyBlob: LegacyBlobRef,
-): Promise<BlobRef> {
+): Promise<TypedBlobRef> {
   const ref = parseCid(legacyBlob.cid)
   const blob = await actorStore.repo.blob.getBlobMetadata(ref)
   return {

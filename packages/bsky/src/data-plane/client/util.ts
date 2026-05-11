@@ -1,6 +1,14 @@
-import { Code, ConnectError } from '@connectrpc/connect'
+import { Code, ConnectError, Interceptor } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { getDidKeyFromMultibase } from '@atproto/identity'
+
+export const callerInterceptor =
+  (caller: string): Interceptor =>
+  (next) =>
+  (req) => {
+    req.header.set('x-atlantis-caller', caller)
+    return next(req)
+  }
 
 export const isDataplaneError = (
   err: unknown,

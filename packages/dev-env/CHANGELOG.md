@@ -1,5 +1,81 @@
 # @atproto/dev-env
 
+## 0.4.7
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+- Updated dependencies [[`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3)]:
+  - @atproto/ozone@0.1.174
+  - @atproto/api@0.19.16
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`5f37211`](https://github.com/bluesky-social/atproto/commit/5f37211cf550b31a693cb174f1fe1d0cfee78294), [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1)]:
+  - @atproto/bsky@0.0.228
+  - @atproto/ozone@0.1.173
+  - @atproto/api@0.19.14
+  - @atproto/pds@0.4.221
+
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [[`3cb1569`](https://github.com/bluesky-social/atproto/commit/3cb156907a15f3f22a1be734f82b3b0c855b4da0), [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284), [`dacb0e8`](https://github.com/bluesky-social/atproto/commit/dacb0e80053e00821408e64e91994fe7d1565f45)]:
+  - @atproto/api@0.19.10
+  - @atproto/ozone@0.1.172
+  - @atproto/bsky@0.0.227
+  - @atproto/pds@0.4.220
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`b704c52`](https://github.com/bluesky-social/atproto/commit/b704c523270e82075e2ed4f38ee54d84a9baed88), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`7c61f19`](https://github.com/bluesky-social/atproto/commit/7c61f196c374a8a0d54c055722c501467ffaca4f), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`61e75af`](https://github.com/bluesky-social/atproto/commit/61e75af39e63217d915850b2f8ac8db5f92eed0b), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/bsky@0.0.226
+  - @atproto/syntax@0.5.4
+  - @atproto/pds@0.4.219
+  - @atproto/lex@0.0.25
+  - @atproto/xrpc-server@0.10.20
+  - @atproto/common-web@0.4.21
+  - @atproto/sync@0.2.2
+
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [[`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950), [`7000746`](https://github.com/bluesky-social/atproto/commit/700074694157718e33c974b666f4563f9647a50c), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17), [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950)]:
+  - @atproto/ozone@0.1.170
+  - @atproto/bsky@0.0.225
+  - @atproto/api@0.19.7
+  - @atproto/pds@0.4.218
+  - @atproto/lex@0.0.24
+  - @atproto/common-web@0.4.20
+  - @atproto/xrpc-server@0.10.19
+  - @atproto/sync@0.2.1
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [[`42232c7`](https://github.com/bluesky-social/atproto/commit/42232c7f3622f1d4a4ebe78eb1321817a8df1c96)]:
+  - @atproto/bsky@0.0.224
+  - @atproto/pds@0.4.217
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13), [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592), [`34f9ae1`](https://github.com/bluesky-social/atproto/commit/34f9ae1f6824bdd7f66c94c57e41cec757e267df)]:
+  - @atproto/ozone@0.1.169
+  - @atproto/bsky@0.0.223
+  - @atproto/api@0.19.6
+  - @atproto/syntax@0.5.3
+  - @atproto/pds@0.4.217
+
 ## 0.4.0
 
 ### Minor Changes

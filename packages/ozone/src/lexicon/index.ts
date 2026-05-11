@@ -128,19 +128,37 @@ import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/dele
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
 import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetConvoMembers from './types/chat/bsky/convo/getConvoMembers.js'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
+import * as ChatBskyConvoListConvoRequests from './types/chat/bsky/convo/listConvoRequests.js'
 import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos.js'
+import * as ChatBskyConvoLockConvo from './types/chat/bsky/convo/lockConvo.js'
 import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo.js'
 import * as ChatBskyConvoRemoveReaction from './types/chat/bsky/convo/removeReaction.js'
 import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage.js'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch.js'
+import * as ChatBskyConvoUnlockConvo from './types/chat/bsky/convo/unlockConvo.js'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo.js'
 import * as ChatBskyConvoUpdateAllRead from './types/chat/bsky/convo/updateAllRead.js'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
+import * as ChatBskyGroupAddMembers from './types/chat/bsky/group/addMembers.js'
+import * as ChatBskyGroupApproveJoinRequest from './types/chat/bsky/group/approveJoinRequest.js'
+import * as ChatBskyGroupCreateGroup from './types/chat/bsky/group/createGroup.js'
+import * as ChatBskyGroupCreateJoinLink from './types/chat/bsky/group/createJoinLink.js'
+import * as ChatBskyGroupDisableJoinLink from './types/chat/bsky/group/disableJoinLink.js'
+import * as ChatBskyGroupEditGroup from './types/chat/bsky/group/editGroup.js'
+import * as ChatBskyGroupEditJoinLink from './types/chat/bsky/group/editJoinLink.js'
+import * as ChatBskyGroupEnableJoinLink from './types/chat/bsky/group/enableJoinLink.js'
+import * as ChatBskyGroupGetGroupPublicInfo from './types/chat/bsky/group/getGroupPublicInfo.js'
+import * as ChatBskyGroupListJoinRequests from './types/chat/bsky/group/listJoinRequests.js'
+import * as ChatBskyGroupRejectJoinRequest from './types/chat/bsky/group/rejectJoinRequest.js'
+import * as ChatBskyGroupRemoveMembers from './types/chat/bsky/group/removeMembers.js'
+import * as ChatBskyGroupRequestJoin from './types/chat/bsky/group/requestJoin.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
+import * as ChatBskyModerationSubscribeModEvents from './types/chat/bsky/moderation/subscribeModEvents.js'
 import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
@@ -268,6 +286,26 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
+import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
+import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
+import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
+import * as ToolsOzoneQueueUnassignModerator from './types/tools/ozone/queue/unassignModerator.js'
+import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
+import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
+import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
+import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+import * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
+import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
+import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
+import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+import * as ToolsOzoneReportRefreshStats from './types/tools/ozone/report/refreshStats.js'
+import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
 import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
@@ -1904,12 +1942,14 @@ export class ChatBskyNS {
   _server: Server
   actor: ChatBskyActorNS
   convo: ChatBskyConvoNS
+  group: ChatBskyGroupNS
   moderation: ChatBskyModerationNS
 
   constructor(server: Server) {
     this._server = server
     this.actor = new ChatBskyActorNS(server)
     this.convo = new ChatBskyConvoNS(server)
+    this.group = new ChatBskyGroupNS(server)
     this.moderation = new ChatBskyModerationNS(server)
   }
 }
@@ -2025,6 +2065,18 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getConvoMembers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetConvoMembers.QueryParams,
+      ChatBskyConvoGetConvoMembers.HandlerInput,
+      ChatBskyConvoGetConvoMembers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getLog<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2061,6 +2113,18 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listConvoRequests<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoListConvoRequests.QueryParams,
+      ChatBskyConvoListConvoRequests.HandlerInput,
+      ChatBskyConvoListConvoRequests.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.listConvoRequests' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listConvos<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2070,6 +2134,18 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.listConvos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  lockConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoLockConvo.QueryParams,
+      ChatBskyConvoLockConvo.HandlerInput,
+      ChatBskyConvoLockConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.lockConvo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2121,6 +2197,18 @@ export class ChatBskyConvoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  unlockConvo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoUnlockConvo.QueryParams,
+      ChatBskyConvoUnlockConvo.HandlerInput,
+      ChatBskyConvoUnlockConvo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.unlockConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   unmuteConvo<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2158,6 +2246,170 @@ export class ChatBskyConvoNS {
   }
 }
 
+export class ChatBskyGroupNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  addMembers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupAddMembers.QueryParams,
+      ChatBskyGroupAddMembers.HandlerInput,
+      ChatBskyGroupAddMembers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.addMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  approveJoinRequest<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupApproveJoinRequest.QueryParams,
+      ChatBskyGroupApproveJoinRequest.HandlerInput,
+      ChatBskyGroupApproveJoinRequest.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.approveJoinRequest' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createGroup<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupCreateGroup.QueryParams,
+      ChatBskyGroupCreateGroup.HandlerInput,
+      ChatBskyGroupCreateGroup.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.createGroup' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createJoinLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupCreateJoinLink.QueryParams,
+      ChatBskyGroupCreateJoinLink.HandlerInput,
+      ChatBskyGroupCreateJoinLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.createJoinLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  disableJoinLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupDisableJoinLink.QueryParams,
+      ChatBskyGroupDisableJoinLink.HandlerInput,
+      ChatBskyGroupDisableJoinLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.disableJoinLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  editGroup<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupEditGroup.QueryParams,
+      ChatBskyGroupEditGroup.HandlerInput,
+      ChatBskyGroupEditGroup.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.editGroup' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  editJoinLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupEditJoinLink.QueryParams,
+      ChatBskyGroupEditJoinLink.HandlerInput,
+      ChatBskyGroupEditJoinLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.editJoinLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  enableJoinLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupEnableJoinLink.QueryParams,
+      ChatBskyGroupEnableJoinLink.HandlerInput,
+      ChatBskyGroupEnableJoinLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.enableJoinLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getGroupPublicInfo<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupGetGroupPublicInfo.QueryParams,
+      ChatBskyGroupGetGroupPublicInfo.HandlerInput,
+      ChatBskyGroupGetGroupPublicInfo.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.getGroupPublicInfo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listJoinRequests<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupListJoinRequests.QueryParams,
+      ChatBskyGroupListJoinRequests.HandlerInput,
+      ChatBskyGroupListJoinRequests.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.listJoinRequests' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  rejectJoinRequest<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupRejectJoinRequest.QueryParams,
+      ChatBskyGroupRejectJoinRequest.HandlerInput,
+      ChatBskyGroupRejectJoinRequest.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.rejectJoinRequest' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeMembers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupRemoveMembers.QueryParams,
+      ChatBskyGroupRemoveMembers.HandlerInput,
+      ChatBskyGroupRemoveMembers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.removeMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  requestJoin<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyGroupRequestJoin.QueryParams,
+      ChatBskyGroupRequestJoin.HandlerInput,
+      ChatBskyGroupRequestJoin.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.group.requestJoin' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
 export class ChatBskyModerationNS {
   _server: Server
 
@@ -2187,6 +2439,17 @@ export class ChatBskyModerationNS {
   ) {
     const nsid = 'chat.bsky.moderation.getMessageContext' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+
+  subscribeModEvents<A extends Auth = void>(
+    cfg: StreamConfigOrHandler<
+      A,
+      ChatBskyModerationSubscribeModEvents.QueryParams,
+      ChatBskyModerationSubscribeModEvents.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.subscribeModEvents' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
   }
 
   updateActorAccess<A extends Auth = void>(
@@ -3605,6 +3868,8 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  queue: ToolsOzoneQueueNS
+  report: ToolsOzoneReportNS
   safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -3618,6 +3883,8 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.queue = new ToolsOzoneQueueNS(server)
+    this.report = new ToolsOzoneReportNS(server)
     this.safelink = new ToolsOzoneSafelinkNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
@@ -3888,6 +4155,262 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneQueueNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  assignModerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueAssignModerator.QueryParams,
+      ToolsOzoneQueueAssignModerator.HandlerInput,
+      ToolsOzoneQueueAssignModerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.assignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueCreateQueue.QueryParams,
+      ToolsOzoneQueueCreateQueue.HandlerInput,
+      ToolsOzoneQueueCreateQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.createQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueDeleteQueue.QueryParams,
+      ToolsOzoneQueueDeleteQueue.HandlerInput,
+      ToolsOzoneQueueDeleteQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.deleteQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueGetAssignments.QueryParams,
+      ToolsOzoneQueueGetAssignments.HandlerInput,
+      ToolsOzoneQueueGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.getAssignments' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listQueues<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueListQueues.QueryParams,
+      ToolsOzoneQueueListQueues.HandlerInput,
+      ToolsOzoneQueueListQueues.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.listQueues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  routeReports<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueRouteReports.QueryParams,
+      ToolsOzoneQueueRouteReports.HandlerInput,
+      ToolsOzoneQueueRouteReports.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.routeReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unassignModerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueUnassignModerator.QueryParams,
+      ToolsOzoneQueueUnassignModerator.HandlerInput,
+      ToolsOzoneQueueUnassignModerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.unassignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueUpdateQueue.QueryParams,
+      ToolsOzoneQueueUpdateQueue.HandlerInput,
+      ToolsOzoneQueueUpdateQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.updateQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneReportNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  assignModerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportAssignModerator.QueryParams,
+      ToolsOzoneReportAssignModerator.HandlerInput,
+      ToolsOzoneReportAssignModerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.assignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createActivity<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportCreateActivity.QueryParams,
+      ToolsOzoneReportCreateActivity.HandlerInput,
+      ToolsOzoneReportCreateActivity.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.createActivity' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetAssignments.QueryParams,
+      ToolsOzoneReportGetAssignments.HandlerInput,
+      ToolsOzoneReportGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getAssignments' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getHistoricalStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetHistoricalStats.QueryParams,
+      ToolsOzoneReportGetHistoricalStats.HandlerInput,
+      ToolsOzoneReportGetHistoricalStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getHistoricalStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLatestReport<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetLatestReport.QueryParams,
+      ToolsOzoneReportGetLatestReport.HandlerInput,
+      ToolsOzoneReportGetLatestReport.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getLatestReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLiveStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetLiveStats.QueryParams,
+      ToolsOzoneReportGetLiveStats.HandlerInput,
+      ToolsOzoneReportGetLiveStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getLiveStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getReport<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetReport.QueryParams,
+      ToolsOzoneReportGetReport.HandlerInput,
+      ToolsOzoneReportGetReport.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listActivities<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportListActivities.QueryParams,
+      ToolsOzoneReportListActivities.HandlerInput,
+      ToolsOzoneReportListActivities.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.listActivities' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryReports<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportQueryReports.QueryParams,
+      ToolsOzoneReportQueryReports.HandlerInput,
+      ToolsOzoneReportQueryReports.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.queryReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  reassignQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportReassignQueue.QueryParams,
+      ToolsOzoneReportReassignQueue.HandlerInput,
+      ToolsOzoneReportReassignQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.reassignQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  refreshStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportRefreshStats.QueryParams,
+      ToolsOzoneReportRefreshStats.HandlerInput,
+      ToolsOzoneReportRefreshStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.refreshStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unassignModerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportUnassignModerator.QueryParams,
+      ToolsOzoneReportUnassignModerator.HandlerInput,
+      ToolsOzoneReportUnassignModerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.unassignModerator' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

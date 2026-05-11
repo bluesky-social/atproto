@@ -218,7 +218,8 @@ export async function xrpcSafe<const M extends Query | Procedure>(
     const agent = buildAgent(agentOpts)
     const url = xrpcRequestUrl(method, options)
     const request = xrpcRequestInit(method, options)
-    const response = await agent.fetchHandler(url, request).catch((cause) => {
+    const response = await agent.fetchHandler(url, request).catch((err) => {
+      const cause = extractFetchErrorCause(err)
       throw new XrpcFetchError(method, cause)
     })
     return await XrpcResponse.fromFetchResponse<M>(method, response, options)
@@ -411,4 +412,30 @@ function buildEncoding(schema: Payload, encodingHint?: string): string {
   throw new TypeError(
     `Unable to determine payload encoding. Please provide a 'content-type' header matching ${schema.encoding}.`,
   )
+}
+
+/**
+ * Extracts the root cause from an error, unwrapping common fetch-related errors
+ * such as those from undici (Node's internal fetch implementation).
+ *
+ * @param err - The error to extract the root cause from
+ * @returns The root cause error, or the original error if no specific pattern is matched
+ * @remarks This is useful for getting more specific error information from fetch-related failures, especially in Node environments using undici.
+ */
+export function extractFetchErrorCause(err: unknown): unknown {
+  // Unwrap the Network error from undici (i.e. Node's internal fetch() implementation)
+  // https://github.com/nodejs/undici/blob/04cb77327f7ada95c2e5b67424cddcb22d7bf882/lib/web/fetch/index.js#L234-L239
+  if (
+    err instanceof TypeError &&
+    err.message === 'fetch failed' &&
+    err.cause !== undefined
+  ) {
+    return err.cause
+  }
+
+  // @TODO Add other unwrap patterns here as needed (e.g. for other fetch
+  // implementations or common network libraries, like "node:http", or in other
+  // environments like React Native, Deno, Bun, Browser, etc.)
+
+  return err
 }

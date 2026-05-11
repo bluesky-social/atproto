@@ -204,6 +204,91 @@ export class CreatedAtUriKeyset extends GenericKeyset<
   }
 }
 
+type EndAtIdKeysetParam = {
+  id: number
+  endAt: string | null
+}
+
+// Special value used here to represent a "permanent" endAt (i.e. a record that should be sorted as if it has an endAt infinitely far in the future).
+// Chosen to sort before all real timestamps in DESC order.
+const PERMANENT_ENDSAT = '9999-12-31T23:59:59.999Z'
+
+export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
+  labelResult(result: EndAtIdKeysetParam): Cursor
+  labelResult(result: EndAtIdKeysetParam) {
+    return {
+      primary: result.endAt ?? PERMANENT_ENDSAT,
+      secondary: result.id.toString(),
+    }
+  }
+  labeledResultToCursor(labeled: Cursor) {
+    return {
+      primary: new Date(labeled.primary).getTime().toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    const primaryDate = new Date(parseInt(cursor.primary, 10))
+    if (isNaN(primaryDate.getTime())) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: primaryDate.toISOString(),
+      secondary: cursor.secondary,
+    }
+  }
+  // Override to substitute the PERMANENT_ENDSAT sentinel for NULL endAt rows
+  // so cursor pagination works across permanent (endAt IS NULL) assignments.
+  getSql(labeled?: Cursor, direction?: 'asc' | 'desc', tryIndex?: boolean) {
+    if (labeled === undefined) return
+    const primaryRef = sql`COALESCE(${this.primary}, ${PERMANENT_ENDSAT})`
+    if (tryIndex) {
+      if (direction === 'asc') {
+        return sql`((${primaryRef}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+      } else {
+        return sql`((${primaryRef}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+      }
+    } else {
+      if (direction === 'asc') {
+        return sql`((${primaryRef} > ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+      } else {
+        return sql`((${primaryRef} < ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+      }
+    }
+  }
+}
+
+type ComputedAtIdKeysetParam = {
+  id: number
+  computedAt: string | Date
+}
+
+export class ComputedAtIdKeyset extends GenericKeyset<
+  ComputedAtIdKeysetParam,
+  Cursor
+> {
+  labelResult(result: ComputedAtIdKeysetParam): Cursor
+  labelResult(result: ComputedAtIdKeysetParam) {
+    return { primary: result.computedAt, secondary: result.id.toString() }
+  }
+  labeledResultToCursor(labeled: Cursor) {
+    return {
+      primary: new Date(labeled.primary).getTime().toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    const primaryDate = new Date(parseInt(cursor.primary, 10))
+    if (isNaN(primaryDate.getTime())) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: primaryDate.toISOString(),
+      secondary: cursor.secondary,
+    }
+  }
+}
+
 export const paginate = <
   QB extends AnyQb,
   K extends GenericKeyset<unknown, any>,

@@ -1,5 +1,64 @@
 # @atproto/ozone
 
+## 0.1.174
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+- Updated dependencies [[`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3)]:
+  - @atproto/api@0.19.16
+
+## 0.1.173
+
+### Patch Changes
+
+- [#4894](https://github.com/bluesky-social/atproto/pull/4894) [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1) Thanks [@foysalit](https://github.com/foysalit)! - Add expiring tags in ozone
+
+- Updated dependencies [[`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1)]:
+  - @atproto/api@0.19.14
+
+## 0.1.172
+
+### Patch Changes
+
+- [#4866](https://github.com/bluesky-social/atproto/pull/4866) [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add description fields
+
+- Updated dependencies [[`3cb1569`](https://github.com/bluesky-social/atproto/commit/3cb156907a15f3f22a1be734f82b3b0c855b4da0), [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284), [`dacb0e8`](https://github.com/bluesky-social/atproto/commit/dacb0e80053e00821408e64e91994fe7d1565f45)]:
+  - @atproto/api@0.19.10
+
+## 0.1.171
+
+### Patch Changes
+
+- [#4854](https://github.com/bluesky-social/atproto/pull/4854) [`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - group chat lexicons
+
+- Updated dependencies [[`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d)]:
+  - @atproto/api@0.19.9
+
+## 0.1.170
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- Updated dependencies [[`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950), [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17), [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950)]:
+  - @atproto/api@0.19.7
+  - @atproto/common@0.5.16
+  - @atproto/xrpc-server@0.10.19
+
+## 0.1.169
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- Updated dependencies [[`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13), [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/api@0.19.6
+  - @atproto/syntax@0.5.3
+
 ## 0.1.168
 
 ### Patch Changes

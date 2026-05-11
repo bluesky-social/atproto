@@ -267,6 +267,17 @@ export class TeamService {
     } while (lastDid)
   }
 
+  async viewByDids(dids: string[]): Promise<Map<string, TeamMember>> {
+    if (!dids.length) return new Map()
+    const members = await this.db.db
+      .selectFrom('member')
+      .selectAll()
+      .where('did', 'in', dids)
+      .execute()
+    const memberViews = await this.view(members)
+    return new Map(memberViews.map((m) => [m.did, m]))
+  }
+
   async view(members: Selectable<Member>[]): Promise<TeamMember[]> {
     const profiles = await this.getProfiles(members.map(({ did }) => did))
     return members.map((member) => {

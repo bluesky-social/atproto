@@ -33,6 +33,9 @@
         "distinctGroup": true,
         "alphabetize": { "order": "asc" },
         "newlines-between": "never",
+        "pathGroups": [
+          { "pattern": "#/**", "group": "parent", "position": "before" }
+        ],
         "groups": [
           "builtin",
           "external",

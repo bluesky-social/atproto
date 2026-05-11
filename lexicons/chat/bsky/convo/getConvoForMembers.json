@@ -4,6 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get or create a 1-1 conversation for the given members. Always returns the same direct (non-group) conversation. To create a group conversation, use createGroup.",
+      "errors": [
+        { "name": "AccountSuspended" },
+        { "name": "BlockedActor" },
+        { "name": "MessagesDisabled" },
+        { "name": "NotFollowedBySender" },
+        { "name": "RecipientNotFound" }
+      ],
       "parameters": {
         "type": "params",
         "required": ["members"],

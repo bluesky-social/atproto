@@ -294,16 +294,16 @@ describe(AtUri, () => {
 
   it('supports modifications', () => {
     const urip = new AtUri('at://foo.com')
-    expect(urip.toString()).toBe('at://foo.com/')
+    expect(urip.toString()).toBe('at://foo.com')
 
     urip.host = 'bar.com'
-    expect(urip.toString()).toBe('at://bar.com/')
+    expect(urip.toString()).toBe('at://bar.com')
     urip.host = 'did:web:localhost%3A1234'
-    expect(urip.toString()).toBe('at://did:web:localhost%3A1234/')
+    expect(urip.toString()).toBe('at://did:web:localhost%3A1234')
     urip.host = 'foo.com'
 
     urip.pathname = '/'
-    expect(urip.toString()).toBe('at://foo.com/')
+    expect(urip.toString()).toBe('at://foo.com')
     urip.pathname = '/foo'
     expect(urip.toString()).toBe('at://foo.com/foo')
     urip.pathname = 'foo'

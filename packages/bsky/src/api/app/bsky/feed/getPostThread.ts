@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       paramsParseLoose: true,
     },
     handler: async ({ params, auth, req, res }) => {
-      const { viewer, includeTakedowns, include3pBlocks } =
+      const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -39,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
+        skipViewerBlocks,
       })
 
       let result: app.bsky.feed.getPostThread.$OutputBody

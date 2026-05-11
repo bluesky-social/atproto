@@ -1,0 +1,60 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.group.defs",
+  "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
+  "defs": {
+    "linkEnabledStatus": {
+      "type": "string",
+      "knownValues": ["enabled", "disabled"]
+    },
+    "joinRule": {
+      "type": "string",
+      "knownValues": ["anyone", "followedByOwner"]
+    },
+    "joinLinkView": {
+      "type": "object",
+      "required": [
+        "code",
+        "enabledStatus",
+        "requireApproval",
+        "joinRule",
+        "createdAt"
+      ],
+      "properties": {
+        "code": { "type": "string" },
+        "enabledStatus": {
+          "type": "ref",
+          "ref": "#linkEnabledStatus"
+        },
+        "requireApproval": { "type": "boolean" },
+        "joinRule": { "type": "ref", "ref": "#joinRule" },
+        "createdAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "groupPublicView": {
+      "type": "object",
+      "required": ["name", "owner", "memberCount", "requireApproval"],
+      "properties": {
+        "name": { "type": "string" },
+        "owner": {
+          "type": "ref",
+          "ref": "chat.bsky.actor.defs#profileViewBasic"
+        },
+        "memberCount": { "type": "integer" },
+        "requireApproval": { "type": "boolean" }
+      }
+    },
+    "joinRequestView": {
+      "type": "object",
+      "required": ["convoId", "requestedBy", "requestedAt"],
+      "properties": {
+        "convoId": { "type": "string" },
+        "requestedBy": {
+          "type": "ref",
+          "ref": "chat.bsky.actor.defs#profileViewBasic"
+        },
+        "requestedAt": { "type": "string", "format": "datetime" }
+      }
+    }
+  }
+}

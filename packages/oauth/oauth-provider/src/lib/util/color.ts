@@ -5,6 +5,8 @@ export type HslColor = { h: number; s: number; l: number }
 export type RgbaColor = { r: number; g: number; b: number; a: number }
 export type HslaColor = { h: number; s: number; l: number; a: number }
 
+export type Color = RgbColor | HslColor | RgbaColor | HslaColor
+
 export function parseColor(color: string): RgbColor | RgbaColor {
   if (color.startsWith('#')) {
     return parseHexColor(color)
@@ -77,10 +79,44 @@ export function pickContrastColor(ref: RgbColor, a: RgbColor, b: RgbColor) {
   return computeContrastRatio(ref, a) > computeContrastRatio(ref, b) ? a : b
 }
 
+export function hslToRgb({ h, s, l }: HslColor): RgbColor
+export function hslToRgb({ h, s, l, a }: HslaColor): RgbaColor
+export function hslToRgb(input: HslaColor | HslColor): RgbColor | RgbaColor {
+  const { h, s, l } = input
+
+  // Achromatic (gray)
+  if (s === 0) {
+    const gray = Math.round(l * 255)
+    return 'a' in input
+      ? { r: gray, g: gray, b: gray, a: input.a }
+      : { r: gray, g: gray, b: gray }
+  }
+
+  const hueToRgb = (p: number, q: number, t: number): number => {
+    if (t < 0) t += 1
+    if (t > 1) t -= 1
+    if (t < 1 / 6) return p + (q - p) * 6 * t
+    if (t < 1 / 2) return q
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+    return p
+  }
+
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+  const p = 2 * l - q
+  const hNorm = h / 360
+
+  const r = Math.round(hueToRgb(p, q, hNorm + 1 / 3) * 255)
+  const g = Math.round(hueToRgb(p, q, hNorm) * 255)
+  const b = Math.round(hueToRgb(p, q, hNorm - 1 / 3) * 255)
+
+  return 'a' in input ? { r, g, b, a: input.a } : { r, g, b }
+}
+
 /**
  * @see {@link https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef}
  */
-function relativeLuminance({ r, g, b }: RgbColor) {
+function relativeLuminance(color: HslColor | RgbColor) {
+  const { r, g, b } = 'h' in color ? hslToRgb(color) : color
   return rgbLum(r) * 0.2126 + rgbLum(g) * 0.7152 + rgbLum(b) * 0.0722
 }
 

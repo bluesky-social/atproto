@@ -3896,6 +3896,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   germRecord?: Record;
 
+  /**
+   * @generated from field: string allow_group_chat_invites_from = 22;
+   */
+  allowGroupChatInvitesFrom = "";
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3924,6 +3929,7 @@ export class ActorInfo extends Message<ActorInfo> {
     { no: 18, name: "allow_activity_subscriptions_from", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 19, name: "age_assurance_status", kind: "message", T: AgeAssuranceStatus, opt: true },
     { no: 21, name: "germ_record", kind: "message", T: Record },
+    { no: 22, name: "allow_group_chat_invites_from", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ActorInfo {

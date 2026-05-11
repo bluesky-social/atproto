@@ -5,7 +5,7 @@ import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { FeedItem } from '../../../../hydration/feed'
 import {
-  HydrateCtx,
+  HydrateCtxWithViewer,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
@@ -34,10 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getTimeline(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getTimeline({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -121,7 +118,7 @@ type Context = {
 }
 
 type Params = app.bsky.feed.getTimeline.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type Skeleton = {

@@ -35,7 +35,6 @@ const run = async () => {
     introspect: { port: 2581 },
   })
   mockMailer(network.pds)
-  await generateMockSetup(network)
 
   if (network.introspect) {
     console.log(
@@ -44,6 +43,7 @@ const run = async () => {
   }
   console.log(`👤 DID Placeholder server http://localhost:${network.plc.port}`)
   console.log(`🌞 Main PDS http://localhost:${network.pds.port}`)
+  console.log(`🌞 Main PDS account DB`, network.pds.ctx.cfg.db.accountDbLoc)
   console.log(
     `🔨 Lexicon authority DID ${network.pds.ctx.cfg.lexicon.didAuthority}`,
   )
@@ -54,6 +54,10 @@ const run = async () => {
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator (${fg.did}) http://localhost:${fg.port}`)
   }
+
+  await generateMockSetup(network)
+
+  console.log('✅ Dev environment is ready')
 }
 
 run()

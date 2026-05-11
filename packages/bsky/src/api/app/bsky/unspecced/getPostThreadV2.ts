@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getPostThreadV2, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns, include3pBlocks } =
+      const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const features = ctx.featureGatesClient.scope(
@@ -42,6 +42,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
+        skipViewerBlocks,
         features,
       })
 

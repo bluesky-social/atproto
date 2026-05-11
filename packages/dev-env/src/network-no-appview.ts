@@ -1,3 +1,4 @@
+import getPort from 'get-port'
 import { SkeletonHandler } from '@atproto/pds'
 import { TestFeedGen } from './feed-gen'
 import { TestPds } from './pds'
@@ -11,6 +12,7 @@ export class TestNetworkNoAppView {
   constructor(
     public plc: TestPlc,
     public pds: TestPds,
+    public extraPdses: TestPds[] = [],
   ) {}
 
   static async create(
@@ -22,9 +24,26 @@ export class TestNetworkNoAppView {
       ...params.pds,
     })
 
-    mockNetworkUtilities(pds)
+    const extraPdsCount = params.extraPdses ?? 0
+    const extraPdses: TestPds[] = []
+    for (let i = 0; i < extraPdsCount; i++) {
+      // Extra PDSes get their own non-overlapping handle domain (.test2, .test3, ...)
+      // to avoid colliding with the primary PDS's .test.
+      const domain = `.test${i + 2}`
+      const extra = await TestPds.create({
+        didPlcUrl: plc.url,
+        ...params.pds,
+        // Override after spreading so each extra PDS gets a unique port and
+        // its own handle domain (rather than inheriting the primary's).
+        port: await getPort(),
+        serviceHandleDomains: [domain],
+      })
+      extraPdses.push(extra)
+    }
 
-    return new TestNetworkNoAppView(plc, pds)
+    mockNetworkUtilities([pds, ...extraPdses])
+
+    return new TestNetworkNoAppView(plc, pds, extraPdses)
   }
 
   async createFeedGen(
@@ -43,11 +62,13 @@ export class TestNetworkNoAppView {
 
   async processAll() {
     await this.pds.processAll()
+    await Promise.all(this.extraPdses.map((p) => p.processAll()))
   }
 
   async close() {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.pds.close()
+    await Promise.all(this.extraPdses.map((p) => p.close()))
     await this.plc.close()
   }
 }

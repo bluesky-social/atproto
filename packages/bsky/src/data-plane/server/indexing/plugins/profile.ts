@@ -1,4 +1,4 @@
-import { Cid } from '@atproto/lex'
+import { Cid, getBlobCidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
@@ -24,8 +24,8 @@ const insertFn = async (
       creator: uri.host,
       displayName: obj.displayName,
       description: obj.description,
-      avatarCid: obj.avatar?.ref.toString(),
-      bannerCid: obj.banner?.ref.toString(),
+      avatarCid: getBlobCidString(obj.avatar),
+      bannerCid: getBlobCidString(obj.banner),
       joinedViaStarterPackUri: obj.joinedViaStarterPack?.uri,
       createdAt: obj.createdAt ?? new Date().toISOString(),
       indexedAt: timestamp,

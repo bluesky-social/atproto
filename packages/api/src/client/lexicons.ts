@@ -265,6 +265,10 @@ export const schemaDict = {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
           },
+          allowGroupInvites: {
+            type: 'string',
+            knownValues: ['all', 'none', 'following'],
+          },
         },
       },
       profileAssociatedGerm: {
@@ -870,6 +874,13 @@ export const schemaDict = {
             type: 'union',
             description: 'An optional embed associated with the status.',
             refs: ['lex:app.bsky.embed.external#view'],
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
           expiresAt: {
             type: 'string',
@@ -2699,6 +2710,12 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
+          associatedRecord: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
+          },
         },
       },
       view: {
@@ -2758,8 +2775,10 @@ export const schemaDict = {
         properties: {
           image: {
             type: 'blob',
+            description:
+              'The raw image file. May be up to 2 MB, formerly limited to 1 MB.',
             accept: ['image/*'],
-            maxSize: 1000000,
+            maxSize: 2000000,
           },
           alt: {
             type: 'string',
@@ -9651,6 +9670,12 @@ export const schemaDict = {
               type: 'string',
               knownValues: ['all', 'none', 'following'],
             },
+            allowGroupInvites: {
+              description:
+                '[NOTE: This is under active development and should be considered unstable while this note is here]. Declaration about group chat invitation preferences for the record owner.',
+              type: 'string',
+              knownValues: ['all', 'none', 'following'],
+            },
           },
         },
       },
@@ -9660,6 +9685,10 @@ export const schemaDict = {
     lexicon: 1,
     id: 'chat.bsky.actor.defs',
     defs: {
+      memberRole: {
+        type: 'string',
+        knownValues: ['owner', 'standard'],
+      },
       profileViewBasic: {
         type: 'object',
         required: ['did', 'handle'],
@@ -9696,6 +9725,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
           chatDisabled: {
             type: 'boolean',
             description:
@@ -9705,7 +9738,50 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#verificationState',
           },
+          kind: {
+            description:
+              'Union field that has data specific to different kinds of convos.',
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.actor.defs#directConvoMember',
+              'lex:chat.bsky.actor.defs#groupConvoMember',
+              'lex:chat.bsky.actor.defs#pastGroupConvoMember',
+            ],
+          },
         },
+      },
+      directConvoMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here].',
+        type: 'object',
+        properties: {},
+      },
+      groupConvoMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. A current group convo member.',
+        type: 'object',
+        required: ['role'],
+        properties: {
+          addedBy: {
+            description:
+              'Who added this member. Only present if the member was added (instead of joining via link).',
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+          },
+          role: {
+            description:
+              "The member's role within this conversation. Only present in group conversation member lists.",
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#memberRole',
+          },
+        },
+      },
+      pastGroupConvoMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. A past group convo member.',
+        type: 'object',
+        required: [],
+        properties: {},
       },
     },
   },
@@ -9743,6 +9819,13 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description:
+          'Marks a conversation as accepted, so it is shown in the list of accepted convos instead on the request convos.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -9816,6 +9899,14 @@ export const schemaDict = {
         },
         errors: [
           {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'ReactionNotAllowed',
+            description:
+              'Indicates that reactions are not allowed on this message, e.g. because it is a system message.',
+          },
+          {
             name: 'ReactionMessageDeleted',
             description:
               'Indicates that the message has been deleted and reactions can no longer be added/removed.',
@@ -9838,6 +9929,18 @@ export const schemaDict = {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
     defs: {
+      convoKind: {
+        type: 'string',
+        knownValues: ['direct', 'group'],
+      },
+      convoLockStatus: {
+        type: 'string',
+        knownValues: ['unlocked', 'locked', 'locked-permanently'],
+      },
+      convoStatus: {
+        type: 'string',
+        knownValues: ['request', 'accepted'],
+      },
       messageRef: {
         type: 'object',
         required: ['did', 'messageId', 'convoId'],
@@ -9923,6 +10026,207 @@ export const schemaDict = {
           },
         },
       },
+      systemMessageReferredUser: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      systemMessageView: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here].',
+        type: 'object',
+        required: ['id', 'rev', 'sentAt', 'data'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          rev: {
+            type: 'string',
+          },
+          sentAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          data: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#systemMessageDataAddMember',
+              'lex:chat.bsky.convo.defs#systemMessageDataRemoveMember',
+              'lex:chat.bsky.convo.defs#systemMessageDataMemberJoin',
+              'lex:chat.bsky.convo.defs#systemMessageDataMemberLeave',
+              'lex:chat.bsky.convo.defs#systemMessageDataLockConvo',
+              'lex:chat.bsky.convo.defs#systemMessageDataUnlockConvo',
+              'lex:chat.bsky.convo.defs#systemMessageDataLockConvoPermanently',
+              'lex:chat.bsky.convo.defs#systemMessageDataEditGroup',
+              'lex:chat.bsky.convo.defs#systemMessageDataCreateJoinLink',
+              'lex:chat.bsky.convo.defs#systemMessageDataEditJoinLink',
+              'lex:chat.bsky.convo.defs#systemMessageDataEnableJoinLink',
+              'lex:chat.bsky.convo.defs#systemMessageDataDisableJoinLink',
+            ],
+          },
+        },
+      },
+      systemMessageDataAddMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user was added to the group convo.',
+        type: 'object',
+        required: ['member', 'role', 'addedBy'],
+        properties: {
+          member: {
+            description: 'Current view of the member who was added.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+          role: {
+            description:
+              "Role the user was added to the group with. The role from 'member' will reflect the current data, not historical.",
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#memberRole',
+          },
+          addedBy: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataRemoveMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user was removed from the group convo.',
+        type: 'object',
+        required: ['member', 'removedBy'],
+        properties: {
+          member: {
+            description: 'Current view of the member who was removed.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+          removedBy: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataMemberJoin: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user joined the group convo via join link.',
+        type: 'object',
+        required: ['member', 'role'],
+        properties: {
+          member: {
+            description: 'Current view of the member who joined.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+          role: {
+            description:
+              "Role the user was added to the group with. The role from 'member' will reflect the current data, not historical.",
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#memberRole',
+          },
+          approvedBy: {
+            description:
+              'If join link was configured to require approval, this will be set to who approved the request. Undefined if approval was not required.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataMemberLeave: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user voluntarily left the group convo.',
+        type: 'object',
+        required: ['member'],
+        properties: {
+          member: {
+            description: 'Current view of the member who left the group.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataLockConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group convo was locked.',
+        type: 'object',
+        required: ['lockedBy'],
+        properties: {
+          lockedBy: {
+            description: 'Current view of the member who locked the group.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataUnlockConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group convo was unlocked.',
+        type: 'object',
+        required: ['unlockedBy'],
+        properties: {
+          unlockedBy: {
+            description: 'Current view of the member who unlocked the group.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataLockConvoPermanently: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group convo was locked permanently.',
+        type: 'object',
+        required: ['lockedBy'],
+        properties: {
+          lockedBy: {
+            description: 'Current view of the member who locked the group.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
+          },
+        },
+      },
+      systemMessageDataEditGroup: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group info was edited.',
+        type: 'object',
+        properties: {
+          oldName: {
+            description: 'Group name that was replaced.',
+            type: 'string',
+          },
+          newName: {
+            description: 'Group name that replaced the old.',
+            type: 'string',
+          },
+        },
+      },
+      systemMessageDataCreateJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group join link was created.',
+        type: 'object',
+        properties: {},
+      },
+      systemMessageDataEditJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group join link was edited.',
+        type: 'object',
+        properties: {},
+      },
+      systemMessageDataEnableJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group join link was enabled.',
+        type: 'object',
+        properties: {},
+      },
+      systemMessageDataDisableJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group join link was disabled.',
+        type: 'object',
+        properties: {},
+      },
       deletedMessageView: {
         type: 'object',
         required: ['id', 'rev', 'sender', 'sentAt'],
@@ -10005,6 +10309,8 @@ export const schemaDict = {
             type: 'string',
           },
           members: {
+            description:
+              'Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members.',
             type: 'array',
             items: {
               type: 'ref',
@@ -10016,6 +10322,7 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
+              'lex:chat.bsky.convo.defs#systemMessageView',
             ],
           },
           lastReaction: {
@@ -10026,15 +10333,66 @@ export const schemaDict = {
             type: 'boolean',
           },
           status: {
-            type: 'string',
-            knownValues: ['request', 'accepted'],
+            description:
+              'Convo status for the viewer member (not the convo itself).',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#convoStatus',
           },
           unreadCount: {
             type: 'integer',
           },
+          kind: {
+            description:
+              'Union field that has data specific to different kinds of convos.',
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#directConvo',
+              'lex:chat.bsky.convo.defs#groupConvo',
+            ],
+          },
+        },
+      },
+      directConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here].',
+        type: 'object',
+        properties: {},
+      },
+      groupConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here].',
+        type: 'object',
+        required: ['name', 'lockStatus', 'memberCount', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+            description: 'The display name of the group conversation.',
+            maxGraphemes: 128,
+            maxLength: 1280,
+          },
+          memberCount: {
+            type: 'integer',
+            description:
+              'The total number of members in the group conversation.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          joinLink: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.group.defs#joinLinkView',
+          },
+          lockStatus: {
+            description: 'The lock status of the conversation.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#convoLockStatus',
+          },
         },
       },
       logBeginConvo: {
+        description:
+          'Event indicating a convo containing the viewer was started. Can be direct or group. When a member is added to a group convo, they also get this event.',
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10047,6 +10405,8 @@ export const schemaDict = {
         },
       },
       logAcceptConvo: {
+        description:
+          'Event indicating the viewer accepted a convo, and it can be moved out of the request inbox. Can be direct or group.',
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10059,6 +10419,8 @@ export const schemaDict = {
         },
       },
       logLeaveConvo: {
+        description:
+          'Event indicating the viewer left a convo. Can be direct or group.',
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10071,6 +10433,8 @@ export const schemaDict = {
         },
       },
       logMuteConvo: {
+        description:
+          'Event indicating the viewer muted a convo. Can be direct or group.',
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10083,6 +10447,8 @@ export const schemaDict = {
         },
       },
       logUnmuteConvo: {
+        description:
+          'Event indicating the viewer unmuted a convo. Can be direct or group.',
         type: 'object',
         required: ['rev', 'convoId'],
         properties: {
@@ -10095,6 +10461,8 @@ export const schemaDict = {
         },
       },
       logCreateMessage: {
+        description:
+          'Event indicating a user-originated message was created. Is not emitted for system messages.',
         type: 'object',
         required: ['rev', 'convoId', 'message'],
         properties: {
@@ -10111,9 +10479,20 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
           },
+          relatedProfiles: {
+            description:
+              "Profiles referred to in the message view. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logDeleteMessage: {
+        description:
+          'Event indicating a user-originated message was deleted. Is not emitted for system messages.',
         type: 'object',
         required: ['rev', 'convoId', 'message'],
         properties: {
@@ -10133,6 +10512,8 @@ export const schemaDict = {
         },
       },
       logReadMessage: {
+        description:
+          'DEPRECATED: use logReadConvo instead. Event indicating a convo was read up to a certain message.',
         type: 'object',
         required: ['rev', 'convoId', 'message'],
         properties: {
@@ -10147,11 +10528,13 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
+              'lex:chat.bsky.convo.defs#systemMessageView',
             ],
           },
         },
       },
       logAddReaction: {
+        description: 'Event indicating a reaction was added to a message.',
         type: 'object',
         required: ['rev', 'convoId', 'message', 'reaction'],
         properties: {
@@ -10171,10 +10554,20 @@ export const schemaDict = {
           reaction: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+          relatedProfiles: {
+            description:
+              "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
           },
         },
       },
       logRemoveReaction: {
+        description: 'Event indicating a reaction was removed from a message.',
         type: 'object',
         required: ['rev', 'convoId', 'message', 'reaction'],
         properties: {
@@ -10194,6 +10587,404 @@ export const schemaDict = {
           reaction: {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#reactionView',
+          },
+          relatedProfiles: {
+            description:
+              "Profiles referred in the message and reaction views. This isn't required for compatibility, because it was added later, but should generally be present.",
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logReadConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a convo was read up to a certain message.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+              'lex:chat.bsky.convo.defs#systemMessageView',
+            ],
+          },
+        },
+      },
+      logAddMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member was added to a group convo. The member who was added gets a logBeginConvo (to create the convo) but also a logAddMember (to show the system message as the first message the user sees).',
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataAddMember',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logRemoveMember: {
+        description:
+          "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member was removed from a group convo. The member who was removed gets a logLeaveConvo (to leave the convo) but not a logRemoveMember (because they already left, so can't see the system message).",
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataRemoveMember',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logMemberJoin: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member joined a group convo via join link. The member who was added gets a logBeginConvo (to create the convo) but also a logMemberJoin (to show the system message as the first message the user sees).',
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataMemberJoin',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logMemberLeave: {
+        description:
+          "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member voluntarily left a group convo. The member who was removed gets a logLeaveConvo (to leave the convo) but not a logMemberLeave (because they already left, so can't see the system message).",
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataMemberLeave',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logLockConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a group convo was locked.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataLockConvo',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logUnlockConvo: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a group convo was unlocked.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataUnlockConvo',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logLockConvoPermanently: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a group convo was locked permanently.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataLockConvoPermanently',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
+        },
+      },
+      logEditGroup: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating info about group convo was edited.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataEditGroup',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+        },
+      },
+      logCreateJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join link was created for a group convo.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataCreateJoinLink',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+        },
+      },
+      logEditJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a settings about a join link for a group convo were edited.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataEditJoinLink',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+        },
+      },
+      logEnableJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join link was enabled for a group convo.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataEnableJoinLink',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+        },
+      },
+      logDisableJoinLink: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join link was disabled for a group convo.',
+        type: 'object',
+        required: ['rev', 'convoId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          message: {
+            description:
+              'A system message with data of type #systemMessageDataDisableJoinLink',
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+        },
+      },
+      logIncomingJoinRequest: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made to a group the viewer owns. Only the owner gets this.',
+        type: 'object',
+        required: ['rev', 'convoId', 'member'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          member: {
+            description: 'Prospective member who requested to join.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+          },
+        },
+      },
+      logApproveJoinRequest: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was approved by the viewer. Only the owner gets this. The approved member gets a logBeginConvo.',
+        type: 'object',
+        required: ['rev', 'convoId', 'member'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          member: {
+            description: 'Prospective member who requested to join.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+          },
+        },
+      },
+      logRejectJoinRequest: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was rejected by the viewer. Only the owner gets this.',
+        type: 'object',
+        required: ['rev', 'convoId', 'member'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
+          },
+          member: {
+            description: 'Prospective member who requested to join.',
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+          },
+        },
+      },
+      logOutgoingJoinRequest: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made by the viewer.',
+        type: 'object',
+        required: ['rev', 'convoId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          convoId: {
+            type: 'string',
           },
         },
       },
@@ -10205,6 +10996,18 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description:
+          "Marks a message as deleted for the viewer, so they won't see that message in future enumerations.",
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'MessageDeleteNotAllowed',
+            description:
+              'Indicates that this message cannot be deleted, e.g. because it is a system message.',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10236,6 +11039,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Gets an existing conversation by its ID.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         parameters: {
           type: 'params',
           required: ['convoId'],
@@ -10268,7 +11077,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get whether the requester and the other members can chat. If an existing convo is found for these members, it is returned.',
+          "Check whether the requester and the other members can start a 1-1 chat. Only applicable to direct (non-group) conversations. If an existing convo is found for these members, it is returned. Does not create a new convo if it doesn't exist.",
         parameters: {
           type: 'params',
           required: ['members'],
@@ -10309,6 +11118,25 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description:
+          'Get or create a 1-1 conversation for the given members. Always returns the same direct (non-group) conversation. To create a group conversation, use createGroup.',
+        errors: [
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'MessagesDisabled',
+          },
+          {
+            name: 'NotFollowedBySender',
+          },
+          {
+            name: 'RecipientNotFound',
+          },
+        ],
         parameters: {
           type: 'params',
           required: ['members'],
@@ -10333,6 +11161,58 @@ export const schemaDict = {
               convo: {
                 type: 'ref',
                 ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoGetConvoMembers: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getConvoMembers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Returns a paginated list of members from a conversation.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
+        parameters: {
+          type: 'params',
+          required: ['convoId'],
+          properties: {
+            convoId: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['members'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              members: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+                },
               },
             },
           },
@@ -10379,6 +11259,23 @@ export const schemaDict = {
                     'lex:chat.bsky.convo.defs#logReadMessage',
                     'lex:chat.bsky.convo.defs#logAddReaction',
                     'lex:chat.bsky.convo.defs#logRemoveReaction',
+                    'lex:chat.bsky.convo.defs#logReadConvo',
+                    'lex:chat.bsky.convo.defs#logAddMember',
+                    'lex:chat.bsky.convo.defs#logRemoveMember',
+                    'lex:chat.bsky.convo.defs#logMemberJoin',
+                    'lex:chat.bsky.convo.defs#logMemberLeave',
+                    'lex:chat.bsky.convo.defs#logLockConvo',
+                    'lex:chat.bsky.convo.defs#logUnlockConvo',
+                    'lex:chat.bsky.convo.defs#logLockConvoPermanently',
+                    'lex:chat.bsky.convo.defs#logEditGroup',
+                    'lex:chat.bsky.convo.defs#logCreateJoinLink',
+                    'lex:chat.bsky.convo.defs#logEditJoinLink',
+                    'lex:chat.bsky.convo.defs#logEnableJoinLink',
+                    'lex:chat.bsky.convo.defs#logDisableJoinLink',
+                    'lex:chat.bsky.convo.defs#logIncomingJoinRequest',
+                    'lex:chat.bsky.convo.defs#logApproveJoinRequest',
+                    'lex:chat.bsky.convo.defs#logRejectJoinRequest',
+                    'lex:chat.bsky.convo.defs#logOutgoingJoinRequest',
                   ],
                 },
               },
@@ -10394,6 +11291,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Returns a page of messages from a conversation.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         parameters: {
           type: 'params',
           required: ['convoId'],
@@ -10428,7 +11331,17 @@ export const schemaDict = {
                   refs: [
                     'lex:chat.bsky.convo.defs#messageView',
                     'lex:chat.bsky.convo.defs#deletedMessageView',
+                    'lex:chat.bsky.convo.defs#systemMessageView',
                   ],
+                },
+              },
+              relatedProfiles: {
+                description:
+                  'Set of all members who authored or reacted to the returned messages. Members referred to by system messages are also included.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
                 },
               },
             },
@@ -10443,6 +11356,18 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description:
+          'Leaves a conversation (direct or group). For group, this effectively removes membership. For direct, membership is never removed, only changed to remove from enumerations by the user who left.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'OwnerCannotLeave',
+            description:
+              'The owner of a group conversation cannot leave before locking the group.',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10473,12 +11398,61 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoListConvoRequests: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.listConvoRequests',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Returns a page of incoming conversation requests for the user. Direct convo requests are returned as convoView; group join requests are returned as joinRequestView.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['requests'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              requests: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:chat.bsky.convo.defs#convoView',
+                    'lex:chat.bsky.group.defs#joinRequestView',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoListConvos: {
     lexicon: 1,
     id: 'chat.bsky.convo.listConvos',
     defs: {
       main: {
         type: 'query',
+        description:
+          'Returns a page of conversations (direct or group) for the user.',
         parameters: {
           type: 'params',
           properties: {
@@ -10496,8 +11470,21 @@ export const schemaDict = {
               knownValues: ['unread'],
             },
             status: {
+              description:
+                'Filter convos by their status. It is discouraged to call with "request" and preferred to call chat.bsky.convo.listConvoRequests, which also includes group join requests made by the user.',
               type: 'string',
               knownValues: ['request', 'accepted'],
+            },
+            kind: {
+              type: 'string',
+              description: 'Filter by conversation kind.',
+              knownValues: ['direct', 'group'],
+            },
+            lockStatus: {
+              type: 'string',
+              description:
+                'Filter by conversation lock status. Values follow chat.bsky.convo.defs#convoLockStatus.',
+              knownValues: ['unlocked', 'locked', 'locked-permanently'],
             },
           },
         },
@@ -10523,12 +11510,66 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoLockConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.lockConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Locks a group convo so no more content (messages, reactions) can be added to it.',
+        errors: [
+          {
+            name: 'ConvoLocked',
+          },
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoMuteConvo: {
     lexicon: 1,
     id: 'chat.bsky.convo.muteConvo',
     defs: {
       main: {
         type: 'procedure',
+        description:
+          'Mutes a conversation, preventing notifications related to it.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10602,6 +11643,14 @@ export const schemaDict = {
         },
         errors: [
           {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'ReactionNotAllowed',
+            description:
+              'Indicates that reactions are not allowed on this message, e.g. because it is a system message.',
+          },
+          {
             name: 'ReactionMessageDeleted',
             description:
               'Indicates that the message has been deleted and reactions can no longer be added/removed.',
@@ -10621,6 +11670,15 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description: 'Sends a message to a conversation.',
+        errors: [
+          {
+            name: 'ConvoLocked',
+          },
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10653,6 +11711,15 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description: 'Sends a batch of messages to a conversation.',
+        errors: [
+          {
+            name: 'ConvoLocked',
+          },
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10702,12 +11769,63 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyConvoUnlockConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.unlockConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Unlocks a group convo so it is able to receive new content.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyConvoUnmuteConvo: {
     lexicon: 1,
     id: 'chat.bsky.convo.unmuteConvo',
     defs: {
       main: {
         type: 'procedure',
+        description:
+          'Unmutes a conversation, allowing notifications related to it.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10742,6 +11860,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description:
+          'Sets conversations from a user as read to the latest message, with filters.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10776,6 +11896,13 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
+        description:
+          'Updates the read state of a conversation from, optionally specifying the last read message.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
         input: {
           encoding: 'application/json',
           schema: {
@@ -10798,6 +11925,793 @@ export const schemaDict = {
             required: ['convo'],
             properties: {
               convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupAddMembers: {
+    lexicon: 1,
+    id: 'chat.bsky.group.addMembers',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "[NOTE: This is under active development and should be considered unstable while this note is here]. Adds members to a group. The members are added in 'request' status, so they have to accept it. This creates convo memberships.",
+        errors: [
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'GroupInvitesDisabled',
+          },
+          {
+            name: 'ConvoLocked',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'MemberLimitReached',
+          },
+          {
+            name: 'NotFollowedBySender',
+          },
+          {
+            name: 'RecipientNotFound',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'members'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              members: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                minLength: 1,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+              addedMembers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupApproveJoinRequest: {
+    lexicon: 1,
+    id: 'chat.bsky.group.approveJoinRequest',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Approves a request to join a group (via join link) the user owns. Action taken by the group owner.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+          {
+            name: 'MemberLimitReached',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'member'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              member: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupCreateGroup: {
+    lexicon: 1,
+    id: 'chat.bsky.group.createGroup',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "[NOTE: This is under active development and should be considered unstable while this note is here]. Creates a group convo, specifying the members to be added to it. Unlike getConvoForMembers, this isn't idempotent. It will create new groups even if the membership is identical to pre-existing groups. Will create 'pending' membership for all members, except the owner who is 'accepted'.",
+        errors: [
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'GroupInvitesDisabled',
+          },
+          {
+            name: 'NotFollowedBySender',
+          },
+          {
+            name: 'RecipientNotFound',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['members', 'name'],
+            properties: {
+              members: {
+                type: 'array',
+                maxLength: 49,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+              name: {
+                type: 'string',
+                minLength: 1,
+                maxGraphemes: 128,
+                maxLength: 1280,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupCreateJoinLink: {
+    lexicon: 1,
+    id: 'chat.bsky.group.createJoinLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Creates a join link for the group convo.',
+        errors: [
+          {
+            name: 'EnabledJoinLinkAlreadyExists',
+          },
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'joinRule'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              requireApproval: {
+                type: 'boolean',
+                default: false,
+              },
+              joinRule: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#joinRule',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['joinLink'],
+            properties: {
+              joinLink: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#joinLinkView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupDefs: {
+    lexicon: 1,
+    id: 'chat.bsky.group.defs',
+    description:
+      '[NOTE: This is under active development and should be considered unstable while this note is here].',
+    defs: {
+      linkEnabledStatus: {
+        type: 'string',
+        knownValues: ['enabled', 'disabled'],
+      },
+      joinRule: {
+        type: 'string',
+        knownValues: ['anyone', 'followedByOwner'],
+      },
+      joinLinkView: {
+        type: 'object',
+        required: [
+          'code',
+          'enabledStatus',
+          'requireApproval',
+          'joinRule',
+          'createdAt',
+        ],
+        properties: {
+          code: {
+            type: 'string',
+          },
+          enabledStatus: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.group.defs#linkEnabledStatus',
+          },
+          requireApproval: {
+            type: 'boolean',
+          },
+          joinRule: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.group.defs#joinRule',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      groupPublicView: {
+        type: 'object',
+        required: ['name', 'owner', 'memberCount', 'requireApproval'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          owner: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+          },
+          memberCount: {
+            type: 'integer',
+          },
+          requireApproval: {
+            type: 'boolean',
+          },
+        },
+      },
+      joinRequestView: {
+        type: 'object',
+        required: ['convoId', 'requestedBy', 'requestedAt'],
+        properties: {
+          convoId: {
+            type: 'string',
+          },
+          requestedBy: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+          },
+          requestedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupDisableJoinLink: {
+    lexicon: 1,
+    id: 'chat.bsky.group.disableJoinLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Disables the active join link for the group convo.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+          {
+            name: 'NoJoinLink',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['joinLink'],
+            properties: {
+              joinLink: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#joinLinkView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupEditGroup: {
+    lexicon: 1,
+    id: 'chat.bsky.group.editGroup',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Edits group settings.',
+        errors: [
+          {
+            name: 'ConvoLocked',
+          },
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'name'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              name: {
+                type: 'string',
+                minLength: 1,
+                maxGraphemes: 128,
+                maxLength: 1280,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupEditJoinLink: {
+    lexicon: 1,
+    id: 'chat.bsky.group.editJoinLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Edits the existing join link settings for the group convo.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+          {
+            name: 'NoJoinLink',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              requireApproval: {
+                type: 'boolean',
+              },
+              joinRule: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#joinRule',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['joinLink'],
+            properties: {
+              joinLink: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#joinLinkView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupEnableJoinLink: {
+    lexicon: 1,
+    id: 'chat.bsky.group.enableJoinLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Re-enables a previously disabled join link for the group convo.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+          {
+            name: 'NoJoinLink',
+          },
+          {
+            name: 'LinkAlreadyEnabled',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['joinLink'],
+            properties: {
+              joinLink: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#joinLinkView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupGetGroupPublicInfo: {
+    lexicon: 1,
+    id: 'chat.bsky.group.getGroupPublicInfo',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Get public information about a group from an join link.',
+        errors: [
+          {
+            name: 'InvalidCode',
+          },
+        ],
+        parameters: {
+          type: 'params',
+          required: ['code'],
+          properties: {
+            code: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['group'],
+            properties: {
+              group: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.group.defs#groupPublicView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupListJoinRequests: {
+    lexicon: 1,
+    id: 'chat.bsky.group.listJoinRequests',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "[NOTE: This is under active development and should be considered unstable while this note is here]. Lists a page of request to join a group (via join link) the user owns. Shows the data from the owner's point of view.",
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        parameters: {
+          type: 'params',
+          required: ['convoId'],
+          properties: {
+            convoId: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['requests'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              requests: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.group.defs#joinRequestView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupRejectJoinRequest: {
+    lexicon: 1,
+    id: 'chat.bsky.group.rejectJoinRequest',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Rejects a request to join a group (via join link) the user owns. Action taken by the group owner.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'member'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              member: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupRemoveMembers: {
+    lexicon: 1,
+    id: 'chat.bsky.group.removeMembers',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "[NOTE: This is under active development and should be considered unstable while this note is here]. Removes members from a group. This deletes convo memberships, doesn't just set a status.",
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+          {
+            name: 'InsufficientRole',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convoId', 'members'],
+            properties: {
+              convoId: {
+                type: 'string',
+              },
+              members: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                minLength: 1,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyGroupRequestJoin: {
+    lexicon: 1,
+    id: 'chat.bsky.group.requestJoin',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Sends a request to join a group (via join link) to the group owner. Action taken by the prospective group member.',
+        errors: [
+          {
+            name: 'ConvoLocked',
+          },
+          {
+            name: 'FollowRequired',
+          },
+          {
+            name: 'InvalidCode',
+          },
+          {
+            name: 'LinkDisabled',
+          },
+          {
+            name: 'MemberLimitReached',
+          },
+          {
+            name: 'UserKicked',
+          },
+        ],
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['code'],
+            properties: {
+              code: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['status'],
+            properties: {
+              status: {
+                type: 'string',
+                knownValues: ['joined', 'pending'],
+              },
+              convo: {
+                description:
+                  'The group convo joined. This is only present in the case of status=joined',
                 type: 'ref',
                 ref: 'lex:chat.bsky.convo.defs#convoView',
               },
@@ -10911,10 +12825,83 @@ export const schemaDict = {
                   refs: [
                     'lex:chat.bsky.convo.defs#messageView',
                     'lex:chat.bsky.convo.defs#deletedMessageView',
+                    'lex:chat.bsky.convo.defs#systemMessageView',
                   ],
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyModerationSubscribeModEvents: {
+    lexicon: 1,
+    id: 'chat.bsky.moderation.subscribeModEvents',
+    defs: {
+      main: {
+        type: 'subscription',
+        description:
+          'Subscribe to stream of chat events targeted to moderation. Private endpoint.',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'string',
+              description:
+                "The last known event seq number to backfill from. Use '2222222222222' to backfill from the beginning. Don't specify a cursor to listen only for new events.",
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.moderation.subscribeModEvents#eventConvoFirstMessage',
+            ],
+          },
+        },
+        errors: [
+          {
+            name: 'FutureCursor',
+          },
+          {
+            name: 'ConsumerTooSlow',
+            description:
+              'If the consumer of the stream can not keep up with events, and a backlog gets too large, the server will drop the connection.',
+          },
+        ],
+      },
+      eventConvoFirstMessage: {
+        type: 'object',
+        required: ['createdAt', 'rev', 'convoId', 'user', 'recipients'],
+        properties: {
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          messageId: {
+            type: 'string',
+          },
+          recipients: {
+            description:
+              'The list of DIDs message recipients. Does not include the sender, which is in the `user` field',
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+          rev: {
+            type: 'string',
+          },
+          user: {
+            description: 'The DID of the message author.',
+            type: 'string',
+            format: 'did',
           },
         },
       },
@@ -18439,6 +20426,11 @@ export const schemaDict = {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the tags being added should remain before automatically being removed. Only applies to tags being added.',
+          },
         },
       },
       accountEvent: {
@@ -19179,6 +21171,12 @@ export const schemaDict = {
                 description:
                   'An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject.',
               },
+              reportAction: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.emitEvent#reportAction',
+                description:
+                  'Optional report-level targeting. If provided, this event will be linked to specific reports and reporters may be notified.',
+              },
             },
           },
         },
@@ -19199,6 +21197,36 @@ export const schemaDict = {
               'An event with the same external ID already exists for the subject.',
           },
         ],
+      },
+      reportAction: {
+        type: 'object',
+        description: 'Target specific reports when emitting a moderation event',
+        properties: {
+          ids: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+            description: 'Target specific report IDs',
+          },
+          types: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              'Target reports matching these report types on the subject (fully qualified NSIDs)',
+          },
+          all: {
+            type: 'boolean',
+            description: 'Target ALL reports on the subject',
+          },
+          note: {
+            type: 'string',
+            description:
+              'Note to send to reporter(s) when actioning their report',
+          },
+        },
       },
     },
   },
@@ -20300,6 +22328,725 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueAssignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.assignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Assign a user to a queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId', 'did'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to assign the user to.',
+              },
+              did: {
+                type: 'string',
+                description: 'DID to be assigned.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description:
+              'The specified queue does not exist or is not enabled.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueCreateQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.createQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Create a new moderation queue. Will fail if the queue configuration conflicts with an existing queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name', 'subjectTypes', 'reportTypes'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Display name for the queue (must be unique)',
+              },
+              subjectTypes: {
+                type: 'array',
+                minLength: 1,
+                items: {
+                  type: 'string',
+                  knownValues: ['account', 'record', 'message'],
+                },
+                description: 'Subject types this queue accepts',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description:
+                  "Collection name for record subjects. Required if subjectTypes includes 'record'.",
+              },
+              reportTypes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minLength: 1,
+                maxLength: 25,
+                description: 'Report reason types (fully qualified NSIDs)',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queue'],
+            properties: {
+              queue: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.queue.defs#queueView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ConflictingQueue',
+            description:
+              'The queue configuration conflicts with an existing queue',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.defs',
+    defs: {
+      queueView: {
+        type: 'object',
+        required: [
+          'id',
+          'name',
+          'subjectTypes',
+          'reportTypes',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+          'enabled',
+          'stats',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Queue ID',
+          },
+          name: {
+            type: 'string',
+            description: 'Display name of the queue',
+          },
+          subjectTypes: {
+            type: 'array',
+            minLength: 1,
+            items: {
+              type: 'string',
+              knownValues: ['account', 'record', 'message'],
+            },
+            description: 'Subject types this queue accepts.',
+          },
+          collection: {
+            type: 'string',
+            format: 'nsid',
+            description:
+              "Collection name for record subjects (e.g., 'app.bsky.feed.post')",
+          },
+          reportTypes: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            minLength: 1,
+            description:
+              'Report reason types this queue accepts (fully qualified NSIDs)',
+          },
+          description: {
+            type: 'string',
+            description: 'Optional description of the queue',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of moderator who created this queue',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          enabled: {
+            type: 'boolean',
+            description: 'Whether this queue is currently active',
+          },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the queue was deleted, if applicable',
+          },
+          stats: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueStats',
+            description: 'Statistics about this queue',
+          },
+        },
+      },
+      queueStats: {
+        type: 'object',
+        required: [],
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'open' status",
+          },
+          actionedCount: {
+            type: 'integer',
+            description: "Number of reports in 'closed' status",
+          },
+          escalatedCount: {
+            type: 'integer',
+            description: "Number of reports in 'escalated' status",
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received in this queue in the last 24 hours.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation to close, for reports closed in this period.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed',
+          },
+        },
+      },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'queue', 'startAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'The moderator assigned to this queue',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueDeleteQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.deleteQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Delete a moderation queue. Optionally migrate reports to another queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'ID of the queue to delete',
+              },
+              migrateToQueueId: {
+                type: 'integer',
+                description:
+                  'Optional: migrate all reports to this queue. If not specified, reports will be set to unassigned (-1).',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['deleted'],
+            properties: {
+              deleted: {
+                type: 'boolean',
+              },
+              reportsMigrated: {
+                type: 'integer',
+                description:
+                  'Number of reports that were migrated (if migration occurred)',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get moderator assignments, optionally filtered by active status, queue, or moderator.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActive: {
+              type: 'boolean',
+              default: true,
+              description: 'When true, only returns active assignments.',
+            },
+            queueIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              description:
+                'If specified, returns assignments for these queues only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.queue.defs#assignmentView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueListQueues: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.listQueues',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all configured moderation queues with statistics.',
+        parameters: {
+          type: 'params',
+          properties: {
+            enabled: {
+              type: 'boolean',
+              description:
+                'Filter by enabled status. If not specified, returns all queues.',
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                "Filter queues that handle this subject type ('account' or 'record').",
+            },
+            collection: {
+              type: 'string',
+              description:
+                "Filter queues by collection name (e.g. 'app.bsky.feed.post').",
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              maxLength: 10,
+              description:
+                'Filter queues that handle any of these report reason types.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queues'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              queues: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.queue.defs#queueView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueRouteReports: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.routeReports',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Route reports within an ID range to matching queues based.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startReportId', 'endReportId'],
+            properties: {
+              startReportId: {
+                type: 'integer',
+                description: 'Start of report ID range (inclusive).',
+              },
+              endReportId: {
+                type: 'integer',
+                description:
+                  'End of report ID range (inclusive). Difference between start and end must be less than 5,000.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assigned', 'unmatched'],
+            properties: {
+              assigned: {
+                type: 'integer',
+                description: 'The number of reports assigned to a queue.',
+              },
+              unmatched: {
+                type: 'integer',
+                description: 'The number of reports with no matching queue.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'OutOfRange',
+            description:
+              'The request is invalid, such as missing required fields or invalid field values.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueUnassignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.unassignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Remove a user's assignment from a queue.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId', 'did'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to unassign the user from.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'DID to be unassigned.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description:
+              'No active assignment exists for the given queue and user.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneQueueUpdateQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.updateQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update queue properties. Currently only supports updating the name and enabled status to prevent configuration conflicts.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'ID of the queue to update',
+              },
+              name: {
+                type: 'string',
+                description: 'New display name for the queue',
+              },
+              enabled: {
+                type: 'boolean',
+                description: 'Enable or disable the queue',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queue'],
+            properties: {
+              queue: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.queue.defs#queueView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportAssignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.report.assignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Assign a report to a user. Defaults to the caller. Admins may assign to any moderator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to assign.',
+              },
+              queueId: {
+                type: 'integer',
+                description:
+                  'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description:
+                  "DID to be assigned. Defaults to the caller's DID. Admins may assign to any moderator.",
+              },
+              isPermanent: {
+                type: 'boolean',
+                description:
+                  'When true, the assignment has no expiry (endAt is null). Throws AlreadyAssigned if another user already has a permanent assignment on this report.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'AlreadyAssigned',
+            description: 'The report is already assigned to another user.',
+          },
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID or queue ID is invalid.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportCreateActivity: {
+    lexicon: 1,
+    id: 'tools.ozone.report.createActivity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Register an activity on a report. For state-change activity types, validates the transition and updates report.status atomically.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId', 'activity'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'ID of the report to record activity on',
+              },
+              activity: {
+                type: 'union',
+                refs: [
+                  'lex:tools.ozone.report.defs#queueActivity',
+                  'lex:tools.ozone.report.defs#assignmentActivity',
+                  'lex:tools.ozone.report.defs#escalationActivity',
+                  'lex:tools.ozone.report.defs#closeActivity',
+                  'lex:tools.ozone.report.defs#reopenActivity',
+                  'lex:tools.ozone.report.defs#noteActivity',
+                ],
+                description: 'The type of activity to record.',
+              },
+              internalNote: {
+                type: 'string',
+                description:
+                  'Optional moderator-only note. Not visible to reporters.',
+              },
+              publicNote: {
+                type: 'string',
+                description:
+                  'Optional public-facing note, potentially visible to the reporter.',
+              },
+              isAutomated: {
+                type: 'boolean',
+                description:
+                  'Set true when this activity is triggered by an automated process. Defaults to false.',
+                default: false,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activity'],
+            properties: {
+              activity: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportActivityView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReportNotFound',
+            description: 'No report exists with the given reportId',
+          },
+          {
+            name: 'InvalidStateTransition',
+            description:
+              "The requested state transition is not permitted from the report's current status",
+          },
+          {
+            name: 'AlreadyInTargetState',
+            description:
+              'The report is already in the status implied by this activity type',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneReportDefs: {
     lexicon: 1,
     id: 'tools.ozone.report.defs',
@@ -20512,6 +23259,974 @@ export const schemaDict = {
       reasonSelfHarmOther: {
         type: 'token',
         description: 'Other dangerous content',
+      },
+      reportAssignment: {
+        type: 'object',
+        description:
+          'Information about the moderator currently assigned to a report.',
+        required: ['did', 'assignedAt'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the assigned moderator',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'Full member record of the assigned moderator',
+          },
+          assignedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was assigned',
+          },
+        },
+      },
+      reportView: {
+        type: 'object',
+        required: [
+          'id',
+          'eventId',
+          'status',
+          'subject',
+          'reportType',
+          'reportedBy',
+          'reporter',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Report ID',
+          },
+          eventId: {
+            type: 'integer',
+            description: 'ID of the moderation event that created this report',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description: 'Current status of the report',
+          },
+          subject: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectView',
+            description: 'The subject that was reported with full details',
+          },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+            description: 'Type of report',
+          },
+          reportedBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who made the report',
+          },
+          reporter: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectView',
+            description: 'Full subject view of the reporter account',
+          },
+          comment: {
+            type: 'string',
+            description: 'Comment provided by the reporter',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was last updated',
+          },
+          queuedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the report was assigned to its current queue',
+          },
+          actionEventIds: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+            description:
+              'Array of moderation event IDs representing actions taken on this report (sorted DESC, most recent first)',
+          },
+          actions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.defs#modEventView',
+            },
+            description: 'Optional: expanded action events',
+          },
+          actionNote: {
+            type: 'string',
+            description: 'Note sent to reporter when report was actioned',
+          },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
+            description: 'Current status of the reported subject',
+          },
+          relatedReportCount: {
+            type: 'integer',
+            description: 'Number of other pending reports on the same subject',
+          },
+          assignment: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#reportAssignment',
+            description:
+              'Information about moderator currently assigned to this report (if any)',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+            description: 'The queue this report is assigned to (if any)',
+          },
+          isMuted: {
+            type: 'boolean',
+            description:
+              'Whether this report is muted. A report is muted if the reporter was muted or the subject was muted at the time the report was created.',
+          },
+        },
+      },
+      queueActivity: {
+        type: 'object',
+        description: 'Activity recording a report being routed to a queue.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      assignmentActivity: {
+        type: 'object',
+        description:
+          'Activity recording a moderator being assigned to a report.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      escalationActivity: {
+        type: 'object',
+        description: 'Activity recording a report being escalated.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      closeActivity: {
+        type: 'object',
+        description: 'Activity recording a report being closed.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      reopenActivity: {
+        type: 'object',
+        description:
+          "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      noteActivity: {
+        type: 'object',
+        description:
+          'Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both).',
+        properties: {},
+      },
+      reportActivityView: {
+        type: 'object',
+        description: 'A single activity entry on a report.',
+        required: [
+          'id',
+          'reportId',
+          'activity',
+          'isAutomated',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Activity ID',
+          },
+          reportId: {
+            type: 'integer',
+            description: 'ID of the report this activity belongs to',
+          },
+          activity: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.report.defs#queueActivity',
+              'lex:tools.ozone.report.defs#assignmentActivity',
+              'lex:tools.ozone.report.defs#escalationActivity',
+              'lex:tools.ozone.report.defs#closeActivity',
+              'lex:tools.ozone.report.defs#reopenActivity',
+              'lex:tools.ozone.report.defs#noteActivity',
+            ],
+            description: 'The typed activity object describing what occurred.',
+          },
+          internalNote: {
+            type: 'string',
+            description:
+              'Optional moderator-only note. Not visible to reporters.',
+          },
+          publicNote: {
+            type: 'string',
+            description:
+              'Optional public note, potentially visible to the reporter.',
+          },
+          meta: {
+            type: 'unknown',
+            description:
+              'Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId).',
+          },
+          isAutomated: {
+            type: 'boolean',
+            description:
+              'True if this activity was created by an automated process (e.g. queue router) rather than a direct human action.',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description:
+              'DID of the actor who created this activity, or the service DID for automated activities.',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description:
+              'Full member record of the moderator who created this activity',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this activity was created',
+          },
+        },
+      },
+      liveStats: {
+        description:
+          'Live statistics for reports for the current calendar day, filterable by queue, moderator, or report type.',
+        type: 'object',
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: 'Number of reports currently not closed.',
+          },
+          actionedCount: {
+            type: 'integer',
+            description: 'Number of reports closed today.',
+          },
+          escalatedCount: {
+            type: 'integer',
+            description: 'Number of reports escalated today.',
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received today.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation (or moderator assignment) to close.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed.',
+          },
+        },
+      },
+      historicalStats: {
+        description:
+          'A single daily snapshot of report statistics for a calendar date.',
+        type: 'object',
+        required: ['date'],
+        properties: {
+          date: {
+            type: 'string',
+            description: 'The calendar date this snapshot covers (YYYY-MM-DD).',
+          },
+          computedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this snapshot was last computed.',
+          },
+          pendingCount: {
+            type: 'integer',
+            description: 'Number of reports not closed at time of computation.',
+          },
+          actionedCount: {
+            type: 'integer',
+            description: 'Number of reports closed during this day.',
+          },
+          escalatedCount: {
+            type: 'integer',
+            description: 'Number of reports escalated during this day.',
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received during this day.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation (or moderator assignment) to close.',
+          },
+        },
+      },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'reportId', 'startAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'The moderator assigned to this report',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+          },
+          reportId: {
+            type: 'integer',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get assignments for reports.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActive: {
+              type: 'boolean',
+              default: true,
+              description: 'When true, only returns active assignments.',
+            },
+            reportIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              maxLength: 50,
+              description:
+                'If specified, returns assignments for these reports only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              maxLength: 50,
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#assignmentView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetHistoricalStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getHistoricalStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get historical daily report statistics. Returns a paginated list of daily stat snapshots, newest first. Filter by queue, moderator, or report type.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Use -1 for unqueued reports.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'Filter stats by moderator DID.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter stats by report types.',
+            },
+            startDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Earliest date to include (inclusive).',
+            },
+            endDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Latest date to include (inclusive).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 30,
+              description: 'Maximum number of entries to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#historicalStats',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetLatestReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLatestReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the most recent report.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportGetLiveStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLiveStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get live report statistics from the past 24 hours. Filter by queue, moderator, or report type. Omit all parameters for aggregate stats.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Use -1 for unqueued reports.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'Filter stats by moderator DID.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter stats by report types.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#liveStats',
+                description: 'Statistics for the requested filter.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about a single moderation report by ID.',
+        parameters: {
+          type: 'params',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'The ID of the report to retrieve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#reportView',
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportListActivities: {
+    lexicon: 1,
+    id: 'tools.ozone.report.listActivities',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List all activities for a report, sorted most-recent-first.',
+        parameters: {
+          type: 'params',
+          required: ['reportId'],
+          properties: {
+            reportId: {
+              type: 'integer',
+              description: 'ID of the report whose activities to list',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activities'],
+            properties: {
+              activities: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#reportActivityView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportQueryReports: {
+    lexicon: 1,
+    id: 'tools.ozone.report.queryReports',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'View moderation reports. Reports are individual instances of content being reported, as opposed to subject statuses which aggregate reports at the subject level.',
+        parameters: {
+          type: 'params',
+          required: ['status'],
+          properties: {
+            queueId: {
+              type: 'integer',
+              description: 'Filter by queue ID. Use -1 for unassigned reports.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'Filter by report types (fully qualified string in the format of com.atproto.moderation.defs#reason<name>).',
+            },
+            status: {
+              type: 'string',
+              knownValues: [
+                'open',
+                'closed',
+                'escalated',
+                'queued',
+                'assigned',
+              ],
+              description: 'Filter by report status.',
+            },
+            subject: {
+              type: 'string',
+              format: 'uri',
+              description: 'Filter by subject DID or AT-URI.',
+            },
+            did: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter to reports where the subject is this DID or any record owned by this DID. Unlike `subject` (which scopes to a specific account or record), this returns all reports tied to the DID across both account-level and record-level subjects.',
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                'If specified, reports of the given type (account or record) will be returned.',
+              knownValues: ['account', 'record'],
+            },
+            collections: {
+              type: 'array',
+              maxLength: 20,
+              description:
+                "If specified, reports where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+              items: {
+                type: 'string',
+                format: 'nsid',
+              },
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve reports created after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve reports created before a given timestamp',
+            },
+            isMuted: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Filter by muted status. true returns only muted reports, false returns only unmuted reports. Defaults to false.',
+            },
+            assignedTo: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter by the DID of the moderator permanently assigned to the report.',
+            },
+            sortField: {
+              type: 'string',
+              default: 'createdAt',
+              enum: ['createdAt', 'updatedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reports'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              reports: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#reportView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportReassignQueue: {
+    lexicon: 1,
+    id: 'tools.ozone.report.reassignQueue',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Manually reassign a report to a different queue (or unassign it). Records a queueActivity entry on the report.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId', 'queueId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'ID of the report to reassign',
+              },
+              queueId: {
+                type: 'integer',
+                description:
+                  'Target queue ID. Use -1 to unassign from any queue.',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional moderator-only note recorded on the resulting queueActivity as internalNote.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReportNotFound',
+            description: 'No report exists with the given reportId',
+          },
+          {
+            name: 'ReportClosed',
+            description: 'The report is closed and cannot be reassigned',
+          },
+          {
+            name: 'AlreadyInTargetQueue',
+            description: 'The report is already assigned to the target queue',
+          },
+          {
+            name: 'QueueNotFound',
+            description: 'No active queue exists with the given queueId',
+          },
+          {
+            name: 'QueueDisabled',
+            description:
+              'The target queue is disabled and cannot receive new assignments',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportRefreshStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.refreshStats',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Recompute report statistics for a date range. Useful for backfilling after failures or data corrections.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startDate', 'endDate'],
+            properties: {
+              startDate: {
+                type: 'string',
+                description:
+                  'Start date for recomputation, inclusive (YYYY-MM-DD).',
+              },
+              endDate: {
+                type: 'string',
+                description:
+                  'End date for recomputation, inclusive (YYYY-MM-DD).',
+              },
+              queueIds: {
+                type: 'array',
+                items: {
+                  type: 'integer',
+                },
+                description:
+                  'Optional list of queue IDs to recompute. Omit to recompute all groups.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportUnassignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.report.unassignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove report assignment.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to unassign.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID is invalid.',
+          },
+        ],
       },
     },
   },
@@ -22526,19 +26241,39 @@ export const ids = {
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
   ChatBskyConvoGetConvoAvailability: 'chat.bsky.convo.getConvoAvailability',
   ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
+  ChatBskyConvoGetConvoMembers: 'chat.bsky.convo.getConvoMembers',
   ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
   ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',
   ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',
+  ChatBskyConvoListConvoRequests: 'chat.bsky.convo.listConvoRequests',
   ChatBskyConvoListConvos: 'chat.bsky.convo.listConvos',
+  ChatBskyConvoLockConvo: 'chat.bsky.convo.lockConvo',
   ChatBskyConvoMuteConvo: 'chat.bsky.convo.muteConvo',
   ChatBskyConvoRemoveReaction: 'chat.bsky.convo.removeReaction',
   ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
+  ChatBskyConvoUnlockConvo: 'chat.bsky.convo.unlockConvo',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
   ChatBskyConvoUpdateAllRead: 'chat.bsky.convo.updateAllRead',
   ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
+  ChatBskyGroupAddMembers: 'chat.bsky.group.addMembers',
+  ChatBskyGroupApproveJoinRequest: 'chat.bsky.group.approveJoinRequest',
+  ChatBskyGroupCreateGroup: 'chat.bsky.group.createGroup',
+  ChatBskyGroupCreateJoinLink: 'chat.bsky.group.createJoinLink',
+  ChatBskyGroupDefs: 'chat.bsky.group.defs',
+  ChatBskyGroupDisableJoinLink: 'chat.bsky.group.disableJoinLink',
+  ChatBskyGroupEditGroup: 'chat.bsky.group.editGroup',
+  ChatBskyGroupEditJoinLink: 'chat.bsky.group.editJoinLink',
+  ChatBskyGroupEnableJoinLink: 'chat.bsky.group.enableJoinLink',
+  ChatBskyGroupGetGroupPublicInfo: 'chat.bsky.group.getGroupPublicInfo',
+  ChatBskyGroupListJoinRequests: 'chat.bsky.group.listJoinRequests',
+  ChatBskyGroupRejectJoinRequest: 'chat.bsky.group.rejectJoinRequest',
+  ChatBskyGroupRemoveMembers: 'chat.bsky.group.removeMembers',
+  ChatBskyGroupRequestJoin: 'chat.bsky.group.requestJoin',
   ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
   ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
+  ChatBskyModerationSubscribeModEvents:
+    'chat.bsky.moderation.subscribeModEvents',
   ChatBskyModerationUpdateActorAccess: 'chat.bsky.moderation.updateActorAccess',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
@@ -22699,7 +26434,28 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneQueueAssignModerator: 'tools.ozone.queue.assignModerator',
+  ToolsOzoneQueueCreateQueue: 'tools.ozone.queue.createQueue',
+  ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
+  ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
+  ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
+  ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
+  ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
+  ToolsOzoneQueueUnassignModerator: 'tools.ozone.queue.unassignModerator',
+  ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
+  ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
+  ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
+  ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
+  ToolsOzoneReportGetHistoricalStats: 'tools.ozone.report.getHistoricalStats',
+  ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
+  ToolsOzoneReportGetLiveStats: 'tools.ozone.report.getLiveStats',
+  ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
+  ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
+  ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
+  ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
+  ToolsOzoneReportRefreshStats: 'tools.ozone.report.refreshStats',
+  ToolsOzoneReportUnassignModerator: 'tools.ozone.report.unassignModerator',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
   ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',

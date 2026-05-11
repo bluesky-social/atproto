@@ -39,7 +39,24 @@ export interface Response {
   data: OutputSchema
 }
 
+export class ConvoLockedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class InvalidConvoError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'ConvoLocked') return new ConvoLockedError(e)
+    if (e.error === 'InvalidConvo') return new InvalidConvoError(e)
+  }
+
   return e
 }
 

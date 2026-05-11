@@ -1,4 +1,4 @@
-import {
+import type {
   Account,
   ConfirmResetPasswordInput,
   InitiatePasswordResetInput,
@@ -11,6 +11,7 @@ import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import {
   HandleUnavailableError,
+  InvalidCredentialsError,
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
 } from '../oauth-errors.js'
@@ -36,6 +37,7 @@ export type {
 
 export {
   HandleUnavailableError,
+  InvalidCredentialsError,
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
 }
@@ -108,7 +110,13 @@ export interface AccountStore {
   createAccount(data: CreateAccountData): Awaitable<Account>
 
   /**
-   * @throws {InvalidRequestError} - When the credentials are not valid
+   * @throws {InvalidCredentialsError} - When the credentials are not valid.
+   * Populate {@link InvalidCredentialsError.sub} with the subject identifier
+   * when the identifier matched an existing account (e.g. wrong password for
+   * a known user); omit it when the identifier was not found. Throwing the
+   * generic {@link InvalidRequestError} is also accepted for backward
+   * compatibility but prevents the `onSignInFailed` hook from distinguishing
+   * the two cases.
    * @throws {SecondAuthenticationFactorRequiredError} - To indicate that an {@link SecondAuthenticationFactorRequiredError.type} is required in the credentials
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>

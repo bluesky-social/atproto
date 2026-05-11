@@ -19,7 +19,12 @@ export type QueryParams = {
   limit: number
   cursor?: string
   readState?: 'unread' | (string & {})
+  /** Filter convos by their status. It is discouraged to call with "request" and preferred to call chat.bsky.convo.listConvoRequests, which also includes group join requests made by the user. */
   status?: 'request' | 'accepted' | (string & {})
+  /** Filter by conversation kind. */
+  kind?: 'direct' | 'group' | (string & {})
+  /** Filter by conversation lock status. Values follow chat.bsky.convo.defs#convoLockStatus. */
+  lockStatus?: 'unlocked' | 'locked' | 'locked-permanently' | (string & {})
 }
 export type InputSchema = undefined
 

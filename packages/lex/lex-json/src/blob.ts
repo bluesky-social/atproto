@@ -1,8 +1,8 @@
 import {
-  BlobRef,
   BlobRefCheckOptions,
   LexMap,
-  isBlobRef,
+  TypedBlobRef,
+  isTypedBlobRef,
 } from '@atproto/lex-data'
 import { parseLexLink } from './link.js'
 
@@ -26,7 +26,7 @@ import { parseLexLink } from './link.js'
  * @example
  * ```typescript
  * // Parse a blob reference from JSON
- * const blobRef = parseBlobRef({
+ * const blobRef = parseTypedBlobRef({
  *   $type: 'blob',
  *   ref: { $link: 'bafyreib2rxk3rybloqtqwbo' },
  *   mimeType: 'image/png',
@@ -36,14 +36,14 @@ import { parseLexLink } from './link.js'
  * // blobRef.ref is a Cid instance
  *
  * // Returns undefined for non-blob objects
- * const result = parseBlobRef({ foo: 'bar' })
+ * const result = parseTypedBlobRef({ foo: 'bar' })
  * // result is undefined
  * ```
  */
-export function parseBlobRef(
+export function parseTypedBlobRef(
   input: LexMap,
   options?: BlobRefCheckOptions,
-): BlobRef | undefined {
+): TypedBlobRef | undefined {
   if (input.$type !== 'blob') return undefined
 
   const ref = input?.ref
@@ -59,10 +59,10 @@ export function parseBlobRef(
     if (!cid) return undefined
 
     const blob = { ...input, ref: cid }
-    if (isBlobRef(blob, options)) return blob
+    if (isTypedBlobRef(blob, options)) return blob
   }
 
-  if (isBlobRef(input)) {
+  if (isTypedBlobRef(input)) {
     return input
   }
 
