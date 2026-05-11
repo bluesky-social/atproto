@@ -12228,7 +12228,7 @@ export const schemaDict = {
           },
         },
       },
-      groupPublicView: {
+      joinLinkPreviewView: {
         type: 'object',
         required: ['name', 'owner', 'memberCount', 'requireApproval'],
         properties: {
@@ -12244,6 +12244,12 @@ export const schemaDict = {
           },
           requireApproval: {
             type: 'boolean',
+          },
+          convo: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#convoView',
+            description:
+              'Present only if the request is authenticated and the user is a member of the group.',
           },
         },
       },
@@ -12470,9 +12476,9 @@ export const schemaDict = {
       },
     },
   },
-  ChatBskyGroupGetGroupPublicInfo: {
+  ChatBskyGroupGetJoinLinkPreview: {
     lexicon: 1,
-    id: 'chat.bsky.group.getGroupPublicInfo',
+    id: 'chat.bsky.group.getJoinLinkPreview',
     defs: {
       main: {
         type: 'query',
@@ -12496,11 +12502,11 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['group'],
+            required: ['joinLinkPreview'],
             properties: {
-              group: {
+              joinLinkPreview: {
                 type: 'ref',
-                ref: 'lex:chat.bsky.group.defs#groupPublicView',
+                ref: 'lex:chat.bsky.group.defs#joinLinkPreviewView',
               },
             },
           },
@@ -24885,7 +24891,7 @@ export const ids = {
   ChatBskyGroupEditGroup: 'chat.bsky.group.editGroup',
   ChatBskyGroupEditJoinLink: 'chat.bsky.group.editJoinLink',
   ChatBskyGroupEnableJoinLink: 'chat.bsky.group.enableJoinLink',
-  ChatBskyGroupGetGroupPublicInfo: 'chat.bsky.group.getGroupPublicInfo',
+  ChatBskyGroupGetJoinLinkPreview: 'chat.bsky.group.getJoinLinkPreview',
   ChatBskyGroupListJoinRequests: 'chat.bsky.group.listJoinRequests',
   ChatBskyGroupRejectJoinRequest: 'chat.bsky.group.rejectJoinRequest',
   ChatBskyGroupRemoveMembers: 'chat.bsky.group.removeMembers',

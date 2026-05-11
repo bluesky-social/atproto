@@ -10,6 +10,7 @@ import {
   type OmitKey,
 } from '../../../../util'
 import type * as ChatBskyActorDefs from '../actor/defs.js'
+import type * as ChatBskyConvoDefs from '../convo/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -37,22 +38,23 @@ export function validateJoinLinkView<V>(v: V) {
   return validate<JoinLinkView & V>(v, id, hashJoinLinkView)
 }
 
-export interface GroupPublicView {
-  $type?: 'chat.bsky.group.defs#groupPublicView'
+export interface JoinLinkPreviewView {
+  $type?: 'chat.bsky.group.defs#joinLinkPreviewView'
   name: string
   owner: ChatBskyActorDefs.ProfileViewBasic
   memberCount: number
   requireApproval: boolean
+  convo?: ChatBskyConvoDefs.ConvoView
 }
 
-const hashGroupPublicView = 'groupPublicView'
+const hashJoinLinkPreviewView = 'joinLinkPreviewView'
 
-export function isGroupPublicView<V>(v: V) {
-  return is$typed(v, id, hashGroupPublicView)
+export function isJoinLinkPreviewView<V>(v: V) {
+  return is$typed(v, id, hashJoinLinkPreviewView)
 }
 
-export function validateGroupPublicView<V>(v: V) {
-  return validate<GroupPublicView & V>(v, id, hashGroupPublicView)
+export function validateJoinLinkPreviewView<V>(v: V) {
+  return validate<JoinLinkPreviewView & V>(v, id, hashJoinLinkPreviewView)
 }
 
 export interface JoinRequestView {
