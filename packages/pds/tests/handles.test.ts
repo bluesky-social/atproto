@@ -1,5 +1,8 @@
 import { jest } from '@jest/globals'
+import { type AtpAgent } from '@atproto/api'
+import { type SeedClient } from '@atproto/dev-env'
 import { AtIdentifierString, DidString } from '@atproto/syntax'
+import { type AppContext } from '../src/index.js'
 
 // outside of suite so they can be used in mock
 let alice: DidString
@@ -19,18 +22,16 @@ jest.unstable_mockModule('node:dns/promises', () => {
   }
 })
 
-const { AtpAgent } = await import('@atproto/api')
-const { SeedClient, TestNetworkNoAppView } = await import('@atproto/dev-env')
 const { IdResolver } = await import('@atproto/identity')
-const { AppContext } = await import('../src/index.js')
+const { TestNetworkNoAppView } = await import('@atproto/dev-env')
 const { default: basicSeed } = await import('./seeds/basic.js')
 
 describe('handles', () => {
-  let network: TestNetworkNoAppView
+  let network: InstanceType<typeof TestNetworkNoAppView>
   let agent: AtpAgent
   let sc: SeedClient
   let ctx: AppContext
-  let idResolver: IdResolver
+  let idResolver: InstanceType<typeof IdResolver>
 
   const newHandle = 'alice2.test'
 
