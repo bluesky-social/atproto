@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.feed.post",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A Sokaa post. Media (video or images) is required; caption is optional.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["media", "createdAt"],
+        "properties": {
+          "caption": {
+            "type": "string",
+            "description": "Optional caption displayed below the media.",
+            "maxGraphemes": 300,
+            "maxLength": 3000
+          },
+          "media": {
+            "type": "union",
+            "description": "The primary media content of the post. Must be a video or one or more images.",
+            "refs": ["app.sokaa.embed.video", "app.sokaa.embed.images"]
+          },
+          "tags": {
+            "type": "array",
+            "description": "Hashtags associated with the post.",
+            "maxLength": 8,
+            "items": { "type": "string", "maxGraphemes": 64, "maxLength": 640 }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Client-declared timestamp when this post was originally created."
+          }
+        }
+      }
+    }
+  }
+}

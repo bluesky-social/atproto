@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.actor.getProfile",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a full profile view for an actor. Publicly accessible.",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The handle or DID of the account to fetch."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "app.sokaa.actor.defs#profileView"
+        }
+      }
+    }
+  }
+}

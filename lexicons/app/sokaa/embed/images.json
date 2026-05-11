@@ -1,0 +1,65 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.embed.images",
+  "description": "One or more images embedded in a Sokaa post.",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["images"],
+      "properties": {
+        "images": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#image" },
+          "minLength": 1,
+          "maxLength": 8
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": ["image", "alt"],
+      "properties": {
+        "image": {
+          "type": "blob",
+          "accept": ["image/png", "image/jpeg", "image/webp"],
+          "maxSize": 10000000
+        },
+        "alt": {
+          "type": "string",
+          "description": "Alt text for the image, for accessibility.",
+          "maxGraphemes": 1000,
+          "maxLength": 10000
+        },
+        "aspectRatio": {
+          "type": "ref",
+          "ref": "app.sokaa.embed.video#aspectRatio"
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["images"],
+      "properties": {
+        "images": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#viewImage" },
+          "minLength": 1,
+          "maxLength": 8
+        }
+      }
+    },
+    "viewImage": {
+      "type": "object",
+      "required": ["thumb", "fullsize", "alt"],
+      "properties": {
+        "thumb": { "type": "string", "format": "uri" },
+        "fullsize": { "type": "string", "format": "uri" },
+        "alt": { "type": "string", "maxGraphemes": 1000, "maxLength": 10000 },
+        "aspectRatio": {
+          "type": "ref",
+          "ref": "app.sokaa.embed.video#aspectRatio"
+        }
+      }
+    }
+  }
+}

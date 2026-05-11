@@ -1,0 +1,70 @@
+name: codegen-check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'lexicons/**'
+      - 'packages/lex-cli/src/**'
+
+jobs:
+  codegen-check:
+    name: Verify generated files are up to date
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build lex-cli workspace dependency chain
+        # In a fresh CI checkout no dist/ directories exist. Build the full
+        # upstream chain that lex-cli needs in topological order so TypeScript
+        # can resolve each package's type declarations before the next builds.
+        run: |
+          pnpm --filter @atproto/lex-data build
+          pnpm --filter @atproto/syntax build
+          pnpm --filter @atproto/lex-json build
+          pnpm --filter @atproto/common-web build
+          pnpm --filter @atproto/lexicon build
+          pnpm --filter @atproto/lex-cli build
+
+      - name: Run PDS codegen
+        working-directory: packages/pds
+        run: |
+          # Call node directly on the lex-cli dist to avoid the 'lex' binary
+          # name colliding with /usr/bin/lex (flex) pre-installed on ubuntu runners.
+          node ../lex-cli/dist/index.js gen-server --yes \
+            ./src/lexicon \
+            ../../lexicons/com/atproto/*/* \
+            ../../lexicons/app/bsky/*/* \
+            ../../lexicons/chat/bsky/*/* \
+            ../../lexicons/tools/ozone/*/* \
+            ../../lexicons/app/sokaa/*/*
+
+      - name: Fail if generated files are stale
+        run: |
+          # git diff catches modified files; git status --porcelain also catches
+          # new untracked files (e.g. a brand-new lexicon's generated type file).
+          if [ -n "$(git status --porcelain)" ]; then
+            echo ""
+            echo "Generated files are out of date."
+            echo "Run 'pnpm --filter @atproto/pds codegen' locally and commit the result."
+            echo ""
+            git status --short
+            git diff --stat
+            exit 1
+          fi
+          echo "Generated files are up to date."

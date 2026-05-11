@@ -1,0 +1,72 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.actor.defs",
+  "defs": {
+    "profileViewBasic": {
+      "type": "object",
+      "description": "Minimal actor information, used when embedding author info in post views.",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "displayName": {
+          "type": "string",
+          "maxGraphemes": 64,
+          "maxLength": 640
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri",
+          "description": "CDN URL of the avatar image."
+        }
+      }
+    },
+    "profileView": {
+      "type": "object",
+      "description": "Full profile view, returned by app.sokaa.actor.getProfile.",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "displayName": {
+          "type": "string",
+          "maxGraphemes": 64,
+          "maxLength": 640
+        },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 256,
+          "maxLength": 2560
+        },
+        "avatar": { "type": "string", "format": "uri" },
+        "banner": { "type": "string", "format": "uri" },
+        "website": { "type": "string", "format": "uri" },
+        "followersCount": { "type": "integer", "minimum": 0 },
+        "followsCount": { "type": "integer", "minimum": 0 },
+        "postsCount": { "type": "integer", "minimum": 0 },
+        "viewer": {
+          "type": "ref",
+          "ref": "#viewerState",
+          "description": "Relationship between the authenticated user and this profile."
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "description": "Authenticated viewer's relationship to this actor.",
+      "properties": {
+        "following": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the viewer's follow record for this actor, if they follow them."
+        },
+        "followedBy": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of this actor's follow record for the viewer, if they follow back."
+        }
+      }
+    }
+  }
+}

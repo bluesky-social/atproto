@@ -1,0 +1,54 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.feed.defs",
+  "defs": {
+    "postView": {
+      "type": "object",
+      "description": "A fully hydrated view of a Sokaa post, as returned by the AppView.",
+      "required": ["uri", "cid", "author", "record", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": {
+          "type": "ref",
+          "ref": "app.sokaa.actor.defs#profileViewBasic"
+        },
+        "record": {
+          "type": "ref",
+          "ref": "app.sokaa.feed.post",
+          "description": "The raw app.sokaa.feed.post record."
+        },
+        "embed": {
+          "type": "union",
+          "description": "Hydrated media embed (CDN URLs resolved).",
+          "refs": ["app.sokaa.embed.video#view", "app.sokaa.embed.images#view"]
+        },
+        "likeCount": { "type": "integer", "minimum": 0 },
+        "viewer": {
+          "type": "ref",
+          "ref": "#viewerState"
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "feedViewPost": {
+      "type": "object",
+      "description": "A post as it appears in a feed list response.",
+      "required": ["post"],
+      "properties": {
+        "post": { "type": "ref", "ref": "#postView" }
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "description": "Authenticated viewer's interaction state with a post.",
+      "properties": {
+        "like": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the viewer's like record for this post, if they liked it."
+        }
+      }
+    }
+  }
+}
