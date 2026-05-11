@@ -92,33 +92,6 @@ const LEXICONS = [
       },
     },
   },
-  {
-    lexicon: 1,
-    id: 'io.example.deeplyNestedStructure',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              value: { type: 'unknown' },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              value: { type: 'unknown' },
-            },
-          },
-        },
-      },
-    },
-  },
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
@@ -145,22 +118,6 @@ const handlers = {
       body: { cid: cid.toString() },
     }
   },
-  'io.example.deeplyNestedStructure': async (
-    ctx: xrpcServer.HandlerContext,
-  ) => {
-    return {
-      encoding: 'application/json',
-      body: {
-        value:
-          (ctx.input?.body as any)?.value ??
-          (() => {
-            let nested: [] | unknown = []
-            for (let i = 0; i < 4000; i++) nested = [nested]
-            return { nested }
-          })(),
-      },
-    }
-  },
 }
 
 for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
@@ -170,7 +127,6 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     let url: string
     beforeAll(async () => {
       const server = await buildServer(LEXICONS, handlers, {
-        validateResponse: false,
         payload: {
           blobLimit: BLOB_LIMIT,
         },
@@ -614,9 +570,77 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         message: 'Request encoding (Content-Type) required but not provided',
       })
     })
+  })
+}
 
-    it.only('handles deeply nested output', async () => {
-      // @NOTE not using the client to avoid any potential issues with JSON
+describe.each([buildMethodLexicons, buildAddLexicons] as const)(
+  'buildServer',
+  (buildServer) => {
+    let s: http.Server
+    let url: string
+    beforeAll(async () => {
+      const server = await buildServer(
+        [
+          {
+            lexicon: 1,
+            id: 'io.example.deeplyNestedStructure',
+            defs: {
+              main: {
+                type: 'procedure',
+                input: {
+                  encoding: 'application/json',
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      value: { type: 'unknown' },
+                    },
+                  },
+                },
+                output: {
+                  encoding: 'application/json',
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      value: { type: 'unknown' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+        {
+          'io.example.deeplyNestedStructure': async (
+            ctx: xrpcServer.HandlerContext,
+          ) => {
+            return {
+              encoding: 'application/json',
+              body: {
+                value:
+                  (ctx.input?.body as any)?.value ??
+                  (() => {
+                    let nested: [] | unknown = []
+                    for (let i = 0; i < 4000; i++) nested = [nested]
+                    return { nested }
+                  })(),
+              },
+            }
+          },
+        },
+        {
+          validateResponse: false,
+        },
+      )
+      s = await createServer(server)
+      const { port } = s.address() as AddressInfo
+      url = `http://localhost:${port}`
+    })
+    afterAll(async () => {
+      if (s) await closeServer(s)
+    })
+
+    it('handles deeply nested output', async () => {
+      // @NOTE not using a client to avoid any potential issues with JSON
       // processing in the client.
       const res = await fetch(`${url}/xrpc/io.example.deeplyNestedStructure`, {
         method: 'post',
@@ -635,8 +659,8 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         nested = nested[0]
       }
     })
-  })
-}
+  },
+)
 
 const bytesToReadableStream = (bytes: Uint8Array): ReadableStream => {
   // not using ReadableStream.from(), which lacks support in some contexts including nodejs v18.

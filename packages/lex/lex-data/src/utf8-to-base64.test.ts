@@ -15,7 +15,7 @@ describe.each([utf8ToBase64Node, utf8ToBase64Ponyfill])('%o', (utf8ToB64) => {
     ])('%s', (text) => {
       const expected = Buffer.from(text, 'utf8')
         .toString(encoding)
-        .replaceAll('=', '')
+        .replaceAll('=', '') // Buffer adds padding for "base64", so we remove it
       expect(utf8ToB64(text, encoding)).toBe(expected)
     })
   })
