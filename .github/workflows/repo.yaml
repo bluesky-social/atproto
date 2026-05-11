@@ -16,8 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.9
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
@@ -51,8 +49,6 @@ jobs:
         with:
           fetch-depth: 0 # needed for git diff against base branch
       - uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.9
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
@@ -85,8 +81,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.9
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
@@ -111,8 +105,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.9
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
