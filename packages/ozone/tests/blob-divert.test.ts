@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import assert from 'node:assert'
+import { jest } from '@jest/globals'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
