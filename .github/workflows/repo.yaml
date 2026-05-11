@@ -6,7 +6,7 @@ on:
       - '*'
   push:
     branches:
-      - divy/node-22-24
+      - divy/typescript-6
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
