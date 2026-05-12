@@ -74,6 +74,7 @@ export default function (server: Server, ctx: AppContext) {
             emailLastSentAt: inv.email_last_sent_at ?? undefined,
             emailAttemptCount: inv.email_attempt_count,
             emailLastError: inv.email_last_error ?? undefined,
+            inviteCode: inv.invite_code ?? undefined,
           })),
           cursor: nextCursor,
         },
