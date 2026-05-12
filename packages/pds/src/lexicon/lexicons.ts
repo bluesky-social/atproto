@@ -15976,6 +15976,71 @@ export const schemaDict = {
       },
     },
   },
+  EuWsocialAdminCreatePassInvitation: {
+    lexicon: 1,
+    id: 'eu.wsocial.admin.createPassInvitation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Create a password-based invitation. Generates an atproto invite code and a pending_invitations row. The onboarding URL returned has the invite code, email and handle baked in. Requires admin auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              email: {
+                type: 'string',
+                description: 'Email address of the invited user.',
+              },
+              preferredHandle: {
+                type: 'string',
+                description: 'Suggested handle for the new account (optional).',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'inviteCode', 'onboardingUrl', 'expiresAt'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              inviteCode: {
+                type: 'string',
+                description: 'The generated atproto invite code.',
+              },
+              onboardingUrl: {
+                type: 'string',
+                description:
+                  'Onboarding URL with inviteCode, email and handle pre-baked as query params.',
+              },
+              preferredHandle: {
+                type: 'string',
+              },
+              expiresAt: {
+                type: 'string',
+                description:
+                  'ISO timestamp when the invitation expires (30 days).',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvitationConfigError',
+          },
+          {
+            name: 'InviteCodeGenerationError',
+          },
+        ],
+      },
+    },
+  },
   EuWsocialQuickloginLinkWid: {
     lexicon: 1,
     id: 'eu.wsocial.quicklogin.linkWid',
@@ -22773,6 +22838,7 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  EuWsocialAdminCreatePassInvitation: 'eu.wsocial.admin.createPassInvitation',
   EuWsocialQuickloginLinkWid: 'eu.wsocial.quicklogin.linkWid',
   EuWsocialServerCheckHandleAvailability:
     'eu.wsocial.server.checkHandleAvailability',

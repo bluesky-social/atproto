@@ -14,6 +14,7 @@ export interface PendingInvitation {
   consuming_handle: string | null
   jid: string | null
   onboarding_url: string | null
+  invite_code: string | null
   email_last_sent_at: string | null
   email_attempt_count: number
   email_last_error: string | null

@@ -228,6 +228,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as EuWsocialAdminCreatePassInvitation from './types/eu/wsocial/admin/createPassInvitation.js'
 import * as EuWsocialQuickloginLinkWid from './types/eu/wsocial/quicklogin/linkWid.js'
 import * as EuWsocialServerCheckHandleAvailability from './types/eu/wsocial/server/checkHandleAvailability.js'
 import * as IoTrustanchorAdminClearInventory from './types/io/trustanchor/admin/clearInventory.js'
@@ -3360,13 +3361,35 @@ export class EuNS {
 
 export class EuWsocialNS {
   _server: Server
+  admin: EuWsocialAdminNS
   quicklogin: EuWsocialQuickloginNS
   server: EuWsocialServerNS
 
   constructor(server: Server) {
     this._server = server
+    this.admin = new EuWsocialAdminNS(server)
     this.quicklogin = new EuWsocialQuickloginNS(server)
     this.server = new EuWsocialServerNS(server)
+  }
+}
+
+export class EuWsocialAdminNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createPassInvitation<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminCreatePassInvitation.QueryParams,
+      EuWsocialAdminCreatePassInvitation.HandlerInput,
+      EuWsocialAdminCreatePassInvitation.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.createPassInvitation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

@@ -65,6 +65,7 @@ def send_invitation_email(
     from_email: str = "invitations@wsocial.app",
     from_name: str = "W Social Team",
     max_retries: int = 3,
+    inline_qr_code: Optional[str] = None,
 ) -> Dict:
     """
     Send invitation email via Brevo Transactional Email API.
@@ -74,11 +75,14 @@ def send_invitation_email(
         template_id: Brevo template ID
         email: Recipient email address
         onboarding_url: Onboarding URL for invitation
-        qr_code_url: URL to QR code image (will be fetched and inlined)
+        qr_code_url: URL to QR code image (will be fetched and inlined unless
+                     inline_qr_code is provided)
         preferred_handle: Optional suggested handle
         from_email: Sender email address
         from_name: Sender display name
         max_retries: Maximum retry attempts on transient failures
+        inline_qr_code: Optional pre-encoded data URI to use instead of fetching
+                        qr_code_url (e.g. a 1×1 transparent PNG for pass flow)
 
     Returns:
         dict with keys: success (bool), message_id (str), error (str)
@@ -90,8 +94,9 @@ def send_invitation_email(
         sib_api_v3_sdk.ApiClient(configuration)
     )
 
-    # Fetch and encode QR code as inline data URI
-    inline_qr_code = fetch_and_encode_qr_code(qr_code_url)
+    # Use caller-supplied inline QR, or fetch from URL
+    if inline_qr_code is None:
+        inline_qr_code = fetch_and_encode_qr_code(qr_code_url)
 
     # Prepare template parameters
     params = {
