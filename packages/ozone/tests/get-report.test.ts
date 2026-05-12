@@ -5,8 +5,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { ids } from '../src/lexicon/lexicons.js'
+import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('ozone-get-report', () => {
   let network: TestNetwork

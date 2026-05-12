@@ -4,8 +4,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { EventReverser } from '../src/daemon/event-reverser'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { EventReverser } from '../src/daemon/event-reverser.js'
+import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('expiring tags', () => {
   let network: TestNetwork
@@ -50,7 +50,6 @@ describe('expiring tags', () => {
   const createReverser = () =>
     new EventReverser(
       network.ozone.ctx.db,
-      // @ts-expect-error Error due to circular dependency with the dev-env package
       network.ozone.ctx.modService,
     )
 

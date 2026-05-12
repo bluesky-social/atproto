@@ -1,6 +1,6 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { formatActivityView, listReportActivities } from '../../report/activity'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon.js'
+import { formatActivityView, listReportActivities } from '../../report/activity.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.report.listActivities({

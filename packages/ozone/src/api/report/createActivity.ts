@@ -1,12 +1,12 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon.js'
 import {
   ActivityType,
   createReportActivity,
   formatActivityView,
-} from '../../report/activity'
-import { getAuthDid } from '../util'
+} from '../../report/activity.js'
+import { getAuthDid } from '../util.js'
 
 const VALID_ACTIVITY_TYPES = new Set<ActivityType>([
   'queueActivity',

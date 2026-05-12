@@ -1,10 +1,10 @@
 import { Selectable, sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db'
-import { ComputedAtIdKeyset, paginate } from '../db/pagination'
-import { ReportStat } from '../db/schema/report_stat'
-import { jsonb } from '../db/types'
-import { dbLogger } from '../logger'
+import { Database } from '../db.js'
+import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
+import { ReportStat } from '../db/schema/report_stat.js'
+import { jsonb } from '../db/types.js'
+import { dbLogger } from '../logger.js'
 
 /**
  * Grouped report types. Stats are computed per group rather than per individual report type.

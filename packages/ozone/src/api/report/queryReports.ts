@@ -1,8 +1,8 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { queryReports } from '../../mod-service/report'
-import { buildReportView, hydrateReportInfo } from '../../report/views'
-import { getPdsAccountInfos } from '../util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon.js'
+import { queryReports } from '../../mod-service/report.js'
+import { buildReportView, hydrateReportInfo } from '../../report/views.js'
+import { getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.report.queryReports({

@@ -1,6 +1,6 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { viewHistoricalStats } from '../../report/views'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon.js'
+import { viewHistoricalStats } from '../../report/views.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.report.getHistoricalStats({
