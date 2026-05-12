@@ -360,7 +360,7 @@ describe(deepTransform, () => {
 
       expect(() =>
         deepTransform(input, noop, { maxContainerLength: 50 }),
-      ).toThrow('Array is too long (length 51)')
+      ).toThrow('Array is too long')
     })
 
     it('allows arrays at the limit', () => {
@@ -383,7 +383,7 @@ describe(deepTransform, () => {
 
       expect(() =>
         deepTransform(input, noop, { maxContainerLength: 50 }),
-      ).toThrow('Object has too many entries (length 51)')
+      ).toThrow('Object has too many entries')
     })
 
     it('allows objects at the limit', () => {

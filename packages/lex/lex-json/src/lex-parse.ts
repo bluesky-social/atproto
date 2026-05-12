@@ -49,14 +49,6 @@ export function lexParse<T extends LexValue = LexValue>(
   // @NOTE see ./lex-parse.bench.ts for performance comparison of implementation
   // that uses a reviver function in JSON.parse vs. the current implementation.
 
-  // @NOTE Unlike JSON.stringify, JSON.parse can handle very deeply nested
-  // structures. jsonToLex will enforce nesting limits and throw if they are
-  // exceeded. The nesting level should always be limited by the input JSON
-  // string itself, so using "unlimited" nesting limits here should not pose a
-  // risk of infinite loops or excessive resource usage.
-  //
-  // JSON.parse('['.repeat(1_000_000) + ']'.repeat(1_000_000))
-
   return jsonToLex(JSON.parse(input), options) as T
 }
 

@@ -6,11 +6,6 @@
 // `deepTransform` and `jsonStringifyDeep`, which need to traverse and
 // transform deeply nested structures without hitting call stack limits.
 
-import {
-  MAX_CBOR_CONTAINER_LEN,
-  MAX_CBOR_NESTED_LEVELS,
-  MAX_CBOR_OBJECT_KEY_LEN,
-} from '@atproto/lex-data'
 import { validateMaxUtf8Length } from './validate-max-utf8-length'
 
 /** @internal */
@@ -85,25 +80,11 @@ export class Stack<TCustom = never> {
   public readonly root: StackFrame
 
   private readonly stack: (StackFrame | TCustom)[]
-  private readonly options: Required<StackOptions>
 
   constructor(
     input: readonly unknown[] | object,
-    {
-      maxNestedLevels = MAX_CBOR_NESTED_LEVELS,
-      maxContainerLength = MAX_CBOR_CONTAINER_LEN,
-      maxObjectKeyLen = MAX_CBOR_OBJECT_KEY_LEN,
-      initialNestedLevel = 0,
-    }: StackOptions = {},
+    private readonly options: Required<StackOptions>,
   ) {
-    // @NOTE this.options must be set before calling createFrame
-    this.options = {
-      maxNestedLevels,
-      maxContainerLength,
-      maxObjectKeyLen,
-      initialNestedLevel,
-    }
-
     const frame = this.createFrame(input)
     this.root = frame
     this.stack = [frame]
@@ -133,7 +114,7 @@ export class Stack<TCustom = never> {
 
     if (
       options.maxNestedLevels === Infinity &&
-      parent.frame.depth > 256 &&
+      parent.frame.depth > 0 &&
       parent.frame.depth % 256 === 0
     ) {
       // @NOTE Traversing the parentRef chain on every frame creation can add
@@ -142,7 +123,7 @@ export class Stack<TCustom = never> {
       // (as it is impossible to represent cycles in JSON / CBOR), we perform
       // this check only if there is a risk of creating an infinite loop (i.e.
       // when maxNestedLevels is Infinity), and only at certain intervals (every
-      // 100 frames) to avoid excessive overhead. Otherwise, we rely on the
+      // 256 frames) to avoid excessive overhead. Otherwise, we rely on the
       // nesting limit (see "if" statement above) to prevent infinite loops,
       // which should be sufficient for all data.
 
@@ -279,7 +260,7 @@ function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
       currentParent.frame.copy = currentParent.frame.input.slice()
       currentParent.frame.copy[currentParent.index] = currentCopy
     } else {
-      currentParent.frame.copy = Object.fromEntries(currentParent.frame.entries)
+      currentParent.frame.copy = { ...currentParent.frame.input }
       const key = currentParent.frame.entries[currentParent.index][0]
       currentParent.frame.copy[key] = currentCopy
     }

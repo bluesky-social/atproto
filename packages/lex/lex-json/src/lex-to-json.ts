@@ -46,12 +46,10 @@ export function lexToJson(
   options?: LexToJsonOptions,
 ): JsonValue {
   // Run "pnpm exec vitest bench --run lex-to-json" for performance comparison
-  // of recursive vs. iterative implementations of this function. The recursive
-  // implementation is more performant but fails at deep nesting levels (e.g. >
-  // 1,000). We use a hybrid approach where we start with the recursive
-  // implementation, but if we detect that the nesting level is too deep, we
-  // switch to the iterative implementation using deepTransform, which can
-  // handle arbitrary nesting levels.
+  // of recursive vs. iterative implementations of this function. deepTransform
+  // uses a hybrid approach where it starts with a recursive implementation, but
+  // if it detects that the nesting level is too deep, it switches to an
+  // iterative implementation using a stack.
 
   return deepTransform(input, encodeSpecialJsonObject, options) as JsonValue
 }

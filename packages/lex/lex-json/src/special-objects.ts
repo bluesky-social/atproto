@@ -1,7 +1,7 @@
-import { BlobRef, Cid, LexMap, LexValue, isCid } from '@atproto/lex-data'
+import { BlobRef, Cid, LexValue, isCid } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { JsonValue } from './json.js'
+import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
 export type SpecialJsonObjectOptions = {
@@ -31,7 +31,7 @@ export function encodeSpecialJsonObject(input: LexValue): JsonValue | void {
  * @internal
  */
 export function parseSpecialJsonObject(
-  input: LexMap,
+  input: JsonObject,
   options?: SpecialJsonObjectOptions,
 ): Cid | Uint8Array | BlobRef | void {
   // Hot path: use hints to avoid parsing when possible

@@ -83,170 +83,166 @@ export function deepTransform(
     initialNestedLevel = 0,
   }: DeepTransformOptions = {},
 ): unknown {
-  return deepTransformUnknown(input, replacer, {
+  return deepTransformRecursive(input, replacer, {
     strict,
     allowNonSafeIntegers,
     initialNestedLevel,
     maxNestedLevels,
     maxContainerLength,
     maxObjectKeyLen,
-    // Optimization: we use Math.min when creating the context so that the most
-    // common case (initialNestedLevel < maxRecursionDepth && initialNestedLevel
-    // < maxNestedLevels) can be checked with a single condition when processing
-    // nested structures (type "object"). This also allows deepTransformUnknown
-    // to rely on deepTransformIterative solely for maxNestedLevels checks,
-    // avoiding duplicated logic.
-    maxRecursionDepth:
-      maxRecursionDepth > maxNestedLevels ? maxNestedLevels : maxRecursionDepth,
+    maxRecursionDepth,
   })
 }
 
-type TransformationContext = DeepTransformOptions & {
+type TransformationContext = {
+  strict: boolean
+  /**
+   * initialNestedLevel is used to track the current nesting level during the
+   * transformation, and then used as option for the Stack when switching to the
+   * iterative implementation (this allows avoiding to create a new option
+   * object every time we switch to the iterative implementation)
+   */
   initialNestedLevel: number
+  allowNonSafeIntegers: boolean
   maxRecursionDepth: number
   maxContainerLength: number
+  maxNestedLevels: number
+  maxObjectKeyLen: number
 }
 
-function deepTransformUnknown(
+function deepTransformRecursive(
   input: unknown,
   replacer: (child: object, context: TransformationContext) => unknown,
   context: TransformationContext,
 ): unknown {
   switch (typeof input) {
-    case 'object': {
-      if (input === null) {
-        return input
-      }
-
-      if (context.initialNestedLevel >= context.maxRecursionDepth) {
-        // Switch to iterative implementation to handle deeper nesting levels
-        // without hitting recursive call stack limits.
-
-        // @NOTE max nested levels is checked in the iterative implementation
-        return deepTransformIterative(input, replacer, context)
-      }
-
-      if (Array.isArray(input)) {
-        return deepTransformArray(input, replacer, context)
-      } else {
-        return (
-          replacer(input, context) ??
-          deepTransformObject(input, replacer, context)
-        )
-      }
-    }
-    case 'number': {
+    case 'object':
+      if (input === null) return input
+      break
+    case 'number':
       if (context.allowNonSafeIntegers) return input
       if (Number.isSafeInteger(input)) return input
-
       throw new TypeError(`Invalid number (got ${input})`)
-    }
     case 'boolean':
     case 'string':
       return input
     default:
-      throw new TypeError(`Invalid JSON value of type ${typeof input}`)
-  }
-}
-
-function deepTransformArray(
-  input: readonly unknown[],
-  replacer: (child: object, context: TransformationContext) => unknown,
-  context: TransformationContext,
-): readonly unknown[] {
-  if (input.length > context.maxContainerLength) {
-    throw new TypeError(`Array is too long (length ${input.length})`)
+      throw new TypeError(`Invalid ${typeof input} input`)
   }
 
-  if (!input.length) {
-    return input
+  // "input" is an object (or array)
+
+  // Keep a reference to the initial nested level at which we started processing
+  // this input, so that we can restore it after processing this input and its
+  // children. This is more efficient than "context.initialNestedLevel++" and
+  // "context.initialNestedLevel--" around the recursive calls as it saves the
+  // JS engine from having to read the value before updating it.
+  const { initialNestedLevel } = context
+
+  if (initialNestedLevel > context.maxNestedLevels) {
+    throw new TypeError(`Input is too deeply nested`)
+  } else if (initialNestedLevel >= context.maxRecursionDepth) {
+    // Switch to iterative implementation to handle deeper nesting levels
+    // without hitting recursive call stack limits.
+    return deepTransformIterative(input, replacer, context)
   }
 
-  context.initialNestedLevel++
+  // @NOTE In order to avoid un-necessary increasing the call stack depth, we
+  // inline the logic for processing arrays and plain objects instead of
+  // creating dedicated functions. This allows us to only increase the call
+  // stack depth for actual nested structures, allowing us to handle deeper
+  // nesting levels with the recursive implementation before switching to the
+  // (slower) iterative one.
 
-  // Lazily copy value
-  let copy: unknown[] | undefined
-
-  for (let index = 0; index < input.length; index++) {
-    const inputItem = input[index]
-    const item = deepTransformUnknown(inputItem, replacer, context)
-    if (item !== inputItem) {
-      copy ??= [...input]
-      copy[index] = item
-    }
-  }
-
-  context.initialNestedLevel--
-
-  return copy ?? input
-}
-
-function deepTransformObject(
-  input: Readonly<object>,
-  replacer: (child: object, context: TransformationContext) => unknown,
-  context: TransformationContext,
-): unknown {
-  const entries = Object.entries(input)
-
-  if (entries.length > context.maxContainerLength) {
-    throw new TypeError(
-      `Object has too many entries (length ${entries.length})`,
-    )
-  }
-
-  if (!entries.length) {
-    return input
-  }
-
-  context.initialNestedLevel++
-
-  // Lazily copy value
-  let copy: { [key: string]: unknown } | undefined = undefined
-
-  for (const [key, value] of entries) {
-    // Prevent prototype pollution
-    if (key === '__proto__') {
-      throw new TypeError(`Forbidden "__proto__" key`)
+  if (Array.isArray(input)) {
+    if (input.length > context.maxContainerLength) {
+      throw new TypeError(`Array is too long (length ${input.length})`)
     }
 
-    if (!validateMaxUtf8Length(key, context.maxObjectKeyLen)) {
-      const keyStr = `${JSON.stringify(key.slice(0, 10)).slice(0, -1)}\u2026"`
-      throw new TypeError(`Object key is too long (${keyStr})`)
+    if (!input.length) {
+      return input
     }
 
-    // Ignore (strip) undefined values
-    if (value === undefined) {
-      copy ??= { ...input }
-      delete copy[key]
-    } else {
-      const converted = deepTransformUnknown(value, replacer, context)
-      if (converted !== value) {
-        copy ??= { ...input }
-        copy[key] = converted
+    context.initialNestedLevel = initialNestedLevel + 1
+
+    // Lazily copy value
+    let copy: unknown[] | undefined
+
+    for (let index = 0; index < input.length; index++) {
+      const value = input[index]
+
+      const valueTransformed = deepTransformRecursive(value, replacer, context)
+      if (valueTransformed !== value) {
+        copy ??= [...input]
+        copy[index] = valueTransformed
       }
     }
+
+    context.initialNestedLevel = initialNestedLevel
+
+    return copy ?? input
+  } else {
+    // Value is an object, apply replacer to it before traversing into it.
+    const valueTransformed = replacer(input, context)
+    if (valueTransformed !== undefined) {
+      return valueTransformed
+    }
+
+    context.initialNestedLevel = initialNestedLevel + 1
+
+    // Lazily copy value
+    let copy: { [key: string]: unknown } | undefined = undefined
+    let count = 0
+
+    for (const key in input) {
+      count++
+
+      // Prevent prototype pollution
+      if (key === '__proto__') {
+        throw new TypeError(`Forbidden "__proto__" key`)
+      }
+
+      if (count > context.maxContainerLength) {
+        throw new TypeError(`Object has too many entries`)
+      }
+
+      if (context.maxObjectKeyLen !== Infinity) {
+        if (!validateMaxUtf8Length(key, context.maxObjectKeyLen)) {
+          const keyStr = `${JSON.stringify(key.slice(0, 10)).slice(0, -1)}\u2026"`
+          throw new TypeError(`Object key is too long (${keyStr})`)
+        }
+      }
+
+      // Ignore (strip) undefined values
+      const value = (input as { [key: string]: unknown })[key]
+      if (value === undefined) {
+        copy ??= { ...input }
+        delete copy[key]
+      } else {
+        const valueTransformed = deepTransformRecursive(
+          value,
+          replacer,
+          context,
+        )
+        if (valueTransformed !== value) {
+          copy ??= { ...input }
+          copy[key] = valueTransformed
+        }
+      }
+    }
+
+    context.initialNestedLevel = initialNestedLevel
+
+    return copy ?? input
   }
-
-  context.initialNestedLevel--
-
-  return copy ?? input
 }
 
 function deepTransformIterative(
-  input: unknown,
+  input: object,
   replacer: (child: object, context: TransformationContext) => unknown,
-  options: TransformationContext,
+  context: TransformationContext,
 ): unknown {
-  const inputValue = transformValue(input, replacer, options)
-
-  if (inputValue !== NESTED) {
-    if (inputValue === OMIT) {
-      throw new TypeError('Invalid undefined value')
-    }
-    return inputValue
-  }
-
-  const stack = new Stack(input as object, options)
+  const stack = new Stack(input, context)
 
   for (const frame of stack) {
     if (isArrayFrame(frame)) {
@@ -255,22 +251,18 @@ function deepTransformIterative(
       for (let index = 0; index < input.length; index++) {
         const value = input[index]
 
-        const result = transformValue(value, replacer, options)
-        if (result === NESTED) {
+        const valueTransformed = transformValue(value, replacer, context)
+        if (valueTransformed === NESTED) {
           stack.pushNested(value as object, { frame, index })
-        } else if (result === OMIT) {
+        } else if (valueTransformed === OMIT) {
           // Undefined values in arrays are not allowed by lex-data.
           throw new TypeError(`Invalid undefined value`)
+        } else if (valueTransformed !== value) {
+          // If the replacer returned a different value, store it in a copy.
+          const copy = getCopy(frame)
+          copy[index] = valueTransformed
         } else {
-          // Leaf value
-          if (result !== value) {
-            // If the replacer returned a different value, we need to obtain a
-            // copy of the parent tree, and update the copy with the new value.
-            const copy = getCopy(frame)
-            copy[index] = result
-          } else {
-            // The value is unchanged, so we can keep the original input value.
-          }
+          // Leaf value that was not transformed, we can keep it as is.
         }
       }
     } else {
@@ -278,22 +270,21 @@ function deepTransformIterative(
       const { entries } = frame
 
       for (let index = 0; index < entries.length; index++) {
-        const value = entries[index][1]
-        const result = transformValue(value, replacer, options)
-        if (result === NESTED) {
+        const [key, value] = entries[index]
+
+        const valueTransformed = transformValue(value, replacer, context)
+        if (valueTransformed === NESTED) {
           stack.pushNested(value as object, { frame, index })
-        } else if (result === OMIT) {
+        } else if (valueTransformed === OMIT) {
           // Omit this property (undefined values should be removed)
           const copy = getCopy(frame)
-          delete copy[entries[index][0]]
+          delete copy[key]
+        } else if (valueTransformed !== value) {
+          // If the replacer returned a different value, store it in a copy.
+          const copy = getCopy(frame)
+          copy[key] = valueTransformed
         } else {
-          // Leaf value. If the replacer returned a different value, we need to
-          // create a copy. Otherwise we can keep the original input value since
-          // it is unchanged.
-          if (result !== value) {
-            const copy = getCopy(frame)
-            copy[entries[index][0]] = result
-          }
+          // Leaf value that was not transformed, we can keep it as is.
         }
       }
     }
@@ -305,25 +296,25 @@ function deepTransformIterative(
 function transformValue(
   value: unknown,
   replacer: (child: object, context: TransformationContext) => unknown,
-  options: TransformationContext,
+  context: TransformationContext,
 ): typeof NESTED | typeof OMIT | unknown {
   switch (typeof value) {
     case 'object': {
       if (value === null) return value
       if (Array.isArray(value)) return NESTED
 
-      const transformed = replacer(value, options)
-      if (transformed !== undefined) return transformed
+      const valueTransformed = replacer(value, context)
+      if (valueTransformed !== undefined) {
+        return valueTransformed
+      }
 
       // Input is an object or array that needs further processing.
       return NESTED
     }
-    case 'number': {
-      if (options.allowNonSafeIntegers ?? true) return value
+    case 'number':
+      if (context.allowNonSafeIntegers) return value
       if (Number.isSafeInteger(value)) return value
-
       throw new TypeError(`Invalid number (got ${value})`)
-    }
     case 'boolean':
     case 'string':
       return value

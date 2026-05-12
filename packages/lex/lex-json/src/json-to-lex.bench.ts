@@ -1,8 +1,8 @@
 import { bench, describe } from 'vitest'
-import { LexMap, LexValue, utf8Len } from '@atproto/lex-data'
-import { DeepTransformOptions, deepTransform } from './deep-transform.js'
+import { LexMap, LexValue } from '@atproto/lex-data'
 import { JsonToLexOptions, jsonToLex } from './json-to-lex.js'
 import { JsonObject, JsonValue } from './json.js'
+import { validateMaxUtf8Length } from './lib/validate-max-utf8-length.js'
 import { parseSpecialJsonObject } from './special-objects.js'
 
 // This benchmark compares the performance of two implementations of
@@ -89,67 +89,52 @@ describe('large structure', () => {
 })
 
 describe('deeply nested structure', () => {
-  type NestedObject = { level: number; nested?: NestedObject }
-  const nestedObject: NestedObject = { level: 0 }
-  let current: NestedObject = nestedObject
-  for (let i = 1; i <= 10_000; i++) {
-    current.nested = { level: i }
-    current = current.nested
+  let current: JsonValue = { level: 0 }
+
+  // Then deeply wrap the value in nested objects to create a deep structure to
+  // show it fails in the recursive implementation but not in the iterative one.
+  for (let i = 1; i <= 50_000; i++) {
+    current = { level: i, nested: current }
+
+    if (i === 10_000) {
+      current.bytes = { $bytes: 'dGVzdA==' }
+    }
   }
 
-  benchData(nestedObject)
+  benchData(current)
 })
 
+/**
+ * Benchmarks the performance of the `jsonToLex` function against a pure
+ * recursive implementation (that does not perform depth checks).
+ */
 function benchData(data: JsonValue) {
+  const options = {
+    strict: true,
+    allowNonSafeIntegers: false,
+    maxContainerLength: 1000,
+    maxNestedLevels: 10_000,
+    maxObjectKeyLen: 100,
+  }
+
   bench(jsonToLex, () => {
-    jsonToLex(data, {
-      strict: true,
-      allowNonSafeIntegers: false,
-      maxContainerLength: 1000,
-      maxNestedLevels: 10_000,
-      maxObjectKeyLen: 100,
-    })
+    jsonToLex(data, options)
   })
 
-  bench(jsonToLexIterative, () => {
-    jsonToLexIterative(data, {
-      strict: true,
-      allowNonSafeIntegers: false,
-      maxContainerLength: 1000,
-      maxNestedLevels: 10_000,
-      maxObjectKeyLen: 100,
-      maxRecursionDepth: 0,
-    })
-  })
-
-  // Useful as baseline but skipped since it is not the same implementation and
-  // can be misleading to compare against.
-  bench.skip(jsonToLexRecursiveNoCheck, () => {
-    jsonToLexRecursiveNoCheck(data, {
-      strict: true,
-      allowNonSafeIntegers: false,
-      maxContainerLength: 1000,
-      maxNestedLevels: 10_000,
-      maxObjectKeyLen: 100,
-    })
+  bench(jsonToLexRecursive, () => {
+    jsonToLexRecursive(data, options)
   })
 }
 
-function jsonToLexIterative(
-  input: JsonValue,
-  options: DeepTransformOptions,
-): LexValue {
-  return deepTransform(input, parseSpecialJsonObject, options) as LexValue
-}
-
-function jsonToLexRecursiveNoCheck(
+function jsonToLexRecursive(
   value: JsonValue,
   options?: JsonToLexOptions,
 ): LexValue {
   switch (typeof value) {
     case 'object': {
       if (value === null) return null
-      if (Array.isArray(value)) return jsonArrayToLexNoCheck(value, options)
+      if (Array.isArray(value))
+        return jsonArrayToLexNoDepthCheck(value, options)
       return (
         parseSpecialJsonObject(value, options) ??
         jsonObjectToLexMapNoCheck(value, options)
@@ -167,25 +152,23 @@ function jsonToLexRecursiveNoCheck(
   }
 }
 
-function jsonArrayToLexNoCheck(
+function jsonArrayToLexNoDepthCheck(
   input: JsonValue[],
   options?: JsonToLexOptions,
 ): LexValue[] {
   // Lazily copy value
   let copy: LexValue[] | undefined
 
-  if (
-    options?.maxContainerLength != null &&
-    input.length > options.maxContainerLength
-  ) {
+  const maxContainerLength = options?.maxContainerLength
+  if (maxContainerLength != null && input.length > maxContainerLength) {
     throw new TypeError(
-      `Array length ${input.length} exceeds maximum of ${options.maxContainerLength}`,
+      `Array length ${input.length} exceeds maximum of ${maxContainerLength}`,
     )
   }
 
   for (let i = 0; i < input.length; i++) {
     const inputItem = input[i]
-    const item = jsonToLexRecursiveNoCheck(inputItem, options)
+    const item = jsonToLexRecursive(inputItem, options)
     if (item !== inputItem) {
       copy ??= Array.from(input)
       copy[i] = item
@@ -200,36 +183,32 @@ function jsonObjectToLexMapNoCheck(
 ): LexMap {
   // Lazily copy value
   let copy: LexMap | undefined = undefined
-  const entries = Object.entries(input)
-
-  if (
-    options?.maxContainerLength != null &&
-    entries.length > options.maxContainerLength
-  ) {
-    throw new TypeError(
-      `Object has ${entries.length} keys, which exceeds maximum of ${options.maxContainerLength}`,
-    )
-  }
 
   const maxObjectKeyLen = options?.maxObjectKeyLen
+  const maxContainerLength = options?.maxContainerLength
 
-  for (const [key, jsonValue] of entries) {
+  let count = 0
+
+  for (const key in input) {
+    count++
+
     // Prevent prototype pollution
     if (key === '__proto__') {
       throw new TypeError('Invalid key: __proto__')
     }
 
+    if (maxContainerLength != null && count > maxContainerLength) {
+      throw new TypeError(`Object has too many entries`)
+    }
+
     if (maxObjectKeyLen != null) {
-      if (
-        // Optimized version of "utf8Len(key) > maxObjectKeyLen" that only
-        // computes utf8Len if needed.
-        key.length * 3 > maxObjectKeyLen &&
-        (key.length > maxObjectKeyLen * 3 || utf8Len(key) > maxObjectKeyLen)
-      ) {
+      if (!validateMaxUtf8Length(key, maxObjectKeyLen)) {
         const keyStr = `${JSON.stringify(key.slice(0, 10)).slice(0, -1)}\u2026"`
         throw new TypeError(`Object key is too long (${keyStr})`)
       }
     }
+
+    const jsonValue = input[key]
 
     // Ignore (strip) undefined values
     if (jsonValue === undefined) {
@@ -238,7 +217,7 @@ function jsonObjectToLexMapNoCheck(
       continue
     }
 
-    const value = jsonToLexRecursiveNoCheck(jsonValue!, options)
+    const value = jsonToLexRecursive(jsonValue!, options)
     if (value !== jsonValue) {
       copy ??= { ...input }
       copy[key] = value
