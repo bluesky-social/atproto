@@ -88,7 +88,7 @@ function AccountSessionCard({
         title: t`Successfully removed device`,
         duration: 2e3,
       })
-    } catch (e) {
+    } catch {
       notify({
         variant: 'error',
         title: t`Failed to remove device`,

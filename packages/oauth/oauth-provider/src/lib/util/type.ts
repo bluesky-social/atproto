@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<{
   [K in keyof (V & T)]: K extends keyof V

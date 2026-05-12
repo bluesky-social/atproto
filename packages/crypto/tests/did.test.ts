@@ -18,7 +18,9 @@ describe('secp256k1 did:key', () => {
       expect(didKey).toEqual(vector.id)
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
       expect(jwtAlg).toBe('ES256K')
-      expect(uint8arrays.equals(keyBytes, keypair.publicKeyBytes())).toBeTruthy
+      expect(
+        uint8arrays.equals(keyBytes, keypair.publicKeyBytes()),
+      ).toBeTruthy()
     }
   })
 })
@@ -41,7 +43,9 @@ describe('P-256 did:key', () => {
       expect(didKey).toEqual(vector.id)
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
       expect(jwtAlg).toBe('ES256')
-      expect(uint8arrays.equals(keyBytes, keypair.publicKeyBytes())).toBeTruthy
+      expect(
+        uint8arrays.equals(keyBytes, keypair.publicKeyBytes()),
+      ).toBeTruthy()
     }
   })
 })

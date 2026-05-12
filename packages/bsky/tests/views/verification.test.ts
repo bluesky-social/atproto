@@ -252,10 +252,10 @@ describe('verification views', () => {
         expect(profile.verification).toStrictEqual(getExpected())
 
         const urlPrefixes = getExpectedUrisPrefixes()
-        profile.verification &&
-          expect(urlPrefixes.length).toBe(
-            profile.verification.verifications.length,
-          )
+
+        expect(urlPrefixes.length).toBe(
+          profile.verification!.verifications.length,
+        )
         urlPrefixes.forEach((prefix, i) => {
           assert(profile.verification)
           expect(

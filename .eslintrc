@@ -51,14 +51,10 @@
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_|^err|^error|^e$|^cause$",
-        "ignoreRestSiblings": true,
-        "reportUsedIgnorePattern": false
+        "caughtErrorsIgnorePattern": "^_|^err$|^error$",
+        "ignoreRestSiblings": true
       }
     ],
-    "@typescript-eslint/no-unused-expressions": "off",
-    "@typescript-eslint/no-require-imports": "off",
-    "@typescript-eslint/no-empty-object-type": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -79,8 +75,10 @@
       "env": { "jest": true }
     },
     {
-      "files": ["*.js", "*.cjs"],
-      "rules": {}
+      "files": ["*.js", "*.cjs", "*.cts"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off"
+      }
     },
     {
       "files": ["**/*.test.ts", "**/tests/**/*.ts"],
@@ -94,9 +92,8 @@
           {
             "argsIgnorePattern": "^_",
             "varsIgnorePattern": "^_",
-            "caughtErrorsIgnorePattern": "^_|^err|^error|^e$|^cause$",
-            "ignoreRestSiblings": true,
-            "reportUsedIgnorePattern": false
+            "caughtErrorsIgnorePattern": "^_|^err$|^error$",
+            "ignoreRestSiblings": true
           }
         ]
       }
