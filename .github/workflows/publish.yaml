@@ -26,11 +26,6 @@ jobs:
           cache: pnpm
           node-version-file: '.nvmrc'
           registry-url: 'https://registry.npmjs.org'
-      # Temporary workaround for an issue with Node.js v22
-      # https://github.com/npm/cli/issues/9151
-      # https://github.com/npm/cli/pull/9152
-      - run: npm install --global npm@11.11.1
-      - run: npm install --global npm@latest
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
@@ -38,7 +33,7 @@ jobs:
         uses: changesets/action@v1
         id: changesets
         with:
-          publish: pnpm release
+          publish: pnpm run publish:ci
           version: pnpm run version-packages
           commit: 'Version packages'
           title: 'Version packages'

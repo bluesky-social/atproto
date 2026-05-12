@@ -43,7 +43,7 @@
     "test:withFlags": "pnpm run test --",
     "bench": "vitest bench --run",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish",
+    "publish:ci": "pnpm run build && changeset tag && pnpm publish -r --no-git-checks --access public",
     "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
