@@ -1,5 +1,8 @@
-import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
-import { ConflictingQueueError } from '@atproto/api/dist/client/types/tools/ozone/queue/createQueue'
+import {
+  AtpAgent,
+  COM_ATPROTO_MODERATION,
+  ToolsOzoneQueueCreateQueue,
+} from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { AtUri, AtUriString } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index.js'
@@ -127,7 +130,7 @@ export async function generateMockSetup(env: TestNetwork) {
         headers: await adminHeaders('tools.ozone.queue.createQueue'),
       })
     } catch (err) {
-      if (!(err instanceof ConflictingQueueError)) {
+      if (!(err instanceof ToolsOzoneQueueCreateQueue.ConflictingQueueError)) {
         throw err
       }
     }

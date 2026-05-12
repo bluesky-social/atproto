@@ -1,8 +1,8 @@
 ---
-'@atproto/bsky': minor
-'@atproto/bsync': minor
-'@atproto/ozone': minor
-'@atproto/pds': minor
+'@atproto/bsky': patch
+'@atproto/bsync': patch
+'@atproto/ozone': patch
+'@atproto/pds': patch
 '@atproto/api': minor
 '@atproto/aws': minor
 '@atproto/common': minor

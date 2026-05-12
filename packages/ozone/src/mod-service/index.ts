@@ -49,6 +49,7 @@ import {
 import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses.js'
 import { httpLogger as log } from '../logger.js'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util.js'
+import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
@@ -64,6 +65,7 @@ import {
 import {
   ModEventType,
   ModerationEventRow,
+  ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
   ReporterStats,
@@ -378,6 +380,29 @@ export class ModerationService {
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
   }
 
+  async getEventsByIds(ids: number[]): Promise<ModerationEventRowWithHandle[]> {
+    if (!ids.length) return []
+
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute()
+
+    if (!result.length) return []
+
+    const infos = await this.views.getAccoutInfosByDid([
+      ...result.map((row) => row.subjectDid),
+      ...result.map((row) => row.createdBy),
+    ])
+
+    return result.map((r) => ({
+      ...r,
+      creatorHandle: infos.get(r.createdBy)?.handle,
+      subjectHandle: infos.get(r.subjectDid)?.handle,
+    }))
+  }
+
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
@@ -593,6 +618,13 @@ export class ModerationService {
       if (isReportingMuted) {
         meta.isReporterMuted = true
       }
+      // Also capture whether the subject was muted at event-creation time, so
+      // the queue-router daemon can populate report.isMuted later without
+      // racing against subsequent mute/unmute changes.
+      const isSubjectMuted = await this.isSubjectMuted(subject.did)
+      if (isSubjectMuted) {
+        meta.isSubjectMuted = true
+      }
     }
 
     const subjectInfo = subject.info()
@@ -668,6 +700,31 @@ export class ModerationService {
       modEvent,
       subject.blobCids,
     )
+
+    // Manage expiring tag rows for temporary tags
+    if (isModEventTag(event)) {
+      if (event.durationInHours && event.add.length > 0) {
+        const expiresAt = addHoursToDate(
+          event.durationInHours,
+          createdAt,
+        ).toISOString()
+        await insertExpiringTags(this.db, {
+          eventId: modEvent.id,
+          did: subjectInfo.subjectDid,
+          recordPath: subjectInfo.subjectUri ?? '',
+          tags: event.add,
+          expiresAt,
+          createdBy,
+        })
+      }
+      if (event.remove.length > 0) {
+        await removeExpiringTags(this.db, {
+          did: subjectInfo.subjectDid,
+          recordPath: subjectInfo.subjectUri ?? '',
+          tags: event.remove,
+        })
+      }
+    }
 
     if (isAgeAssurancePurgeEvent(event)) {
       await this.purgeAgeAssuranceEvents(subjectInfo.subjectDid)
@@ -1012,7 +1069,7 @@ export class ModerationService {
       modTool,
     } = info
 
-    const result = await this.logEvent({
+    return await this.logEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: reasonType,
@@ -1023,8 +1080,6 @@ export class ModerationService {
       createdAt,
       modTool,
     })
-
-    return result
   }
 
   async getSubjectStatuses({
@@ -1396,6 +1451,19 @@ export class ModerationService {
       .where('did', '=', did)
       .where('recordPath', '=', '')
       .where('muteReportingUntil', '>', new Date().toISOString())
+      .select(sql`true`.as('status'))
+      .executeTakeFirst()
+
+    return !!result
+  }
+
+  // Check if a subject (the account being reported) has an active mute
+  async isSubjectMuted(did: string) {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('muteUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
 

@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db.js'
+import { Database } from '../db/index.js'
 import { Member } from '../lexicon/types/tools/ozone/team/defs.js'
 import {
   AlreadyInTargetState,

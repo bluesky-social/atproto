@@ -1,6 +1,6 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon.js'
+import { Server } from '../../lexicon/index.js'
 
 const MAX_REPORTS = 5000
 
