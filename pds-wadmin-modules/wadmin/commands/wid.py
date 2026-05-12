@@ -345,6 +345,81 @@ def unlink_command(ctx, did: str, jid: str):
         print_warning(result["warning"])
 
 
+@wid.command(name="connect")
+@click.argument("jid")
+@click.option("--handle", default=None, help="Preferred handle for the new account")
+@click.pass_context
+def connect_command(ctx, jid: str, handle: Optional[str]):
+    """Pre-authorize a WID (JID) to create an account without an invite code.
+
+    Inserts a pending invitation row tied to the given JID. When the user
+    logs in with that WID via the onboarding QR flow, the invitation is
+    matched by JID and the invite-code requirement is bypassed.
+
+    The JID must not already be linked to an existing account.
+    """
+    config: Config = ctx.obj["config"]
+
+    # Validate JID to prevent SQL injection (local@domain, alphanumeric + hyphens)
+    if not re.match(r'^[a-zA-Z0-9_\-]+@[a-zA-Z0-9_\-\.]+$', jid):
+        print_error("Invalid JID format — expected <local>@<domain> (alphanumeric, hyphens, dots only)")
+        raise click.Abort()
+
+    jid_local = jid.split("@")[0]
+
+    # Step 1: check JID is not already linked to an account
+    check_linked = exec_sqlite(
+        config,
+        f"SELECT did FROM neuro_identity_link "
+        f"WHERE jid LIKE '{jid_local}@%' OR jid = '{jid_local}' LIMIT 1;"
+    )
+    if "(no rows)" not in check_linked:
+        print_error(
+            "JID is already linked to an existing account",
+            check_linked.strip(),
+        )
+        raise click.Abort()
+
+    # Step 2: check no existing active pending invitation for this JID
+    check_pending = exec_sqlite(
+        config,
+        f"SELECT id, status, expires_at FROM pending_invitations "
+        f"WHERE (jid LIKE '{jid_local}@%' OR jid = '{jid_local}') "
+        f"AND status IN ('pending','email_pending','email_sent','email_failed') "
+        f"AND expires_at > datetime('now') LIMIT 1;"
+    )
+    if "(no rows)" not in check_pending:
+        print_error(
+            "An active pending invitation already exists for this JID",
+            check_pending.strip(),
+        )
+        raise click.Abort()
+
+    # Step 3: insert pending invitation row
+    placeholder_email = f"wid-connect-{jid_local}@wid.local"
+    handle_sql = f"'{handle}'" if handle else "NULL"
+    onboarding_url = config.pds_host.rstrip("/") + "/onboarding"
+
+    exec_sqlite(
+        config,
+        f"INSERT INTO pending_invitations "
+        f"(email, email_hash, jid, onboarding_url, preferred_handle, "
+        f"invitation_timestamp, created_at, expires_at, status, email_attempt_count) "
+        f"VALUES ("
+        f"'{placeholder_email}', '', '{jid}', '{onboarding_url}', {handle_sql}, "
+        f"CAST(strftime('%s','now') AS INTEGER), datetime('now'), "
+        f"datetime('now','+30 days'), 'pending', 0);"
+    )
+
+    print_success(f"WID connected — {jid} is now authorized to create an account")
+    if handle:
+        console.print(f"[cyan]Preferred handle:[/cyan] {handle}", highlight=False)
+    console.print(f"[cyan]Expires:[/cyan] 30 days from now", highlight=False)
+    console.print(f"[cyan]Onboarding URL:[/cyan] {onboarding_url}", highlight=False)
+    console.print()
+    console.print("[dim]The user can now open the above URL and scan the QR code with their WID app.[/dim]")
+
+
 @wid.command(name="links")
 @click.argument("jid_or_did")
 @click.pass_context
