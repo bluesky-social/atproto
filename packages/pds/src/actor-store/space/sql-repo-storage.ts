@@ -26,8 +26,9 @@ export class SqlRepoStorage implements SpaceRepoStorage {
   async listRecords(
     collection: string,
   ): Promise<{ rkey: string; record: RepoRecord }[]> {
-    const rows = await this.txn.listRecords(this.space, collection, {
+    const rows = await this.txn.listRecords(this.space, {
       limit: 10000,
+      collection,
     })
     const results: { rkey: string; record: RepoRecord }[] = []
     for (const row of rows) {

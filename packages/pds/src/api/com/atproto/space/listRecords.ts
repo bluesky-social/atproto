@@ -1,5 +1,6 @@
 import { NsidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { formatListCursor } from '../../../../actor-store/space/reader'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
 
@@ -26,54 +27,29 @@ export default function (server: Server, ctx: AppContext) {
         repoDid = repo ?? auth.credentials.did
       }
 
-      if (collection) {
-        const records = await ctx.actorStore.read(repoDid, (store) =>
-          store.space.listRecords(space, collection, {
-            limit: limit ?? 50,
-            cursor,
-            reverse,
-          }),
-        )
-        return {
-          encoding: 'application/json' as const,
-          body: {
-            cursor: records.at(-1)?.rkey,
-            records: records.map((r) => ({
-              collection,
-              rkey: r.rkey,
-              cid: r.cid,
-            })),
-          },
-        }
-      }
-
-      // List across all collections
-      const collections = await ctx.actorStore.read(repoDid, (store) =>
-        store.space.listCollections(space),
+      const records = await ctx.actorStore.read(repoDid, (store) =>
+        store.space.listRecords(space, {
+          limit: limit ?? 50,
+          cursor,
+          reverse,
+          collection,
+        }),
       )
-      const allRecords: {
-        collection: NsidString
-        rkey: string
-        cid: string
-      }[] = []
-      for (const col of collections) {
-        const records = await ctx.actorStore.read(repoDid, (store) =>
-          store.space.listRecords(space, col, {
-            limit: limit ?? 50,
-          }),
-        )
-        for (const r of records) {
-          allRecords.push({
-            collection: col as NsidString,
-            rkey: r.rkey,
-            cid: r.cid,
-          })
-        }
-      }
+
+      const last = records.at(-1)
+      const nextCursor = last
+        ? formatListCursor(last.collection, last.rkey)
+        : undefined
+
       return {
         encoding: 'application/json' as const,
         body: {
-          records: allRecords,
+          cursor: nextCursor,
+          records: records.map((r) => ({
+            collection: r.collection as NsidString,
+            rkey: r.rkey,
+            cid: r.cid,
+          })),
         },
       }
     },

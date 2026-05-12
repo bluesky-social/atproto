@@ -3,6 +3,22 @@ import { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import { ActorDb } from '../db'
 
+// Cursor is `${collection}/${rkey}`. Parser is lenient — returns null for a
+// malformed cursor so callers can choose to ignore it instead of 500ing.
+const parseListCursor = (
+  cursor: string,
+): { collection: string; rkey: string } | null => {
+  const slash = cursor.indexOf('/')
+  if (slash < 0) return null
+  const collection = cursor.slice(0, slash)
+  const rkey = cursor.slice(slash + 1)
+  if (!collection || !rkey) return null
+  return { collection, rkey }
+}
+
+export const formatListCursor = (collection: string, rkey: string): string =>
+  `${collection}/${rkey}`
+
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
@@ -93,26 +109,45 @@ export class SpaceReader {
 
   async listRecords(
     space: string,
-    collection: string,
-    opts: { limit: number; cursor?: string; reverse?: boolean },
-  ): Promise<{ rkey: string; cid: string }[]> {
-    const { limit, cursor, reverse } = opts
+    opts: {
+      limit: number
+      cursor?: string
+      reverse?: boolean
+      collection?: string
+    },
+  ): Promise<{ collection: string; rkey: string; cid: string }[]> {
+    const { limit, cursor, reverse, collection } = opts
+    // Pagination is ordered by (collection, rkey) so a single cursor works
+    // across collections. Cursor format: `${collection}/${rkey}`.
+    const direction = reverse ? 'asc' : 'desc'
     let builder = this.db.db
       .selectFrom('space_record')
-      .select(['rkey', 'cid'])
+      .select(['collection', 'rkey', 'cid'])
       .where('space', '=', space)
-      .where('collection', '=', collection)
-      .orderBy('rkey', reverse ? 'asc' : 'desc')
+      .orderBy('collection', direction)
+      .orderBy('rkey', direction)
       .limit(limit)
+    if (collection) {
+      builder = builder.where('collection', '=', collection)
+    }
     if (cursor !== undefined) {
-      if (reverse) {
-        builder = builder.where('rkey', '>', cursor)
-      } else {
-        builder = builder.where('rkey', '<', cursor)
+      const cursorKey = parseListCursor(cursor)
+      if (cursorKey) {
+        // Lexicographic tuple comparison: (collection, rkey) </> cursor.
+        // Written with `sql` because not all kysely versions expose tuple
+        // expressions in the typed builder.
+        const op = reverse ? sql`>` : sql`<`
+        builder = builder.where(
+          sql`("collection", "rkey") ${op} (${cursorKey.collection}, ${cursorKey.rkey})`,
+        )
       }
     }
     const rows = await builder.execute()
-    return rows.map((r) => ({ rkey: r.rkey, cid: r.cid }))
+    return rows.map((r) => ({
+      collection: r.collection,
+      rkey: r.rkey,
+      cid: r.cid,
+    }))
   }
 
   async listMembers(
