@@ -9941,6 +9941,19 @@ export const schemaDict = {
         type: 'string',
         knownValues: ['request', 'accepted'],
       },
+      convoRef: {
+        type: 'object',
+        required: ['did', 'convoId'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
       messageRef: {
         type: 'object',
         required: ['did', 'messageId', 'convoId'],
