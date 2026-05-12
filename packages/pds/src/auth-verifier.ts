@@ -347,59 +347,67 @@ export class AuthVerifier {
     }
   }
 
-  public spaceCredentialAuth: MethodAuthVerifier<SpaceCredentialOutput> = async (ctx) => {
-    setAuthHeaders(ctx.res)
-    const jwtStr = bearerTokenFromReq(ctx.req)
-    if (!jwtStr) {
-      throw new AuthRequiredError('missing space credential', 'MissingCredential')
+  public spaceCredentialAuth: MethodAuthVerifier<SpaceCredentialOutput> =
+    async (ctx) => {
+      setAuthHeaders(ctx.res)
+      const jwtStr = bearerTokenFromReq(ctx.req)
+      if (!jwtStr) {
+        throw new AuthRequiredError(
+          'missing space credential',
+          'MissingCredential',
+        )
+      }
+
+      try {
+        // Parse the JWT to extract the issuer (space owner DID) before verification
+        // We need to resolve the issuer's DID doc to get the public key
+        const parts = jwtStr.split('.')
+        if (parts.length !== 3) {
+          throw new AuthRequiredError('invalid space credential format')
+        }
+        const payloadJson = Buffer.from(parts[1], 'base64url').toString()
+        const payload = JSON.parse(payloadJson)
+        const iss = payload.iss
+        if (!iss) {
+          throw new AuthRequiredError('missing issuer in space credential')
+        }
+
+        // Resolve the space owner's DID to get their signing key
+        const didDoc = await this.idResolver.did.resolve(iss)
+        if (!didDoc) {
+          throw new AuthRequiredError('could not resolve space owner DID')
+        }
+        const parsedKey = getVerificationMaterial(didDoc, 'atproto')
+        if (!parsedKey) {
+          throw new AuthRequiredError(
+            'missing or bad key in space owner did doc',
+          )
+        }
+        const didKey = getDidKeyFromMultibase(parsedKey)
+        if (!didKey) {
+          throw new AuthRequiredError(
+            'missing or bad key in space owner did doc',
+          )
+        }
+
+        const verified = await verifySpaceCredential(jwtStr, didKey)
+
+        return {
+          credentials: {
+            type: 'space_credential' as const,
+            iss: verified.iss,
+            space: verified.space,
+            clientId: verified.clientId,
+          },
+        }
+      } catch (err) {
+        if (err instanceof AuthRequiredError) throw err
+        throw new AuthRequiredError(
+          `Invalid space credential: ${err instanceof Error ? err.message : String(err)}`,
+          'InvalidCredential',
+        )
+      }
     }
-
-    try {
-      // Parse the JWT to extract the issuer (space owner DID) before verification
-      // We need to resolve the issuer's DID doc to get the public key
-      const parts = jwtStr.split('.')
-      if (parts.length !== 3) {
-        throw new AuthRequiredError('invalid space credential format')
-      }
-      const payloadJson = Buffer.from(parts[1], 'base64url').toString()
-      const payload = JSON.parse(payloadJson)
-      const iss = payload.iss
-      if (!iss) {
-        throw new AuthRequiredError('missing issuer in space credential')
-      }
-
-      // Resolve the space owner's DID to get their signing key
-      const didDoc = await this.idResolver.did.resolve(iss)
-      if (!didDoc) {
-        throw new AuthRequiredError('could not resolve space owner DID')
-      }
-      const parsedKey = getVerificationMaterial(didDoc, 'atproto')
-      if (!parsedKey) {
-        throw new AuthRequiredError('missing or bad key in space owner did doc')
-      }
-      const didKey = getDidKeyFromMultibase(parsedKey)
-      if (!didKey) {
-        throw new AuthRequiredError('missing or bad key in space owner did doc')
-      }
-
-      const verified = await verifySpaceCredential(jwtStr, didKey)
-
-      return {
-        credentials: {
-          type: 'space_credential' as const,
-          iss: verified.iss,
-          space: verified.space,
-          clientId: verified.clientId,
-        },
-      }
-    } catch (err) {
-      if (err instanceof AuthRequiredError) throw err
-      throw new AuthRequiredError(
-        `Invalid space credential: ${err instanceof Error ? err.message : String(err)}`,
-        'InvalidCredential',
-      )
-    }
-  }
 
   public userServiceAuthOptional: MethodAuthVerifier<
     UserServiceAuthOutput | UnauthenticatedOutput
@@ -433,10 +441,7 @@ export class AuthVerifier {
       ScopedOptions &
       ExtraScopedOptions &
       AuthorizedOptions<P>,
-  ): MethodAuthVerifier<
-    SpaceCredentialOutput | OAuthOutput | AccessOutput,
-    P
-  > {
+  ): MethodAuthVerifier<SpaceCredentialOutput | OAuthOutput | AccessOutput, P> {
     const authorizationVerifier = this.authorization(options)
     return async (ctx) => {
       if (isSpaceCredentialAuth(ctx.req)) {

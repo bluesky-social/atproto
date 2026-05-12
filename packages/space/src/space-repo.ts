@@ -36,7 +36,10 @@ export class SpaceRepo {
     return new SpaceRepo({ storage, did })
   }
 
-  static async load(storage: SpaceRepoStorage, did: string): Promise<SpaceRepo> {
+  static async load(
+    storage: SpaceRepoStorage,
+    did: string,
+  ): Promise<SpaceRepo> {
     const stored = await storage.getSetHash()
     if (stored) {
       return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
@@ -44,7 +47,10 @@ export class SpaceRepo {
     return SpaceRepo.recompute(storage, did)
   }
 
-  static async loadOrCreate(storage: SpaceRepoStorage, did: string): Promise<SpaceRepo> {
+  static async loadOrCreate(
+    storage: SpaceRepoStorage,
+    did: string,
+  ): Promise<SpaceRepo> {
     const stored = await storage.getSetHash()
     if (stored) {
       return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
@@ -52,7 +58,10 @@ export class SpaceRepo {
     return new SpaceRepo({ storage, did })
   }
 
-  static async recompute(storage: SpaceRepoStorage, did: string): Promise<SpaceRepo> {
+  static async recompute(
+    storage: SpaceRepoStorage,
+    did: string,
+  ): Promise<SpaceRepo> {
     const setHash = new SetHash()
     const collections = await storage.listCollections()
     for (const collection of collections) {

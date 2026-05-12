@@ -2,15 +2,9 @@ import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   // Alter space table: drop setHash and rev, add isMember
-  await db.schema
-    .alterTable('space')
-    .dropColumn('setHash')
-    .execute()
+  await db.schema.alterTable('space').dropColumn('setHash').execute()
 
-  await db.schema
-    .alterTable('space')
-    .dropColumn('rev')
-    .execute()
+  await db.schema.alterTable('space').dropColumn('rev').execute()
 
   await db.schema
     .alterTable('space')
@@ -71,7 +65,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('serviceDid', 'varchar', (col) => col.notNull())
     .addColumn('serviceEndpoint', 'varchar', (col) => col.notNull())
     .addColumn('lastIssuedAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('space_credential_recipient_pkey', ['space', 'serviceDid'])
+    .addPrimaryKeyConstraint('space_credential_recipient_pkey', [
+      'space',
+      'serviceDid',
+    ])
     .execute()
 }
 
@@ -84,24 +81,12 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('space_repo').execute()
 
   // Revert space_member table: drop memberRev
-  await db.schema
-    .alterTable('space_member')
-    .dropColumn('memberRev')
-    .execute()
+  await db.schema.alterTable('space_member').dropColumn('memberRev').execute()
 
   // Revert space table: drop isMember, add back setHash and rev
-  await db.schema
-    .alterTable('space')
-    .dropColumn('isMember')
-    .execute()
+  await db.schema.alterTable('space').dropColumn('isMember').execute()
 
-  await db.schema
-    .alterTable('space')
-    .addColumn('setHash', 'blob')
-    .execute()
+  await db.schema.alterTable('space').addColumn('setHash', 'blob').execute()
 
-  await db.schema
-    .alterTable('space')
-    .addColumn('rev', 'varchar')
-    .execute()
+  await db.schema.alterTable('space').addColumn('rev', 'varchar').execute()
 }

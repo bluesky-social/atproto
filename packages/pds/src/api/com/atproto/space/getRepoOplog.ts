@@ -23,7 +23,11 @@ export default function (server: Server, ctx: AppContext) {
           ops: result.ops.map((op) => ({
             rev: op.rev,
             idx: op.idx,
-            action: op.action as 'create' | 'update' | 'delete' | l.UnknownString,
+            action: op.action as
+              | 'create'
+              | 'update'
+              | 'delete'
+              | l.UnknownString,
             collection: op.collection as l.NsidString,
             rkey: op.rkey as l.RecordKeyString,
             cid: op.cid ? (op.cid as l.CidString) : undefined,

@@ -1,5 +1,5 @@
-import { SpaceUri } from '@atproto/syntax'
 import { createMemberGrant } from '@atproto/space'
+import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
@@ -19,7 +19,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
       }
       if (!spaceRow.isMember) {
-        throw new InvalidRequestError('Not a member of this space', 'NotAMember')
+        throw new InvalidRequestError(
+          'Not a member of this space',
+          'NotAMember',
+        )
       }
 
       // Parse space URI to extract owner DID

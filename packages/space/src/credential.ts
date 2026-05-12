@@ -68,7 +68,9 @@ export async function verifyMemberGrant(
 
   // Check typ
   if (parsed.header.typ !== 'space_member_grant') {
-    throw new Error(`Invalid JWT type: expected space_member_grant, got ${parsed.header.typ}`)
+    throw new Error(
+      `Invalid JWT type: expected space_member_grant, got ${parsed.header.typ}`,
+    )
   }
 
   // Verify signature
@@ -92,7 +94,9 @@ export async function verifyMemberGrant(
 
   // Check lxm
   if (payload.lxm !== 'com.atproto.space.getSpaceCredential') {
-    throw new Error(`Invalid lxm: expected com.atproto.space.getSpaceCredential, got ${payload.lxm}`)
+    throw new Error(
+      `Invalid lxm: expected com.atproto.space.getSpaceCredential, got ${payload.lxm}`,
+    )
   }
 
   return payload
@@ -136,7 +140,9 @@ export async function verifySpaceCredential(
 
   // Check typ
   if (parsed.header.typ !== 'space_credential') {
-    throw new Error(`Invalid JWT type: expected space_credential, got ${parsed.header.typ}`)
+    throw new Error(
+      `Invalid JWT type: expected space_credential, got ${parsed.header.typ}`,
+    )
   }
 
   // Verify signature
@@ -207,7 +213,9 @@ function parseJwt(jwt: string): ParsedJwt {
 
   let header: JwtHeader
   try {
-    const headerJson = new TextDecoder().decode(fromBase64(headerB64, 'base64url'))
+    const headerJson = new TextDecoder().decode(
+      fromBase64(headerB64, 'base64url'),
+    )
     header = JSON.parse(headerJson)
   } catch (err) {
     throw new Error(`Invalid JWT header: ${err}`)
@@ -215,7 +223,9 @@ function parseJwt(jwt: string): ParsedJwt {
 
   let payload: Record<string, unknown>
   try {
-    const payloadJson = new TextDecoder().decode(fromBase64(payloadB64, 'base64url'))
+    const payloadJson = new TextDecoder().decode(
+      fromBase64(payloadB64, 'base64url'),
+    )
     payload = JSON.parse(payloadJson)
   } catch (err) {
     throw new Error(`Invalid JWT payload: ${err}`)

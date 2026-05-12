@@ -304,9 +304,7 @@ export class SpaceReader {
     }
   }
 
-  async getCredentialRecipients(
-    space: string,
-  ): Promise<
+  async getCredentialRecipients(space: string): Promise<
     Array<{
       serviceDid: string
       serviceEndpoint: string

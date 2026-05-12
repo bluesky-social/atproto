@@ -1,20 +1,19 @@
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
+  MemberAlreadyExistsError,
+  MemberNotFoundError,
+  MemoryMembersStorage,
   MemoryRepoStorage,
   RecordAlreadyExistsError,
   RecordNotFoundError,
-  SpaceRepo,
   SetHash,
   SpaceContext,
-  WriteOpAction,
   SpaceMembers,
-  MemoryMembersStorage,
-  MemberAlreadyExistsError,
-  MemberNotFoundError,
-  MemberOpAction,
+  SpaceRepo,
+  WriteOpAction,
   createMemberGrant,
-  verifyMemberGrant,
   createSpaceCredential,
+  verifyMemberGrant,
   verifySpaceCredential,
 } from '../src'
 
@@ -529,9 +528,7 @@ describe('commits', () => {
     expect(repo.verifyCommit(membersContext, repoCommit)).toBe(false)
 
     // Verify members commit fails with records context
-    expect(spaceMembers.verifyCommit(recordsContext, membersCommit)).toBe(
-      false,
-    )
+    expect(spaceMembers.verifyCommit(recordsContext, membersCommit)).toBe(false)
   })
 })
 
@@ -689,9 +686,9 @@ describe('credentials', () => {
       )
 
       // Try to verify it as a member grant - should fail
-      await expect(verifyMemberGrant(credential, keypairA.did())).rejects.toThrow(
-        'Invalid JWT type',
-      )
+      await expect(
+        verifyMemberGrant(credential, keypairA.did()),
+      ).rejects.toThrow('Invalid JWT type')
     })
 
     it('rejects member grant verified as space credential', async () => {

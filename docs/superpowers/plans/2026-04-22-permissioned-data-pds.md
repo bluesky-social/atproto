@@ -17,6 +17,7 @@
 ### Task 1: Rename Repo → SpaceRepo
 
 **Files:**
+
 - Rename: `packages/space/src/repo.ts` → `packages/space/src/space-repo.ts`
 - Modify: `packages/space/src/index.ts`
 - Modify: `packages/space/tests/space.test.ts`
@@ -47,6 +48,7 @@ git commit -m "refactor: rename Repo to SpaceRepo in @atproto/space"
 ### Task 2: Rename SpaceStorage → SpaceRepoStorage, MemoryStorage → MemoryRepoStorage
 
 **Files:**
+
 - Rename: `packages/space/src/storage/memory-storage.ts` → `memory-repo-storage.ts`
 - Modify: `packages/space/src/storage/types.ts`
 - Modify: `packages/space/src/storage/index.ts`
@@ -80,6 +82,7 @@ git commit -m "refactor: rename SpaceStorage to SpaceRepoStorage"
 ### Task 3: Add scope to SpaceContext and member types
 
 **Files:**
+
 - Modify: `packages/space/src/types.ts`
 - Modify: `packages/space/src/commit.ts`
 - Modify: `packages/space/src/error.ts`
@@ -149,6 +152,7 @@ git commit -m "feat: add scope to SpaceContext and member operation types"
 ### Task 4: Add SpaceMembersStorage and MemoryMembersStorage
 
 **Files:**
+
 - Modify: `packages/space/src/storage/types.ts`
 - Create: `packages/space/src/storage/memory-members-storage.ts`
 - Modify: `packages/space/src/storage/index.ts`
@@ -221,6 +225,7 @@ git commit -m "feat: add SpaceMembersStorage interface and MemoryMembersStorage"
 ### Task 5: Create SpaceMembers class
 
 **Files:**
+
 - Create: `packages/space/src/space-members.ts`
 - Modify: `packages/space/src/index.ts`
 
@@ -242,6 +247,7 @@ git commit -m "feat: add SpaceMembers class for member list management"
 ### Task 6: Add SpaceMembers and domain separation tests
 
 **Files:**
+
 - Modify: `packages/space/tests/space.test.ts`
 
 - [ ] **Step 1:** Add `describe('SpaceMembers', ...)` block with tests:
@@ -273,6 +279,7 @@ git commit -m "test: add SpaceMembers and commit domain separation tests"
 ### Task 7: Create credential.ts with JWT helpers
 
 **Files:**
+
 - Create: `packages/space/src/credential.ts`
 - Modify: `packages/space/src/index.ts`
 - Modify: `packages/space/package.json` (if `@atproto/common` needed)
@@ -280,6 +287,7 @@ git commit -m "test: add SpaceMembers and commit domain separation tests"
 - [ ] **Step 1:** Create `packages/space/src/credential.ts` with:
 
 **MemberGrant functions:**
+
 - `createMemberGrant(opts: { iss, aud, space, clientId }, keypair)` → JWT string
   - Header: `{ alg: keypair.jwtAlg, typ: "space_member_grant" }`
   - Payload: `{ iss, aud, space, clientId, lxm: "com.atproto.space.getSpaceCredential", iat, exp: iat + 5min, jti }`
@@ -288,6 +296,7 @@ git commit -m "test: add SpaceMembers and commit domain separation tests"
   - Parse JWT, check `header.typ === "space_member_grant"`, verify signature, check expiration, check `lxm`
 
 **SpaceCredential functions:**
+
 - `createSpaceCredential(opts: { iss, space, clientId, expSeconds? }, keypair)` → JWT string
   - Header: `{ alg: keypair.jwtAlg, typ: "space_credential" }`
   - Payload: `{ iss, space, clientId, iat, exp: iat + (expSeconds ?? 2hours), jti }`
@@ -295,6 +304,7 @@ git commit -m "test: add SpaceMembers and commit domain separation tests"
   - Parse JWT, check `header.typ === "space_credential"`, verify signature, check expiration
 
 **Internal JWT helpers** (private to this module):
+
 - `encodeJwt(header, payload, keypair)` → base64url-encoded JWT
 - `parseJwt(jwt)` → `{ header, payload, signingInput, signature }`
 - Use `@atproto/crypto`'s `Keypair.sign()` and `verifySignature()`.
@@ -317,6 +327,7 @@ git commit -m "feat: add space credential and member grant JWT utilities"
 ### Task 8: Add credential tests
 
 **Files:**
+
 - Modify: `packages/space/tests/space.test.ts`
 
 - [ ] **Step 1:** Add `describe('credentials', ...)` block:
@@ -347,6 +358,7 @@ git commit -m "test: add credential and member grant verification tests"
 ### Task 9: Create new schema type files
 
 **Files:**
+
 - Modify: `packages/pds/src/actor-store/db/schema/space.ts`
 - Modify: `packages/pds/src/actor-store/db/schema/space-member.ts`
 - Create: `packages/pds/src/actor-store/db/schema/space-repo.ts`
@@ -392,6 +404,7 @@ git commit -m "feat: add schema types for space tables"
 ### Task 10: Create migration 003-space-update
 
 **Files:**
+
 - Create: `packages/pds/src/actor-store/db/migrations/003-space-update.ts`
 - Modify: `packages/pds/src/actor-store/db/migrations/index.ts`
 
@@ -426,6 +439,7 @@ git commit -m "feat: add migration 003 for space table restructuring"
 ### Task 11: Update SpaceReader
 
 **Files:**
+
 - Modify: `packages/pds/src/actor-store/space/reader.ts`
 
 - [ ] **Step 1:** Update `getSpace()` — return `{ uri, isOwner, isMember }` (no setHash/rev).
@@ -458,6 +472,7 @@ git commit -m "feat: update SpaceReader for new table structure and oplog querie
 ### Task 12: Update SpaceTransactor
 
 **Files:**
+
 - Modify: `packages/pds/src/actor-store/space/transactor.ts`
 
 - [ ] **Step 1:** Update `createSpace()` — no longer insert setHash/rev into `space`. Add `isMember` column. If `isOwner`, also create a row in `space_member_state`. Always create a row in `space_repo`.
@@ -492,6 +507,7 @@ git commit -m "feat: update SpaceTransactor with oplog, member commit, and crede
 ### Task 13: Create SQL storage adapters
 
 **Files:**
+
 - Create: `packages/pds/src/actor-store/space/sql-repo-storage.ts`
 - Create: `packages/pds/src/actor-store/space/sql-members-storage.ts`
 - Modify: `packages/pds/src/actor-store/space/index.ts`
@@ -523,6 +539,7 @@ git commit -m "feat: add SqlRepoStorage and SqlMembersStorage, remove ScopedSpac
 ### Task 14: Create new lexicon JSON files
 
 **Files:**
+
 - Create: `lexicons/com/atproto/space/getMembers.json`
 - Create: `lexicons/com/atproto/space/getMemberGrant.json`
 - Create: `lexicons/com/atproto/space/getSpaceCredential.json`
@@ -581,6 +598,7 @@ git commit -m "chore: run codegen for new space lexicons"
 ### Task 16: Update existing CRUD endpoints for renames
 
 **Files:**
+
 - Modify: `packages/pds/src/api/com/atproto/space/createRecord.ts`
 - Modify: `packages/pds/src/api/com/atproto/space/putRecord.ts`
 - Modify: `packages/pds/src/api/com/atproto/space/deleteRecord.ts`
@@ -609,6 +627,7 @@ git commit -m "refactor: update CRUD endpoints for SpaceRepo rename and SqlRepoS
 ### Task 17: Update addMember/removeMember to use SpaceMembers
 
 **Files:**
+
 - Modify: `packages/pds/src/api/com/atproto/space/addMember.ts`
 - Modify: `packages/pds/src/api/com/atproto/space/removeMember.ts`
 
@@ -630,6 +649,7 @@ git commit -m "feat: use SpaceMembers for member list operations with committed 
 ### Task 18: Update notifyMembership and createSpace
 
 **Files:**
+
 - Modify: `packages/pds/src/api/com/atproto/space/notifyMembership.ts`
 - Modify: `packages/pds/src/api/com/atproto/space/createSpace.ts`
 
@@ -651,6 +671,7 @@ git commit -m "feat: update notifyMembership for isMember flag, update createSpa
 ### Task 19: Add space credential auth verifier
 
 **Files:**
+
 - Modify: `packages/pds/src/auth-verifier.ts`
 - Modify: `packages/pds/src/auth-output.ts`
 
@@ -668,6 +689,7 @@ export type SpaceCredentialOutput = {
 ```
 
 - [ ] **Step 2:** In `auth-verifier.ts`, add a `spaceCredentialAuth` method that:
+
 1. Extracts bearer token from Authorization header
 2. Uses `verifySpaceCredential` from `@atproto/space` (need to resolve space owner's DID doc to get public key)
 3. Returns `SpaceCredentialOutput` with `iss`, `space`, `clientId`
@@ -688,6 +710,7 @@ git commit -m "feat: add space credential auth verifier path"
 ### Task 20: Add credential flow endpoints
 
 **Files:**
+
 - Create: `packages/pds/src/api/com/atproto/space/getMemberGrant.ts`
 - Create: `packages/pds/src/api/com/atproto/space/getSpaceCredential.ts`
 
@@ -726,6 +749,7 @@ git commit -m "feat: add getMemberGrant and getSpaceCredential endpoints"
 ### Task 21: Add sync endpoints
 
 **Files:**
+
 - Create: `packages/pds/src/api/com/atproto/space/getRepoState.ts`
 - Create: `packages/pds/src/api/com/atproto/space/getRepoOplog.ts`
 - Create: `packages/pds/src/api/com/atproto/space/getMemberState.ts`
@@ -761,6 +785,7 @@ git commit -m "feat: add sync endpoints and getMembers"
 ### Task 22: Add notifyWrite endpoint
 
 **Files:**
+
 - Create: `packages/pds/src/api/com/atproto/space/notifyWrite.ts`
 
 - [ ] **Step 1:** Create `notifyWrite.ts`:
@@ -784,6 +809,7 @@ git commit -m "feat: add notifyWrite endpoint with fan-out to credential recipie
 ### Task 23: Register all new endpoints
 
 **Files:**
+
 - Modify: `packages/pds/src/api/com/atproto/space/index.ts`
 
 - [ ] **Step 1:** Add imports and registrations for: getMembers, getMemberGrant, getSpaceCredential, getRepoState, getRepoOplog, getMemberState, getMemberOplog, notifyWrite.
@@ -806,6 +832,7 @@ git commit -m "feat: register all new space endpoints"
 ### Task 24: Fix existing PDS space tests
 
 **Files:**
+
 - Modify: `packages/pds/tests/spaces.test.ts`
 
 - [ ] **Step 1:** Update tests for:
@@ -827,6 +854,7 @@ git commit -m "test: fix existing space tests for new table structure"
 ### Task 25: Add oplog and member state tests
 
 **Files:**
+
 - Modify: `packages/pds/tests/spaces.test.ts`
 
 - [ ] **Step 1:** Add tests:
@@ -850,6 +878,7 @@ git commit -m "test: add oplog and member state verification tests"
 ### Task 26: Add credential flow integration tests
 
 **Files:**
+
 - Modify: `packages/pds/tests/spaces.test.ts`
 
 - [ ] **Step 1:** Add `describe('credential flow', ...)`:
@@ -875,6 +904,7 @@ git commit -m "test: add credential flow integration tests"
 ### Task 27: Add sync flow integration tests
 
 **Files:**
+
 - Modify: `packages/pds/tests/spaces.test.ts`
 
 - [ ] **Step 1:** Add `describe('sync', ...)`:
@@ -896,6 +926,7 @@ git commit -m "test: add sync flow integration tests"
 ### Task 28: Add notification flow test
 
 **Files:**
+
 - Modify: `packages/pds/tests/spaces.test.ts`
 
 - [ ] **Step 1:** Add test for notifyWrite:

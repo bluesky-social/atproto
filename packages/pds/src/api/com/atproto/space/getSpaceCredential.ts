@@ -1,9 +1,6 @@
 import { getVerificationMaterial } from '@atproto/common'
-import { getDidKeyFromMultibase, IdResolver } from '@atproto/identity'
-import {
-  createSpaceCredential,
-  verifyMemberGrant,
-} from '@atproto/space'
+import { getDidKeyFromMultibase } from '@atproto/identity'
+import { createSpaceCredential, verifyMemberGrant } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -21,18 +18,13 @@ export default function (server: Server, ctx: AppContext) {
       }
       let grantPayload: { iss?: string }
       try {
-        grantPayload = JSON.parse(
-          Buffer.from(parts[1], 'base64url').toString(),
-        )
+        grantPayload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
       } catch {
         throw new InvalidRequestError('Invalid grant format', 'InvalidGrant')
       }
       const memberDid = grantPayload.iss
       if (!memberDid) {
-        throw new InvalidRequestError(
-          'Missing issuer in grant',
-          'InvalidGrant',
-        )
+        throw new InvalidRequestError('Missing issuer in grant', 'InvalidGrant')
       }
 
       // Resolve member's DID doc to get signing key
@@ -92,10 +84,7 @@ export default function (server: Server, ctx: AppContext) {
         store.space.isMember(space, memberDid),
       )
       if (!isMember) {
-        throw new InvalidRequestError(
-          'Member not found in space',
-          'NotAMember',
-        )
+        throw new InvalidRequestError('Member not found in space', 'NotAMember')
       }
 
       // Issue space credential

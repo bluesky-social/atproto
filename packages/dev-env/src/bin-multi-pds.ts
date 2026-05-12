@@ -44,10 +44,11 @@ const run = async () => {
     mockMailer(extra)
   }
 
-  const introspect = await IntrospectServer.start(INTROSPECT_PORT, network.plc, [
-    network.pds,
-    ...network.extraPdses,
-  ])
+  const introspect = await IntrospectServer.start(
+    INTROSPECT_PORT,
+    network.plc,
+    [network.pds, ...network.extraPdses],
+  )
 
   console.log(`🔍 Introspection server http://localhost:${introspect.port}`)
   console.log(`👤 DID Placeholder server http://localhost:${network.plc.port}`)

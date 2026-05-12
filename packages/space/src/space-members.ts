@@ -38,7 +38,9 @@ export class SpaceMembers {
     return SpaceMembers.recompute(storage)
   }
 
-  static async loadOrCreate(storage: SpaceMembersStorage): Promise<SpaceMembers> {
+  static async loadOrCreate(
+    storage: SpaceMembersStorage,
+  ): Promise<SpaceMembers> {
     const stored = await storage.getSetHash()
     if (stored) {
       return new SpaceMembers({ storage, setHash: new SetHash(stored) })

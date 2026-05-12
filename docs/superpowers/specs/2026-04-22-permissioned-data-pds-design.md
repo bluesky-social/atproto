@@ -5,6 +5,7 @@
 This spec covers the PDS implementation of ATProto's permissioned data protocol ("spaces"). A space is an authorization and sync boundary for permissioned records representing a shared social context. It includes many record types from many users, each storing their own records on their own PDS.
 
 This work covers four subsystems:
+
 1. **Record CRUD** — permissioned repo operations exposed as XRPC endpoints
 2. **Space management** — creating spaces, managing member lists
 3. **Space credentials** — stateless authorization tokens for read access
@@ -42,6 +43,7 @@ A space is identified by a URI: `ats://<ownerDid>/<spaceType>/<spaceKey>`.
 Example: `ats://did:plc:abc123/app.bsky.group/default`
 
 The three components:
+
 - **Owner DID** — the DID that serves as root of trust for the space
 - **Space type** — an NSID describing the modality (e.g. `app.bsky.group`)
 - **Space key** — an arbitrary string differentiating multiple spaces of the same type under the same owner
@@ -180,6 +182,7 @@ src/
 **Commit** (`commit.ts`) — `createCommit(setHash, context, keypair)` / `verifyCommit(context, commit)`. Shared by both constructs. Uses HKDF to derive an HMAC key from random IKM, with space context as info. Provides deniability — each commit uses fresh IKM.
 
 **SpaceContext** — the HKDF info used for domain separation:
+
 ```ts
 type SpaceContext = {
   spaceDid: string
@@ -198,16 +201,19 @@ The `scope` field ensures a record commit can't be confused with a member list c
 Manages a single user's permissioned repo within a space.
 
 **Factory methods:**
+
 - `SpaceRepo.create(storage)` — new empty repo
 - `SpaceRepo.load(storage)` — load from storage, recompute setHash if missing
 - `SpaceRepo.loadOrCreate(storage)` — load or create
 
 **Write operations:**
+
 - `formatCommit(writes: RecordWriteOp[])` — validate writes, compute updated setHash, return `CommitData` (does not persist)
 - `applyCommit(commit: CommitData)` — persist to storage
 - `applyWrites(writes: RecordWriteOp[])` — convenience: formatCommit + applyCommit
 
 **Read operations:**
+
 - `getRecord(collection, rkey)` — fetch single record
 - `listRecords(collection)` — all records in a collection
 - `listCollections()` — all collections with records
@@ -219,14 +225,17 @@ Manages a single user's permissioned repo within a space.
 Manages the member set for a space (space owner only).
 
 **Factory methods:**
+
 - `SpaceMembers.create(storage)` / `.load(storage)` / `.loadOrCreate(storage)`
 
 **Write operations:**
+
 - `formatCommit(ops: MemberWriteOp[])` — validate ops, compute updated setHash, return `MemberCommitData`
 - `applyCommit(commit: MemberCommitData)` — persist
 - `addMember(did)` / `removeMember(did)` — convenience wrappers
 
 **Read operations:**
+
 - `getMembers()` — all member DIDs
 - `isMember(did)` — membership check
 
@@ -239,17 +248,19 @@ Manages the member set for a space (space owner only).
 JWT header: `{ alg: "ES256K", typ: "space_member_grant" }`
 
 JWT payload:
+
 ```ts
 {
-  iss: string       // member DID
-  aud: string       // space owner DID
-  space: string     // space URI
-  clientId: string  // OAuth client ID of requesting app
-  lxm: string       // "com.atproto.space.getSpaceCredential"
+  iss: string // member DID
+  aud: string // space owner DID
+  space: string // space URI
+  clientId: string // OAuth client ID of requesting app
+  lxm: string // "com.atproto.space.getSpaceCredential"
   iat: number
-  exp: number       // short-lived, ~5 minutes
+  exp: number // short-lived, ~5 minutes
 }
 ```
+
 Signed by the user's atproto signing key. The `lxm` field binds the grant to the credential issuance endpoint, preventing replay against other endpoints. The `typ` header distinguishes this from other JWT types in the system.
 
 **SpaceCredential** — issued by space owner, presented to member PDSes for read access.
@@ -257,18 +268,21 @@ Signed by the user's atproto signing key. The `lxm` field binds the grant to the
 JWT header: `{ alg: "ES256K", typ: "space_credential" }`
 
 JWT payload:
+
 ```ts
 {
-  iss: string       // space owner DID
-  space: string     // space URI
-  clientId: string  // OAuth client ID
+  iss: string // space owner DID
+  space: string // space URI
+  clientId: string // OAuth client ID
   iat: number
-  exp: number       // 2-4 hours
+  exp: number // 2-4 hours
 }
 ```
+
 Signed by the space owner's atproto signing key. Verifiable by any PDS by resolving the space owner's DID doc. The `typ` header distinguishes this from service auth tokens and other JWT types.
 
 **Functions:**
+
 - `createMemberGrant(opts, signingKey)` / `verifyMemberGrant(jwt, memberPubKey)`
 - `createSpaceCredential(opts, signingKey)` / `verifySpaceCredential(jwt, spaceOwnerPubKey)`
 
@@ -279,7 +293,9 @@ interface SpaceRepoStorage {
   getRecord(collection: string, rkey: string): Promise<RepoRecord | null>
   hasRecord(collection: string, rkey: string): Promise<boolean>
   listCollections(): Promise<string[]>
-  listRecords(collection: string): Promise<{ rkey: string; record: RepoRecord }[]>
+  listRecords(
+    collection: string,
+  ): Promise<{ rkey: string; record: RepoRecord }[]>
   getSetHash(): Promise<Buffer | null>
   applyCommit(commit: CommitData): Promise<void>
   destroy(): Promise<void>
@@ -306,14 +322,14 @@ All endpoints live under `com.atproto.space.*`.
 
 Called by the user's app on the user's PDS. Auth: standard OAuth.
 
-| Endpoint | Type | Description |
-|----------|------|-------------|
-| `createRecord` | procedure | Create a record in a permissioned repo |
-| `putRecord` | procedure | Create or update a record |
-| `deleteRecord` | procedure | Delete a record |
-| `getRecord` | query | Get a single record (dual auth: user OAuth or space credential) |
-| `listRecords` | query | List records in a collection (dual auth) |
-| `applyWrites` | procedure | Batch write operations |
+| Endpoint       | Type      | Description                                                     |
+| -------------- | --------- | --------------------------------------------------------------- |
+| `createRecord` | procedure | Create a record in a permissioned repo                          |
+| `putRecord`    | procedure | Create or update a record                                       |
+| `deleteRecord` | procedure | Delete a record                                                 |
+| `getRecord`    | query     | Get a single record (dual auth: user OAuth or space credential) |
+| `listRecords`  | query     | List records in a collection (dual auth)                        |
+| `applyWrites`  | procedure | Batch write operations                                          |
 
 Every request includes a `space` parameter (the space URI). The PDS looks up the space in the actor store and operates on the corresponding SpaceRepo.
 
@@ -323,25 +339,26 @@ After a write, the user's PDS calls `notifyWrite` on the space owner's PDS (fire
 
 Called by the space owner's app on the space owner's PDS. Auth: standard OAuth.
 
-| Endpoint | Type | Description |
-|----------|------|-------------|
-| `createSpace` | procedure | Create a new space |
-| `getSpace` | query | Get space metadata |
-| `listSpaces` | query | List spaces owned by or joined by this account |
-| `addMember` | procedure | Add a DID to the member list |
-| `removeMember` | procedure | Remove a DID from the member list |
-| `getMembers` | query | List all members of a space |
+| Endpoint       | Type      | Description                                    |
+| -------------- | --------- | ---------------------------------------------- |
+| `createSpace`  | procedure | Create a new space                             |
+| `getSpace`     | query     | Get space metadata                             |
+| `listSpaces`   | query     | List spaces owned by or joined by this account |
+| `addMember`    | procedure | Add a DID to the member list                   |
+| `removeMember` | procedure | Remove a DID from the member list              |
+| `getMembers`   | query     | List all members of a space                    |
 
 Only the space owner can call `addMember` / `removeMember`. After a member change, the space owner's PDS calls `notifyMembership` on the affected member's PDS.
 
 ### Credential flow
 
-| Endpoint | Called on | Called by | Description |
-|----------|-----------|-----------|-------------|
-| `getMemberGrant` | Member's PDS | App (with member's OAuth token) | Returns a grant token (JWT) scoped to space + client ID |
-| `getSpaceCredential` | Space owner's PDS | App (with grant token) | Exchanges grant for a signed space credential JWT |
+| Endpoint             | Called on         | Called by                       | Description                                             |
+| -------------------- | ----------------- | ------------------------------- | ------------------------------------------------------- |
+| `getMemberGrant`     | Member's PDS      | App (with member's OAuth token) | Returns a grant token (JWT) scoped to space + client ID |
+| `getSpaceCredential` | Space owner's PDS | App (with grant token)          | Exchanges grant for a signed space credential JWT       |
 
 **Flow:**
+
 1. App has OAuth session with a member user (bound to a client ID)
 2. App calls `getMemberGrant` on member's PDS -> gets a short-lived grant token
 3. App calls `getSpaceCredential` on space owner's PDS with the grant token
@@ -351,19 +368,19 @@ Only the space owner can call `addMember` / `removeMember`. After a member chang
 
 ### Sync
 
-| Endpoint | Called on | Auth | Description |
-|----------|-----------|------|-------------|
-| `getRepoState` | Member's PDS | Space credential | Get current setHash + rev for a user's permissioned repo |
-| `getRepoOplog` | Member's PDS | Space credential | Get record operations since a given rev. Response includes current commit info (setHash + rev) |
-| `getMemberState` | Space owner's PDS | Space credential | Get current member list setHash + rev |
-| `getMemberOplog` | Space owner's PDS | Space credential | Get member list operations since a given rev. Response includes current commit info |
+| Endpoint         | Called on         | Auth             | Description                                                                                    |
+| ---------------- | ----------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `getRepoState`   | Member's PDS      | Space credential | Get current setHash + rev for a user's permissioned repo                                       |
+| `getRepoOplog`   | Member's PDS      | Space credential | Get record operations since a given rev. Response includes current commit info (setHash + rev) |
+| `getMemberState` | Space owner's PDS | Space credential | Get current member list setHash + rev                                                          |
+| `getMemberOplog` | Space owner's PDS | Space credential | Get member list operations since a given rev. Response includes current commit info            |
 
 ### Notifications
 
-| Endpoint | Direction | Auth | Description |
-|----------|-----------|------|-------------|
-| `notifyMembership` | Space owner -> member's PDS | Service auth | Notify member's PDS of membership change |
-| `notifyWrite` | Member's PDS -> space owner's PDS -> syncing apps | Service auth | Notify that a member has written new data |
+| Endpoint           | Direction                                         | Auth         | Description                               |
+| ------------------ | ------------------------------------------------- | ------------ | ----------------------------------------- |
+| `notifyMembership` | Space owner -> member's PDS                       | Service auth | Notify member's PDS of membership change  |
+| `notifyWrite`      | Member's PDS -> space owner's PDS -> syncing apps | Service auth | Notify that a member has written new data |
 
 `notifyWrite` is the same endpoint on both the space owner's service and syncing apps. The space owner relays the notification by looking up `space_credential_recipient` and calling the same endpoint on each service.
 
@@ -374,6 +391,7 @@ Only the space owner can call `addMember` / `removeMember`. After a member chang
 ### Actor store integration
 
 **SpaceReader** (`actor-store/space/reader.ts`) — read-only queries:
+
 - `getSpace(uri)`, `listSpaces(opts)`
 - `getRecord(space, collection, rkey, cid?)`, `hasRecord(space, collection, rkey)`
 - `listRecords(space, collection, opts)`, `listCollections(space)`
@@ -384,6 +402,7 @@ Only the space owner can call `addMember` / `removeMember`. After a member chang
 - `getMemberOplog(space, since, limit)` -> `{ ops[], rev, setHash }`
 
 **SpaceTransactor** (`actor-store/space/transactor.ts`, extends SpaceReader) — writes:
+
 - `createSpace(uri, isOwner)`
 - `applyRepoCommit(space, commitData)` — writes records, updates setHash/rev, appends to `space_record_oplog`
 - `applyMemberCommit(space, memberCommitData)` — writes members, updates setHash/rev in `space_member_state`, appends to `space_member_oplog`
@@ -458,17 +477,20 @@ Extend the existing test suite:
 Spin up a real PDS instance using existing test infrastructure. Test XRPC endpoints directly.
 
 **Record CRUD:**
+
 - Create/get/put/delete/list records via XRPC
 - applyWrites batch operations
 - Verify rev advances on each write
 - Verify setHash correctness after operation sequences
 
 **Space management:**
+
 - Create space, verify listSpaces
 - Add/remove members, verify getMembers
 - Auth rejection for non-owner calling addMember/removeMember
 
 **Credential flow:**
+
 - Member obtains grant from their PDS
 - Exchange grant for credential on space owner's PDS
 - Rejected if member not in member list
@@ -482,6 +504,7 @@ Spin up multiple PDS instances to simulate real protocol flows. Test infrastruct
 **Setup:** Two PDSes (PDS-A hosts space owner + member-1, PDS-B hosts member-2). A test client acting as the syncing application.
 
 **Happy path sync:**
+
 1. Space owner creates space, adds members
 2. Members write records on their respective PDSes
 3. App obtains space credential via grant flow
@@ -490,25 +513,30 @@ Spin up multiple PDS instances to simulate real protocol flows. Test infrastruct
 6. Verify complete, consistent view — setHash matches everywhere
 
 **Incremental sync:**
+
 1. After initial sync, members write more records
 2. App syncs with `since` — verify only new ops, setHash still matches
 
 **Sync recovery:**
+
 1. Simulate oplog gap (compact/flush oplog entries)
 2. App attempts incremental sync, setHash mismatch after replay
 3. App falls back to full resync via listRecords
 4. Verify consistent state after recovery
 
 **Member lifecycle:**
+
 1. Space owner removes a member mid-sync
 2. App syncs member list, sees removal
 3. Verify credential/access behavior for removed member
 
 **Notification flow:**
+
 1. Member writes -> notifyWrite reaches space owner -> relayed to app
 2. Verify notification delivery (mock app endpoint)
 
 ### What we're NOT testing
+
 - ECMH (XOR placeholder only)
 - Application-level write semantics
 - Delegated accounts / app coordination

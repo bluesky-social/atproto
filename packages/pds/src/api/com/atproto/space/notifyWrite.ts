@@ -1,4 +1,3 @@
-import { getPdsEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
 import { SpaceUri } from '@atproto/syntax'
 import {

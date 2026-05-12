@@ -67,10 +67,7 @@ export class SpaceTransactor extends SpaceReader {
       .deleteFrom('space_member')
       .where('space', '=', uri)
       .execute()
-    await this.db.db
-      .deleteFrom('space_repo')
-      .where('space', '=', uri)
-      .execute()
+    await this.db.db.deleteFrom('space_repo').where('space', '=', uri).execute()
     await this.db.db
       .deleteFrom('space_member_state')
       .where('space', '=', uri)
