@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import { Server } from '../../lexicon.js'
 import { getLatestReport } from '../../mod-service/report.js'
 import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getPdsAccountInfos } from '../util.js'

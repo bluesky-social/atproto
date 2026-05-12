@@ -1,5 +1,5 @@
 import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import { Server } from '../../lexicon.js'
 import { viewLiveStats } from '../../report/views.js'
 
 export default function (server: Server, ctx: AppContext) {

@@ -1,4 +1,4 @@
-import { Database } from '../db/index.js'
+import { Database } from '../db.js'
 
 export async function initJobCursor(db: Database, job: string): Promise<void> {
   await db.db

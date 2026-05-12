@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../db/index.js'
+import { Database } from '../db.js'
 import { Report } from '../db/schema/report.js'
 import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
 import {

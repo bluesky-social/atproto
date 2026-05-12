@@ -1,6 +1,6 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import { Server } from '../../lexicon.js'
 
 const VALID_SUBJECT_TYPES = ['account', 'record', 'message']
 

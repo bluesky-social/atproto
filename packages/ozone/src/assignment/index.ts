@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { ToolsOzoneQueueDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
+import { Database } from '../db.js'
 import { EndAtIdKeyset, paginate } from '../db/pagination.js'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment.js'
 import { ReportQueue } from '../db/schema/report_queue.js'
@@ -9,7 +9,7 @@ import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
 import { QueueService, QueueServiceCreator } from '../queue/service.js'
 import { createReportActivity } from '../report/activity.js'
-import { TeamService, TeamServiceCreator } from '../team/index.js'
+import { TeamService, TeamServiceCreator } from '../team.js'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number

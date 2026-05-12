@@ -1,6 +1,6 @@
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import { Server } from '../../lexicon.js'
 import { getAuthDid } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {

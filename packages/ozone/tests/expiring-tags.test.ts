@@ -50,7 +50,6 @@ describe('expiring tags', () => {
   const createReverser = () =>
     new EventReverser(
       network.ozone.ctx.db,
-      // @ts-expect-error Error due to circular dependency with the dev-env package
       network.ozone.ctx.modService,
     )
 

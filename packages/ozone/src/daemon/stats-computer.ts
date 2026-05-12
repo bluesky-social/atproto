@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db/index.js'
+import { Database } from '../db.js'
 import { dbLogger } from '../logger.js'
 import { ReportStatsServiceCreator } from '../report/stats.js'
 

@@ -1,6 +1,6 @@
 import { Selectable, sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db/index.js'
+import { Database } from '../db.js'
 import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
 import { ReportStat } from '../db/schema/report_stat.js'
 import { jsonb } from '../db/types.js'
