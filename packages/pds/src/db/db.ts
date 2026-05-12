@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import SqliteDB from 'better-sqlite3'
 import {
   Kysely,
   KyselyPlugin,
@@ -11,6 +10,8 @@ import {
   UnknownRow,
   sql,
 } from 'kysely'
+// eslint-disable-next-line import/no-unresolved
+import { DatabaseSync, type SQLInputValue, StatementSync } from 'node:sqlite'
 import { dbLogger } from '../logger'
 import { retrySqlite } from './util'
 
@@ -28,9 +29,7 @@ export class Database<Schema> {
     location: string,
     opts?: { pragmas?: Record<string, string> },
   ): Database<T> {
-    const sqliteDb = new SqliteDB(location, {
-      timeout: 0, // handled by application
-    })
+    const sqliteDb = new KyselyNodeSqliteDatabase(location)
     const pragmas = {
       ...DEFAULT_PRAGMAS,
       ...(opts?.pragmas ?? {}),
@@ -137,4 +136,53 @@ class LeakyTxPlugin implements KyselyPlugin {
   ): Promise<QueryResult<UnknownRow>> {
     return args.result
   }
+}
+
+class KyselyNodeSqliteDatabase {
+  private readonly db: DatabaseSync
+
+  constructor(location: string) {
+    this.db = new DatabaseSync(location)
+  }
+
+  close(): void {
+    this.db.close()
+  }
+
+  pragma(pragma: string): void {
+    this.db.exec(`PRAGMA ${pragma}`)
+  }
+
+  prepare(sql: string): KyselyNodeSqliteStatement {
+    return new KyselyNodeSqliteStatement(this.db.prepare(sql))
+  }
+}
+
+class KyselyNodeSqliteStatement {
+  readonly reader: boolean
+
+  constructor(private readonly statement: StatementSync) {
+    this.reader = statement.columns().length > 0
+  }
+
+  all(parameters: ReadonlyArray<unknown>): unknown[] {
+    return this.statement.all(...asSqliteParameters(parameters))
+  }
+
+  run(parameters: ReadonlyArray<unknown>): {
+    changes: number | bigint
+    lastInsertRowid: number | bigint
+  } {
+    const result = this.statement.run(...asSqliteParameters(parameters))
+    return {
+      changes: result.changes,
+      lastInsertRowid: result.lastInsertRowid,
+    }
+  }
+}
+
+const asSqliteParameters = (
+  parameters: ReadonlyArray<unknown>,
+): SQLInputValue[] => {
+  return parameters as SQLInputValue[]
 }
