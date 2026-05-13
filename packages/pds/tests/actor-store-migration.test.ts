@@ -4,7 +4,6 @@ import { Client } from '@atproto/lex'
 import {
   ActorStoreMigrator,
   allActorStoresMigrated,
-  countInProgressMigrations,
 } from '../dist/account-manager/helpers/actor-store-migration'
 import {
   clearExtraMigration,
@@ -52,7 +51,6 @@ describe('actor store migration', () => {
 
   it('reports all migrated when no stores are behind', async () => {
     expect(await allActorStoresMigrated(ctx.accountManager.db)).toBe(true)
-    expect(await countInProgressMigrations(ctx.accountManager.db)).toBe(0)
   })
 
   describe('with dummy migration 999', () => {

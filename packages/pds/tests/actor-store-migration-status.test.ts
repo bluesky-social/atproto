@@ -29,6 +29,5 @@ describe('getActorStoreMigrationStatus', () => {
       { headers: network.pds.adminAuthHeaders() },
     )
     expect(data.allMigrated).toBe(true)
-    expect(data.inProgressCount).toBe(0)
   })
 })
