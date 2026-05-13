@@ -1,10 +1,7 @@
 import { sql } from 'kysely'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { Client } from '@atproto/lex'
-import {
-  ActorStoreMigrator,
-  allActorStoresMigrated,
-} from '../dist/account-manager/helpers/actor-store-migration'
+import { ActorStoreMigrator } from '../dist/account-manager/helpers/actor-store-migration'
 import {
   clearExtraMigration,
   getLatestStoreSchemaVersion,
@@ -50,7 +47,7 @@ describe('actor store migration', () => {
   })
 
   it('reports all migrated when no stores are behind', async () => {
-    expect(await allActorStoresMigrated(ctx.accountManager.db)).toBe(true)
+    expect(await ctx.accountManager.allActorStoresMigrated()).toBe(true)
   })
 
   describe('with dummy migration 999', () => {
@@ -71,7 +68,7 @@ describe('actor store migration', () => {
     })
 
     it('detects unmigrated stores', async () => {
-      expect(await allActorStoresMigrated(ctx.accountManager.db)).toBe(false)
+      expect(await ctx.accountManager.allActorStoresMigrated()).toBe(false)
     })
 
     describe('concurrency limit', () => {
@@ -135,17 +132,17 @@ describe('actor store migration', () => {
         .set({ storeSchemaVersion: '001' })
         .execute()
 
-      expect(await allActorStoresMigrated(ctx.accountManager.db)).toBe(false)
+      expect(await ctx.accountManager.allActorStoresMigrated()).toBe(false)
 
       const migrator = new ActorStoreMigrator(
-        ctx.accountManager.db,
+        ctx.accountManager,
         ctx.actorStore,
         true,
       )
       migrator.start()
       await migrator.running
 
-      expect(await allActorStoresMigrated(ctx.accountManager.db)).toBe(true)
+      expect(await ctx.accountManager.allActorStoresMigrated()).toBe(true)
 
       const actors = await ctx.accountManager.db.db
         .selectFrom('actor')
@@ -159,7 +156,7 @@ describe('actor store migration', () => {
 
     it('ActorStoreMigrator.destroy() stops cleanly', async () => {
       const migrator = new ActorStoreMigrator(
-        ctx.accountManager.db,
+        ctx.accountManager,
         ctx.actorStore,
         true,
       )

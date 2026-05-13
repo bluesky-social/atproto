@@ -1,4 +1,5 @@
 import { KeyObject } from 'node:crypto'
+import { sql } from 'kysely'
 import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import {
@@ -10,6 +11,7 @@ import {
 import { Cid } from '@atproto/lex-data'
 import { currentDatetimeString, isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { getLatestStoreSchemaVersion } from '../actor-store/db/migrations'
 import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
@@ -22,7 +24,6 @@ import { com } from '../lexicons/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
-import * as actorStoreMigration from './helpers/actor-store-migration'
 import * as auth from './helpers/auth'
 import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
@@ -574,6 +575,94 @@ export class AccountManager {
   }
 
   async allActorStoresMigrated(): Promise<boolean> {
-    return actorStoreMigration.allActorStoresMigrated(this.db)
+    const unmigrated = await this.db.db
+      .selectFrom('actor')
+      .select('did')
+      .where('storeSchemaVersion', '<', getLatestStoreSchemaVersion())
+      .limit(1)
+      .executeTakeFirst()
+    return !unmigrated
+  }
+
+  // Note: this is a relatively expensive query, but it is only called via the
+  // admin interface.
+  async getActorStoreVersionCounts(): Promise<
+    { version: string; count: number }[]
+  > {
+    const rows = await this.db.db
+      .selectFrom('actor')
+      .select(['storeSchemaVersion', sql<number>`count(*)`.as('count')])
+      .groupBy('storeSchemaVersion')
+      .execute()
+    return rows.map((row) => ({
+      version: row.storeSchemaVersion,
+      count: row.count,
+    }))
+  }
+
+  // Release storeIsMigrating on any actor whose claim is older than the
+  // given staleness threshold (in ms). A migration could become "stuck"
+  // if the process was terminated mid-migration.
+  async unstickStaleActorStoreMigrations(
+    staleMs: number,
+  ): Promise<DidString[]> {
+    const staleThreshold = new Date(Date.now() - staleMs).toISOString()
+    const rows = await this.db.db
+      .updateTable('actor')
+      .set({ storeIsMigrating: 0 })
+      .where('storeIsMigrating', '=', 1)
+      .where('storeMigratedAt', '<', staleThreshold)
+      .returning('did')
+      .execute()
+    return rows.map((r) => r.did)
+  }
+
+  // Atomically pick the oldest unmigrated actor and mark its storeIsMigrating
+  // flag. Returns null when nothing is available (everything migrated, or
+  // every unmigrated row is currently claimed by some other process).
+  async claimNextActorStoreToMigrate(): Promise<{ did: DidString } | null> {
+    const now = new Date().toISOString()
+    const claimed = await this.db.db
+      .updateTable('actor')
+      .set({ storeIsMigrating: 1, storeMigratedAt: now })
+      .where(
+        'did',
+        '=',
+        sql`(
+          SELECT did FROM actor
+          WHERE "storeSchemaVersion" < ${getLatestStoreSchemaVersion()}
+          AND "storeIsMigrating" = 0
+          ORDER BY "storeSchemaVersion" ASC, "storeMigratedAt" ASC
+          LIMIT 1
+        )`,
+      )
+      .where('storeIsMigrating', '=', 0)
+      .returning('did')
+      .executeTakeFirst()
+    return claimed ?? null
+  }
+
+  // Mark an actor's store as fully migrated to the current latest version
+  // and clear its in-progress flag.
+  async markActorStoreMigrationSuccess(did: DidString): Promise<void> {
+    await this.db.db
+      .updateTable('actor')
+      .set({
+        storeSchemaVersion: getLatestStoreSchemaVersion(),
+        storeIsMigrating: 0,
+        storeMigratedAt: new Date().toISOString(),
+      })
+      .where('did', '=', did)
+      .execute()
+  }
+
+  // Release a migration claim without bumping the recorded schema version
+  // (used by the migrator after a failed attempt so it can be retried).
+  async releaseActorStoreMigrationClaim(did: DidString): Promise<void> {
+    await this.db.db
+      .updateTable('actor')
+      .set({ storeIsMigrating: 0 })
+      .where('did', '=', did)
+      .execute()
   }
 }

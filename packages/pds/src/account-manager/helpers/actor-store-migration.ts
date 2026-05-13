@@ -1,43 +1,14 @@
-import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import type { ActorStore } from '../../actor-store/actor-store'
-import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { actorStoreMigrationLogger as logger } from '../../logger'
-import type { AccountDb } from '../db'
-
-export const allActorStoresMigrated = async (
-  db: AccountDb,
-): Promise<boolean> => {
-  const unmigrated = await db.db
-    .selectFrom('actor')
-    .select('did')
-    .where('storeSchemaVersion', '<', getLatestStoreSchemaVersion())
-    .limit(1)
-    .executeTakeFirst()
-  return !unmigrated
-}
-
-// Note, this is a relatively expensive query, it is only called via the admin interface
-export const getVersionCounts = async (
-  db: AccountDb,
-): Promise<{ version: string; count: number }[]> => {
-  const rows = await db.db
-    .selectFrom('actor')
-    .select(['storeSchemaVersion', sql<number>`count(*)`.as('count')])
-    .groupBy('storeSchemaVersion')
-    .execute()
-  return rows.map((row) => ({
-    version: row.storeSchemaVersion,
-    count: row.count,
-  }))
-}
+import type { AccountManager } from '../account-manager'
 
 export class ActorStoreMigrator {
   destroyed = false
   running: Promise<void> | null = null
 
   constructor(
-    private db: AccountDb,
+    private accountManager: AccountManager,
     private actorStore: ActorStore,
     private throwOnError: boolean,
   ) {}
@@ -57,69 +28,31 @@ export class ActorStoreMigrator {
   }
 
   private async run(): Promise<void> {
-    while (!(await allActorStoresMigrated(this.db))) {
+    while (!(await this.accountManager.allActorStoresMigrated())) {
       if (this.destroyed) return
-      // Unstick migrations that have been in-progress for >60s so that they can be retried
-      const staleThreshold = new Date(Date.now() - 60_000).toISOString()
-      const unstuck = await this.db.db
-        .updateTable('actor')
-        .set({ storeIsMigrating: 0 })
-        .where('storeIsMigrating', '=', 1)
-        .where('storeMigratedAt', '<', staleThreshold)
-        .returning('did')
-        .execute()
-      for (const row of unstuck) {
-        logger.warn({ did: row.did }, 'Unstuck stale actor store migration')
+
+      const unstuck =
+        await this.accountManager.unstickStaleActorStoreMigrations(60_000)
+      for (const did of unstuck) {
+        logger.warn({ did }, 'Unstuck stale actor store migration')
       }
 
-      const now = new Date().toISOString()
-      // get next unmigrated actor, least-recently-migrated first
-      const claimed = await this.db.db
-        .updateTable('actor')
-        .set({ storeIsMigrating: 1, storeMigratedAt: now })
-        .where(
-          'did',
-          '=',
-          sql`(
-            SELECT did FROM actor
-            WHERE "storeSchemaVersion" < ${getLatestStoreSchemaVersion()}
-            AND "storeIsMigrating" = 0
-            ORDER BY "storeSchemaVersion" ASC, "storeMigratedAt" ASC
-            LIMIT 1
-          )`,
-        )
-        .where('storeIsMigrating', '=', 0)
-        .returning('did')
-        .executeTakeFirst()
+      const claimed = await this.accountManager.claimNextActorStoreToMigrate()
       if (!claimed) {
-        // There may be no work left to claim, but active tasks remaining.
-        // Either the other tasks are stuck and will eventually time out, or a concurrent process is actively working on them.
+        // No work available - either the remaining unmigrated actors are
+        // claimed by another process or stuck claims will expire and be
+        // unstuck on a later iteration.
         await wait(1000)
         continue
       }
+
       try {
         const { dbLocation } = await this.actorStore.getLocation(claimed.did)
-        // runMigration defaults to a worker thread so the main event loop
-        // stays responsive. This path does not consume the on-open
-        // in-process concurrency slot
+        // runs in a worker thread so the main event loop stays responsive
         await this.actorStore.runMigration(dbLocation)
-
-        // record the success
-        await this.db.db
-          .updateTable('actor')
-          .set({
-            storeSchemaVersion: getLatestStoreSchemaVersion(),
-            storeIsMigrating: 0,
-            storeMigratedAt: new Date().toISOString(),
-          })
-          .where('did', '=', claimed.did)
-          .execute()
+        await this.accountManager.markActorStoreMigrationSuccess(claimed.did)
       } catch (e) {
-        await this.db.db
-          .updateTable('actor')
-          .set({ storeIsMigrating: 0 })
-          .where('did', '=', claimed.did)
-          .execute()
+        await this.accountManager.releaseActorStoreMigrationClaim(claimed.did)
         logger.error(
           { did: claimed.did, err: e },
           'Failed to migrate actor store',

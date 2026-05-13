@@ -281,7 +281,7 @@ export class AppContext {
     })
 
     const actorStoreMigrator = new ActorStoreMigrator(
-      accountManager.db,
+      accountManager,
       actorStore,
       // fail loudly if it's foregrounded
       cfg.actorStore.migrateInBackground ? false : true,
