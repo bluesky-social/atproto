@@ -37,6 +37,7 @@ export const lexStringFormat = z.enum([
   'datetime',
   'uri',
   'at-uri',
+  'space-uri',
   'did',
   'handle',
   'at-identifier',

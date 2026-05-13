@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "uri",
+              "format": "space-uri",
               "description": "Reference to the space."
             },
             "collection": {
@@ -46,7 +46,11 @@
           "properties": {}
         }
       },
-      "errors": [{ "name": "InvalidSwap" }]
+      "errors": [
+        {
+          "name": "InvalidSwap"
+        }
+      ]
     }
   }
 }

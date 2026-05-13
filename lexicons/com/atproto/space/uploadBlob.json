@@ -11,7 +11,7 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "uri",
+            "format": "space-uri",
             "description": "Reference to the space."
           }
         }
@@ -25,7 +25,9 @@
           "type": "object",
           "required": ["blob"],
           "properties": {
-            "blob": { "type": "blob" }
+            "blob": {
+              "type": "blob"
+            }
           }
         }
       }

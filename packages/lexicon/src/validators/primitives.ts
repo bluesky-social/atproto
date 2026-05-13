@@ -318,6 +318,8 @@ function string(
         return formats.uri(path, value)
       case 'at-uri':
         return formats.atUri(path, value)
+      case 'space-uri':
+        return formats.spaceUri(path, value)
       case 'did':
         return formats.did(path, value)
       case 'handle':

@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "uri",
+              "format": "space-uri",
               "description": "Reference to the space."
             },
             "validate": {
@@ -64,13 +64,18 @@
       "description": "Operation which creates a new record.",
       "required": ["collection", "value"],
       "properties": {
-        "collection": { "type": "string", "format": "nsid" },
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
         "rkey": {
           "type": "string",
           "format": "record-key",
           "maxLength": 512
         },
-        "value": { "type": "unknown" }
+        "value": {
+          "type": "unknown"
+        }
       }
     },
     "update": {
@@ -78,9 +83,17 @@
       "description": "Operation which updates an existing record.",
       "required": ["collection", "rkey", "value"],
       "properties": {
-        "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "format": "record-key" },
-        "value": { "type": "unknown" }
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        },
+        "value": {
+          "type": "unknown"
+        }
       }
     },
     "delete": {
@@ -88,16 +101,27 @@
       "description": "Operation which deletes an existing record.",
       "required": ["collection", "rkey"],
       "properties": {
-        "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "format": "record-key" }
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        }
       }
     },
     "createResult": {
       "type": "object",
       "required": ["uri", "cid"],
       "properties": {
-        "uri": { "type": "string" },
-        "cid": { "type": "string", "format": "cid" },
+        "uri": {
+          "type": "string"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        },
         "validationStatus": {
           "type": "string",
           "knownValues": ["valid", "unknown"]
@@ -108,8 +132,13 @@
       "type": "object",
       "required": ["uri", "cid"],
       "properties": {
-        "uri": { "type": "string" },
-        "cid": { "type": "string", "format": "cid" },
+        "uri": {
+          "type": "string"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        },
         "validationStatus": {
           "type": "string",
           "knownValues": ["valid", "unknown"]

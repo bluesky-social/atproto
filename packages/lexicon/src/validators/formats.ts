@@ -2,6 +2,7 @@ import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { validateLanguage } from '@atproto/common-web'
 import {
+  assertSpaceUriString,
   ensureValidAtUri,
   ensureValidDid,
   ensureValidHandle,
@@ -45,6 +46,19 @@ export function atUri(path: string, value: string): ValidationResult {
     return {
       success: false,
       error: new ValidationError(`${path} must be a valid at-uri`),
+    }
+  }
+
+  return { success: true, value }
+}
+
+export function spaceUri(path: string, value: string): ValidationResult {
+  try {
+    assertSpaceUriString(value)
+  } catch {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a valid space-uri`),
     }
   }
 

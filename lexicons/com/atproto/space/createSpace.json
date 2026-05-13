@@ -47,7 +47,7 @@
           "properties": {
             "uri": {
               "type": "string",
-              "format": "uri",
+              "format": "space-uri",
               "description": "URI of the created space."
             }
           }
