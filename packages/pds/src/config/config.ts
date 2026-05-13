@@ -416,6 +416,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     wsocial: {
       defaultSubscribeLists: env.wsocialDefaultSubscribeLists || [],
       defaultThreadPref: parseThreadPref(env.wsocialDefaultThreadPref),
+      widInventoryTtlDays: env.widInventoryTtlDays ?? 30,
     },
     wadmin: {
       url: env.wadminUrl,
@@ -637,6 +638,7 @@ export type EmailBrandingConfig = {
 
 export type WSocialConfig = {
   defaultSubscribeLists: string[] // AT-URIs of lists to auto-subscribe human/test accounts on creation
+  widInventoryTtlDays: number // How long (days from created_at) a WID inventory entry is considered live
   defaultThreadPref: {
     enabled: boolean
     treeViewEnabled: boolean // lab_treeViewEnabled: true for threaded, false for linear

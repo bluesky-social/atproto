@@ -527,6 +527,17 @@ async function handleApprovalCallback(
         },
       })
       log.info({ did: approvalDid }, 'link_wid upgrade completed successfully')
+
+      // Mark the inventory account consumed so stock counts stay accurate.
+      // Non-critical: log and continue on failure.
+      try {
+        await ctx.widInventoryManager.markAccountConsumed(jid)
+      } catch (err) {
+        log.warn(
+          { jid: jid.substring(0, 8) + '...', error: (err as Error).message },
+          'link_wid: failed to mark inventory account consumed',
+        )
+      }
     } catch (err) {
       const code = (err as any)?.error ?? (err as Error).message
       log.warn(

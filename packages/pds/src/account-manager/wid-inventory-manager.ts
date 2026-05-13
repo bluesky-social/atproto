@@ -3,16 +3,55 @@ import { AccountDb } from './db'
 import { WidAccountInventoryEntry } from './db/schema'
 
 export class WidInventoryManager {
-  constructor(public db: AccountDb) {}
+  /**
+   * @param inventoryTtlDays How long (in days from created_at) a WID inventory
+   *   entry is considered live. Sourced from PDS_WID_INVENTORY_TTL_DAYS;
+   *   defaults to 30 if not set.
+   */
+  constructor(
+    public db: AccountDb,
+    private inventoryTtlDays: number = 30,
+  ) {}
 
   /**
-   * Allocate an available WID account from inventory
-   * Returns null if no accounts available
-   * Updates status to 'allocated' and records email  */
+   * Allocate an available WID account from inventory for the given email.
+   * Idempotent: if the email already has an 'allocated' row, returns it as-is.
+   * This ensures that returning users (who never completed onboarding) get the
+   * same QR code and JID rather than consuming a fresh inventory slot.
+   * Returns null if no accounts are available.
+   */
   async allocateAccount(
     email: string,
   ): Promise<WidAccountInventoryEntry | null> {
     const normalizedEmail = email.trim().toLowerCase()
+
+    // Return any existing allocation for this email so the call is idempotent,
+    // but only if the inventory entry is still within its TTL.
+    // TTL is measured from created_at (the day the WID operator provisioned
+    // the entry), not allocated_at, since the QR code lifetime starts at
+    // provisioning time. If the entry has expired, fall through and allocate
+    // a fresh one — the expired entry stays 'allocated' (its QR is stale/dead).
+    const ttlCutoff = new Date(
+      Date.now() - this.inventoryTtlDays * 24 * 60 * 60 * 1000,
+    ).toISOString()
+
+    const existing = await this.db.db
+      .selectFrom('wid_account_inventory')
+      .selectAll()
+      .where('status', '=', 'allocated')
+      .where('allocated_to_email', '=', normalizedEmail)
+      .where('created_at', '>', ttlCutoff) // only return if still within TTL
+      .orderBy('allocated_at', 'asc') // oldest first in the unlikely case of duplicates
+      .limit(1)
+      .executeTakeFirst()
+
+    if (existing) {
+      dbLogger.info(
+        { did: existing.did, email: normalizedEmail },
+        'Returning existing inventory allocation for email (still within TTL)',
+      )
+      return existing
+    }
 
     // Find an available account
     const account = await this.db.db

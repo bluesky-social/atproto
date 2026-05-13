@@ -16087,6 +16087,47 @@ export const schemaDict = {
       },
     },
   },
+  EuWsocialServerAllocateWidForAccount: {
+    lexicon: 1,
+    id: 'eu.wsocial.server.allocateWidForAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Allocate a WID account from the server inventory for the authenticated user. Returns the QR code URL needed to onboard the W Identity app. The caller must already have an active session (unverified account type). Returns an error if the inventory is empty.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['qrCodeUrl', 'expiresAt'],
+            properties: {
+              qrCodeUrl: {
+                type: 'string',
+                description:
+                  'URL of the WID onboarding QR code image. Display this so the user can scan it with the W Identity app to provision their WID.',
+              },
+              expiresAt: {
+                type: 'string',
+                description:
+                  'ISO timestamp after which this allocation expires and the QR code may no longer be valid.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InventoryEmpty',
+            description:
+              'No WID accounts are available in the server inventory. Try again later or contact support.',
+          },
+          {
+            name: 'AlreadyLinked',
+            description: 'This account already has a W Identity association.',
+          },
+        ],
+      },
+    },
+  },
   EuWsocialServerCheckHandleAvailability: {
     lexicon: 1,
     id: 'eu.wsocial.server.checkHandleAvailability',
@@ -22840,6 +22881,8 @@ export const ids = {
     'com.atproto.temp.revokeAccountCredentials',
   EuWsocialAdminCreatePassInvitation: 'eu.wsocial.admin.createPassInvitation',
   EuWsocialQuickloginLinkWid: 'eu.wsocial.quicklogin.linkWid',
+  EuWsocialServerAllocateWidForAccount:
+    'eu.wsocial.server.allocateWidForAccount',
   EuWsocialServerCheckHandleAvailability:
     'eu.wsocial.server.checkHandleAvailability',
   IoTrustanchorAdminClearInventory: 'io.trustanchor.admin.clearInventory',

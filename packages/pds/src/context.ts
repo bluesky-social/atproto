@@ -517,7 +517,10 @@ export class AppContext {
     const { WidInventoryManager } = await import(
       './account-manager/wid-inventory-manager'
     )
-    const widInventoryManager = new WidInventoryManager(accountManager.db)
+    const widInventoryManager = new WidInventoryManager(
+      accountManager.db,
+      cfg.wsocial.widInventoryTtlDays,
+    )
 
     return new AppContext({
       actorStore,
