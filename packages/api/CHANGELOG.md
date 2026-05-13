@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.19.18
+
+### Patch Changes
+
+- [#4932](https://github.com/bluesky-social/atproto/pull/4932) [`18d3114`](https://github.com/bluesky-social/atproto/commit/18d311494038b73e3c3429e504ca6cc05bba5f6d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4933](https://github.com/bluesky-social/atproto/pull/4933) [`0533a5f`](https://github.com/bluesky-social/atproto/commit/0533a5f60ecc1f15feb9c4940781bc7e217a3644) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - trigger build after github actions previously disabled
+
 ## 0.19.17
 
 ### Patch Changes
