@@ -14,6 +14,8 @@ import {
   SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
+  VerifyEmailConfirmInput,
+  VerifyEmailRequestInput,
 } from './account/account-store.js'
 import { SignInData } from './account/sign-in-data.js'
 import { SignUpInput } from './account/sign-up-input.js'
@@ -130,6 +132,52 @@ export type OAuthHooks = {
    */
   onUpdateEmailConfirmed?: (data: {
     input: UpdateEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests an email verification, before the
+   * verification request is triggered on the account store. Only triggered with
+   * authenticated sessions, so the `account` is always available.
+   */
+  onVerifyEmailRequest?: (data: {
+    input: VerifyEmailRequestInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user requests an email verification, and the
+   * verification request was successfully triggered on the account store.
+   */
+  onVerifyEmailRequested?: (data: {
+    input: VerifyEmailRequestInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user confirms an email verification, before the
+   * verification is actually confirmed on the account store. Only triggered
+   * with authenticated sessions, so the `account` is always available.
+   */
+  onVerifyEmailConfirm?: (data: {
+    input: VerifyEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user confirms an email verification, and the
+   * verification was successfully confirmed on the account store.
+   */
+  onVerifyEmailConfirmed?: (data: {
+    input: VerifyEmailConfirmInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account

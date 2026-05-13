@@ -144,6 +144,19 @@ export function SessionProvider({
     [setCurrent, setSessions],
   )
 
+  const updateAccount = useCallback(
+    (sub: string, changes: Partial<Omit<Account, 'sub'>>) => {
+      setSessions((sessions) =>
+        sessions.map((s) =>
+          s.account.sub === sub
+            ? { ...s, account: { ...s.account, ...changes } }
+            : s,
+        ),
+      )
+    },
+    [setSessions],
+  )
+
   const removeSession = useCallback(
     (sub: string | string[]) => {
       if (Array.isArray(sub)) {
@@ -180,12 +193,31 @@ export function SessionProvider({
         '/sign-in': ({ json }) => upsertSession(json),
         '/sign-up': ({ json }) => upsertSession(json),
         '/sign-out': ({ input }) => removeSession(input.sub),
+        '/update-email-confirm': ({ input }) =>
+          updateAccount(input.sub, {
+            email: input.email,
+            // The store sends a new verification email on change.
+            email_verified: false,
+          }),
+        '/verify-email-confirm': ({ input }) =>
+          updateAccount(input.sub, {
+            email: input.email,
+            email_verified: true,
+          }),
       },
       headers: session?.ephemeralToken
         ? () => ({ Authorization: `Bearer ${session.ephemeralToken}` })
         : undefined,
     })
-  }, [session, showBoundary, removeSession, upsertSession, notify, t])
+  }, [
+    session,
+    showBoundary,
+    removeSession,
+    upsertSession,
+    updateAccount,
+    notify,
+    t,
+  ])
 
   const value = useMemo<SessionContextType>(
     () => ({

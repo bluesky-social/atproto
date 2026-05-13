@@ -201,6 +201,12 @@ export interface AccountStore {
   updateEmailRequest(
     data: UpdateEmailRequestInput,
   ): Awaitable<UpdateEmailRequestOutput>
+  /**
+   * Must trigger a verification email to be sent to the new email address, that
+   * will then be confirmed through {@link updateEmailConfirm}. The account's
+   * `email_verified` field is expected to become `false` until the new email is
+   * confirmed.
+   */
   updateEmailConfirm(data: UpdateEmailConfirmInput): Awaitable<Account | null>
 
   verifyEmailRequest(data: VerifyEmailRequestInput): Awaitable<void>

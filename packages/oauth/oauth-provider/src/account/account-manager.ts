@@ -23,6 +23,8 @@ import {
   SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
+  VerifyEmailConfirmInput,
+  VerifyEmailRequestInput,
 } from './account-store.js'
 import { SignInData } from './sign-in-data.js'
 import { SignUpInput } from './sign-up-input.js'
@@ -391,6 +393,58 @@ export class AccountManager {
     }
 
     await this.hooks.onUpdateEmailConfirmed?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
+  }
+
+  public async verifyEmailRequest(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: VerifyEmailRequestInput,
+    account: Account,
+  ): Promise<void> {
+    await this.hooks.onVerifyEmailRequest?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    await this.store.verifyEmailRequest(input)
+
+    await this.hooks.onVerifyEmailRequested?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+  }
+
+  public async verifyEmailConfirm(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: VerifyEmailConfirmInput,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onVerifyEmailConfirm?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.verifyEmailConfirm(input)
+
+    if (!updatedAccount) {
+      throw new InvalidRequestError('Invalid token')
+    }
+
+    await this.hooks.onVerifyEmailConfirmed?.call(null, {
       deviceId,
       deviceMetadata,
       input,
