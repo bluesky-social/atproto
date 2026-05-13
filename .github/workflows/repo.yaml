@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - '*'
-  push:
-    branches:
-      - divy/node-22-24
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
