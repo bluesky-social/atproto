@@ -174,4 +174,63 @@ describe('actor store migration', () => {
       await migrator.destroy()
     })
   })
+
+  describe('event loop blocking', () => {
+    let charlieDid: string
+
+    beforeAll(async () => {
+      // create a fresh account at the current schema baseline (no extra
+      // migrations registered yet)
+      const charlie = await client.call(com.atproto.server.createAccount, {
+        handle: 'charlie.test',
+        email: 'charlie@test.com',
+        password: 'password',
+      })
+      charlieDid = charlie.did
+
+      // inject a slow migration. the recursive CTE executes inside a single
+      // better-sqlite3 .run() call, which is synchronous and pegs the event
+      // loop for the duration of the query.
+      migrations['998-slow'] = {
+        async up(db) {
+          await sql`
+            WITH RECURSIVE c(x) AS (
+              SELECT 1 UNION ALL SELECT x + 1 FROM c WHERE x < 10000000
+            )
+            SELECT max(x) FROM c
+          `.execute(db)
+        },
+        async down() {},
+      }
+    })
+
+    afterAll(() => {
+      delete migrations['998-slow']
+    })
+
+    it('does not block the event loop for more than 100ms during a migration', async () => {
+      let maxLagMs = 0
+      const tickMs = 10
+      let lastTick = performance.now()
+      const interval = setInterval(() => {
+        const now = performance.now()
+        const lag = now - lastTick - tickMs
+        if (lag > maxLagMs) maxLagMs = lag
+        lastTick = now
+      }, tickMs)
+      interval.unref?.()
+
+      let actorDb: any
+      try {
+        actorDb = await ctx.actorStore.openDb(charlieDid)
+        // wait for the lag-detector loop to tick at least once more
+        await new Promise((resolve) => setTimeout(resolve, 20))
+      } finally {
+        clearInterval(interval)
+        actorDb?.close()
+      }
+
+      expect(maxLagMs).toBeLessThan(100)
+    })
+  })
 })
