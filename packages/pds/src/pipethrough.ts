@@ -79,8 +79,19 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-type': body && req.headers['content-type'],
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
+      }
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+      // Some upstream AppView endpoints (notably Bluesky's
+      // `app.bsky.unspecced.getPopularFeedGenerators`) silently change
+      // behaviour when they receive an authenticated request — e.g. they
+      // return the user's saved feeds and ignore the `query` filter, instead
+      // of returning a globally filtered popular-feeds list. Forwarding such
+      // calls without service auth lets the upstream serve the
+      // anonymous/discovery response we actually want. The user is still
+      // authenticated to *this* PDS — we just don't tell the upstream who
+      // they are.
+      if (!ANONYMIZED_METHODS.has(lxm)) {
+        headers.authorization = `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -529,6 +540,32 @@ export const CHAT_BSKY_METHODS = new Set<string>([
 export const PRIVILEGED_METHODS = new Set<string>([
   ...CHAT_BSKY_METHODS,
   ids.ComAtprotoServerCreateAccount,
+])
+
+// Methods whose upstream service-auth header must be stripped before we
+// proxy them. Several Bluesky AppView discovery endpoints in the
+// `app.bsky.unspecced.*` namespace silently change behaviour when they
+// receive an authenticated request:
+//
+//   - `getPopularFeedGenerators` returns the caller's saved feeds and
+//     ignores the `query` parameter — feed search becomes "your saved
+//     feeds".
+//   - `getTrendingTopics` / `getTrends` return a stale, personalized,
+//     near-empty cohort instead of the live global trending list.
+//
+// In every case the same endpoint, called anonymously, returns the proper
+// public response we actually want. Stripping service auth on these
+// outbound calls fixes the symptom without affecting authenticated reads
+// (timelines, profiles, notifications, etc.) which depend on knowing who
+// the user is.
+//
+// We still authenticate the user against *this* PDS — we just don't tell
+// the upstream who they are. If you find another endpoint with the same
+// authenticated-vs-anonymous divergence, add it here.
+export const ANONYMIZED_METHODS = new Set<string>([
+  ids.AppBskyUnspeccedGetPopularFeedGenerators,
+  ids.AppBskyUnspeccedGetTrendingTopics,
+  ids.AppBskyUnspeccedGetTrends,
 ])
 
 // These endpoints are related to account management and must be used directly,

@@ -61,6 +61,7 @@ export class TestPds {
       termsOfServiceUrl: 'https://bsky.social/about/support/tos',
       privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
       supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
+      wadminUrl: process.env.PDS_WADMIN_URL,
       ...config,
     }
     const cfg = pds.envToCfg(env)
