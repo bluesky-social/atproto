@@ -21,11 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          cache: false
       - uses: actions/setup-node@v6
         with:
-          cache: pnpm
           node-version-file: '.nvmrc'
           registry-url: 'https://registry.npmjs.org'
+          # ⚠️ Do not use cache on purpose during publish to avoid any potential
+          # cache poisoning issues. We want to make sure we always download the
+          # dependencies from NPM.
+          # cache: pnpm
+          package-manager-cache: false
       # Temporary workaround for an issue with Node.js v22
       # https://github.com/npm/cli/issues/9151
       # https://github.com/npm/cli/pull/9152
