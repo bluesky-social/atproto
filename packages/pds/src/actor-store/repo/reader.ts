@@ -1,9 +1,9 @@
 import { BlobStore } from '@atproto/repo'
-import { SyncEvtData } from '../../repo'
-import { BlobReader } from '../blob/reader'
-import { ActorDb } from '../db'
-import { RecordReader } from '../record/reader'
-import { SqlRepoReader } from './sql-repo-reader'
+import { SyncEvtData } from '../../repo/index.js'
+import { BlobReader } from '../blob/reader.js'
+import { ActorDb } from '../db/index.js'
+import { RecordReader } from '../record/reader.js'
+import { SqlRepoReader } from './sql-repo-reader.js'
 
 export class RepoReader {
   blob: BlobReader

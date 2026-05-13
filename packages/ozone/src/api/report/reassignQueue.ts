@@ -1,10 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { getReportById } from '../../mod-service/report'
-import { reassignReportQueue } from '../../report/reassign'
-import { buildReportView, hydrateReportInfo } from '../../report/views'
-import { getAuthDid, getPdsAccountInfos } from '../util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { getReportById } from '../../mod-service/report.js'
+import { reassignReportQueue } from '../../report/reassign.js'
+import { buildReportView, hydrateReportInfo } from '../../report/views.js'
+import { getAuthDid, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.report.reassignQueue({

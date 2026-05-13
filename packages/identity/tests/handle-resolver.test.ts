@@ -1,4 +1,4 @@
-import { HandleResolver } from '../src'
+import { HandleResolver } from '../src/index.js'
 
 jest.mock('node:dns/promises', () => {
   return {

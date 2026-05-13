@@ -11,7 +11,7 @@ import {
 import {
   REVIEWNONE,
   REVIEWOPEN,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
+} from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 
 describe('report-muting', () => {
   let network: TestNetwork

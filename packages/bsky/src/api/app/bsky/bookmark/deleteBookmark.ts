@@ -1,8 +1,8 @@
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { Namespaces } from '../../../../stash'
-import { validateUri } from './util'
+import { Namespaces } from '../../../../stash.js'
+import { validateUri } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.bookmark.deleteBookmark, {

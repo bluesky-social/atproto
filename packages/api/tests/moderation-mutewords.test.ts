@@ -1,5 +1,5 @@
-import { RichText, mock, moderatePost } from '../src/'
-import { matchMuteWords } from '../src/moderation/mutewords'
+import { RichText, mock, moderatePost } from '../src//index.js'
+import { matchMuteWords } from '../src/moderation/mutewords.js'
 
 describe(`matchMuteWords`, () => {
   describe(`tags`, () => {

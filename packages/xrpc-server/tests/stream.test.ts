@@ -10,7 +10,7 @@ import {
   XrpcStreamServer,
   byFrame,
   byMessage,
-} from '../src'
+} from '../src/index.js'
 
 describe('Stream', () => {
   const wait = (ms) => new Promise((res) => setTimeout(res, ms))

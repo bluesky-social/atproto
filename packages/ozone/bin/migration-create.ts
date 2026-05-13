@@ -19,7 +19,7 @@ export async function main() {
   await fs.writeFile(path.join(dir, `${filename}.ts`), template, { flag: 'wx' })
   await fs.writeFile(
     path.join(dir, 'index.ts'),
-    `export * as _${prefix} from './${filename}'\n`,
+    `export * as _${prefix} from './${filename}.js'\n`,
     { flag: 'a' },
   )
 }

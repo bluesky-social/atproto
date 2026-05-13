@@ -11,8 +11,8 @@ import {
   UnknownRow,
   sql,
 } from 'kysely'
-import { dbLogger } from '../logger'
-import { retrySqlite } from './util'
+import { dbLogger } from '../logger.js'
+import { retrySqlite } from './util.js'
 
 const DEFAULT_PRAGMAS = {
   // strict: 'ON', // @TODO strictness should live on table defs instead

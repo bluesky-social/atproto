@@ -1,19 +1,19 @@
 import { GrowthBookClient } from '@growthbook/growthbook'
 import type express from 'express'
-import { featureGatesLogger } from '../logger'
-import { Gate, IGNORE_METRICS_FOR_GATES } from './gates'
-import { MetricsClient } from './metrics'
+import { featureGatesLogger } from '../logger.js'
+import { Gate, IGNORE_METRICS_FOR_GATES } from './gates.js'
+import { MetricsClient } from './metrics.js'
 import {
   CheckedFeatureGatesMap,
   ScopedFeatureGatesClient,
   UserContext,
-} from './types'
+} from './types.js'
 import {
   extractUserContextFromGrowthbookUserContext,
   mergeUserContexts,
   normalizeUserContext,
   parsedUserContextToTrackingMetadata,
-} from './utils'
+} from './utils.js'
 
 /**
  * We want this to be sufficiently high that we don't time out under
@@ -33,7 +33,7 @@ const REFETCH_INTERVAL = 60e3 // 1 minute
 const ANALYTICS_HEADER_DEVICE_ID = 'X-Bsky-Device-Id'
 const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
 
-export { type ScopedFeatureGatesClient } from './types'
+export { type ScopedFeatureGatesClient } from './types.js'
 
 export class FeatureGatesClient {
   private ready = false

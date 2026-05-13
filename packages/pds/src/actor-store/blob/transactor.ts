@@ -14,12 +14,12 @@ import {
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../../background'
+import { BackgroundQueue } from '../../background.js'
 import { com } from '../../lexicons/index.js'
-import { blobStoreLogger as log } from '../../logger'
-import { PreparedWrite } from '../../repo/types'
-import { ActorDb, Blob as BlobTable } from '../db'
-import { BlobReader } from './reader'
+import { blobStoreLogger as log } from '../../logger.js'
+import { PreparedWrite } from '../../repo/types.js'
+import { ActorDb, Blob as BlobTable } from '../db/index.js'
+import { BlobReader } from './reader.js'
 
 export type BlobMetadata = {
   tempKey: string

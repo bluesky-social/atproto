@@ -1,17 +1,20 @@
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { ensureValidRecordKey } from '@atproto/syntax'
-import { AppContext } from '../context'
-import { Database } from '../db'
-import { OperationMethod, createOperationChannel } from '../db/schema/operation'
-import { Service } from '../proto/bsync_connect'
+import { AppContext } from '../context.js'
+import { Database } from '../db/index.js'
+import {
+  OperationMethod,
+  createOperationChannel,
+} from '../db/schema/operation.js'
+import { Service } from '../proto/bsync_connect.js'
 import {
   Method,
   PutOperationRequest,
   PutOperationResponse,
-} from '../proto/bsync_pb'
-import { authWithApiKey } from './auth'
-import { isValidDid, validateNamespace } from './util'
+} from '../proto/bsync_pb.js'
+import { authWithApiKey } from './auth.js'
+import { isValidDid, validateNamespace } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async putOperation(req, handlerCtx) {

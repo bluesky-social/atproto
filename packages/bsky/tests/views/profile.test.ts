@@ -9,7 +9,7 @@ import {
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewer } from '../_util'
+import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
   let network: TestNetwork

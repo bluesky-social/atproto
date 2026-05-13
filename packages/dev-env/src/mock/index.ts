@@ -2,10 +2,10 @@ import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { ConflictingQueueError } from '@atproto/api/dist/client/types/tools/ozone/queue/createQueue'
 import { Database } from '@atproto/bsky'
 import { AtUri, AtUriString } from '@atproto/syntax'
-import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
-import { postTexts, replyTexts } from './data'
-import blurHashB64 from './img/blur-hash-avatar-b64'
-import labeledImgB64 from './img/labeled-img-b64'
+import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index.js'
+import { postTexts, replyTexts } from './data.js'
+import blurHashB64 from './img/blur-hash-avatar-b64.js'
+import labeledImgB64 from './img/labeled-img-b64.js'
 
 // NOTE
 // deterministic date generator
@@ -623,7 +623,7 @@ export async function generateMockSetup(env: TestNetwork) {
   await setVerifier(env.bsky.db, alice.assertDid)
 
   // @TODO These are useful when testing complex threads, but don't need to be enabled all the time. We could make it configurable.
-  // import * as seedThreadV2 from '../seed/thread-v2'
+  // import * as seedThreadV2 from '../seed/thread-v2.js'
   // const sc = env.getSeedClient()
   // await seedThreadV2.simple(sc)
   // await seedThreadV2.long(sc)

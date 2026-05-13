@@ -5,9 +5,9 @@ import {
   AppBskyNotificationListNotifications,
   ChatBskyActorDefs,
   ComAtprotoLabelDefs,
-} from '../client/index'
-import { KnownLabelValue } from './const/labels'
-import { MuteWordMatch } from './mutewords'
+} from '../client/index.js'
+import { KnownLabelValue } from './const/labels.js'
+import { MuteWordMatch } from './mutewords.js'
 
 // syntax
 // =

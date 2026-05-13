@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { PingRequest, PingResponse, PushNotificationsRequest, PushNotificationsResponse, RegisterDeviceTokenRequest, RegisterDeviceTokenResponse, SetAgeRestrictedRequest, SetAgeRestrictedResponse, UnregisterDeviceTokenRequest, UnregisterDeviceTokenResponse } from "./courier_pb";
+import { PingRequest, PingResponse, PushNotificationsRequest, PushNotificationsResponse, RegisterDeviceTokenRequest, RegisterDeviceTokenResponse, SetAgeRestrictedRequest, SetAgeRestrictedResponse, UnregisterDeviceTokenRequest, UnregisterDeviceTokenResponse } from "./courier_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**

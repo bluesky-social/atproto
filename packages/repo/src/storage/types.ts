@@ -1,8 +1,8 @@
 import type { Readable } from 'node:stream'
 import { check } from '@atproto/common-web'
 import { Cid, LexMap } from '@atproto/lex-data'
-import { BlockMap } from '../block-map'
-import { CommitData } from '../types'
+import { BlockMap } from '../block-map.js'
+import { CommitData } from '../types.js'
 
 export interface RepoStorage {
   // Writable

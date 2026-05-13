@@ -6,8 +6,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { REPORT_TYPE_GROUPS } from '../src/report/stats'
+import { ids } from '../src/lexicon/lexicons.js'
+import { REPORT_TYPE_GROUPS } from '../src/report/stats.js'
 
 describe('report-stats', () => {
   let network: TestNetwork

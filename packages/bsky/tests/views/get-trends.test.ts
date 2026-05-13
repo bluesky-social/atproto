@@ -5,7 +5,7 @@ import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
 import { AppBskyUnspeccedGetTrendsSkeleton, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { Users, trendsSeed } from '../seed/get-trends'
+import { Users, trendsSeed } from '../seed/get-trends.js'
 
 describe('getTrends', () => {
   let network: TestNetwork

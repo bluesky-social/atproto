@@ -1,4 +1,4 @@
-import { ParsedLabelers, formatLabelerHeader } from '../util'
+import { ParsedLabelers, formatLabelerHeader } from '../util.js'
 
 export const BSKY_USER_AGENT = 'BskyAppView'
 export const ATPROTO_CONTENT_LABELERS = 'Atproto-Content-Labelers'

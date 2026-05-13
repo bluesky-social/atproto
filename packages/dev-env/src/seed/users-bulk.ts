@@ -1,5 +1,5 @@
 import { chunkArray } from '@atproto/common-web'
-import { SeedClient } from './client'
+import { SeedClient } from './client.js'
 
 export default async (sc: SeedClient, max = Infinity) => {
   // @TODO when these are run in parallel, seem to get an intermittent

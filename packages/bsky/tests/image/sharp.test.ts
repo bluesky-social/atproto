@@ -5,7 +5,7 @@ import {
   createImageProcessor,
   createImageUpscaler,
   getInfo,
-} from '../../src/image/sharp'
+} from '../../src/image/sharp.js'
 
 describe('sharp image processor', () => {
   it('scales up to cover.', async () => {

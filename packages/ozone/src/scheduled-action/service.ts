@@ -1,11 +1,11 @@
 import { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ScheduledActionStatus, ScheduledActionType } from '../api/util'
-import { Database } from '../db'
-import { ScheduledAction } from '../db/schema/scheduled-action'
-import { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs'
-import { dbLogger } from '../logger'
-import { SchedulingParams } from './types'
+import { ScheduledActionStatus, ScheduledActionType } from '../api/util.js'
+import { Database } from '../db/index.js'
+import { ScheduledAction } from '../db/schema/scheduled-action.js'
+import { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { dbLogger } from '../logger.js'
+import { SchedulingParams } from './types.js'
 
 export type ScheduledActionServiceCreator = (
   db: Database,

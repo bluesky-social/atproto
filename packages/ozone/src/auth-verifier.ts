@@ -6,7 +6,7 @@ import {
   parseReqNsid,
   verifyJwt,
 } from '@atproto/xrpc-server'
-import { TeamService } from './team'
+import { TeamService } from './team/index.js'
 
 type ReqCtx = {
   req: express.Request

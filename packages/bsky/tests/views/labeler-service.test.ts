@@ -7,7 +7,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromLabeler } from '../_util'
+import { forSnapshot, stripViewerFromLabeler } from '../_util.js'
 
 describe('labeler service views', () => {
   let network: TestNetwork

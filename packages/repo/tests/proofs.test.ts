@@ -2,10 +2,10 @@ import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { cidForLex } from '@atproto/lex-cbor'
 import { NsidString } from '@atproto/syntax'
-import { RecordCidClaim, RecordPath, Repo, RepoContents } from '../src'
-import { MemoryBlockstore } from '../src/storage'
-import * as sync from '../src/sync'
-import * as util from './_util'
+import { RecordCidClaim, RecordPath, Repo, RepoContents } from '../src/index.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
+import * as sync from '../src/sync/index.js'
+import * as util from './_util.js'
 
 describe('Repo Proofs', () => {
   let storage: MemoryBlockstore

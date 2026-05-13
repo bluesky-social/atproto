@@ -1,10 +1,10 @@
-import { ModerationOpts } from '../dist'
 import {
+  ModerationOpts,
   interpretLabelValueDefinition,
   mock,
   moderatePost,
   moderateProfile,
-} from '../src'
+} from '../src/index.js'
 import './util/moderation-behavior'
 
 describe('Moderation', () => {

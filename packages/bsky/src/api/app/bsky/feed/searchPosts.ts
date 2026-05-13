@@ -1,15 +1,15 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString, Client } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
+import { ServerConfig } from '../../../../config.js'
+import { AppContext } from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
 import {
   PostSearchQuery,
   parsePostSearchQuery,
-} from '../../../../data-plane/server/util'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+} from '../../../../data-plane/server/util.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -17,10 +17,10 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(

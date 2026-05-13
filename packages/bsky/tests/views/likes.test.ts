@@ -1,6 +1,11 @@
 import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
+import {
+  constantDate,
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+} from '../_util.js'
 
 describe('pds like views', () => {
   let network: TestNetwork

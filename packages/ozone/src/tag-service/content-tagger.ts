@@ -1,6 +1,6 @@
-import { ModerationService } from '../mod-service'
-import { ModSubject } from '../mod-service/subject'
-import { ModerationSubjectStatusRow } from '../mod-service/types'
+import { ModerationService } from '../mod-service/index.js'
+import { ModSubject } from '../mod-service/subject.js'
+import { ModerationSubjectStatusRow } from '../mod-service/types.js'
 
 export abstract class ContentTagger {
   constructor(

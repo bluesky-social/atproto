@@ -1,6 +1,6 @@
 import AtpAgent, { AppBskyLabelerDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { OzoneConfig } from '../config'
+import { OzoneConfig } from '../config/index.js'
 import {
   REASONAPPEAL,
   REASONMISLEADING,
@@ -9,8 +9,8 @@ import {
   REASONSEXUAL,
   REASONSPAM,
   REASONVIOLATION,
-} from '../lexicon/types/com/atproto/moderation/defs'
-import { httpLogger } from '../logger'
+} from '../lexicon/types/com/atproto/moderation/defs.js'
+import { httpLogger } from '../logger.js'
 
 // Reverse mapping from new ozone namespaced reason types to old com.atproto namespaced reason types
 export const NEW_TO_OLD_REASON_MAPPING: Record<string, string> = {

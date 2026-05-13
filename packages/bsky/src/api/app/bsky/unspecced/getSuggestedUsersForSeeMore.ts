@@ -1,12 +1,12 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
 import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -14,8 +14,8 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedUsersForSeeMore = createPipeline(

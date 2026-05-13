@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { BackgroundQueue, PeriodicBackgroundTask } from '../background'
-import { dbLogger } from '../logger'
+import { BackgroundQueue, PeriodicBackgroundTask } from '../background.js'
+import { dbLogger } from '../logger.js'
 
 export class MaterializedViewRefresher extends PeriodicBackgroundTask {
   constructor(backgroundQueue: BackgroundQueue, interval = 30 * MINUTE) {

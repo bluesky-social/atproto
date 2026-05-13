@@ -2,8 +2,8 @@ import { AtpAgent, ids } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { CommitDataWithOps, sequencer } from '@atproto/pds'
-import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
-import { forSnapshot } from '../_util'
+import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema.js'
+import { forSnapshot } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 

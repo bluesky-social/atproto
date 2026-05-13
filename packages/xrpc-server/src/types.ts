@@ -2,8 +2,8 @@ import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
 import { l } from '@atproto/lex-schema'
-import { ErrorResult, XRPCError } from './errors'
-import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
+import { ErrorResult, XRPCError } from './errors.js'
+import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter.js'
 
 export type Awaitable<T> = T | Promise<T>
 

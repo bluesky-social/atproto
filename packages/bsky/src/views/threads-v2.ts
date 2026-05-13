@@ -1,5 +1,5 @@
 import { $Typed } from '@atproto/lex'
-import { HydrateCtx } from '../hydration/hydrator'
+import { HydrateCtx } from '../hydration/hydrator.js'
 import {
   GetPostThreadV2QueryParams,
   ThreadItem,

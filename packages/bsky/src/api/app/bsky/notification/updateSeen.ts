@@ -1,7 +1,7 @@
 import { Struct, Timestamp } from '@bufbuild/protobuf'
 import { v3 as murmurV3 } from 'murmurhash'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

@@ -4,7 +4,7 @@ import {
   interpretLabelValueDefinition,
   mock,
   moderatePost,
-} from '../src'
+} from '../src/index.js'
 import './util/moderation-behavior'
 
 interface ScenarioResult {

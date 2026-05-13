@@ -1,6 +1,6 @@
 /// <reference types="jest" />
-import { featureGatesLogger } from '../logger'
-import { MetricsClient } from './metrics'
+import { featureGatesLogger } from '../logger.js'
+import { MetricsClient } from './metrics.js'
 
 jest.mock('../logger', () => ({
   featureGatesLogger: {

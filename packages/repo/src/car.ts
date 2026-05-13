@@ -2,9 +2,9 @@ import { setImmediate } from 'node:timers/promises'
 import * as varint from 'varint'
 import * as cbor from '@atproto/lex-cbor'
 import { Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
-import { BlockMap } from './block-map'
-import { CarBlock, schema } from './types'
-import { concatBytesAsync } from './util'
+import { BlockMap } from './block-map.js'
+import { CarBlock, schema } from './types.js'
+import { concatBytesAsync } from './util.js'
 
 export async function* writeCarStream(
   root: Cid | null,

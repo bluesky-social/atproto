@@ -7,8 +7,8 @@ import {
 import {
   ROLEADMIN,
   ROLEMODERATOR,
-} from '../dist/lexicon/types/tools/ozone/team/defs'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
+} from '../dist/lexicon/types/tools/ozone/team/defs.js'
+import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('protected-tags', () => {
   let network: TestNetwork

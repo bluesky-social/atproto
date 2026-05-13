@@ -1,7 +1,7 @@
 import { parseCid } from '@atproto/lex-data'
-import { BlockMap } from '../src'
-import { MST } from '../src/mst'
-import { MemoryBlockstore } from '../src/storage'
+import { BlockMap } from '../src/index.js'
+import { MST } from '../src/mst/index.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
 import fixtures from './commit-proof-fixtures.json'
 
 describe('commit proofs', () => {

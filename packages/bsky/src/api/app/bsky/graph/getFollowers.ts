@@ -1,12 +1,12 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   Hydrator,
   mergeStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -14,10 +14,10 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getFollowers = createPipeline(

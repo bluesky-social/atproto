@@ -5,7 +5,7 @@ import {
   paginateAll,
   stripViewer,
   stripViewerFromPost,
-} from '../_util'
+} from '../_util.js'
 
 describe('list feed views', () => {
   let network: TestNetwork

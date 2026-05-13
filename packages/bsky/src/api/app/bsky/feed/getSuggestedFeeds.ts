@@ -1,10 +1,10 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { parseString } from '../../../../hydration/util'
+import { AppContext } from '../../../../context.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
-import { resHeaders } from '../../../util'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.feed.getSuggestedFeeds, {

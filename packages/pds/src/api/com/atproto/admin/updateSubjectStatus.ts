@@ -1,7 +1,7 @@
 import { parseCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

@@ -1,9 +1,9 @@
 import { TID } from '@atproto/common'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { Namespaces } from '../../../../stash'
-import { assertRolodexOrThrowUnimplemented } from './util'
+import { Namespaces } from '../../../../stash.js'
+import { assertRolodexOrThrowUnimplemented } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.contact.sendNotification, {

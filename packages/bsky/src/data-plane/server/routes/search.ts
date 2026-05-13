@@ -1,8 +1,12 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { IndexedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
-import { parsePostSearchQuery } from '../util'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import {
+  IndexedAtDidKeyset,
+  TimeCidKeyset,
+  paginate,
+} from '../db/pagination.js'
+import { parsePostSearchQuery } from '../util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   // @TODO actor search endpoints still fall back to search service

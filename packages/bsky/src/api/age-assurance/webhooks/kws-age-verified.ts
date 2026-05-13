@@ -1,14 +1,14 @@
 import express, { RequestHandler } from 'express'
-import { ageAssuranceLogger as logger } from '../../../logger'
-import { AGE_ASSURANCE_CONFIG } from '../const'
+import { ageAssuranceLogger as logger } from '../../../logger.js'
+import { AGE_ASSURANCE_CONFIG } from '../const.js'
 import {
   type KWSWebhookAgeVerified,
   parseKWSAgeVerifiedWebhook,
-} from '../kws/age-verified'
-import { parseKWSExternalPayloadV2 } from '../kws/external-payload'
-import { createEvent } from '../stash'
-import { type AppContextWithAA } from '../types'
-import { computeAgeAssuranceAccessOrThrow } from '../util'
+} from '../kws/age-verified.js'
+import { parseKWSExternalPayloadV2 } from '../kws/external-payload.js'
+import { createEvent } from '../stash.js'
+import { type AppContextWithAA } from '../types.js'
+import { computeAgeAssuranceAccessOrThrow } from '../util.js'
 
 export const handler =
   (ctx: AppContextWithAA): RequestHandler =>

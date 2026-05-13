@@ -1,9 +1,9 @@
 import { AtUri } from '@atproto/syntax'
-import { AppBskyActorDefs } from '../../client/index'
-import { ModerationDecision } from '../decision'
-import { ModerationOpts, ModerationSubjectUserList } from '../types'
-import { decideAccount } from './account'
-import { decideProfile } from './profile'
+import { AppBskyActorDefs } from '../../client/index.js'
+import { ModerationDecision } from '../decision.js'
+import { ModerationOpts, ModerationSubjectUserList } from '../types.js'
+import { decideAccount } from './account.js'
+import { decideProfile } from './profile.js'
 
 export function decideUserList(
   subject: ModerationSubjectUserList,
