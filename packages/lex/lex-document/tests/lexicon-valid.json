@@ -65,5 +65,41 @@
         }
       }
     }
+  },
+  {
+    "name": "basic space",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.atmoboards.forum",
+      "defs": {
+        "main": {
+          "type": "space",
+          "name": "AtmoBoards Forum",
+          "description": "A discussion forum",
+          "name:lang": {
+            "es": "Foro AtmoBoards",
+            "ja": "AtmoBoards 掲示板"
+          },
+          "collections": [
+            "com.atmoboards.thread",
+            "com.atmoboards.reply"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "space with empty collections",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.empty",
+      "defs": {
+        "main": {
+          "type": "space",
+          "name": "Empty Space",
+          "collections": []
+        }
+      }
+    }
   }
 ]

@@ -24,6 +24,7 @@ import {
   LexiconRecord,
   LexiconRef,
   LexiconRefUnion,
+  LexiconSpace,
   LexiconString,
   LexiconSubscription,
   LexiconToken,
@@ -138,6 +139,8 @@ export class LexDefBuilder {
     switch (def.type) {
       case 'permission-set':
         return this.addPermissionSet(hash, def)
+      case 'space':
+        return this.addSpace(hash, def)
       case 'procedure':
         return this.addProcedure(hash, def)
       case 'query':
@@ -179,6 +182,21 @@ export class LexDefBuilder {
     await this.addSchema(hash, def, {
       schema: this.pure(
         `l.permissionSet($nsid, [${permission.join(',')}], ${options})`,
+      ),
+    })
+  }
+
+  private async addSpace(hash: string, def: LexiconSpace) {
+    const options = stringifyOptions(def, [
+      'description',
+      'name:lang',
+    ] satisfies (keyof l.SpaceOptions)[])
+
+    const collections = `[${def.collections.map((c) => JSON.stringify(c)).join(',')}]`
+
+    await this.addSchema(hash, def, {
+      schema: this.pure(
+        `l.space($nsid, ${JSON.stringify(def.name)}, ${collections}, ${options})`,
       ),
     })
   }

@@ -235,6 +235,16 @@ export const lexPermissionSet = z.object({
 
 export type LexPermissionSet = z.infer<typeof lexPermissionSet>
 
+export const lexSpace = z.object({
+  type: z.literal('space'),
+  description: z.string().optional(),
+  name: z.string().min(1).max(64),
+  'name:lang': lexLang.optional(),
+  collections: z.array(z.string()),
+})
+
+export type LexSpace = z.infer<typeof lexSpace>
+
 // xrpc
 // =
 
@@ -325,6 +335,7 @@ export type LexRecord = z.infer<typeof lexRecord>
 export const lexUserType = z.custom<
   | LexRecord
   | LexPermissionSet
+  | LexSpace
   | LexXrpcQuery
   | LexXrpcProcedure
   | LexXrpcSubscription
@@ -354,6 +365,9 @@ export const lexUserType = z.custom<
 
       case 'permission-set':
         return lexPermissionSet.parse(val)
+
+      case 'space':
+        return lexSpace.parse(val)
 
       case 'query':
         return lexXrpcQuery.parse(val)
@@ -409,7 +423,7 @@ export const lexUserType = z.custom<
     }
 
     return {
-      message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
+      message: `Invalid type: ${val['type']} must be one of: record, permission-set, space, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
       fatal: true,
     }
   },
@@ -433,6 +447,7 @@ export const lexiconDoc = z
           defId !== 'main' &&
           (def.type === 'record' ||
             def.type === 'permission-set' ||
+            def.type === 'space' ||
             def.type === 'procedure' ||
             def.type === 'query' ||
             def.type === 'subscription')
@@ -443,7 +458,7 @@ export const lexiconDoc = z
       return true
     },
     {
-      message: `Records, permission sets, procedures, queries, and subscriptions must be the main definition.`,
+      message: `Records, permission sets, spaces, procedures, queries, and subscriptions must be the main definition.`,
     },
   )
 export type LexiconDoc = z.infer<typeof lexiconDoc>

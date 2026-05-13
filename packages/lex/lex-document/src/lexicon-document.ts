@@ -634,6 +634,28 @@ export const lexiconPermissionSetSchema = l.object({
  */
 export type LexiconPermissionSet = l.Infer<typeof lexiconPermissionSetSchema>
 
+/**
+ * Schema for validating Lexicon space definitions.
+ */
+export const lexiconSpaceSchema = l.object({
+  type: l.literal('space'),
+  name: l.string({ minLength: 1, maxLength: 64 }),
+  'name:lang': l.optional(lexiconLanguageDict),
+  collections: l.array(l.string({ format: 'nsid' })),
+  description: l.optional(l.string()),
+})
+
+/**
+ * TypeScript type for a Lexicon space definition.
+ *
+ * Declares a permissioned space type. The `name` is shown on OAuth consent
+ * screens when an application requests access to a space of this type;
+ * `collections` lists the recommended record collections for clients.
+ *
+ * @see {@link lexiconSpaceSchema} for the schema definition
+ */
+export type LexiconSpace = l.Infer<typeof lexiconSpaceSchema>
+
 const NAMED_LEXICON_SCHEMAS = [
   ...CONCRETE_TYPES,
   lexiconArraySchema,
@@ -656,6 +678,7 @@ const MAIN_LEXICON_SCHEMAS = [
   lexiconProcedureSchema,
   lexiconQuerySchema,
   lexiconRecordSchema,
+  lexiconSpaceSchema,
   lexiconSubscriptionSchema,
   ...NAMED_LEXICON_SCHEMAS,
 ] as const

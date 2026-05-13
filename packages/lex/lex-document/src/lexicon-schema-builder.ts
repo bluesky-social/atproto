@@ -117,6 +117,7 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
       | l.Subscription
       | l.Procedure
       | l.PermissionSet
+      | l.Space
     >()
     if (!isAsyncIterableObject(indexer)) {
       throw new Error('An iterable indexer is required to build all schemas')
@@ -239,6 +240,8 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
           ),
           def,
         )
+      case 'space':
+        return l.space(doc.id, def.name, def.collections, def)
       case 'procedure':
         return l.procedure(
           doc.id,
