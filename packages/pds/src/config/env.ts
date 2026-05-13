@@ -57,7 +57,7 @@ export function readEnv() {
       'PDS_ACTOR_STORE_MIGRATE_IN_BACKGROUND',
     ),
     actorStoreMaxConcurrentMigrations: envInt(
-      'PDS_ACTOR_STORE_MAX_CONCURRENT_MIGRATIONS',
+      'PDS_ACTOR_STORE_MAX_CONCURRENT_MIGRATIONS', // note, this is a per-process limit, not global
     ),
 
     // blobstore: one required

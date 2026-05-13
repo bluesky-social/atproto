@@ -275,14 +275,10 @@ export class AppContext {
     )
     await accountManager.migrateOrThrow()
 
-    const actorStore = new ActorStore(
-      cfg.actorStore,
-      {
-        blobstore,
-        backgroundQueue,
-      },
-      accountManager.db,
-    )
+    const actorStore = new ActorStore(cfg.actorStore, {
+      blobstore,
+      backgroundQueue,
+    })
 
     const actorStoreMigrator = new ActorStoreMigrator(
       accountManager.db,

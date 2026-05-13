@@ -4,10 +4,7 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
-import { DidString } from '@atproto/lex'
 import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AccountDb } from '../account-manager/db'
-import { countInProgressMigrations } from '../account-manager/helpers/actor-store-migration'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
@@ -21,11 +18,15 @@ import { getLatestStoreSchemaVersion } from './db/migrations'
 
 export class ActorStore {
   reservedKeyDir: string
+  // In-process count of migrations currently running via ensureMigrated.
+  // The total across a deployment is this limit multiplied by the number of
+  // processes. Cross-process coordination for the background migrator loop is
+  // handled separately via the actor.storeIsMigrating column.
+  public migrationsInProgress = 0
 
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
-    public accountDb: AccountDb,
   ) {
     this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
   }
@@ -68,7 +69,7 @@ export class ActorStore {
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
       if (migrateOnOpen) {
-        await this.ensureMigrated(did, db)
+        await this.ensureMigrated(db)
       }
     } catch (err) {
       db.close()
@@ -79,12 +80,17 @@ export class ActorStore {
   }
 
   // Ensures the actor's SQLite store is at the latest schema version.
-  // If storeSchemaVersion is already LATEST, this is a no-op.
-  // Otherwise, we run the migrator. If a concurrent caller is already
-  // migrating the same store, SQLite serializes the writes - the second
-  // caller blocks until the first completes, then sees all migrations
-  // already applied (no-op).
-  private async ensureMigrated(did: string, db: ActorDb): Promise<void> {
+  // If the store is already at LATEST (or beyond, during a rolling deploy),
+  // this is a no-op. Otherwise we run the migrator under an in-process
+  // concurrency cap. If a concurrent caller in this or another process is
+  // already migrating the same store, SQLite serializes the writes - the
+  // second caller blocks until the first completes, then sees all migrations
+  // already applied.
+  //
+  // The account db is NOT updated here. The background ActorStoreMigrator
+  // loop is the sole writer of actor.storeSchemaVersion, and it eventually
+  // visits every actor to reconcile.
+  private async ensureMigrated(db: ActorDb): Promise<void> {
     const lastMigration = await getMigrationLevel(db)
     // Tolerate a store that's ahead of our code: during a rolling deploy, a
     // newer container may have already migrated this store past the latest
@@ -97,46 +103,16 @@ export class ActorStore {
       return
     }
 
-    // We need to do a migration
-
-    if (
-      (await countInProgressMigrations(this.accountDb)) >=
-      this.cfg.maxConcurrentMigrations
-    ) {
+    if (this.migrationsInProgress >= this.cfg.maxConcurrentMigrations) {
       throw new InternalServerError(
         'too many concurrent actor store migrations',
       )
     }
-
-    await this.accountDb.db
-      .updateTable('actor')
-      .set({ storeIsMigrating: 1, storeMigratedAt: new Date().toISOString() })
-      .where('did', '=', did as DidString)
-      .where('storeIsMigrating', '=', 0) // don't bump storeMigratedAt if there's a concurrent migration
-      .execute()
-
+    this.migrationsInProgress++
     try {
       await getMigrator(db).migrateToLatestOrThrow()
-
-      // NOTE: If the process dies here (after migration but before the account db has been updated),
-      // the account db and the actor store will be out of sync
-
-      await this.accountDb.db
-        .updateTable('actor')
-        .set({
-          storeSchemaVersion: getLatestStoreSchemaVersion(),
-          storeIsMigrating: 0,
-          storeMigratedAt: new Date().toISOString(),
-        })
-        .where('did', '=', did as DidString)
-        .execute()
-    } catch (err) {
-      await this.accountDb.db
-        .updateTable('actor')
-        .set({ storeIsMigrating: 0 })
-        .where('did', '=', did as DidString)
-        .execute()
-      throw err
+    } finally {
+      this.migrationsInProgress--
     }
   }
 

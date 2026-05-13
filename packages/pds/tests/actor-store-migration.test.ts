@@ -91,29 +91,22 @@ describe('actor store migration', () => {
 
       afterAll(async () => {
         ctx.actorStore.cfg.maxConcurrentMigrations = originalLimit
-        await ctx.accountManager.db.db
-          .updateTable('actor')
-          .set({ storeIsMigrating: 0 })
-          .execute()
+        ctx.actorStore.migrationsInProgress = 0
       })
 
-      it('rejects store open when concurrency limit is reached', async () => {
-        // simulate alice having an in-progress migration
-        await ctx.accountManager.db.db
-          .updateTable('actor')
-          .set({ storeIsMigrating: 1 })
-          .where('did', '=', aliceDid)
-          .execute()
+      it('rejects store open when in-process concurrency limit is reached', async () => {
+        // simulate one migration in-flight in this process
+        ctx.actorStore.migrationsInProgress = 1
 
-        // bob's open should fail because alice's migration is "in progress"
-        // and bob's SQLite store genuinely needs migration '999'
+        // bob's open should fail because the in-process counter is at the
+        // limit and bob's SQLite store genuinely needs migration '999'
         await expect(ctx.actorStore.openDb(bobDid)).rejects.toThrow(
           'too many concurrent actor store migrations',
         )
       })
     })
 
-    it('ensureMigrated applies migration on store open', async () => {
+    it('ensureMigrated applies migration on store open without touching account db', async () => {
       const actorDb = await ctx.actorStore.openDb(aliceDid)
       try {
         // verify the dummy table was created in the actor store sqlite
@@ -123,13 +116,14 @@ describe('actor store migration', () => {
         `.execute(actorDb.db)
         expect(result.rows).toHaveLength(1)
 
-        // verify account db was updated
+        // on-demand migrations do not update the account db. The
+        // background migrator is the sole writer of storeSchemaVersion.
         const actor = await ctx.accountManager.db.db
           .selectFrom('actor')
           .select(['storeSchemaVersion', 'storeIsMigrating'])
           .where('did', '=', aliceDid)
           .executeTakeFirstOrThrow()
-        expect(actor.storeSchemaVersion).toBe('999')
+        expect(actor.storeSchemaVersion).toBe('001')
         expect(actor.storeIsMigrating).toBe(0)
       } finally {
         actorDb.close()
