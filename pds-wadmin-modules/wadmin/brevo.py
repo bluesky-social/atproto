@@ -55,6 +55,80 @@ def fetch_and_encode_qr_code(qr_code_url: str, timeout: int = 10) -> Optional[st
         return None
 
 
+def send_invitation_email_with_params(
+    api_key: str,
+    template_id: int,
+    email: str,
+    params: dict,
+    from_email: str = "invitations@wsocial.app",
+    from_name: str = "W Social Team",
+    max_retries: int = 3,
+) -> Dict:
+    """
+    Send a Brevo transactional email with a pre-built params dict.
+
+    Use this directly when you control the params yourself (e.g. the pass
+    invitation flow, which only needs ONBOARDING_URL). For the standard WID
+    invitation flow, use send_invitation_email which builds the params for you.
+
+    Returns:
+        dict with keys: success (bool), message_id (str), from_email (str),
+        from_name (str), error (str)
+    """
+    configuration = sib_api_v3_sdk.Configuration()
+    configuration.api_key['api-key'] = api_key
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+        sib_api_v3_sdk.ApiClient(configuration)
+    )
+
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": email}],
+        template_id=template_id,
+        params=params,
+        sender={"email": from_email, "name": from_name},
+    )
+
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            response = api_instance.send_transac_email(send_smtp_email)
+            return {
+                "success": True,
+                "message_id": response.message_id,
+                "from_email": from_email,
+                "from_name": from_name,
+                "error": None,
+            }
+
+        except ApiException as e:
+            import json
+            try:
+                error_data = json.loads(e.body)
+                error_message = error_data.get('message', str(e))
+            except Exception:
+                error_message = str(e)
+
+            last_error = error_message
+
+            if e.status >= 500 or e.status == 429:
+                if attempt < max_retries - 1:
+                    sleep_time = 2 ** attempt
+                    time.sleep(sleep_time)
+                    continue
+
+            break
+
+        except Exception as e:
+            last_error = str(e)
+            break
+
+    return {
+        "success": False,
+        "message_id": None,
+        "error": last_error or "Unknown error",
+    }
+
+
 def send_invitation_email(
     api_key: str,
     template_id: int,
@@ -68,106 +142,38 @@ def send_invitation_email(
     inline_qr_code: Optional[str] = None,
 ) -> Dict:
     """
-    Send invitation email via Brevo Transactional Email API.
+    Build the standard WID invitation email params, then send via Brevo.
 
-    Args:
-        api_key: Brevo API key
-        template_id: Brevo template ID
-        email: Recipient email address
-        onboarding_url: Onboarding URL for invitation
-        qr_code_url: URL to QR code image (will be fetched and inlined unless
-                     inline_qr_code is provided)
-        preferred_handle: Optional suggested handle
-        from_email: Sender email address
-        from_name: Sender display name
-        max_retries: Maximum retry attempts on transient failures
-        inline_qr_code: Optional pre-encoded data URI to use instead of fetching
-                        qr_code_url (e.g. a 1×1 transparent PNG for pass flow)
+    Fetches and inlines the QR code image, includes PREFERRED_HANDLE if
+    provided. For templates that need different params (e.g. pass invitations
+    with only ONBOARDING_URL), call send_invitation_email_with_params directly.
 
     Returns:
-        dict with keys: success (bool), message_id (str), error (str)
+        dict with keys: success (bool), message_id (str), from_email (str),
+        from_name (str), error (str)
     """
-    # Configure Brevo API client
-    configuration = sib_api_v3_sdk.Configuration()
-    configuration.api_key['api-key'] = api_key
-    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
-        sib_api_v3_sdk.ApiClient(configuration)
-    )
-
     # Use caller-supplied inline QR, or fetch from URL
     if inline_qr_code is None:
         inline_qr_code = fetch_and_encode_qr_code(qr_code_url)
 
-    # Prepare template parameters
-    params = {
+    params: dict = {
         "ONBOARDING_URL": onboarding_url,
-        "QR_CODE_URL": qr_code_url,  # Hosted URL for email clients that prefer it
+        "QR_CODE_URL": qr_code_url,
     }
-
-    # Add inline QR code if fetch succeeded
     if inline_qr_code:
         params["INLINE_QR_CODE"] = inline_qr_code
-
-    # Add preferred handle if provided
     if preferred_handle:
         params["PREFERRED_HANDLE"] = preferred_handle
 
-    # Prepare email
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=[{"email": email}],
+    return send_invitation_email_with_params(
+        api_key=api_key,
         template_id=template_id,
+        email=email,
         params=params,
-        sender={"email": from_email, "name": from_name},
+        from_email=from_email,
+        from_name=from_name,
+        max_retries=max_retries,
     )
-
-    # Retry logic with exponential backoff
-    last_error = None
-    for attempt in range(max_retries):
-        try:
-            # Send email
-            response = api_instance.send_transac_email(send_smtp_email)
-
-            # Success
-            return {
-                "success": True,
-                "message_id": response.message_id,
-                "from_email": from_email,
-                "from_name": from_name,
-                "error": None,
-            }
-
-        except ApiException as e:
-            # Parse error response
-            import json
-            try:
-                error_data = json.loads(e.body)
-                error_message = error_data.get('message', str(e))
-            except:
-                error_message = str(e)
-
-            last_error = error_message
-
-            # Check if retryable (5xx server errors, rate limits)
-            if e.status >= 500 or e.status == 429:
-                if attempt < max_retries - 1:
-                    # Exponential backoff: 1s, 2s, 4s
-                    sleep_time = 2 ** attempt
-                    time.sleep(sleep_time)
-                    continue
-
-            # Non-retryable error or max retries reached
-            break
-
-        except Exception as e:
-            last_error = str(e)
-            break
-
-    # All retries failed
-    return {
-        "success": False,
-        "message_id": None,
-        "error": last_error or "Unknown error",
-    }
 
 
 def get_list_contacts(

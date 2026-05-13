@@ -25,6 +25,7 @@ class Config:
     environment: Optional[str] = None  # None, "dev", "stage", "prod"
     brevo_api_key: Optional[str] = None
     brevo_template_id: Optional[int] = None
+    brevo_pass_template_id: Optional[int] = None
     invitation_email_from: Optional[str] = None
     invitation_mail_from_name: Optional[str] = None
     invitation_email_hash_salt: Optional[str] = None
@@ -110,6 +111,7 @@ class Config:
         }
 
         brevo_template_raw = secrets.get("PDS_BREVO_INVITATION_TEMPLATE_ID")
+        brevo_pass_template_raw = secrets.get("PDS_BREVO_PASS_INVITATION_TEMPLATE_ID")
 
         return cls(
             pds_host=f"https://{secrets['PDS_HOSTNAME']}",
@@ -117,6 +119,7 @@ class Config:
             environment=env,
             brevo_api_key=secrets.get("PDS_BREVO_API_KEY"),
             brevo_template_id=int(brevo_template_raw) if brevo_template_raw else None,
+            brevo_pass_template_id=int(brevo_pass_template_raw) if brevo_pass_template_raw else None,
             invitation_email_from=secrets.get("PDS_INVITATION_EMAIL_FROM"),
             invitation_mail_from_name=secrets.get("PDS_INVITATION_MAIL_FROM_NAME"),
             invitation_email_hash_salt=secrets.get("PDS_INVITATION_EMAIL_HASH_SALT"),
@@ -155,6 +158,7 @@ class Config:
             admin_password=admin_password,
             brevo_api_key=os.getenv("PDS_BREVO_API_KEY"),
             brevo_template_id=int(os.getenv("PDS_BREVO_INVITATION_TEMPLATE_ID", 0)) or None,
+            brevo_pass_template_id=int(os.getenv("PDS_BREVO_PASS_INVITATION_TEMPLATE_ID", 0)) or None,
             invitation_email_from=os.getenv("PDS_INVITATION_EMAIL_FROM"),
             invitation_mail_from_name=os.getenv("PDS_INVITATION_MAIL_FROM_NAME"),
             invitation_email_hash_salt=os.getenv("PDS_INVITATION_EMAIL_HASH_SALT"),
