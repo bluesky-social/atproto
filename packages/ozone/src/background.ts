@@ -1,7 +1,11 @@
 import PQueue from 'p-queue'
-import { Database } from './db'
-import { dbLogger } from './logger'
-import { boundAbortController, isCausedBySignal, startInterval } from './util'
+import { Database } from './db/index.js'
+import { dbLogger } from './logger.js'
+import {
+  boundAbortController,
+  isCausedBySignal,
+  startInterval,
+} from './util.js'
 
 type Task = (db: Database, signal: AbortSignal) => Promise<void>
 

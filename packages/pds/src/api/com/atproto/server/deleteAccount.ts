@@ -4,9 +4,9 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager/account-manager'
-import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
-import { AppContext } from '../../../../context'
+import { AccountStatus } from '../../../../account-manager/account-manager.js'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

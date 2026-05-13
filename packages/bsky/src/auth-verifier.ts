@@ -18,8 +18,8 @@ import {
   getKeyAsDidKey,
   isDataplaneError,
   unpackIdentityKeys,
-} from './data-plane'
-import { GetIdentityByDidResponse } from './proto/bsky_pb'
+} from './data-plane/index.js'
+import { GetIdentityByDidResponse } from './proto/bsky_pb.js'
 
 type ReqCtx = {
   req: express.Request

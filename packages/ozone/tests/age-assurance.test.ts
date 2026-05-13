@@ -4,7 +4,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('age assurance events', () => {
   let network: TestNetwork

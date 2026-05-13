@@ -1,12 +1,12 @@
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from '../lexicon/types/chat/bsky/convo/defs'
-import { RepoRef, isRepoRef } from '../lexicon/types/com/atproto/admin/defs'
-import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
-import * as ComAtprotoRepoStrongRef from '../lexicon/types/com/atproto/repo/strongRef'
-import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent'
-import { $Typed, asPredicate } from '../lexicon/util'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+import * as ChatBskyConvoDefs from '../lexicon/types/chat/bsky/convo/defs.js'
+import { RepoRef, isRepoRef } from '../lexicon/types/com/atproto/admin/defs.js'
+import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport.js'
+import * as ComAtprotoRepoStrongRef from '../lexicon/types/com/atproto/repo/strongRef.js'
+import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import { $Typed, asPredicate } from '../lexicon/util.js'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 

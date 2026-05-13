@@ -2,8 +2,8 @@ import { Readable } from 'node:stream'
 import { cidForCbor } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { Cid } from '@atproto/lex'
-import { getInfo } from '../../src/image/sharp'
-import { ImageUriBuilder } from '../../src/image/uri'
+import { getInfo } from '../../src/image/sharp.js'
+import { ImageUriBuilder } from '../../src/image/uri.js'
 
 describe('image processing server', () => {
   let network: TestNetwork

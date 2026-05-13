@@ -1,8 +1,8 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { FeedType } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import { Service } from '../../../proto/bsky_connect.js'
+import { FeedType } from '../../../proto/bsky_pb.js'
+import { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {

@@ -11,8 +11,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { Database } from '../../src'
-import { forSnapshot, getOriginator, paginateAll } from '../_util'
+import { Database } from '../../src/index.js'
+import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
 const REVERSE_CHRON = 'reverse-chronological'
 

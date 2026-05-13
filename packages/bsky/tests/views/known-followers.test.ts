@@ -1,6 +1,6 @@
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { knownFollowersSeed } from '../seed/known-followers'
+import { knownFollowersSeed } from '../seed/known-followers.js'
 
 describe('known followers (social proof)', () => {
   let network: TestNetwork

@@ -1,9 +1,9 @@
 import assert from 'node:assert'
 import { DeviceId } from '@atproto/oauth-provider'
 import { DidString } from '@atproto/syntax'
-import { toDateISO } from '../../db'
-import { AccountDb } from '../db'
-import { selectAccountQB } from './account'
+import { toDateISO } from '../../db/index.js'
+import { AccountDb } from '../db/index.js'
+import { selectAccountQB } from './account.js'
 
 export function upsertQB(db: AccountDb, deviceId: DeviceId, did: string) {
   const now = new Date()

@@ -11,7 +11,7 @@ import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
-} from '../_util'
+} from '../_util.js'
 
 describe('appview thread views', () => {
   let network: TestNetwork

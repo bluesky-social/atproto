@@ -12,7 +12,7 @@ import {
   StarterPacks,
   Users,
   starterPacksSeed,
-} from '../seed/get-suggested-starter-packs'
+} from '../seed/get-suggested-starter-packs.js'
 
 describe('getSuggestedStarterPacks', () => {
   let network: TestNetwork

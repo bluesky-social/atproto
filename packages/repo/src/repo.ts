@@ -2,13 +2,13 @@ import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
 import { Cid, cidForCbor } from '@atproto/lex-data'
-import { BlockMap } from './block-map'
-import { CidSet } from './cid-set'
-import { DataDiff } from './data-diff'
-import log from './logger'
-import { MST } from './mst'
-import { ReadableRepo } from './readable-repo'
-import { RepoStorage } from './storage'
+import { BlockMap } from './block-map.js'
+import { CidSet } from './cid-set.js'
+import { DataDiff } from './data-diff.js'
+import log from './logger.js'
+import { MST } from './mst/index.js'
+import { ReadableRepo } from './readable-repo.js'
+import { RepoStorage } from './storage/index.js'
 import {
   Commit,
   CommitData,
@@ -16,8 +16,8 @@ import {
   RecordWriteOp,
   WriteOpAction,
   def,
-} from './types'
-import * as util from './util'
+} from './types.js'
+import * as util from './util.js'
 
 type Params = {
   storage: RepoStorage

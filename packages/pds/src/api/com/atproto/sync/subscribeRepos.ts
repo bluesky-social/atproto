@@ -1,8 +1,8 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { httpLogger } from '../../../../logger'
-import { Outbox } from '../../../../sequencer/outbox'
+import { httpLogger } from '../../../../logger.js'
+import { Outbox } from '../../../../sequencer/outbox.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(

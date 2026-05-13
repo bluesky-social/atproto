@@ -3,8 +3,8 @@ import { DAY } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { toDatetimeString } from '@atproto/lex'
-import { AppContext } from '../src'
-import { genInvCodes } from '../src/api/com/atproto/server/util'
+import { genInvCodes } from '../src/api/com/atproto/server/util.js'
+import { AppContext } from '../src/index.js'
 
 describe('account', () => {
   let network: TestNetworkNoAppView

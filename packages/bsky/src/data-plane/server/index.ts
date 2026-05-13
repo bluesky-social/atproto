@@ -3,12 +3,12 @@ import http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { IdResolver, MemoryCache } from '@atproto/identity'
-import { Database, DatabaseSchema } from './db'
-import createRoutes from './routes'
+import { Database, DatabaseSchema } from './db/index.js'
+import createRoutes from './routes/index.js'
 
 export type { DatabaseSchema }
 
-export { RepoSubscription } from './subscription'
+export { RepoSubscription } from './subscription.js'
 
 export class DataPlaneServer {
   constructor(

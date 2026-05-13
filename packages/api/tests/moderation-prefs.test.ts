@@ -1,6 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { DEFAULT_LABEL_SETTINGS } from '../src'
-import { isContentLabelPref } from '../src/client/types/app/bsky/actor/defs'
+import { isContentLabelPref } from '../src/client/types/app/bsky/actor/defs.js'
+import { DEFAULT_LABEL_SETTINGS } from '../src/index.js'
 import './util/moderation-behavior'
 
 describe('agent', () => {

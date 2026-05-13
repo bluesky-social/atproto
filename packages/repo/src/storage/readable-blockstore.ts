@@ -1,9 +1,9 @@
 import { check } from '@atproto/common-web'
 import { Cid, LexMap } from '@atproto/lex-data'
-import { BlockMap } from '../block-map'
-import { MissingBlockError } from '../error'
-import { parseObjByDef } from '../parse'
-import { cborToLexRecord } from '../util'
+import { BlockMap } from '../block-map.js'
+import { MissingBlockError } from '../error.js'
+import { parseObjByDef } from '../parse.js'
+import { cborToLexRecord } from '../util.js'
 
 export abstract class ReadableBlockstore {
   abstract getBytes(cid: Cid): Promise<Uint8Array | null>

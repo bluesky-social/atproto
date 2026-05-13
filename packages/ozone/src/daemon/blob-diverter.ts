@@ -10,9 +10,9 @@ import {
 } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { BlobDivertConfig } from '../config'
-import { Database } from '../db'
-import { retryHttp } from '../util'
+import { BlobDivertConfig } from '../config/index.js'
+import { Database } from '../db/index.js'
+import { retryHttp } from '../util.js'
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig

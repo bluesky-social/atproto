@@ -1,9 +1,9 @@
 import { check } from '@atproto/common-web'
 import { decode } from '@atproto/lex-cbor'
 import { Cid, LexMap } from '@atproto/lex-data'
-import { BlockMap } from './block-map'
-import { MissingBlockError, UnexpectedObjectError } from './error'
-import { cborToLexRecord } from './util'
+import { BlockMap } from './block-map.js'
+import { MissingBlockError, UnexpectedObjectError } from './error.js'
+import { cborToLexRecord } from './util.js'
 
 export const getAndParseRecord = async (
   blocks: BlockMap,

@@ -1,8 +1,8 @@
 import * as uint8arrays from 'uint8arrays'
-import { P256Keypair, Secp256k1Keypair } from '../src'
-import * as did from '../src/did'
-import { decompressPubkey as p256Decompress } from '../src/p256/encoding'
-import { decompressPubkey as secp256k1Decompress } from '../src/secp256k1/encoding'
+import * as did from '../src/did.js'
+import { P256Keypair, Secp256k1Keypair } from '../src/index.js'
+import { decompressPubkey as p256Decompress } from '../src/p256/encoding.js'
+import { decompressPubkey as secp256k1Decompress } from '../src/secp256k1/encoding.js'
 
 describe('secp256k1 did:key', () => {
   it('derives the correct DID from the privatekey', async () => {

@@ -1,8 +1,11 @@
 import { $Typed, ToolsOzoneModerationDefs } from '@atproto/api'
-import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../api/util'
-import { AppContext } from '../context'
-import { ModerationService } from '../mod-service'
-import { ParsedLabelers } from '../util'
+import {
+  addAccountInfoToRepoViewDetail,
+  getPdsAccountInfos,
+} from '../api/util.js'
+import { AppContext } from '../context.js'
+import { ModerationService } from '../mod-service/index.js'
+import { ParsedLabelers } from '../util.js'
 
 export const getReposForVerifications = async (
   ctx: AppContext,

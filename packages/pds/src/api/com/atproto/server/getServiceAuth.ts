@@ -9,10 +9,13 @@ import {
   AuthScope,
   isAccessPrivileged,
   isTakendown,
-} from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+} from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
+import {
+  PRIVILEGED_METHODS,
+  PROTECTED_METHODS,
+} from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.getServiceAuth, {

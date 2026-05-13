@@ -18,7 +18,7 @@ import {
 } from '@atproto/dev-env'
 import { SkeletonHandler, app } from '@atproto/pds'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { forSnapshot, paginateAll } from './_util'
+import { forSnapshot, paginateAll } from './_util.js'
 
 describe('feed generation', () => {
   let network: TestNetwork

@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { mergeUserContexts, normalizeUserContext } from './utils'
+import { mergeUserContexts, normalizeUserContext } from './utils.js'
 
 describe('normalizeUserContext', () => {
   it('defaults', () => {

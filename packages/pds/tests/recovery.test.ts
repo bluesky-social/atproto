@@ -5,7 +5,7 @@ import { renameIfExists, rmIfExists } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import { verifyRepoCar } from '@atproto/repo'
 import { DidString } from '@atproto/syntax'
-import { AppContext, scripts } from '../dist'
+import { AppContext, scripts } from '../dist/index.js'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView

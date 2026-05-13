@@ -9,9 +9,9 @@ import {
   MemoryBlockstore,
   signCommit,
 } from '@atproto/repo'
-import { AccountManager } from '../account-manager/account-manager'
-import { ActorStore } from '../actor-store/actor-store'
-import { Sequencer } from '../sequencer'
+import { AccountManager } from '../account-manager/account-manager.js'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { Sequencer } from '../sequencer/index.js'
 
 export interface RebuildContext {
   sequencer: Sequencer

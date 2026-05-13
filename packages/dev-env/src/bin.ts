@@ -1,7 +1,7 @@
 import './env'
-import { generateMockSetup } from './mock'
-import { TestNetwork } from './network'
-import { mockMailer } from './util'
+import { generateMockSetup } from './mock/index.js'
+import { TestNetwork } from './network.js'
+import { mockMailer } from './util.js'
 
 const run = async () => {
   console.log(`

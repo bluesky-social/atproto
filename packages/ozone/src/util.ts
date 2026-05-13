@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { parseList } from 'structured-headers'
 import { createRetryable } from '@atproto/common'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { Database } from './db'
+import { Database } from './db/index.js'
 
 export const getSigningKeyId = async (
   db: Database,

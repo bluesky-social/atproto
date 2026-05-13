@@ -1,8 +1,8 @@
 import express from 'express'
 import { l } from '@atproto/lex'
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { ActorAccount } from '../../../../account-manager/helpers/account'
-import { CodeDetail } from '../../../../account-manager/helpers/invite'
+import { ActorAccount } from '../../../../account-manager/helpers/account.js'
+import { CodeDetail } from '../../../../account-manager/helpers/invite.js'
 import { com } from '../../../../lexicons/index.js'
 
 // Output designed to passed as second arg to AtpAgent methods.

@@ -223,7 +223,7 @@ export class LexBuilder {
 
     // @NOTE Individual exports exports from the defs file might conflict with
     // child namespaces. For this reason, we also add a namespace export for the
-    // defs (export * as $defs from './xyz.defs'). This is an escape hatch
+    // defs (export * as $defs from './xyz.defs.js'). This is an escape hatch
     // allowing to still access the definitions if a hash get shadowed by a
     // child namespace.
     file.addExportDeclaration({

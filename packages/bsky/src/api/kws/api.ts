@@ -1,19 +1,19 @@
 import express, { RequestHandler } from 'express'
-import { httpLogger as log } from '../../logger'
-import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const'
+import { httpLogger as log } from '../../logger.js'
+import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const.js'
 import {
   KWSExternalPayloadVersion,
   parseKWSExternalPayloadV1WithV2Compat,
-} from '../age-assurance/kws/external-payload'
-import { createEvent } from '../age-assurance/stash'
-import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util'
-import { AppContextWithKwsClient } from './types'
+} from '../age-assurance/kws/external-payload.js'
+import { createEvent } from '../age-assurance/stash.js'
+import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util.js'
+import { AppContextWithKwsClient } from './types.js'
 import {
   createStashEvent,
   getClientUa,
   parseStatus,
   validateSignature,
-} from './util'
+} from './util.js'
 
 function parseQueryParams(
   ctx: AppContextWithKwsClient,

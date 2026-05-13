@@ -1,7 +1,7 @@
 import { LexMap, TypedObjectSchema, lexStringify } from '@atproto/lex'
-import { BsyncClient } from './bsync'
+import { BsyncClient } from './bsync.js'
 import { app } from './lexicons/index.js'
-import { Method } from './proto/bsync_pb'
+import { Method } from './proto/bsync_pb.js'
 
 export const Namespaces = {
   AppBskyAgeassuranceDefsEvent: app.bsky.ageassurance.defs.event,

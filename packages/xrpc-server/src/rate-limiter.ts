@@ -5,8 +5,8 @@ import {
   RateLimiterRedis,
   RateLimiterRes,
 } from 'rate-limiter-flexible'
-import { ResponseType, XRPCError } from './errors'
-import { logger } from './logger'
+import { ResponseType, XRPCError } from './errors.js'
+import { logger } from './logger.js'
 
 // @NOTE Do not depend (directly or indirectly) on "./types" here, as it would
 // create a circular dependency.

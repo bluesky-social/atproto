@@ -10,9 +10,9 @@ import {
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
-import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications'
-import { Namespaces } from '../../src/stash'
-import { forSnapshot, paginateAll } from '../_util'
+import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications.js'
+import { Namespaces } from '../../src/stash.js'
+import { forSnapshot, paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 

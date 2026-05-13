@@ -1,6 +1,6 @@
 import PQueue from 'p-queue'
-import { dbLogger } from '../../logger'
-import { Database } from './db'
+import { dbLogger } from '../../logger.js'
+import { Database } from './db/index.js'
 
 // A simple queue for in-process, out-of-band/backgrounded work
 

@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events'
 import { Etcd3, IKeyValue } from 'etcd3'
-import { EtcdHostList } from '../src'
-import { EtcdMap } from '../src/etcd'
+import { EtcdMap } from '../src/etcd.js'
+import { EtcdHostList } from '../src/index.js'
 
 describe('etcd', () => {
   describe('EtcdMap', () => {

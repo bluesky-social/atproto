@@ -6,7 +6,7 @@ import {
   isValidDatetime,
   normalizeDatetime,
   normalizeDatetimeAlways,
-} from '../src'
+} from '../src/index.js'
 
 const interopValid = readLines(
   `${__dirname}/interop-files/datetime_syntax_valid.txt`,
