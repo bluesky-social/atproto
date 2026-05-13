@@ -6,16 +6,16 @@ import {
   RateLimitedActionOptions,
   useRateLimitedAction,
 } from '#/hooks/use-rate-limited-action.ts'
+import { Override } from '#/lib/util.ts'
 import { CircularProgress } from '../utils/circular-progress.tsx'
 import { Button, ButtonProps } from './button.tsx'
 
-export type ButtonCooldownProps = ButtonProps & RateLimitedActionOptions
+export type ButtonCooldownProps = Override<
+  ButtonProps,
+  RateLimitedActionOptions
+>
 
 export function ButtonCooldown({
-  cooldownSeconds,
-  initialCooldown,
-
-  // button
   children,
   onClick,
   disabled = false,
@@ -23,13 +23,10 @@ export function ButtonCooldown({
   ...props
 }: ButtonCooldownProps) {
   const { t } = useLingui()
-  const action = useRateLimitedAction(onClick, {
-    cooldownSeconds,
-    initialCooldown,
-  })
+  const handler = useRateLimitedAction(props)
   const [isHovered, setIsHovered] = useState(false)
-  const remainingSeconds = Math.ceil(action.remaining)
-  const isCoolingDown = !disabled && action.disabled
+  const remainingSeconds = Math.ceil(handler.remaining)
+  const isCoolingDown = !disabled && handler.disabled
 
   return (
     <div
@@ -40,7 +37,12 @@ export function ButtonCooldown({
       <Popover.Root open={isCoolingDown && isHovered}>
         <Popover.Trigger asChild>
           <Button
-            onClick={action.trigger}
+            onClick={(event) => {
+              onClick?.(event)
+              if (!event.defaultPrevented) {
+                void handler.trigger()
+              }
+            }}
             disabled={isCoolingDown || disabled}
             className={clsx('relative pr-9', className)}
             aria-label={
@@ -54,7 +56,9 @@ export function ButtonCooldown({
           >
             <CircularProgress
               size={16}
-              value={((action.total - action.remaining) / action.total) * 100}
+              value={
+                ((handler.total - handler.remaining) / handler.total) * 100
+              }
               startAngle={-90}
               className={clsx(
                 'absolute right-3 top-1/2 inline-block -translate-y-1/2 transform transition-opacity',

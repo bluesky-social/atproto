@@ -12,6 +12,8 @@ import {
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
+  UpdateEmailConfirmInput,
+  UpdateEmailRequestInput,
 } from './account/account-store.js'
 import { SignInData } from './account/sign-in-data.js'
 import { SignUpInput } from './account/sign-up-input.js'
@@ -88,6 +90,52 @@ export type OAuthHooks = {
   ) => Awaitable<undefined | Partial<ClientInfo>>
 
   /**
+   * This hook is called when a user requests an email change, before the email
+   * change request is triggered on the account store. Only triggered with
+   * authenticated sessions, so the `account` is always available.
+   */
+  onChangeEmailRequest?: (data: {
+    input: UpdateEmailRequestInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user requests an email change, and the email
+   * change request was successfully triggered on the account store.
+   */
+  onChangeEmailRequested?: (data: {
+    input: UpdateEmailRequestInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user confirms an email change, before the email
+   * change is actually confirmed on the account store. Only triggered with
+   * authenticated sessions, so the `account` is always available.
+   */
+  onUpdateEmailConfirm?: (data: {
+    input: UpdateEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user confirms an email change, and the email
+   * change was successfully confirmed on the account store.
+   */
+  onUpdateEmailConfirmed?: (data: {
+    input: UpdateEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
    * This hook is called when a user attempts to sign up, after every validation
    * has passed (including hcaptcha).
    */
@@ -111,7 +159,8 @@ export type OAuthHooks = {
 
   /**
    * This hook is called when a user requests a password reset, before the
-   * reset password request is triggered on the account store.
+   * reset password request is triggered on the account store. Use this to
+   * potentially cancel the password reset.
    */
   onResetPasswordRequest?: (data: {
     input: ResetPasswordRequestInput
@@ -121,13 +170,14 @@ export type OAuthHooks = {
 
   /**
    * This hook is called when a user requests a password reset, before the
-   * reset password request is triggered on the account store.
+   * reset password request is triggered on the account store. If not account
+   * was found for the provided identifier, the `account` field will be `null`.
    */
   onResetPasswordRequested?: (data: {
     input: ResetPasswordRequestInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    account: Account
+    account: Account | null
   }) => Awaitable<void>
 
   /**

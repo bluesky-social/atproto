@@ -2,6 +2,7 @@ import { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import {
   DevicesIcon,
+  EnvelopeIcon,
   GlobeIcon,
   HouseSimpleIcon,
   IconProps,
@@ -27,6 +28,7 @@ import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
 import { Page as AccountOAuthPage } from './apps/page.tsx'
 import { Page as AccountDevicesPage } from './devices/page.tsx'
+import { Page as AccountEmailPage } from './email/page.tsx'
 import { Page as AccountIndexPage } from './page.tsx'
 import { Page as AccountPasswordPage } from './password/page.tsx'
 
@@ -70,6 +72,13 @@ const DEFAULT_PAGES = {
     title: msg`Password`,
     description: msg`Change your account password`,
     component: AccountPasswordPage,
+  },
+  '/email': {
+    icon: EnvelopeIcon,
+    position: 40,
+    title: msg`Email`,
+    description: msg`Change your account email address`,
+    component: AccountEmailPage,
   },
   '/about': {
     icon: QuestionIcon,
