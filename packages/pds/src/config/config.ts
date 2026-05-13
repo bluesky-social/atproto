@@ -49,7 +49,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     cacheSize: env.actorStoreCacheSize ?? 100,
     disableWalAutoCheckpoint,
     migrateInBackground: env.actorStoreMigrateInBackground ?? false,
-    maxConcurrentMigrations: env.actorStoreMaxConcurrentMigrations ?? 1000,
+    maxConcurrentMigrations: env.actorStoreMaxConcurrentMigrations ?? 16,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']

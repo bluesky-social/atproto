@@ -24,4 +24,4 @@ If breaking backwards compatibility is unavoidable, explicit schema version chec
 
 `PDS_ACTOR_STORE_MIGRATE_IN_BACKGROUND` (bool, default false)
 
-`PDS_ACTOR_STORE_MAX_CONCURRENT_MIGRATIONS` (int, default 1000)
+`PDS_ACTOR_STORE_MAX_CONCURRENT_MIGRATIONS` (int, default 16 - note that this is per-process, not a global limit)
