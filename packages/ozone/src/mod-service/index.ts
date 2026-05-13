@@ -683,6 +683,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        subjectConvoId: subjectInfo.subjectConvoId,
         modTool: modTool ? jsonb(modTool) : null,
         externalId: externalId ?? null,
         severityLevel,
