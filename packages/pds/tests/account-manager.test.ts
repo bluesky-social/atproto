@@ -105,4 +105,46 @@ describe('account manager', () => {
       },
     )
   })
+
+  it('allows changing the password', async () => {
+    const sendResetPasswordMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle(`Compte utilisateur`)
+
+    await page.clickOnText('Mot de passe', 'a')
+
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(0)
+
+    await page.clickOnText('Envoyer le code')
+
+    await page.waitForNetworkIdle()
+
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendResetPasswordMock.mock.lastCall
+    expect(params).toEqual({
+      handle: 'bob.test',
+      token: expect.any(String),
+    })
+
+    await page.typeInInput('code', params.token)
+    await page.typeInInput('password', 'bob-new-pass')
+
+    await page.clickOnText('Soumettre')
+
+    await page.ensureTextVisibility(
+      'Réinitialisation du mot de passe réussie',
+      'div',
+    )
+
+    sendResetPasswordMock.mockRestore()
+  })
 })
