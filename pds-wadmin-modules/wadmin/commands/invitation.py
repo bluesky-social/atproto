@@ -163,24 +163,19 @@ def create_pass(ctx, email: str, handle: Optional[str]):
         console.print()
         console.print("Sending invitation email via Brevo...")
 
-        # Use a 1×1 transparent PNG as placeholder QR code (no WID QR for pass flow)
-        TRANSPARENT_PNG_1X1 = (
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA"
-            "DUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-        )
+        # Template 29 only uses ONBOARDING_URL (no QR, no handle param —
+        # handle is already baked into the onboarding URL itself)
+        pass_template_id = config.brevo_pass_template_id or 29
 
         try:
             brevo = _get_brevo()
-            email_result = brevo.send_invitation_email(
+            email_result = brevo.send_invitation_email_with_params(
                 api_key=config.brevo_api_key,  # type: ignore
-                template_id=config.brevo_template_id,  # type: ignore
+                template_id=pass_template_id,
                 email=result.get("email", email),
-                onboarding_url=onboarding_url,
-                qr_code_url=onboarding_url,  # fallback URL in template
-                preferred_handle=result.get("preferredHandle") or handle,
+                params={"ONBOARDING_URL": onboarding_url},
                 from_email=config.invitation_email_from or "invitations@wsocial.app",
                 from_name=config.invitation_mail_from_name or "W Social Team",
-                inline_qr_code=TRANSPARENT_PNG_1X1,
             )
 
             if email_result["success"]:
