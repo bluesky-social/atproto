@@ -230,6 +230,7 @@ import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/tem
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 import * as EuWsocialAdminCreatePassInvitation from './types/eu/wsocial/admin/createPassInvitation.js'
 import * as EuWsocialQuickloginLinkWid from './types/eu/wsocial/quicklogin/linkWid.js'
+import * as EuWsocialServerAllocateWidForAccount from './types/eu/wsocial/server/allocateWidForAccount.js'
 import * as EuWsocialServerCheckHandleAvailability from './types/eu/wsocial/server/checkHandleAvailability.js'
 import * as IoTrustanchorAdminClearInventory from './types/io/trustanchor/admin/clearInventory.js'
 import * as IoTrustanchorAdminCreateAccountSession from './types/io/trustanchor/admin/createAccountSession.js'
@@ -3418,6 +3419,18 @@ export class EuWsocialServerNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  allocateWidForAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialServerAllocateWidForAccount.QueryParams,
+      EuWsocialServerAllocateWidForAccount.HandlerInput,
+      EuWsocialServerAllocateWidForAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.server.allocateWidForAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   checkHandleAvailability<A extends Auth = void>(
