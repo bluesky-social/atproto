@@ -43,7 +43,7 @@
     "test:withFlags": "pnpm run test --",
     "bench": "vitest bench --run",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish",
+    "publish:ci": "pnpm build && jq '.devEngines.packageManager.onFail = \"warn\"' package.json > package.json.tmp && mv package.json.tmp package.json && changeset publish",
     "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
