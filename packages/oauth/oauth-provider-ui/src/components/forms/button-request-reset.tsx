@@ -7,13 +7,14 @@ import {
 
 export type ButtonRequestResetProps = ButtonCooldownProps
 
-export function ButtonRequestReset({ ...props }: ButtonRequestResetProps) {
+export function ButtonRequestReset({
+  children = <Trans context="PasswordReset">Send reset code</Trans>,
+  ...props
+}: ButtonRequestResetProps) {
   return (
     <ButtonCooldown {...props}>
       <PaperPlaneTiltIcon aria-hidden className="mr-2" weight="bold" />
-      <span className="flex-1 truncate">
-        <Trans context="PasswordReset">Send reset code</Trans>
-      </span>
+      <span className="flex-1 truncate">{children}</span>
     </ButtonCooldown>
   )
 }

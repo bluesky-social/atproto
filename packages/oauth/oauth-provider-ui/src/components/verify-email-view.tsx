@@ -1,10 +1,7 @@
 import { Trans } from '@lingui/react/macro'
-import { useState } from 'react'
+import { ReactNode } from '@tanstack/react-router'
 import { ButtonRequestReset } from '#/components/forms/button-request-reset'
-import { Button } from '#/components/forms/button.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { VerifyEmailConfirmForm } from './verify-email-confirm-form.tsx'
-import { VerifyEmailRequestForm } from './verify-email-request-form.tsx'
 
 export type VerifyEmailViewProps = {
   email: string
@@ -22,17 +19,14 @@ export type VerifyEmailViewProps = {
    * (e.g. the update-email view, where verification is abortable).
    */
   onCancel?: () => void
+  cancelLabel?: ReactNode
   /**
-   * Skip the initial "we'll send you a code" step — useful when a code has
-   * already been sent by a prior action (e.g. right after an email change).
+   * When set, renders this content on the Request step instead of the default
+   * instructions. Used by callers that want to provide additional context for
+   * the verification step (e.g. the update-email view, which needs to explain
+   * that the code is being sent to the old email address, not the new one).
    */
-  skipRequest?: boolean
-}
-
-enum Step {
-  Request,
-  Confirm,
-  Done,
+  children?: ReactNode
 }
 
 export function VerifyEmailView({
@@ -43,67 +37,37 @@ export function VerifyEmailView({
   onConfirm,
   onDone,
   onCancel,
-  skipRequest = false,
+  children,
+  cancelLabel,
 }: VerifyEmailViewProps) {
-  const [step, setStep] = useState<Step>(
-    skipRequest ? Step.Confirm : Step.Request,
-  )
-
-  if (step === Step.Done) {
-    return (
-      <div className="space-y-4">
-        <Admonition role="note" variant="success">
-          <Trans context="EmailVerify">
-            <strong>{email}</strong> has been verified.
-          </Trans>
-        </Admonition>
-
-        <Button color="primary" onClick={onDone}>
-          <Trans>Done</Trans>
-        </Button>
-      </div>
-    )
-  }
-
-  if (step === Step.Confirm) {
-    return (
-      <div className="space-y-4">
-        <VerifyEmailConfirmForm
-          disabled={confirmPending}
-          onCancel={onCancel}
-          cancelLabel={<Trans>Cancel</Trans>}
-          onSubmit={async (data, signal) => {
-            await onConfirm(data, signal)
-            if (!signal.aborted) setStep(Step.Done)
-          }}
-        />
-
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Trans context="EmailVerify">Didn't receive it?</Trans>
-          <ButtonRequestReset action={onRequest} loading={requestPending} />
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
-      <VerifyEmailRequestForm
-        email={email}
-        disabled={requestPending}
-        onCancel={onCancel}
-        cancelLabel={<Trans>Cancel</Trans>}
-        onSubmit={async (signal) => {
-          await onRequest()
-          if (!signal.aborted) setStep(Step.Confirm)
-        }}
+      {children ?? (
+        <p>
+          <Trans context="EmailVerify">
+            To verify your email, we'll send a verification code to{' '}
+            <strong>{email}</strong>. Enter the code below to confirm that you
+            own this address.
+          </Trans>
+        </p>
+      )}
+
+      <ButtonRequestReset
+        action={onRequest}
+        loading={requestPending}
+        disabled={confirmPending}
+        className="max-w-full"
       />
 
-      <hr className="border-contrast-100 dark:border-contrast-200" />
-
-      <Button onClick={() => setStep(Step.Confirm)}>
-        <Trans context="EmailVerify">I already have a code</Trans>
-      </Button>
+      <VerifyEmailConfirmForm
+        disabled={confirmPending}
+        onCancel={onCancel}
+        cancelLabel={cancelLabel}
+        onSubmit={async (data, signal) => {
+          await onConfirm(data, signal)
+          if (!signal.aborted) onDone()
+        }}
+      />
     </div>
   )
 }

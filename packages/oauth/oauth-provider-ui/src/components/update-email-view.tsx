@@ -1,9 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { useState } from 'react'
 import { ButtonRequestReset } from '#/components/forms/button-request-reset'
-import { Button } from '#/components/forms/button.tsx'
 import { ResetEmailConfirmForm } from '#/components/reset-email-confirm-form.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { VerifyEmailView } from './verify-email-view.tsx'
 
 export type UpdateEmailViewProps = {
@@ -29,13 +27,6 @@ export type UpdateEmailViewProps = {
     email: string
     token: string
   }) => void | PromiseLike<void>
-  onDone: () => void
-}
-
-enum Step {
-  Request,
-  Confirm,
-  Verify,
 }
 
 export function UpdateEmailView({
@@ -48,86 +39,55 @@ export function UpdateEmailView({
   onConfirm,
   onVerifyRequest,
   onVerifyConfirm,
-  onDone,
 }: UpdateEmailViewProps) {
-  const [step, setStep] = useState<Step>(Step.Request)
   const [newEmail, setNewEmail] = useState<string | null>(null)
 
-  if (step === Step.Verify && newEmail) {
+  if (newEmail) {
     return (
-      <div className="space-y-4">
-        <Admonition role="note" variant="success">
+      <VerifyEmailView
+        email={newEmail}
+        requestPending={verifyRequestPending}
+        confirmPending={verifyConfirmPending}
+        onRequest={() => onVerifyRequest({ email: newEmail })}
+        onConfirm={({ token }) => onVerifyConfirm({ email: newEmail, token })}
+        onDone={() => setNewEmail(null)}
+      >
+        <p>
           <Trans context="EmailChange">
             Your email has been updated to <strong>{newEmail}</strong>. A
             verification code has been sent to the new address.
           </Trans>
-        </Admonition>
-
-        <VerifyEmailView
-          email={newEmail}
-          skipRequest
-          requestPending={verifyRequestPending}
-          confirmPending={verifyConfirmPending}
-          onRequest={() => onVerifyRequest({ email: newEmail })}
-          onConfirm={({ token }) => onVerifyConfirm({ email: newEmail, token })}
-          onCancel={onDone}
-          onDone={onDone}
-        />
-      </div>
-    )
-  }
-
-  if (step === Step.Confirm) {
-    return (
-      <div className="space-y-4">
-        <p>
-          <Trans context="EmailChange">
-            Enter the confirmation code we sent to <strong>{email}</strong>{' '}
-            along with your new email address.
-          </Trans>
         </p>
-
-        <ResetEmailConfirmForm
-          disabled={confirmPending}
-          onSubmit={async (data) => {
-            await onConfirm(data)
-            setNewEmail(data.email)
-            setStep(Step.Verify)
-          }}
-        />
-
-        <div className="flex items-center gap-2 text-sm">
-          <Trans context="EmailChange">Didn't receive it?</Trans>
-          <ButtonRequestReset action={onRequest} loading={requestPending} />
-        </div>
-      </div>
+      </VerifyEmailView>
     )
   }
 
   return (
     <div className="space-y-4">
-      <p>
-        <Trans context="EmailChange">
-          To change your email, we'll send a confirmation code to{' '}
-          <strong>{email}</strong>. On the next step you'll enter the code and
-          your new email address.
-        </Trans>
-      </p>
-
-      <ButtonRequestReset
-        action={async () => {
-          await onRequest()
-          setStep(Step.Confirm)
+      <ResetEmailConfirmForm
+        disabled={confirmPending}
+        cancelLabel={<Trans>Cancel</Trans>}
+        onSubmit={async (data, signal) => {
+          await onConfirm(data)
+          if (signal.aborted) return
+          setNewEmail(data.email)
         }}
-        loading={requestPending}
-        className="max-w-full"
-      />
+      >
+        <p>
+          <Trans context="EmailChange">
+            To change your email, we'll send a confirmation code to{' '}
+            <strong>{email}</strong>. Enter the code below along with your new
+            email address.
+          </Trans>
+        </p>
 
-      <hr className="border-contrast-100 dark:border-contrast-200" />
-
-      <Button onClick={() => setStep(Step.Confirm)}>
-        <Trans context="EmailChange">I already have a code</Trans>
-      </Button>
+        <ButtonRequestReset
+          action={onRequest}
+          loading={requestPending}
+          disabled={confirmPending}
+          className="max-w-full"
+        />
+      </ResetEmailConfirmForm>
     </div>
   )
 }

@@ -11,7 +11,7 @@ import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
 export type VerifyEmailConfirmFormProps = Override<
-  Omit<FormCardAsyncProps, 'children'>,
+  FormCardAsyncProps,
   {
     onSubmit: (
       data: { token: string },
@@ -26,6 +26,7 @@ export function VerifyEmailConfirmForm({
   // FormCardAsyncProps
   invalid,
   ref,
+  children,
   ...props
 }: VerifyEmailConfirmFormProps) {
   const [token, setToken] = useState<string | null>(null)
@@ -46,6 +47,8 @@ export function VerifyEmailConfirmForm({
       onSubmit={doSubmit}
       invalid={invalid || !token}
     >
+      {children}
+
       <FormField label={<Trans>Verification code</Trans>}>
         <InputToken
           name="code"

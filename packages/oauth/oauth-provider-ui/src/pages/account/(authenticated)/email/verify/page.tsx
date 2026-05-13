@@ -1,20 +1,14 @@
 import { Trans } from '@lingui/react/macro'
-import { UpdateEmailView } from '#/components/update-email-view.tsx'
+import { useRouter } from '@tanstack/react-router'
 import { Admonition } from '#/components/utils/admonition.tsx'
+import { VerifyEmailView } from '#/components/verify-email-view.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
-import {
-  useChangeEmailRequest,
-  useUpdateEmailConfirm,
-  useVerifyEmailConfirm,
-  useVerifyEmailRequest,
-} from '#/data/email'
-
+import { useVerifyEmailConfirm, useVerifyEmailRequest } from '#/data/email'
 export function Page() {
   const { account } = useAuthenticatedSession()
   const { email, sub } = account
+  const { navigate } = useRouter()
 
-  const changeRequest = useChangeEmailRequest()
-  const updateConfirm = useUpdateEmailConfirm()
   const verifyRequest = useVerifyEmailRequest()
   const verifyConfirm = useVerifyEmailConfirm()
 
@@ -29,24 +23,18 @@ export function Page() {
   }
 
   return (
-    <UpdateEmailView
+    <VerifyEmailView
       email={email}
-      requestPending={changeRequest.isPending}
-      confirmPending={updateConfirm.isPending}
-      verifyRequestPending={verifyRequest.isPending}
-      verifyConfirmPending={verifyConfirm.isPending}
+      requestPending={verifyRequest.isPending}
+      confirmPending={verifyConfirm.isPending}
       onRequest={async () => {
-        await changeRequest.mutateAsync({ sub })
-      }}
-      onConfirm={async ({ email, token }) => {
-        await updateConfirm.mutateAsync({ sub, token, email })
-      }}
-      onVerifyRequest={async () => {
         await verifyRequest.mutateAsync({ sub })
       }}
-      onVerifyConfirm={async ({ email, token }) => {
+      onConfirm={async ({ token }) => {
         await verifyConfirm.mutateAsync({ sub, token, email })
       }}
+      onCancel={() => navigate({ to: '/account' })}
+      onDone={() => navigate({ to: '/account' })}
     />
   )
 }
