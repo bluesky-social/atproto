@@ -6,8 +6,10 @@ import {
   allActorStoresMigrated,
   countInProgressMigrations,
 } from '../dist/account-manager/helpers/actor-store-migration'
-import migrations, {
+import {
+  clearExtraMigration,
   getLatestStoreSchemaVersion,
+  setExtraMigration,
 } from '../dist/actor-store/db/migrations/index'
 import { com } from '../src/lexicons.js'
 // import through the dist entry point so we share the same module instance
@@ -44,7 +46,7 @@ describe('actor store migration', () => {
   })
 
   afterAll(async () => {
-    delete migrations['999']
+    clearExtraMigration('999')
     await network.close()
   })
 
@@ -55,22 +57,15 @@ describe('actor store migration', () => {
 
   describe('with dummy migration 999', () => {
     beforeAll(() => {
-      migrations['999'] = {
-        async up(db) {
-          await db.schema
-            .createTable('dummy_migration_999')
-            .ifNotExists()
-            .addColumn('id', 'integer', (col) => col.primaryKey())
-            .execute()
-        },
-        async down(db) {
-          await db.schema.dropTable('dummy_migration_999').ifExists().execute()
-        },
-      }
+      setExtraMigration(
+        '999',
+        'CREATE TABLE IF NOT EXISTS dummy_migration_999 (id INTEGER PRIMARY KEY)',
+        'DROP TABLE IF EXISTS dummy_migration_999',
+      )
     })
 
     afterAll(() => {
-      delete migrations['999']
+      clearExtraMigration('999')
     })
 
     it('getLatestStoreSchemaVersion reflects injected migration', () => {
@@ -188,24 +183,20 @@ describe('actor store migration', () => {
       })
       charlieDid = charlie.did
 
-      // inject a slow migration. the recursive CTE executes inside a single
-      // better-sqlite3 .run() call, which is synchronous and pegs the event
-      // loop for the duration of the query.
-      migrations['998-slow'] = {
-        async up(db) {
-          await sql`
-            WITH RECURSIVE c(x) AS (
-              SELECT 1 UNION ALL SELECT x + 1 FROM c WHERE x < 10000000
-            )
-            SELECT max(x) FROM c
-          `.execute(db)
-        },
-        async down() {},
-      }
+      // register a slow migration. setExtraMigration forwards this SQL to
+      // the worker via workerData, so the recursive CTE runs in the worker
+      // and only blocks the worker thread.
+      setExtraMigration(
+        '998-slow',
+        `WITH RECURSIVE c(x) AS (
+          SELECT 1 UNION ALL SELECT x + 1 FROM c WHERE x < 10000000
+        )
+        SELECT max(x) FROM c`,
+      )
     })
 
     afterAll(() => {
-      delete migrations['998-slow']
+      clearExtraMigration('998-slow')
     })
 
     it('does not block the event loop for more than 100ms during a migration', async () => {

@@ -6,7 +6,6 @@ import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreConfig } from '../config'
-import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
 import { blobStoreLogger } from '../logger'
 import { ActorStoreReader } from './actor-store-reader'
@@ -15,6 +14,7 @@ import { ActorStoreTransactor } from './actor-store-transactor'
 import { ActorStoreWriter } from './actor-store-writer'
 import { ActorDb, getDb, getMigrationLevel, getMigrator } from './db'
 import { getLatestStoreSchemaVersion } from './db/migrations'
+import { migrateInWorker } from './migrate-worker'
 
 export class ActorStore {
   reservedKeyDir: string
@@ -50,11 +50,7 @@ export class ActorStore {
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
-  async openDb(
-    did: string,
-    opts?: { migrateOnOpen?: boolean },
-  ): Promise<ActorDb> {
-    const { migrateOnOpen = true } = opts ?? {}
+  async openDb(did: string): Promise<ActorDb> {
     const { dbLocation } = await this.getLocation(did)
     const exists = await fileExists(dbLocation)
     if (!exists) {
@@ -63,14 +59,10 @@ export class ActorStore {
 
     const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
 
-    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
+    // ensure the db is ready (not in wal recovery mode)
     try {
-      await retrySqlite(() =>
-        db.db.selectFrom('repo_root').selectAll().execute(),
-      )
-      if (migrateOnOpen) {
-        await this.ensureMigrated(db)
-      }
+      // ensureMigrated involves a SELECT on the schema version, so if it succeeds the db must be ready
+      await this.ensureMigrated(db, dbLocation)
     } catch (err) {
       db.close()
       throw err
@@ -87,10 +79,13 @@ export class ActorStore {
   // second caller blocks until the first completes, then sees all migrations
   // already applied.
   //
+  // The actual migration runs in a worker thread because better-sqlite3 is
+  // synchronous and an individual migration statement can take seconds.
+  //
   // The account db is NOT updated here. The background ActorStoreMigrator
   // loop is the sole writer of actor.storeSchemaVersion, and it eventually
   // visits every actor to reconcile.
-  private async ensureMigrated(db: ActorDb): Promise<void> {
+  private async ensureMigrated(db: ActorDb, dbLocation: string): Promise<void> {
     const lastMigration = await getMigrationLevel(db)
     // Tolerate a store that's ahead of our code: during a rolling deploy, a
     // newer container may have already migrated this store past the latest
@@ -110,10 +105,21 @@ export class ActorStore {
     }
     this.migrationsInProgress++
     try {
-      await getMigrator(db).migrateToLatestOrThrow()
+      await this.runMigration(dbLocation)
     } finally {
       this.migrationsInProgress--
     }
+  }
+
+  // Runs the kysely migrator against the actor store at `dbLocation`. Used by
+  // both on-demand opens (ensureMigrated) and the background migrator loop.
+  // Runs in a worker thread so the main event loop stays responsive through
+  // slow migration statements.
+  async runMigration(dbLocation: string): Promise<void> {
+    await migrateInWorker({
+      dbLocation,
+      disableWalAutoCheckpoint: this.cfg.disableWalAutoCheckpoint,
+    })
   }
 
   async read<T>(did: string, fn: (fn: ActorStoreReader) => T | PromiseLike<T>) {

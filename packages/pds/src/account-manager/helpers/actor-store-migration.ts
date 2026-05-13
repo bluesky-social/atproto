@@ -1,7 +1,6 @@
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import type { ActorStore } from '../../actor-store/actor-store'
-import { getMigrator } from '../../actor-store/db'
 import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { actorStoreMigrationLogger as logger } from '../../logger'
 import type { AccountDb } from '../db'
@@ -110,15 +109,11 @@ export class ActorStoreMigrator {
         continue
       }
       try {
-        const actorDb = await this.actorStore.openDb(claimed.did, {
-          migrateOnOpen: false,
-        })
-        try {
-          // Calling migrateToLatestOrThrow explicitly lets us skip the concurrency limits
-          await getMigrator(actorDb).migrateToLatestOrThrow()
-        } finally {
-          actorDb.close()
-        }
+        const { dbLocation } = await this.actorStore.getLocation(claimed.did)
+        // runMigration defaults to a worker thread so the main event loop
+        // stays responsive. This path does not consume the on-open
+        // in-process concurrency slot
+        await this.actorStore.runMigration(dbLocation)
 
         // record the success
         await this.db.db
