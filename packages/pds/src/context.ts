@@ -286,10 +286,6 @@ export class AppContext {
       // fail loudly if it's foregrounded
       cfg.actorStore.migrateInBackground ? false : true,
     )
-    actorStoreMigrator.start()
-    if (!cfg.actorStore.migrateInBackground) {
-      await actorStoreMigrator.running
-    }
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
