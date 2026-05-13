@@ -957,6 +957,25 @@ describe('Record validation', () => {
     ).toThrow('Record/atUri must be a valid at-uri')
   })
 
+  it('Applies space-uri formatting constraint', () => {
+    lex.assertValidRecord('com.example.spaceUri', {
+      $type: 'com.example.spaceUri',
+      spaceUri: 'ats://did:web:example.com/com.example.group/default',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceUri', {
+        $type: 'com.example.spaceUri',
+        spaceUri: 'at://did:web:example.com/com.example.test/self',
+      }),
+    ).toThrow('Record/spaceUri must be a valid space-uri')
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceUri', {
+        $type: 'com.example.spaceUri',
+        spaceUri: 'http://not-atproto.com',
+      }),
+    ).toThrow('Record/spaceUri must be a valid space-uri')
+  })
+
   it('Applies did formatting constraint', () => {
     lex.assertValidRecord('com.example.did', {
       $type: 'com.example.did',

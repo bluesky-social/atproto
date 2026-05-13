@@ -14,12 +14,12 @@ export type SpaceUriString = `ats://${string}`
 
 // Parser regex accepts the optional `ats://` prefix (constructor convenience).
 // Strict format validation (isSpaceUriString / assertSpaceUriString) requires it.
-const SPACE_URI_REGEX = /^(ats:\/\/)?(did:[a-z0-9:%-]+)(\/[^?#\s]*)?$/i
+const SPACE_URI_REGEX = /^(ats:\/\/)?([^/?#\s]+)(\/[^?#\s]*)?$/i
 
 // Used by the format validators below. Mirrors the at-uri charset policy.
 const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
 const STRICT_SPACE_URI_REGEXP =
-  /^ats:\/\/(?<authority>did:[a-z0-9:%-]+)(?:\/(?<spaceType>[^/?#\s]+)(?:\/(?<skey>[^/?#\s]+)(?:\/(?<userDid>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?)?)?)?$/i
+  /^ats:\/\/(?<authority>[^/?#\s]+)(?:\/(?<spaceType>[^/?#\s]+)(?:\/(?<skey>[^/?#\s]+)(?:\/(?<userDid>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?)?)?)?$/i
 
 export type ParseSpaceUriStringOptions = {
   /**

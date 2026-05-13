@@ -380,6 +380,50 @@ describe('StringSchema', () => {
     })
   })
 
+  describe('format: space-uri', () => {
+    const schema = string({ format: 'space-uri' })
+
+    it('accepts a space-only URI (3 segments)', () => {
+      const result = schema.safeParse(
+        'ats://did:plc:abc123/com.example.group/default',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts a fully-qualified record URI (6 segments)', () => {
+      const result = schema.safeParse(
+        'ats://did:plc:abc123/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects a fully-qualified URI with an invalid user DID', () => {
+      const result = schema.safeParse(
+        'ats://did:plc:abc123/com.example.group/default/notadid/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a fully-qualified URI with an invalid collection NSID', () => {
+      const result = schema.safeParse(
+        'ats://did:plc:abc123/com.example.group/default/did:plc:user1/short/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects an at-uri', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/app.bsky.feed.post/xyz',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects plain strings', () => {
+      const result = schema.safeParse('not a space-uri')
+      expect(result.success).toBe(false)
+    })
+  })
+
   describe('format: did', () => {
     const schema = string({ format: 'did' })
 
