@@ -10,6 +10,22 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .alterTable('moderation_subject_status')
     .addColumn('convoId', 'varchar')
     .execute()
+
+  // Update unique constraint
+  // Use CONCURRENTLY when running in production
+  // [did, recordPath] -> [did, recordPath, convoId]
+  await db.schema
+    .alterTable('moderation_subject_status')
+    .dropConstraint('moderation_status_unique_idx')
+    .execute()
+  await db.schema
+    .alterTable('moderation_subject_status')
+    .addUniqueConstraint('moderation_status_unique_idx', [
+      'did',
+      'recordPath',
+      'convoId',
+    ])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
