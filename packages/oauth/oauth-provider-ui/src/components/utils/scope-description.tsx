@@ -9,6 +9,7 @@ import {
   HandIcon,
   IdentificationBadgeIcon,
   UserIcon,
+  UsersThreeIcon,
 } from '@phosphor-icons/react'
 import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
 import {
@@ -20,8 +21,14 @@ import {
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
+  SpacePermission,
 } from '@atproto/oauth-scopes'
-import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
+import type {
+  PermissionSet,
+  PermissionSets,
+  Space,
+  Spaces,
+} from '#/hydration-data.d.ts'
 import { Override } from '#/lib/util'
 import { Checkbox } from '../forms/checkbox.tsx'
 import { Admonition } from './admonition.tsx'
@@ -36,6 +43,7 @@ export type ScopeDescriptionProps = Override<
     clientFirstParty?: boolean
     scope?: string
     permissionSets?: PermissionSets
+    spaces?: Spaces
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -45,6 +53,7 @@ export type ScopeDescriptionProps = Override<
 export function ScopeDescription({
   scope,
   permissionSets,
+  spaces,
   clientTrusted = false,
   clientFirstParty = false,
   allowEmail,
@@ -90,9 +99,12 @@ export function ScopeDescription({
       <IncludedPermissions
         includeScopes={includeScopes}
         permissionSets={permissionSets}
+        spaces={spaces}
       />
 
-      <FineGrainedPermissions permissions={permissions} />
+      <FineGrainedPermissions permissions={permissions} spaces={spaces} />
+
+      <SpaceUniversalWarning permissions={permissions} />
 
       {(!clientFirstParty || !clientTrusted) && (
         <IdentityWarning permissions={permissions} />
@@ -104,15 +116,18 @@ export function ScopeDescription({
 function IncludedPermissions({
   includeScopes,
   permissionSets,
+  spaces,
 }: {
   includeScopes: IncludeScope[]
   permissionSets?: PermissionSets
+  spaces?: Spaces
 }): ReactNode {
   return includeScopes.map((includeScope, i) => (
     <IncludeScopePermissions
       key={i}
       includeScope={includeScope}
       permissionSet={permissionSets?.[includeScope.nsid]}
+      spaces={spaces}
     />
   ))
 }
@@ -120,9 +135,11 @@ function IncludedPermissions({
 function IncludeScopePermissions({
   includeScope,
   permissionSet,
+  spaces,
 }: {
   includeScope: IncludeScope
   permissionSet?: PermissionSet
+  spaces?: Spaces
 }) {
   const { nsid } = includeScope
 
@@ -163,6 +180,11 @@ function IncludeScopePermissions({
           <>
             <RpcMethodsTable className="mt-2" permissions={permissions} />
             <RepoTable className="mt-2" permissions={permissions} />
+            <SpaceTable
+              className="mt-2"
+              permissions={permissions}
+              spaces={spaces}
+            />
           </>
         ) : null
       }
@@ -280,8 +302,10 @@ function AccountPermissions({
  */
 function FineGrainedPermissions({
   permissions,
+  spaces,
 }: {
   permissions: ScopePermissionsTransition
+  spaces?: Spaces
 }) {
   const hasOnlyBskyAppSpecificPermissions = useMemo(() => {
     if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
@@ -316,6 +340,7 @@ function FineGrainedPermissions({
     <>
       <RepoPermissions permissions={permissions} />
       <RpcMethodsDetails permissions={permissions} />
+      <SpacePermissions permissions={permissions} spaces={spaces} />
     </>
   )
 }
@@ -701,6 +726,301 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
         )}
       </tbody>
     </table>
+  )
+}
+
+// SPACE PERMISSIONS
+//
+// Space scopes describe access to permissioned spaces (groups, forums, etc.).
+// They have a (type, did, skey) tuple plus a list of (collection, action) write
+// targets. Read access is implicit on any matching grant.
+//
+// Rendering uses lexicon-resolved names where possible:
+//   - `type=com.atmoboards.forum` → "AtmoBoards Forum spaces" (from lexicon)
+//   - `type=*` (community grant) → "spaces under <did>"
+//   - `did=*` → "any community" (modality-only grant)
+//
+// @TODO Community handle resolution: when the space is anchored to a specific
+// owner DID, we'd ideally render its handle (e.g. "protocol-nerds.atmoboards.com")
+// instead of a raw DID string. Left as a follow-up — see the diary on
+// "communities known by handle" — and the consent UI falls back to the DID.
+
+function SpacePermissions({
+  permissions,
+  spaces,
+}: {
+  permissions: ScopePermissionsTransition
+  spaces?: Spaces
+}) {
+  const { t } = useLingui()
+
+  const hasSpaceScopes = useMemo(() => {
+    return permissions.scopes.some((s) => SpacePermission.fromString(s) != null)
+  }, [permissions])
+
+  if (!hasSpaceScopes) return null
+
+  return (
+    <DescriptionCard
+      role="listitem"
+      image={<UsersThreeIcon className="size-6" />}
+      title={t`Spaces`}
+      description={t`Access permissioned spaces`}
+      extra={
+        <SpaceTable
+          className="mt-2"
+          permissions={permissions}
+          spaces={spaces}
+        />
+      }
+    >
+      <Trans>
+        Permissioned spaces (such as group chats, forums, or shared albums) hold
+        data that's only visible to their members. The application requests the
+        following access:
+      </Trans>
+    </DescriptionCard>
+  )
+}
+
+type SpaceWriteCell = {
+  create: boolean
+  update: boolean
+  delete: boolean
+}
+
+type SpaceTableRow = {
+  /** Stable key for React. */
+  key: string
+  /** Lexicon NSID (or '*' for any). */
+  type: string
+  /** Lexicon doc, if resolved. */
+  space?: Space
+  /** Owner DID, or '*' for any. */
+  did: string
+  /** Space key, or '*' for any. */
+  skey: string
+  /** True iff at least one matching grant lists `read`. */
+  read: boolean
+  /**
+   * Per-collection write actions. Key is collection NSID or '*'. Empty when
+   * the grant has no write targets — read-only.
+   */
+  writes: Map<string, SpaceWriteCell>
+}
+
+type SpaceTableProps = Override<
+  HTMLAttributes<HTMLTableElement>,
+  {
+    permissions: ScopePermissionsTransition
+    spaces?: Spaces
+    children?: never
+  }
+>
+function SpaceTable({
+  permissions,
+  spaces,
+  className = '',
+  ...attrs
+}: SpaceTableProps) {
+  const rows = useMemo<SpaceTableRow[]>(() => {
+    // Group scopes by (type, did, skey) tuple. Multiple scopes for the same
+    // tuple get merged action/collection sets.
+    const map = new Map<string, SpaceTableRow>()
+
+    for (const s of permissions.scopes) {
+      const parsed = SpacePermission.fromString(s)
+      if (!parsed) continue
+
+      const key = `${parsed.type}|${parsed.did}|${parsed.skey}`
+      let row = map.get(key)
+      if (!row) {
+        row = {
+          key,
+          type: parsed.type,
+          space: parsed.type !== '*' ? spaces?.[parsed.type] : undefined,
+          did: parsed.did,
+          skey: parsed.skey,
+          read: false,
+          writes: new Map(),
+        }
+        map.set(key, row)
+      }
+
+      if (parsed.action.includes('read')) row.read = true
+
+      // Merge per-collection writes. If a collection is already present, OR
+      // the new actions in.
+      for (const coll of parsed.collection) {
+        const existing = row.writes.get(coll)
+        const cell: SpaceWriteCell = existing ?? {
+          create: false,
+          update: false,
+          delete: false,
+        }
+        if (parsed.action.includes('create')) cell.create = true
+        if (parsed.action.includes('update')) cell.update = true
+        if (parsed.action.includes('delete')) cell.delete = true
+        row.writes.set(coll, cell)
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key))
+  }, [permissions, spaces])
+
+  if (!rows.length) return null
+
+  return (
+    <div className={`flex flex-col gap-3 ${className}`} {...attrs}>
+      {rows.map((row) => (
+        <SpaceRow key={row.key} row={row} />
+      ))}
+    </div>
+  )
+}
+
+function SpaceRow({ row }: { row: SpaceTableRow }) {
+  const { t } = useLingui()
+  const writeEntries = useMemo(
+    () =>
+      Array.from(row.writes.entries()).sort(([a], [b]) => a.localeCompare(b)),
+    [row.writes],
+  )
+  const starWrites = row.writes.get('*')
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-sm">
+        <SpaceLabel row={row} />
+      </div>
+
+      {writeEntries.length === 0 ? (
+        <div className="text-text-light text-xs">
+          {row.read ? (
+            <Trans>Read-only access.</Trans>
+          ) : (
+            // No actions at all — defensive; the parser shouldn't produce this
+            // shape but render something sane anyway.
+            <Trans>No access.</Trans>
+          )}
+        </div>
+      ) : (
+        <table className="w-full table-auto text-left">
+          <thead>
+            <tr className="text-xs">
+              <th className="font-normal">{t`Data`}</th>
+              <th className="text-center font-normal">{t`Create`}</th>
+              <th className="text-center font-normal">{t`Update`}</th>
+              <th className="text-center font-normal">{t`Delete`}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {writeEntries.map(([coll, actions]) => (
+              <tr key={coll} className="text-xs">
+                <td>
+                  <Collection coll={coll as CollectionParam} />
+                </td>
+                <td className="text-center">
+                  {starWrites?.create || actions.create ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+                <td className="text-center">
+                  {starWrites?.update || actions.update ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+                <td className="text-center">
+                  {starWrites?.delete || actions.delete ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+function SpaceLabel({ row }: { row: SpaceTableRow }) {
+  // Modality + community: anchored to a specific community. Render as
+  // "<name> spaces on <did>".
+  if (row.type !== '*' && row.did !== '*') {
+    return (
+      <Trans>
+        <SpaceTypeLabel type={row.type} space={row.space} /> spaces on{' '}
+        <SpaceOwner did={row.did} />
+      </Trans>
+    )
+  }
+  // Modality only: any community of this type.
+  if (row.type !== '*') {
+    return (
+      <Trans>
+        <SpaceTypeLabel type={row.type} space={row.space} /> spaces
+      </Trans>
+    )
+  }
+  // Community only: any space type under a specific owner.
+  if (row.did !== '*') {
+    return (
+      <Trans>
+        All spaces on <SpaceOwner did={row.did} />
+      </Trans>
+    )
+  }
+  // Universal grant — covered by SpaceUniversalWarning at the top level. We
+  // still render a row here so the table is complete.
+  return <Trans>All spaces on the network</Trans>
+}
+
+function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
+  if (space) {
+    return (
+      <b>
+        <LangProp object={space} property="name" fallback={type} />
+      </b>
+    )
+  }
+  return <b>{type}</b>
+}
+
+function SpaceOwner({ did }: { did: string }) {
+  // @TODO Resolve DID → handle so the consent screen can render
+  // "protocol-nerds.atmoboards.com" instead of a raw DID. Pending the
+  // community-handle resolution work that follows this PR.
+  return <code className="text-text-light">{did}</code>
+}
+
+/**
+ * Loud admonition for the rare-but-extremely-broad case: a `space:*` scope
+ * with no DID anchor. This grants the application access to *every* space on
+ * the network, which is almost never what a user wants to authorize.
+ */
+function SpaceUniversalWarning({
+  permissions,
+}: {
+  permissions: ScopePermissionsTransition
+}) {
+  const isUniversal = useMemo(() => {
+    return permissions.scopes.some((s) => {
+      const parsed = SpacePermission.fromString(s)
+      return parsed != null && parsed.type === '*' && parsed.did === '*'
+    })
+  }, [permissions])
+
+  if (!isUniversal) return null
+
+  return (
+    <Admonition role="status">
+      <Trans>
+        This application is requesting access to{' '}
+        <b>every space on the network</b>. This is an extremely broad
+        permission. Only grant it to applications you deeply trust.
+      </Trans>
+    </Admonition>
   )
 }
 

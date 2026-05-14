@@ -721,6 +721,11 @@ export class OAuthProvider extends OAuthVerifier {
               cause,
             )
           }),
+        // @NOTE space-type lexicons are advisory (used to render human-readable
+        // names on the consent screen). Resolution failures are swallowed
+        // inside the manager — unlike permission sets, missing spaces don't
+        // block the authorization flow.
+        spaces: await this.lexiconManager.getSpacesFromScope(parameters.scope),
       }
     } catch (err) {
       try {

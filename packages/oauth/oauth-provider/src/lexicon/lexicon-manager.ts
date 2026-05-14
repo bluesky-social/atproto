@@ -1,6 +1,6 @@
-import { LexiconPermissionSet } from '@atproto/lex-document'
+import { LexiconPermissionSet, LexiconSpace } from '@atproto/lex-document'
 import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
+import { IncludeScope, Nsid, SpacePermission } from '@atproto/oauth-scopes'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
 
@@ -16,6 +16,20 @@ export class LexiconManager {
   public async getPermissionSetsFromScope(scope?: string) {
     const { includeScopes } = parseScope(scope)
     return this.extractPermissionSets(includeScopes)
+  }
+
+  /**
+   * Extracts space-type NSIDs referenced by `space:` scopes in the request and
+   * resolves their lexicon documents. Used by the consent screen to render
+   * human-readable space names.
+   *
+   * Wildcard `type=*` scopes are skipped — there's no NSID to resolve.
+   */
+  public async getSpacesFromScope(
+    scope?: string,
+  ): Promise<Map<string, LexiconSpace>> {
+    const nsids = extractSpaceTypeNsids(scope)
+    return this.getSpaces(nsids)
   }
 
   /**
@@ -73,6 +87,57 @@ export class LexiconManager {
 
     return lexicon.defs.main
   }
+
+  /**
+   * Resolve a set of space-type NSIDs to their lexicon documents. Failures
+   * are tolerated — a space whose lexicon doesn't resolve, or doesn't have
+   * `type: space` at `defs.main`, is silently dropped from the result so the
+   * consent screen falls back to rendering the bare NSID.
+   */
+  protected async getSpaces(
+    nsids: Set<Nsid>,
+  ): Promise<Map<string, LexiconSpace>> {
+    const entries = await Promise.all(
+      Array.from(nsids, async (nsid) => {
+        try {
+          const space = await this.getSpace(nsid)
+          return [nsid, space] as const
+        } catch {
+          return null
+        }
+      }),
+    )
+    return new Map(
+      entries.filter((e): e is readonly [Nsid, LexiconSpace] => e !== null),
+    )
+  }
+
+  protected async getSpace(nsid: Nsid): Promise<LexiconSpace> {
+    const { lexicon } = await this.lexiconGetter.get(nsid)
+
+    if (!lexicon) {
+      throw LexResolverError.from(nsid)
+    }
+
+    if (lexicon.defs.main?.type !== 'space') {
+      const description = 'Lexicon document is not a space'
+      throw LexResolverError.from(nsid, description)
+    }
+
+    return lexicon.defs.main
+  }
+}
+
+function extractSpaceTypeNsids(scope?: string): Set<Nsid> {
+  const nsids = new Set<Nsid>()
+  if (!scope) return nsids
+  for (const value of scope.split(' ')) {
+    const parsed = SpacePermission.fromString(value)
+    if (!parsed) continue
+    if (parsed.type === '*') continue
+    nsids.add(parsed.type)
+  }
+  return nsids
 }
 
 function parseScope(scope?: string) {

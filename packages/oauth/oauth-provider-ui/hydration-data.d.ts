@@ -4,11 +4,14 @@ import type {
   CustomizationData,
   Session,
 } from '@atproto/oauth-provider-api'
-import type { LexiconPermissionSet } from '@atproto/oauth-scopes'
+import type { LexiconPermissionSet, LexiconSpace } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata, OAuthPromptMode } from '@atproto/oauth-types'
 
 export type PermissionSet = LexiconPermissionSet
 export type PermissionSets = Record<string, undefined | PermissionSet>
+
+export type Space = LexiconSpace
+export type Spaces = Record<string, undefined | Space>
 
 export type AuthorizeData = {
   requestUri: string
@@ -24,6 +27,7 @@ export type AuthorizeData = {
   uiLocales?: string
   promptMode?: OAuthPromptMode
   permissionSets: PermissionSets
+  spaces: Spaces
 }
 
 export type ErrorData = {

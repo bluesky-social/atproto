@@ -192,7 +192,14 @@
         clientTrusted: false,
         clientFirstParty: false,
         permissionSets: Object.fromEntries(
-          lexicons.map((l) => [l.id, l.defs.main]),
+          lexicons
+            .filter((l) => l.defs.main?.type === 'permission-set')
+            .map((l) => [l.id, l.defs.main]),
+        ),
+        spaces: Object.fromEntries(
+          lexicons
+            .filter((l) => l.defs.main?.type === 'space')
+            .map((l) => [l.id, l.defs.main]),
         ),
 
         loginHint,

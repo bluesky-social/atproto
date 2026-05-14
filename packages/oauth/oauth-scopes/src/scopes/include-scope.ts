@@ -1,5 +1,9 @@
 import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
-import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
+import {
+  LexiconPermission,
+  LexiconPermissionSet,
+  LexiconSpace,
+} from '../lib/lexicon.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
@@ -14,7 +18,13 @@ import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
 import { SpacePermission } from './space-permission.js'
 
-export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
+export {
+  type LexiconPermission,
+  type LexiconPermissionSet,
+  type LexiconSpace,
+  type Nsid,
+  isNsid,
+}
 
 /**
  * This is used to handle "include:" oauth scope values, used to include

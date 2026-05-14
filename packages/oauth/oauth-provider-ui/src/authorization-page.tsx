@@ -108,6 +108,7 @@ function App() {
           clientTrusted={authorizeData.clientTrusted}
           clientFirstParty={authorizeData.clientFirstParty}
           permissionSets={authorizeData.permissionSets}
+          spaces={authorizeData.spaces}
           account={session.account}
           scope={authorizeData.scope}
           onConsent={(scope) =>

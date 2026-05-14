@@ -3,7 +3,7 @@ import { ReactNode, useState } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { PermissionSets } from '#/hydration-data.d.ts'
+import type { PermissionSets, Spaces } from '#/hydration-data.d.ts'
 import { Button } from './forms/button.tsx'
 import { FormCard } from './forms/form-card.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
@@ -18,6 +18,7 @@ export type ConsentFormProps = {
   clientTrusted: boolean
   clientFirstParty: boolean
   permissionSets: PermissionSets
+  spaces: Spaces
 
   account: Account
   scope?: string
@@ -55,6 +56,7 @@ export function ConsentForm({
   clientTrusted,
   clientFirstParty,
   permissionSets,
+  spaces,
 
   account,
   scope,
@@ -141,6 +143,7 @@ export function ConsentForm({
       <ScopeDescription
         scope={scope}
         permissionSets={permissionSets}
+        spaces={spaces}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}
