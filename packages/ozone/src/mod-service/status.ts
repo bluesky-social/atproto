@@ -283,6 +283,7 @@ export const adjustModerationSubjectStatus = async (
     subjectDid,
     subjectUri,
     subjectCid,
+    subjectConvoId,
     createdBy,
     meta,
     addedTags,
@@ -301,6 +302,7 @@ export const adjustModerationSubjectStatus = async (
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
     .where('recordPath', '=', identifier.recordPath)
+    .where('convoId', 'is', subjectConvoId)
     // Make sure we respect other updates that may be happening at the same time
     .forUpdate()
     .selectAll()
@@ -319,6 +321,7 @@ export const adjustModerationSubjectStatus = async (
       .insertInto('moderation_subject_status')
       .values({
         ...identifier,
+        convoId: subjectConvoId ?? null,
         ...newStatus,
         // newStatus doesn't contain a reviewState or takendown so in case this is a new entry
         // we need to set a default values so that the insert doesn't fail
@@ -489,6 +492,7 @@ export const adjustModerationSubjectStatus = async (
     .insertInto('moderation_subject_status')
     .values({
       ...identifier,
+      convoId: subjectConvoId ?? null,
       ...newStatus,
       createdAt: now,
       updatedAt: now,
