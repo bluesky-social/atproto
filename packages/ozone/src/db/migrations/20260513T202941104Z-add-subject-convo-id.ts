@@ -8,11 +8,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .alterTable('moderation_subject_status')
-    .addColumn('convoId', 'varchar')
+    .addColumn('convoId', 'varchar', (col) => col.notNull().defaultTo(''))
     .execute()
 
   // Update unique constraint
-  // Use CONCURRENTLY when running in production
   // [did, recordPath] -> [did, recordPath, convoId]
   await db.schema
     .alterTable('moderation_subject_status')

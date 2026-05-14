@@ -14,7 +14,7 @@ export interface ModerationSubjectStatus {
   // unique columns
   did: string
   recordPath: string
-  convoId: string | null
+  convoId: string
 
   recordCid: string | null
   blobCids: string[] | null
