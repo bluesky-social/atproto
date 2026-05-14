@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events'
 import { Etcd3, IKeyValue } from 'etcd3'
+import { describe, expect, it } from 'vitest'
 import { EtcdMap } from '../src/etcd.js'
 import { EtcdHostList } from '../src/index.js'
 

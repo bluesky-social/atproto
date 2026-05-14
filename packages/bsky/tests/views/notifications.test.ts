@@ -1,4 +1,13 @@
 import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
   AppBskyActorDefs,
   AppBskyNotificationDeclaration,
   AppBskyNotificationDefs,
@@ -8,8 +17,12 @@ import {
   AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { TAG_HIDE } from '@atproto/dev-env/dist/seed/thread-v2'
+import {
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+  seedThreadV2,
+} from '@atproto/dev-env'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications.js'
 import { Namespaces } from '../../src/stash.js'
 import { forSnapshot, paginateAll } from '../_util.js'
@@ -39,7 +52,7 @@ describe('notification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
       bsky: {
-        threadTagsHide: new Set([TAG_HIDE]),
+        threadTagsHide: new Set([seedThreadV2.TAG_HIDE]),
       },
     })
     db = network.bsky.db
@@ -797,7 +810,10 @@ describe('notification views', () => {
         'no thanks',
       )
       await network.processAll()
-      await createTag(db, { uri: eveReply.ref.uri.toString(), val: TAG_HIDE })
+      await createTag(db, {
+        uri: eveReply.ref.uri.toString(),
+        val: seedThreadV2.TAG_HIDE,
+      })
     })
 
     it('filters posts with hide tag', async () => {
@@ -864,19 +880,11 @@ describe('notification views', () => {
 
       // @NOTE: Use fake timers after inserting seed data,
       // to avoid inserting all notifications with the same timestamp.
-      jest.useFakeTimers({
-        doNotFake: [
-          'nextTick',
-          'performance',
-          'setImmediate',
-          'setInterval',
-          'setTimeout',
-        ],
-      })
+      vi.useFakeTimers({ toFake: ['Date'] })
     })
 
     afterAll(async () => {
-      jest.useRealTimers()
+      vi.useRealTimers()
       await delayNetwork.close()
     })
 
@@ -889,7 +897,7 @@ describe('notification views', () => {
         .executeTakeFirstOrThrow()
       // Sets the system time to when the first notification happened.
       // At this point we won't have any notifications that already crossed the delay threshold.
-      jest.setSystemTime(new Date(firstNotification.sortAt))
+      vi.setSystemTime(new Date(firstNotification.sortAt))
 
       const results = (
         results: AppBskyNotificationListNotifications.OutputSchema[],
@@ -936,7 +944,7 @@ describe('notification views', () => {
         .executeTakeFirstOrThrow()
       // Sets the system time to when the last notification happened and the delay has elapsed.
       // At this point we all notifications already crossed the delay threshold.
-      jest.setSystemTime(
+      vi.setSystemTime(
         new Date(
           new Date(lastNotification.sortAt).getTime() +
             notificationsDelayMs +
@@ -975,12 +983,12 @@ describe('notification views', () => {
       const nowMinus8s = '2021-01-01T00:59:52.000Z'
 
       beforeAll(async () => {
-        jest.useFakeTimers({ doNotFake: ['performance'] })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       describe('for undefined cursor', () => {

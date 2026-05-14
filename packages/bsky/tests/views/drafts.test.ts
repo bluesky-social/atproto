@@ -1,4 +1,13 @@
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
   AppBskyDraftCreateDraft,
   AppBskyDraftDefs,
   AppBskyDraftGetDrafts,
@@ -41,7 +50,7 @@ describe('appview drafts views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearDrafts(db)
   })
 

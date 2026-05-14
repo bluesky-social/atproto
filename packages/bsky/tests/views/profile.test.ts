@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   AppBskyEmbedExternal,
   AtpAgent,
@@ -448,20 +449,12 @@ describe('pds profile views', () => {
       const nowPlus15M = '2021-01-01T01:15:00.000Z'
 
       beforeAll(() => {
-        jest.useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'performance',
-            'setImmediate',
-            'setInterval',
-            'setTimeout',
-          ],
-        })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       it('returns inactive status', async () => {
@@ -484,7 +477,7 @@ describe('pds profile views', () => {
         )
         await network.processAll()
 
-        jest.setSystemTime(new Date(nowPlus15M))
+        vi.setSystemTime(new Date(nowPlus15M))
 
         const { data } = await agent.api.app.bsky.actor.getProfile(
           { actor: alice },
@@ -732,7 +725,7 @@ describe('pds profile views', () => {
 
   it('filters out Go zero-value dates from dataplane', async () => {
     // Spy on the dataplane getActors method
-    const getActorsSpy = jest.spyOn(network.bsky.ctx.dataplane, 'getActors')
+    const getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
 
     // Call the original implementation but modify the result
     getActorsSpy.mockImplementationOnce(async (req) => {

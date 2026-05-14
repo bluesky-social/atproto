@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { DidString, NSID } from '@atproto/syntax'
 import {
@@ -8,7 +9,7 @@ import {
 
 const dnsEntries: [entry: string, ...result: string[][]][] = []
 
-jest.mock('node:dns/promises', () => {
+vi.mock('node:dns/promises', () => {
   return {
     resolveTxt: (entry: string) => {
       const found = dnsEntries.find(([e]) => e === entry)
@@ -37,7 +38,6 @@ describe('Lexicon resolution', () => {
   })
 
   afterAll(async () => {
-    jest.unmock('node:dns/promises')
     await network.close()
   })
 

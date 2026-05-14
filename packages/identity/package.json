@@ -17,7 +17,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:log": "cat test.log | pino-pretty",
     "build": "tsc --build tsconfig.build.json"
   },
@@ -34,7 +34,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "get-port": "^6.1.2",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "typescript": "^6.0.3"
   }
 }
