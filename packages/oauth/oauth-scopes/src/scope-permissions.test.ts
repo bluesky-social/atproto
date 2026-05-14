@@ -264,4 +264,79 @@ describe('ScopePermissions', () => {
       ).toBe(false)
     })
   })
+
+  describe('allowsSpace', () => {
+    it('should grant read on tuple match', () => {
+      const set = new ScopePermissions('space:com.example.group')
+      expect(
+        set.allowsSpace({
+          type: 'com.example.group',
+          did: 'did:plc:abc',
+          skey: 'default',
+          action: 'read',
+        }),
+      ).toBe(true)
+    })
+
+    it('should refuse writes when no collection is listed', () => {
+      const set = new ScopePermissions('space:com.example.group')
+      expect(
+        set.allowsSpace({
+          type: 'com.example.group',
+          did: 'did:plc:abc',
+          skey: 'default',
+          collection: 'com.example.event',
+          action: 'create',
+        }),
+      ).toBe(false)
+    })
+
+    it('should grant writes scoped by collection and action', () => {
+      const set = new ScopePermissions(
+        'space:com.example.group?collection=com.example.event&action=create',
+      )
+      expect(
+        set.allowsSpace({
+          type: 'com.example.group',
+          did: 'did:plc:abc',
+          skey: 'default',
+          collection: 'com.example.event',
+          action: 'create',
+        }),
+      ).toBe(true)
+
+      // Control
+
+      expect(
+        set.allowsSpace({
+          type: 'com.example.group',
+          did: 'did:plc:abc',
+          skey: 'default',
+          collection: 'com.example.event',
+          action: 'delete',
+        }),
+      ).toBe(false)
+      expect(
+        set.allowsSpace({
+          type: 'com.example.group',
+          did: 'did:plc:abc',
+          skey: 'default',
+          collection: 'com.example.other',
+          action: 'create',
+        }),
+      ).toBe(false)
+    })
+
+    it('should ignore transition:generic', () => {
+      const set = new ScopePermissions('transition:generic')
+      expect(
+        set.allowsSpace({
+          type: 'com.example.group',
+          did: 'did:plc:abc',
+          skey: 'default',
+          action: 'read',
+        }),
+      ).toBe(false)
+    })
+  })
 })

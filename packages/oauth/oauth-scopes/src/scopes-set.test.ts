@@ -44,4 +44,26 @@ describe('ScopesSet', () => {
       set.matches('repo', { action: 'create', collection: 'not-a-valid-nsid' }),
     ).toBe(false)
   })
+
+  it('should match space scopes via the dispatcher', () => {
+    const set = new ScopesSet([
+      'space:com.example.group?did=did:plc:abc&skey=default&collection=com.example.event',
+    ])
+    expect(
+      set.matches('space', {
+        type: 'com.example.group',
+        did: 'did:plc:abc',
+        skey: 'default',
+        action: 'read',
+      }),
+    ).toBe(true)
+    expect(
+      set.matches('space', {
+        type: 'com.example.group',
+        did: 'did:plc:other',
+        skey: 'default',
+        action: 'read',
+      }),
+    ).toBe(false)
+  })
 })

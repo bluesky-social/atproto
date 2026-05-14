@@ -54,9 +54,7 @@ describe('SpacePermission', () => {
       })
 
       it('rejects invalid did', () => {
-        expect(
-          SpacePermission.fromString('space:*?did=not-a-did'),
-        ).toBeNull()
+        expect(SpacePermission.fromString('space:*?did=not-a-did')).toBeNull()
         expect(SpacePermission.fromString('space:*?did=did:')).toBeNull()
       })
 

@@ -60,6 +60,13 @@
               "resource": "rpc",
               "lxm": ["com.example.lexicon.endpointTwo"],
               "inheritAud": true
+            },
+            {
+              "type": "permission",
+              "resource": "space",
+              "spaceType": "com.example.lexicon.group",
+              "collection": ["com.example.calendar.event"],
+              "action": ["read", "create"]
             }
           ]
         }
@@ -80,10 +87,7 @@
             "es": "Foro AtmoBoards",
             "ja": "AtmoBoards 掲示板"
           },
-          "collections": [
-            "com.atmoboards.thread",
-            "com.atmoboards.reply"
-          ]
+          "collections": ["com.atmoboards.thread", "com.atmoboards.reply"]
         }
       }
     }
