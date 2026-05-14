@@ -12,6 +12,7 @@ import {
 } from '../lib/syntax.js'
 import { RepoPermission } from './repo-permission.js'
 import { RpcPermission } from './rpc-permission.js'
+import { SpacePermission } from './space-permission.js'
 
 export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 
@@ -32,13 +33,13 @@ export class IncludeScope {
 
   toPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Array<RepoPermission | RpcPermission> {
+  ): Array<RepoPermission | RpcPermission | SpacePermission> {
     return Array.from(this.buildPermissions(permissionSet))
   }
 
   toScopes(
     permissionSet: LexiconPermissionSet,
-  ): Array<ScopeStringFor<'repo' | 'rpc'>> {
+  ): Array<ScopeStringFor<'repo' | 'rpc' | 'space'>> {
     return Array.from(this.buildPermissions(permissionSet), (p) => p.toString())
   }
 
@@ -48,7 +49,11 @@ export class IncludeScope {
    */
   *buildPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Generator<RepoPermission | RpcPermission, void, unknown> {
+  ): Generator<
+    RepoPermission | RpcPermission | SpacePermission,
+    void,
+    unknown
+  > {
     for (const lexPermission of permissionSet.permissions) {
       const syntax = this.parseLexPermission(lexPermission)
       if (!syntax) continue
@@ -64,7 +69,7 @@ export class IncludeScope {
 
   protected parseLexPermission(
     permission: LexiconPermission,
-  ): ScopeSyntax<'repo' | 'rpc'> | null {
+  ): ScopeSyntax<'repo' | 'rpc' | 'space'> | null {
     // This function converts permissions listed in the permission set into
     // their respective ScopeSyntax representations, handling special cases as
     // needed.
@@ -95,6 +100,10 @@ export class IncludeScope {
       return new LexPermissionSyntax(permission)
     }
 
+    if (isLexPermissionForResource(permission, 'space')) {
+      return new LexPermissionSyntax(permission)
+    }
+
     return null
   }
 
@@ -102,16 +111,28 @@ export class IncludeScope {
    * Verifies that a permission included through a lexicon permission set is
    * allowed in the context of the `include:` scope. This basically checks that
    * the permission is "under" the namespace authority of the `include:` scope,
-   * and that it only contains "repo:", "rpc:", or "blob:" permissions.
+   * and that it only contains "repo:", "rpc:", "space:", or "blob:"
+   * permissions.
+   *
+   * For `space:` permissions, both the space `type` and any listed
+   * `collection`s must be under the include's namespace. The `did` and `skey`
+   * params don't carry a namespace and are not constrained here — a permission
+   * set declares an *intent* (e.g. "AtmoBoards forums"), and which spaces the
+   * grant applies to is filled in at OAuth request time.
    */
   protected isAllowedPermission(
-    permission: RpcPermission | RepoPermission,
+    permission: RpcPermission | RepoPermission | SpacePermission,
   ): boolean {
     if (permission instanceof RpcPermission) {
       return permission.lxm.every(this.isParentAuthorityOf, this)
     }
 
     if (permission instanceof RepoPermission) {
+      return permission.collection.every(this.isParentAuthorityOf, this)
+    }
+
+    if (permission instanceof SpacePermission) {
+      if (!this.isParentAuthorityOf(permission.type)) return false
       return permission.collection.every(this.isParentAuthorityOf, this)
     }
 
@@ -186,13 +207,16 @@ export class IncludeScope {
 }
 
 function toResourcePermission(
-  syntax: ScopeSyntax<'repo' | 'rpc'>,
-): RepoPermission | RpcPermission | null {
+  syntax: ScopeSyntax<'repo' | 'rpc' | 'space'>,
+): RepoPermission | RpcPermission | SpacePermission | null {
   if (isScopeSyntaxFor(syntax, 'repo')) {
     return RepoPermission.fromSyntax(syntax)
   }
   if (isScopeSyntaxFor(syntax, 'rpc')) {
     return RpcPermission.fromSyntax(syntax)
+  }
+  if (isScopeSyntaxFor(syntax, 'space')) {
+    return SpacePermission.fromSyntax(syntax)
   }
   return null
 }

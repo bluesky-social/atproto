@@ -16,6 +16,10 @@ import {
   RepoPermissionMatch,
 } from './scopes/repo-permission.js'
 import { RpcPermission, RpcPermissionMatch } from './scopes/rpc-permission.js'
+import {
+  SpacePermission,
+  SpacePermissionMatch,
+} from './scopes/space-permission.js'
 import { ScopesSet } from './scopes-set.js'
 
 export type {
@@ -24,6 +28,7 @@ export type {
   IdentityPermissionMatch,
   RepoPermissionMatch,
   RpcPermissionMatch,
+  SpacePermissionMatch,
 }
 
 export class ScopePermissions {
@@ -85,6 +90,16 @@ export class ScopePermissions {
   public assertRpc(options: RpcPermissionMatch): void {
     if (!this.allowsRpc(options)) {
       const scope = RpcPermission.scopeNeededFor(options)
+      throw new ScopeMissingError(scope)
+    }
+  }
+
+  public allowsSpace(options: SpacePermissionMatch): boolean {
+    return this.scopes.matches('space', options)
+  }
+  public assertSpace(options: SpacePermissionMatch): void {
+    if (!this.allowsSpace(options)) {
+      const scope = SpacePermission.scopeNeededFor(options)
       throw new ScopeMissingError(scope)
     }
   }

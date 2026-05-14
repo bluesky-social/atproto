@@ -632,6 +632,109 @@ describe('IncludeScope', () => {
           })
         })
       })
+
+      describe('space', () => {
+        describe('enabled', () => {
+          it('space permission with type only', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: 'com.example.calendar.group',
+                    action: ['read', 'create', 'update', 'delete'],
+                  },
+                ],
+              }),
+            ).toEqual(['space:com.example.calendar.group'])
+          })
+
+          it('space permission with type and collection', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: 'com.example.calendar.group',
+                    collection: ['com.example.calendar.event'],
+                    action: ['create', 'update'],
+                  },
+                ],
+              }),
+            ).toEqual([
+              'space:com.example.calendar.group?collection=com.example.calendar.event&action=create&action=update',
+            ])
+          })
+        })
+
+        describe('rejects', () => {
+          it('space type outside the include namespace', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: 'app.bsky.group',
+                  },
+                ],
+              }),
+            ).toEqual([])
+          })
+
+          it('space collection outside the include namespace', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: 'com.example.calendar.group',
+                    collection: ['app.bsky.feed.post'],
+                  },
+                ],
+              }),
+            ).toEqual([])
+          })
+
+          it('wildcard space type (too broad for a permission-set)', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: '*',
+                  },
+                ],
+              }),
+            ).toEqual([])
+          })
+
+          it('wildcard collection (too broad for a permission-set)', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: 'com.example.calendar.group',
+                    collection: ['*'],
+                  },
+                ],
+              }),
+            ).toEqual([])
+          })
+        })
+      })
     })
   })
 })
