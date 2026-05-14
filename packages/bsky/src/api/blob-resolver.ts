@@ -81,7 +81,7 @@ export function createMiddleware(ctx: AppContext): Middleware {
         // The way I/O work, it is likely that, in case of small payloads, the
         // full upstream response is already buffered at this point. In order to
         // return a 404 instead of a broken response stream, we allow the event
-        // loop to to process any pending I/O events before we start piping the
+        // loop to process any pending I/O events before we start piping the
         // bytes to the response. For larger payloads, the response will look
         // like a 200 with a broken chunked response stream. The only way around
         // that would be to buffer the entire response before piping it to the
