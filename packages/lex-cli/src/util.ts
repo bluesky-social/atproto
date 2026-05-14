@@ -6,9 +6,27 @@ import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { type FileDiff, type GeneratedAPI } from './types'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
-  paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
+  // On Windows the shell does not expand glob patterns before passing args to
+  // the process (unlike bash/zsh on Linux/Mac). Expand manually so codegen
+  // works cross-platform.
+  const expanded: string[] = []
+  for (const p of paths) {
+    if (p.includes('*')) {
+      const baseDir = p.substring(0, p.indexOf('*')).replace(/[\\/]+$/, '')
+      // Derive the exact depth from the glob portion so behaviour matches the
+      // shell expansion on Linux/Mac. e.g. '*/*' → depth 2, meaning only files
+      // exactly two levels below baseDir are collected (same as bash `*/*`).
+      const globPart = p.substring(p.indexOf('*'))
+      // path.resolve() converts '/' to '\' on Windows, so split on both
+      const depth = globPart.split(/[/\\]/).length
+      collectJsonFiles(baseDir, expanded, depth)
+    } else {
+      expanded.push(p)
+    }
+  }
+  expanded.sort()
   const docs: LexiconDoc[] = []
-  for (const path of paths) {
+  for (const path of expanded) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
       continue
     }
@@ -148,4 +166,29 @@ function readdirRecursiveSync(root: string, files: string[] = [], prefix = '') {
 
 function dedup(arr: string[]): string[] {
   return Array.from(new Set(arr))
+}
+
+// Collects .json files under dir up to the given depth (1 = immediate children,
+// 2 = one level of subdirectories, etc.), matching the behaviour of a shell
+// glob where each '*' segment corresponds to one depth level. This makes
+// Windows and Linux codegen produce identical file lists.
+function collectJsonFiles(
+  dir: string,
+  acc: string[],
+  depth: number,
+  current = 1,
+): void {
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    if (entry.isDirectory() && current < depth) {
+      collectJsonFiles(full, acc, depth, current + 1)
+    } else if (
+      !entry.isDirectory() &&
+      entry.name.endsWith('.json') &&
+      current === depth
+    ) {
+      acc.push(full)
+    }
+  }
 }

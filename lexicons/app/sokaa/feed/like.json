@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.feed.like",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a like of a Sokaa post. Stored in the liker's repo.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "createdAt"],
+        "properties": {
+          "subject": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef",
+            "description": "The post being liked, identified by its AT-URI and CID."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

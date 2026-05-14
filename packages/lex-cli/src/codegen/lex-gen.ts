@@ -146,6 +146,10 @@ export function genUserType(
       genPrimitiveOrBlob(file, lexUri, def)
       break
 
+    case 'permission-set':
+      // OAuth permission-set descriptors carry no TypeScript type; skip them.
+      break
+
     default:
       throw new Error(
         `genLexUserType() called with wrong definition type (${def.type}) in ${lexUri}`,

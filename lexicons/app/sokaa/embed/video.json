@@ -1,0 +1,66 @@
+{
+  "lexicon": 1,
+  "id": "app.sokaa.embed.video",
+  "description": "A video embedded in a Sokaa post.",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["video"],
+      "properties": {
+        "video": {
+          "type": "blob",
+          "description": "The video file. Maximum 500MB (supports up to 4K resolution).",
+          "accept": ["video/mp4"],
+          "maxSize": 500000000
+        },
+        "thumbnail": {
+          "type": "blob",
+          "description": "A still image preview frame for the video.",
+          "accept": ["image/jpeg", "image/png"],
+          "maxSize": 1000000
+        },
+        "alt": {
+          "type": "string",
+          "description": "Alt text description of the video, for accessibility.",
+          "maxGraphemes": 1000,
+          "maxLength": 10000
+        },
+        "duration": {
+          "type": "integer",
+          "description": "Duration of the video in seconds.",
+          "minimum": 0
+        },
+        "aspectRatio": {
+          "type": "ref",
+          "ref": "#aspectRatio"
+        }
+      }
+    },
+    "aspectRatio": {
+      "type": "object",
+      "description": "Width:height ratio of the video frame.",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "view": {
+      "type": "object",
+      "description": "Hydrated video view returned by the AppView.",
+      "required": ["cid", "playlist"],
+      "properties": {
+        "cid": { "type": "string", "format": "cid" },
+        "playlist": {
+          "type": "string",
+          "format": "uri",
+          "description": "HLS/DASH playlist URL served by the media CDN."
+        },
+        "thumbnail": { "type": "string", "format": "uri" },
+        "alt": { "type": "string", "maxGraphemes": 1000, "maxLength": 10000 },
+        "duration": { "type": "integer", "minimum": 0 },
+        "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
+      }
+    }
+  }
+}
