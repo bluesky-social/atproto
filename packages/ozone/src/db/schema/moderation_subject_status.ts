@@ -10,11 +10,14 @@ export const subjectStatusTableName = 'moderation_subject_status'
 
 export interface ModerationSubjectStatus {
   id: Generated<number>
+
+  // unique columns
   did: string
   recordPath: string
+  convoId: string | null
+
   recordCid: string | null
   blobCids: string[] | null
-  convoId: string | null
   reviewState:
     | typeof REVIEWCLOSED
     | typeof REVIEWOPEN
