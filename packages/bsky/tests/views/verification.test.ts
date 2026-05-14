@@ -254,7 +254,7 @@ describe('verification views', () => {
         const urlPrefixes = getExpectedUrisPrefixes()
 
         expect(urlPrefixes.length).toBe(
-          profile.verification!.verifications.length,
+          profile.verification?.verifications.length ?? 0,
         )
         urlPrefixes.forEach((prefix, i) => {
           assert(profile.verification)
