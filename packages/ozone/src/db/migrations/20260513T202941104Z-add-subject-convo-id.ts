@@ -31,6 +31,16 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('moderation_subject_status')
+    .dropConstraint('moderation_status_unique_idx')
+    .execute()
+
+  await db.schema
+    .alterTable('moderation_subject_status')
+    .addUniqueConstraint('moderation_status_unique_idx', ['did', 'recordPath'])
+    .execute()
+
+  await db.schema
+    .alterTable('moderation_subject_status')
     .dropColumn('convoId')
     .execute()
 
