@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
+import { IdResolver } from '@atproto/identity'
 import { Jwks, Keyset } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -71,6 +72,7 @@ import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { IdentityManager } from './identity/identity-manager.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
 import { LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -162,6 +164,13 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
+   * An atproto identity resolver, used to resolve DIDs (e.g. community-owner
+   * DIDs in `space:` scopes) to handles for display on the consent screen.
+   * Optional — when omitted, raw DIDs are rendered.
+   */
+  idResolver?: IdResolver
+
+  /**
    * A custom fetch function that can be used to fetch the client metadata from
    * the internet. By default, the fetch function is a safeFetchWrap() function
    * that protects against SSRF attacks, large responses & known bad domains. If
@@ -247,6 +256,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
   public readonly lexiconManager: LexiconManager
+  public readonly identityManager?: IdentityManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
@@ -261,6 +271,7 @@ export class OAuthProvider extends OAuthVerifier {
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
     lexResolver = new LexResolver({ fetch: safeFetch }),
+    idResolver,
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -332,6 +343,9 @@ export class OAuthProvider extends OAuthVerifier {
       clientMetadataCache,
     )
     this.lexiconManager = new LexiconManager(lexiconStore, lexResolver)
+    this.identityManager = idResolver
+      ? new IdentityManager(idResolver)
+      : undefined
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,
@@ -726,6 +740,14 @@ export class OAuthProvider extends OAuthVerifier {
         // inside the manager — unlike permission sets, missing spaces don't
         // block the authorization flow.
         spaces: await this.lexiconManager.getSpacesFromScope(parameters.scope),
+        // @NOTE community handles for `space:` scopes anchored to a specific
+        // owner DID. Same advisory model as spaces above — verification
+        // failures fall back to rendering the raw DID. Empty map when no
+        // identity resolver was configured.
+        communityHandles:
+          (await this.identityManager?.getCommunityHandlesFromScope(
+            parameters.scope,
+          )) ?? new Map(),
       }
     } catch (err) {
       try {

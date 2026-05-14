@@ -24,6 +24,7 @@ import {
   SpacePermission,
 } from '@atproto/oauth-scopes'
 import type {
+  CommunityHandles,
   PermissionSet,
   PermissionSets,
   Space,
@@ -44,6 +45,7 @@ export type ScopeDescriptionProps = Override<
     scope?: string
     permissionSets?: PermissionSets
     spaces?: Spaces
+    communityHandles?: CommunityHandles
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -54,6 +56,7 @@ export function ScopeDescription({
   scope,
   permissionSets,
   spaces,
+  communityHandles,
   clientTrusted = false,
   clientFirstParty = false,
   allowEmail,
@@ -100,9 +103,14 @@ export function ScopeDescription({
         includeScopes={includeScopes}
         permissionSets={permissionSets}
         spaces={spaces}
+        communityHandles={communityHandles}
       />
 
-      <FineGrainedPermissions permissions={permissions} spaces={spaces} />
+      <FineGrainedPermissions
+        permissions={permissions}
+        spaces={spaces}
+        communityHandles={communityHandles}
+      />
 
       <SpaceUniversalWarning permissions={permissions} />
 
@@ -117,10 +125,12 @@ function IncludedPermissions({
   includeScopes,
   permissionSets,
   spaces,
+  communityHandles,
 }: {
   includeScopes: IncludeScope[]
   permissionSets?: PermissionSets
   spaces?: Spaces
+  communityHandles?: CommunityHandles
 }): ReactNode {
   return includeScopes.map((includeScope, i) => (
     <IncludeScopePermissions
@@ -128,6 +138,7 @@ function IncludedPermissions({
       includeScope={includeScope}
       permissionSet={permissionSets?.[includeScope.nsid]}
       spaces={spaces}
+      communityHandles={communityHandles}
     />
   ))
 }
@@ -136,10 +147,12 @@ function IncludeScopePermissions({
   includeScope,
   permissionSet,
   spaces,
+  communityHandles,
 }: {
   includeScope: IncludeScope
   permissionSet?: PermissionSet
   spaces?: Spaces
+  communityHandles?: CommunityHandles
 }) {
   const { nsid } = includeScope
 
@@ -184,6 +197,7 @@ function IncludeScopePermissions({
               className="mt-2"
               permissions={permissions}
               spaces={spaces}
+              communityHandles={communityHandles}
             />
           </>
         ) : null
@@ -303,9 +317,11 @@ function AccountPermissions({
 function FineGrainedPermissions({
   permissions,
   spaces,
+  communityHandles,
 }: {
   permissions: ScopePermissionsTransition
   spaces?: Spaces
+  communityHandles?: CommunityHandles
 }) {
   const hasOnlyBskyAppSpecificPermissions = useMemo(() => {
     if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
@@ -340,7 +356,11 @@ function FineGrainedPermissions({
     <>
       <RepoPermissions permissions={permissions} />
       <RpcMethodsDetails permissions={permissions} />
-      <SpacePermissions permissions={permissions} spaces={spaces} />
+      <SpacePermissions
+        permissions={permissions}
+        spaces={spaces}
+        communityHandles={communityHandles}
+      />
     </>
   )
 }
@@ -748,9 +768,11 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
 function SpacePermissions({
   permissions,
   spaces,
+  communityHandles,
 }: {
   permissions: ScopePermissionsTransition
   spaces?: Spaces
+  communityHandles?: CommunityHandles
 }) {
   const { t } = useLingui()
 
@@ -771,6 +793,7 @@ function SpacePermissions({
           className="mt-2"
           permissions={permissions}
           spaces={spaces}
+          communityHandles={communityHandles}
         />
       }
     >
@@ -798,6 +821,11 @@ type SpaceTableRow = {
   space?: Space
   /** Owner DID, or '*' for any. */
   did: string
+  /**
+   * Verified handle for the owner DID, when bidirectional resolution
+   * succeeded. Always undefined when `did === '*'`.
+   */
+  ownerHandle?: string
   /** Space key, or '*' for any. */
   skey: string
   /** True iff at least one matching grant lists `read`. */
@@ -814,12 +842,14 @@ type SpaceTableProps = Override<
   {
     permissions: ScopePermissionsTransition
     spaces?: Spaces
+    communityHandles?: CommunityHandles
     children?: never
   }
 >
 function SpaceTable({
   permissions,
   spaces,
+  communityHandles,
   className = '',
   ...attrs
 }: SpaceTableProps) {
@@ -840,6 +870,8 @@ function SpaceTable({
           type: parsed.type,
           space: parsed.type !== '*' ? spaces?.[parsed.type] : undefined,
           did: parsed.did,
+          ownerHandle:
+            parsed.did !== '*' ? communityHandles?.[parsed.did] : undefined,
           skey: parsed.skey,
           read: false,
           writes: new Map(),
@@ -866,7 +898,7 @@ function SpaceTable({
     }
 
     return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key))
-  }, [permissions, spaces])
+  }, [permissions, spaces, communityHandles])
 
   if (!rows.length) return null
 
@@ -946,12 +978,12 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
 
 function SpaceLabel({ row }: { row: SpaceTableRow }) {
   // Modality + community: anchored to a specific community. Render as
-  // "<name> spaces on <did>".
+  // "<name> spaces on <handle-or-did>".
   if (row.type !== '*' && row.did !== '*') {
     return (
       <Trans>
         <SpaceTypeLabel type={row.type} space={row.space} /> spaces on{' '}
-        <SpaceOwner did={row.did} />
+        <SpaceOwner did={row.did} handle={row.ownerHandle} />
       </Trans>
     )
   }
@@ -967,7 +999,7 @@ function SpaceLabel({ row }: { row: SpaceTableRow }) {
   if (row.did !== '*') {
     return (
       <Trans>
-        All spaces on <SpaceOwner did={row.did} />
+        All spaces on <SpaceOwner did={row.did} handle={row.ownerHandle} />
       </Trans>
     )
   }
@@ -987,10 +1019,17 @@ function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
   return <b>{type}</b>
 }
 
-function SpaceOwner({ did }: { did: string }) {
-  // @TODO Resolve DID → handle so the consent screen can render
-  // "protocol-nerds.atmoboards.com" instead of a raw DID. Pending the
-  // community-handle resolution work that follows this PR.
+function SpaceOwner({ did, handle }: { did: string; handle?: string }) {
+  // When the bidirectional handle resolution succeeded, render the handle
+  // (with the DID as a tooltip for transparency). Otherwise fall back to the
+  // raw DID — keeps the consent screen honest about what's being granted.
+  if (handle) {
+    return (
+      <b className="text-text" title={did}>
+        {handle}
+      </b>
+    )
+  }
   return <code className="text-text-light">{did}</code>
 }
 

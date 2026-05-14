@@ -38,6 +38,7 @@
     "@atproto-labs/simple-store-memory": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/did": "workspace:^",
+    "@atproto/identity": "workspace:^",
     "@atproto/jwk": "workspace:^",
     "@atproto/jwk-jose": "workspace:^",
     "@atproto/lex-document": "workspace:^",

@@ -2,7 +2,11 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { PermissionSets, Spaces } from '#/hydration-data.d.ts'
+import type {
+  CommunityHandles,
+  PermissionSets,
+  Spaces,
+} from '#/hydration-data.d.ts'
 import { ConsentForm } from './consent-form.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
@@ -14,6 +18,7 @@ export type ConsentViewProps = {
   clientFirstParty: boolean
   permissionSets: PermissionSets
   spaces: Spaces
+  communityHandles: CommunityHandles
 
   account: Account
   scope?: string
@@ -30,6 +35,7 @@ export function ConsentView({
   clientFirstParty,
   permissionSets,
   spaces,
+  communityHandles,
   account,
   scope,
   onConsent,
@@ -52,6 +58,7 @@ export function ConsentView({
         clientFirstParty={clientFirstParty}
         permissionSets={permissionSets}
         spaces={spaces}
+        communityHandles={communityHandles}
         account={account}
         scope={scope}
         onBack={onBack}

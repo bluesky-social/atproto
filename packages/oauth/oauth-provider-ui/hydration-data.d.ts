@@ -13,6 +13,9 @@ export type PermissionSets = Record<string, undefined | PermissionSet>
 export type Space = LexiconSpace
 export type Spaces = Record<string, undefined | Space>
 
+/** Verified handles keyed by community-owner DID. */
+export type CommunityHandles = Record<string, undefined | string>
+
 export type AuthorizeData = {
   requestUri: string
 
@@ -28,6 +31,7 @@ export type AuthorizeData = {
   promptMode?: OAuthPromptMode
   permissionSets: PermissionSets
   spaces: Spaces
+  communityHandles: CommunityHandles
 }
 
 export type ErrorData = {

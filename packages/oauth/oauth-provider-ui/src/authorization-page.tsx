@@ -109,6 +109,7 @@ function App() {
           clientFirstParty={authorizeData.clientFirstParty}
           permissionSets={authorizeData.permissionSets}
           spaces={authorizeData.spaces}
+          communityHandles={authorizeData.communityHandles}
           account={session.account}
           scope={authorizeData.scope}
           onConsent={(scope) =>
