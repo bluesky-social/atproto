@@ -5,9 +5,19 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .alterTable('moderation_event')
     .addColumn('subjectConvoId', 'varchar')
     .execute()
+
+  await db.schema
+    .alterTable('moderation_subject_status')
+    .addColumn('convoId', 'varchar')
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema
+    .alterTable('moderation_subject_status')
+    .dropColumn('convoId')
+    .execute()
+
   await db.schema
     .alterTable('moderation_event')
     .dropColumn('subjectConvoId')

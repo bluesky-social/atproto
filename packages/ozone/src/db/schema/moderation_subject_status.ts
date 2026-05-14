@@ -14,6 +14,7 @@ export interface ModerationSubjectStatus {
   recordPath: string
   recordCid: string | null
   blobCids: string[] | null
+  convoId: string | null
   reviewState:
     | typeof REVIEWCLOSED
     | typeof REVIEWOPEN

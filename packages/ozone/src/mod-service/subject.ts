@@ -99,6 +99,9 @@ export const subjectFromStatusRow = (
     // which is what the last 2 params of .make() arguments are
     const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
     return new RecordSubject(uri.toString(), row.recordCid, row.blobCids ?? [])
+  } else if (row.convoId) {
+    // Conversation subject - restore from subject status row
+    return new ConvoSubject(row.did, row.convoId)
   } else {
     return new RepoSubject(row.did)
   }
