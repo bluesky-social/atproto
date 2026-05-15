@@ -32,7 +32,10 @@ export enum AccountStatus {
   Deactivated = 'deactivated',
 }
 
-export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
+export const selectAccountQB = (
+  db: AccountDb,
+  flags?: AvailabilityFlags,
+): any => {
   const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
   return db.db

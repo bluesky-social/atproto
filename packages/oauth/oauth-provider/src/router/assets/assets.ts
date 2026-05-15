@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { createRequire } from 'node:module'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
@@ -24,6 +25,7 @@ import { setupCsrfToken } from './csrf.js'
 //   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 // )
 
+const require = createRequire(import.meta.url)
 const ui = parseAssetsManifest(
   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 )

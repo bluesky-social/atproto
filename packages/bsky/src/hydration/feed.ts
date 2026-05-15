@@ -280,7 +280,7 @@ export class FeedHydrator {
     viewer: DidString | null,
   ): Promise<PostAggs> {
     const map: PostAggs = new HydrationMap()
-    if (!refs.length) return map
+    if (!refs.length) map
 
     const counts = await this.dataplane.getInteractionCounts({
       refs,

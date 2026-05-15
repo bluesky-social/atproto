@@ -1,5 +1,5 @@
-import { EventEmitter } from 'node:stream'
-import TypedEventEmitter from 'typed-emitter'
+import { EventEmitter } from 'node:events'
+import type TypedEventEmitter from 'typed-emitter'
 import { ServerConfig } from './config.js'
 import { Database } from './db/index.js'
 import { createMuteOpChannel } from './db/schema/mute_op.js'

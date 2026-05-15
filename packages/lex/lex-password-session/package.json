@@ -26,14 +26,11 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },

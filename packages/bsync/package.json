@@ -13,12 +13,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsync"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-db.sh jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
@@ -48,5 +46,12 @@
     "jest": "^30.0.0",
     "ts-node": "^10.8.2",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

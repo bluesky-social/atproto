@@ -4,7 +4,11 @@ import { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
+// eslint-disable-next-line import/no-named-as-default-member
+const { createHttpTerminator } = httpTerminator
+type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown } from './api/index.js'
 import { OzoneConfig, OzoneSecrets } from './config/index.js'

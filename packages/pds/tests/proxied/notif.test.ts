@@ -20,6 +20,7 @@ describe('notif service proxy', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'proxy_notifs',
     })
+    network.pds.server.app.get
     const plc = network.plc.getClient()
     agent = network.pds.getAgent()
     sc = network.getSeedClient()

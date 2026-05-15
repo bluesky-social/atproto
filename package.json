@@ -29,7 +29,7 @@
     "test:withFlags": "pnpm run test --",
     "bench": "vitest bench --run",
     "changeset": "changeset",
-    "publish:ci": "pnpm build && jq '.devEngines.packageManager.onFail = \"warn\"' package.json > package.json.tmp && mv package.json.tmp package.json && changeset publish",
+    "release": "pnpm build && changeset publish",
     "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
@@ -37,8 +37,9 @@
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
     "@swc/core": "^1.3.42",
+    "@jest/globals": "^30.0.0",
     "@swc/jest": "^0.2.24",
-    "@types/jest": "^28.1.4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
@@ -63,9 +64,6 @@
     "overrides": {
       "cookie": "^0.7.2",
       "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
-    },
-    "patchedDependencies": {
-      "multiformats@13.4.2": "patches/multiformats@13.4.2.patch"
     }
   },
   "workspace": [
@@ -81,5 +79,6 @@
       "packages/oauth/*",
       "packages/internal/*"
     ]
-  }
+  },
+  "type": "module"
 }

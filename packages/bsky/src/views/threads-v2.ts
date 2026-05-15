@@ -504,7 +504,7 @@ function parseRankFromTag(prefix: string, tag?: string) {
       return 0
     }
     return rank
-  } catch {
+  } catch (e) {
     return 0
   }
 }

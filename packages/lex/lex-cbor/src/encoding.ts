@@ -8,7 +8,7 @@ import {
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
-import { OptionalTypeEncoder } from 'cborg/lib/encode'
+import { OptionalTypeEncoder } from 'cborg/interface'
 import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
 
 // @NOTE "cborg" version 4 is required to support multi-decoding via the

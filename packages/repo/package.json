@@ -16,11 +16,9 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/repo"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "test:profile": "node --inspect ../../node_modules/.bin/jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -36,5 +34,12 @@
   "devDependencies": {
     "jest": "^30.0.0",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

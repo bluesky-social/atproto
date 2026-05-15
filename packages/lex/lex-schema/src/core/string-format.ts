@@ -1,4 +1,5 @@
-import { isValidISODateString } from 'iso-datestring-validator'
+import isoDatestringValidator from 'iso-datestring-validator'
+const { isValidISODateString } = isoDatestringValidator
 import { validateCidString } from '@atproto/lex-data'
 import {
   AtIdentifierString,

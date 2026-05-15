@@ -1,5 +1,6 @@
 import { setImmediate } from 'node:timers/promises'
-import * as varint from 'varint'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import varint from 'varint'
 import * as cbor from '@atproto/lex-cbor'
 import { Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
 import { BlockMap } from './block-map.js'

@@ -60,4 +60,6 @@
 '@atproto-labs/xrpc-utils': minor
 ---
 
-**BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use `node:22-alpine3.23`.
+
+`@atproto-labs/fetch-node`: `unicastFetchWrap` and `safeFetchWrap` no longer accept `dangerouslyForceKeepAliveAgent` — on Node.js 22+ the keep-alive dispatcher is always used via `new Request(input, { dispatcher })`, so the option was a no-op.

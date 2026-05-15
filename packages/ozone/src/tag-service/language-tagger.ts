@@ -1,3 +1,4 @@
+import lande from 'lande'
 import {
   AppBskyActorProfile,
   AppBskyFeedGenerator,
@@ -87,8 +88,6 @@ export class LanguageTagger extends ContentTagger {
           .map((lang) => lang.split('-')[0])
           .forEach((lang) => langs.add(lang))
       } else if (recordText) {
-        // 'lande' is an esm module, so we need to import it dynamically
-        const { default: lande } = await import('lande')
         const detectedLanguages = lande(recordText)
         if (detectedLanguages.length) {
           const langCode = code3ToCode2(detectedLanguages[0][0])

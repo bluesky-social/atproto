@@ -1,15 +1,5 @@
-/* eslint-env node */
-
-'use strict'
-
-const {
-  PDS,
-  envToCfg,
-  envToSecrets,
-  httpLogger,
-  readEnv,
-} = require('@atproto/pds')
-const pkg = require('@atproto/pds/package.json')
+import { PDS, envToCfg, envToSecrets, httpLogger, readEnv } from '@atproto/pds'
+import pkg from '@atproto/pds/package.json' with { type: 'json' }
 
 const main = async () => {
   const env = readEnv()

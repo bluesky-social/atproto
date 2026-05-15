@@ -3,7 +3,11 @@ import * as http from 'node:http'
 import * as plcLib from '@did-plc/lib'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+// eslint-disable-next-line import/default
+import _KeyEncoder from 'key-encoder'
+// TODO: key-encoder has no ESM version; this workaround handles CJS __esModule interop.
+// Ideally replace key-encoder with a maintained ESM alternative.
+const KeyEncoder = (_KeyEncoder as any).default ?? _KeyEncoder
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { getVerificationMaterial } from '@atproto/common'

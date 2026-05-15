@@ -1,6 +1,8 @@
 import crypto from 'node:crypto'
 import stream from 'node:stream'
-import { fromStream as fileTypeFromStream } from 'file-type'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import fileType from 'file-type'
+const { fromStream: fileTypeFromStream } = fileType
 import PQueue from 'p-queue'
 import { SECOND, cloneStream, streamSize } from '@atproto/common'
 import {

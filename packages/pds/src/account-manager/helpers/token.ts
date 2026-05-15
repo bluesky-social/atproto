@@ -69,7 +69,7 @@ export const createQB = (
   })
 }
 
-export const forRotateQB = (db: AccountDb, id: TokenId) =>
+export const forRotateQB = (db: AccountDb, id: TokenId): any =>
   db.db
     .selectFrom('token')
     .where('tokenId', '=', id)
@@ -85,7 +85,7 @@ export const findByQB = (
     tokenId?: TokenId
     currentRefreshToken?: RefreshToken
   },
-) => {
+): any => {
   if (
     search.id === undefined &&
     search.did === undefined &&
@@ -122,7 +122,7 @@ export const findByQB = (
     )
 }
 
-export const removeByDidQB = (db: AccountDb, did: string) =>
+export const removeByDidQB = (db: AccountDb, did: string): any =>
   // uses "token_did_idx" index
   db.db.deleteFrom('token').where('did', '=', did)
 
@@ -132,7 +132,7 @@ export const rotateQB = (
   newTokenId: TokenId,
   newRefreshToken: RefreshToken,
   newData: NewTokenData,
-) =>
+): any =>
   db.db
     .updateTable('token')
     .set({
@@ -147,6 +147,6 @@ export const rotateQB = (
     // uses primary key index
     .where('id', '=', id)
 
-export const removeQB = (db: AccountDb, tokenId: TokenId) =>
+export const removeQB = (db: AccountDb, tokenId: TokenId): any =>
   // uses "used_refresh_token_fk" to cascade delete
   db.db.deleteFrom('token').where('tokenId', '=', tokenId)

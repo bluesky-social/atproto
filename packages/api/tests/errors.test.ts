@@ -1,9 +1,10 @@
+// @NOTE must be imported from here to match dev-env's built error types
+import { ComAtprotoServerCreateAccount } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
 
 describe('errors', () => {
   let network: TestNetworkNoAppView
-  let client: AtpAgent
+  let client: ReturnType<TestNetworkNoAppView['pds']['getAgent']>
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -17,7 +18,7 @@ describe('errors', () => {
   })
 
   it('constructs the correct error instance', async () => {
-    const res = client.api.com.atproto.server.createAccount({
+    const res = client.com.atproto.server.createAccount({
       handle: 'admin.blah',
       email: 'admin@test.com',
       password: 'password',

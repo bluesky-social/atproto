@@ -12,8 +12,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/dev-env"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": "bin.js",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
@@ -49,5 +47,12 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

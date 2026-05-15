@@ -13,7 +13,7 @@ export class SetService {
     return (db: Database) => new SetService(db)
   }
 
-  buildQueryForSetWithSize() {
+  buildQueryForSetWithSize(): any {
     return this.db.db.selectFrom('set_detail as s').select([
       's.id',
       's.name',

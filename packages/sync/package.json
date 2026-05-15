@@ -18,13 +18,11 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "codegen": "lex build --override --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
     "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
-    "test": "../dev-infra/with-test-redis-and-db.sh jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -40,5 +38,12 @@
     "@types/ws": "^8.5.4",
     "jest": "^30.0.0",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

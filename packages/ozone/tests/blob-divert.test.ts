@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { jest } from '@jest/globals'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
@@ -7,7 +8,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { forSnapshot, identity } from './_util'
+import { forSnapshot, identity } from './_util.js'
 
 describe('blob divert', () => {
   let network: TestNetwork

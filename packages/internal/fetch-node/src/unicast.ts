@@ -17,21 +17,12 @@ export type UnicastFetchWrapOptions<C = FetchContext> = {
   fetch?: Fetch<C>
 }
 
-const SUPPORTS_REQUEST_INIT_DISPATCHER =
-  Number(process.versions.node.split('.')[0]) >= 20
-
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
  */
 export function unicastFetchWrap<C = FetchContext>({
   fetch = globalThis.fetch,
 }: UnicastFetchWrapOptions<C>): Fetch<C> {
-  if (!SUPPORTS_REQUEST_INIT_DISPATCHER) {
-    throw new Error(
-      'Unicast SSRF protection unavailable on your platform. Update to Node.js 22+.',
-    )
-  }
-
   const dispatcher = new Agent({
     connect: { lookup: unicastLookup },
   })

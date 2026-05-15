@@ -17,7 +17,8 @@ import {
 import { Override } from '#/lib/util.ts'
 import { Button, ButtonProps } from '../forms/button.tsx'
 
-type Variant = 'info' | 'warning' | 'error' | 'success'
+const _VARIANTS = ['info', 'warning', 'error', 'success'] as const
+type Variant = (typeof _VARIANTS)[number]
 
 const ROLE_VARIANT_MAP: ReadonlyMap<AriaRole, Variant> = new Map([
   ['note', 'info'],

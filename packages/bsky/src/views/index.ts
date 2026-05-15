@@ -121,13 +121,13 @@ const notificationDeletedRecordCid =
   'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim'
 
 export class Views {
-  public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
-  public videoUriBuilder: VideoUriBuilder = this.opts.videoUriBuilder
-  public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
-  private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
-  private threadTagsHide: readonly string[] = this.opts.threadTagsHide
-  private visibilityTagHide: string = this.opts.visibilityTagHide
-  private visibilityTagRankPrefix: string = this.opts.visibilityTagRankPrefix
+  public imgUriBuilder: ImageUriBuilder
+  public videoUriBuilder: VideoUriBuilder
+  public indexedAtEpoch: Date | undefined
+  private threadTagsBumpDown: readonly string[]
+  private threadTagsHide: readonly string[]
+  private visibilityTagHide: string
+  private visibilityTagRankPrefix: string
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
@@ -138,7 +138,15 @@ export class Views {
       visibilityTagHide: string
       visibilityTagRankPrefix: string
     },
-  ) {}
+  ) {
+    this.imgUriBuilder = opts.imgUriBuilder
+    this.videoUriBuilder = opts.videoUriBuilder
+    this.indexedAtEpoch = opts.indexedAtEpoch
+    this.threadTagsBumpDown = opts.threadTagsBumpDown
+    this.threadTagsHide = opts.threadTagsHide
+    this.visibilityTagHide = opts.visibilityTagHide
+    this.visibilityTagRankPrefix = opts.visibilityTagRankPrefix
+  }
 
   // Actor
   // ------------
@@ -2367,7 +2375,7 @@ export class Views {
 
   viewerPinned(uri: AtUriString, state: HydrationState, authorDid: string) {
     if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
-    const actor = state.actors?.get(authorDid)
+    const actor = state.actors?.get(authorDid as any)
     if (!actor) return
     const pinnedPost = safePinnedPost(actor.profile?.pinnedPost)
     if (!pinnedPost) return undefined

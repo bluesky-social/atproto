@@ -6,5 +6,5 @@
     "noEmit": true,
     "noUnusedLocals": false
   },
-  "include": ["./tests"]
+  "include": ["./tests", "../../tsconfig/cjs-default-exports.d.ts"]
 }

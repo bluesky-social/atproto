@@ -1,7 +1,14 @@
 /** @type {import('jest').Config} */
 module.exports = {
   displayName: 'API',
-  transform: { '^.+\\.ts$': '@swc/jest' },
+  transform: {
+    '^.+\\.(t|j)s$': [
+      '@swc/jest',
+      { jsc: { transform: {} }, module: { type: 'es6' } },
+    ],
+  },
+  extensionsToTreatAsEsm: ['.ts'],
+  transformIgnorePatterns: [],
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],

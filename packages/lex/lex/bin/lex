@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
 /* eslint-env node */
-/* eslint-disable @typescript-eslint/no-var-requires */
 
 // This file is referenced by the "bin" field in package.json. Because of that,
 // we need this file to exist on disk even before the project is built, so it is
 // written in plain JS. This allows package managers to properly link the CLI
 // command when the monorepo is being setup (during initial "pnpm install").
 
-const yargs = require('yargs')
-const { hideBin } = require('yargs/helpers')
-const { build } = require('@atproto/lex-builder')
-const { install } = require('@atproto/lex-installer')
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
+import { build } from '@atproto/lex-builder'
+import { install } from '@atproto/lex-installer'
 
 yargs(hideBin(process.argv))
   .strict()

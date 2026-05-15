@@ -81,7 +81,7 @@ function ApplicationSessionCard({
     tokenId,
     createdAt,
     updatedAt,
-    scope: _scope = clientMetadata?.scope, // @TODO Display scopes using <ScopeDescription />
+    scope = clientMetadata?.scope,
   },
   sub,
 }: {
@@ -118,6 +118,9 @@ function ApplicationSessionCard({
       })
     }
   }
+
+  // @TODO Display scopes using <ScopeDescription />
+  scope
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">

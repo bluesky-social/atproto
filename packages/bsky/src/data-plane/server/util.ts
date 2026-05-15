@@ -10,7 +10,7 @@ export const getDescendentsQb = (
     uri: string
     depth: number // required, protects against cycles
   },
-) => {
+): any => {
   const { uri, depth } = opts
   const query = db.withRecursive('descendent(uri, depth)', (cte) => {
     return cte
@@ -38,7 +38,7 @@ export const getAncestorsAndSelfQb = (
     uri: string
     parentHeight: number // required, protects against cycles
   },
-) => {
+): any => {
   const { uri, parentHeight } = opts
   const query = db.withRecursive(
     'ancestor(uri, ancestorUri, height)',
@@ -171,7 +171,7 @@ export const parsePostSearchQuery = (
   let quoted = false
   for (const c of qParam) {
     if (c === ' ' && !quoted) {
-      if (curr.trim()) parts.push(curr)
+      curr.trim() && parts.push(curr)
       curr = ''
       continue
     }
@@ -181,7 +181,7 @@ export const parsePostSearchQuery = (
     }
     curr += c
   }
-  if (curr.trim()) parts.push(curr)
+  curr.trim() && parts.push(curr)
 
   const qParts: string[] = []
   for (const p of parts) {

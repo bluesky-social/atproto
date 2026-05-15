@@ -12,10 +12,8 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/common"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "engines": {
@@ -32,5 +30,12 @@
     "jest": "^30.0.0",
     "typescript": "^6.0.3",
     "uint8arrays": "^5.0.0"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

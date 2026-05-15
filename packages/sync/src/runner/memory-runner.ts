@@ -8,12 +8,14 @@ export type MemoryRunnerOptions = {
   startCursor?: number
 }
 
+type Queue = InstanceType<typeof PQueue>
+
 // A queue with arbitrarily many partitions, each processing work sequentially.
 // Partitions are created lazily and taken out of memory when they go idle.
 export class MemoryRunner implements EventRunner {
   consecutive = new ConsecutiveList<number>()
-  mainQueue: PQueue
-  partitions = new Map<string, PQueue>()
+  mainQueue: Queue
+  partitions: Map<string, Queue> = new Map()
   cursor: number | undefined
 
   constructor(public opts: MemoryRunnerOptions = {}) {
