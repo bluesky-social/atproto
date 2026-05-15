@@ -26,6 +26,22 @@ export type ConvoLockStatus =
   | (string & {})
 export type ConvoStatus = 'request' | 'accepted' | (string & {})
 
+export interface ConvoRef {
+  $type?: 'chat.bsky.convo.defs#convoRef'
+  did: string
+  convoId: string
+}
+
+const hashConvoRef = 'convoRef'
+
+export function isConvoRef<V>(v: V) {
+  return is$typed(v, id, hashConvoRef)
+}
+
+export function validateConvoRef<V>(v: V) {
+  return validate<ConvoRef & V>(v, id, hashConvoRef)
+}
+
 export interface MessageRef {
   $type?: 'chat.bsky.convo.defs#messageRef'
   did: string
