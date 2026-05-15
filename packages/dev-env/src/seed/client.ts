@@ -13,7 +13,7 @@ import {
   ChatBskyConvoDefs,
   ComAtprotoAdminDefs,
   ComAtprotoModerationCreateReport,
-  ComAtprotoRepoStrongRef
+  ComAtprotoRepoStrongRef,
 } from '@atproto/api'
 import { CidString, Client } from '@atproto/lex'
 import { BlobRef } from '@atproto/lexicon'
@@ -581,21 +581,22 @@ export class SeedClient<
 
   // override public signature to add support for convos and messages
   async createReport(opts: {
-    input: ComAtprotoModerationCreateReport.InputSchema & {
-      subject:
-        | $Typed<ComAtprotoAdminDefs.RepoRef>
-        | $Typed<ComAtprotoRepoStrongRef.Main>
-        | $Typed<ChatBskyConvoDefs.MessageRef>
-        | $Typed<ChatBskyConvoDefs.ConvoRef>
-        | { $type: string }
-    }
+    reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
+    subject:
+      | $Typed<ComAtprotoAdminDefs.RepoRef>
+      | $Typed<ComAtprotoRepoStrongRef.Main>
+      | $Typed<ChatBskyConvoDefs.MessageRef>
+      | $Typed<ChatBskyConvoDefs.ConvoRef>
+      | { $type: string }
+    reason?: string
     reportedBy: string
   }) {
+    const { reasonType, subject, reason, reportedBy } = opts
     const result = await this.agent.com.atproto.moderation.createReport(
-      opts.input,
+      { reasonType, subject, reason },
       {
         encoding: 'application/json',
-        headers: this.getHeaders(opts.reportedBy),
+        headers: this.getHeaders(reportedBy),
       },
     )
     return result.data
