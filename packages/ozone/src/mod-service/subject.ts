@@ -125,6 +125,7 @@ type SubjectInfo = {
 export interface ModSubject {
   did: string
   recordPath: string | undefined
+  convoId: string | undefined
   blobCids?: string[]
   isRepo(): this is RepoSubject
   isRecord(): this is RecordSubject
@@ -141,6 +142,7 @@ export interface ModSubject {
 export class RepoSubject implements ModSubject {
   blobCids = undefined
   recordPath = undefined
+  convoId = undefined
   constructor(public did: string) {}
   isRepo(): this is RepoSubject {
     return true
@@ -178,6 +180,7 @@ export class RecordSubject implements ModSubject {
   parsedUri: AtUri
   did: string
   recordPath: string
+  convoId = undefined
   constructor(
     public uri: string,
     public cid: string,

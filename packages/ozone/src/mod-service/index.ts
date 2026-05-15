@@ -431,6 +431,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '!=', '')
+      .where('convoId', '!=', '')
       .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
       .selectAll()
       .execute()
@@ -710,6 +711,7 @@ export class ModerationService {
           eventId: modEvent.id,
           did: subjectInfo.subjectDid,
           recordPath: subjectInfo.subjectUri ?? '',
+          convoId: subjectInfo.subjectConvoId ?? '',
           tags: event.add,
           expiresAt,
           createdBy,
@@ -719,6 +721,7 @@ export class ModerationService {
         await removeExpiringTags(this.db, {
           did: subjectInfo.subjectDid,
           recordPath: subjectInfo.subjectUri ?? '',
+          convoId: subjectInfo.subjectConvoId ?? '',
           tags: event.remove,
         })
       }
@@ -813,6 +816,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('suspendUntil', '>', new Date().toISOString())
       .select('did')
       .limit(1)
@@ -1126,11 +1130,10 @@ export class ModerationService {
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
-      builder = builder.where(
-        'moderation_subject_status.did',
-        '=',
-        subjectInfo.did,
-      )
+      builder = builder
+        .where('moderation_subject_status.did', '=', subjectInfo.did)
+        /// TODO: update this later
+        .where('moderation_subject_status.convoId', '=', '')
 
       if (!includeAllUserRecords) {
         builder = builder.where((qb) =>
@@ -1436,6 +1439,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
       .where('recordPath', '=', subject.recordPath ?? '')
+      .where('convoId', '=', subject.convoId ?? '')
       .selectAll()
       .executeTakeFirst()
     return result ?? null
@@ -1448,6 +1452,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('muteReportingUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
@@ -1461,6 +1466,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('muteUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()

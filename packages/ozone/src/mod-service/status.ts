@@ -293,7 +293,10 @@ export const adjustModerationSubjectStatus = async (
   } = moderationEvent
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
-  const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)
+  const identifier = getStatusIdentifierFromSubject(
+    subjectUri || subjectDid,
+    subjectConvoId,
+  )
 
   db.assertTransaction()
 
@@ -302,7 +305,7 @@ export const adjustModerationSubjectStatus = async (
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
     .where('recordPath', '=', identifier.recordPath)
-    .where('convoId', 'is', subjectConvoId)
+    .where('convoId', '=', identifier.convoId)
     // Make sure we respect other updates that may be happening at the same time
     .forUpdate()
     .selectAll()
@@ -321,7 +324,6 @@ export const adjustModerationSubjectStatus = async (
       .insertInto('moderation_subject_status')
       .values({
         ...identifier,
-        convoId: subjectConvoId ?? null,
         ...newStatus,
         // newStatus doesn't contain a reviewState or takendown so in case this is a new entry
         // we need to set a default values so that the insert doesn't fail
@@ -492,7 +494,6 @@ export const adjustModerationSubjectStatus = async (
     .insertInto('moderation_subject_status')
     .values({
       ...identifier,
-      convoId: subjectConvoId ?? null,
       ...newStatus,
       createdAt: now,
       updatedAt: now,
@@ -510,12 +511,14 @@ export const adjustModerationSubjectStatus = async (
 
 export const getStatusIdentifierFromSubject = (
   subject: string | AtUri,
-): { did: string; recordPath: string } => {
+  convoId?: string | null,
+): { did: string; recordPath: string; convoId: string } => {
   const isSubjectString = typeof subject === 'string'
   if (isSubjectString && subject.startsWith('did:')) {
     return {
       did: subject,
       recordPath: '',
+      convoId: convoId || '',
     }
   }
 
@@ -527,5 +530,6 @@ export const getStatusIdentifierFromSubject = (
   return {
     did: uri.host,
     recordPath: `${uri.collection}/${uri.rkey}`,
+    convoId: '',
   }
 }

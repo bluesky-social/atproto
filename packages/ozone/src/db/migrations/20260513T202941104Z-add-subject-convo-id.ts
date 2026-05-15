@@ -11,6 +11,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('convoId', 'varchar', (col) => col.notNull().defaultTo(''))
     .execute()
 
+  await db.schema
+    .alterTable('expiring_tag')
+    .addColumn('convoId', 'varchar', (col) => col.notNull().defaultTo(''))
+    .execute()
+
   // Update unique constraint
   // [did, recordPath] -> [did, recordPath, convoId]
   await db.schema
@@ -36,6 +41,11 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('moderation_subject_status')
     .addUniqueConstraint('moderation_status_unique_idx', ['did', 'recordPath'])
+    .execute()
+
+  await db.schema
+    .alterTable('expiring_tag')
+    .dropColumn('convoId')
     .execute()
 
   await db.schema
