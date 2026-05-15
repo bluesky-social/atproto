@@ -10,13 +10,14 @@ import {
 const dnsEntries: [entry: string, ...result: string[][]][] = []
 
 vi.mock('node:dns/promises', () => {
-  return {
+  const mock = {
     resolveTxt: (entry: string) => {
       const found = dnsEntries.find(([e]) => e === entry)
       if (found) return found.slice(1)
       return []
     },
   }
+  return { default: mock, ...mock }
 })
 
 describe('Lexicon resolution', () => {
