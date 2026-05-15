@@ -19,9 +19,9 @@
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
+    "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "engines": {
@@ -58,7 +58,6 @@
     "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",
-    "@jest/globals": "^30.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",

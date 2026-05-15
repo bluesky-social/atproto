@@ -19,8 +19,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:profile": "NODE_OPTIONS=--experimental-vm-modules node --inspect ../../node_modules/.bin/jest",
+    "test": "jest",
+    "test:profile": "node --inspect ../../node_modules/.bin/jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {

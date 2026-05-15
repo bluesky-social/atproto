@@ -37,6 +37,6 @@
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "jest"
   }
 }

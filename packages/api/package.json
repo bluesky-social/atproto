@@ -23,7 +23,7 @@
     "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
     "prebuild": "node ./scripts/generate-code.mjs && ([ -f ./src/client/index.ts ] || pnpm run codegen)",
     "build": "tsc --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "jest"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",

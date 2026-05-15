@@ -1,14 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   displayName: 'Lexicon',
-  transform: {
-    '^.+\\.(t|j)s$': [
-      '@swc/jest',
-      { jsc: { transform: {} }, module: { type: 'es6' } },
-    ],
-  },
-  extensionsToTreatAsEsm: ['.ts'],
-  transformIgnorePatterns: [],
+  transform: { '^.+\\.ts$': '@swc/jest' },
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
 }
