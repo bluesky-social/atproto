@@ -1,10 +1,14 @@
 import {
+  $Typed,
   AtpAgent,
-  ToolsOzoneModerationDefs,
+  ChatBskyConvoDefs,
+  ComAtprotoAdminDefs,
+  ComAtprotoRepoStrongRef,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneReportQueryReports as QueryModerationReports,
+  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  ToolsOzoneModerationDefs,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
@@ -84,7 +88,12 @@ export class ModeratorClient {
   async emitEvent(
     opts: {
       event: TakeActionInput['event']
-      subject: TakeActionInput['subject']
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       reason?: string
       createdBy?: string
@@ -164,7 +173,12 @@ export class ModeratorClient {
 
   async performTakedown(
     opts: {
-      subject: TakeActionInput['subject']
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       durationInHours?: number
       acknowledgeAccountSubjects?: boolean
