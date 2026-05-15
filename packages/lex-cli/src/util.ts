@@ -14,7 +14,7 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
     }
     try {
       docs.push(readLexicon(path))
-    } catch (e) {
+    } catch {
       // skip
     }
   }

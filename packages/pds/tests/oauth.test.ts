@@ -1,7 +1,6 @@
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { oauthClientAssetsMiddleware } from './_oauth_client_assets_middleware.js'

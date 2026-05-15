@@ -171,7 +171,7 @@ export const parsePostSearchQuery = (
   let quoted = false
   for (const c of qParam) {
     if (c === ' ' && !quoted) {
-      curr.trim() && parts.push(curr)
+      if (curr.trim()) parts.push(curr)
       curr = ''
       continue
     }
@@ -181,7 +181,7 @@ export const parsePostSearchQuery = (
     }
     curr += c
   }
-  curr.trim() && parts.push(curr)
+  if (curr.trim()) parts.push(curr)
 
   const qParts: string[] = []
   for (const p of parts) {

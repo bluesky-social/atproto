@@ -87,6 +87,7 @@ declare module 'multiformats/cid' {
    * we update or swap out `multiformats`, `@atproto/lex-data` provides its own
    * stable {@link Cid} interface.
    */
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface CID {}
 }
 
