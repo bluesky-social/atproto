@@ -6,7 +6,7 @@ on:
       - '*'
   push:
     branches:
-      - divy/esm
+      - divy/esm-no-noise
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'

@@ -60,14 +60,6 @@
 '@atproto-labs/xrpc-utils': minor
 ---
 
-Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+**BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
 
-Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code. However, direct CJS consumers on older Node versions will need to use dynamic `import()`.
-
-Also upgrades:
-- `multiformats` ^9 → ^13
-- `uint8arrays` 3 → ^5
-- `p-queue` ^6 → ^8
-- `jose` ^4 → ^5 (in xrpc-server)
-
-Service entrypoints converted from JavaScript to TypeScript, using Node 22's type stripping for direct `.ts` execution.
+Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
