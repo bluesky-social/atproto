@@ -107,7 +107,7 @@ export const registerActor = async (
     accountType?: import('../db/schema/actor').AccountType
   },
 ) => {
-  const { did, handle, deactivated, accountType = 'organization' } = opts
+  const { did, handle, deactivated, accountType = 'unverified' } = opts
   const now = Date.now()
   const createdAt = new Date(now).toISOString()
   const [registered] = await db.executeWithRetry(
@@ -253,6 +253,16 @@ export const getAccountAdminStatus = async (
     : { applied: false }
   const deactivated = res.deactivatedAt ? { applied: true } : { applied: false }
   return { takedown, deactivated }
+}
+
+export const updateAccountType = async (
+  db: AccountDb,
+  did: string,
+  accountType: import('../db/schema/actor').AccountType,
+) => {
+  await db.executeWithRetry(
+    db.db.updateTable('actor').set({ accountType }).where('did', '=', did),
+  )
 }
 
 export const updateAccountTakedownStatus = async (

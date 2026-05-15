@@ -169,12 +169,14 @@ export class InvitationManager {
 
   /**
    * Get active invitation by email hash (for create-or-reuse flow)
-   * Returns row with JID if it exists and is reusable
+   * Returns row with JID if it exists and is reusable.
+   * Only returns invitations with at least 7 days of remaining lifetime.
    */
   async getActiveInvitationByEmailHash(
     emailHash: string,
   ): Promise<PendingInvitationEntry | null> {
     const normalizedHash = this.normalizeHash(emailHash)
+    const minExpiresAt = new Date(Date.now() + 7 * DAY).toISOString()
 
     const invitation = await this.db.db
       .selectFrom('pending_invitations')
@@ -187,6 +189,7 @@ export class InvitationManager {
         'email_failed',
       ])
       .where('jid', 'is not', null)
+      .where('expires_at', '>', minExpiresAt)
       .executeTakeFirst()
 
     return invitation || null
@@ -688,6 +691,93 @@ export class InvitationManager {
     return createHmac('sha256', this.emailHashSalt!)
       .update(normalizedEmail)
       .digest('hex')
+  }
+
+  /**
+   * Create a password-based invitation with an atproto invite code.
+   * Used by `invitation create-pass` in pds-wadmin.
+   * The invite code is embedded in the onboarding URL so the user arrives
+   * pre-authorized. At account creation, if the submitted email matches
+   * this row's email, emailConfirmedAt is set automatically.
+   */
+  async createInvitationWithInviteCode(
+    email: string,
+    inviteCode: string,
+    onboardingUrl: string,
+    preferredHandle?: string | null,
+  ): Promise<PendingInvitationEntry> {
+    this.ensureInvitationHashSaltConfigured()
+
+    const normalizedEmail = this.normalizeEmail(email)
+    const emailHash = this.hashEmail(normalizedEmail)
+    const now = new Date().toISOString()
+    const expiresAt = new Date(Date.now() + INVITATION_EXPIRY_MS).toISOString()
+
+    await this.db.db
+      .insertInto('pending_invitations')
+      .values({
+        email: normalizedEmail,
+        email_hash: emailHash,
+        invite_code: inviteCode,
+        onboarding_url: onboardingUrl,
+        preferred_handle: preferredHandle || null,
+        invitation_timestamp: Math.floor(Date.now() / 1000),
+        created_at: now,
+        expires_at: expiresAt,
+        status: 'pending',
+        email_attempt_count: 0,
+      })
+      .onConflict((oc) =>
+        oc.column('email').doUpdateSet({
+          email_hash: emailHash,
+          invite_code: inviteCode,
+          onboarding_url: onboardingUrl,
+          preferred_handle: preferredHandle || null,
+          invitation_timestamp: Math.floor(Date.now() / 1000),
+          created_at: now,
+          expires_at: expiresAt,
+          status: 'pending',
+          email_attempt_count: 0,
+        }),
+      )
+      .execute()
+
+    const invitation = await this.db.db
+      .selectFrom('pending_invitations')
+      .selectAll()
+      .where('invite_code', '=', inviteCode)
+      .executeTakeFirst()
+
+    if (!invitation) {
+      throw new Error('Failed to create password-based invitation')
+    }
+
+    return invitation
+  }
+
+  /**
+   * Look up a pending invitation by its atproto invite code.
+   * Returns null if not found or already consumed/expired.
+   */
+  async getInvitationByInviteCode(
+    inviteCode: string,
+  ): Promise<PendingInvitationEntry | null> {
+    const now = new Date().toISOString()
+
+    const invitation = await this.db.db
+      .selectFrom('pending_invitations')
+      .selectAll()
+      .where('invite_code', '=', inviteCode)
+      .where('status', 'in', [
+        'pending',
+        'email_pending',
+        'email_sent',
+        'email_failed',
+      ])
+      .where('expires_at', '>', now)
+      .executeTakeFirst()
+
+    return invitation || null
   }
 
   /**

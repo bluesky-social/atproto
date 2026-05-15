@@ -37,6 +37,7 @@ export default function (server: Server, ctx: AppContext) {
             {
               invitationId: existingInvitation.id,
               hasJid: true,
+              expiresAt: existingInvitation.expires_at,
             },
             'Reusing existing invitation for reminder',
           )

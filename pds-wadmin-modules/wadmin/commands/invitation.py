@@ -43,12 +43,12 @@ def invitation():
     pass
 
 
-@invitation.command()
+@invitation.command(name="create-wid")
 @click.argument("email")
 @click.option("--handle", default=None, help="Preferred handle for the account")
 @click.pass_context
-def create(ctx, email: str, handle: Optional[str]):
-    """Create a new invitation."""
+def create_wid(ctx, email: str, handle: Optional[str]):
+    """Create a WID/QR-based invitation (allocates a W Identity account from inventory)."""
     client: PDSClient = ctx.obj["client"]
     config: Config = ctx.obj["config"]
 
@@ -121,6 +121,81 @@ def create(ctx, email: str, handle: Optional[str]):
         console.print(f"\n[dim]Onboarding URL: {onboarding_url[:60]}...[/dim]", highlight=False)
 
 
+@invitation.command(name="create-pass")
+@click.argument("email")
+@click.option("--handle", default=None, help="Preferred handle for the account")
+@click.pass_context
+def create_pass(ctx, email: str, handle: Optional[str]):
+    """Create a password-based invitation (skips WID; user signs up with email+password)."""
+    client: PDSClient = ctx.obj["client"]
+    config: Config = ctx.obj["config"]
+
+    # Build request body
+    data: dict = {"email": email}
+    if handle:
+        data["preferredHandle"] = handle
+
+    # Call the new eu.wsocial admin endpoint
+    response = client.call("POST", "eu.wsocial.admin.createPassInvitation", data=data)
+
+    if not response.success:
+        print_error(f"Failed to create pass invitation: {response.error}")
+        raise click.Abort()
+
+    if response.data is None:
+        print_error("No data returned from API")
+        raise click.Abort()
+
+    result = response.data
+
+    print_success("Pass invitation created successfully")
+    console.print(f"[cyan]Email:[/cyan] {result.get('email', email)}", highlight=False)
+    if result.get("preferredHandle"):
+        console.print(f"[cyan]Suggested handle:[/cyan] {result['preferredHandle']}", highlight=False)
+    if result.get("inviteCode"):
+        console.print(f"[cyan]Invite code:[/cyan] {result['inviteCode']}", highlight=False)
+    if result.get("expiresAt"):
+        console.print(f"[cyan]Expires:[/cyan] {result['expiresAt']}", highlight=False)
+
+    onboarding_url = result.get("onboardingUrl")
+
+    if onboarding_url and config.has_brevo_config():
+        console.print()
+        console.print("Sending invitation email via Brevo...")
+
+        # Template 29 only uses ONBOARDING_URL (no QR, no handle param —
+        # handle is already baked into the onboarding URL itself)
+        pass_template_id = config.brevo_pass_template_id or 29
+
+        try:
+            brevo = _get_brevo()
+            email_result = brevo.send_invitation_email_with_params(
+                api_key=config.brevo_api_key,  # type: ignore
+                template_id=pass_template_id,
+                email=result.get("email", email),
+                params={"ONBOARDING_URL": onboarding_url},
+                from_email=config.invitation_email_from or "invitations@wsocial.app",
+                from_name=config.invitation_mail_from_name or "W Social Team",
+            )
+
+            if email_result["success"]:
+                print_success("Email sent successfully")
+                if email_result.get("from_name") and email_result.get("from_email"):
+                    console.print(f"  From: {email_result['from_name']} <{email_result['from_email']}>")
+                if email_result.get("message_id"):
+                    console.print(f"  Message ID: {email_result['message_id']}")
+            else:
+                print_error(f"Email sending failed: {email_result.get('error', 'Unknown error')}")
+
+        except Exception as e:
+            print_error(f"Email sending failed: {str(e)}")
+
+    elif onboarding_url:
+        console.print(f"\n[cyan]Onboarding URL:[/cyan] {onboarding_url}", highlight=False)
+    else:
+        print_warning("No onboarding URL returned — check PDS_EMAIL_APP_URL / PDS_HOME_URL config")
+
+
 @invitation.command(name="list")
 @click.option("--status", default="pending", help="Filter by status (pending, consumed, expired, revoked, all)")
 @click.option("--before", default=None, help="Filter by timestamp (ISO format)")
@@ -177,11 +252,20 @@ def list_command(ctx, status: str, before: Optional[str], limit: int, json_outpu
         if jid and jid != "-":
             jid = jid[:8] + "..."
 
+        # Determine invitation type
+        if inv.get("jid"):
+            inv_type = "wid"
+        elif inv.get("inviteCode"):
+            inv_type = "pass"
+        else:
+            inv_type = "?"
+
         table_data.append([
             str(inv.get("id", "")),
             inv.get("email", ""),
             inv.get("preferredHandle", "-"),
             jid,
+            inv_type,
             inv.get("status", ""),
             email_status,
             inv.get("createdAt", ""),
@@ -189,7 +273,7 @@ def list_command(ctx, status: str, before: Optional[str], limit: int, json_outpu
         ])
 
     # Print with column colors
-    headers = ["ID", "EMAIL", "HANDLE", "JID", "STATUS", "EMAIL_STATUS", "CREATED", "CONSUMED"]
+    headers = ["ID", "EMAIL", "HANDLE", "JID", "TYPE", "STATUS", "EMAIL_STATUS", "CREATED", "CONSUMED"]
 
     # Print header
     header_parts = []
@@ -197,10 +281,11 @@ def list_command(ctx, status: str, before: Optional[str], limit: int, json_outpu
     header_parts.append(f"[bold yellow]{headers[1]}[/bold yellow]")
     header_parts.append(f"[bold green]{headers[2]}[/bold green]")
     header_parts.append(f"[bold magenta]{headers[3]}[/bold magenta]")
-    header_parts.append(f"[bold blue]{headers[4]}[/bold blue]")
-    header_parts.append(f"[bold red]{headers[5]}[/bold red]")
-    header_parts.append(f"[bold white]{headers[6]}[/bold white]")
+    header_parts.append(f"[bold white]{headers[4]}[/bold white]")
+    header_parts.append(f"[bold blue]{headers[5]}[/bold blue]")
+    header_parts.append(f"[bold red]{headers[6]}[/bold red]")
     header_parts.append(f"[bold white]{headers[7]}[/bold white]")
+    header_parts.append(f"[bold white]{headers[8]}[/bold white]")
 
     wide = Console(width=32000)
     wide.print("  ".join(header_parts), highlight=False)
@@ -212,10 +297,11 @@ def list_command(ctx, status: str, before: Optional[str], limit: int, json_outpu
         row_parts.append(f"[yellow]{row[1]}[/yellow]")
         row_parts.append(f"[green]{row[2]}[/green]")
         row_parts.append(f"[magenta]{row[3]}[/magenta]")
-        row_parts.append(f"[blue]{row[4]}[/blue]")
-        row_parts.append(f"[red]{row[5]}[/red]")
-        row_parts.append(f"[white]{row[6]}[/white]")
+        row_parts.append(f"[white]{row[4]}[/white]")
+        row_parts.append(f"[blue]{row[5]}[/blue]")
+        row_parts.append(f"[red]{row[6]}[/red]")
         row_parts.append(f"[white]{row[7]}[/white]")
+        row_parts.append(f"[white]{row[8]}[/white]")
 
         wide.print("  ".join(row_parts), highlight=False)
 

@@ -54,6 +54,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError()
       }
 
+      await ctx.accountManager.assertWriteAllowed(did, collection)
+
       if (auth.credentials.type === 'oauth') {
         auth.credentials.permissions.assertRepo({
           action: 'create',

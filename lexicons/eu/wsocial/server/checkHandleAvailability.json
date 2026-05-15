@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "eu.wsocial.server.checkHandleAvailability",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Check whether a handle is available on this PDS. No authentication required.",
+      "parameters": {
+        "type": "params",
+        "required": ["handle"],
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "The handle to check, without a domain suffix (e.g. 'alice' or 'alice.wsocial.eu')."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["available"],
+          "properties": {
+            "available": {
+              "type": "boolean",
+              "description": "True if the handle is available for registration."
+            }
+          }
+        }
+      }
+    }
+  }
+}

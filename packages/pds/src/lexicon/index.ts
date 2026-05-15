@@ -228,6 +228,10 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as EuWsocialAdminCreatePassInvitation from './types/eu/wsocial/admin/createPassInvitation.js'
+import * as EuWsocialQuickloginLinkWid from './types/eu/wsocial/quicklogin/linkWid.js'
+import * as EuWsocialServerAllocateWidForAccount from './types/eu/wsocial/server/allocateWidForAccount.js'
+import * as EuWsocialServerCheckHandleAvailability from './types/eu/wsocial/server/checkHandleAvailability.js'
 import * as IoTrustanchorAdminClearInventory from './types/io/trustanchor/admin/clearInventory.js'
 import * as IoTrustanchorAdminCreateAccountSession from './types/io/trustanchor/admin/createAccountSession.js'
 import * as IoTrustanchorAdminCreateBotAccount from './types/io/trustanchor/admin/createBotAccount.js'
@@ -240,6 +244,7 @@ import * as IoTrustanchorAdminListInvitations from './types/io/trustanchor/admin
 import * as IoTrustanchorAdminLoadInventory from './types/io/trustanchor/admin/loadInventory.js'
 import * as IoTrustanchorAdminPurgeInvitations from './types/io/trustanchor/admin/purgeInvitations.js'
 import * as IoTrustanchorAdminSetAccountPassword from './types/io/trustanchor/admin/setAccountPassword.js'
+import * as IoTrustanchorAdminSetAccountType from './types/io/trustanchor/admin/setAccountType.js'
 import * as IoTrustanchorAdminSetThreadViewPreferences from './types/io/trustanchor/admin/setThreadViewPreferences.js'
 import * as IoTrustanchorAdminSubscribeToLists from './types/io/trustanchor/admin/subscribeToLists.js'
 import * as IoTrustanchorAdminUpdateInvitationEmailStatus from './types/io/trustanchor/admin/updateInvitationEmailStatus.js'
@@ -412,6 +417,7 @@ export class Server {
   app: AppNS
   chat: ChatNS
   com: ComNS
+  eu: EuNS
   io: IoNS
   tools: ToolsNS
 
@@ -420,6 +426,7 @@ export class Server {
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
     this.com = new ComNS(this)
+    this.eu = new EuNS(this)
     this.io = new IoNS(this)
     this.tools = new ToolsNS(this)
   }
@@ -3343,6 +3350,102 @@ export class ComAtprotoTempNS {
   }
 }
 
+export class EuNS {
+  _server: Server
+  wsocial: EuWsocialNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.wsocial = new EuWsocialNS(server)
+  }
+}
+
+export class EuWsocialNS {
+  _server: Server
+  admin: EuWsocialAdminNS
+  quicklogin: EuWsocialQuickloginNS
+  server: EuWsocialServerNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.admin = new EuWsocialAdminNS(server)
+    this.quicklogin = new EuWsocialQuickloginNS(server)
+    this.server = new EuWsocialServerNS(server)
+  }
+}
+
+export class EuWsocialAdminNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createPassInvitation<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminCreatePassInvitation.QueryParams,
+      EuWsocialAdminCreatePassInvitation.HandlerInput,
+      EuWsocialAdminCreatePassInvitation.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.createPassInvitation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class EuWsocialQuickloginNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  linkWid<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialQuickloginLinkWid.QueryParams,
+      EuWsocialQuickloginLinkWid.HandlerInput,
+      EuWsocialQuickloginLinkWid.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.quicklogin.linkWid' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class EuWsocialServerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  allocateWidForAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialServerAllocateWidForAccount.QueryParams,
+      EuWsocialServerAllocateWidForAccount.HandlerInput,
+      EuWsocialServerAllocateWidForAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.server.allocateWidForAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  checkHandleAvailability<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialServerCheckHandleAvailability.QueryParams,
+      EuWsocialServerCheckHandleAvailability.HandlerInput,
+      EuWsocialServerCheckHandleAvailability.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.server.checkHandleAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
 export class IoNS {
   _server: Server
   trustanchor: IoTrustanchorNS
@@ -3515,6 +3618,18 @@ export class IoTrustanchorAdminNS {
     >,
   ) {
     const nsid = 'io.trustanchor.admin.setAccountPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  setAccountType<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorAdminSetAccountType.QueryParams,
+      IoTrustanchorAdminSetAccountType.HandlerInput,
+      IoTrustanchorAdminSetAccountType.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.admin.setAccountType' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -67,6 +67,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError()
       }
 
+      await ctx.accountManager.assertWriteAllowed(did, collection)
+
       // We can't compute permissions based on the request payload ("input") in
       // the 'auth' phase, so we do it here.
       if (auth.credentials.type === 'oauth') {

@@ -118,6 +118,38 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         if (!deactivated) {
+          // Auto-verify email when an invite code from a pending_invitations row is used
+          // and the submitted email matches the invited email. This is safe because
+          // the invite was sent to that specific address, proving ownership.
+          if (ctx.cfg.invites.required && inviteCode && email) {
+            try {
+              const pendingInv =
+                await ctx.invitationManager.getInvitationByInviteCode(
+                  inviteCode,
+                )
+              if (
+                pendingInv &&
+                pendingInv.email.toLowerCase() === email.toLowerCase()
+              ) {
+                await ctx.accountManager.db.db
+                  .updateTable('account')
+                  .set({ emailConfirmedAt: new Date().toISOString() })
+                  .where('did', '=', did)
+                  .execute()
+                req.log.info(
+                  { did },
+                  'Auto-verified email via invite code match',
+                )
+              }
+            } catch (err) {
+              // Non-fatal: log and continue; email verification can happen later
+              req.log.warn(
+                { err },
+                'Failed to auto-verify email via invite code',
+              )
+            }
+          }
+
           await sendIdentityEventWithRetry(
             ctx.sequencer,
             ctx.backgroundQueue,

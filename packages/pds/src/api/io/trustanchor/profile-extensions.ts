@@ -7,7 +7,7 @@ import type { ProfileViewDetailed } from '../../../lexicon/types/app/bsky/actor/
  *
  * Extensions:
  * - wsocialAccountType: 'human' | 'test' | 'organization' | 'bot'
- * - wsocialVerified: true (always true for W Social accounts)
+ * - wsocialVerified: 'wid' | 'admin' | null
  */
 export async function addWSocialExtensions(
   ctx: AppContext,
@@ -15,7 +15,7 @@ export async function addWSocialExtensions(
 ): Promise<
   ProfileViewDetailed & {
     wsocialAccountType?: string
-    wsocialVerified?: boolean
+    wsocialVerified?: string | null
   }
 > {
   try {
@@ -40,11 +40,15 @@ export async function addWSocialExtensions(
     const rawType = actorRow?.accountType ?? 'bot'
     const wsocialAccountType = rawType === 'personal' ? 'human' : rawType
 
+    // Derive wsocialVerified from accountType
+    const wsocialVerified =
+      rawType === 'unverified' ? null : rawType === 'personal' ? 'wid' : 'admin'
+
     // Return profile with W Social extensions
     return {
       ...profile,
       wsocialAccountType,
-      wsocialVerified: true,
+      wsocialVerified,
     }
   } catch (error) {
     // On any error, silently return original profile without extensions

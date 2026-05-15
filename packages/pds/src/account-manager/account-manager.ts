@@ -83,6 +83,80 @@ export class AccountManager {
     return !account.deactivatedAt
   }
 
+  /**
+   * Throws WidVerificationRequired if the account has not yet linked a W Identity.
+   * Exempt: app.bsky.actor.profile (allows unverified accounts to set up their profile).
+   */
+  async assertWriteAllowed(did: string, collection?: string): Promise<void> {
+    if (collection === 'app.bsky.actor.profile') return
+    const acct = await this.getAccount(did, { includeDeactivated: false })
+    if (acct?.accountType === 'unverified') {
+      throw new InvalidRequestError(
+        'Account must be linked to W Identity before writing. Please verify with W Identity to continue.',
+        'WidVerificationRequired',
+      )
+    }
+  }
+
+  /**
+   * Atomically link a W Identity JID to an unverified account and promote it to 'personal'.
+   * Throws if the account already has a neuro_identity_link row (data-integrity guard).
+   * Throws if the JID is already linked to a different personal account (WidAlreadyAssociated).
+   */
+  async upgradeUnverifiedToPersonalAccount(
+    jid: string,
+    did: string,
+  ): Promise<void> {
+    // Safety: the JID must not already own a personal account
+    const jidExistingLink = await this.db.db
+      .selectFrom('neuro_identity_link')
+      .innerJoin('actor', 'actor.did', 'neuro_identity_link.did')
+      .select(['neuro_identity_link.did', 'actor.accountType'])
+      .where('neuro_identity_link.jid', '=', jid)
+      .executeTakeFirst()
+
+    if (jidExistingLink?.accountType === 'personal') {
+      throw new InvalidRequestError(
+        'This W Identity is already linked to another account.',
+        'WidAlreadyAssociated',
+      )
+    }
+
+    // Safety: the target account must not already have any link row
+    const didExistingLink = await this.db.db
+      .selectFrom('neuro_identity_link')
+      .select(['jid'])
+      .where('did', '=', did)
+      .executeTakeFirst()
+
+    if (didExistingLink) {
+      // Should never happen — indicates a data integrity violation.
+      throw new InvalidRequestError(
+        'Account already has a linked identity. Cannot re-link.',
+        'WidLinkConflict',
+      )
+    }
+
+    const now = new Date().toISOString()
+    await this.db.db.transaction().execute(async (trx) => {
+      await trx
+        .insertInto('neuro_identity_link')
+        .values({
+          jid,
+          did,
+          linkedAt: now,
+          lastLoginAt: now,
+        } as any)
+        .execute()
+
+      await trx
+        .updateTable('actor')
+        .set({ accountType: 'personal' })
+        .where('did', '=', did)
+        .execute()
+    })
+  }
+
   async getDidForActor(
     handleOrDid: string,
     flags?: account.AvailabilityFlags,
@@ -579,5 +653,12 @@ export class AccountManager {
         auth.revokeRefreshTokensByDid(dbTxn, did),
       ]),
     )
+  }
+
+  async updateAccountType(
+    did: string,
+    accountType: import('./db/schema/actor').AccountType,
+  ) {
+    await account.updateAccountType(this.db, did, accountType)
   }
 }

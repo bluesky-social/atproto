@@ -1,4 +1,4 @@
-import { ComAtprotoServerGetSession } from '@atproto/api'
+import * as ComAtprotoServerGetSession from '../../../../lexicon/types/com/atproto/server/getSession'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
@@ -58,6 +58,12 @@ export default function (server: Server, ctx: AppContext) {
           emailConfirmed: !!user.emailConfirmedAt,
           active,
           status,
+          wsocialVerified:
+            user.accountType === 'unverified'
+              ? undefined
+              : user.accountType === 'personal'
+                ? 'wid'
+                : 'admin',
         }),
       }
     },
