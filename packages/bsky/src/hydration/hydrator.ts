@@ -83,25 +83,15 @@ import {
 } from './util.js'
 
 export class HydrateCtx {
-  labelers
-  viewer
-  includeTakedowns
-  overrideIncludeTakedownsForActor
-  include3pBlocks
-  skipViewerBlocks
-  includeDebugField
-  features
-  constructor(private vals: HydrateCtxVals) {
-    this.labelers = vals.labelers
-    this.viewer = vals.viewer !== null ? serviceRefToDid(vals.viewer) : null
-    this.includeTakedowns = vals.includeTakedowns
-    this.overrideIncludeTakedownsForActor =
-      vals.overrideIncludeTakedownsForActor
-    this.include3pBlocks = vals.include3pBlocks
-    this.skipViewerBlocks = vals.skipViewerBlocks
-    this.includeDebugField = vals.includeDebugField
-    this.features = vals.features
-  }
+  labelers = this.vals.labelers
+  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
+  includeTakedowns = this.vals.includeTakedowns
+  overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
+  include3pBlocks = this.vals.include3pBlocks
+  skipViewerBlocks = this.vals.skipViewerBlocks
+  includeDebugField = this.vals.includeDebugField
+  features = this.vals.features
+  constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
     if (!this.viewer) return

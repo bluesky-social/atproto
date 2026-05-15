@@ -48,7 +48,7 @@ export class ModeratorClient {
     return result.data
   }
 
-  async getReporterStats(dids: string[]): Promise<any> {
+  async getReporterStats(dids: string[]) {
     const result = await this.agent.tools.ozone.moderation.getReporterStats(
       { dids },
       {
