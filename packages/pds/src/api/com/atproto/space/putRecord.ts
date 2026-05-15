@@ -4,14 +4,21 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
-import { fireNotifyWrite } from './util'
+import { assertSpaceScope, fireNotifyWrite } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.putRecord, {
-    auth: ctx.authVerifier.authorization({ authorize: () => {} }),
+    auth: ctx.authVerifier.authorization({
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
+    }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
       const { space, collection, rkey, record, swapCommit } = input.body
+
+      assertSpaceScope(auth, space, { action: 'create', collection })
+      assertSpaceScope(auth, space, { action: 'update', collection })
 
       const result = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new SqlRepoStorage(actorTxn.space, space)

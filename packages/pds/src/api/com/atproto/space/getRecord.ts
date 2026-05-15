@@ -1,11 +1,14 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
+import { assertSpaceScope } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRecord, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
-      authorize: () => {},
+      authorize: () => {
+        // Performed in the handler as it requires the `space` param
+      },
     }),
     handler: async ({ params, auth }) => {
       const { space, collection, rkey, cid, repo } = params
@@ -22,6 +25,9 @@ export default function (server: Server, ctx: AppContext) {
         }
         repoDid = repo
       } else {
+        // OAuth/access auth must carry a `space:?action=read` (or default)
+        // scope on the (type, did, skey) of the requested space.
+        assertSpaceScope(auth, space, { action: 'read' })
         repoDid = repo ?? auth.credentials.did
       }
 

@@ -3,11 +3,14 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { formatListCursor } from '../../../../actor-store/space/reader'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
+import { assertSpaceScope } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRecords, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
-      authorize: () => {},
+      authorize: () => {
+        // Performed in the handler as it requires the `space` param
+      },
     }),
     handler: async ({ params, auth }) => {
       const { space, collection, limit, cursor, reverse, repo } = params
@@ -24,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         }
         repoDid = repo
       } else {
+        assertSpaceScope(auth, space, { action: 'read' })
         repoDid = repo ?? auth.credentials.did
       }
 

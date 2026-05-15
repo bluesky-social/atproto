@@ -16,6 +16,7 @@ export const SPACE_ACTIONS = Object.freeze([
   'create',
   'update',
   'delete',
+  'manage',
 ] as const)
 export type SpaceAction = (typeof SPACE_ACTIONS)[number]
 export const isSpaceAction = knownValuesValidator(SPACE_ACTIONS)
@@ -48,20 +49,23 @@ export const isSpaceCollectionParam = (
 ): value is SpaceCollectionParam => value === '*' || isNsid(value)
 
 /**
- * The shape of a permission check at request time. Reads pass `action: 'read'`
- * and need only (type, did, skey) to overlap with the grant; writes also need
- * `collection` and a write `action` that intersect with the grant.
+ * The shape of a permission check at request time.
  *
- * Read access is implicit — any matching grant confers read regardless of its
- * declared `action` list, except when the grant lists `action=read` alone.
- * Use `assertSpaceWrite`/`allowsSpaceWrite` (downstream) for write checks.
+ * - `read`: any grant on the matching (type, did, skey) tuple whose action
+ *   list includes `read` (the default). Collection-independent.
+ * - `create | update | delete`: requires the action to be in the grant's
+ *   action list AND the target collection to be in the grant's collection
+ *   list. Empty collection list = no write targets.
+ * - `manage`: governs space-level operations like `createSpace`,
+ *   `addMember`, `removeMember`, `deleteSpace`. Collection-independent;
+ *   requires the action list to include `manage`. Implicitly grants read.
  */
 export type SpacePermissionMatch = {
   type: string
   did: string
   skey: string
 } & (
-  | { action: 'read'; collection?: never }
+  | { action: 'read' | 'manage'; collection?: never }
   | { action: 'create' | 'update' | 'delete'; collection: string }
 )
 
@@ -83,19 +87,28 @@ export class SpacePermission
     if (this.skey !== '*' && this.skey !== target.skey) return false
 
     // Read is the baseline — any grant on the right (type, did, skey) tuple
-    // confers read access, regardless of its `collection` list. The only way
-    // a grant can refuse read is by explicitly listing `action=read` only,
-    // since the action list still has to include `read`.
+    // confers read access if it lists `read`. `manage` also implies read,
+    // since space-level admin without read access doesn't make sense.
     if (target.action === 'read') {
-      return this.action.includes('read')
+      return this.action.includes('read') || this.action.includes('manage')
+    }
+
+    // Manage is collection-independent — governs space-level operations
+    // (createSpace, addMember, removeMember, deleteSpace).
+    if (target.action === 'manage') {
+      return this.action.includes('manage')
     }
 
     // Write check: action must be in the grant's action list and the target
     // collection must be in the grant's collection list.
-    if (!this.action.includes(target.action)) return false
+    const writeTarget = target as Extract<
+      SpacePermissionMatch,
+      { action: 'create' | 'update' | 'delete' }
+    >
+    if (!this.action.includes(writeTarget.action)) return false
     return (
       this.collection.includes('*') ||
-      (this.collection as readonly string[]).includes(target.collection)
+      (this.collection as readonly string[]).includes(writeTarget.collection)
     )
   }
 
@@ -175,14 +188,18 @@ export class SpacePermission
   }
 
   static scopeNeededFor(options: SpacePermissionMatch): string {
+    const collectionIndependent =
+      options.action === 'read' || options.action === 'manage'
     return SpacePermission.parser.format({
       type: options.type as SpaceTypeParam,
       did: options.did as SpaceDidParam,
       skey: options.skey as SpaceSkeyParam | '*',
-      collection:
-        options.action === 'read'
-          ? ([] as unknown as NeRoArray<SpaceCollectionParam>)
-          : [options.collection as SpaceCollectionParam],
+      collection: collectionIndependent
+        ? ([] as unknown as NeRoArray<SpaceCollectionParam>)
+        : [
+            (options as { collection: string })
+              .collection as SpaceCollectionParam,
+          ],
       action: [options.action],
     })
   }

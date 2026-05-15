@@ -644,7 +644,7 @@ describe('IncludeScope', () => {
                     type: 'permission',
                     resource: 'space',
                     spaceType: 'com.example.calendar.group',
-                    action: ['read', 'create', 'update', 'delete'],
+                    action: ['read', 'create', 'update', 'delete', 'manage'],
                   },
                 ],
               }),

@@ -43,14 +43,25 @@ export class SpaceReader {
   async listSpaces(opts: {
     limit: number
     cursor?: string
+    type?: string
+    did?: string
   }): Promise<{ uri: string; isOwner: boolean }[]> {
-    const { limit, cursor } = opts
+    const { limit, cursor, type, did } = opts
     let builder = this.db.db
       .selectFrom('space')
       .select(['uri', 'isOwner'])
       .where(sql`("isOwner" = 1 OR "isMember" = 1)`)
       .orderBy('uri', 'asc')
       .limit(limit)
+    // Filter by URI shape `ats://<did>/<type>/<skey>`. DIDs can't contain `/`
+    // so a `%/<type>/%` LIKE is unambiguous.
+    if (did && type) {
+      builder = builder.where('uri', 'like', `ats://${did}/${type}/%`)
+    } else if (did) {
+      builder = builder.where('uri', 'like', `ats://${did}/%`)
+    } else if (type) {
+      builder = builder.where('uri', 'like', `ats://%/${type}/%`)
+    }
     if (cursor !== undefined) {
       builder = builder.where('uri', '>', cursor)
     }

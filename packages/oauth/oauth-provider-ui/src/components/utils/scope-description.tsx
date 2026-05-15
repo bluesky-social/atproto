@@ -831,6 +831,11 @@ type SpaceTableRow = {
   /** True iff at least one matching grant lists `read`. */
   read: boolean
   /**
+   * True iff at least one matching grant lists `manage` — confers space-level
+   * governance (createSpace, addMember, removeMember, deleteSpace).
+   */
+  manage: boolean
+  /**
    * Per-collection write actions. Key is collection NSID or '*'. Empty when
    * the grant has no write targets — read-only.
    */
@@ -874,12 +879,19 @@ function SpaceTable({
             parsed.did !== '*' ? communityHandles?.[parsed.did] : undefined,
           skey: parsed.skey,
           read: false,
+          manage: false,
           writes: new Map(),
         }
         map.set(key, row)
       }
 
       if (parsed.action.includes('read')) row.read = true
+      if (parsed.action.includes('manage')) {
+        row.manage = true
+        // manage implies read at the matcher; mirror that here so the UI
+        // doesn't claim "read-only" when the grant is actually broader.
+        row.read = true
+      }
 
       // Merge per-collection writes. If a collection is already present, OR
       // the new actions in.
@@ -926,10 +938,20 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
         <SpaceLabel row={row} />
       </div>
 
+      {row.manage && (
+        <div className="text-text-light text-xs">
+          <Trans>
+            <b>Manage</b> the space: create new spaces, add and remove members.
+          </Trans>
+        </div>
+      )}
+
       {writeEntries.length === 0 ? (
         <div className="text-text-light text-xs">
           {row.read ? (
-            <Trans>Read-only access.</Trans>
+            row.manage ? null : (
+              <Trans>Read-only access.</Trans>
+            )
           ) : (
             // No actions at all — defensive; the parser shouldn't produce this
             // shape but render something sane anyway.

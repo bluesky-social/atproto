@@ -1,6 +1,6 @@
 import { SpacePermission } from './space-permission.js'
 
-const ALL_ACTIONS = ['read', 'create', 'update', 'delete'] as const
+const ALL_ACTIONS = ['read', 'create', 'update', 'delete', 'manage'] as const
 
 describe('SpacePermission', () => {
   describe('static', () => {
@@ -174,6 +174,35 @@ describe('SpacePermission', () => {
           collection: 'another.one.here',
         }),
       ).toBe(true)
+    })
+
+    it('action=manage governs space-level ops independent of collection', () => {
+      const scope = SpacePermission.fromString(
+        'space:com.atmoboards.forum?action=manage',
+      )!
+      expect(scope.matches({ ...baseTarget, action: 'manage' })).toBe(true)
+      // manage implies read
+      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
+      // but not arbitrary writes
+      expect(
+        scope.matches({
+          ...baseTarget,
+          action: 'create',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(false)
+    })
+
+    it('default action list (all five) covers manage', () => {
+      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
+      expect(scope.matches({ ...baseTarget, action: 'manage' })).toBe(true)
+    })
+
+    it('grants without manage refuse manage', () => {
+      const scope = SpacePermission.fromString(
+        'space:com.atmoboards.forum?action=read',
+      )!
+      expect(scope.matches({ ...baseTarget, action: 'manage' })).toBe(false)
     })
 
     it('explicit collection limits writes to that collection', () => {

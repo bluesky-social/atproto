@@ -3,13 +3,20 @@ import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
+import { assertSpaceScope } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getMemberGrant, {
-    auth: ctx.authVerifier.authorization({ authorize: () => {} }),
+    auth: ctx.authVerifier.authorization({
+      authorize: () => {
+        // Performed in the handler as it requires the `space` param
+      },
+    }),
     handler: async ({ params, auth }) => {
       const memberDid = auth.credentials.did
       const { space } = params
+
+      assertSpaceScope(auth, space, { action: 'read' })
 
       // Verify the space exists in member's actor store and they're a member
       const spaceRow = await ctx.actorStore.read(memberDid, (store) =>

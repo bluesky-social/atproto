@@ -4,11 +4,21 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
-import { fireNotifyWrite } from './util'
+import { assertSpaceScope, fireNotifyWrite } from './util'
+
+const writeOpToAction = {
+  [WriteOpAction.Create]: 'create' as const,
+  [WriteOpAction.Update]: 'update' as const,
+  [WriteOpAction.Delete]: 'delete' as const,
+}
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.applyWrites, {
-    auth: ctx.authVerifier.authorization({ authorize: () => {} }),
+    auth: ctx.authVerifier.authorization({
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
+    }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
       const { space, writes, swapCommit } = input.body
@@ -37,6 +47,13 @@ export default function (server: Server, ctx: AppContext) {
         }
         throw new InvalidRequestError('Unknown write type')
       })
+
+      for (const op of ops) {
+        assertSpaceScope(auth, space, {
+          action: writeOpToAction[op.action],
+          collection: op.collection,
+        })
+      }
 
       const { results, rev } = await ctx.actorStore.transact(
         did,

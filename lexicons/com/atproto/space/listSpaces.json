@@ -4,10 +4,20 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the spaces that the authenticated user participates in. Requires auth, implemented by PDS.",
+      "description": "List the spaces that the authenticated user participates in, optionally filtered by type and/or owner DID. Requires auth, implemented by PDS.",
       "parameters": {
         "type": "params",
         "properties": {
+          "type": {
+            "type": "string",
+            "format": "nsid",
+            "description": "Filter to spaces of this type. Required if the caller's OAuth scope is narrower than `space:*`."
+          },
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "Filter to spaces owned by this DID. Required if the caller's OAuth scope is narrower than `?did=*`."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
