@@ -103,10 +103,10 @@ describe('RecordSchema', () => {
     it('properly discriminates Unknown$TypeObject', () => {
       function foo(value: Unknown$TypedObject | Schema) {
         if (schema.isTypeOf(value)) {
-          value.text
+          void value.text
         } else {
           // @ts-expect-error
-          value.text
+          void value.text
         }
       }
 
