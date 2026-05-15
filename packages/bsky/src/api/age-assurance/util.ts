@@ -1,4 +1,6 @@
 import {
+  AgeAssuranceRuleID,
+  AppBskyAgeassuranceDefs,
   computeAgeAssuranceRegionAccess,
   getAgeAssuranceRegionConfig,
 } from '@atproto/api'
@@ -19,7 +21,7 @@ export function computeAgeAssuranceAccessOrThrow(
     regionCode?: string
     verifiedMinimumAge: number
   },
-): any {
+): { access: AppBskyAgeassuranceDefs.Access; reason: AgeAssuranceRuleID } {
   const region = getAgeAssuranceRegionConfig(config, {
     countryCode,
     regionCode,
