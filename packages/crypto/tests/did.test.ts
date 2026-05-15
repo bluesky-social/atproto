@@ -1,6 +1,8 @@
 import * as uint8arrays from 'uint8arrays'
 import { P256Keypair, Secp256k1Keypair } from '../src'
 import * as did from '../src/did'
+import { decompressPubkey as p256Decompress } from '../src/p256/encoding'
+import { decompressPubkey as secp256k1Decompress } from '../src/secp256k1/encoding'
 
 describe('secp256k1 did:key', () => {
   it('derives the correct DID from the privatekey', async () => {
@@ -19,7 +21,10 @@ describe('secp256k1 did:key', () => {
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
       expect(jwtAlg).toBe('ES256K')
       expect(
-        uint8arrays.equals(keyBytes, keypair.publicKeyBytes()),
+        uint8arrays.equals(
+          keyBytes,
+          secp256k1Decompress(keypair.publicKeyBytes()),
+        ),
       ).toBeTruthy()
     }
   })
@@ -44,7 +49,7 @@ describe('P-256 did:key', () => {
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
       expect(jwtAlg).toBe('ES256')
       expect(
-        uint8arrays.equals(keyBytes, keypair.publicKeyBytes()),
+        uint8arrays.equals(keyBytes, p256Decompress(keypair.publicKeyBytes())),
       ).toBeTruthy()
     }
   })
