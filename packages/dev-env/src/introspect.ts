@@ -6,6 +6,14 @@ import { TestOzone } from './ozone'
 import { TestPds } from './pds'
 import { TestPlc } from './plc'
 
+export type LexiconAuthorityIntrospection = {
+  did: string
+  handle: string
+  password: string
+  /** PDS URL hosting the authority account. */
+  pds: string
+}
+
 export class IntrospectServer {
   constructor(
     public port: number,
@@ -18,6 +26,7 @@ export class IntrospectServer {
     pds: TestPds | TestPds[],
     bsky?: TestBsky,
     ozone?: TestOzone,
+    lexiconAuthority?: LexiconAuthorityIntrospection,
   ) {
     const pdses = Array.isArray(pds) ? pds : [pds]
     const app = express()
@@ -54,6 +63,10 @@ export class IntrospectServer {
               url: ozone.ctx.cfg.db.postgresUrl,
             }
           : undefined,
+        // Credentials for the dev-env lex authority. Demo apps log in here to
+        // publish lexicon docs (permission sets, space declarations) that the
+        // PDSes will resolve via `lexiconDidAuthority`.
+        lexiconAuthority,
       })
     })
     const server = app.listen(port)
