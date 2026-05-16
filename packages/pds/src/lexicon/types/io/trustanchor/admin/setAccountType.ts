@@ -20,7 +20,7 @@ export interface InputSchema {
   /** DID of the account to update */
   did: string
   /** New account type */
-  accountType: 'personal' | 'bot' | 'organization' | 'test' | (string & {})
+  accountType: 'personal' | 'bot' | 'organization' | 'test' | 'unverified' | 'service' | (string & {})
 }
 
 export interface OutputSchema {
