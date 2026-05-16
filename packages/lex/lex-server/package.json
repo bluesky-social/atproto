@@ -32,7 +32,6 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./nodejs": {
