@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { jest } from '@jest/globals'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
@@ -57,7 +58,7 @@ describe('blob divert', () => {
     modClient.emitEvent(
       {
         subject: getSubject(),
-        // @ts-expect-error ModEventDivert.$type is optional but the event union requires it
+        // @ts-expect-error "tools.ozone.moderation.defs#modEventDivert" is not part of the event open union
         event: identity<ToolsOzoneModerationDefs.ModEventDivert>({
           $type: 'tools.ozone.moderation.defs#modEventDivert',
           comment: 'Diverting for test',

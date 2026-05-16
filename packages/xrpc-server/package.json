@@ -41,6 +41,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/lex-document": "workspace:^",
+    "@jest/globals": "^30.0.0",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.4",

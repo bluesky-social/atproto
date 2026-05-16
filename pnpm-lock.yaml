@@ -588,6 +588,9 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
+      '@jest/globals':
+        specifier: ^30.0.0
+        version: 30.4.1
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -1735,6 +1738,9 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
+      '@jest/globals':
+        specifier: ^30.0.0
+        version: 30.4.1
       '@types/cors':
         specifier: ^2.8.12
         version: 2.8.12
@@ -1910,6 +1916,9 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
+      '@jest/globals':
+        specifier: ^30.0.0
+        version: 30.4.1
       '@types/cors':
         specifier: ^2.8.12
         version: 2.8.12
@@ -2160,6 +2169,9 @@ importers:
       '@atproto/lex-document':
         specifier: workspace:^
         version: link:../lex/lex-document
+      '@jest/globals':
+        specifier: ^30.0.0
+        version: 30.4.1
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
