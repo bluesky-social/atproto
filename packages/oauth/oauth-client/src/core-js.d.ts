@@ -1,1 +1,1 @@
-declare module 'core-js/modules/es.symbol.dispose'
+declare module 'core-js/es/symbol/dispose.js'

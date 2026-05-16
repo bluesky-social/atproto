@@ -1,5 +1,5 @@
-import 'core-js/modules/es.uint8-array.from-base64.js'
-import 'core-js/modules/es.uint8-array.to-base64.js'
+import 'core-js/es/typed-array/from-base64.js'
+import 'core-js/es/typed-array/to-base64.js'
 
 import { describe, expect, it } from 'vitest'
 import {

@@ -6,4 +6,4 @@
 // the monorepo is being setup (during initial "pnpm install"), but was never
 // built.
 
-import('./dist/bin.js')
+import './dist/bin.js'

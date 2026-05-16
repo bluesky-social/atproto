@@ -13,7 +13,7 @@ export default defineConfig({
     alias: {
       '#': resolve(__dirname, './src'),
     },
-    conditions: ['import', 'module', 'browser', 'default'],
+    conditions: ['browser', 'import', 'module', 'default'],
   },
   plugins: [
     react({
