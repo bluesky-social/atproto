@@ -8,6 +8,11 @@ overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
 
+patchedDependencies:
+  kysely@0.22.0:
+    hash: 5k7pdbhmqkb2cevvbr5z6i5uee
+    path: patches/kysely@0.22.0.patch
+
 importers:
 
   .:
@@ -271,7 +276,7 @@ importers:
         version: 2.0.3
       kysely:
         specifier: ^0.22.0
-        version: 0.22.0
+        version: 0.22.0(patch_hash=5k7pdbhmqkb2cevvbr5z6i5uee)
       leo-profanity:
         specifier: ^1.8.0
         version: 1.8.0
@@ -371,7 +376,7 @@ importers:
         version: 3.2.0
       kysely:
         specifier: ^0.22.0
-        version: 0.22.0
+        version: 0.22.0(patch_hash=5k7pdbhmqkb2cevvbr5z6i5uee)
       pg:
         specifier: ^8.10.0
         version: 8.10.0
@@ -1689,7 +1694,7 @@ importers:
         version: 3.2.0
       kysely:
         specifier: ^0.22.0
-        version: 0.22.0
+        version: 0.22.0(patch_hash=5k7pdbhmqkb2cevvbr5z6i5uee)
       lande:
         specifier: ^1.0.10
         version: 1.0.10
@@ -1861,7 +1866,7 @@ importers:
         version: 2.0.3
       kysely:
         specifier: ^0.22.0
-        version: 0.22.0
+        version: 0.22.0(patch_hash=5k7pdbhmqkb2cevvbr5z6i5uee)
       nodemailer:
         specifier: ^6.8.0
         version: 6.8.0
@@ -14998,10 +15003,11 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /kysely@0.22.0:
+  /kysely@0.22.0(patch_hash=5k7pdbhmqkb2cevvbr5z6i5uee):
     resolution: {integrity: sha512-ZE3qWtnqLOalodzfK5QUEcm7AEulhxsPNuKaGFsC3XiqO92vMLm+mAHk/NnbSIOtC4RmGm0nsv700i8KDp1gfQ==}
     engines: {node: '>=14.0.0'}
     dev: false
+    patched: true
 
   /kysely@0.23.5:
     resolution: {integrity: sha512-TH+b56pVXQq0tsyooYLeNfV11j6ih7D50dyN8tkM0e7ndiUH28Nziojiog3qRFlmEj9XePYdZUrNJ2079Qjdow==}

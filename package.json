@@ -42,8 +42,8 @@
     "@atproto/dev-env": "workspace:^",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
-    "@swc/core": "^1.3.42",
     "@jest/globals": "^30.0.0",
+    "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
@@ -73,6 +73,9 @@
     "overrides": {
       "cookie": "^0.7.2",
       "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
+    },
+    "patchedDependencies": {
+      "kysely@0.22.0": "patches/kysely@0.22.0.patch"
     }
   },
   "workspace": [
