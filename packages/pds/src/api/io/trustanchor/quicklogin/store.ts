@@ -30,6 +30,8 @@ export type QuickLoginResult = {
   did: string
   handle: string
   created: boolean
+  emailConfirmed?: boolean
+  wsocialVerified?: string
 }
 
 export class QuickLoginSessionStore {
