@@ -204,6 +204,9 @@ export function readEnv() {
     wsocialDefaultThreadPref: envStr('PDS_WSOCIAL_DEFAULT_THREAD_PREF'),
     // WID inventory TTL (days from creation). Defaults to 30 at config layer.
     widInventoryTtlDays: envInt('PDS_WID_INVENTORY_TTL_DAYS'),
+
+    // W Admin
+    wadminUrl: envStr('PDS_WADMIN_URL'),
   }
 }
 

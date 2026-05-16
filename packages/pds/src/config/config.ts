@@ -418,6 +418,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       defaultThreadPref: parseThreadPref(env.wsocialDefaultThreadPref),
       widInventoryTtlDays: env.widInventoryTtlDays ?? 30,
     },
+    wadmin: {
+      url: env.wadminUrl,
+    },
   }
 }
 
@@ -449,6 +452,7 @@ export type ServerConfig = {
   allowTestUserLogin: boolean // Enable/disable test-user login (new unified QuickLogin flow)
   neuroCallbackSignatureRequired: boolean // Feature flag: require callback signature verification (WP2)
   wsocial: WSocialConfig
+  wadmin: WAdminConfig
 }
 
 export type ServiceConfig = {
@@ -640,4 +644,8 @@ export type WSocialConfig = {
     treeViewEnabled: boolean // lab_treeViewEnabled: true for threaded, false for linear
     sort: string // 'hotness', 'oldest', 'newest', 'most-likes', 'random'
   }
+}
+
+export type WAdminConfig = {
+  url: string | undefined // W Admin backend URL — source of trending topics, feeds. If unset, overrides return empty arrays.
 }

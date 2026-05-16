@@ -1,6 +1,6 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
 import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
@@ -12,10 +12,18 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,
-      authorize: () => {
-        throw new ForbiddenError(
-          'OAuth credentials are not supported for this endpoint',
-        )
+      // Allow OAuth credentials when the token carries the
+      // `account:email:manage` permission. This matches the
+      // companion endpoint `com.atproto.server.requestEmailUpdate`
+      // (see requestEmailUpdate.ts) — without this, a user who
+      // signed in via OAuth (e.g. W Identity / WID/QR) can request
+      // a change-email token but cannot actually submit the change,
+      // because the upstream Bluesky default unconditionally rejects
+      // OAuth here. That mismatch surfaces as a 400 Bad Request on
+      // /xrpc/com.atproto.server.updateEmail and produces the
+      // "Failed to update email, please try again" error in the UI.
+      authorize: (permissions) => {
+        permissions.assertAccount({ attr: 'email', action: 'manage' })
       },
     }),
     handler: async ({ auth, input, req }) => {
