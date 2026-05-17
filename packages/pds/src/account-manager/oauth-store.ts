@@ -322,7 +322,7 @@ export class OAuthStore
     const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
 
     const uniqueDids: string[] = [
-      ...new Set<string>(rows.map((row: any) => row.did)),
+      ...new Set<string>(rows.map((row) => row.did)),
     ]
 
     // Enrich all distinct account with their profile data

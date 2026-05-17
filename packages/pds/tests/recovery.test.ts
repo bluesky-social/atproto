@@ -3,13 +3,14 @@ import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { renameIfExists, rmIfExists } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
+// import package to avoid type errors from circular dep with dev-env
+import { type AppContext, scripts } from '@atproto/pds'
 import { verifyRepoCar } from '@atproto/repo'
 import { DidString } from '@atproto/syntax'
-import { scripts } from '../src/index.js'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView
-  let ctx: TestNetworkNoAppView['pds']['ctx']
+  let ctx: AppContext
   let sc: SeedClient
   let agent: AtpAgent
   let alice: DidString
@@ -136,11 +137,7 @@ describe('recovery', () => {
     await restore([alice, bob, elli])
 
     // run recovery operation
-    await scripts['sequencer-recovery'](network.pds.ctx as any, [
-      '0',
-      '10',
-      'true',
-    ])
+    await scripts['sequencer-recovery'](network.pds.ctx, ['0', '10', 'true'])
 
     // ensure alice's CAR is exactly the same as before the loss, including intermediate states based on tracked revs
     const startCarAfter = await getCar(alice, startRev)
@@ -170,7 +167,7 @@ describe('recovery', () => {
   })
 
   it('rotates keys for users', async () => {
-    await scripts['rotate-keys'](network.pds.ctx as any, [elli])
+    await scripts['rotate-keys'](network.pds.ctx, [elli])
     const elliKey = await ctx.actorStore.keypair(elli)
 
     const plcData = await ctx.plcClient.getDocumentData(elli)

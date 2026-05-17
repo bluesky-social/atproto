@@ -47,14 +47,14 @@ const requestDataToRow = (
 export const createQB = (db: AccountDb, id: RequestId, data: RequestData) =>
   db.db.insertInto('authorization_request').values(requestDataToRow(id, data))
 
-export const readQB = (db: AccountDb, id: RequestId): any =>
+export const readQB = (db: AccountDb, id: RequestId) =>
   db.db.selectFrom('authorization_request').where('id', '=', id).selectAll()
 
 export const updateQB = (
   db: AccountDb,
   id: RequestId,
   { code, sub, deviceId, expiresAt, parameters, ...rest }: UpdateRequestData,
-): any => {
+) => {
   assert(!Object.keys(rest).length, 'Unexpected fields in UpdateRequestData')
   return db.db
     .updateTable('authorization_request')
@@ -66,7 +66,7 @@ export const updateQB = (
     .where('id', '=', id)
 }
 
-export const removeOldExpiredQB = (db: AccountDb, delay = 600e3): any =>
+export const removeOldExpiredQB = (db: AccountDb, delay = 600e3) =>
   // We allow some delay for the expiration time so that expired requests
   // can still be returned to the OAuthProvider library for error handling.
   db.db
@@ -74,10 +74,10 @@ export const removeOldExpiredQB = (db: AccountDb, delay = 600e3): any =>
     // uses "authorization_request_expires_at_idx" index
     .where('expiresAt', '<', toDateISO(new Date(Date.now() - delay)))
 
-export const removeByIdQB = (db: AccountDb, id: RequestId): any =>
+export const removeByIdQB = (db: AccountDb, id: RequestId) =>
   db.db.deleteFrom('authorization_request').where('id', '=', id)
 
-export const consumeByCodeQB = (db: AccountDb, code: Code): any =>
+export const consumeByCodeQB = (db: AccountDb, code: Code) =>
   db.db
     .deleteFrom('authorization_request')
     // uses "authorization_request_code_idx" partial index (hence the null check)

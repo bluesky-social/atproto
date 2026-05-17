@@ -107,7 +107,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     } while (cursor)
   }
 
-  async getBlockRange(since?: string, cursor?: RevCursor): Promise<any> {
+  async getBlockRange(since?: string, cursor?: RevCursor) {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('repo_block')

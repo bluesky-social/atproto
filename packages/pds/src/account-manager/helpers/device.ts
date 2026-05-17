@@ -25,14 +25,14 @@ export const createQB = (
     lastSeenAt: toDateISO(lastSeenAt),
   })
 
-export const readQB = (db: AccountDb, deviceId: DeviceId): any =>
+export const readQB = (db: AccountDb, deviceId: DeviceId) =>
   db.db.selectFrom('device').where('id', '=', deviceId).selectAll()
 
 export const updateQB = (
   db: AccountDb,
   deviceId: DeviceId,
   { sessionId, userAgent, ipAddress, lastSeenAt }: Partial<DeviceData>,
-): any =>
+) =>
   db.db
     .updateTable('device')
     .if(sessionId != null, (qb) => qb.set({ sessionId }))
@@ -43,5 +43,5 @@ export const updateQB = (
     )
     .where('id', '=', deviceId)
 
-export const removeQB = (db: AccountDb, deviceId: DeviceId): any =>
+export const removeQB = (db: AccountDb, deviceId: DeviceId) =>
   db.db.deleteFrom('device').where('id', '=', deviceId)
