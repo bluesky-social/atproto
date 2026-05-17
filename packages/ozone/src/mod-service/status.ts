@@ -509,6 +509,10 @@ export const adjustModerationSubjectStatus = async (
   return status || null
 }
 
+/**
+ * Get moderation_subject_status identifier (did, recordPath, convoId).
+ * @note Supports addressing conversations explicitly (via convoId) and implicitly (via properly formed at-uri)
+ */
 export const getStatusIdentifierFromSubject = (
   subject: string | AtUri,
   convoId?: string | null,
@@ -527,6 +531,16 @@ export const getStatusIdentifierFromSubject = (
   }
 
   const uri = isSubjectString ? new AtUri(subject) : subject
+
+  // Handle conversation URIs
+  if (uri.collection === 'chat.bsky.convo') {
+    return {
+      did: uri.host,
+      recordPath: '',
+      convoId: uri.rkey,
+    }
+  }
+
   return {
     did: uri.host,
     recordPath: `${uri.collection}/${uri.rkey}`,

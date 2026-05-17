@@ -1135,21 +1135,30 @@ export class ModerationService {
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
-      builder = builder
-        .where('moderation_subject_status.did', '=', subjectInfo.did)
-        /// TODO: update this later
-        .where('moderation_subject_status.convoId', '=', '')
+      builder = builder.where(
+        'moderation_subject_status.did',
+        '=',
+        subjectInfo.did,
+      )
 
       if (!includeAllUserRecords) {
-        builder = builder.where((qb) =>
-          subjectInfo.recordPath
-            ? qb.where(
-                'moderation_subject_status.recordPath',
-                '=',
-                subjectInfo.recordPath,
-              )
-            : qb.where('moderation_subject_status.recordPath', '=', ''),
-        )
+        if (subjectInfo.convoId) {
+          builder = builder.where(
+            'moderation_subject_status.convoId',
+            '=',
+            subjectInfo.convoId,
+          )
+        } else {
+          builder = builder.where((qb) =>
+            subjectInfo.recordPath
+              ? qb.where(
+                  'moderation_subject_status.recordPath',
+                  '=',
+                  subjectInfo.recordPath,
+                )
+              : qb.where('moderation_subject_status.recordPath', '=', ''),
+          )
+        }
       }
     } else if (subjectType === 'account') {
       builder = builder.where('moderation_subject_status.recordPath', '=', '')
