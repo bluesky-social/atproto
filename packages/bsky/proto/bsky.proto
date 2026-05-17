@@ -1382,16 +1382,34 @@ message StashRef {
   string key = 3;
 }
 
-// Standard.site documents
-message DocumentWithPublication {
-  Record document = 1;
-  Record publication = 2;
-}
-message GetSiteStandardDocumentsWithPublicationRequest {
+// Standard.site records
+message GetSiteStandardRecordsByURIRequest {
+  // Mixed list of site.standard.document and site.standard.publication AT-URIs.
+  // URIs of other collections (or unparseable strings) are silently skipped.
   repeated string uris = 1;
 }
-message GetSiteStandardDocumentsWithPublicationResponse {
-  repeated DocumentWithPublication results = 1;
+message GetSiteStandardRecordsByURIResponse {
+  // Latest indexed version of each requested document, keyed by document AT-URI.
+  map<string, Record> documents = 1;
+  // Latest indexed version of each requested publication AND each publication
+  // resolved from a document's `site` field, keyed by publication AT-URI.
+  map<string, Record> publications = 2;
+}
+message GetSiteStandardRecordsByRefRequest {
+  // Mixed list of site.standard.document and site.standard.publication refs
+  // (uri + cid). Refs whose URI is not a SiteStandard collection (or doesn't
+  // parse) are silently skipped.
+  repeated RecordRef refs = 1;
+}
+message GetSiteStandardRecordsByRefResponse {
+  // Document version exactly matching each requested doc ref, keyed by the
+  // composite "<uri>@<cid>" string.
+  map<string, Record> documents = 1;
+  // Publication version exactly matching each requested pub ref, keyed by the
+  // composite "<uri>@<cid>" string. This RPC does NOT auto-resolve publications
+  // referenced by documents — callers who want a paired publication should
+  // pass its ref explicitly.
+  map<string, Record> publications = 2;
 }
 
 service Service {
@@ -1586,8 +1604,9 @@ service Service {
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
 
-  // Standard.site documents
-  rpc GetSiteStandardDocumentsWithPublication(GetSiteStandardDocumentsWithPublicationRequest) returns (GetSiteStandardDocumentsWithPublicationResponse);
+  // Standard.site records
+  rpc GetSiteStandardRecordsByURI(GetSiteStandardRecordsByURIRequest) returns (GetSiteStandardRecordsByURIResponse);
+  rpc GetSiteStandardRecordsByRef(GetSiteStandardRecordsByRefRequest) returns (GetSiteStandardRecordsByRefResponse);
 }
 
 

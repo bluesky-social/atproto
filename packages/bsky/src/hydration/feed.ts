@@ -1,8 +1,7 @@
-import * as ui8 from 'uint8arrays'
 import { dedupeStrs } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { app } from '../lexicons/index.js'
+import { app, site } from '../lexicons/index.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -15,6 +14,8 @@ import {
   PostRecord,
   PostgateRecord,
   RepostRecord,
+  SiteStandardDocumentRecord,
+  SiteStandardPublicationRecord,
 } from '../views/types.js'
 import {
   HydrationMap,
@@ -93,11 +94,25 @@ export type Threadgates = HydrationMap<AtUriString, Threadgate>
 export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<AtUriString, Postgate>
 
-export type SiteStandardRecord = {
-  document?: unknown
-  publication?: unknown
+export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
+/**
+ * Keyed by the `"<uri>@<cid>"` composite string used by the dataplane's
+ * `GetSiteStandardRecordsByRef` RPC to address an exact record version.
+ */
+export type SiteStandardDocuments = HydrationMap<string, SiteStandardDocument>
+export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
+/**
+ * Keyed by the `"<uri>@<cid>"` composite string used by the dataplane's
+ * `GetSiteStandardRecordsByRef` RPC to address an exact record version.
+ */
+export type SiteStandardPublications = HydrationMap<
+  string,
+  SiteStandardPublication
+>
+export type SiteStandardRecordsByRef = {
+  documents: SiteStandardDocuments
+  publications: SiteStandardPublications
 }
-export type SiteStandardRecords = HydrationMap<AtUriString, SiteStandardRecord>
 
 export type ThreadRef = ItemRef & { threadRoot: AtUriString }
 
@@ -365,26 +380,33 @@ export class FeedHydrator {
     return map
   }
 
-  async getSiteStandardRecords(
-    uris: AtUriString[],
-  ): Promise<SiteStandardRecords> {
-    const map: SiteStandardRecords = new HydrationMap()
-    if (!uris.length) return map
+  async getSiteStandardRecordsByRef(
+    refs: ItemRef[],
+    includeTakedowns = false,
+  ): Promise<SiteStandardRecordsByRef> {
+    const documents: SiteStandardDocuments = new HydrationMap()
+    const publications: SiteStandardPublications = new HydrationMap()
+    if (!refs.length) return { documents, publications }
 
-    const res = await this.dataplane.getSiteStandardDocumentsWithPublication({
-      uris,
+    const res = await this.dataplane.getSiteStandardRecordsByRef({
+      refs: refs.map(({ uri, cid }) => ({ uri, cid: cid ?? '' })),
     })
-    for (let i = 0; i < uris.length; i++) {
-      const result = res.results[i]
-      const document = parseRecordBytes(result?.document?.record)
-      const publication = parseRecordBytes(result?.publication?.record)
-      map.set(
-        uris[i],
-        document || publication ? { document, publication } : null,
+    for (const [key, entry] of Object.entries(res.documents)) {
+      documents.set(
+        key,
+        parseRecord(site.standard.document.main, entry, includeTakedowns) ??
+          null,
+      )
+    }
+    for (const [key, entry] of Object.entries(res.publications)) {
+      publications.set(
+        key,
+        parseRecord(site.standard.publication.main, entry, includeTakedowns) ??
+          null,
       )
     }
 
-    return map
+    return { documents, publications }
   }
 
   async getThreadgatesForPosts(
@@ -482,9 +504,4 @@ export class FeedHydrator {
 
     return map
   }
-}
-
-const parseRecordBytes = (bytes?: Uint8Array): unknown => {
-  if (!bytes || bytes.byteLength === 0) return undefined
-  return JSON.parse(ui8.toString(bytes, 'utf8'))
 }

@@ -43,7 +43,8 @@ import {
   Postgates,
   Posts,
   Reposts,
-  SiteStandardRecords,
+  SiteStandardDocuments,
+  SiteStandardPublications,
   ThreadContexts,
   ThreadRef,
   Threadgates,
@@ -150,7 +151,8 @@ export type HydrationState = {
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
   bookmarks?: Bookmarks
-  siteStandardRecords?: SiteStandardRecords
+  siteStandardDocuments?: SiteStandardDocuments
+  siteStandardPublications?: SiteStandardPublications
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -601,7 +603,7 @@ export class Hydrator {
       labelerState,
       starterPackState,
       postgates,
-      siteStandardRecords,
+      { documents: siteStandardDocuments, publications: siteStandardPublications },
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
@@ -615,12 +617,8 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.feed.getSiteStandardRecords(
-        siteStandardDocumentUrisFromPosts(
-          postsLayer0,
-          postsLayer1,
-          postsLayer2,
-        ),
+      this.feed.getSiteStandardRecordsByRef(
+        siteStandardRefsFromPosts(postsLayer0, postsLayer1, postsLayer2),
       ),
     ])
     if (!ctx.includeTakedowns) {
@@ -641,7 +639,8 @@ export class Hydrator {
         labels,
         threadgates,
         postgates,
-        siteStandardRecords,
+        siteStandardDocuments,
+        siteStandardPublications,
         ctx,
       },
     )
@@ -1489,31 +1488,50 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   return uris
 }
 
-const SITE_STANDARD_DOCUMENT_NSID = 'site.standard.document'
-
-const externalAssociatedRecordUri = (
+/**
+ * Returns every strongRef the post embedded as `external.associatedRecords`,
+ * regardless of collection. Callers are responsible for filtering to NSIDs
+ * they care about.
+ */
+const externalAssociatedRecords = (
   post: Post['record'],
-): AtUriString | undefined => {
+): { uri: AtUriString; cid: string }[] => {
   const embed = post?.embed
-  if (!embed) return
+  if (!embed) return []
   if (isExternalEmbedType(embed)) {
-    return embed.external.associatedRecord
+    return embed.external.associatedRecords ?? []
   }
   if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
-    return embed.media.external.associatedRecord
+    return embed.media.external.associatedRecords ?? []
   }
+  return []
 }
 
-const siteStandardDocumentUrisFromPosts = (
-  ...postLayers: Posts[]
-): AtUriString[] => {
-  const out: AtUriString[] = []
+// Standard.site
+// ------------
+
+const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
+
+/**
+ * Collects standard.site refs across all post layers, deduped by the
+ * `"<uri>@<cid>"` composite key — this is the same key the dataplane uses to
+ * address an exact record version (see `GetSiteStandardRecordsByRef`), so it
+ * also matches how downstream hydration maps key their entries.
+ */
+const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
+  const seen = new Set<string>()
+  const out: ItemRef[] = []
   for (const layer of postLayers) {
     for (const item of layer.values()) {
       if (!item) continue
-      const uri = externalAssociatedRecordUri(item.record)
-      if (uri && new AtUri(uri).collection === SITE_STANDARD_DOCUMENT_NSID) {
-        out.push(uri)
+      for (const ref of externalAssociatedRecords(item.record)) {
+        if (!new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)) {
+          continue
+        }
+        const key = `${ref.uri}@${ref.cid}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ uri: ref.uri, cid: ref.cid })
       }
     }
   }
@@ -1600,9 +1618,13 @@ export const mergeStates = (
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
     bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
-    siteStandardRecords: mergeMaps(
-      stateA.siteStandardRecords,
-      stateB.siteStandardRecords,
+    siteStandardDocuments: mergeMaps(
+      stateA.siteStandardDocuments,
+      stateB.siteStandardDocuments,
+    ),
+    siteStandardPublications: mergeMaps(
+      stateA.siteStandardPublications,
+      stateB.siteStandardPublications,
     ),
   }
 }

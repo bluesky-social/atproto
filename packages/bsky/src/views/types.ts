@@ -1,4 +1,4 @@
-import { app, chat, com } from '../lexicons/index.js'
+import { app, chat, com, site } from '../lexicons/index.js'
 
 // app.bsky.actor
 
@@ -173,3 +173,8 @@ export const validateStrongRef = com.atproto.repo.strongRef.$safeValidate
 // com.germnetwork.declaration
 
 export type GermDeclarationRecord = com.germnetwork.declaration.Main
+
+// site.standard
+
+export type SiteStandardDocumentRecord = site.standard.document.Main
+export type SiteStandardPublicationRecord = site.standard.publication.Main
