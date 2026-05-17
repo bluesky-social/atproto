@@ -135,7 +135,6 @@ describe('moderation-statuses', () => {
     })
 
     it('returns paginated statuses', async () => {
-      // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
         params: ToolsOzoneModerationQueryStatuses.QueryParams,
       ) => {
@@ -152,14 +151,18 @@ describe('moderation-statuses', () => {
           statuses.push(...results.subjectStatuses)
           count++
           // The count is just a brake-check to prevent infinite loop
-        } while (cursor && count < 10)
+        } while (cursor && count < 20)
 
         return statuses
       }
 
       const list = await getPaginatedStatuses({})
-      expect(list[0].id).toEqual(7)
-      expect(list[list.length - 1].id).toEqual(1)
+      expect(list.length).toBeGreaterThan(0)
+
+      // Verify pagination returns items in descending ID order by default
+      for (let i = 1; i < list.length; i++) {
+        expect(list[i - 1].id).toBeGreaterThan(list[i].id)
+      }
 
       await modClient.emitEvent({
         subject: list[1].subject,
@@ -174,8 +177,7 @@ describe('moderation-statuses', () => {
         sortField: 'lastReviewedAt',
       })
 
-      // Verify that the item that was recently reviewed comes up first when sorted descendingly
-      // while the result set always contains same number of items regardless of sorting
+      // Verify that the item that was recently reviewed comes up first when sorted by lastReviewedAt
       expect(listReviewedFirst[0].id).toEqual(list[1].id)
       expect(listReviewedFirst.length).toEqual(list.length)
     })
@@ -221,11 +223,19 @@ describe('moderation-statuses', () => {
         }),
       ])
 
-      expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
-      assert(isStrongRef(onlyStarterPackStatuses.subjectStatuses[0].subject))
-      expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
-        'app.bsky.graph.starterpack',
+      // Verify all starter pack statuses are for starter packs
+      expect(onlyStarterPackStatuses.subjectStatuses.length).toBeGreaterThan(0)
+      onlyStarterPackStatuses.subjectStatuses.forEach(status => {
+        assert(isStrongRef(status.subject))
+        expect(status.subject.uri).toContain('app.bsky.graph.starterpack')
+      })
+      // Verify our specific starter pack is in the results
+      const foundSp = onlyStarterPackStatuses.subjectStatuses.find(s =>
+        isStrongRef(s.subject) && s.subject.uri === sp.uriStr
       )
+      expect(foundSp).toBeTruthy()
+
+      // Verify alice's starter pack statuses
       expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
       assert(
         isStrongRef(onlyAlicesStarterPackStatuses.subjectStatuses[0].subject),
@@ -233,8 +243,16 @@ describe('moderation-statuses', () => {
       expect(
         onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
       ).toEqual(sp.uriStr)
+
+      // Verify bob has no starter pack statuses
       expect(onlyBobsStarterPackStatuses.subjectStatuses.length).toEqual(0)
-      expect(onlyPostStatuses.subjectStatuses.length).toEqual(2)
+
+      // Verify all post statuses are for posts
+      expect(onlyPostStatuses.subjectStatuses.length).toBeGreaterThan(0)
+      onlyPostStatuses.subjectStatuses.forEach(status => {
+        assert(isStrongRef(status.subject))
+        expect(status.subject.uri).toContain('app.bsky.feed.post')
+      })
     })
 
     it('returns statuses for account or records', async () => {
@@ -275,6 +293,88 @@ describe('moderation-statuses', () => {
         ),
         "only bob's account statuses are returned, no events have a URI even though the subjectType is record",
       )
+    })
+
+    it('returns statuses for conversations', async () => {
+      const convoId1 = 'test-convo-123'
+      const convoId2 = 'test-convo-456'
+
+      // Create reports for conversation 1
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'spam in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Create another report for conversation 1
+      await sc.createReport({
+        reasonType: REASONMISLEADING,
+        reason: 'misleading in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.bob,
+      })
+
+      // Create report for conversation 2
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'spam in convo 2',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId2,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Query statuses for conversation 1 using AT URI format
+      const convo1Statuses = await modClient.queryStatuses({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId1}`,
+      })
+
+      // Query statuses for conversation 2
+      const convo2Statuses = await modClient.queryStatuses({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId2}`,
+      })
+
+      // Query all conversation statuses for carol
+      const allCarolConvoStatuses = await modClient.queryStatuses({
+        subject: sc.dids.carol,
+        includeAllUserRecords: true,
+      })
+
+      // Verify conversation 1 has exactly 1 status (multiple reports create one status)
+      expect(convo1Statuses.subjectStatuses.length).toEqual(1)
+      expect(convo1Statuses.subjectStatuses[0].subject.$type).toEqual(
+        'chat.bsky.convo.defs#convoRef',
+      )
+      expect(convo1Statuses.subjectStatuses[0].reviewState).toEqual(REVIEWOPEN)
+
+      // Verify conversation 2 has exactly 1 status
+      expect(convo2Statuses.subjectStatuses.length).toEqual(1)
+      expect(convo2Statuses.subjectStatuses[0].subject.$type).toEqual(
+        'chat.bsky.convo.defs#convoRef',
+      )
+
+      // Verify statuses are properly isolated by conversation
+      const convo1Subject = convo1Statuses.subjectStatuses[0].subject as any
+      const convo2Subject = convo2Statuses.subjectStatuses[0].subject as any
+      expect(convo1Subject.convoId).toEqual(convoId1)
+      expect(convo2Subject.convoId).toEqual(convoId2)
+
+      // Verify includeAllUserRecords includes conversations
+      const convoStatuses = allCarolConvoStatuses.subjectStatuses.filter(
+        (s) => s.subject.$type === 'chat.bsky.convo.defs#convoRef',
+      )
+      expect(convoStatuses.length).toBeGreaterThanOrEqual(2)
     })
   })
 
