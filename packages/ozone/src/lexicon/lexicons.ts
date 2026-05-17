@@ -2710,9 +2710,12 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
-          associatedRecord: {
-            type: 'string',
-            format: 'at-uri',
+          associatedRecords: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
             description:
               'The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
           },
