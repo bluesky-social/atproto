@@ -232,16 +232,21 @@ export class ModerationService {
 
     if (subject) {
       const isSubjectAtUri = subject.startsWith('at://')
+      const subjectAtUri = isSubjectAtUri ? new AtUri(subject) : null
       const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
       const subjectUri = isSubjectAtUri ? subject : null
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // if requester wants to include all user records, let's ignore matching on subjectUri
+      // subjectUri or subjectConvoId
       if (!includeAllUserRecords) {
-        builder = builder
-          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
-          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+        if (subjectAtUri?.collection === 'chat.bsky.convo') {
+          builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
+        } else {
+          builder = builder
+            .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
+            .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+        }
       }
     } else if (subjectType === 'account') {
       builder = builder.where('subjectUri', 'is', null)
