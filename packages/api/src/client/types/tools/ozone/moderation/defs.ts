@@ -55,6 +55,7 @@ export interface ModEventView {
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
     | $Typed<ChatBskyConvoDefs.MessageRef>
+    | $Typed<ChatBskyConvoDefs.ConvoRef>
     | { $type: string }
   subjectBlobCids: string[]
   createdBy: string
@@ -133,6 +134,7 @@ export interface SubjectStatusView {
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
     | $Typed<ChatBskyConvoDefs.MessageRef>
+    | $Typed<ChatBskyConvoDefs.ConvoRef>
     | { $type: string }
   hosting?: $Typed<AccountHosting> | $Typed<RecordHosting> | { $type: string }
   subjectBlobCids?: string[]

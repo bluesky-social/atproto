@@ -18253,6 +18253,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
               'lex:chat.bsky.convo.defs#messageRef',
+              'lex:chat.bsky.convo.defs#convoRef',
             ],
           },
           subjectBlobCids: {
@@ -18368,6 +18369,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
               'lex:chat.bsky.convo.defs#messageRef',
+              'lex:chat.bsky.convo.defs#convoRef',
             ],
           },
           hosting: {
