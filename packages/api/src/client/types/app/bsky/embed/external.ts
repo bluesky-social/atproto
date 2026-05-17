@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -37,7 +38,7 @@ export interface External {
   description: string
   thumb?: BlobRef
   /** The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record. */
-  associatedRecord?: string
+  associatedRecords?: ComAtprotoRepoStrongRef.Main[]
 }
 
 const hashExternal = 'external'
