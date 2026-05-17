@@ -15,7 +15,14 @@ import {
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed'
+import {
+  FeedItem,
+  Like,
+  Post,
+  Repost,
+  SiteStandardDocument,
+  SiteStandardPublication,
+} from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
@@ -606,7 +613,7 @@ export class Views {
       status: record.status,
       embed:
         record.embed && isExternalEmbedType(record.embed)
-          ? this.externalEmbed(did, record.embed)
+          ? this.externalEmbed(did, record.embed, state)
           : undefined,
       labels,
       expiresAt,
@@ -2068,7 +2075,7 @@ export class Views {
     } else if (isVideoEmbedType(embed)) {
       return this.videoEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbedType(embed)) {
-      return this.externalEmbed(creatorFromUri(postUri), embed)
+      return this.externalEmbed(creatorFromUri(postUri), embed, state)
     } else if (isRecordEmbedType(embed)) {
       return this.recordEmbed(postUri, embed, state, depth)
     } else if (isRecordWithMediaType(embed)) {
@@ -2113,8 +2120,18 @@ export class Views {
   externalEmbed(
     did: DidString,
     embed: ExternalEmbed,
+    state: HydrationState,
   ): $Typed<ExternalEmbedView> {
     const { uri, title, description, thumb } = embed.external
+    const { document, publication } = lookupAssociatedSiteStandardRecords(
+      embed.external.associatedRecords,
+      state,
+    )
+    // TODO(phase 2 cont.): use `document` / `publication` to populate
+    // viewExternal's createdAt, updatedAt, readingTime, source, and
+    // associatedRecords fields. Plumbing-only for now.
+    void document
+    void publication
     return app.bsky.embed.external.view.$build({
       external: {
         uri,
@@ -2289,7 +2306,7 @@ export class Views {
     } else if (isVideoEmbedType(embed.media)) {
       mediaEmbed = this.videoEmbed(creator, embed.media)
     } else if (isExternalEmbedType(embed.media)) {
-      mediaEmbed = this.externalEmbed(creator, embed.media)
+      mediaEmbed = this.externalEmbed(creator, embed.media, state)
     } else {
       return
     }
@@ -2457,4 +2474,38 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
+}
+
+/**
+ * Walks `external.associatedRecords` and returns the first hydrated
+ * `site.standard.document` and the first hydrated `site.standard.publication`
+ * found in `HydrationState`, looked up by the `"<uri>@<cid>"` composite key
+ * the dataplane uses.
+ *
+ * Returns `undefined` for either slot when no matching ref is present or the
+ * record wasn't hydrated. Refs of other collections are ignored.
+ */
+const lookupAssociatedSiteStandardRecords = (
+  associatedRecords: ExternalEmbed['external']['associatedRecords'],
+  state: HydrationState,
+): {
+  document: SiteStandardDocument | undefined
+  publication: SiteStandardPublication | undefined
+} => {
+  let document: SiteStandardDocument | undefined
+  let publication: SiteStandardPublication | undefined
+  if (!associatedRecords?.length) return { document, publication }
+  for (const ref of associatedRecords) {
+    const key = `${ref.uri}@${ref.cid}`
+    if (!document) {
+      const hit = state.siteStandardDocuments?.get(key)
+      if (hit) document = hit
+    }
+    if (!publication) {
+      const hit = state.siteStandardPublications?.get(key)
+      if (hit) publication = hit
+    }
+    if (document && publication) break
+  }
+  return { document, publication }
 }
