@@ -37,7 +37,7 @@ export interface External {
   title: string
   description: string
   thumb?: BlobRef
-  /** The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record. */
+  /** Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record. */
   associatedRecords?: ComAtprotoRepoStrongRef.Main[]
 }
 
@@ -79,8 +79,8 @@ export interface ViewExternal {
   /** Estimated reading time in minutes, if applicable and available. */
   readingTime?: number
   source?: ViewExternalSource
-  associatedRecord?: ComAtprotoRepoStrongRef.Main
-  associatedBskyPost?: ComAtprotoRepoStrongRef.Main
+  /** Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record. */
+  associatedRecords?: ComAtprotoRepoStrongRef.Main[]
 }
 
 const hashViewExternal = 'viewExternal'
@@ -102,7 +102,6 @@ export interface ViewExternalSource {
   name?: string
   description?: string
   theme?: ViewExternalSourceTheme
-  associatedRecord?: ComAtprotoRepoStrongRef.Main
 }
 
 const hashViewExternalSource = 'viewExternalSource'

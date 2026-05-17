@@ -2717,7 +2717,7 @@ export const schemaDict = {
               ref: 'lex:com.atproto.repo.strongRef',
             },
             description:
-              'The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
+              'Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record.',
           },
         },
       },
@@ -2769,17 +2769,14 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternalSource',
           },
-          associatedRecord: {
-            type: 'ref',
-            ref: 'lex:com.atproto.repo.strongRef',
+          associatedRecords: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
             description:
-              'A ref to the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
-          },
-          associatedBskyPost: {
-            type: 'ref',
-            ref: 'lex:com.atproto.repo.strongRef',
-            description:
-              'A ref to the Bluesky post that is the primary or canonical embedding location of the external content.',
+              'Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record.',
           },
         },
       },
@@ -2807,12 +2804,6 @@ export const schemaDict = {
           theme: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternalSourceTheme',
-          },
-          associatedRecord: {
-            type: 'ref',
-            ref: 'lex:com.atproto.repo.strongRef',
-            description:
-              'A ref to the Atmosphere record representing this external content source, if it exists. Example: a site.standard.publication record.',
           },
         },
       },

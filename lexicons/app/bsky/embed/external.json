@@ -31,7 +31,7 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
-          "description": "The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record."
+          "description": "Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record."
         }
       }
     },
@@ -68,15 +68,13 @@
           "description": "Estimated reading time in minutes, if applicable and available."
         },
         "source": { "type": "ref", "ref": "#viewExternalSource" },
-        "associatedRecord": {
-          "type": "ref",
-          "ref": "com.atproto.repo.strongRef",
-          "description": "A ref to the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record."
-        },
-        "associatedBskyPost": {
-          "type": "ref",
-          "ref": "com.atproto.repo.strongRef",
-          "description": "A ref to the Bluesky post that is the primary or canonical embedding location of the external content."
+        "associatedRecords": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          },
+          "description": "Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record."
         }
       }
     },
@@ -95,11 +93,6 @@
         "theme": {
           "type": "ref",
           "ref": "#viewExternalSourceTheme"
-        },
-        "associatedRecord": {
-          "type": "ref",
-          "ref": "com.atproto.repo.strongRef",
-          "description": "A ref to the Atmosphere record representing this external content source, if it exists. Example: a site.standard.publication record."
         }
       }
     },
