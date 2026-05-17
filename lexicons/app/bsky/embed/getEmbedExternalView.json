@@ -4,23 +4,37 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a hydrated view of an external embed for a given AT-URI.",
+      "description": "Get a hydrated view of an external embed for one or more site.standard.* AT-URIs. Returns the view plus the strongRefs of records that backed it, suitable for embedding into a post's external.associatedRecords.",
       "parameters": {
         "type": "params",
-        "required": ["uri"],
+        "required": ["uris"],
         "properties": {
-          "uri": {
-            "type": "string",
-            "format": "at-uri",
-            "description": "AT-URI of the record whose external embed view should be returned. Example: a site.standard.document record."
+          "uris": {
+            "type": "array",
+            "description": "AT-URIs of site.standard.* records to resolve. Typically a site.standard.document and optionally its associated site.standard.publication.",
+            "items": { "type": "string", "format": "at-uri" },
+            "maxLength": 4
           }
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
-          "type": "ref",
-          "ref": "app.bsky.embed.external#view"
+          "type": "object",
+          "properties": {
+            "view": {
+              "type": "ref",
+              "ref": "app.bsky.embed.external#view"
+            },
+            "associatedRecords": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.repo.strongRef"
+              },
+              "description": "StrongRefs (uri+cid) of the site.standard.* records that backed this view, suitable for embedding into a post's external.associatedRecords."
+            }
+          }
         }
       }
     }

@@ -114,6 +114,29 @@ export type SiteStandardRecordsByRef = {
   publications: SiteStandardPublications
 }
 
+/**
+ * Keyed by AT-URI. Used by the latest-version variant
+ * (`GetSiteStandardRecordsByURI`) — keying by URI alone is fine because the
+ * dataplane returns the latest indexed version per URI.
+ */
+export type SiteStandardDocumentsByUri = HydrationMap<
+  AtUriString,
+  SiteStandardDocument
+>
+/**
+ * Keyed by AT-URI. Used by the latest-version variant
+ * (`GetSiteStandardRecordsByURI`) — keying by URI alone is fine because the
+ * dataplane returns the latest indexed version per URI.
+ */
+export type SiteStandardPublicationsByUri = HydrationMap<
+  AtUriString,
+  SiteStandardPublication
+>
+export type SiteStandardRecordsByUri = {
+  documents: SiteStandardDocumentsByUri
+  publications: SiteStandardPublicationsByUri
+}
+
 export type ThreadRef = ItemRef & { threadRoot: AtUriString }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
@@ -401,6 +424,33 @@ export class FeedHydrator {
     for (const [key, entry] of Object.entries(res.publications)) {
       publications.set(
         key,
+        parseRecord(site.standard.publication.main, entry, includeTakedowns) ??
+          null,
+      )
+    }
+
+    return { documents, publications }
+  }
+
+  async getSiteStandardRecordsByURI(
+    uris: AtUriString[],
+    includeTakedowns = false,
+  ): Promise<SiteStandardRecordsByUri> {
+    const documents: SiteStandardDocumentsByUri = new HydrationMap()
+    const publications: SiteStandardPublicationsByUri = new HydrationMap()
+    if (!uris.length) return { documents, publications }
+
+    const res = await this.dataplane.getSiteStandardRecordsByURI({ uris })
+    for (const [uri, entry] of Object.entries(res.documents)) {
+      documents.set(
+        uri as AtUriString,
+        parseRecord(site.standard.document.main, entry, includeTakedowns) ??
+          null,
+      )
+    }
+    for (const [uri, entry] of Object.entries(res.publications)) {
+      publications.set(
+        uri as AtUriString,
         parseRecord(site.standard.publication.main, entry, includeTakedowns) ??
           null,
       )
