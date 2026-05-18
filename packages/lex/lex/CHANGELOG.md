@@ -1,5 +1,13 @@
 # @atproto/lex
 
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies [[`d8b2374`](https://github.com/bluesky-social/atproto/commit/d8b2374e1592d1dec65a33439791bc141f02397a)]:
+  - @atproto/lex-client@0.0.22
+  - @atproto/lex-installer@0.0.27
+
 ## 0.0.26
 
 ### Patch Changes
