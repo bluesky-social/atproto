@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import { AtUri } from '../src'
+import { readLines } from './utils'
 
 describe(AtUri, () => {
   describe('parses valid interop', () => {
@@ -426,9 +426,3 @@ describe(AtUri, () => {
     expect(() => urip.rkeySafe).toThrow()
   })
 })
-
-function readLines(filePath: string): string[] {
-  return readFileSync(filePath, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.startsWith('#') && line.length > 0)
-}

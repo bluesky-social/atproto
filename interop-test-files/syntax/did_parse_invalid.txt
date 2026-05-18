@@ -1,0 +1,14 @@
+# While syntactically valid, these DIDs are not valid according to the AT protocol specification and must not resolve in that context.
+
+# Percent encoding is only allowed to encode the port number, for localhost DIDs. Path are not allowed
+did:web:ex%61mple.com
+did:web:example.com:foo
+did:web:example.com%3A80
+did:web:example.com%3A443
+did:web:example.com%3A4443
+
+# PLC does not allow percent-encoding in the method-specific-id
+did:plc:%37%69%7A%61%36%64%65%32%64%77%61%70%32%73%62%6B%70%61%76%37%63%36%63%36
+did:plc:%37iza6de2dwap2sbkpav7c6c6
+did:plc:7iza6de2dwap2sbkpav7c6c6
+did:plc:7iza6de2dwap2sbkpav7c6c%36
