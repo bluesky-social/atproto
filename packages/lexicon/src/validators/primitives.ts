@@ -1,5 +1,5 @@
-import { CID } from 'multiformats/cid'
 import { graphemeLen, utf8Len } from '@atproto/common-web'
+import { ifCid } from '@atproto/lex-data'
 import { Lexicons } from '../lexicons'
 import {
   LexBoolean,
@@ -388,7 +388,7 @@ function cidLink(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  if (CID.asCID(value) === null) {
+  if (ifCid(value) === null) {
     return {
       success: false,
       error: new ValidationError(`${path} must be a CID`),
