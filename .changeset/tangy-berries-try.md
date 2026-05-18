@@ -6,4 +6,4 @@
 Add `applyWrites()` method to Lex SDK client class
 
 
-Thank you @TrySound
+Thank you [@TrySound](https://github.com/TrySound) for the suggestion
