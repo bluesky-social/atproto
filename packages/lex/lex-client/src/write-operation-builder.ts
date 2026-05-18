@@ -37,6 +37,8 @@ export type WriteOperationsFactory = (
   | Promise<AsyncIterable<WriteOperation>>
 
 export class WriteOperationHelper {
+  private constructor() {}
+
   create<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends WriteOperationCreateOptions<T>
       ? Main<T>
@@ -107,11 +109,9 @@ export class WriteOperationHelper {
     })
   }
 
-  static async from(
+  static async build(
     factory: WriteOperationsFactory,
   ): Promise<WriteOperation[]> {
-    const builder = new WriteOperationHelper()
-    const result = await factory(builder)
-    return toArrayAsync(result)
+    return toArrayAsync(await factory(new WriteOperationHelper()))
   }
 }

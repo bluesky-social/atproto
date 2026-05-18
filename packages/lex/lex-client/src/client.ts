@@ -742,7 +742,7 @@ export class Client implements Agent {
       ...options,
       body: {
         repo: options?.repo ?? this.assertDid,
-        writes: await WriteOperationHelper.from(factory),
+        writes: await WriteOperationHelper.build(factory),
         validate: options?.validate,
         swapCommit: options?.swapCommit,
       },
