@@ -11,7 +11,6 @@ import {
   RecordKeyOptions,
   getDefaultRecordKey,
   getLiteralRecordKey,
-  toArrayAsync,
 } from './util.js'
 
 export type WriteOperation =
@@ -30,11 +29,7 @@ export type WriteOperationDeleteOptions<T extends RecordSchema> =
 
 export type WriteOperationsFactory = (
   helper: WriteOperationHelper,
-) =>
-  | Iterable<WriteOperation>
-  | Promise<Iterable<WriteOperation>>
-  | AsyncIterable<WriteOperation>
-  | Promise<AsyncIterable<WriteOperation>>
+) => Iterable<WriteOperation>
 
 export class WriteOperationHelper {
   private constructor() {}
@@ -109,9 +104,7 @@ export class WriteOperationHelper {
     })
   }
 
-  static async build(
-    factory: WriteOperationsFactory,
-  ): Promise<WriteOperation[]> {
-    return toArrayAsync(await factory(new WriteOperationHelper()))
+  static build(factory: WriteOperationsFactory): WriteOperation[] {
+    return Array.from(factory(new WriteOperationHelper()))
   }
 }
