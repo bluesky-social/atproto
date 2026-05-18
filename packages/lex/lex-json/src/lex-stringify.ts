@@ -52,6 +52,14 @@ export function lexStringify(
     // If we hit a max call stack error, it means the structure is too deeply
     // nested for JSON.stringify. In this case, we can use our custom iterative
     // implementation to handle deep structures.
+    //
+    // @NOTE This is only needed on older versions of V8 (NodeJS < 26) that were
+    // using a recursive implementation of JSON.stringify. Newer versions of V8
+    // have an iterative implementation that can handle deeper nesting levels
+    // without hitting call stack limits, so this fallback should rarely be
+    // needed in modern environments.
+    //
+    // https://v8.dev/blog/json-stringify
     if (err instanceof RangeError) {
       return jsonStringifyDeep(json, JSON_STRINGIFY_DEEP_OPTIONS)
     }
