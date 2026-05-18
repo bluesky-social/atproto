@@ -842,29 +842,28 @@ describe('Client', () => {
           }
           return Response.json(body)
         })
-        const client = new Client({ fetchHandler, did })
 
-        const { body } = await client.applyWrites(
-          (op) => [
-            op.create(app.bsky.feed.post, {
-              text: 'Hello, world!',
-              createdAt: currentDatetimeString(),
-            }),
-
-            op.update(app.bsky.actor.profile, {
-              displayName: 'Alice',
-            }),
-
-            op.delete(app.bsky.feed.post, {
-              rkey: 'old-post',
-            }),
-
-            op.delete(app.bsky.actor.profile),
-          ],
-          {
-            validateResponse: false,
-          },
+        const client = new Client(
+          { fetchHandler, did },
+          { validateResponse: false },
         )
+
+        const { body } = await client.applyWrites((op) => [
+          op.create(app.bsky.feed.post, {
+            text: 'Hello, world!',
+            createdAt: currentDatetimeString(),
+          }),
+
+          op.update(app.bsky.actor.profile, {
+            displayName: 'Alice',
+          }),
+
+          op.delete(app.bsky.feed.post, {
+            rkey: 'old-post',
+          }),
+
+          op.delete(app.bsky.actor.profile),
+        ])
 
         expect(fetchHandler).toHaveBeenCalledTimes(1)
         expect(body.results).toEqual([
@@ -901,7 +900,10 @@ describe('Client', () => {
 
           return Response.json({})
         })
-        const client = new Client({ fetchHandler, did })
+        const client = new Client(
+          { fetchHandler, did },
+          { validateResponse: false },
+        )
 
         await client.applyWrites(function* (op) {
           yield op.delete(app.bsky.actor.profile)
