@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "internal.pds.getActorStoreMigrationStatus",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the status of actor store migrations.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["allMigrated", "versionCounts"],
+          "properties": {
+            "allMigrated": {
+              "type": "boolean",
+              "description": "Whether all actor stores have been migrated to the latest schema version."
+            },
+            "versionCounts": {
+              "type": "array",
+              "description": "The number of actors on each schema version.",
+              "items": {
+                "type": "ref",
+                "ref": "#versionCount"
+              }
+            }
+          }
+        }
+      }
+    },
+    "versionCount": {
+      "type": "object",
+      "required": ["version", "count"],
+      "properties": {
+        "version": { "type": "string" },
+        "count": { "type": "integer" }
+      }
+    }
+  }
+}

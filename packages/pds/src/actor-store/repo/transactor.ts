@@ -2,7 +2,7 @@ import * as crypto from '@atproto/crypto'
 import { Cid, parseCid } from '@atproto/lex-data'
 import { BlobStore, Repo, WriteOpAction, formatDataKey } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
 import { createWriteToOp, writeToOp } from '../../repo'
 import {
@@ -14,7 +14,8 @@ import {
   PreparedWrite,
 } from '../../repo/types'
 import { BlobTransactor } from '../blob/transactor'
-import { ActorDb } from '../db'
+import { ActorDb, getMigrationLevel } from '../db'
+import { getLatestStoreSchemaVersion } from '../db/migrations'
 import { RecordTransactor } from '../record/transactor'
 import { RepoReader } from './reader'
 import { SqlRepoTransactor } from './sql-repo-transactor'
@@ -49,6 +50,7 @@ export class RepoTransactor extends RepoReader {
 
   async createRepo(writes: PreparedCreate[]): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
+    await this.assertRepoSchemaCompatible()
     const commit = await Repo.formatInitCommit(
       this.storage,
       this.did,
@@ -76,6 +78,7 @@ export class RepoTransactor extends RepoReader {
     swapCommitCid?: Cid,
   ): Promise<CommitDataWithOps> {
     this.db.assertTransaction()
+    await this.assertRepoSchemaCompatible()
     if (writes.length > 200) {
       throw new InvalidRequestError('Too many writes. Max: 200')
     }
@@ -204,6 +207,25 @@ export class RepoTransactor extends RepoReader {
       } else if (write.action === WriteOpAction.Delete) {
         await this.record.deleteRecord(write.uri)
       }
+    }
+  }
+
+  // Refuse to perform a repo write if the actor store has been migrated past
+  // the latest schema version this process knows about. During a rolling
+  // deploy a newer container may migrate a store in a way that's
+  // incompatible with this container's repo write path.
+  // Specifically, the migration in https://github.com/bluesky-social/atproto/pull/4742
+  // cannot be backward-compatible on the write path.
+  // After that migration, this check could be removed.
+  private async assertRepoSchemaCompatible(): Promise<void> {
+    const lastMigration = await getMigrationLevel(this.db)
+    if (
+      lastMigration !== null &&
+      lastMigration > getLatestStoreSchemaVersion()
+    ) {
+      throw new InternalServerError(
+        'actor store schema is ahead of this server; a deploy may be in progress',
+      )
     }
   }
 

@@ -177,6 +177,13 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
+    this.ctx.actorStoreMigrator?.start()
+    if (!this.ctx.cfg.actorStore.migrateInBackground) {
+      // foregrounded: block startup until all actor stores are at the latest
+      // schema version. The migrator was constructed with throwOnError=true
+      // so any per-actor failure aborts startup.
+      await this.ctx.actorStoreMigrator?.running
+    }
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
@@ -187,6 +194,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
+    await this.ctx.actorStoreMigrator?.destroy()
     await this.ctx.sequencer.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
