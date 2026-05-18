@@ -2,30 +2,58 @@ import { describe, expect, it, test } from 'vitest'
 import { MAX_CBOR_NESTED_LEVELS, parseCid } from '@atproto/lex-data'
 import { lexStringify } from './lex-stringify.js'
 
+const [NODE_MAJOR_VERSION] = process.versions.node.split('.').map(Number)
+
 describe(lexStringify, () => {
   describe('deeply nested structure', () => {
-    it('handles deeply nested structures without throwing', () => {
-      const maxNestedLevels = 20_000
-      const objectNesting = maxNestedLevels + 0
+    it.runIf(NODE_MAJOR_VERSION < 26)(
+      'throws RangeError for deeply nested structures in older Node versions',
+      () => {
+        const maxNestedLevels = 50_000
+        const objectNesting = maxNestedLevels
 
-      type NestedObject = { level: number; nested?: NestedObject }
-      const nestedObject: NestedObject = { level: 0 }
-      let current: NestedObject = nestedObject
-      for (let i = 1; i < objectNesting; i++) {
-        current.nested = { level: i }
-        current = current.nested
-      }
+        type NestedObject = { level: number; nested?: NestedObject }
+        const nestedObject: NestedObject = { level: 0 }
+        let current: NestedObject = nestedObject
+        for (let i = 0; i < objectNesting; i++) {
+          current.nested = { level: i }
+          current = current.nested
+        }
 
-      lexStringify(nestedObject, { maxNestedLevels })
-    })
+        expect(() => {
+          lexStringify(nestedObject, { maxNestedLevels })
+        }).toThrow(RangeError)
+      },
+    )
+
+    it.runIf(NODE_MAJOR_VERSION >= 26)(
+      'handles deeply nested structures without throwing in newer Node versions',
+      () => {
+        const maxNestedLevels = 50_000
+        const objectNesting = maxNestedLevels
+
+        type NestedObject = { level: number; nested?: NestedObject }
+        const nestedObject: NestedObject = { level: 0 }
+        let current: NestedObject = nestedObject
+        for (let i = 0; i < objectNesting; i++) {
+          current.nested = { level: i }
+          current = current.nested
+        }
+
+        expect(() => {
+          lexStringify(nestedObject, { maxNestedLevels })
+        }).not.toThrow()
+      },
+    )
 
     it('throws error when structure exceeds max depth', () => {
       const maxNestedLevels = 50_000
+      const objectNesting = maxNestedLevels + 1
 
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 0; i <= maxNestedLevels; i++) {
+      for (let i = 0; i < objectNesting; i++) {
         current.nested = { level: i }
         current = current.nested
       }
