@@ -44,9 +44,7 @@ import { appendVary } from './util/http.js'
 import { WithRequired } from './util/types.js'
 
 // key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const getDefault = <M>(m: M): M extends { default: infer D } ? D : M =>
-  (m as any).default ?? m
-const KeyEncoder = getDefault(KeyEncoderModule)
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 export type VerifiedOptions = {
   checkTakedown?: boolean

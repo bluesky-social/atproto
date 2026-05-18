@@ -22,9 +22,7 @@ import {
 import { GetIdentityByDidResponse } from './proto/bsky_pb.js'
 
 // key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const getDefault = <M>(m: M): M extends { default: infer D } ? D : M =>
-  (m as any).default ?? m
-const KeyEncoder = getDefault(KeyEncoderModule)
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 type ReqCtx = {
   req: express.Request
