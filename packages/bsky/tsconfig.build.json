@@ -5,6 +5,6 @@
     "outDir": "./dist",
     "noUnusedLocals": false
   },
-  "include": ["./src", "../../tsconfig/cjs-default-exports.d.ts"],
+  "include": ["./src"],
   "exclude": ["./src/**/*.test.ts"]
 }

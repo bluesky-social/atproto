@@ -4,5 +4,5 @@
     "rootDir": ".",
     "noUnusedLocals": false
   },
-  "include": ["./tests", "../../tsconfig/cjs-default-exports.d.ts"]
+  "include": ["./tests"]
 }

@@ -195,7 +195,7 @@ class LeakyTxPlugin implements KyselyPlugin {
   }
 }
 
-type TxnEmitter = TypedEmitter<TxnEvents>
+type TxnEmitter = TypedEmitter.default<TxnEvents>
 
 type TxnEvents = {
   commit: () => void

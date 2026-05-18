@@ -3,11 +3,7 @@ import * as http from 'node:http'
 import * as plcLib from '@did-plc/lib'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import * as jose from 'jose'
-// eslint-disable-next-line import/default
-import _KeyEncoder from 'key-encoder'
-// TODO: key-encoder has no ESM version; this workaround handles CJS __esModule interop.
-// Ideally replace key-encoder with a maintained ESM alternative.
-const KeyEncoder = (_KeyEncoder as any).default ?? _KeyEncoder
+import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { getVerificationMaterial } from '@atproto/common'
@@ -25,6 +21,9 @@ import {
   createPublicKeyObject,
 } from '../src/auth-verifier.js'
 import { com } from '../src/lexicons/index.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 interface Account {
   did: DidString

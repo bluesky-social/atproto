@@ -1,10 +1,7 @@
 import crypto, { KeyObject } from 'node:crypto'
 import express from 'express'
 import * as jose from 'jose'
-// eslint-disable-next-line import/default
-import _KeyEncoder from 'key-encoder'
-// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const KeyEncoder = (_KeyEncoder as any).default ?? _KeyEncoder
+import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import { DidString, isDidString } from '@atproto/lex'
@@ -23,6 +20,9 @@ import {
   unpackIdentityKeys,
 } from './data-plane/index.js'
 import { GetIdentityByDidResponse } from './proto/bsky_pb.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 type ReqCtx = {
   req: express.Request
