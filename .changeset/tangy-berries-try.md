@@ -4,3 +4,6 @@
 ---
 
 Add `applyWrites()` method to Lex SDK client class
+
+
+Thank you @TrySound
