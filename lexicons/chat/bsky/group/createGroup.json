@@ -8,7 +8,7 @@
       "errors": [
         { "name": "AccountSuspended" },
         { "name": "BlockedActor" },
-        { "name": "GroupInvitesDisabled" },
+        { "name": "UserForbidsGroups" },
         { "name": "NotFollowedBySender" },
         { "name": "RecipientNotFound" }
       ],
