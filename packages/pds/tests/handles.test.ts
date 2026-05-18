@@ -22,6 +22,9 @@ jest.unstable_mockModule('node:dns/promises', () => {
   }
 })
 
+// Dynamic imports so jest.unstable_mockModule() registers before these modules
+// load node:dns/promises. Static imports link the full dep graph before any code
+// evaluates, which would bypass the mock. Remove once migrated to vitest.
 const { IdResolver } = await import('@atproto/identity')
 const { TestNetworkNoAppView } = await import('@atproto/dev-env')
 const { default: basicSeed } = await import('./seeds/basic.js')
