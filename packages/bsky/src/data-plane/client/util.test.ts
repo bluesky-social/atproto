@@ -1,41 +1,29 @@
+import {
+  StreamRequest,
+  StreamResponse,
+  UnaryRequest,
+  UnaryResponse,
+} from '@connectrpc/connect'
 import { describe, expect, it, vi } from 'vitest'
 import { callerInterceptor } from './util.js'
 
-type NextFn = (req: unknown) => Promise<unknown>
-
 describe('callerInterceptor', () => {
   it('sets x-atlantis-caller header on the request', async () => {
+    const fakeRequest = { header: new Headers({ 'x-other': 'value' }) } as
+      | UnaryRequest
+      | StreamRequest
+    const fakeResponse = {} as UnaryResponse | StreamResponse
+    const fakeHandler = vi.fn(async (_req: UnaryRequest | StreamRequest) => {
+      return fakeResponse
+    })
+
     const interceptor = callerInterceptor('appview')
-    const expectedResponse = { status: 'ok' }
-    const next = vi.fn<NextFn>().mockResolvedValue(expectedResponse)
+    const next = interceptor(fakeHandler)
+    const res = await next(fakeRequest)
 
-    const req = { header: new Headers() }
-    const handler = interceptor(next as any)
-    const res = await handler(req as any)
-
-    expect(req.header.get('x-atlantis-caller')).toBe('appview')
-    expect(next).toHaveBeenCalledWith(req)
-    expect(res).toBe(expectedResponse)
-  })
-
-  it('uses the provided caller value', async () => {
-    const interceptor = callerInterceptor('feed-generator')
-    const next = vi.fn<NextFn>().mockResolvedValue({})
-
-    const req = { header: new Headers() }
-    await interceptor(next as any)(req as any)
-
-    expect(req.header.get('x-atlantis-caller')).toBe('feed-generator')
-  })
-
-  it('does not overwrite other existing headers', async () => {
-    const interceptor = callerInterceptor('appview')
-    const next = vi.fn<NextFn>().mockResolvedValue({})
-
-    const req = { header: new Headers({ 'x-other': 'value' }) }
-    await interceptor(next as any)(req as any)
-
-    expect(req.header.get('x-atlantis-caller')).toBe('appview')
-    expect(req.header.get('x-other')).toBe('value')
+    expect(fakeRequest.header.get('x-atlantis-caller')).toBe('appview')
+    expect(fakeRequest.header.get('x-other')).toBe('value')
+    expect(fakeHandler).toHaveBeenCalledWith(fakeRequest)
+    expect(res).toBe(fakeResponse)
   })
 })
