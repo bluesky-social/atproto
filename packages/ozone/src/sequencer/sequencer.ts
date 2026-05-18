@@ -144,4 +144,4 @@ type SequencerEvents = {
   close: () => void
 }
 
-export type SequencerEmitter = TypedEmitter<SequencerEvents>
+export type SequencerEmitter = TypedEmitter.default<SequencerEvents>
