@@ -32,7 +32,7 @@
     "inlineSources": true,
     "sourceMap": true,
     "jsx": "preserve",
-    "module": "Node16",
+    "module": "Node20",
     "target": "ES2022"
   },
   "typeAcquisition": {

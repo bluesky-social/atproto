@@ -1,4 +1,4 @@
-import TLDs from 'tlds'
+import TLDs from 'tlds' with { type: 'json' }
 import { AppBskyRichtextFacet } from '../client/index.js'
 import { UnicodeString } from './unicode.js'
 import {
