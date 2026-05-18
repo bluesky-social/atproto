@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { mapDefined } from '@atproto/common'
+import { dedupeStrs, mapDefined } from '@atproto/common'
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { FeatureGatesClient, ScopedFeatureGatesClient } from '../feature-gates'
@@ -48,6 +48,7 @@ import {
   ThreadContexts,
   ThreadRef,
   Threadgates,
+  parseSiteStandardRecordKey,
 } from './feed'
 import {
   BlockEntry,
@@ -592,6 +593,15 @@ export class Hydrator {
       }
     }
 
+    const siteStandardRefs = siteStandardRefsFromPosts(
+      postsLayer0,
+      postsLayer1,
+      postsLayer2,
+    )
+    const siteStandardLabelSubjects = dedupeStrs(
+      siteStandardRefs.map((ref) => ref.uri),
+    )
+
     const [
       postAggs,
       postViewers,
@@ -609,7 +619,10 @@ export class Hydrator {
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
-      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
+      this.label.getLabelsForSubjects(
+        [...allPostUris, ...siteStandardLabelSubjects],
+        ctx.labelers,
+      ),
       this.hydratePostBlocks(posts, ctx),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
@@ -617,12 +630,12 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.feed.getSiteStandardRecordsByRef(
-        siteStandardRefsFromPosts(postsLayer0, postsLayer1, postsLayer2),
-      ),
+      this.feed.getSiteStandardRecordsByRef(siteStandardRefs),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
+      actionSiteStandardTakedownLabels(siteStandardDocuments, labels)
+      actionSiteStandardTakedownLabels(siteStandardPublications, labels)
     }
     // combine all hydration state
     return mergeManyStates(
@@ -1641,6 +1654,23 @@ const actionTakedownLabels = (
 ) => {
   for (const key of keys) {
     if (labels.get(key)?.isTakendown) {
+      hydrationMap.set(key, null)
+    }
+  }
+}
+
+/**
+ * Like `actionTakedownLabels`, but for hydration maps keyed by the
+ * `uri@cid` composite (see `siteStandardRecordKey`). Looks up labels by the
+ * subject URI extracted from the key.
+ */
+const actionSiteStandardTakedownLabels = (
+  hydrationMap: HydrationMap<string, unknown>,
+  labels: Labels,
+) => {
+  for (const key of hydrationMap.keys()) {
+    const { uri } = parseSiteStandardRecordKey(key)
+    if (labels.get(uri)?.isTakendown) {
       hydrationMap.set(key, null)
     }
   }
