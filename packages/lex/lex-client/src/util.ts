@@ -102,6 +102,17 @@ export function buildXrpcRequestHeaders(
   return headers
 }
 
+export async function toArrayAsync<T>(
+  iterable: AsyncIterable<T> | Iterable<T>,
+): Promise<T[]> {
+  if (Array.isArray(iterable)) return iterable
+  const result: T[] = []
+  for await (const item of iterable) {
+    result.push(item)
+  }
+  return result
+}
+
 export function toReadableStream(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {

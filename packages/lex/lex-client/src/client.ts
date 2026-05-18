@@ -18,7 +18,6 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { ApplyWritesOperations } from './apply-writes-operations.js'
 import { XrpcFailure } from './errors.js'
 import { com } from './lexicons/index.js'
 import {
@@ -36,6 +35,14 @@ import {
   getLiteralRecordKey,
 } from './util.js'
 import {
+  WriteOperation,
+  WriteOperationCreateOptions,
+  WriteOperationDeleteOptions,
+  WriteOperationHelper,
+  WriteOperationUpdateOptions,
+  WriteOperationsFactory,
+} from './write-operation-builder.js'
+import {
   XrpcOptions,
   XrpcRequestParams,
   XrpcRequestProcessingOptions,
@@ -43,25 +50,31 @@ import {
   xrpcSafe,
 } from './xrpc.js'
 
-export type {
-  AtIdentifierString,
-  CidString,
-  DidString,
-  Infer,
-  InferMethodInputBody,
-  InferMethodOutputBody,
-  InferRecordKey,
-  LexMap,
-  LexValue,
-  LexiconRecordKey,
-  Main,
-  NsidString,
-  Params,
+export {
+  type AtIdentifierString,
+  type CidString,
+  type DidString,
+  type Infer,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type InferRecordKey,
+  type LexMap,
+  type LexValue,
+  type LexiconRecordKey,
+  type Main,
+  type NsidString,
+  type Params,
   Procedure,
   Query,
   RecordSchema,
-  Restricted,
-  TypedLexMap,
+  type Restricted,
+  type TypedLexMap,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
+  WriteOperationHelper,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
 }
 
 /**
@@ -722,17 +735,14 @@ export class Client implements Agent {
    * ```
    */
   async applyWrites(
-    builder: (ops: ApplyWritesOperations) => void,
+    factory: WriteOperationsFactory,
     options?: ApplyWritesOptions,
   ) {
-    const repo = options?.repo ?? this.assertDid
-    const ops = new ApplyWritesOperations(options)
-    builder(ops)
     return this.xrpc(com.atproto.repo.applyWrites, {
       ...options,
       body: {
-        repo,
-        writes: ops.writes,
+        repo: options?.repo ?? this.assertDid,
+        writes: await WriteOperationHelper.from(factory),
         validate: options?.validate,
         swapCommit: options?.swapCommit,
       },

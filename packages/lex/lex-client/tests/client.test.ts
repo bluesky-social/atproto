@@ -845,22 +845,22 @@ describe('Client', () => {
         const client = new Client({ fetchHandler, did })
 
         const { body } = await client.applyWrites(
-          (ops) => {
-            ops.create(app.bsky.feed.post, {
+          (op) => [
+            op.create(app.bsky.feed.post, {
               text: 'Hello, world!',
               createdAt: currentDatetimeString(),
-            })
+            }),
 
-            ops.update(app.bsky.actor.profile, {
+            op.update(app.bsky.actor.profile, {
               displayName: 'Alice',
-            })
+            }),
 
-            ops.delete(app.bsky.feed.post, {
+            op.delete(app.bsky.feed.post, {
               rkey: 'old-post',
-            })
+            }),
 
-            ops.delete(app.bsky.actor.profile)
-          },
+            op.delete(app.bsky.actor.profile),
+          ],
           {
             validateResponse: false,
           },
@@ -903,13 +903,13 @@ describe('Client', () => {
         })
         const client = new Client({ fetchHandler, did })
 
-        await client.applyWrites((ops) => {
-          ops.delete(app.bsky.actor.profile)
-          ops.update(app.bsky.actor.profile, { displayName: 'Alice' })
+        await client.applyWrites(function* (op) {
+          yield op.delete(app.bsky.actor.profile)
+          yield op.update(app.bsky.actor.profile, { displayName: 'Alice' })
 
           expect(() => {
             // @ts-expect-error
-            ops.update(app.bsky.feed.post, {
+            op.update(app.bsky.feed.post, {
               text: 'Alice',
               createdAt: currentDatetimeString(),
             })
@@ -917,7 +917,7 @@ describe('Client', () => {
 
           expect(() => {
             // @ts-expect-error
-            ops.delete(app.bsky.feed.post)
+            op.delete(app.bsky.feed.post)
           }).toThrow()
         })
 
