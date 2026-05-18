@@ -12,6 +12,7 @@ import {
   CommitOp,
   PreparedCreate,
   PreparedWrite,
+  RecordAlreadyExistsError,
 } from '../../repo/types'
 import { BlobTransactor } from '../blob/transactor'
 import { ActorDb } from '../db'
@@ -134,6 +135,9 @@ export class RepoTransactor extends RepoReader {
         op.prev = currRecord
       }
       commitOps.push(op)
+      if (action === WriteOpAction.Create && currRecord) {
+        throw new RecordAlreadyExistsError(op.path)
+      }
       if (swapCid !== undefined) {
         if (action === WriteOpAction.Create && swapCid !== null) {
           throw new BadRecordSwapError(currRecord) // There should be no current record for a create
