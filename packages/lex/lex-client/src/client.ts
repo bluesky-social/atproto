@@ -719,13 +719,12 @@ export class Client implements Agent {
    *
    * @example
    * ```typescript
-   * const response = await client.applyWrites((ops) => {
-   *   ops.create(app.bsky.feed.post, { text: 'Hello!' })
-   *   ops.update(app.bsky.feed.post, { text: 'Updated text' }, { rkey: 'post123' })
-   *   ops.delete(app.bsky.feed.post, 'post456')
-   *
-   *   ops.update(app.bsky.actor.profile, { displayName: 'Alice' })
-   * }, {
+   * const response = await client.applyWrites((op) => [
+   *   op.create(app.bsky.feed.post, { text: 'Hello!' }),
+   *   op.update(app.bsky.feed.post, { text: 'Updated text' }, { rkey: 'post123' }),
+   *   op.delete(app.bsky.feed.post, 'post456'),
+   *   op.update(app.bsky.actor.profile, { displayName: 'Alice' }),
+   * ], {
    *   validate: true,
    * })
    *

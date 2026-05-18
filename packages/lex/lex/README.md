@@ -231,7 +231,7 @@ import * as app from './lexicons/app.js'
 const post = app.bsky.feed.post.$build({
   // No need to specify $type when using $build
   text: 'Hello, world!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 
 // For runtime validation, use $parse()/$validate() instead
@@ -275,7 +275,7 @@ import * as app from './lexicons/app.js'
 const data = {
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 }
 
 if (app.bsky.feed.post.$check(data)) {
@@ -296,7 +296,7 @@ try {
   const post = app.bsky.feed.post.$main.$parse({
     $type: 'app.bsky.feed.post',
     text: 'Hello!',
-    createdAt: l.toDatetimeString(new Date()),
+    createdAt: l.currentDatetimeString(),
   })
   // post is now typed and validated
   console.log(post.text)
@@ -320,7 +320,7 @@ import * as app from './lexicons/app.js'
 const value = {
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 }
 
 // Throws if no valid
@@ -340,7 +340,7 @@ import * as app from './lexicons/app.js'
 const result = app.bsky.feed.post.$safeParse({
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 
 if (result.success) {
@@ -374,7 +374,7 @@ const like = app.bsky.feed.like.$build({
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
     cid: 'bafyrei...',
   },
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 ```
 
@@ -655,7 +655,7 @@ import * as app from './lexicons/app.js'
 
 const result = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 
 console.log(result.uri) // at://did:plc:...
@@ -757,24 +757,24 @@ Perform an atomic batch of create, update, and delete operations in a single req
 import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
-const response = await client.applyWrites((ops) => {
+const response = await client.applyWrites((op) => [
   // Create a new post
-  ops.create(app.bsky.feed.post, {
+  op.create(app.bsky.feed.post, {
     text: 'Hello, world!',
-    createdAt: l.toDatetimeString(new Date()),
-  })
+    createdAt: l.currentDatetimeString(),
+  }),
 
   // Update profile
-  ops.update(app.bsky.actor.profile, {
+  op.update(app.bsky.actor.profile, {
     displayName: 'Alice',
     description: 'Updated bio',
-  })
+  }),
 
-  // Delete a post by rkey
-  ops.delete(app.bsky.feed.post, {
+  // Delete an existing post by rkey
+  op.delete(app.bsky.feed.post, {
     rkey: '3jxf7z2k3q2',
-  })
-})
+  }),
+])
 
 // Check results
 for (const result of response.body.results) {
@@ -1217,7 +1217,7 @@ export const likePost: Action<
     app.bsky.feed.like,
     {
       subject: { uri, cid },
-      createdAt: l.toDatetimeString(new Date()),
+      createdAt: l.currentDatetimeString(),
     },
     options,
   )
