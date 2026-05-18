@@ -207,6 +207,9 @@ export class RepoTransactor extends RepoReader {
     }
   }
 
+  // Note: We assume that MST nodes and records will never share a CID.
+  // This holds true since records are required to have a $type field, and
+  // MST nodes cannot.
   async getDuplicateRecordCids(
     cids: Cid[],
     touchedUris: AtUri[],

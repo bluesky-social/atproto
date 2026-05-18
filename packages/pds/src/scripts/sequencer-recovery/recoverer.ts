@@ -153,6 +153,11 @@ const processRepoCreation = async (
   blocks: BlockMap,
 ) => {
   const did = evt.repo
+  if (writes.length > 0) {
+    // initial commits are always write-empty in PDS-native account creation.
+    // if this ever changes, preorderOps must be derived correctly.
+    throw new Error('unexpected writes on initial commit during recovery')
+  }
   const keypair = await Secp256k1Keypair.create({ exportable: true })
   await ctx.actorStore.create(did, keypair)
   const commit: CommitData = {
@@ -163,6 +168,7 @@ const processRepoCreation = async (
     newBlocks: blocks,
     relevantBlocks: new BlockMap(),
     removedCids: new CidSet(),
+    preorderOps: [],
   }
   await ctx.actorStore.transact(did, async (actorTxn) => {
     await actorTxn.repo.storage.applyCommit(commit, true)

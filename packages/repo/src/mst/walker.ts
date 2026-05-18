@@ -9,36 +9,45 @@ type WalkerStatusProgress = {
   curr: NodeEntry
   walking: MST | null // walking set to null if `curr` is the root of the tree
   index: number
+  layer: number // layer of `curr`
 }
 
 type WalkerStatus = WalkerStatusDone | WalkerStatusProgress
 
+export const rightmostLeaf = async (node: MST): Promise<string | null> => {
+  const entries = await node.getEntries()
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i]
+    if (entry.isLeaf()) return entry.key
+    if (entry.isTree()) return rightmostLeaf(entry)
+  }
+  return null
+}
+
 export class MstWalker {
   stack: WalkerStatus[] = []
   status: WalkerStatus
+  lastLeafKey: string = ''
 
-  constructor(public root: MST) {
+  constructor(
+    public root: MST,
+    rootLayer: number,
+  ) {
     this.status = {
       done: false,
       curr: root,
       walking: null,
       index: 0,
+      layer: rootLayer,
     }
   }
 
-  // return the current layer of the node you are walking
+  // return the layer of the current node
   layer(): number {
     if (this.status.done) {
       throw new Error('Walk is done')
     }
-    if (this.status.walking) {
-      return this.status.walking.layer ?? 0
-    }
-    // if curr is the root of the tree, add 1
-    if (this.status.curr.isTree()) {
-      return (this.status.curr.layer ?? 0) + 1
-    }
-    throw new Error('Could not identify layer of walk')
+    return this.status.layer
   }
 
   // move to the next node in the subtree, skipping over the subtree
@@ -84,6 +93,7 @@ export class MstWalker {
           walking: this.status.curr,
           curr: next,
           index: 0,
+          layer: this.status.layer - 1,
         }
       }
       return
@@ -100,9 +110,11 @@ export class MstWalker {
     }
 
     this.stack.push({ ...this.status })
+    const childLayer = this.status.layer - 1
     this.status.walking = this.status.curr
     this.status.curr = next
     this.status.index = 0
+    this.status.layer = childLayer
   }
 
   // advance the pointer to the next node in the tree,
@@ -110,6 +122,7 @@ export class MstWalker {
   async advance(): Promise<void> {
     if (this.status.done) return
     if (this.status.curr.isLeaf()) {
+      this.lastLeafKey = this.status.curr.key
       await this.stepOver()
     } else {
       await this.stepInto()
