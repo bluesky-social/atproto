@@ -21,19 +21,3 @@ declare module 'nodemailer/lib/mailer' {
   }
   export = Mail
 }
-
-declare module 'key-encoder' {
-  export default class KeyEncoder {
-    constructor(algorithmOrOptions: string | object)
-    encodePublic(
-      key: string | Buffer,
-      originalEncoding: string,
-      destinationEncoding: string,
-    ): string
-    encodePrivate(
-      key: string | Buffer,
-      originalEncoding: string,
-      destinationEncoding: string,
-    ): string
-  }
-}

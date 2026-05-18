@@ -1,13 +1,18 @@
 import assert from 'node:assert'
 import * as nodeCrypto from 'node:crypto'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtUri, AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const getDefault = <M>(m: M): M extends { default: infer D } ? D : M =>
+  (m as any).default ?? m
+const KeyEncoder = getDefault(KeyEncoderModule)
 
 const keyEncoder = new KeyEncoder('secp256k1')
 
