@@ -9,6 +9,7 @@ RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
