@@ -2,6 +2,23 @@
 import '../src/env'
 import fs from 'node:fs/promises'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { type ServerEnvironment, readEnv } from '@atproto/pds'
+
+/** Merge `readEnv()` into TestPds options; omit undefined so dev-env defaults still apply. */
+function pdsEnvFromProcess(): Partial<ServerEnvironment> {
+  const raw = readEnv()
+  const out = Object.fromEntries(
+    Object.entries(raw).filter(([, v]) => v !== undefined),
+  ) as Partial<ServerEnvironment>
+  if (
+    out.serviceHandleDomains &&
+    Array.isArray(out.serviceHandleDomains) &&
+    out.serviceHandleDomains.length === 0
+  ) {
+    delete out.serviceHandleDomains
+  }
+  return out
+}
 
 function intEnv(name: string, fallback: number): number {
   const v = process.env[name]
@@ -43,17 +60,19 @@ async function main() {
     await fs.mkdir(process.env.PDS_BLOB_STORE_LOCATION, { recursive: true })
   }
 
-  // Create PDS + PLC network (no appview)
+  // Create PDS + PLC network (no appview).
+  // Railway / production: set PDS_* vars per packages/pds/src/config/env.ts (e.g. JWT, admin
+  // password, PDS_DEV_MODE, PDS_INVITE_REQUIRED). Omitted vars keep TestPds dev defaults.
   const network = await TestNetworkNoAppView.create({
     plc: {
       port: plcPort,
       ...(process.env.PLC_DB_URL ? { dbUrl: process.env.PLC_DB_URL } : {}),
     },
     pds: {
+      ...pdsEnvFromProcess(),
       port: pdsPort,
       hostname: pdsHostname,
       didPlcUrl,
-      inviteRequired: false, // No invite code needed
       ...(process.env.PDS_DATA_DIRECTORY
         ? { dataDirectory: process.env.PDS_DATA_DIRECTORY }
         : {}),
@@ -78,6 +97,9 @@ async function main() {
   console.log(`📡 PDS (internal): ${network.pds.url}`)
   console.log(`📡 PDS (clients):  ${pdsPublicUrl}`)
   console.log(`📡 PDS DID: ${network.pds.ctx.cfg.service.did}\n`)
+  console.log(
+    `🔧 PDS devMode=${network.pds.ctx.cfg.service.devMode} invites.required=${network.pds.ctx.cfg.invites.required}`,
+  )
   console.log(
     `💾 PDS storage:    ${process.env.PDS_DATA_DIRECTORY ?? 'tmpdir (ephemeral)'}`,
   )
