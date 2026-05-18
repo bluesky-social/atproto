@@ -8,7 +8,7 @@
       "errors": [
         { "name": "AccountSuspended" },
         { "name": "BlockedActor" },
-        { "name": "GroupInvitesDisabled" },
+        { "name": "UserForbidsGroups" },
         { "name": "ConvoLocked" },
         { "name": "InsufficientRole" },
         { "name": "InvalidConvo" },
