@@ -129,7 +129,7 @@ describe('account manager', () => {
 
     expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
 
-    const [params] = sendResetPasswordMock.mock.lastCall
+    const [params] = sendResetPasswordMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'bob.test',
       token: expect.any(String),
