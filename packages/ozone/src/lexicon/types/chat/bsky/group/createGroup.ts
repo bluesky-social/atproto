@@ -43,7 +43,7 @@ export interface HandlerError {
   error?:
     | 'AccountSuspended'
     | 'BlockedActor'
-    | 'GroupInvitesDisabled'
+    | 'UserForbidsGroups'
     | 'NotFollowedBySender'
     | 'RecipientNotFound'
 }
