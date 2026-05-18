@@ -29,7 +29,7 @@ import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
 import { RecordInfo, parseString } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
-import { app } from '../lexicons/index.js'
+import { app, site } from '../lexicons/index.js'
 import { Notification } from '../proto/bsky_pb'
 import {
   postUriToPostgateUri,
@@ -57,7 +57,11 @@ import {
   Embed,
   EmbedView,
   ExternalEmbed,
+  ExternalEmbedColorRgb,
+  ExternalEmbedSourceThemeView,
+  ExternalEmbedSourceView,
   ExternalEmbedView,
+  SiteStandardPublicationRecord,
   FeedViewPost,
   FollowRecord,
   GeneratorView,
@@ -2123,29 +2127,112 @@ export class Views {
     embed: ExternalEmbed,
     state: HydrationState,
   ): $Typed<ExternalEmbedView> {
-    const { uri, title, description, thumb } = embed.external
-    const { document, publication } = lookupAssociatedSiteStandardRecords(
+    // Start from the post-author-supplied embed values, then layer
+    // SS-derived fields on top so any field present on the hydrated
+    // document/publication wins.
+    const ssView = this.externalEmbedFromStandardSite(
       embed.external.associatedRefs,
       state,
     )
-    // TODO(phase 2 cont.): use `document` / `publication` to populate
-    // viewExternal's createdAt, updatedAt, readingTime, source, and
-    // associatedRefs fields. Plumbing-only for now.
-    void document
-    void publication
     return app.bsky.embed.external.view.$build({
       external: {
-        uri,
-        title,
-        description,
-        thumb: thumb
+        uri: embed.external.uri,
+        title: embed.external.title,
+        description: embed.external.description,
+        thumb: embed.external.thumb
           ? this.imgUriBuilder.getPresetUri(
               'feed_thumbnail',
               did,
-              getBlobCidString(thumb),
+              getBlobCidString(embed.external.thumb),
             )
           : undefined,
+        associatedRefs: embed.external.associatedRefs,
+        ...ssView,
       },
+    })
+  }
+
+  /**
+   * Returns a partial `viewExternal` overlay derived from `site.standard.*`
+   * records hydrated into `state`, or `undefined` when no SS records were
+   * hydrated for these refs. Only fields the SS records can supply are set;
+   * callers should layer this on top of a base view (typically built from
+   * the post's embed) so hydrated fields override author-supplied ones and
+   * un-hydratable fields fall through to the base.
+   *
+   * The `uri` field is intentionally not included here since we want to
+   * respect the embed's supplied URI (which might include tracking params, for
+   * example) rather than forcing it to be the canonical URI from the SS
+   * record.
+   */
+  externalEmbedFromStandardSite(
+    associatedRefs: ExternalEmbed['external']['associatedRefs'],
+    state: HydrationState,
+  ): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
+    const { document, publication } = lookupAssociatedSiteStandardRecords(
+      associatedRefs,
+      state,
+    )
+    if (!document && !publication) return undefined
+
+    const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}
+
+    const title = document?.info.record.title ?? publication?.info.record.name
+    if (title) overlay.title = title
+
+    const description =
+      document?.info.record.description ??
+      publication?.info.record.description
+    if (description) overlay.description = description
+
+    const docCover = document?.info.record.coverImage
+    if (docCover) {
+      overlay.thumb = this.imgUriBuilder.getPresetUri(
+        'feed_thumbnail',
+        creatorFromUri(document.ref.uri),
+        getBlobCidString(docCover),
+      )
+    }
+
+    if (document?.info.record.publishedAt) {
+      overlay.createdAt = document.info.record.publishedAt
+    }
+    if (document?.info.record.updatedAt) {
+      overlay.updatedAt = document.info.record.updatedAt
+    }
+
+    const labelSubject = document?.ref.uri ?? publication?.ref.uri
+    const labels = labelSubject
+      ? state.labels?.getBySubject(labelSubject)
+      : undefined
+    if (labels?.length) overlay.labels = labels
+
+    if (publication) {
+      overlay.source = this.externalEmbedSource(publication)
+    }
+
+    return overlay
+  }
+
+  externalEmbedSource(
+    publication: AssociatedSiteStandardRecord<SiteStandardPublication>,
+  ): $Typed<ExternalEmbedSourceView> {
+    const { record } = publication.info
+    const pubDid = creatorFromUri(publication.ref.uri)
+    return app.bsky.embed.external.viewExternalSource.$build({
+      uri: record.url,
+      icon: record.icon
+        ? this.imgUriBuilder.getPresetUri(
+            'avatar',
+            pubDid,
+            getBlobCidString(record.icon),
+          )
+        : undefined,
+      name: record.name,
+      description: record.description,
+      theme: record.basicTheme
+        ? buildExternalEmbedSourceTheme(record.basicTheme)
+        : undefined,
     })
   }
 
@@ -2477,12 +2564,20 @@ const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
 }
 
+type AssociatedSiteStandardRecord<T> = {
+  ref: { uri: AtUriString; cid: string }
+  info: T
+}
+
 /**
  * Walks `external.associatedRefs` and returns the first hydrated
  * `site.standard.document` and the first hydrated `site.standard.publication`
  * found in `HydrationState`. The hydration maps are keyed by `uri@cid` so a
  * single batch can carry multiple versions of the same URI (different posts
  * pinning different cids); the lookup is version-exact via that composite key.
+ *
+ * Each slot also carries the matching `ref` so callers can recover the owner
+ * DID for blob-cdn URL building, etc.
  *
  * Returns `undefined` for either slot when no matching ref is present or the
  * record wasn't hydrated. Refs of other collections are ignored.
@@ -2491,23 +2586,58 @@ const lookupAssociatedSiteStandardRecords = (
   associatedRefs: ExternalEmbed['external']['associatedRefs'],
   state: HydrationState,
 ): {
-  document: SiteStandardDocument | undefined
-  publication: SiteStandardPublication | undefined
+  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  publication:
+    | AssociatedSiteStandardRecord<SiteStandardPublication>
+    | undefined
 } => {
-  let document: SiteStandardDocument | undefined
-  let publication: SiteStandardPublication | undefined
+  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  let publication:
+    | AssociatedSiteStandardRecord<SiteStandardPublication>
+    | undefined
   if (!associatedRefs?.length) return { document, publication }
   for (const ref of associatedRefs) {
     const key = siteStandardRecordKey(ref.uri, ref.cid)
     if (!document) {
       const hit = state.siteStandardDocuments?.get(key)
-      if (hit) document = hit
+      if (hit) document = { ref, info: hit }
     }
     if (!publication) {
       const hit = state.siteStandardPublications?.get(key)
-      if (hit) publication = hit
+      if (hit) publication = { ref, info: hit }
     }
     if (document && publication) break
   }
   return { document, publication }
+}
+
+const buildExternalEmbedSourceTheme = (
+  theme: SiteStandardPublicationRecord['basicTheme'],
+): ExternalEmbedSourceThemeView | undefined => {
+  if (!theme) return undefined
+  const view: ExternalEmbedSourceThemeView = {}
+  const background = toColorRgb(theme.background)
+  const foreground = toColorRgb(theme.foreground)
+  const accent = toColorRgb(theme.accent)
+  const accentForeground = toColorRgb(theme.accentForeground)
+  if (background) view.backgroundRGB = background
+  if (foreground) view.foregroundRGB = foreground
+  if (accent) view.accentRGB = accent
+  if (accentForeground) view.accentForegroundRGB = accentForeground
+  // No fields set -> don't decorate the view at all.
+  if (!background && !foreground && !accent && !accentForeground) {
+    return undefined
+  }
+  return view
+}
+
+const toColorRgb = (
+  color: { $type?: unknown } | undefined,
+): ExternalEmbedColorRgb | undefined => {
+  if (!color || !site.standard.theme.color.rgb.isTypeOf(color)) return undefined
+  // `isTypeOf` narrows $type but not the shape; pull rgb fields off the
+  // unchecked input. Records that fail full validation are dropped above
+  // by the SS record parser, so by the time we get here the shape matches.
+  const { r, g, b } = color as unknown as { r: number; g: number; b: number }
+  return app.bsky.embed.external.colorRGB.$build({ r, g, b })
 }
