@@ -1,0 +1,9 @@
+{
+  "name": "dataplane-service",
+  "private": true,
+  "packageManager": "pnpm@8.15.9",
+  "dependencies": {
+    "@atproto/bsky": "workspace:^",
+    "dd-trace": "3.13.2"
+  }
+}
