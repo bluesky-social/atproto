@@ -67,6 +67,10 @@
           "type": "integer",
           "description": "Estimated reading time in minutes, if applicable and available."
         },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "source": { "type": "ref", "ref": "#viewExternalSource" },
         "associatedRefs": {
           "type": "array",
@@ -100,19 +104,19 @@
       "type": "object",
       "description": "The theme colors of an external source, such as a site.standard.publication. These colors may be used when rendering an embed from that source.",
       "properties": {
-        "background": {
+        "backgroundRGB": {
           "type": "ref",
           "ref": "#colorRGB"
         },
-        "foreground": {
+        "foregroundRGB": {
           "type": "ref",
           "ref": "#colorRGB"
         },
-        "accent": {
+        "accentRGB": {
           "type": "ref",
           "ref": "#colorRGB"
         },
-        "accentForeground": {
+        "accentForegroundRGB": {
           "type": "ref",
           "ref": "#colorRGB"
         }

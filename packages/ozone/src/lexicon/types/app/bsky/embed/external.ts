@@ -10,6 +10,7 @@ import {
   type OmitKey,
 } from '../../../../util'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -78,6 +79,7 @@ export interface ViewExternal {
   updatedAt?: string
   /** Estimated reading time in minutes, if applicable and available. */
   readingTime?: number
+  labels?: ComAtprotoLabelDefs.Label[]
   source?: ViewExternalSource
   /** StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
   associatedRefs?: ComAtprotoRepoStrongRef.Main[]
@@ -117,10 +119,10 @@ export function validateViewExternalSource<V>(v: V) {
 /** The theme colors of an external source, such as a site.standard.publication. These colors may be used when rendering an embed from that source. */
 export interface ViewExternalSourceTheme {
   $type?: 'app.bsky.embed.external#viewExternalSourceTheme'
-  background?: ColorRGB
-  foreground?: ColorRGB
-  accent?: ColorRGB
-  accentForeground?: ColorRGB
+  backgroundRGB?: ColorRGB
+  foregroundRGB?: ColorRGB
+  accentRGB?: ColorRGB
+  accentForegroundRGB?: ColorRGB
 }
 
 const hashViewExternalSourceTheme = 'viewExternalSourceTheme'

@@ -2765,6 +2765,13 @@ export const schemaDict = {
             description:
               'Estimated reading time in minutes, if applicable and available.',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           source: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternalSource',
@@ -2812,19 +2819,19 @@ export const schemaDict = {
         description:
           'The theme colors of an external source, such as a site.standard.publication. These colors may be used when rendering an embed from that source.',
         properties: {
-          background: {
+          backgroundRGB: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#colorRGB',
           },
-          foreground: {
+          foregroundRGB: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#colorRGB',
           },
-          accent: {
+          accentRGB: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#colorRGB',
           },
-          accentForeground: {
+          accentForegroundRGB: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#colorRGB',
           },
