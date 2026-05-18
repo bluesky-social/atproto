@@ -37,7 +37,7 @@ describe('pds like views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     frankie = sc.dids.frankie
-  })
+  }, 20000) // @NOTE occasionally takes a long time in CI, possibly due to size of likesSeed()
 
   afterAll(async () => {
     await network.close()
