@@ -9980,19 +9980,20 @@ export class GetSiteStandardRecordsByURIRequest extends Message<GetSiteStandardR
  */
 export class GetSiteStandardRecordsByURIResponse extends Message<GetSiteStandardRecordsByURIResponse> {
   /**
-   * Latest indexed version of each requested document, keyed by document AT-URI.
+   * Latest indexed version of each requested document.
    *
-   * @generated from field: map<string, bsky.Record> documents = 1;
+   * @generated from field: repeated bsky.SiteStandardRecord documents = 1;
    */
-  documents: { [key: string]: Record } = {};
+  documents: SiteStandardRecord[] = [];
 
   /**
    * Latest indexed version of each requested publication AND each publication
-   * resolved from a document's `site` field, keyed by publication AT-URI.
+   * resolved from a document's `site` field. Each publication appears at most
+   * once across the two sources.
    *
-   * @generated from field: map<string, bsky.Record> publications = 2;
+   * @generated from field: repeated bsky.SiteStandardRecord publications = 2;
    */
-  publications: { [key: string]: Record } = {};
+  publications: SiteStandardRecord[] = [];
 
   constructor(data?: PartialMessage<GetSiteStandardRecordsByURIResponse>) {
     super();
@@ -10002,8 +10003,8 @@ export class GetSiteStandardRecordsByURIResponse extends Message<GetSiteStandard
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetSiteStandardRecordsByURIResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "documents", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: Record} },
-    { no: 2, name: "publications", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: Record} },
+    { no: 1, name: "documents", kind: "message", T: SiteStandardRecord, repeated: true },
+    { no: 2, name: "publications", kind: "message", T: SiteStandardRecord, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSiteStandardRecordsByURIResponse {
@@ -10069,22 +10070,20 @@ export class GetSiteStandardRecordsByRefRequest extends Message<GetSiteStandardR
  */
 export class GetSiteStandardRecordsByRefResponse extends Message<GetSiteStandardRecordsByRefResponse> {
   /**
-   * Document version exactly matching each requested doc ref, keyed by the
-   * composite "<uri>@<cid>" string.
+   * Document version exactly matching each requested doc ref.
    *
-   * @generated from field: map<string, bsky.Record> documents = 1;
+   * @generated from field: repeated bsky.SiteStandardRecord documents = 1;
    */
-  documents: { [key: string]: Record } = {};
+  documents: SiteStandardRecord[] = [];
 
   /**
-   * Publication version exactly matching each requested pub ref, keyed by the
-   * composite "<uri>@<cid>" string. This RPC does NOT auto-resolve publications
-   * referenced by documents — callers who want a paired publication should
-   * pass its ref explicitly.
+   * Publication version exactly matching each requested pub ref. This RPC
+   * does NOT auto-resolve publications referenced by documents — callers who
+   * want a paired publication should pass its ref explicitly.
    *
-   * @generated from field: map<string, bsky.Record> publications = 2;
+   * @generated from field: repeated bsky.SiteStandardRecord publications = 2;
    */
-  publications: { [key: string]: Record } = {};
+  publications: SiteStandardRecord[] = [];
 
   constructor(data?: PartialMessage<GetSiteStandardRecordsByRefResponse>) {
     super();
@@ -10094,8 +10093,8 @@ export class GetSiteStandardRecordsByRefResponse extends Message<GetSiteStandard
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetSiteStandardRecordsByRefResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "documents", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: Record} },
-    { no: 2, name: "publications", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: Record} },
+    { no: 1, name: "documents", kind: "message", T: SiteStandardRecord, repeated: true },
+    { no: 2, name: "publications", kind: "message", T: SiteStandardRecord, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSiteStandardRecordsByRefResponse {
@@ -10112,6 +10111,52 @@ export class GetSiteStandardRecordsByRefResponse extends Message<GetSiteStandard
 
   static equals(a: GetSiteStandardRecordsByRefResponse | PlainMessage<GetSiteStandardRecordsByRefResponse> | undefined, b: GetSiteStandardRecordsByRefResponse | PlainMessage<GetSiteStandardRecordsByRefResponse> | undefined): boolean {
     return proto3.util.equals(GetSiteStandardRecordsByRefResponse, a, b);
+  }
+}
+
+/**
+ * SiteStandardRecord pairs a record with its addressing ref so callers can
+ * build a uri- or (uri,cid)-keyed lookup without server-side encoding.
+ *
+ * @generated from message bsky.SiteStandardRecord
+ */
+export class SiteStandardRecord extends Message<SiteStandardRecord> {
+  /**
+   * @generated from field: bsky.RecordRef ref = 1;
+   */
+  ref?: RecordRef;
+
+  /**
+   * @generated from field: bsky.Record record = 2;
+   */
+  record?: Record;
+
+  constructor(data?: PartialMessage<SiteStandardRecord>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.SiteStandardRecord";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "ref", kind: "message", T: RecordRef },
+    { no: 2, name: "record", kind: "message", T: Record },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SiteStandardRecord {
+    return new SiteStandardRecord().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SiteStandardRecord {
+    return new SiteStandardRecord().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SiteStandardRecord {
+    return new SiteStandardRecord().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SiteStandardRecord | PlainMessage<SiteStandardRecord> | undefined, b: SiteStandardRecord | PlainMessage<SiteStandardRecord> | undefined): boolean {
+    return proto3.util.equals(SiteStandardRecord, a, b);
   }
 }
 

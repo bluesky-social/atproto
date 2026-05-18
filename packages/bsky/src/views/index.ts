@@ -22,6 +22,7 @@ import {
   Repost,
   SiteStandardDocument,
   SiteStandardPublication,
+  siteStandardRecordKey,
 } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
@@ -2479,8 +2480,9 @@ const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
 /**
  * Walks `external.associatedRefs` and returns the first hydrated
  * `site.standard.document` and the first hydrated `site.standard.publication`
- * found in `HydrationState`, looked up by the `"<uri>@<cid>"` composite key
- * the dataplane uses.
+ * found in `HydrationState`. The hydration maps are keyed by `uri@cid` so a
+ * single batch can carry multiple versions of the same URI (different posts
+ * pinning different cids); the lookup is version-exact via that composite key.
  *
  * Returns `undefined` for either slot when no matching ref is present or the
  * record wasn't hydrated. Refs of other collections are ignored.
@@ -2496,7 +2498,7 @@ const lookupAssociatedSiteStandardRecords = (
   let publication: SiteStandardPublication | undefined
   if (!associatedRefs?.length) return { document, publication }
   for (const ref of associatedRefs) {
-    const key = `${ref.uri}@${ref.cid}`
+    const key = siteStandardRecordKey(ref.uri, ref.cid)
     if (!document) {
       const hit = state.siteStandardDocuments?.get(key)
       if (hit) document = hit

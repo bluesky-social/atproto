@@ -3,6 +3,7 @@ import { LexMap } from '@atproto/lex'
 import { AtUri, AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
+import { parseSiteStandardRecordKey } from '../../../../hydration/feed'
 import { app, com } from '../../../../lexicons/index.js'
 import { StrongRef } from '../../../../views/types.js'
 
@@ -25,14 +26,20 @@ export default function (server: Server, ctx: AppContext) {
       // associatedRecords[i] is the raw record body for associatedRefs[i].
       const associatedRefs: StrongRef[] = []
       const associatedRecords: LexMap[] = []
-      for (const [uri, info] of documents) {
+      for (const [key, info] of documents) {
         if (!info) continue
-        associatedRefs.push(com.atproto.repo.strongRef.$build({ uri, cid: info.cid }))
+        const { uri } = parseSiteStandardRecordKey(key)
+        associatedRefs.push(
+          com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
+        )
         associatedRecords.push(info.record as LexMap)
       }
-      for (const [uri, info] of publications) {
+      for (const [key, info] of publications) {
         if (!info) continue
-        associatedRefs.push(com.atproto.repo.strongRef.$build({ uri, cid: info.cid }))
+        const { uri } = parseSiteStandardRecordKey(key)
+        associatedRefs.push(
+          com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
+        )
         associatedRecords.push(info.record as LexMap)
       }
 

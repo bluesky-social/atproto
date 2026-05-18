@@ -4,9 +4,9 @@ import { Database } from '../db'
 
 export default (_db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getSiteStandardRecordsByURI() {
-    return { documents: {}, publications: {} }
+    return { documents: [], publications: [] }
   },
   async getSiteStandardRecordsByRef() {
-    return { documents: {}, publications: {} }
+    return { documents: [], publications: [] }
   },
 })

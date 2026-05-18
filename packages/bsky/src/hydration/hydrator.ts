@@ -1513,10 +1513,11 @@ const externalAssociatedRefs = (
 const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 
 /**
- * Collects standard.site refs across all post layers, deduped by the
- * `"<uri>@<cid>"` composite key — this is the same key the dataplane uses to
- * address an exact record version (see `GetSiteStandardRecordsByRef`), so it
- * also matches how downstream hydration maps key their entries.
+ * Collects standard.site refs across all post layers, deduped by `uri+cid` so
+ * the dataplane batch is minimal even if multiple posts in the layer reference
+ * the same exact version of an SS record. The downstream hydration maps are
+ * keyed by AT-URI; the cid lives on each `RecordInfo` and is checked at lookup
+ * time by view-layer code.
  */
 const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
   const seen = new Set<string>()
