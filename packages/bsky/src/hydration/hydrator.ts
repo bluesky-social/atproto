@@ -1489,20 +1489,20 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
 }
 
 /**
- * Returns every strongRef the post embedded as `external.associatedRecords`,
+ * Returns every strongRef the post embedded as `external.associatedRefs`,
  * regardless of collection. Callers are responsible for filtering to NSIDs
  * they care about.
  */
-const externalAssociatedRecords = (
+const externalAssociatedRefs = (
   post: Post['record'],
 ): { uri: AtUriString; cid: string }[] => {
   const embed = post?.embed
   if (!embed) return []
   if (isExternalEmbedType(embed)) {
-    return embed.external.associatedRecords ?? []
+    return embed.external.associatedRefs ?? []
   }
   if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
-    return embed.media.external.associatedRecords ?? []
+    return embed.media.external.associatedRefs ?? []
   }
   return []
 }
@@ -1524,7 +1524,7 @@ const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
   for (const layer of postLayers) {
     for (const item of layer.values()) {
       if (!item) continue
-      for (const ref of externalAssociatedRecords(item.record)) {
+      for (const ref of externalAssociatedRefs(item.record)) {
         if (!new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)) {
           continue
         }

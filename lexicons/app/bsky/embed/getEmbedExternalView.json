@@ -11,7 +11,7 @@
         "properties": {
           "uris": {
             "type": "array",
-            "description": "AT-URIs of site.standard.* records to resolve. Typically a site.standard.document and optionally its associated site.standard.publication.",
+            "description": "AT-URIs of any Atmosphere records that can be resolved and used to construct #externalView views. Example: a site.standard.document and optionally its associated site.standard.publication.",
             "items": { "type": "string", "format": "at-uri" },
             "maxLength": 4
           }
@@ -26,13 +26,20 @@
               "type": "ref",
               "ref": "app.bsky.embed.external#view"
             },
-            "associatedRecords": {
+            "associatedRefs": {
               "type": "array",
               "items": {
                 "type": "ref",
                 "ref": "com.atproto.repo.strongRef"
               },
-              "description": "StrongRefs (uri+cid) of the site.standard.* records that backed this view, suitable for embedding into a post's external.associatedRecords."
+              "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
+            },
+            "associatedRecords": {
+              "type": "array",
+              "items": {
+                "type": "unknown",
+                "description": "The raw record data of the Atmosphere records that backed this view. This is returned for convenience, to avoid the need for the client to separately fetch the record data for the associatedRefs. Example: the site.standard.document and site.standard.publication records that backed this view."
+              }
             }
           }
         }

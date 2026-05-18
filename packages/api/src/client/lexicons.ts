@@ -2710,14 +2710,14 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
-          associatedRecords: {
+          associatedRefs: {
             type: 'array',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
             description:
-              'Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record.',
+              "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
           },
         },
       },
@@ -2769,14 +2769,14 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternalSource',
           },
-          associatedRecords: {
+          associatedRefs: {
             type: 'array',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
             description:
-              'Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record.',
+              "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
           },
         },
       },
@@ -2862,24 +2862,50 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a hydrated view of an external embed for a given AT-URI.',
+          "Get a hydrated view of an external embed for one or more site.standard.* AT-URIs. Returns the view plus the strongRefs of records that backed it, suitable for embedding into a post's external.associatedRecords.",
         parameters: {
           type: 'params',
-          required: ['uri'],
+          required: ['uris'],
           properties: {
-            uri: {
-              type: 'string',
-              format: 'at-uri',
+            uris: {
+              type: 'array',
               description:
-                'AT-URI of the record whose external embed view should be returned. Example: a site.standard.document record.',
+                'AT-URIs of any Atmosphere records that can be resolved and used to construct #externalView views. Example: a site.standard.document and optionally its associated site.standard.publication.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 4,
             },
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.embed.external#view',
+            type: 'object',
+            properties: {
+              view: {
+                type: 'ref',
+                ref: 'lex:app.bsky.embed.external#view',
+              },
+              associatedRefs: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.repo.strongRef',
+                },
+                description:
+                  "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
+              },
+              associatedRecords: {
+                type: 'array',
+                items: {
+                  type: 'unknown',
+                  description:
+                    'The raw record data of the Atmosphere records that backed this view. This is returned for convenience, to avoid the need for the client to separately fetch the record data for the associatedRefs. Example: the site.standard.document and site.standard.publication records that backed this view.',
+                },
+              },
+            },
           },
         },
       },

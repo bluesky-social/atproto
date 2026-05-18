@@ -2124,12 +2124,12 @@ export class Views {
   ): $Typed<ExternalEmbedView> {
     const { uri, title, description, thumb } = embed.external
     const { document, publication } = lookupAssociatedSiteStandardRecords(
-      embed.external.associatedRecords,
+      embed.external.associatedRefs,
       state,
     )
     // TODO(phase 2 cont.): use `document` / `publication` to populate
     // viewExternal's createdAt, updatedAt, readingTime, source, and
-    // associatedRecords fields. Plumbing-only for now.
+    // associatedRefs fields. Plumbing-only for now.
     void document
     void publication
     return app.bsky.embed.external.view.$build({
@@ -2477,7 +2477,7 @@ const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
 }
 
 /**
- * Walks `external.associatedRecords` and returns the first hydrated
+ * Walks `external.associatedRefs` and returns the first hydrated
  * `site.standard.document` and the first hydrated `site.standard.publication`
  * found in `HydrationState`, looked up by the `"<uri>@<cid>"` composite key
  * the dataplane uses.
@@ -2486,7 +2486,7 @@ const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
  * record wasn't hydrated. Refs of other collections are ignored.
  */
 const lookupAssociatedSiteStandardRecords = (
-  associatedRecords: ExternalEmbed['external']['associatedRecords'],
+  associatedRefs: ExternalEmbed['external']['associatedRefs'],
   state: HydrationState,
 ): {
   document: SiteStandardDocument | undefined
@@ -2494,8 +2494,8 @@ const lookupAssociatedSiteStandardRecords = (
 } => {
   let document: SiteStandardDocument | undefined
   let publication: SiteStandardPublication | undefined
-  if (!associatedRecords?.length) return { document, publication }
-  for (const ref of associatedRecords) {
+  if (!associatedRefs?.length) return { document, publication }
+  for (const ref of associatedRefs) {
     const key = `${ref.uri}@${ref.cid}`
     if (!document) {
       const hit = state.siteStandardDocuments?.get(key)

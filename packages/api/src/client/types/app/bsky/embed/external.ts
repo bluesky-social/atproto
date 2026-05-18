@@ -37,8 +37,8 @@ export interface External {
   title: string
   description: string
   thumb?: BlobRef
-  /** Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record. */
-  associatedRecords?: ComAtprotoRepoStrongRef.Main[]
+  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
+  associatedRefs?: ComAtprotoRepoStrongRef.Main[]
 }
 
 const hashExternal = 'external'
@@ -79,8 +79,8 @@ export interface ViewExternal {
   /** Estimated reading time in minutes, if applicable and available. */
   readingTime?: number
   source?: ViewExternalSource
-  /** Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record. */
-  associatedRecords?: ComAtprotoRepoStrongRef.Main[]
+  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
+  associatedRefs?: ComAtprotoRepoStrongRef.Main[]
 }
 
 const hashViewExternal = 'viewExternal'

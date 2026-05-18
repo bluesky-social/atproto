@@ -1,8 +1,10 @@
-import { dedupeStrs, mapDefined } from '@atproto/common'
+import { dedupeStrs } from '@atproto/common'
+import { LexMap } from '@atproto/lex'
 import { AtUri, AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { app } from '../../../../lexicons/index.js'
+import { app, com } from '../../../../lexicons/index.js'
+import { StrongRef } from '../../../../views/types.js'
 
 const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 
@@ -19,28 +21,34 @@ export default function (server: Server, ctx: AppContext) {
       const { documents, publications } =
         await ctx.hydrator.feed.getSiteStandardRecordsByURI(uris)
 
-      const associatedRecords = [
-        ...mapDefined([...documents], ([uri, info]) =>
-          info ? { uri, cid: info.cid } : undefined,
-        ),
-        ...mapDefined([...publications], ([uri, info]) =>
-          info ? { uri, cid: info.cid } : undefined,
-        ),
-      ]
+      // associatedRefs and associatedRecords are returned as parallel arrays:
+      // associatedRecords[i] is the raw record body for associatedRefs[i].
+      const associatedRefs: StrongRef[] = []
+      const associatedRecords: LexMap[] = []
+      for (const [uri, info] of documents) {
+        if (!info) continue
+        associatedRefs.push(com.atproto.repo.strongRef.$build({ uri, cid: info.cid }))
+        associatedRecords.push(info.record as LexMap)
+      }
+      for (const [uri, info] of publications) {
+        if (!info) continue
+        associatedRefs.push(com.atproto.repo.strongRef.$build({ uri, cid: info.cid }))
+        associatedRecords.push(info.record as LexMap)
+      }
 
       // No records hydrated -> nothing to give Cardy; it falls back to its
       // own link-card rendering and skips writing strongRefs.
-      if (!associatedRecords.length) {
+      if (!associatedRefs.length) {
         return { encoding: 'application/json', body: {} }
       }
 
       // TODO(phase 2): build a viewExternal here, populating
       // createdAt/updatedAt/readingTime/source from the resolved document +
-      // publication. Until then we only return associatedRecords; Cardy
+      // publication. Until then we only return raw refs and records; Cardy
       // continues to render the link card from its own HTML extraction.
       return {
         encoding: 'application/json',
-        body: { associatedRecords },
+        body: { associatedRefs, associatedRecords },
       }
     },
   })

@@ -25,13 +25,13 @@
           "accept": ["image/*"],
           "maxSize": 1000000
         },
-        "associatedRecords": {
+        "associatedRefs": {
           "type": "array",
           "items": {
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
-          "description": "Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record."
+          "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
         }
       }
     },
@@ -68,13 +68,13 @@
           "description": "Estimated reading time in minutes, if applicable and available."
         },
         "source": { "type": "ref", "ref": "#viewExternalSource" },
-        "associatedRecords": {
+        "associatedRefs": {
           "type": "array",
           "items": {
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
-          "description": "Any URIs of Atmosphere records associated with this external content, if any exist. Example: a site.standard.document record."
+          "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
         }
       }
     },
