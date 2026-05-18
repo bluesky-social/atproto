@@ -14,7 +14,7 @@ import type * as ChatBskyGroupDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.group.getGroupPublicInfo'
+const id = 'chat.bsky.group.getJoinLinkPreview'
 
 export type QueryParams = {
   code: string
@@ -22,7 +22,7 @@ export type QueryParams = {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  group: ChatBskyGroupDefs.GroupPublicView
+  joinLinkPreview: ChatBskyGroupDefs.JoinLinkPreviewView
 }
 
 export interface CallOptions {

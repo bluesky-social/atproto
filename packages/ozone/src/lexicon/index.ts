@@ -151,7 +151,7 @@ import * as ChatBskyGroupDisableJoinLink from './types/chat/bsky/group/disableJo
 import * as ChatBskyGroupEditGroup from './types/chat/bsky/group/editGroup.js'
 import * as ChatBskyGroupEditJoinLink from './types/chat/bsky/group/editJoinLink.js'
 import * as ChatBskyGroupEnableJoinLink from './types/chat/bsky/group/enableJoinLink.js'
-import * as ChatBskyGroupGetGroupPublicInfo from './types/chat/bsky/group/getGroupPublicInfo.js'
+import * as ChatBskyGroupGetJoinLinkPreview from './types/chat/bsky/group/getJoinLinkPreview.js'
 import * as ChatBskyGroupListJoinRequests from './types/chat/bsky/group/listJoinRequests.js'
 import * as ChatBskyGroupRejectJoinRequest from './types/chat/bsky/group/rejectJoinRequest.js'
 import * as ChatBskyGroupRemoveMembers from './types/chat/bsky/group/removeMembers.js'
@@ -2329,15 +2329,15 @@ export class ChatBskyGroupNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getGroupPublicInfo<A extends Auth = void>(
+  getJoinLinkPreview<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
-      ChatBskyGroupGetGroupPublicInfo.QueryParams,
-      ChatBskyGroupGetGroupPublicInfo.HandlerInput,
-      ChatBskyGroupGetGroupPublicInfo.HandlerOutput
+      ChatBskyGroupGetJoinLinkPreview.QueryParams,
+      ChatBskyGroupGetJoinLinkPreview.HandlerInput,
+      ChatBskyGroupGetJoinLinkPreview.HandlerOutput
     >,
   ) {
-    const nsid = 'chat.bsky.group.getGroupPublicInfo' // @ts-ignore
+    const nsid = 'chat.bsky.group.getJoinLinkPreview' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

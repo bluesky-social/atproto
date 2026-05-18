@@ -45,7 +45,7 @@ export interface HandlerError {
   error?:
     | 'AccountSuspended'
     | 'BlockedActor'
-    | 'GroupInvitesDisabled'
+    | 'UserForbidsGroups'
     | 'ConvoLocked'
     | 'InsufficientRole'
     | 'InvalidConvo'

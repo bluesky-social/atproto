@@ -1,5 +1,25 @@
 # @atproto/pds
 
+## 0.4.223
+
+### Patch Changes
+
+- [#4844](https://github.com/bluesky-social/atproto/pull/4844) [`04d727c`](https://github.com/bluesky-social/atproto/commit/04d727c69a2683ea15eff70d9d0bb6aa25452778) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add account manager tests
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.27
+  - @atproto/xrpc-server@0.10.22
+  - @atproto/oauth-provider@0.16.5
+
+## 0.4.222
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.26
+  - @atproto/xrpc-server@0.10.21
+  - @atproto/oauth-provider@0.16.4
+
 ## 0.4.221
 
 ### Patch Changes

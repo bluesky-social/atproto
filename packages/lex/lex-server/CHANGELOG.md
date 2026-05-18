@@ -1,5 +1,22 @@
 # @atproto/lex-server
 
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies [[`d8b2374`](https://github.com/bluesky-social/atproto/commit/d8b2374e1592d1dec65a33439791bc141f02397a)]:
+  - @atproto/lex-client@0.0.22
+
+## 0.0.18
+
+### Patch Changes
+
+- [#4892](https://github.com/bluesky-social/atproto/pull/4892) [`6ccfa49`](https://github.com/bluesky-social/atproto/commit/6ccfa49cdf3f995dd6f30f594d284aa0fe395e61) Thanks [@essential-randomness](https://github.com/essential-randomness)! - Fix `lxm` service token validation
+
+- Updated dependencies [[`2fd8d62`](https://github.com/bluesky-social/atproto/commit/2fd8d62708dc23de6ed21cbcccfebab68b19f588), [`907edfa`](https://github.com/bluesky-social/atproto/commit/907edfa1d16b1074bab4dc617d0bd1a810f3da02)]:
+  - @atproto/lex-schema@0.0.20
+  - @atproto/lex-client@0.0.21
+
 ## 0.0.17
 
 ### Patch Changes

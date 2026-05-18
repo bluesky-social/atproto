@@ -2710,9 +2710,12 @@ export const schemaDict = {
             accept: ['image/*'],
             maxSize: 1000000,
           },
-          associatedRecord: {
-            type: 'string',
-            format: 'at-uri',
+          associatedRecords: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
             description:
               'The URI of the Atmosphere record representing this external content, if it exists. Example: a site.standard.document record.',
           },
@@ -9941,6 +9944,19 @@ export const schemaDict = {
         type: 'string',
         knownValues: ['request', 'accepted'],
       },
+      convoRef: {
+        type: 'object',
+        required: ['did', 'convoId'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          convoId: {
+            type: 'string',
+          },
+        },
+      },
       messageRef: {
         type: 'object',
         required: ['did', 'messageId', 'convoId'],
@@ -10310,7 +10326,7 @@ export const schemaDict = {
           },
           members: {
             description:
-              'Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members.',
+              'Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who added the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members.',
             type: 'array',
             items: {
               type: 'ref',
@@ -11480,6 +11496,12 @@ export const schemaDict = {
               description: 'Filter by conversation kind.',
               knownValues: ['direct', 'group'],
             },
+            lockStatus: {
+              type: 'string',
+              description:
+                'Filter by conversation lock status. Values follow chat.bsky.convo.defs#convoLockStatus.',
+              knownValues: ['unlocked', 'locked', 'locked-permanently'],
+            },
           },
         },
         output: {
@@ -11944,7 +11966,7 @@ export const schemaDict = {
             name: 'BlockedActor',
           },
           {
-            name: 'GroupInvitesDisabled',
+            name: 'UserForbidsGroups',
           },
           {
             name: 'ConvoLocked',
@@ -12075,7 +12097,7 @@ export const schemaDict = {
             name: 'BlockedActor',
           },
           {
-            name: 'GroupInvitesDisabled',
+            name: 'UserForbidsGroups',
           },
           {
             name: 'NotFollowedBySender',
@@ -12222,7 +12244,7 @@ export const schemaDict = {
           },
         },
       },
-      groupPublicView: {
+      joinLinkPreviewView: {
         type: 'object',
         required: ['name', 'owner', 'memberCount', 'requireApproval'],
         properties: {
@@ -12238,6 +12260,12 @@ export const schemaDict = {
           },
           requireApproval: {
             type: 'boolean',
+          },
+          convo: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#convoView',
+            description:
+              'Present only if the request is authenticated and the user is a member of the group.',
           },
         },
       },
@@ -12464,9 +12492,9 @@ export const schemaDict = {
       },
     },
   },
-  ChatBskyGroupGetGroupPublicInfo: {
+  ChatBskyGroupGetJoinLinkPreview: {
     lexicon: 1,
-    id: 'chat.bsky.group.getGroupPublicInfo',
+    id: 'chat.bsky.group.getJoinLinkPreview',
     defs: {
       main: {
         type: 'query',
@@ -12490,11 +12518,11 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['group'],
+            required: ['joinLinkPreview'],
             properties: {
-              group: {
+              joinLinkPreview: {
                 type: 'ref',
-                ref: 'lex:chat.bsky.group.defs#groupPublicView',
+                ref: 'lex:chat.bsky.group.defs#joinLinkPreviewView',
               },
             },
           },
@@ -12799,10 +12827,22 @@ export const schemaDict = {
             before: {
               type: 'integer',
               default: 5,
+              description:
+                'Number of user messages before the target to include. System messages between the earliest returned user message and the target are also included, capped per gap by `maxInterleavedSystemMessages`. If there are no user messages before the target, up to `maxInterleavedSystemMessages` system messages immediately preceding the target are returned instead.',
             },
             after: {
               type: 'integer',
               default: 5,
+              description:
+                'Number of user messages after the target to include. System messages between the target and the latest returned user message are also included, capped per gap by `maxInterleavedSystemMessages`. If there are no user messages after the target, up to `maxInterleavedSystemMessages` system messages immediately following the target are returned instead.',
+            },
+            maxInterleavedSystemMessages: {
+              type: 'integer',
+              default: 10,
+              minimum: 0,
+              maximum: 1000,
+              description:
+                'Maximum number of system messages to include per gap between consecutive returned messages (and per side when there are no user messages on that side). Within a gap, the system messages closest to the earlier message are kept.',
             },
           },
         },
@@ -12818,7 +12858,6 @@ export const schemaDict = {
                   type: 'union',
                   refs: [
                     'lex:chat.bsky.convo.defs#messageView',
-                    'lex:chat.bsky.convo.defs#deletedMessageView',
                     'lex:chat.bsky.convo.defs#systemMessageView',
                   ],
                 },
@@ -12852,6 +12891,15 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:chat.bsky.moderation.subscribeModEvents#eventConvoFirstMessage',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatCreated',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberAdded',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberJoined',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequest',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequestApproved',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequestRejected',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventChatAccepted',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberLeft',
+              'lex:chat.bsky.moderation.subscribeModEvents#eventGroupChatUpdated',
             ],
           },
         },
@@ -12868,6 +12916,7 @@ export const schemaDict = {
       },
       eventConvoFirstMessage: {
         type: 'object',
+        description: 'Fired when the first message was sent on a convo.',
         required: ['createdAt', 'rev', 'convoId', 'user', 'recipients'],
         properties: {
           convoId: {
@@ -12896,6 +12945,581 @@ export const schemaDict = {
             description: 'The DID of the message author.',
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+      eventGroupChatCreated: {
+        type: 'object',
+        description: 'Fire when a group chat is created.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'initialMemberDids',
+          'ownerDid',
+          'rev',
+        ],
+        properties: {
+          actorDid: {
+            description:
+              'The DID of the actor performing the action. For this event, same as ownerDid.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            description: 'The name set at creation time.',
+            type: 'string',
+          },
+          initialMemberDids: {
+            description: 'DIDs of everyone added at creation time.',
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+        },
+      },
+      eventGroupChatMemberAdded: {
+        type: 'object',
+        description:
+          "Fired when a member is added to a group chat. Note that members are added in the 'request' state.",
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'ownerDid',
+          'requestMembersCount',
+          'rev',
+          'subjectDid',
+          'subjectFollowsOwner',
+        ],
+        properties: {
+          actorDid: {
+            description:
+              'The DID of the actor performing the action. For this event, same as ownerDid.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            type: 'string',
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          requestMembersCount: {
+            description:
+              'The number of members who have not yet accepted the convo.',
+            type: 'integer',
+          },
+          rev: {
+            type: 'string',
+          },
+          subjectDid: {
+            description: 'The DID of the member who was added.',
+            type: 'string',
+            format: 'did',
+          },
+          subjectFollowsOwner: {
+            description: 'Whether the added member follows the group owner.',
+            type: 'boolean',
+          },
+        },
+      },
+      eventGroupChatMemberJoined: {
+        type: 'object',
+        description:
+          'Fired when a member joins a group chat via an join link that does not require approval.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'joinLinkCode',
+          'ownerDid',
+          'rev',
+          'subjectFollowsOwner',
+        ],
+        properties: {
+          actorDid: {
+            description: 'The DID of the person joining.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            type: 'string',
+          },
+          joinLinkCode: {
+            description: 'The code of the join link used to join.',
+            type: 'string',
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+          subjectFollowsOwner: {
+            description: 'Whether the joining member follows the group owner.',
+            type: 'boolean',
+          },
+        },
+      },
+      eventGroupChatJoinRequest: {
+        type: 'object',
+        description:
+          'Fired when a user requests to join a group chat via an join link that requires approval.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'joinLinkCode',
+          'ownerDid',
+          'rev',
+          'subjectFollowsOwner',
+        ],
+        properties: {
+          actorDid: {
+            description: 'The DID of the person requesting to join.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            type: 'string',
+          },
+          joinLinkCode: {
+            description: 'The code of the join link used to request joining.',
+            type: 'string',
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+          subjectFollowsOwner: {
+            description:
+              'Whether the requesting member follows the group owner.',
+            type: 'boolean',
+          },
+        },
+      },
+      eventGroupChatJoinRequestApproved: {
+        type: 'object',
+        description:
+          'Fired when a join request is approved by the group owner.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'ownerDid',
+          'rev',
+          'subjectDid',
+        ],
+        properties: {
+          actorDid: {
+            description: 'The DID of the owner approving the request.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            type: 'string',
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+          subjectDid: {
+            description: 'The DID of the member whose request was approved.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      eventGroupChatJoinRequestRejected: {
+        type: 'object',
+        description:
+          'Fired when a join request is rejected by the group owner.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'ownerDid',
+          'rev',
+          'subjectDid',
+        ],
+        properties: {
+          actorDid: {
+            description: 'The DID of the owner rejecting the request.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            type: 'string',
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+          subjectDid: {
+            description: 'The DID of the member whose request was rejected.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      eventChatAccepted: {
+        type: 'object',
+        description:
+          'Fired when a user accepts a chat convo, either explicitly or by sending a message.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'method',
+          'rev',
+        ],
+        properties: {
+          actorDid: {
+            description: 'The DID of the person accepting the convo.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the convo was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description:
+              'Current member count at the time of the event. Only present for group convos.',
+            type: 'integer',
+          },
+          groupName: {
+            description:
+              'The name of the group chat. Only present for group convos.',
+            type: 'string',
+          },
+          method: {
+            description: 'How the convo was accepted.',
+            type: 'string',
+            knownValues: ['explicit', 'message'],
+          },
+          ownerDid: {
+            description:
+              'The DID of the group chat owner. Only present for group convos.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+        },
+      },
+      eventGroupChatMemberLeft: {
+        type: 'object',
+        description:
+          'Fired when a member leaves or is removed from a group chat.',
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'leaveMethod',
+          'ownerDid',
+          'rev',
+          'subjectDid',
+        ],
+        properties: {
+          actorDid: {
+            description:
+              'The DID of the actor. For voluntary: the person leaving. For kicked: the owner.',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            type: 'string',
+          },
+          leaveMethod: {
+            description: 'How the member left.',
+            type: 'string',
+            knownValues: ['voluntary', 'kicked'],
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+          subjectDid: {
+            description: 'The DID of the member who left or was removed.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      eventGroupChatUpdated: {
+        type: 'object',
+        description: "Fired when a group chat's metadata or status changes.",
+        required: [
+          'actorDid',
+          'convoCreatedAt',
+          'convoId',
+          'createdAt',
+          'groupMemberCount',
+          'groupName',
+          'ownerDid',
+          'rev',
+          'updateType',
+        ],
+        properties: {
+          actorDid: {
+            description:
+              'The DID of the actor performing the action (the owner).',
+            type: 'string',
+            format: 'did',
+          },
+          convoCreatedAt: {
+            description: 'When the group was originally created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          convoId: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          groupMemberCount: {
+            description: 'Current member count at the time of the event.',
+            type: 'integer',
+          },
+          groupName: {
+            description: 'Current group name.',
+            type: 'string',
+          },
+          joinLinkCode: {
+            description:
+              'The code of the join link. Only present when updateType is join-link-related.',
+            type: 'string',
+          },
+          joinLinkFollowersOnly: {
+            description:
+              'Whether the join link is restricted to followers of the owner. Only present when updateType is join-link-related.',
+            type: 'boolean',
+          },
+          joinLinkRequiresApproval: {
+            description:
+              'Whether the join link requires owner approval to join. Only present when updateType is join-link-related.',
+            type: 'boolean',
+          },
+          lockReason: {
+            description:
+              "Why the group was locked. Only present when updateType is 'locked'.",
+            type: 'string',
+            knownValues: [
+              'owner_action',
+              'owner_left',
+              'owner_deactivated',
+              'owner_deleted',
+              'owner_taken_down',
+              'label_applied',
+            ],
+          },
+          newName: {
+            description:
+              "The new group name. Only present when updateType is 'name_changed'.",
+            type: 'string',
+          },
+          oldName: {
+            description:
+              "The previous group name. Only present when updateType is 'name_changed'.",
+            type: 'string',
+          },
+          ownerDid: {
+            description: 'The DID of the group chat owner.',
+            type: 'string',
+            format: 'did',
+          },
+          rev: {
+            type: 'string',
+          },
+          updateType: {
+            description: 'What changed.',
+            type: 'string',
+            knownValues: [
+              'name_changed',
+              'locked',
+              'locked_permanently',
+              'unlocked',
+              'join_link_created',
+              'join_link_disabled',
+              'join_link_settings_changed',
+            ],
           },
         },
       },
@@ -24948,7 +25572,7 @@ export const ids = {
   ChatBskyGroupEditGroup: 'chat.bsky.group.editGroup',
   ChatBskyGroupEditJoinLink: 'chat.bsky.group.editJoinLink',
   ChatBskyGroupEnableJoinLink: 'chat.bsky.group.enableJoinLink',
-  ChatBskyGroupGetGroupPublicInfo: 'chat.bsky.group.getGroupPublicInfo',
+  ChatBskyGroupGetJoinLinkPreview: 'chat.bsky.group.getJoinLinkPreview',
   ChatBskyGroupListJoinRequests: 'chat.bsky.group.listJoinRequests',
   ChatBskyGroupRejectJoinRequest: 'chat.bsky.group.rejectJoinRequest',
   ChatBskyGroupRemoveMembers: 'chat.bsky.group.removeMembers',

@@ -47,7 +47,7 @@
             "chat.bsky.group.editGroup",
             "chat.bsky.group.editJoinLink",
             "chat.bsky.group.enableJoinLink",
-            "chat.bsky.group.getGroupPublicInfo",
+            "chat.bsky.group.getJoinLinkPreview",
             "chat.bsky.group.listJoinRequests",
             "chat.bsky.group.rejectJoinRequest",
             "chat.bsky.group.removeMembers",

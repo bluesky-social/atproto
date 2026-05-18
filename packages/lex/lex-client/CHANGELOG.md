@@ -1,5 +1,20 @@
 # @atproto/lex-client
 
+## 0.0.22
+
+### Patch Changes
+
+- [#4948](https://github.com/bluesky-social/atproto/pull/4948) [`d8b2374`](https://github.com/bluesky-social/atproto/commit/d8b2374e1592d1dec65a33439791bc141f02397a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `options` required for `Client.get` when the schema expects a `rkey` to fetch a record
+
+## 0.0.21
+
+### Patch Changes
+
+- [#4888](https://github.com/bluesky-social/atproto/pull/4888) [`907edfa`](https://github.com/bluesky-social/atproto/commit/907edfa1d16b1074bab4dc617d0bd1a810f3da02) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Small JSDoc improvements
+
+- Updated dependencies [[`2fd8d62`](https://github.com/bluesky-social/atproto/commit/2fd8d62708dc23de6ed21cbcccfebab68b19f588)]:
+  - @atproto/lex-schema@0.0.20
+
 ## 0.0.20
 
 ### Patch Changes

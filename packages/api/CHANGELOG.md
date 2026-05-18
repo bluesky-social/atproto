@@ -1,5 +1,31 @@
 # @atproto/api
 
+## 0.19.19
+
+### Patch Changes
+
+- [#4945](https://github.com/bluesky-social/atproto/pull/4945) [`cb13878`](https://github.com/bluesky-social/atproto/commit/cb1387899f0b296759ebdf5b8985b6b573091a9a) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4947](https://github.com/bluesky-social/atproto/pull/4947) [`ea4184b`](https://github.com/bluesky-social/atproto/commit/ea4184b9beb9821d806a9540223dab55c2628184) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Updates contract defined in #4912 to replace `associatedRecord: string` with `associatedRecords: StrongRef[]`
+
+- [#4946](https://github.com/bluesky-social/atproto/pull/4946) [`38bc2fa`](https://github.com/bluesky-social/atproto/commit/38bc2faa142d42f95c5b89b5a10bf8ed607fe39f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.18
+
+### Patch Changes
+
+- [#4932](https://github.com/bluesky-social/atproto/pull/4932) [`18d3114`](https://github.com/bluesky-social/atproto/commit/18d311494038b73e3c3429e504ca6cc05bba5f6d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4933](https://github.com/bluesky-social/atproto/pull/4933) [`0533a5f`](https://github.com/bluesky-social/atproto/commit/0533a5f60ecc1f15feb9c4940781bc7e217a3644) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - trigger build after github actions previously disabled
+
+## 0.19.17
+
+### Patch Changes
+
+- [#4924](https://github.com/bluesky-social/atproto/pull/4924) [`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4926](https://github.com/bluesky-social/atproto/pull/4926) [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.19.16
 
 ### Patch Changes

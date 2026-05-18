@@ -23,6 +23,8 @@ export type QueryParams = {
   status?: 'request' | 'accepted' | (string & {})
   /** Filter by conversation kind. */
   kind?: 'direct' | 'group' | (string & {})
+  /** Filter by conversation lock status. Values follow chat.bsky.convo.defs#convoLockStatus. */
+  lockStatus?: 'unlocked' | 'locked' | 'locked-permanently' | (string & {})
 }
 export type InputSchema = undefined
 

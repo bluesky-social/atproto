@@ -26,6 +26,22 @@ export type ConvoLockStatus =
   | (string & {})
 export type ConvoStatus = 'request' | 'accepted' | (string & {})
 
+export interface ConvoRef {
+  $type?: 'chat.bsky.convo.defs#convoRef'
+  did: string
+  convoId: string
+}
+
+const hashConvoRef = 'convoRef'
+
+export function isConvoRef<V>(v: V) {
+  return is$typed(v, id, hashConvoRef)
+}
+
+export function validateConvoRef<V>(v: V) {
+  return validate<ConvoRef & V>(v, id, hashConvoRef)
+}
+
 export interface MessageRef {
   $type?: 'chat.bsky.convo.defs#messageRef'
   did: string
@@ -466,7 +482,7 @@ export interface ConvoView {
   $type?: 'chat.bsky.convo.defs#convoView'
   id: string
   rev: string
-  /** Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members. */
+  /** Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who added the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members. */
   members: ChatBskyActorDefs.ProfileViewBasic[]
   lastMessage?:
     | $Typed<MessageView>

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "chat.bsky.group.getGroupPublicInfo",
+  "id": "chat.bsky.group.getJoinLinkPreview",
   "defs": {
     "main": {
       "type": "query",
@@ -17,11 +17,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["group"],
+          "required": ["joinLinkPreview"],
           "properties": {
-            "group": {
+            "joinLinkPreview": {
               "type": "ref",
-              "ref": "chat.bsky.group.defs#groupPublicView"
+              "ref": "chat.bsky.group.defs#joinLinkPreviewView"
             }
           }
         }

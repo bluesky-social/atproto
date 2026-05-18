@@ -919,7 +919,7 @@ export class Client implements Agent {
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
     ns: Main<T>,
-    options?: GetOptions<T>,
+    options: GetOptions<T>,
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
     ns: Main<T>,

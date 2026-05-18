@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.3.5",
+  "version": "0.3.7",
   "type": "commonjs",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
@@ -12,7 +12,7 @@
     "test": "jest",
     "build": "tsc --build tsconfig.build.json",
     "prebuild": "pnpm run codegen",
-    "codegen": "lex build --override --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
+    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
   },
   "homepage": "https://atproto.com",
   "repository": {

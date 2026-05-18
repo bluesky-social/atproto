@@ -1,5 +1,27 @@
 # @atproto/bsky
 
+## 0.0.230
+
+### Patch Changes
+
+- Updated dependencies [[`cb13878`](https://github.com/bluesky-social/atproto/commit/cb1387899f0b296759ebdf5b8985b6b573091a9a), [`ea4184b`](https://github.com/bluesky-social/atproto/commit/ea4184b9beb9821d806a9540223dab55c2628184), [`38bc2fa`](https://github.com/bluesky-social/atproto/commit/38bc2faa142d42f95c5b89b5a10bf8ed607fe39f)]:
+  - @atproto/api@0.19.19
+  - @atproto/lex@0.0.27
+  - @atproto/xrpc-server@0.10.22
+  - @atproto/sync@0.2.4
+
+## 0.0.229
+
+### Patch Changes
+
+- [#4919](https://github.com/bluesky-social/atproto/pull/4919) [`733d557`](https://github.com/bluesky-social/atproto/commit/733d557d8314265d2c9bdee8d77ba49941dc5d81) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update courier proto
+
+- Updated dependencies [[`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42), [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3)]:
+  - @atproto/api@0.19.17
+  - @atproto/lex@0.0.26
+  - @atproto/xrpc-server@0.10.21
+  - @atproto/sync@0.2.3
+
 ## 0.0.228
 
 ### Patch Changes
