@@ -8,6 +8,10 @@ export class PageHelper implements AsyncDisposable {
     await this.page.goto(url.toString())
   }
 
+  url() {
+    return this.page.url()
+  }
+
   isClosed() {
     return this.page.isClosed()
   }
