@@ -636,7 +636,10 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.external.getSiteStandardRecordsByRef(siteStandardRefs),
+      this.external.getSiteStandardRecordsByRef(
+        siteStandardRefs,
+        ctx.includeTakedowns,
+      ),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
