@@ -1,19 +1,3 @@
-/* eslint-disable import/order */
-import { createRequire } from 'node:module'
-import path from 'node:path'
-
-const require = createRequire(import.meta.url)
-require('dd-trace')
-  .init({ logInjection: true })
-  .tracer.use('express', {
-    hooks: {
-      request: (span: any, req: any) => {
-        maintainXrpcResource(span, req)
-      },
-    },
-  })
-
-// Tracer code above must come before anything else
 import {
   BunnyInvalidator,
   CloudfrontInvalidator,
@@ -34,7 +18,7 @@ const main = async () => {
   const secrets = envToSecrets(env)
 
   // configure zero, one, or more image invalidators
-  const imgUriEndpoint = process.env.OZONE_IMG_URI_ENDPOINT
+  const imgUriEndpoint = process.env.OZONE_IMG_URI_ENDPOINT ?? ''
   const bunnyAccessKey = process.env.OZONE_BUNNY_ACCESS_KEY
   const cfDistributionId = process.env.OZONE_CF_DISTRIBUTION_ID
 
@@ -87,21 +71,6 @@ const main = async () => {
 
     httpLogger.info('ozone is stopped')
   })
-}
-
-const maintainXrpcResource = (span: any, req: any) => {
-  // Show actual xrpc method as resource rather than the route pattern
-  if (span && req.originalUrl?.startsWith('/xrpc/')) {
-    span.setTag(
-      'resource.name',
-      [
-        req.method,
-        path.posix.join(req.baseUrl || '', req.path || '', '/').slice(0, -1), // Ensures no trailing slash
-      ]
-        .filter(Boolean)
-        .join(' '),
-    )
-  }
 }
 
 main()
