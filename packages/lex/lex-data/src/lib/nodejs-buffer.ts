@@ -9,20 +9,28 @@ interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
   extends Uint8Array<TArrayBuffer> {
   byteLength: number
   toString(encoding?: Encoding): string
+  slice(start?: number, end?: number): NodeJSBuffer<ArrayBuffer>
+  subarray(start?: number, end?: number): NodeJSBuffer<TArrayBuffer>
 }
 
 interface NodeJSBufferConstructor {
   new (input: string, encoding?: Encoding): NodeJSBuffer
   from(
-    input: Uint8Array | ArrayBuffer | ArrayBufferView,
+    string: WithImplicitCoercion<string>,
+    encoding?: BufferEncoding,
   ): NodeJSBuffer<ArrayBuffer>
-  from(input: string, encoding?: Encoding): NodeJSBuffer<ArrayBuffer>
+  from(
+    arrayOrString: WithImplicitCoercion<ArrayLike<number> | string>,
+  ): NodeJSBuffer<ArrayBuffer>
   from<TArrayBuffer extends ArrayBufferLike>(
     arrayBuffer: WithImplicitCoercion<TArrayBuffer>,
     byteOffset?: number,
     length?: number,
-  ): Buffer<TArrayBuffer>
-  concat(list: readonly Uint8Array[], totalLength?: number): NodeJSBuffer
+  ): NodeJSBuffer<TArrayBuffer>
+  concat(
+    list: readonly Uint8Array[],
+    totalLength?: number,
+  ): NodeJSBuffer<ArrayBuffer>
   byteLength(input: string, encoding?: Encoding): number
   prototype: NodeJSBuffer
 }

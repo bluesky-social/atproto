@@ -6,7 +6,7 @@ export const ui8ConcatNode = Buffer
   ? function ui8ConcatNode(
       array: readonly Uint8Array[],
     ): Uint8Array<ArrayBuffer> {
-      return Buffer.concat(array) as Uint8Array<ArrayBuffer>
+      return Buffer.concat(array)
     }
   : /* v8 ignore next -- @preserve */ null
 

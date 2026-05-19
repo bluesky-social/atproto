@@ -46,18 +46,14 @@ export type Service = `${DidString}#${DidServiceIdentifier}`
  * const file: BinaryBodyInit = fileInput.files[0]
  * await client.xrpc(uploadMethod, { body: file })
  * ```
- *
- * @note Uint8Array is parameterized with ArrayBuffer (not ArrayBufferLike)
- * because fetch's BodyInit requires ArrayBuffer-backed views —
- * SharedArrayBuffer is not supported for network I/O.
  */
 export type BinaryBodyInit =
-  | Uint8Array<ArrayBuffer>
-  | ArrayBuffer
-  | Blob
-  | ReadableStream<Uint8Array<ArrayBuffer>>
-  | AsyncIterable<Uint8Array<ArrayBuffer>>
   | string
+  | Blob
+  | Uint8Array
+  | ArrayBuffer
+  | ReadableStream<Uint8Array>
+  | AsyncIterable<Uint8Array>
 
 export type EncodingString = `${string}/${string}`
 
@@ -68,7 +64,7 @@ export function isEncodingString(
 }
 
 export type XrpcUnknownResponsePayload<
-  TBinary extends BinaryBodyInit = Uint8Array<ArrayBuffer>,
+  TBinary extends BinaryBodyInit = Uint8Array,
 > = {
   encoding: EncodingString
   body: LexValue | TBinary
