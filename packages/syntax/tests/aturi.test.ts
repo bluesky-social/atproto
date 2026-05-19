@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
-import { AtUri } from '../src'
+import { AtUri } from '../src/index.js'
 
 describe(AtUri, () => {
   describe('parses valid interop', () => {

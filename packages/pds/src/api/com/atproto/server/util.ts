@@ -2,9 +2,9 @@ import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { DidDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { httpLogger } from '../../../../logger'
+import { ServerConfig } from '../../../../config/index.js'
+import { AppContext } from '../../../../context.js'
+import { httpLogger } from '../../../../logger.js'
 
 // generate an invite code preceded by the hostname
 // with '.'s replaced by '-'s so it is not mistakable for a link

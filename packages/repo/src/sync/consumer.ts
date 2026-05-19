@@ -1,18 +1,22 @@
 import { Cid } from '@atproto/lex-data'
-import { BlockMap } from '../block-map'
-import { readCarWithRoot } from '../car'
-import { DataDiff } from '../data-diff'
-import { MST } from '../mst'
-import { ReadableRepo } from '../readable-repo'
-import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
+import { BlockMap } from '../block-map.js'
+import { readCarWithRoot } from '../car.js'
+import { DataDiff } from '../data-diff.js'
+import { MST } from '../mst/index.js'
+import { ReadableRepo } from '../readable-repo.js'
+import {
+  MemoryBlockstore,
+  ReadableBlockstore,
+  SyncStorage,
+} from '../storage/index.js'
 import {
   RecordCidClaim,
   RecordClaim,
   VerifiedDiff,
   VerifiedRepo,
   def,
-} from '../types'
-import * as util from '../util'
+} from '../types.js'
+import * as util from '../util.js'
 
 export const verifyRepoCar = async (
   carBytes: Uint8Array,

@@ -1,8 +1,8 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { DAY, keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { countAll } from '../db/util'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import { countAll } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {

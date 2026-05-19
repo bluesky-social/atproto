@@ -1,4 +1,4 @@
-import dns from 'node:dns/promises'
+import * as dns from 'node:dns/promises'
 import { Cid, l } from '@atproto/lex'
 import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
 import { Commit } from '@atproto/repo'

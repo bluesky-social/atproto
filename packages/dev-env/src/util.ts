@@ -2,9 +2,9 @@ import * as plc from '@did-plc/lib'
 import { request } from 'undici'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { TestBsky } from './bsky'
-import { TestPds } from './pds'
-import { DidAndKey } from './types'
+import { TestBsky } from './bsky.js'
+import { TestPds } from './pds.js'
+import { DidAndKey } from './types.js'
 
 export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
   mockResolvers(pds.ctx.idResolver, pds)

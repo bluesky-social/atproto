@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
-import { type FileDiff, type GeneratedAPI } from './types'
+import { type FileDiff, type GeneratedAPI } from './types.js'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
   paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
@@ -14,7 +14,7 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
     }
     try {
       docs.push(readLexicon(path))
-    } catch (e) {
+    } catch {
       // skip
     }
   }

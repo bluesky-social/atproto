@@ -1,9 +1,9 @@
 import { InvalidRequestError } from '@atproto/oauth-provider'
 import { AtUri } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app, com } from '../../../../lexicons/index.js'
-import { computeProxyTo, pipethrough } from '../../../../pipethrough'
+import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx

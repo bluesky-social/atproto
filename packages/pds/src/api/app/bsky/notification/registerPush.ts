@@ -1,10 +1,10 @@
 import { getNotif } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { AuthScope } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { getDidDoc } from '../util/resolver'
+import { getDidDoc } from '../util/resolver.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx

@@ -10,9 +10,9 @@ import {
 } from '@atproto/lex'
 import { encode as cborEncode } from '@atproto/lex-cbor'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
-import { AccountStatus } from '../account-manager/account-manager'
-import { CommitDataWithOps, SyncEvtData } from '../repo'
-import { RepoSeqInsert } from './db'
+import { AccountStatus } from '../account-manager/account-manager.js'
+import { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
+import { RepoSeqInsert } from './db/index.js'
 
 export const formatSeqCommit = async (
   did: string,

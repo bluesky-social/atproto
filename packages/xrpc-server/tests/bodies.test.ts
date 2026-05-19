@@ -3,18 +3,19 @@ import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
+import { jest } from '@jest/globals'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { LexiconDoc } from '@atproto/lexicon'
 import { ResponseType, XrpcClient } from '@atproto/xrpc'
-import * as xrpcServer from '../src'
-import { logger } from '../src/logger'
+import * as xrpcServer from '../src/index.js'
+import { logger } from '../src/logger.js'
 import {
   buildAddLexicons,
   buildMethodLexicons,
   closeServer,
   createServer,
-} from './_util'
+} from './_util.js'
 
 const BLOB_LIMIT = 5000
 

@@ -1,6 +1,6 @@
 import { Etcd3 } from 'etcd3'
-import { EtcdMap } from '../../etcd'
-import { dataplaneLogger as logger } from '../../logger'
+import { EtcdMap } from '../../etcd.js'
+import { dataplaneLogger as logger } from '../../logger.js'
 
 /**
  * Interface for a reactive list of hosts, i.e. for use with the dataplane client.

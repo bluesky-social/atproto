@@ -14,7 +14,7 @@ import {
   lexParse,
   lexStringify,
 } from '@atproto/lex-json'
-import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './blob-refs'
+import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './blob-refs.js'
 
 /**
  * @note this is equivalent to `unknown` because of {@link IpldValue}

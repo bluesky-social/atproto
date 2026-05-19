@@ -47,24 +47,24 @@ import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
 } from '@atproto/xrpc-server'
-import { ActorStore } from '../actor-store/actor-store'
-import { BackgroundQueue } from '../background'
-import { fromDateISO } from '../db'
-import { ImageUrlBuilder } from '../image/image-url-builder'
-import { dbLogger } from '../logger'
-import { ServerMailer } from '../mailer'
-import { Sequencer, syncEvtDataFromCommit } from '../sequencer'
-import { AccountManager, InvalidPasswordError } from './account-manager'
-import * as schemas from './db/schema'
-import * as accountHelper from './helpers/account'
-import { AccountStatus } from './helpers/account'
-import * as accountDeviceHelper from './helpers/account-device'
-import * as authRequestHelper from './helpers/authorization-request'
-import * as authorizedClientHelper from './helpers/authorized-client'
-import * as deviceHelper from './helpers/device'
-import * as lexiconHelper from './helpers/lexicon'
-import * as tokenHelper from './helpers/token'
-import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { BackgroundQueue } from '../background.js'
+import { fromDateISO } from '../db/index.js'
+import { ImageUrlBuilder } from '../image/image-url-builder.js'
+import { dbLogger } from '../logger.js'
+import { ServerMailer } from '../mailer/index.js'
+import { Sequencer, syncEvtDataFromCommit } from '../sequencer/index.js'
+import { AccountManager, InvalidPasswordError } from './account-manager.js'
+import * as schemas from './db/schema/index.js'
+import * as accountDeviceHelper from './helpers/account-device.js'
+import * as accountHelper from './helpers/account.js'
+import { AccountStatus } from './helpers/account.js'
+import * as authRequestHelper from './helpers/authorization-request.js'
+import * as authorizedClientHelper from './helpers/authorized-client.js'
+import * as deviceHelper from './helpers/device.js'
+import * as lexiconHelper from './helpers/lexicon.js'
+import * as tokenHelper from './helpers/token.js'
+import * as usedRefreshTokenHelper from './helpers/used-refresh-token.js'
 
 /**
  * This class' purpose is to implement the interface needed by the OAuthProvider
@@ -321,7 +321,7 @@ export class OAuthStore
   ): Promise<DeviceAccount[]> {
     const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
 
-    const uniqueDids = [...new Set(rows.map((row) => row.did))]
+    const uniqueDids: string[] = [...new Set(rows.map((row) => row.did))]
 
     // Enrich all distinct account with their profile data
     const accounts = new Map(

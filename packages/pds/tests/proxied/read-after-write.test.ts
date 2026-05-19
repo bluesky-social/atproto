@@ -10,7 +10,7 @@ import {
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
 import { app } from '../../src/lexicons/index.js'
-import basicSeed from '../seeds/basic'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxy read after write', () => {
   let network: TestNetwork

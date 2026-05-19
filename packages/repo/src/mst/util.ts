@@ -1,8 +1,8 @@
 import { sha256 } from '@atproto/crypto'
 import { cidForLex } from '@atproto/lex-cbor'
 import { Cid } from '@atproto/lex-data'
-import { ReadableBlockstore } from '../storage'
-import { Leaf, MST, MstOpts, NodeData, NodeEntry } from './mst'
+import { ReadableBlockstore } from '../storage/index.js'
+import { Leaf, MST, MstOpts, NodeData, NodeEntry } from './mst.js'
 
 function toAscii(bytes: Uint8Array): string {
   let string = ''
@@ -12,7 +12,7 @@ function toAscii(bytes: Uint8Array): string {
   return string
 }
 
-function fromAscii(str: string): Uint8Array {
+function fromAscii(str: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(str.length)
   for (let i = 0; i < str.length; i++) {
     bytes[i] = str.charCodeAt(i)

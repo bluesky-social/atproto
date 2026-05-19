@@ -1,8 +1,8 @@
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { pipethrough } from '../../../../pipethrough'
+import { pipethrough } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.repo.getRecord, async ({ req, params }) => {

@@ -507,7 +507,7 @@ export type LexRouterOptions = {
  * ```typescript
  * import { LexRouter } from '@atproto/lex-server'
  * import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
- * import { getProfile, createPost, subscribeRepos } from './lexicons'
+ * import { getProfile, createPost, subscribeRepos } from './lexicons.js'
  *
  * const router = new LexRouter({ upgradeWebSocket })
  *
@@ -1114,14 +1114,17 @@ function onMessage(this: WebSocket, _event: unknown) {
 // Pre-encoded frame header for error frames
 const ERROR_FRAME_HEADER = /*#__PURE__*/ encode({ op: -1 })
 
-function encodeErrorFrame(errorData: LexErrorData): Uint8Array {
+function encodeErrorFrame(errorData: LexErrorData): Uint8Array<ArrayBuffer> {
   return ui8Concat([ERROR_FRAME_HEADER, encode(errorData)])
 }
 
 // Pre-encoded frame header for message frames with unknown type
 const UNKNOWN_MESSAGE_FRAME_HEADER = /*#__PURE__*/ encode({ op: 1 })
 
-function encodeMessageFrame(method: Subscription, value: LexValue): Uint8Array {
+function encodeMessageFrame(
+  method: Subscription,
+  value: LexValue,
+): Uint8Array<ArrayBuffer> {
   if (isPlainObject(value) && typeof value.$type === 'string') {
     const { $type, ...rest } = value
     return ui8Concat([

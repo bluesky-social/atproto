@@ -6,8 +6,8 @@ import {
   NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
-} from '../../../../proto/bsky_pb'
-import { AppPlatform } from '../../../../proto/courier_pb'
+} from '../../../../proto/bsky_pb.js'
+import { AppPlatform } from '../../../../proto/courier_pb.js'
 
 type DeepPartial<T> = T extends object
   ? {

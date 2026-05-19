@@ -25,8 +25,8 @@ import {
   MethodNotImplementedError,
   XRPCError,
   excludeErrorResult,
-} from './errors'
-import log, { LOGGER_NAME } from './logger'
+} from './errors.js'
+import log, { LOGGER_NAME } from './logger.js'
 import {
   CalcKeyFn,
   CalcPointsFn,
@@ -34,8 +34,13 @@ import {
   RateLimiterOptions,
   RouteRateLimiter,
   WrappedRateLimiter,
-} from './rate-limiter'
-import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
+} from './rate-limiter.js'
+import {
+  ErrorFrame,
+  Frame,
+  MessageFrame,
+  XrpcStreamServer,
+} from './stream/index.js'
 import {
   Auth,
   AuthResult,
@@ -67,7 +72,7 @@ import {
   isHandlerPipeThroughStream,
   isHandlerSuccess,
   isSharedRateLimitOpts,
-} from './types'
+} from './types.js'
 import {
   AuthVerifierInternal,
   InputVerifierInternal,
@@ -82,7 +87,7 @@ import {
   createSchemaParamsVerifier,
   extractUrlNsid,
   setHeaders,
-} from './util'
+} from './util.js'
 
 export function createServer(lexicons?: LexiconDoc[], options?: Options) {
   return new Server(lexicons, options)

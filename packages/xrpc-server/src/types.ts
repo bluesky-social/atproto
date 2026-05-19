@@ -3,9 +3,9 @@ import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
 import { JsonToLexOptions } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
-import { ErrorResult, XRPCError } from './errors'
-import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
-import { Overwrite } from './util'
+import { ErrorResult, XRPCError } from './errors.js'
+import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter.js'
+import { Overwrite } from './util.js'
 
 export type Awaitable<T> = T | Promise<T>
 

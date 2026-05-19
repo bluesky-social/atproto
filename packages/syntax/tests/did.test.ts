@@ -1,7 +1,11 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
 import { describe, expect, it } from 'vitest'
-import { InvalidDidError, ensureValidDid, ensureValidDidRegex } from '../src'
+import {
+  InvalidDidError,
+  ensureValidDid,
+  ensureValidDidRegex,
+} from '../src/index.js'
 
 describe('DID permissive validation', () => {
   const expectValid = (h: string) => {

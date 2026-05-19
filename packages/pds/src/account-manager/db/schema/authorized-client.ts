@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 import { AuthorizedClientData, OAuthClientId } from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded } from '../../../db'
+import { DateISO, JsonEncoded } from '../../../db/index.js'
 
 export interface AuthorizedClient {
   did: string

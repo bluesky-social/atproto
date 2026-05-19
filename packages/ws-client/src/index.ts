@@ -1,4 +1,5 @@
-import { ClientOptions, WebSocket, createWebSocketStream } from 'ws'
+import type { ClientOptions } from 'ws'
+import { WebSocket, createWebSocketStream } from 'ws'
 import { SECOND, isErrnoException, wait } from '@atproto/common'
 
 export class WebSocketKeepAlive {

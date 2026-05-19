@@ -1,15 +1,14 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { IdResolver } from '@atproto/identity'
+import { jest } from '@jest/globals'
+import { type AtpAgent } from '@atproto/api'
+import { type SeedClient } from '@atproto/dev-env'
 import { AtIdentifierString, DidString } from '@atproto/syntax'
-import { AppContext } from '../src'
-import basicSeed from './seeds/basic'
+import { type AppContext } from '../src/index.js'
 
 // outside of suite so they can be used in mock
 let alice: DidString
 let bob: DidString
 
-jest.mock('node:dns/promises', () => {
+jest.unstable_mockModule('node:dns/promises', () => {
   return {
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
@@ -23,12 +22,19 @@ jest.mock('node:dns/promises', () => {
   }
 })
 
+// Dynamic imports so jest.unstable_mockModule() registers before these modules
+// load node:dns/promises. Static imports link the full dep graph before any code
+// evaluates, which would bypass the mock. Remove once migrated to vitest.
+const { IdResolver } = await import('@atproto/identity')
+const { TestNetworkNoAppView } = await import('@atproto/dev-env')
+const { default: basicSeed } = await import('./seeds/basic.js')
+
 describe('handles', () => {
-  let network: TestNetworkNoAppView
+  let network: InstanceType<typeof TestNetworkNoAppView>
   let agent: AtpAgent
   let sc: SeedClient
   let ctx: AppContext
-  let idResolver: IdResolver
+  let idResolver: InstanceType<typeof IdResolver>
 
   const newHandle = 'alice2.test'
 

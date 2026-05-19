@@ -7,8 +7,8 @@ import {
   AtpSessionData,
   AtpSessionEvent,
   BSKY_LABELER_DID,
-} from '../src'
-import { createHeaderEchoServer } from './util/echo-server'
+} from '../src/index.js'
+import { createHeaderEchoServer } from './util/echo-server.js'
 
 const getPdsEndpointUrl = (...args: Parameters<typeof getPdsEndpoint>) => {
   const endpoint = getPdsEndpoint(...args)

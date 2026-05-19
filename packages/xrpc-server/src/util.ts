@@ -7,7 +7,10 @@ import {
   json,
   text,
 } from 'express'
-import { contentType } from 'mime-types'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import mimeTypes from 'mime-types'
+// eslint-disable-next-line import/no-named-as-default-member
+const { contentType } = mimeTypes
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
@@ -25,7 +28,7 @@ import {
   InternalServerError,
   InvalidRequestError,
   XRPCError,
-} from './errors'
+} from './errors.js'
 import {
   Auth,
   Input,
@@ -37,7 +40,7 @@ import {
   RouteOptions,
   UndecodedParams,
   handlerSuccess,
-} from './types'
+} from './types.js'
 
 export type Overwrite<T, U> = Omit<T, keyof U> & U
 

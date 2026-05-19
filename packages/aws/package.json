@@ -1,6 +1,6 @@
 {
   "name": "@atproto/aws",
-  "version": "0.2.32",
+  "version": "0.3.0",
   "license": "MIT",
   "description": "Shared AWS cloud API helpers for atproto services",
   "keywords": [
@@ -13,13 +13,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/aws"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -32,10 +30,17 @@
     "@aws-sdk/lib-storage": "3.879.0",
     "@noble/curves": "^1.7.0",
     "key-encoder": "^2.0.3",
-    "multiformats": "^9.9.0",
-    "uint8arrays": "3.0.0"
+    "multiformats": "^13.0.0",
+    "uint8arrays": "^5.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

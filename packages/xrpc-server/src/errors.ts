@@ -1,4 +1,7 @@
-import { isHttpError } from 'http-errors'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpErrors from 'http-errors'
+// eslint-disable-next-line import/no-named-as-default-member
+const { isHttpError } = httpErrors
 import { LexError, XrpcError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import {

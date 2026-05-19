@@ -1,14 +1,14 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane'
+} from '../../../../data-plane/index.js'
 import { app } from '../../../../lexicons/index.js'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import { resHeaders } from '../../../util'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.feed.getFeedGenerator, {

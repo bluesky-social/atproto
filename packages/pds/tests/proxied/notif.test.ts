@@ -6,7 +6,7 @@ import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createServer, verifyJwt } from '@atproto/xrpc-server'
 import { app } from '../../src/lexicons/index.js'
-import usersSeed from '../seeds/users'
+import usersSeed from '../seeds/users.js'
 
 describe('notif service proxy', () => {
   let network: TestNetworkNoAppView
@@ -20,7 +20,6 @@ describe('notif service proxy', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'proxy_notifs',
     })
-    network.pds.server.app.get
     const plc = network.plc.getClient()
     agent = network.pds.getAgent()
     sc = network.getSeedClient()

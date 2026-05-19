@@ -1,6 +1,7 @@
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
+import { expect } from 'vitest'
 import {
   $Typed,
   AppBskyEmbedRecord,

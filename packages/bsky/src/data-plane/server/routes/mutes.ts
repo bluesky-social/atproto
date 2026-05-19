@@ -2,10 +2,14 @@ import assert from 'node:assert'
 import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { app } from '../../../lexicons'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { CreatedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
+import { app } from '../../../lexicons/index.js'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import {
+  CreatedAtDidKeyset,
+  TimeCidKeyset,
+  paginate,
+} from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorMutesActor(req) {

@@ -5,14 +5,14 @@ import {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../context'
-import { readStickyLogger as log } from '../logger'
+import { AppContext } from '../context.js'
+import { readStickyLogger as log } from '../logger.js'
 import {
   asPipeThroughBuffer,
   isJsonContentType,
   pipethrough,
-} from '../pipethrough'
-import { HandlerResponse, LocalRecords, MungeFn } from './types'
+} from '../pipethrough.js'
+import { HandlerResponse, LocalRecords, MungeFn } from './types.js'
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
   let oldest: string | undefined = local.profile?.indexedAt

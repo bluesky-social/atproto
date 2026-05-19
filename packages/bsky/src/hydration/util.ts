@@ -14,7 +14,7 @@ import {
   parseCidSafe,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { Record as RecordEntry } from '../proto/bsky_pb'
+import { Record as RecordEntry } from '../proto/bsky_pb.js'
 
 const PARSE_OPTIONS: JsonToLexOptions & ValidateOptions = {
   strict: false,

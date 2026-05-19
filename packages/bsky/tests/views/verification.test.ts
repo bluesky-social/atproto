@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppBskyActorDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, verificationsSeed } from '@atproto/dev-env'
 
@@ -252,10 +253,10 @@ describe('verification views', () => {
         expect(profile.verification).toStrictEqual(getExpected())
 
         const urlPrefixes = getExpectedUrisPrefixes()
-        profile.verification &&
-          expect(urlPrefixes.length).toBe(
-            profile.verification.verifications.length,
-          )
+
+        expect(urlPrefixes.length).toBe(
+          profile.verification?.verifications.length ?? 0,
+        )
         urlPrefixes.forEach((prefix, i) => {
           assert(profile.verification)
           expect(

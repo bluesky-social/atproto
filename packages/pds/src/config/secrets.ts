@@ -1,4 +1,4 @@
-import { ServerEnvironment } from './env'
+import { ServerEnvironment } from './env.js'
 
 export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
   let plcRotationKey: ServerSecrets['plcRotationKey']

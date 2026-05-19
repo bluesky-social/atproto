@@ -3,8 +3,8 @@ import {
   ageAssuranceRuleIDs,
   computeAgeAssuranceRegionAccess,
   getAgeAssuranceRegionConfig,
-} from './age-assurance'
-import { AppBskyAgeassuranceDefs } from './client'
+} from './age-assurance.js'
+import { AppBskyAgeassuranceDefs } from './client/index.js'
 
 describe('age-assurance', () => {
   describe('getAgeAssuranceRegionConfig', () => {
