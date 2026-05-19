@@ -34,6 +34,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
+      # Removing generated code to ensure that the "prebuild" step is run and
+      # generates fresh code. This is needed because "ozone" and "api" won't run
+      # "codegen" as "prebuild" if the codegen code already exists (because it
+      # takes a long time to run). Once they are migrated to use "@atproto/lex"
+      # (and have a "prebuild" step), we can remove the explicit "rm" command
+      # here.
+      - run: rm -r packages/api/src/client packages/ozone/src/lexicon
       - name: Publish
         uses: changesets/action@v1
         id: changesets
