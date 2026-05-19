@@ -220,7 +220,23 @@ describe('moderation', () => {
           convoId: convoId2,
         },
       })
-      expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
+
+      // Verify reportA
+      expect(reportA.subject.$type).toBe('chat.bsky.convo.defs#convoRef')
+      expect(reportA.subject.convoId).toBe(convoId1)
+      expect(reportA.subject.did).toBe(sc.dids.carol)
+      expect(reportA.reasonType).toBe(REASONSPAM)
+      expect(reportA.reportedBy).toBe(sc.dids.alice)
+      expect(reportA.id).toBeGreaterThan(0)
+
+      // Verify reportB
+      expect(reportB.subject.$type).toBe('chat.bsky.convo.defs#convoRef')
+      expect(reportB.subject.convoId).toBe(convoId2)
+      expect(reportB.subject.did).toBe(sc.dids.carol)
+      expect(reportB.reasonType).toBe(REASONOTHER)
+      expect(reportB.reason).toBe('defamation')
+      expect(reportB.reportedBy).toBe(sc.dids.carol)
+      expect(reportB.id).toBeGreaterThan(reportA.id)
     })
   })
 
