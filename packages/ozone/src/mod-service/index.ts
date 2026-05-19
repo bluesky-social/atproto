@@ -249,7 +249,9 @@ export class ModerationService {
         }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('subjectUri', 'is', null)
+      builder = builder
+        .where('subjectUri', 'is', null)
+        .where('subjectConvoId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
     }
