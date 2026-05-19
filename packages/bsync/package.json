@@ -14,13 +14,15 @@
     "directory": "packages/bsync"
   },
   "scripts": {
+    "codegen:buf": "buf generate proto",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": "buf generate proto"
+    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   },
   "engines": {
     "node": ">=22"
