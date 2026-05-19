@@ -1,6 +1,6 @@
 import { ConnectRouter } from '@connectrpc/connect'
 import { IdResolver } from '@atproto/identity'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import activitySubscription from './activity-subscription.js'
 import blocks from './blocks.js'

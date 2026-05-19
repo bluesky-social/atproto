@@ -1,10 +1,10 @@
+import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { AppContext } from '../context.js'
 import { Database } from '../db/index.js'
 import { createNotifOpChannel } from '../db/schema/notif_op.js'
-import { Service } from '../proto/bsync_connect.js'
-import { AddNotifOperationResponse } from '../proto/bsync_pb.js'
+import { AddNotifOperationResponseSchema, Service } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { isValidDid } from './util.js'
 
@@ -28,7 +28,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       }
       return id
     })
-    return new AddNotifOperationResponse({
+    return create(AddNotifOperationResponseSchema, {
       operation: {
         id: String(id),
         actorDid,

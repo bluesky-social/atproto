@@ -1,5 +1,5 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -50,6 +50,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .set({ takedownRef: ref || 'TAKEDOWN' })
       .where('did', '=', did)
       .execute()
+    return {}
   },
 
   async takedownBlob(req) {
@@ -62,6 +63,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         takedownRef: ref || 'TAKEDOWN',
       })
       .execute()
+    return {}
   },
 
   async takedownRecord(req) {
@@ -71,6 +73,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .set({ takedownRef: ref || 'TAKEDOWN' })
       .where('uri', '=', recordUri)
       .execute()
+    return {}
   },
 
   async untakedownActor(req) {
@@ -80,6 +83,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .set({ takedownRef: null })
       .where('did', '=', did)
       .execute()
+    return {}
   },
 
   async untakedownBlob(req) {
@@ -89,6 +93,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('did', '=', did)
       .where('cid', '=', cid)
       .executeTakeFirst()
+    return {}
   },
 
   async untakedownRecord(req) {
@@ -98,5 +103,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .set({ takedownRef: null })
       .where('uri', '=', recordUri)
       .execute()
+    return {}
   },
 })

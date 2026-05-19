@@ -1,7 +1,7 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { DidDocument, IdResolver, getDid, getHandle } from '@atproto/identity'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 
 export default (
@@ -54,6 +54,6 @@ const getResultFromDoc = (doc: DidDocument) => {
     handle: getHandle(doc),
     keys: Buffer.from(JSON.stringify(keys)),
     services: Buffer.from(JSON.stringify(services)),
-    updated: Timestamp.fromDate(new Date()),
+    updated: timestampFromDate(new Date()),
   }
 }

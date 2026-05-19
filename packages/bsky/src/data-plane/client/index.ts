@@ -1,21 +1,21 @@
 import assert from 'node:assert'
 import { randomInt } from 'node:crypto'
 import {
+  Client,
   Code,
   ConnectError,
-  PromiseClient,
-  createPromiseClient,
+  createClient,
   makeAnyClient,
 } from '@connectrpc/connect'
-import { createGrpcTransport } from '@connectrpc/connect-node'
-import { Service } from '../../proto/bsky_connect.js'
+import { createConnectTransport } from '@connectrpc/connect-node'
+import { Service } from '../../proto/bsky_pb.js'
 import { HostList } from './hosts.js'
 import { callerInterceptor } from './util.js'
 
 export * from './hosts.js'
 export * from './util.js'
 
-export type DataPlaneClient = PromiseClient<typeof Service>
+export type DataPlaneClient = Client<typeof Service>
 type HttpVersion = '1.1' | '2'
 const MAX_RETRIES = 3
 
@@ -101,14 +101,14 @@ const createBaseClient = (
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ): DataPlaneClient => {
   const { httpVersion = '2', rejectUnauthorized = true } = opts
-  const transport = createGrpcTransport({
+  const transport = createConnectTransport({
     baseUrl,
     httpVersion,
     acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
     interceptors: [callerInterceptor('appview')],
   })
-  return createPromiseClient(Service, transport)
+  return createClient(Service, transport)
 }
 
 const getRemainingClients = (

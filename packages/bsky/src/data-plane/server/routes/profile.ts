@@ -1,11 +1,10 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { parseJsonBytes } from '../../../hydration/util.js'
 import { app, chat } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
-import { VerificationMeta } from '../../../proto/bsky_pb.js'
+import { Service, VerificationMeta } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import { Verification } from '../db/tables/verification.js'
 import { getRecords } from './records.js'
@@ -106,7 +105,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           rkey: cur.rkey,
           handle: cur.handle,
           displayName: cur.displayName,
-          sortedAt: Timestamp.fromDate(new Date(cur.sortedAt)),
+          sortedAt: timestampFromDate(new Date(cur.sortedAt)),
         }
         return acc
       }, {} as VerifiedBy)
@@ -154,7 +153,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
         return {
           lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
-            ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
+            ? timestampFromDate(new Date(row?.ageAssuranceLastInitiatedAt))
             : undefined,
           status,
           access,
@@ -216,5 +215,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .set({ upstreamStatus })
       .where('did', '=', actorDid)
       .execute()
+    return {}
   },
 })

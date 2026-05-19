@@ -1,4 +1,4 @@
-import { Struct, Timestamp } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 // eslint-disable-next-line import/no-named-as-default-member
 import murmur from 'murmurhash'
 import { Server } from '@atproto/xrpc-server'
@@ -15,12 +15,12 @@ export default function (server: Server, ctx: AppContext) {
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
           actorDid: viewer,
-          timestamp: Timestamp.fromDate(seenAt),
+          timestamp: timestampFromDate(seenAt),
           priority: false,
         }),
         ctx.dataplane.updateNotificationSeen({
           actorDid: viewer,
-          timestamp: Timestamp.fromDate(seenAt),
+          timestamp: timestampFromDate(seenAt),
           priority: true,
         }),
         ctx.courierClient?.pushNotifications({
@@ -31,10 +31,10 @@ export default function (server: Server, ctx: AppContext) {
               recipientDid: viewer,
               alwaysDeliver: false,
               collapseKey: 'mark-read-generic',
-              timestamp: Timestamp.fromDate(new Date()),
-              additional: Struct.fromJson({
+              timestamp: timestampFromDate(new Date()),
+              additional: {
                 reason: 'mark-read-generic',
-              }),
+              },
             },
           ],
         }),

@@ -1,6 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

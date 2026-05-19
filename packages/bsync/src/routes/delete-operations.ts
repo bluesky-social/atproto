@@ -1,7 +1,10 @@
+import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { AppContext } from '../context.js'
-import { Service } from '../proto/bsync_connect.js'
-import { DeleteOperationsByActorAndNamespaceResponse } from '../proto/bsync_pb.js'
+import {
+  DeleteOperationsByActorAndNamespaceResponseSchema,
+  Service,
+} from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { isValidDid, validateNamespace } from './util.js'
 
@@ -38,7 +41,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       .where('namespace', '=', req.namespace)
       .returning('id')
       .execute()
-    return new DeleteOperationsByActorAndNamespaceResponse({
+    return create(DeleteOperationsByActorAndNamespaceResponseSchema, {
       deletedCount: deletedRows.length,
     })
   },

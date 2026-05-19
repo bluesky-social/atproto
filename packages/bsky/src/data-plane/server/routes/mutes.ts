@@ -3,7 +3,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import {
   CreatedAtDidKeyset,
@@ -123,6 +123,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
+    return {}
   },
 
   async deleteActorMute(req) {
@@ -133,11 +134,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('subjectDid', '=', subjectDid)
       .where('mutedByDid', '=', actorDid)
       .execute()
+    return {}
   },
 
   async clearActorMutes(req) {
     const { actorDid } = req
     await db.db.deleteFrom('mute').where('mutedByDid', '=', actorDid).execute()
+    return {}
   },
 
   async createActorMutelistSubscription(req) {
@@ -152,6 +155,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
+    return {}
   },
 
   async deleteActorMutelistSubscription(req) {
@@ -162,6 +166,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('listUri', '=', subjectUri)
       .where('mutedByDid', '=', actorDid)
       .execute()
+    return {}
   },
 
   async clearActorMutelistSubscriptions(req) {
@@ -170,6 +175,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .deleteFrom('list_mute')
       .where('mutedByDid', '=', actorDid)
       .execute()
+    return {}
   },
 
   async getThreadMutesOnSubjects(req) {

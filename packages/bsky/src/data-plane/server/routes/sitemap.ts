@@ -1,7 +1,7 @@
 import { gzipSync } from 'node:zlib'
+import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect.js'
-import { GetSitemapPageRequest } from '../../../proto/bsky_pb.js'
+import { GetSitemapPageRequest, Service } from '../../../proto/bsky_pb.js'
 
 const MOCK_SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -24,7 +24,7 @@ export default (): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
   async getSitemapPage(req: GetSitemapPageRequest) {
-    const date = req.date?.toDate()
+    const date = req.date ? timestampDate(req.date) : undefined
     const isExpectedDate =
       date &&
       date.getFullYear() === 2025 &&

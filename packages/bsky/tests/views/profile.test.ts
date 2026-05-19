@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { Timestamp } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   AppBskyEmbedExternal,
@@ -737,7 +737,7 @@ describe('pds profile views', () => {
         const actor = result.actors[0]
         // Create a Timestamp with Go zero-value (0001-01-01 00:00:00 UTC)
         const goZeroDate = new Date(-62135596800000)
-        actor.createdAt = Timestamp.fromDate(goZeroDate)
+        actor.createdAt = timestampFromDate(goZeroDate)
       }
 
       return result

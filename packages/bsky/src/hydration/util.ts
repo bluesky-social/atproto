@@ -1,4 +1,4 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { Timestamp, timestampDate } from '@bufbuild/protobuf/wkt'
 import {
   AtUriString,
   Cid,
@@ -145,7 +145,7 @@ export const parseDate = (
   timestamp: Timestamp | undefined,
 ): Date | undefined => {
   if (!timestamp) return undefined
-  const date = timestamp.toDate()
+  const date = timestampDate(timestamp)
   // Check for year 1 (0001-01-01 00:00:00 UTC) which is -62135596800000ms from epoch.
   // The Go dataplane gives us those values as they come from the Go zero-value for dates.
   if (date.getTime() === -62135596800000) return undefined

@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream'
-import { Timestamp } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 import { Code, ConnectError } from '@connectrpc/connect'
 import express, { RequestHandler, Router } from 'express'
 import { AppContext } from '../context.js'
@@ -60,7 +60,7 @@ const userPageHandler =
     try {
       const result = await ctx.dataplane.getSitemapPage({
         type: SitemapPageType.USER,
-        date: Timestamp.fromDate(new Date(year, month - 1, day)),
+        date: timestampFromDate(new Date(year, month - 1, day)),
         bucket: bucketNum,
       })
       res.set('Content-Type', 'application/gzip')

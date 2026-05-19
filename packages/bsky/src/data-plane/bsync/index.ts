@@ -9,7 +9,7 @@ import { lexParse } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
-import { Service } from '../../proto/bsync_connect.js'
+import { Service } from '../../proto/bsync_pb.js'
 import {
   Method,
   MuteOperation_Type,

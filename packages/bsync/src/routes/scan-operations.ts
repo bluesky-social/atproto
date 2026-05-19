@@ -1,9 +1,9 @@
 import { once } from 'node:events'
+import { create } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { AppContext } from '../context.js'
 import { createOperationChannel } from '../db/schema/operation.js'
-import { Service } from '../proto/bsync_connect.js'
-import { ScanOperationsResponse } from '../proto/bsync_pb.js'
+import { ScanOperationsResponseSchema, Service } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { combineSignals, validCursor } from './util.js'
 
@@ -36,14 +36,14 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         await nextOpPromise
       } catch (err) {
         ctx.shutdown.throwIfAborted()
-        return new ScanOperationsResponse({
+        return create(ScanOperationsResponseSchema, {
           operations: [],
           cursor: req.cursor,
         })
       }
       ops = await nextOpPageQb.execute()
       if (!ops.length) {
-        return new ScanOperationsResponse({
+        return create(ScanOperationsResponseSchema, {
           operations: [],
           cursor: req.cursor,
         })
@@ -52,7 +52,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 
     const lastOp = ops[ops.length - 1]
 
-    return new ScanOperationsResponse({
+    return create(ScanOperationsResponseSchema, {
       operations: ops.map((op) => ({
         id: op.id.toString(),
         actorDid: op.actorDid,

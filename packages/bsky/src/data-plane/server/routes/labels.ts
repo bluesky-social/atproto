@@ -2,7 +2,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
 import * as ui8 from 'uint8arrays'
 import { noUndefinedVals } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import { Label } from '../db/tables/label.js'
 

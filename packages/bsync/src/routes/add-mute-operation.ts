@@ -1,13 +1,14 @@
+import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { AppContext } from '../context.js'
 import { Database } from '../db/index.js'
 import { createMuteOpChannel } from '../db/schema/mute_op.js'
-import { Service } from '../proto/bsync_connect.js'
 import {
-  AddMuteOperationResponse,
+  AddMuteOperationResponseSchema,
   MuteOperation_Type,
+  Service,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { isValidAtUri, isValidDid } from './util.js'
@@ -33,7 +34,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       }
       return id
     })
-    return new AddMuteOperationResponse({
+    return create(AddMuteOperationResponseSchema, {
       operation: {
         id: String(id),
         type: op.type,

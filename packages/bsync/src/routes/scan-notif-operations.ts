@@ -1,9 +1,12 @@
 import { once } from 'node:events'
+import { create } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { AppContext } from '../context.js'
 import { createNotifOpChannel } from '../db/schema/notif_op.js'
-import { Service } from '../proto/bsync_connect.js'
-import { ScanNotifOperationsResponse } from '../proto/bsync_pb.js'
+import {
+  ScanNotifOperationsResponseSchema,
+  Service,
+} from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { combineSignals, validCursor } from './util.js'
 
@@ -36,14 +39,14 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         await nextNotifOpPromise
       } catch (err) {
         ctx.shutdown.throwIfAborted()
-        return new ScanNotifOperationsResponse({
+        return create(ScanNotifOperationsResponseSchema, {
           operations: [],
           cursor: req.cursor,
         })
       }
       ops = await nextNotifOpPageQb.execute()
       if (!ops.length) {
-        return new ScanNotifOperationsResponse({
+        return create(ScanNotifOperationsResponseSchema, {
           operations: [],
           cursor: req.cursor,
         })
@@ -52,7 +55,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 
     const lastOp = ops[ops.length - 1]
 
-    return new ScanNotifOperationsResponse({
+    return create(ScanNotifOperationsResponseSchema, {
       operations: ops.map((op) => ({
         id: op.id.toString(),
         actorDid: op.actorDid,

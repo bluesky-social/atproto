@@ -1,23 +1,23 @@
 import {
+  Client,
   Code,
   ConnectError,
   Interceptor,
-  PromiseClient,
-  createPromiseClient,
+  createClient,
 } from '@connectrpc/connect'
 import {
   ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-import { Service } from './proto/bsync_connect.js'
+import { Service } from './proto/bsync_pb.js'
 
-export type BsyncClient = PromiseClient<typeof Service>
+export type BsyncClient = Client<typeof Service>
 
 export const createBsyncClient = (
   opts: ConnectTransportOptions,
 ): BsyncClient => {
   const transport = createConnectTransport(opts)
-  return createPromiseClient(Service, transport)
+  return createClient(Service, transport)
 }
 
 export { Code }

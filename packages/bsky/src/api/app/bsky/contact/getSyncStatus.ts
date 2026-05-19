@@ -1,3 +1,4 @@
+import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { DatetimeString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
@@ -21,9 +22,9 @@ export default function (server: Server, ctx: AppContext) {
         res.status && res.status.syncedAt
           ? {
               matchesCount: res.status.matchesCount,
-              syncedAt: res.status.syncedAt
-                .toDate()
-                .toISOString() as DatetimeString,
+              syncedAt: timestampDate(
+                res.status.syncedAt,
+              ).toISOString() as DatetimeString,
             }
           : undefined
 

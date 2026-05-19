@@ -1,10 +1,12 @@
-import { PlainMessage } from '@bufbuild/protobuf'
+import { create } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
 import {
   ActivitySubscription,
-  GetActivitySubscriptionsByActorAndSubjectsResponse,
+  GetActivitySubscriptionsByActorAndSubjectsResponseSchema,
+  PostActivitySubscriptionSchema,
+  ReplyActivitySubscriptionSchema,
+  Service,
 } from '../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../stash.js'
 import { Database } from '../db/index.js'
@@ -14,7 +16,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActivitySubscriptionsByActorAndSubjects(req) {
     const { actorDid, subjectDids } = req
     if (subjectDids.length === 0) {
-      return new GetActivitySubscriptionsByActorAndSubjectsResponse({
+      return create(GetActivitySubscriptionsByActorAndSubjectsResponseSchema, {
         subscriptions: [],
       })
     }
@@ -28,7 +30,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const bySubject = keyBy(res, 'subjectDid')
     const subscriptions = subjectDids.map(
-      (did): PlainMessage<ActivitySubscription> => {
+      (did): Omit<ActivitySubscription, '$typeName'> => {
         const subject = bySubject.get(did)
         if (!subject) {
           return {
@@ -48,16 +50,20 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           namespace:
             Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type,
           key: subject.key,
-          post: subject.post ? {} : undefined,
-          reply: subject.reply ? {} : undefined,
+          post: subject.post
+            ? create(PostActivitySubscriptionSchema)
+            : undefined,
+          reply: subject.reply
+            ? create(ReplyActivitySubscriptionSchema)
+            : undefined,
           subjectDid: subject.subjectDid,
         }
       },
     )
 
-    return {
+    return create(GetActivitySubscriptionsByActorAndSubjectsResponseSchema, {
       subscriptions,
-    }
+    })
   },
 
   async getActivitySubscriptionDids(req) {

@@ -1,3 +1,4 @@
+import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { mapDefined } from '@atproto/common'
 import { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
@@ -142,9 +143,12 @@ const skeleton = async (
   ])
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
   // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
-  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  let lastSeenDate = lastSeenRes.timestamp
+    ? timestampDate(lastSeenRes.timestamp)
+    : undefined
   if (!lastSeenDate && !originalCursor) {
-    lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
+    const firstTs = res.notifications.at(0)?.timestamp
+    lastSeenDate = firstTs ? timestampDate(firstTs) : undefined
   }
   return {
     notifs: res.notifications,

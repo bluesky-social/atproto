@@ -1,17 +1,22 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { create } from '@bufbuild/protobuf'
+import { timestampDate, timestampFromDate } from '@bufbuild/protobuf/wkt'
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { app } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
 import {
   ChatNotificationInclude,
   ChatNotificationPreference,
+  ChatNotificationPreferenceSchema,
   FilterableNotificationPreference,
+  FilterableNotificationPreferenceSchema,
   NotificationInclude,
   NotificationPreference,
+  NotificationPreferenceSchema,
   NotificationPreferences,
+  NotificationPreferencesSchema,
+  Service,
 } from '../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../stash.js'
 import { Database } from '../db/index.js'
@@ -65,7 +70,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       uri: notif.uri,
       reason: notif.reason,
       reasonSubject: notif.reasonSubject ?? undefined,
-      timestamp: Timestamp.fromDate(new Date(notif.sortAt)),
+      timestamp: timestampFromDate(new Date(notif.sortAt)),
       priority: notif.priority ?? false,
     }))
     return {
@@ -89,7 +94,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         ? res.lastSeenPriorityNotifs
         : res.lastSeenNotifs
     return {
-      timestamp: Timestamp.fromDate(new Date(lastSeen)),
+      timestamp: timestampFromDate(new Date(lastSeen)),
     }
   },
 
@@ -136,9 +141,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async updateNotificationSeen(req) {
     const { actorDid, timestamp, priority } = req
     if (!timestamp) {
-      return
+      return {}
     }
-    const timestampIso = timestamp.toDate().toISOString()
+    const timestampIso = timestampDate(timestamp).toISOString()
     let builder = db.db
       .updateTable('actor_state')
       .where('did', '=', actorDid)
@@ -150,7 +155,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
     const updateRes = await builder.executeTakeFirst()
     if (updateRes) {
-      return
+      return {}
     }
     await db.db
       .insertInto('actor_state')
@@ -162,6 +167,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       })
       .onConflict((oc) => oc.doNothing())
       .executeTakeFirst()
+    return {}
   },
 
   async getNotificationPreferences(req) {
@@ -203,7 +209,7 @@ export const notificationPreferencesLexToProtobuf = (
   const lexChatPreferenceToProtobuf = (
     p: app.bsky.notification.defs.ChatPreference,
   ): ChatNotificationPreference =>
-    new ChatNotificationPreference({
+    create(ChatNotificationPreferenceSchema, {
       include:
         p.include === 'accepted'
           ? ChatNotificationInclude.ACCEPTED
@@ -214,7 +220,7 @@ export const notificationPreferencesLexToProtobuf = (
   const lexFilterablePreferenceToProtobuf = (
     p: app.bsky.notification.defs.FilterablePreference,
   ): FilterableNotificationPreference =>
-    new FilterableNotificationPreference({
+    create(FilterableNotificationPreferenceSchema, {
       include:
         p.include === 'follows'
           ? NotificationInclude.FOLLOWS
@@ -226,12 +232,12 @@ export const notificationPreferencesLexToProtobuf = (
   const lexPreferenceToProtobuf = (
     p: app.bsky.notification.defs.Preference,
   ): NotificationPreference =>
-    new NotificationPreference({
+    create(NotificationPreferenceSchema, {
       list: { enabled: p.list ?? true },
       push: { enabled: p.push ?? true },
     })
 
-  return new NotificationPreferences({
+  return create(NotificationPreferencesSchema, {
     entry: Buffer.from(json),
     chat: lexChatPreferenceToProtobuf(p.chat),
     follow: lexFilterablePreferenceToProtobuf(p.follow),

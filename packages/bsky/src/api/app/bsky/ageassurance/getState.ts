@@ -1,3 +1,4 @@
+import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { DatetimeString } from '@atproto/syntax'
 import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
@@ -20,14 +21,14 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           state: {
             lastInitiatedAt: lastInitiatedAt
-              ? (lastInitiatedAt.toDate().toISOString() as DatetimeString)
+              ? (timestampDate(lastInitiatedAt).toISOString() as DatetimeString)
               : undefined,
             status: actor.ageAssuranceStatus?.status || 'unknown',
             access: actor.ageAssuranceStatus?.access || 'unknown',
           },
           metadata: {
             accountCreatedAt: actor.createdAt
-              ? (actor.createdAt.toDate().toISOString() as DatetimeString)
+              ? (timestampDate(actor.createdAt).toISOString() as DatetimeString)
               : undefined,
           },
         },
