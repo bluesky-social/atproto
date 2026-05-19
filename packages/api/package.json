@@ -18,8 +18,9 @@
     "directory": "packages/api"
   },
   "scripts": {
-    "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
-    "prebuild": "node ./scripts/generate-code.mjs && ([ -f ./src/client/index.ts ] || pnpm run codegen)",
+    "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
+    "codegen:generated": "node ./scripts/generate-code.mjs",
+    "prebuild": "pnpm run codegen:generated && ([ -f ./src/client/index.ts ] && [ -z \"$CI\" ] || pnpm run codegen:lex)",
     "build": "tsc --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },

@@ -12,10 +12,10 @@
     "lexicon"
   ],
   "scripts": {
-    "test": "vitest run",
-    "build": "tsc --build tsconfig.build.json",
+    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema",
     "prebuild": "pnpm run codegen",
-    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
   },
   "homepage": "https://atproto.com",
   "repository": {
