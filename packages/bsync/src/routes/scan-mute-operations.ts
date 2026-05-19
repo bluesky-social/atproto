@@ -1,9 +1,9 @@
 import { once } from 'node:events'
+import { create } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { AppContext } from '../context.js'
 import { createMuteOpChannel } from '../db/schema/mute_op.js'
-import { Service } from '../proto/bsync_connect.js'
-import { ScanMuteOperationsResponse } from '../proto/bsync_pb.js'
+import { ScanMuteOperationsResponseSchema, Service } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { combineSignals, validCursor } from './util.js'
 
@@ -36,14 +36,14 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         await nextMuteOpPromise
       } catch (err) {
         ctx.shutdown.throwIfAborted()
-        return new ScanMuteOperationsResponse({
+        return create(ScanMuteOperationsResponseSchema, {
           operations: [],
           cursor: req.cursor,
         })
       }
       ops = await nextMuteOpPageQb.execute()
       if (!ops.length) {
-        return new ScanMuteOperationsResponse({
+        return create(ScanMuteOperationsResponseSchema, {
           operations: [],
           cursor: req.cursor,
         })
@@ -52,7 +52,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 
     const lastOp = ops[ops.length - 1]
 
-    return new ScanMuteOperationsResponse({
+    return create(ScanMuteOperationsResponseSchema, {
       operations: ops.map((op) => ({
         id: op.id.toString(),
         type: op.type,

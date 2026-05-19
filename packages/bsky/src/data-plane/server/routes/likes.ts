@@ -1,7 +1,11 @@
 import assert from 'node:assert'
+import { create } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
+import {
+  GetLikesBySubjectSortedRequestSchema,
+  Service,
+} from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
@@ -38,7 +42,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   // @NOTE deprecated in favor of getLikesBySubjectSorted
   async getLikesBySubject(req, context) {
     assert(this.getLikesBySubjectSorted)
-    return this.getLikesBySubjectSorted(req, context)
+    const { $typeName: _, ...props } = await this.getLikesBySubjectSorted(
+      create(GetLikesBySubjectSortedRequestSchema, {
+        subject: req.subject,
+        cursor: req.cursor,
+        limit: req.limit,
+      }),
+      context,
+    )
+    return props
   },
 
   async getLikesByActorAndSubjects(req) {

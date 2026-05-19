@@ -1,12 +1,22 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { create } from '@bufbuild/protobuf'
+import {
+  Timestamp,
+  timestampDate,
+  timestampFromDate,
+} from '@bufbuild/protobuf/wkt'
 import { ServiceImpl } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { keyBy } from '@atproto/common'
 import { l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app, chat, com } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
-import { PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
+import {
+  PostRecordMeta,
+  PostRecordMetaSchema,
+  Record,
+  RecordSchema,
+  Service,
+} from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -54,13 +64,13 @@ export const getRecords = (db: Database, ns?: l.Main<l.RecordSchema>) => {
       const json = row ? row.json : JSON.stringify(null)
       const createdAtRaw = new Date(JSON.parse(json)?.['createdAt'])
       const createdAt = !isNaN(createdAtRaw.getTime())
-        ? Timestamp.fromDate(createdAtRaw)
+        ? timestampFromDate(createdAtRaw)
         : undefined
       const indexedAt = row?.indexedAt
-        ? Timestamp.fromDate(new Date(row?.indexedAt))
+        ? timestampFromDate(new Date(row?.indexedAt))
         : undefined
       const recordBytes = ui8.fromString(json, 'utf8')
-      return new Record({
+      return create(RecordSchema, {
         record: recordBytes as Uint8Array<ArrayBuffer>,
         cid: row?.cid,
         createdAt,
@@ -98,7 +108,7 @@ export const getPostRecords = (db: Database) => {
     ])
     const byKey = keyBy(details, 'uri')
     const meta = req.uris.map((uri) => {
-      return new PostRecordMeta({
+      return create(PostRecordMetaSchema, {
         violatesThreadGate: !!byKey.get(uri)?.violatesThreadGate,
         violatesEmbeddingRules: !!byKey.get(uri)?.violatesEmbeddingRules,
         hasThreadGate: !!byKey.get(uri)?.hasThreadGate,
@@ -115,5 +125,5 @@ const compositeTime = (
 ) => {
   if (!ts1) return ts2
   if (!ts2) return ts1
-  return ts1.toDate() < ts2.toDate() ? ts1 : ts2
+  return timestampDate(ts1) < timestampDate(ts2) ? ts1 : ts2
 }

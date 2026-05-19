@@ -1,6 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
+import { Service } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import { TimeCidKeyset, paginate } from '../db/pagination.js'
 import { countAll } from '../db/util.js'

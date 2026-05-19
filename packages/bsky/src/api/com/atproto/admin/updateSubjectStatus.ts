@@ -1,4 +1,4 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 import {
   AuthRequiredError,
   InvalidRequestError,
@@ -25,12 +25,12 @@ export default function (server: Server, ctx: AppContext) {
             await ctx.dataplane.takedownActor({
               did: subject.did,
               ref: takedown.ref,
-              seen: Timestamp.fromDate(now),
+              seen: timestampFromDate(now),
             })
           } else {
             await ctx.dataplane.untakedownActor({
               did: subject.did,
-              seen: Timestamp.fromDate(now),
+              seen: timestampFromDate(now),
             })
           }
         } else if (com.atproto.repo.strongRef.$isTypeOf(subject)) {
@@ -38,12 +38,12 @@ export default function (server: Server, ctx: AppContext) {
             await ctx.dataplane.takedownRecord({
               recordUri: subject.uri,
               ref: takedown.ref,
-              seen: Timestamp.fromDate(now),
+              seen: timestampFromDate(now),
             })
           } else {
             await ctx.dataplane.untakedownRecord({
               recordUri: subject.uri,
-              seen: Timestamp.fromDate(now),
+              seen: timestampFromDate(now),
             })
           }
         } else if (com.atproto.admin.defs.repoBlobRef.$isTypeOf(subject)) {
@@ -52,13 +52,13 @@ export default function (server: Server, ctx: AppContext) {
               did: subject.did,
               cid: subject.cid,
               ref: takedown.ref,
-              seen: Timestamp.fromDate(now),
+              seen: timestampFromDate(now),
             })
           } else {
             await ctx.dataplane.untakedownBlob({
               did: subject.did,
               cid: subject.cid,
-              seen: Timestamp.fromDate(now),
+              seen: timestampFromDate(now),
             })
           }
         } else {

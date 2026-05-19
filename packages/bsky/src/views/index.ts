@@ -1,3 +1,4 @@
+import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import {
   $Typed,
@@ -2432,7 +2433,7 @@ export class Views {
       cid: recordInfo.cid,
       record: recordInfo.record,
     })
-    const indexedAt = notif.timestamp.toDate().toISOString()
+    const indexedAt = timestampDate(notif.timestamp!).toISOString()
     return {
       uri: notif.uri as AtUriString,
       cid: recordInfo.cid,
@@ -2444,7 +2445,7 @@ export class Views {
       // the user's first notification is marked unread, and all previous read. in this case,
       // the last seen time will be equal to the first notification's indexed time.
       isRead: lastSeenAt ? lastSeenAt > indexedAt : true,
-      indexedAt: notif.timestamp.toDate().toISOString() as DatetimeString,
+      indexedAt: timestampDate(notif.timestamp!).toISOString() as DatetimeString,
       labels: [...labels, ...selfLabels],
     }
   }

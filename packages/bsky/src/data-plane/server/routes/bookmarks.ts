@@ -1,10 +1,14 @@
-import { PlainMessage, Timestamp } from '@bufbuild/protobuf'
+import { create } from '@bufbuild/protobuf'
+import { timestampFromDate } from '@bufbuild/protobuf/wkt'
 import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
 import {
   Bookmark,
+  BookmarkSchema,
   GetBookmarksByActorAndSubjectsResponse,
+  GetBookmarksByActorAndSubjectsResponseSchema,
+  Service,
+  StashRefSchema,
 } from '../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../stash.js'
 import { Database } from '../db/index.js'
@@ -36,11 +40,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  async getBookmarksByActorAndSubjects(req) {
+  async getBookmarksByActorAndSubjects(
+    req,
+  ): Promise<GetBookmarksByActorAndSubjectsResponse> {
     const { actorDid, uris } = req
 
     if (uris.length === 0) {
-      return new GetBookmarksByActorAndSubjectsResponse({
+      return create(GetBookmarksByActorAndSubjectsResponseSchema, {
         bookmarks: [],
       })
     }
@@ -53,31 +59,31 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
 
     const byUri = keyBy(res, 'subjectUri')
-    const bookmarks = uris.map((did): PlainMessage<Bookmark> => {
+    const bookmarks = uris.map((did): Bookmark => {
       const bookmark = byUri.get(did)
       if (!bookmark) {
-        return {
+        return create(BookmarkSchema, {
           ref: undefined,
           subjectUri: '',
           subjectCid: '',
           indexedAt: undefined,
-        }
+        })
       }
 
-      return {
-        ref: {
+      return create(BookmarkSchema, {
+        ref: create(StashRefSchema, {
           actorDid,
           namespace: Namespaces.AppBskyBookmarkDefsBookmark.$type,
           key: bookmark.key,
-        },
+        }),
         subjectUri: bookmark.subjectUri,
         subjectCid: bookmark.subjectCid,
-        indexedAt: Timestamp.fromDate(new Date(bookmark.indexedAt)),
-      }
+        indexedAt: timestampFromDate(new Date(bookmark.indexedAt)),
+      })
     })
 
-    return {
+    return create(GetBookmarksByActorAndSubjectsResponseSchema, {
       bookmarks,
-    }
+    })
   },
 })

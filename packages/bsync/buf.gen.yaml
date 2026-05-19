@@ -1,12 +1,8 @@
-version: v1
+version: v2
+clean: true
 plugins:
-  - plugin: es
+  - local: protoc-gen-es
+    out: src/proto
+    include_imports: true
     opt:
       - target=ts
-      - import_extension=
-    out: src/proto
-  - plugin: connect-es
-    opt:
-      - target=ts
-      - import_extension=
-    out: src/proto

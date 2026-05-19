@@ -12,7 +12,7 @@ import {
   Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
-  RecordRef,
+  StashRef,
 } from '../proto/bsky_pb.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import { ParsedLabelers } from '../util.js'
@@ -1065,7 +1065,7 @@ export class Hydrator {
       uris: bookmarkInfos.map((b) => b.subject),
     })
 
-    type BookmarkWithRef = BookmarkLex & { ref: RecordRef }
+    type BookmarkWithRef = BookmarkLex & { ref: StashRef }
     const bookmarks: BookmarkWithRef[] = bookmarksRes.bookmarks.filter(
       (bookmark): bookmark is BookmarkWithRef => !!bookmark.ref?.key,
     )

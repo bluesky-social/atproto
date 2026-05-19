@@ -1,24 +1,24 @@
 import {
+  Client,
   Code,
   ConnectError,
   Interceptor,
-  PromiseClient,
-  createPromiseClient,
+  createClient,
 } from '@connectrpc/connect'
 import {
   ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-import { RolodexService } from './proto/rolodex_connect.js'
+import { RolodexService } from './proto/rolodex_pb.js'
 
 // Rolodex is the service that does contact imports following https://docs.bsky.app/blog/contact-import-rfc.
-export type RolodexClient = PromiseClient<typeof RolodexService>
+export type RolodexClient = Client<typeof RolodexService>
 
 export const createRolodexClient = (
   opts: ConnectTransportOptions,
 ): RolodexClient => {
   const transport = createConnectTransport(opts)
-  return createPromiseClient(RolodexService, transport)
+  return createClient(RolodexService, transport)
 }
 
 export { Code }

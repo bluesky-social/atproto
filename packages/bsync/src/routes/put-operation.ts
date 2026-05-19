@@ -1,3 +1,4 @@
+import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { ensureValidRecordKey } from '@atproto/syntax'
@@ -7,11 +8,11 @@ import {
   OperationMethod,
   createOperationChannel,
 } from '../db/schema/operation.js'
-import { Service } from '../proto/bsync_connect.js'
 import {
   Method,
   PutOperationRequest,
-  PutOperationResponse,
+  PutOperationResponseSchema,
+  Service,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { isValidDid, validateNamespace } from './util.js'
@@ -24,7 +25,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const id = await db.transaction(async (txn) => {
       return putOp(txn, op)
     })
-    return new PutOperationResponse({
+    return create(PutOperationResponseSchema, {
       operation: {
         id: String(id),
         actorDid: op.actorDid,
@@ -110,6 +111,6 @@ type Operation = {
   actorDid: string
   namespace: string
   key: string
-  payload: Uint8Array<ArrayBuffer>
+  payload: Uint8Array
   method: OperationMethod
 }

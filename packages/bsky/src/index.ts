@@ -168,7 +168,6 @@ export class BskyAppView {
     })
 
     const dataplane = createDataPlaneClient(dataplaneHostList, {
-      httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {

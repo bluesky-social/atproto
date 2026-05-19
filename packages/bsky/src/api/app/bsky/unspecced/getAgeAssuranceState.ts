@@ -1,3 +1,4 @@
+import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { DatetimeString } from '@atproto/syntax'
 import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
@@ -17,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           lastInitiatedAt: lastInitiatedAt
-            ? (lastInitiatedAt.toDate().toISOString() as DatetimeString)
+            ? (timestampDate(lastInitiatedAt).toISOString() as DatetimeString)
             : undefined,
           status: actorInfo.ageAssuranceStatus?.status ?? 'unknown',
         },

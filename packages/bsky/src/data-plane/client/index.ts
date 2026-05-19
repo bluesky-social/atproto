@@ -1,27 +1,26 @@
 import assert from 'node:assert'
 import { randomInt } from 'node:crypto'
 import {
+  Client,
   Code,
   ConnectError,
-  PromiseClient,
-  createPromiseClient,
+  createClient,
   makeAnyClient,
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
-import { Service } from '../../proto/bsky_connect.js'
+import { Service } from '../../proto/bsky_pb.js'
 import { HostList } from './hosts.js'
 import { callerInterceptor } from './util.js'
 
 export * from './hosts.js'
 export * from './util.js'
 
-export type DataPlaneClient = PromiseClient<typeof Service>
-type HttpVersion = '1.1' | '2'
+export type DataPlaneClient = Client<typeof Service>
 const MAX_RETRIES = 3
 
 export const createDataPlaneClient = (
   hostList: HostList,
-  opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
+  opts: { rejectUnauthorized?: boolean },
 ) => {
   const clients = new DataPlaneClients(hostList, opts)
   return makeAnyClient(Service, (method) => {
@@ -67,7 +66,6 @@ class DataPlaneClients {
   constructor(
     private hostList: HostList,
     private clientOpts: {
-      httpVersion?: HttpVersion
       rejectUnauthorized?: boolean
     },
   ) {
@@ -98,17 +96,16 @@ class DataPlaneClients {
 
 const createBaseClient = (
   baseUrl: string,
-  opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
+  opts: { rejectUnauthorized?: boolean },
 ): DataPlaneClient => {
-  const { httpVersion = '2', rejectUnauthorized = true } = opts
+  const { rejectUnauthorized = true } = opts
   const transport = createGrpcTransport({
     baseUrl,
-    httpVersion,
     acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
     interceptors: [callerInterceptor('appview')],
   })
-  return createPromiseClient(Service, transport)
+  return createClient(Service, transport)
 }
 
 const getRemainingClients = (
