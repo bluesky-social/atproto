@@ -23,6 +23,7 @@
 
     "lib": [],
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "types": [],
 

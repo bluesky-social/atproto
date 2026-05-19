@@ -335,8 +335,13 @@ function xrpcProcedureInput(
       return buildPayload(input, body, encodingHint)
     case 'object': {
       if (body === null) break
-      if (
-        ArrayBuffer.isView(body) ||
+      if (ArrayBuffer.isView(body)) {
+        return buildPayload(
+          input,
+          body as Uint8Array<ArrayBuffer>,
+          encodingHint,
+        )
+      } else if (
         body instanceof ArrayBuffer ||
         body instanceof ReadableStream
       ) {

@@ -1,7 +1,7 @@
 import { base64url } from 'multiformats/bases/base64'
 import { RefinementCtx, ZodIssueCode } from 'zod'
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<V & Omit<T, keyof V>>
 
@@ -26,6 +26,7 @@ export const preferredOrderCmp =
     return aIdx - bIdx
   }
 
+/* eslint-disable @typescript-eslint/no-unused-vars -- `v` is used at runtime in the returned type guards; v8 false-positive */
 export function matchesAny<T extends string | number | symbol | boolean>(
   value: null | undefined | T | readonly T[],
 ): (v: unknown) => v is T {
@@ -35,6 +36,7 @@ export function matchesAny<T extends string | number | symbol | boolean>(
       ? (v): v is T => value.includes(v)
       : (v): v is T => v === value
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * Decorator to cache the result of a getter on a class instance.

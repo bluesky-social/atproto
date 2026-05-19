@@ -55,8 +55,8 @@
     "@swc/jest": "^0.2.24",
     "@types/jest": "^28.1.4",
     "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@typescript-eslint/parser": "^8.59.2",
     "@vitest/coverage-v8": "4.0.16",
     "dotenv": "^16.0.3",
     "eslint": "^8.57.0",
@@ -71,7 +71,7 @@
     "prettier": "^3.2.5",
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },
   "workspace": [

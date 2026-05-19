@@ -44,9 +44,9 @@ export class BrowserRuntimeImplementation implements RuntimeImplementation {
   }
 
   async digest(
-    data: Uint8Array,
+    data: Uint8Array<ArrayBuffer>,
     { name }: DigestAlgorithm,
-  ): Promise<Uint8Array> {
+  ): Promise<Uint8Array<ArrayBuffer>> {
     switch (name) {
       case 'sha256':
       case 'sha384':

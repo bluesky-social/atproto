@@ -38,7 +38,7 @@ export const readFromGenerator = async <T>(
     }
   } finally {
     hasBroke = true
-    bail && bail()
+    if (bail) bail()
   }
   return evts
 }
