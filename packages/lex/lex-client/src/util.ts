@@ -55,6 +55,19 @@ export function isAsyncIterable<T>(
   )
 }
 
+export function asUint8ArrayArrayBuffer(
+  bytes: Uint8Array,
+): Uint8Array<ArrayBuffer> {
+  // If the Uint8Array is already backed by a non-shared ArrayBuffer, we can use
+  // it directly.
+  if (bytes.buffer instanceof ArrayBuffer) {
+    return bytes as Uint8Array<ArrayBuffer>
+  }
+
+  // Otherwise, we need to create a new ArrayBuffer and copy the data.
+  return new Uint8Array(bytes)
+}
+
 export type XrpcRequestHeadersOptions = {
   /** Additional HTTP headers to include in the request. */
   headers?: HeadersInit
@@ -115,7 +128,7 @@ export function toReadableStreamPonyfill(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {
   let iterator: AsyncIterator<Uint8Array> | undefined
-  return new ReadableStream({
+  return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         iterator ??= data[Symbol.asyncIterator]()
