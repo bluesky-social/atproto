@@ -333,6 +333,7 @@ export interface EventGroupChatUpdated {
     | 'owner_left'
     | 'owner_deactivated'
     | 'owner_deleted'
+    | 'owner_suspended'
     | 'owner_taken_down'
     | 'label_applied'
     | (string & {})

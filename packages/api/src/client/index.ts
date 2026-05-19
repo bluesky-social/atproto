@@ -191,6 +191,7 @@ import * as ChatBskyGroupEditJoinLink from './types/chat/bsky/group/editJoinLink
 import * as ChatBskyGroupEnableJoinLink from './types/chat/bsky/group/enableJoinLink.js'
 import * as ChatBskyGroupGetJoinLinkPreview from './types/chat/bsky/group/getJoinLinkPreview.js'
 import * as ChatBskyGroupListJoinRequests from './types/chat/bsky/group/listJoinRequests.js'
+import * as ChatBskyGroupListMutualGroups from './types/chat/bsky/group/listMutualGroups.js'
 import * as ChatBskyGroupRejectJoinRequest from './types/chat/bsky/group/rejectJoinRequest.js'
 import * as ChatBskyGroupRemoveMembers from './types/chat/bsky/group/removeMembers.js'
 import * as ChatBskyGroupRequestJoin from './types/chat/bsky/group/requestJoin.js'
@@ -552,6 +553,7 @@ export * as ChatBskyGroupEditJoinLink from './types/chat/bsky/group/editJoinLink
 export * as ChatBskyGroupEnableJoinLink from './types/chat/bsky/group/enableJoinLink.js'
 export * as ChatBskyGroupGetJoinLinkPreview from './types/chat/bsky/group/getJoinLinkPreview.js'
 export * as ChatBskyGroupListJoinRequests from './types/chat/bsky/group/listJoinRequests.js'
+export * as ChatBskyGroupListMutualGroups from './types/chat/bsky/group/listMutualGroups.js'
 export * as ChatBskyGroupRejectJoinRequest from './types/chat/bsky/group/rejectJoinRequest.js'
 export * as ChatBskyGroupRemoveMembers from './types/chat/bsky/group/removeMembers.js'
 export * as ChatBskyGroupRequestJoin from './types/chat/bsky/group/requestJoin.js'
@@ -4172,6 +4174,18 @@ export class ChatBskyGroupNS {
       .catch((e) => {
         throw ChatBskyGroupListJoinRequests.toKnownErr(e)
       })
+  }
+
+  listMutualGroups(
+    params?: ChatBskyGroupListMutualGroups.QueryParams,
+    opts?: ChatBskyGroupListMutualGroups.CallOptions,
+  ): Promise<ChatBskyGroupListMutualGroups.Response> {
+    return this._client.call(
+      'chat.bsky.group.listMutualGroups',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   rejectJoinRequest(
