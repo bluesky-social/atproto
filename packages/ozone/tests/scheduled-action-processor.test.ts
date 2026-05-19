@@ -4,9 +4,9 @@ import {
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs'
-import { ids } from '../src/lexicon/lexicons'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
+import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs.js'
+import { ids } from '../src/lexicon/lexicons.js'
+import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('scheduled action processor', () => {
   let network: TestNetwork

@@ -1,7 +1,7 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import { AtIdentifierString, DidString, isDidString } from '@atproto/lex'
@@ -27,8 +27,8 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager/account-manager'
-import { ActorAccount } from './account-manager/helpers/account'
+import { AccountManager } from './account-manager/account-manager.js'
+import { ActorAccount } from './account-manager/helpers/account.js'
 import {
   AccessOutput,
   AdminTokenOutput,
@@ -37,11 +37,14 @@ import {
   RefreshOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
-} from './auth-output'
-import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
-import { softDeleted } from './db'
-import { appendVary } from './util/http'
-import { WithRequired } from './util/types'
+} from './auth-output.js'
+import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
+import { softDeleted } from './db/index.js'
+import { appendVary } from './util/http.js'
+import { WithRequired } from './util/types.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 export type VerifiedOptions = {
   checkTakedown?: boolean

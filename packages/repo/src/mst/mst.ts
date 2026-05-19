@@ -1,13 +1,13 @@
 import { z } from 'zod'
 import { cidForLex, encode } from '@atproto/lex-cbor'
 import { Cid, cidForCbor } from '@atproto/lex-data'
-import { BlockMap } from '../block-map'
-import { CidSet } from '../cid-set'
-import { MissingBlockError, MissingBlocksError } from '../error'
-import * as parse from '../parse'
-import { ReadableBlockstore } from '../storage'
-import { CarBlock, schema } from '../types'
-import * as util from './util'
+import { BlockMap } from '../block-map.js'
+import { CidSet } from '../cid-set.js'
+import { MissingBlockError, MissingBlocksError } from '../error.js'
+import * as parse from '../parse.js'
+import { ReadableBlockstore } from '../storage/index.js'
+import { CarBlock, schema } from '../types.js'
+import * as util from './util.js'
 
 /**
  * This is an implementation of a Merkle Search Tree (MST)

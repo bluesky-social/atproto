@@ -3,7 +3,7 @@ import * as http from 'node:http'
 import * as plcLib from '@did-plc/lib'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { getVerificationMaterial } from '@atproto/common'
@@ -16,8 +16,14 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { bearerTokenFromReq, createPublicKeyObject } from '../src/auth-verifier'
+import {
+  bearerTokenFromReq,
+  createPublicKeyObject,
+} from '../src/auth-verifier.js'
 import { com } from '../src/lexicons/index.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 interface Account {
   did: DidString

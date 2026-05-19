@@ -5,6 +5,7 @@ import {
   ComAtprotoAdminDefs,
   ComAtprotoRepoStrongRef,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneReportQueryReports as QueryModerationReports,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
@@ -12,7 +13,7 @@ import {
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { TestOzone } from './ozone'
+import { TestOzone } from './ozone.js'
 
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams

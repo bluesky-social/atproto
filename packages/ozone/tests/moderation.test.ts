@@ -14,21 +14,21 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { EventReverser } from '../src'
-import { ImageInvalidator } from '../src/image-invalidator'
-import { ids } from '../src/lexicon/lexicons'
+import { ImageInvalidator } from '../src/image-invalidator.js'
+import { EventReverser } from '../src/index.js'
+import { ids } from '../src/lexicon/lexicons.js'
 import {
   REASONMISLEADING,
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 import {
   ModEventLabel,
   REVIEWCLOSED,
   REVIEWESCALATED,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { forSnapshot, identity } from './_util'
+} from '../src/lexicon/types/tools/ozone/moderation/defs.js'
+import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
+import { forSnapshot, identity } from './_util.js'
 
 describe('moderation', () => {
   let network: TestNetwork

@@ -1,6 +1,6 @@
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { TestNetwork } from '../network'
-import { SeedClient } from './client'
+import { TestNetwork } from '../network.js'
+import { SeedClient } from './client.js'
 
 export default async (sc: SeedClient<TestNetwork>) => {
   const labelerDid = sc.network.bsky.ctx.cfg.modServiceDid

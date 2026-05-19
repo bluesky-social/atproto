@@ -3,7 +3,7 @@ import {
   normalizeAndEnsureValidHandle,
 } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { reservedSubdomains } from './reserved'
+import { reservedSubdomains } from './reserved.js'
 
 export const baseNormalizeAndValidate = (handle: string) => {
   try {

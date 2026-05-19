@@ -6,9 +6,9 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons.js'
+import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
+import { forSnapshot } from './_util.js'
 
 describe('admin get starter pack view', () => {
   let network: TestNetwork

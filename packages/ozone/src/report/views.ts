@@ -1,20 +1,18 @@
 import { Selectable } from 'kysely'
-import {
-  AppBskyActorDefs,
-  ToolsOzoneModerationDefs,
-  ToolsOzoneQueueDefs,
-  ToolsOzoneReportDefs,
-} from '@atproto/api'
-import { addAccountInfoToRepoViewDetail } from '../api/util'
-import { ReportStat } from '../db/schema/report_stat'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
+import { addAccountInfoToRepoViewDetail } from '../api/util.js'
+import { ReportStat } from '../db/schema/report_stat.js'
+import * as AppBskyActorDefs from '../lexicon/types/app/bsky/actor/defs.js'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
 import {
   RecordViewDetail,
   RepoView,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { ReportWithEvent } from '../mod-service/report'
-import { ParsedLabelers } from '../util'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import * as ToolsOzoneModerationDefs from '../lexicon/types/tools/ozone/moderation/defs.js'
+import * as ToolsOzoneQueueDefs from '../lexicon/types/tools/ozone/queue/defs.js'
+import * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
+import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
+import { ReportWithEvent } from '../mod-service/report.js'
+import { ParsedLabelers } from '../util.js'
 
 type ReportViews = {
   repoDetails(

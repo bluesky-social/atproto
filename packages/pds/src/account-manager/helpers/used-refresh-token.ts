@@ -1,5 +1,5 @@
 import { RefreshToken } from '@atproto/oauth-provider'
-import { AccountDb } from '../db'
+import { AccountDb } from '../db/index.js'
 
 /**
  * Note that the used refresh tokens will be removed once the token is revoked.

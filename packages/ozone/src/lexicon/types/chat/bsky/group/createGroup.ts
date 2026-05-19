@@ -3,12 +3,12 @@
  */
 import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { validate as _validate } from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons.js'
 import {
   type $Typed,
   is$typed as _is$typed,
   type OmitKey,
-} from '../../../../util'
+} from '../../../../util.js'
 import type * as ChatBskyConvoDefs from '../convo/defs.js'
 
 const is$typed = _is$typed,
@@ -43,7 +43,7 @@ export interface HandlerError {
   error?:
     | 'AccountSuspended'
     | 'BlockedActor'
-    | 'GroupInvitesDisabled'
+    | 'UserForbidsGroups'
     | 'NotFollowedBySender'
     | 'RecipientNotFound'
 }

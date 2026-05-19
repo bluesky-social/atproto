@@ -11,8 +11,8 @@ import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { AppContext } from '../src/context'
-import { forSnapshot, paginateAll } from './_util'
+import { AppContext } from '../src/context.js'
+import { forSnapshot, paginateAll } from './_util.js'
 
 describe('crud operations', () => {
   let network: TestNetworkNoAppView

@@ -1,9 +1,9 @@
 import { Server } from '@atproto/xrpc-server'
-import { isUserOrAdmin } from '../../../../../auth-verifier'
-import { AppContext } from '../../../../../context'
+import { isUserOrAdmin } from '../../../../../auth-verifier.js'
+import { AppContext } from '../../../../../context.js'
 import { com } from '../../../../../lexicons/index.js'
-import { getCarStream } from '../getRepo'
-import { assertRepoAvailability } from '../util'
+import { getCarStream } from '../getRepo.js'
+import { assertRepoAvailability } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.sync.getCheckout, {

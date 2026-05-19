@@ -1,24 +1,19 @@
-import { Transporter } from 'nodemailer'
-import Mail from 'nodemailer/lib/mailer'
-import SMTPTransport from 'nodemailer/lib/smtp-transport'
+import { SendMailOptions, Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
-import { ServerConfig } from '../config'
-import { mailerLogger } from '../logger'
+import { ServerConfig } from '../config/index.js'
+import { mailerLogger } from '../logger.js'
 
 export class ModerationMailer {
   private config: ServerConfig
-  transporter: Transporter<SMTPTransport.SentMessageInfo>
+  transporter: Transporter
 
-  constructor(
-    transporter: Transporter<SMTPTransport.SentMessageInfo>,
-    config: ServerConfig,
-  ) {
+  constructor(transporter: Transporter, config: ServerConfig) {
     this.config = config
     this.transporter = transporter
     this.transporter.use('compile', htmlToText())
   }
 
-  async send({ content }: { content: string }, mailOpts: Mail.Options) {
+  async send({ content }: { content: string }, mailOpts: SendMailOptions) {
     const mail = {
       ...mailOpts,
       html: content,

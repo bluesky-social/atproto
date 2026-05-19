@@ -1,11 +1,11 @@
 import assert from 'node:assert'
 import { Un$Typed } from '@atproto/lex'
 import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
-import { Namespaces } from '../../../../stash'
-import { protobufToLex } from './util'
+import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb.js'
+import { Namespaces } from '../../../../stash.js'
+import { protobufToLex } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.putPreferencesV2, {

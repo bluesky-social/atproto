@@ -1,4 +1,4 @@
-import { FormatEnum, OutputInfo } from 'sharp'
+import type { FormatEnum, OutputInfo } from 'sharp'
 
 export type ImageMime = `image/${string}`
 

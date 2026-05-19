@@ -3,12 +3,12 @@
  */
 import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { validate as _validate } from '../../../../lexicons'
+import { validate as _validate } from '../../../../lexicons.js'
 import {
   type $Typed,
   is$typed as _is$typed,
   type OmitKey,
-} from '../../../../util'
+} from '../../../../util.js'
 import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet.js'
 import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record.js'
 import type * as ChatBskyActorDefs from '../actor/defs.js'
@@ -482,7 +482,7 @@ export interface ConvoView {
   $type?: 'chat.bsky.convo.defs#convoView'
   id: string
   rev: string
-  /** Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members. */
+  /** Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who added the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members. */
   members: ChatBskyActorDefs.ProfileViewBasic[]
   lastMessage?:
     | $Typed<MessageView>

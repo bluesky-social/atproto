@@ -1,6 +1,12 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
+import {
+  constantDate,
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+} from '../_util.js'
 
 describe('pds like views', () => {
   let network: TestNetwork
@@ -31,7 +37,7 @@ describe('pds like views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     frankie = sc.dids.frankie
-  })
+  }, 20000) // @NOTE occasionally takes a long time in CI, possibly due to size of likesSeed()
 
   afterAll(async () => {
     await network.close()

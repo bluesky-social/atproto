@@ -1,6 +1,6 @@
 import { encode } from '@atproto/lex-cbor'
 import { ui8Equals } from '@atproto/lex-data'
-import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src'
+import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src/index.js'
 
 describe('Frames', () => {
   it('creates and parses message frame.', async () => {

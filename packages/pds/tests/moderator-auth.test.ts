@@ -6,7 +6,7 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { $Typed } from '@atproto/lex'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
-import usersSeed from './seeds/users'
+import usersSeed from './seeds/users.js'
 
 describe('moderator auth', () => {
   let network: TestNetworkNoAppView

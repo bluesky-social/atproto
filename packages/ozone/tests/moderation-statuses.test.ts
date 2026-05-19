@@ -9,17 +9,17 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
 import {
   REASONMISLEADING,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
 import {
   REVIEWNONE,
   REVIEWOPEN,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/tools/ozone/moderation/defs.js'
+import { forSnapshot } from './_util.js'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork

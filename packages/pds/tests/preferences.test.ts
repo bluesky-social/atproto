@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Unknown$Type } from '@atproto/lex'
-import usersSeed from './seeds/users'
+import usersSeed from './seeds/users.js'
 
 describe('user preferences', () => {
   let network: TestNetworkNoAppView

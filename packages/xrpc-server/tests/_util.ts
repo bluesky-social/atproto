@@ -13,7 +13,7 @@ import {
   Options,
   Server,
   StreamConfigOrHandler,
-} from '../src'
+} from '../src/index.js'
 
 // @ts-expect-error
 Symbol.asyncDispose ??= Symbol.for('nodejs.asyncDispose')

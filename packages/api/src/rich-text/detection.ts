@@ -1,13 +1,13 @@
-import TLDs from 'tlds'
-import { AppBskyRichtextFacet } from '../client'
-import { UnicodeString } from './unicode'
+import TLDs from 'tlds' with { type: 'json' }
+import { AppBskyRichtextFacet } from '../client/index.js'
+import { UnicodeString } from './unicode.js'
 import {
   CASHTAG_REGEX,
   MENTION_REGEX,
   TAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
   URL_REGEX,
-} from './util'
+} from './util.js'
 
 export type Facet = AppBskyRichtextFacet.Main
 

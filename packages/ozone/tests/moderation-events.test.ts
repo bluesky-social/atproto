@@ -7,14 +7,14 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
 import {
   REASONAPPEAL,
   REASONMISLEADING,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
+import { forSnapshot } from './_util.js'
 
 describe('moderation-events', () => {
   let network: TestNetwork

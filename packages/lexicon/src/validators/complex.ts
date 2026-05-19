@@ -1,4 +1,4 @@
-import { Lexicons } from '../lexicons'
+import { Lexicons } from '../lexicons.js'
 import {
   LexArray,
   LexRefVariant,
@@ -7,10 +7,10 @@ import {
   ValidationResult,
   isDiscriminatedObject,
   isObj,
-} from '../types'
-import { toLexUri } from '../util'
-import { blob } from './blob'
-import { validate as validatePrimitive } from './primitives'
+} from '../types.js'
+import { toLexUri } from '../util.js'
+import { blob } from './blob.js'
+import { validate as validatePrimitive } from './primitives.js'
 
 export function validate(
   lexicons: Lexicons,

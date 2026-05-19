@@ -6,7 +6,13 @@ import {
 } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import { DidString } from '@atproto/syntax'
-import { Create, Event, Firehose, FirehoseOptions, MemoryRunner } from '..'
+import {
+  Create,
+  Event,
+  Firehose,
+  FirehoseOptions,
+  MemoryRunner,
+} from '../src/index.js'
 
 describe('firehose', () => {
   let network: TestNetworkNoAppView

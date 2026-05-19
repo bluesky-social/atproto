@@ -2,10 +2,10 @@ import { byteIterableToStream } from '@atproto/common'
 import { parseCid } from '@atproto/lex-data'
 import { blocksToCarStream } from '@atproto/repo'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { isUserOrAdmin } from '../../../../auth-verifier'
-import { AppContext } from '../../../../context'
+import { isUserOrAdmin } from '../../../../auth-verifier.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertRepoAvailability } from './util'
+import { assertRepoAvailability } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.sync.getBlocks, {

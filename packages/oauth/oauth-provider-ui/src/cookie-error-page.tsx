@@ -10,7 +10,7 @@ import { Admonition } from '#/components/utils/admonition.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
-import { LayoutApp } from './components/layouts/layout-app'
+import { LayoutApp } from './components/layouts/layout-app.js'
 
 const {
   //

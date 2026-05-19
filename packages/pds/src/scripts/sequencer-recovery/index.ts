@@ -1,6 +1,6 @@
-import { parseIntArg } from '../util'
-import { Recoverer, RecovererContextNoDb } from './recoverer'
-import { getRecoveryDbFromSequencerLoc } from './recovery-db'
+import { parseIntArg } from '../util.js'
+import { Recoverer, RecovererContextNoDb } from './recoverer.js'
+import { getRecoveryDbFromSequencerLoc } from './recovery-db.js'
 
 export const sequencerRecovery = async (
   ctx: RecovererContextNoDb,

@@ -47,7 +47,7 @@ describe('assertDidPlc', () => {
 
   it('throws if called with non string argument', () => {
     for (const [val, message] of INVALID) {
-      expect(() => assertDidPlc(val)).toThrowError(
+      expect(() => assertDidPlc(val)).toThrow(
         new InvalidDidError(
           typeof val === 'string' ? val : typeof val,
           message,
@@ -66,7 +66,7 @@ describe('asDidPlc', () => {
 
   it('throws if called with invalid dids', () => {
     for (const [val] of INVALID) {
-      expect(() => asDidPlc(val)).toThrowError(InvalidDidError)
+      expect(() => asDidPlc(val)).toThrow(InvalidDidError)
     }
   })
 })

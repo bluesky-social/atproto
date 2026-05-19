@@ -1,5 +1,5 @@
-import { BlobCache } from './server'
-import { ImageUriBuilder } from './uri'
+import { BlobCache } from './server.js'
+import { ImageUriBuilder } from './uri.js'
 
 // Invalidation is a general interface for propagating an image blob
 // takedown through any caches where a representation of it may be stored.

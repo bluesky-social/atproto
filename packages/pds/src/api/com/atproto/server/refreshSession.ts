@@ -4,11 +4,11 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { AppContext } from '../../../../context'
-import { softDeleted } from '../../../../db/util'
+import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import { AppContext } from '../../../../context.js'
+import { softDeleted } from '../../../../db/util.js'
 import { com } from '../../../../lexicons/index.js'
-import { didDocForSession } from './util'
+import { didDocForSession } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.refreshSession, {

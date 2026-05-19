@@ -7,8 +7,8 @@ import { AtUri } from '@atproto/syntax'
 import {
   isView as isEmbedRecordView,
   isViewRecord,
-} from '../src/lexicon/types/app/bsky/embed/record'
-import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia'
+} from '../src/lexicon/types/app/bsky/embed/record.js'
+import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia.js'
 import {
   FeedViewPost,
   PostView,
@@ -16,7 +16,7 @@ import {
   isPostView,
   isReasonRepost,
   isThreadViewPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
+} from '../src/lexicon/types/app/bsky/feed/defs.js'
 
 export const identity = <T>(x: T) => x
 

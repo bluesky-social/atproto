@@ -1,14 +1,14 @@
 import { check } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
-import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors'
+import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors.js'
 import {
   AtprotoData,
   CacheResult,
   DidCache,
   DidDocument,
   didDocument,
-} from '../types'
-import * as atprotoData from './atproto-data'
+} from '../types.js'
+import * as atprotoData from './atproto-data.js'
 
 export abstract class BaseResolver {
   constructor(public cache?: DidCache) {}

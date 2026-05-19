@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import { Cid, parseCid } from '@atproto/lex-data'
-import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff'
-import { MST } from '../src/mst'
-import { InvalidMstKeyError, countPrefixLen } from '../src/mst/util'
-import { MemoryBlockstore } from '../src/storage'
-import * as util from './_util'
+import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff.js'
+import { MST } from '../src/mst/index.js'
+import { InvalidMstKeyError, countPrefixLen } from '../src/mst/util.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
+import * as util from './_util.js'
 
 describe('Merkle Search Tree', () => {
   let blockstore: MemoryBlockstore

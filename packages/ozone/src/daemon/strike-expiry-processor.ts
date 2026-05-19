@@ -1,8 +1,8 @@
 import { HOUR } from '@atproto/common'
-import { Database } from '../db'
-import { dbLogger } from '../logger'
-import { StrikeServiceCreator } from '../mod-service/strike'
-import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor'
+import { Database } from '../db/index.js'
+import { dbLogger } from '../logger.js'
+import { StrikeServiceCreator } from '../mod-service/strike.js'
+import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor.js'
 
 const JOB_NAME = 'strike_expiry'
 

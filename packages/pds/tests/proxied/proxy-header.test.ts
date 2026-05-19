@@ -7,7 +7,7 @@ import express from 'express'
 import { Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough'
+import { parseProxyHeader } from '../../src/pipethrough.js'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView

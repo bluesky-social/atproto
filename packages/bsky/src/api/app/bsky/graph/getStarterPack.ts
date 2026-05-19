@@ -1,7 +1,7 @@
 import { AtUriString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -9,9 +9,9 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getStarterPack = createPipeline(

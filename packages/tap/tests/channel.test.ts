@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { AddressInfo } from 'ws'
-import { TapChannel, TapHandler } from '../src/channel'
-import { TapEvent } from '../src/types'
-import { createWebSocketServer } from './_util'
+import { TapChannel, TapHandler } from '../src/channel.js'
+import { TapEvent } from '../src/types.js'
+import { createWebSocketServer } from './_util.js'
 
 const createRecordEvent = (id: number) => ({
   id,

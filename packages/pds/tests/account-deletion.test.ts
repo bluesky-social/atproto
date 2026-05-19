@@ -5,17 +5,17 @@ import { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
-import { AppContext } from '../src'
 import {
   Account,
   AppPassword,
   EmailToken,
   RefreshToken,
   RepoRoot,
-} from '../src/account-manager/db'
-import { ServerMailer } from '../src/mailer'
-import { RepoSeq } from '../src/sequencer/db'
-import basicSeed from './seeds/basic'
+} from '../src/account-manager/db/index.js'
+import { AppContext } from '../src/index.js'
+import { ServerMailer } from '../src/mailer/index.js'
+import { RepoSeq } from '../src/sequencer/db/index.js'
+import basicSeed from './seeds/basic.js'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView

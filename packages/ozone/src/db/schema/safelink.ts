@@ -4,7 +4,7 @@ import {
   SafelinkEventType,
   SafelinkPatternType,
   SafelinkReasonType,
-} from '../../api/util'
+} from '../../api/util.js'
 
 export const safelinkRuleTableName = 'safelink_rule'
 export const safelinkEventTableName = 'safelink_event'
