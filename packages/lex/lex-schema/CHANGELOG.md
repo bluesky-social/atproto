@@ -1,5 +1,16 @@
 # @atproto/lex-schema
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4955](https://github.com/bluesky-social/atproto/pull/4955) [`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes a bug that would reject valid `datetime` atproto strings in non-strict validation
+
+- [#4955](https://github.com/bluesky-social/atproto/pull/4955) [`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use datetime validation utility from `@atproto/syntax`
+
+- Updated dependencies [[`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8)]:
+  - @atproto/syntax@0.6.1
+
 ## 0.1.0
 
 ### Minor Changes
