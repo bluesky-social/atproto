@@ -2,13 +2,14 @@ import {
   AtpAgent,
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneReportQueryReports as QueryModerationReports,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { TestOzone } from './ozone'
+import { TestOzone } from './ozone.js'
 
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams

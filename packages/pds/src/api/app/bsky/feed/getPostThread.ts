@@ -2,12 +2,12 @@ import assert from 'node:assert'
 import { isHandleString, l } from '@atproto/lex'
 import { AtUri, AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   PipethroughUpstreamError,
   computeProxyTo,
-} from '../../../../pipethrough'
+} from '../../../../pipethrough.js'
 import {
   LocalViewer,
   MungeFn,
@@ -15,7 +15,7 @@ import {
   formatMungedResponse,
   getLocalLag,
   pipethroughReadAfterWrite,
-} from '../../../../read-after-write'
+} from '../../../../read-after-write/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return

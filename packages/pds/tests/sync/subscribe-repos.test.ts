@@ -13,10 +13,10 @@ import { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
-import { AppContext } from '../../src'
-import { AccountStatus } from '../../src/account-manager/account-manager'
+import { AccountStatus } from '../../src/account-manager/account-manager.js'
+import { AppContext } from '../../src/index.js'
 import { com } from '../../src/lexicons.js'
-import basicSeed from '../seeds/basic'
+import basicSeed from '../seeds/basic.js'
 
 describe('repo subscribe repos', () => {
   let serverHost: string

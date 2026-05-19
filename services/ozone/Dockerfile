@@ -1,14 +1,15 @@
-FROM node:18-alpine AS build
+FROM node:24.15-alpine3.23 AS build
 
 RUN corepack enable
 
 WORKDIR /app
 
 COPY ./package.json ./
-RUN corepack prepare --activate
+RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
@@ -58,7 +59,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --
 WORKDIR services/ozone
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:24.15-alpine3.23
 
 RUN apk add --update dumb-init
 
@@ -74,7 +75,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "api.js"]
+CMD ["node", "--enable-source-maps", "api.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Ozone"

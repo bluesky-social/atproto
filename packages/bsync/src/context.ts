@@ -1,10 +1,10 @@
-import { EventEmitter } from 'node:stream'
-import TypedEventEmitter from 'typed-emitter'
-import { ServerConfig } from './config'
-import { Database } from './db'
-import { createMuteOpChannel } from './db/schema/mute_op'
-import { createNotifOpChannel } from './db/schema/notif_op'
-import { createOperationChannel } from './db/schema/operation'
+import { EventEmitter } from 'node:events'
+import type TypedEmitter from 'typed-emitter'
+import { ServerConfig } from './config.js'
+import { Database } from './db/index.js'
+import { createMuteOpChannel } from './db/schema/mute_op.js'
+import { createNotifOpChannel } from './db/schema/notif_op.js'
+import { createOperationChannel } from './db/schema/operation.js'
 
 export type AppContextOptions = {
   db: Database
@@ -16,13 +16,13 @@ export class AppContext {
   db: Database
   cfg: ServerConfig
   shutdown: AbortSignal
-  events: TypedEventEmitter<AppEvents>
+  events: TypedEmitter.default<AppEvents>
 
   constructor(opts: AppContextOptions) {
     this.db = opts.db
     this.cfg = opts.cfg
     this.shutdown = opts.shutdown
-    this.events = new EventEmitter() as TypedEventEmitter<AppEvents>
+    this.events = new EventEmitter() as TypedEmitter.default<AppEvents>
   }
 
   static async fromConfig(

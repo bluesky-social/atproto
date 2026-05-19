@@ -245,7 +245,7 @@ describe('Subscription', () => {
 
   describe('type inference', () => {
     it('InferSubscriptionParameters correctly infers parameter types', () => {
-      const mySub = subscription(
+      const _mySub = subscription(
         'com.atproto.sync.subscribeRepos',
         params({
           cursor: optional(integer()),
@@ -255,7 +255,7 @@ describe('Subscription', () => {
         }),
       )
 
-      type Params = InferSubscriptionParameters<typeof mySub>
+      type Params = InferSubscriptionParameters<typeof _mySub>
 
       expectTypeOf<Params>({
         cursor: 12345,
@@ -270,9 +270,9 @@ describe('Subscription', () => {
         data: string(),
       })
 
-      const mySub = subscription(nsid, parameters, message, undefined)
+      const _mySub = subscription(nsid, parameters, message, undefined)
 
-      type Message = InferSubscriptionMessage<typeof mySub>
+      type Message = InferSubscriptionMessage<typeof _mySub>
 
       expectTypeOf<Message>({
         seq: 12345,

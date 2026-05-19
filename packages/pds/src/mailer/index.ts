@@ -1,16 +1,14 @@
-import { Transporter } from 'nodemailer'
-import Mail from 'nodemailer/lib/mailer'
-import SMTPTransport from 'nodemailer/lib/smtp-transport'
+import { SendMailOptions, Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
-import { ServerConfig } from '../config'
-import { mailerLogger } from '../logger'
-import * as templates from './templates'
+import { ServerConfig } from '../config/index.js'
+import { mailerLogger } from '../logger.js'
+import * as templates from './templates.js'
 
 // @TODO Add support for i18n
 
 export class ServerMailer {
   constructor(
-    public readonly transporter: Transporter<SMTPTransport.SentMessageInfo>,
+    public readonly transporter: Transporter,
     private readonly config: ServerConfig,
   ) {
     transporter.use('compile', htmlToText())
@@ -23,7 +21,7 @@ export class ServerMailer {
 
   async sendResetPassword(
     params: { handle: string; token: string },
-    mailOpts: Mail.Options,
+    mailOpts: SendMailOptions,
   ) {
     await this.sendTemplate('resetPassword', params, {
       subject: 'Password Reset Requested',
@@ -31,28 +29,31 @@ export class ServerMailer {
     })
   }
 
-  async sendAccountDelete(params: { token: string }, mailOpts: Mail.Options) {
+  async sendAccountDelete(
+    params: { token: string },
+    mailOpts: SendMailOptions,
+  ) {
     await this.sendTemplate('deleteAccount', params, {
       subject: 'Account Deletion Requested',
       ...mailOpts,
     })
   }
 
-  async sendConfirmEmail(params: { token: string }, mailOpts: Mail.Options) {
+  async sendConfirmEmail(params: { token: string }, mailOpts: SendMailOptions) {
     await this.sendTemplate('confirmEmail', params, {
       subject: 'Email Confirmation',
       ...mailOpts,
     })
   }
 
-  async sendUpdateEmail(params: { token: string }, mailOpts: Mail.Options) {
+  async sendUpdateEmail(params: { token: string }, mailOpts: SendMailOptions) {
     await this.sendTemplate('updateEmail', params, {
       subject: 'Email Update Requested',
       ...mailOpts,
     })
   }
 
-  async sendPlcOperation(params: { token: string }, mailOpts: Mail.Options) {
+  async sendPlcOperation(params: { token: string }, mailOpts: SendMailOptions) {
     await this.sendTemplate('plcOperation', params, {
       subject: 'PLC Update Operation Requested',
       ...mailOpts,
@@ -62,7 +63,7 @@ export class ServerMailer {
   private async sendTemplate<K extends keyof typeof templates>(
     templateName: K,
     params: Parameters<(typeof templates)[K]>[0],
-    mailOpts: Mail.Options,
+    mailOpts: SendMailOptions,
   ) {
     const html = templates[templateName]({
       ...params,

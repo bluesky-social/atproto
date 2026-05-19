@@ -25,10 +25,10 @@ import {
   Event,
   IdentityEvt,
   SyncEvt,
-} from '../events'
+} from '../events.js'
 import { com } from '../lexicons/index.js'
-import { EventRunner } from '../runner'
-import { didAndSeqForEvt } from '../util'
+import { EventRunner } from '../runner/index.js'
+import { didAndSeqForEvt } from '../util.js'
 
 export type FirehoseOptions = ClientOptions & {
   idResolver: IdResolver

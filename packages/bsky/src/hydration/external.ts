@@ -1,15 +1,15 @@
 import { AtUriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
+import { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
 import {
   GetSiteStandardRecordsByRefResponse,
   GetSiteStandardRecordsByURIResponse,
-} from '../proto/bsky_pb'
+} from '../proto/bsky_pb.js'
 import {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
 } from '../views/types.js'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
+import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util.js'
 
 export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 

@@ -3,8 +3,14 @@ import { AddressInfo } from 'node:net'
 import { WebSocket, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
-import { ErrorFrame, Frame, MessageFrame, Subscription, byFrame } from '../src'
-import * as xrpcServer from '../src'
+import {
+  ErrorFrame,
+  Frame,
+  MessageFrame,
+  Subscription,
+  byFrame,
+} from '../src/index.js'
+import * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   buildAddLexicons,
@@ -12,7 +18,7 @@ import {
   closeServer,
   createBasicAuth,
   createServer,
-} from './_util'
+} from './_util.js'
 
 const LEXICONS = [
   {
@@ -278,8 +284,8 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     it('does not websocket upgrade at bad endpoint', async () => {
       const ws = new WebSocket(`ws://localhost:${port}/xrpc/does.not.exist`)
       const drainStream = async () => {
-        for await (const bytes of createWebSocketStream(ws)) {
-          bytes // drain
+        for await (const _bytes of createWebSocketStream(ws)) {
+          // drain
         }
       }
       await expect(drainStream).rejects.toHaveProperty('code', 'ECONNRESET')

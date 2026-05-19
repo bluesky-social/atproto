@@ -1,4 +1,4 @@
-import { aggregateErrors, bailableWait } from './util'
+import { aggregateErrors, bailableWait } from './util.js'
 
 // reads values from a generator into a list
 // breaks when isDone signals `true` AND `waitFor` completes OR when a max length is reached
@@ -38,7 +38,7 @@ export const readFromGenerator = async <T>(
     }
   } finally {
     hasBroke = true
-    bail && bail()
+    if (bail) bail()
   }
   return evts
 }

@@ -1,4 +1,4 @@
-import { parseUrlNsid } from '../src/util'
+import { parseUrlNsid } from '../src/util.js'
 
 const testValid = (url: string, expected: string) => {
   expect(parseUrlNsid(url)).toBe(expected)

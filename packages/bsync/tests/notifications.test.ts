@@ -8,8 +8,8 @@ import {
   authWithApiKey,
   createClient,
   envToCfg,
-} from '../src'
-import { NotifOperation } from '../src/proto/bsync_pb'
+} from '../src/index.js'
+import { NotifOperation } from '../src/proto/bsync_pb.js'
 
 describe('notifications', () => {
   let bsync: BsyncService

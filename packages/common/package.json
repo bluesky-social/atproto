@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.5.16",
+  "version": "0.6.0",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -12,25 +12,30 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/common"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "pino": "^8.21.0"
   },
   "devDependencies": {
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3",
-    "uint8arrays": "3.0.0"
+    "jest": "^30.0.0",
+    "typescript": "^6.0.3",
+    "uint8arrays": "^5.0.0"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

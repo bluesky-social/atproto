@@ -1,6 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common'
-import { Redis } from '../src/'
-import { ReadThroughCache } from '../src/cache/read-through'
+import { ReadThroughCache } from '../src/cache/read-through.js'
+import { Redis } from '../src/index.js'
 
 describe('redis cache', () => {
   let redis: Redis

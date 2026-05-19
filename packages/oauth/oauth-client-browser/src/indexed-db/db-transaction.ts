@@ -1,4 +1,4 @@
-import 'core-js/modules/esnext.symbol.dispose'
+import 'core-js/es/symbol/dispose.js'
 
 import { DBObjectStore } from './db-object-store.js'
 import { DatabaseSchema } from './schema.js'

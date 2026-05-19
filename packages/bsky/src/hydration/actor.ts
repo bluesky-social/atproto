@@ -9,9 +9,9 @@ import {
   isHandleIdentifier,
   normalizeHandle,
 } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
+import { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
+import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb.js'
 import {
   ChatDeclarationRecord,
   GermDeclarationRecord,
@@ -27,7 +27,7 @@ import {
   parseRecord,
   parseString,
   safeTakedownRef,
-} from './util'
+} from './util.js'
 
 type AllowActivitySubscriptions = Extract<
   app.bsky.notification.declaration.Main['allowSubscriptions'],

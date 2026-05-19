@@ -6,8 +6,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { SeverityLevelSettingKey } from '../src/setting/constants'
+import { ids } from '../src/lexicon/lexicons.js'
+import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 
 const strikeConfig = {
   'sev-1': {

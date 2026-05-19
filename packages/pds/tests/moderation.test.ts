@@ -7,7 +7,7 @@ import {
 } from '@atproto/api'
 import { ImageRef, SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
-import basicSeed from './seeds/basic'
+import basicSeed from './seeds/basic.js'
 
 describe('moderation', () => {
   let network: TestNetworkNoAppView

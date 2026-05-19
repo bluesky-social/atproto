@@ -1,8 +1,8 @@
 import { AtUriString, LexMap } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { parseSiteStandardRecordKey } from '../../../../hydration/external'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import { parseSiteStandardRecordKey } from '../../../../hydration/external.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, com } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -10,10 +10,10 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 import { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
-import { resHeaders } from '../../../util'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getEmbedExternalView = createPipeline(

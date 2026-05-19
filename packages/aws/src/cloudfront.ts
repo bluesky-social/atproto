@@ -1,5 +1,5 @@
 import * as aws from '@aws-sdk/client-cloudfront'
-import { ImageInvalidator } from './types'
+import { ImageInvalidator } from './types.js'
 
 export type CloudfrontConfig = {
   distributionId: string

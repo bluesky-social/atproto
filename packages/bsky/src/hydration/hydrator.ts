@@ -1,18 +1,21 @@
 import assert from 'node:assert'
 import { dedupeStrs, mapDefined } from '@atproto/common'
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
-import { FeatureGatesClient, ScopedFeatureGatesClient } from '../feature-gates'
+import { DataPlaneClient } from '../data-plane/client/index.js'
+import {
+  FeatureGatesClient,
+  ScopedFeatureGatesClient,
+} from '../feature-gates/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { hydrationLogger } from '../logger'
+import { hydrationLogger } from '../logger.js'
 import {
   Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
   RecordRef,
-} from '../proto/bsky_pb'
-import { ParsedLabelers } from '../util'
-import { uriToDid, uriToDid as didFromUri } from '../util/uris'
+} from '../proto/bsky_pb.js'
+import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
+import { ParsedLabelers } from '../util.js'
 import {
   ProfileRecord,
   isExternalEmbedType,
@@ -28,14 +31,14 @@ import {
   ProfileAggs,
   ProfileViewerState,
   ProfileViewerStates,
-} from './actor'
+} from './actor.js'
 import {
   ExternalHydrator,
   SITE_STANDARD_NSID_PREFIX,
   SiteStandardDocuments,
   SiteStandardPublications,
   parseSiteStandardRecordKey,
-} from './external'
+} from './external.js'
 import {
   FeedGenAggs,
   FeedGenViewerStates,
@@ -53,7 +56,7 @@ import {
   ThreadContexts,
   ThreadRef,
   Threadgates,
-} from './feed'
+} from './feed.js'
 import {
   BlockEntry,
   Follows,
@@ -68,14 +71,14 @@ import {
   StarterPackAggs,
   StarterPacks,
   Verifications,
-} from './graph'
+} from './graph.js'
 import {
   LabelHydrator,
   LabelerAggs,
   LabelerViewerStates,
   Labelers,
   Labels,
-} from './label'
+} from './label.js'
 import {
   HydrationMap,
   ItemRef,
@@ -85,7 +88,7 @@ import {
   mergeNestedMaps,
   parseDate,
   urisByCollection,
-} from './util'
+} from './util.js'
 
 export class HydrateCtx {
   labelers = this.vals.labelers

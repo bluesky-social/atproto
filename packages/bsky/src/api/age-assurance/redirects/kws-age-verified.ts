@@ -1,15 +1,15 @@
 import express, { RequestHandler } from 'express'
-import { ageAssuranceLogger as logger } from '../../../logger'
-import { getClientUa, validateSignature } from '../../kws/util'
-import { AGE_ASSURANCE_CONFIG } from '../const'
-import { parseKWSAgeVerifiedStatus } from '../kws/age-verified'
+import { ageAssuranceLogger as logger } from '../../../logger.js'
+import { getClientUa, validateSignature } from '../../kws/util.js'
+import { AGE_ASSURANCE_CONFIG } from '../const.js'
+import { parseKWSAgeVerifiedStatus } from '../kws/age-verified.js'
 import {
   type KWSExternalPayloadV2,
   parseKWSExternalPayloadV2,
-} from '../kws/external-payload'
-import { createEvent } from '../stash'
-import { AppContextWithAA } from '../types'
-import { computeAgeAssuranceAccessOrThrow } from '../util'
+} from '../kws/external-payload.js'
+import { createEvent } from '../stash.js'
+import { AppContextWithAA } from '../types.js'
+import { computeAgeAssuranceAccessOrThrow } from '../util.js'
 
 function parseQueryParams(
   ctx: AppContextWithAA,

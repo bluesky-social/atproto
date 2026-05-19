@@ -10,11 +10,11 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 import {
   REASONMISLEADING,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('query-reports', () => {
   let network: TestNetwork

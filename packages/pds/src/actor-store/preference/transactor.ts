@@ -3,8 +3,8 @@ import {
   AccountPreference,
   PreferenceReader,
   prefMatchNamespace,
-} from './reader'
-import { PrefAllowedOptions, isReadOnlyPref, prefAllowed } from './util'
+} from './reader.js'
+import { PrefAllowedOptions, isReadOnlyPref, prefAllowed } from './util.js'
 
 export class PreferenceTransactor extends PreferenceReader {
   async putPreferences(

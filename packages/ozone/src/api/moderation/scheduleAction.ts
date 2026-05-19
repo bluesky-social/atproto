@@ -1,11 +1,11 @@
 import { ToolsOzoneModerationScheduleAction } from '@atproto/api'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { subjectFromInput } from '../../mod-service/subject'
-import { ExecutionSchedule } from '../../scheduled-action/types'
-import { getScheduledActionType } from '../util'
-import { ScheduledTakedownTag } from './util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { subjectFromInput } from '../../mod-service/subject.js'
+import { ExecutionSchedule } from '../../scheduled-action/types.js'
+import { getScheduledActionType } from '../util.js'
+import { ScheduledTakedownTag } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.scheduleAction({

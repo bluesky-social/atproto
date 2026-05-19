@@ -8,12 +8,12 @@ import {
   makeAnyClient,
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
-import { Service } from '../../proto/bsky_connect'
-import { HostList } from './hosts'
-import { callerInterceptor } from './util'
+import { Service } from '../../proto/bsky_connect.js'
+import { HostList } from './hosts.js'
+import { callerInterceptor } from './util.js'
 
-export * from './hosts'
-export * from './util'
+export * from './hosts.js'
+export * from './util.js'
 
 export type DataPlaneClient = PromiseClient<typeof Service>
 type HttpVersion = '1.1' | '2'

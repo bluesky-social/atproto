@@ -27,10 +27,21 @@ import {
 } from './response.js'
 import { BinaryBodyInit, Service } from './types.js'
 import {
+  RecordKeyOptions,
   XrpcRequestHeadersOptions,
   applyDefaults,
   buildXrpcRequestHeaders,
+  getDefaultRecordKey,
+  getLiteralRecordKey,
 } from './util.js'
+import {
+  WriteOperation,
+  WriteOperationCreateOptions,
+  WriteOperationDeleteOptions,
+  WriteOperationHelper,
+  WriteOperationUpdateOptions,
+  WriteOperationsFactory,
+} from './write-operation-builder.js'
 import {
   XrpcOptions,
   XrpcRequestParams,
@@ -39,25 +50,31 @@ import {
   xrpcSafe,
 } from './xrpc.js'
 
-export type {
-  AtIdentifierString,
-  CidString,
-  DidString,
-  Infer,
-  InferMethodInputBody,
-  InferMethodOutputBody,
-  InferRecordKey,
-  LexMap,
-  LexValue,
-  LexiconRecordKey,
-  Main,
-  NsidString,
-  Params,
+export {
+  type AtIdentifierString,
+  type CidString,
+  type DidString,
+  type Infer,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type InferRecordKey,
+  type LexMap,
+  type LexValue,
+  type LexiconRecordKey,
+  type Main,
+  type NsidString,
+  type Params,
   Procedure,
   Query,
   RecordSchema,
-  Restricted,
-  TypedLexMap,
+  type Restricted,
+  type TypedLexMap,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
+  WriteOperationHelper,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
 }
 
 /**
@@ -217,6 +234,23 @@ export type ListRecordsOptions = Omit<
   reverse?: boolean
 }
 
+/**
+ * Options for applying a batch of writes (create/update/delete) to an AT Protocol repository.
+ *
+ * @see {@link Client.applyWrites}
+ */
+export type ApplyWritesOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.applyWrites.main>,
+  'body'
+> & {
+  /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
+  repo?: AtIdentifierString
+  /** Whether the PDS should validate the records against their lexicon schemas. */
+  validate?: boolean
+  /** Compare-and-swap on the repo commit. If specified, must match current commit. */
+  swapCommit?: CidString
+}
+
 export type UploadBlobOptions = Omit<
   XrpcOptions<typeof com.atproto.repo.uploadBlob.main>,
   'body'
@@ -226,13 +260,6 @@ export type GetBlobOptions = Omit<
   XrpcOptions<typeof com.atproto.sync.getBlob.main>,
   'params'
 >
-
-export type RecordKeyOptions<
-  T extends RecordSchema,
-  AlsoOptionalWhenRecordKeyIs extends LexiconRecordKey = never,
-> = T['key'] extends `literal:${string}` | AlsoOptionalWhenRecordKeyIs
-  ? { rkey?: InferRecordKey<T> }
-  : { rkey: InferRecordKey<T> }
 
 /**
  * Type-safe options for {@link Client.create}, combining record options with key requirements.
@@ -700,6 +727,44 @@ export class Client implements Agent {
   }
 
   /**
+   * Performs an atomic batch of create, update, and delete operations on records in a repository.
+   *
+   * @param builder - A function that receives an {@link ApplyWritesOperations} instance to build the operations
+   * @param options - ApplyWrites options including repo, validate, swapCommit
+   * @returns The XRPC response from the applyWrites call
+   *
+   * @example
+   * ```typescript
+   * const response = await client.applyWrites((op) => [
+   *   op.create(app.bsky.feed.post, { text: 'Hello!' }),
+   *   op.update(app.bsky.feed.post, { text: 'Updated text' }, { rkey: 'post123' }),
+   *   op.delete(app.bsky.feed.post, 'post456'),
+   *   op.update(app.bsky.actor.profile, { displayName: 'Alice' }),
+   * ], {
+   *   validate: true,
+   * })
+   *
+   * for (const result of response.body.results) {
+   *   console.log(result.uri)
+   * }
+   * ```
+   */
+  async applyWrites(
+    factory: WriteOperationsFactory,
+    options?: ApplyWritesOptions,
+  ) {
+    return this.xrpc(com.atproto.repo.applyWrites, {
+      ...options,
+      body: {
+        repo: options?.repo ?? this.assertDid,
+        writes: WriteOperationHelper.build(factory),
+        validate: options?.validate,
+        swapCommit: options?.swapCommit,
+      },
+    })
+  }
+
+  /**
    * Uploads a blob to an AT Protocol repository.
    *
    * @param body - The blob data (Uint8Array, ReadableStream, Blob, etc.)
@@ -919,7 +984,7 @@ export class Client implements Agent {
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
     ns: Main<T>,
-    options?: GetOptions<T>,
+    options: GetOptions<T>,
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
     ns: Main<T>,
@@ -1001,26 +1066,4 @@ export class Client implements Agent {
 
     return { ...body, records, invalid }
   }
-}
-
-function getDefaultRecordKey<const T extends RecordSchema>(
-  schema: T,
-): undefined | InferRecordKey<T> {
-  // Let the server generate the TID
-  if (schema.key === 'tid') return undefined
-  if (schema.key === 'any') return undefined
-
-  return getLiteralRecordKey(schema)
-}
-
-function getLiteralRecordKey<const T extends RecordSchema>(
-  schema: T,
-): InferRecordKey<T> {
-  if (schema.key.startsWith('literal:')) {
-    return schema.key.slice(8) as InferRecordKey<T>
-  }
-
-  throw new TypeError(
-    `An "rkey" must be provided for record key type "${schema.key}" (${schema.$type})`,
-  )
 }

@@ -14,27 +14,27 @@ import {
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
-import { Actor, ProfileViewerState } from '../hydration/actor'
+import { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
   SiteStandardDocument,
   SiteStandardPublication,
   siteStandardRecordKey,
-} from '../hydration/external'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed'
-import { Follow, Verification } from '../hydration/graph'
-import { HydrationState } from '../hydration/hydrator'
-import { Label } from '../hydration/label'
-import { RecordInfo, parseString } from '../hydration/util'
-import { ImageUriBuilder } from '../image/uri'
+} from '../hydration/external.js'
+import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
+import { Follow, Verification } from '../hydration/graph.js'
+import { HydrationState } from '../hydration/hydrator.js'
+import { Label } from '../hydration/label.js'
+import { RecordInfo, parseString } from '../hydration/util.js'
+import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
-import { Notification } from '../proto/bsky_pb'
+import { Notification } from '../proto/bsky_pb.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   safePinnedPost,
   uriToDid,
   uriToDid as creatorFromUri,
-} from '../util/uris'
+} from '../util/uris.js'
 import {
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
@@ -46,7 +46,7 @@ import {
   ThreadTree,
   ThreadTreeVisible,
   sortTrimFlattenThreadTree,
-} from './threads-v2'
+} from './threads-v2.js'
 import {
   ActivitySubscription,
   BlockedPost,
@@ -120,7 +120,7 @@ import {
   isSelfLabelsType,
   isVideoEmbedType,
 } from './types.js'
-import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util'
+import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util.js'
 
 const notificationDeletedRecord =
   app.bsky.notification.defs.recordDeleted.$build({})

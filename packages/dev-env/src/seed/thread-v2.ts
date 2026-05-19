@@ -1,8 +1,8 @@
 import { AppBskyFeedPost } from '@atproto/api'
 import type { DatabaseSchema } from '@atproto/bsky'
-import { TestNetwork } from '../network'
-import { TestNetworkNoAppView } from '../network-no-appview'
-import { RecordRef, SeedClient } from './client'
+import { TestNetworkNoAppView } from '../network-no-appview.js'
+import { TestNetwork } from '../network.js'
+import { RecordRef, SeedClient } from './client.js'
 
 type User = {
   id: string
@@ -107,8 +107,10 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
     )
     posts[breadcrumbs] = reply
     // Await for this post to be processed before replying to it.
-    replyCb && (await sc.network.processAll())
-    await replyCb?.(rootReplyFnBuilder(sc, root, reply.ref, breadcrumbs, posts))
+    if (replyCb) {
+      await sc.network.processAll()
+      await replyCb(rootReplyFnBuilder(sc, root, reply.ref, breadcrumbs, posts))
+    }
   }
 }
 
@@ -139,10 +141,12 @@ const createThread = async <T extends TestNetworkNoAppView>(
     overrides,
   )
   // Await for this post to be processed before replying to it.
-  replyCb && (await sc.network.processAll())
-  await replyCb?.(
-    rootReplyFnBuilder(sc, root.ref, root.ref, breadcrumbs, replies),
-  )
+  if (replyCb) {
+    await sc.network.processAll()
+    await replyCb(
+      rootReplyFnBuilder(sc, root.ref, root.ref, breadcrumbs, replies),
+    )
+  }
   return { root, replies }
 }
 

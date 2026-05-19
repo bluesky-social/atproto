@@ -1,10 +1,10 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { parseString } from '../../../../hydration/util'
+import { AppContext } from '../../../../context.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.

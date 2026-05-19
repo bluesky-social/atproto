@@ -1,6 +1,6 @@
-import { DidCache } from '../types'
-import { BaseResolver } from './base-resolver'
-import { timed } from './util'
+import { DidCache } from '../types.js'
+import { BaseResolver } from './base-resolver.js'
+import { timed } from './util.js'
 
 export class DidPlcResolver extends BaseResolver {
   constructor(

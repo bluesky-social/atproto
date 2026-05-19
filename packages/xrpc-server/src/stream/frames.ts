@@ -1,6 +1,6 @@
 import { decodeAll, encode } from '@atproto/lex-cbor'
 import { LexValue, isPlainObject } from '@atproto/lex-data'
-import { XRPCError } from '../errors'
+import { XRPCError } from '../errors.js'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -9,7 +9,7 @@ import {
   MessageFrameHeader,
   errorFrameBody,
   frameHeader,
-} from './types'
+} from './types.js'
 
 export abstract class Frame<T extends LexValue = LexValue> {
   abstract header: FrameHeader

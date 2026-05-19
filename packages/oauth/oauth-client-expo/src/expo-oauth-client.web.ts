@@ -3,8 +3,8 @@ import {
   BrowserOAuthClient,
   OAuthSession,
 } from '@atproto/oauth-client-browser'
-import { ExpoOAuthClientInterface } from './expo-oauth-client-interface'
-import { ExpoOAuthClientOptions } from './expo-oauth-client-options'
+import { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
+import { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
 
 export class ExpoOAuthClient
   extends BrowserOAuthClient

@@ -1,7 +1,7 @@
-import { ModerationDecision } from '../decision'
-import { ModerationOpts, ModerationSubjectFeedGenerator } from '../types'
-import { decideAccount } from './account'
-import { decideProfile } from './profile'
+import { ModerationDecision } from '../decision.js'
+import { ModerationOpts, ModerationSubjectFeedGenerator } from '../types.js'
+import { decideAccount } from './account.js'
+import { decideProfile } from './profile.js'
 
 export function decideFeedGenerator(
   subject: ModerationSubjectFeedGenerator,

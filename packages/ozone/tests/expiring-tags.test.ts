@@ -4,8 +4,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { EventReverser } from '../src/daemon/event-reverser'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { EventReverser } from '../src/daemon/event-reverser.js'
+import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('expiring tags', () => {
   let network: TestNetwork

@@ -3,8 +3,8 @@ import fs from 'node:fs/promises'
 import { wait } from '@atproto/common'
 import { isDidString } from '@atproto/lex'
 import { DidString } from '@atproto/syntax'
-import { Sequencer } from '../sequencer'
-import { parseIntArg } from './util'
+import { Sequencer } from '../sequencer/index.js'
+import { parseIntArg } from './util.js'
 
 export type PublishIdentityContext = {
   sequencer: Sequencer

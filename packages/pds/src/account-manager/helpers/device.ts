@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { DeviceData, DeviceId } from '@atproto/oauth-provider'
-import { fromDateISO, toDateISO } from '../../db'
-import { AccountDb, Device } from '../db'
+import { fromDateISO, toDateISO } from '../../db/index.js'
+import { AccountDb, Device } from '../db/index.js'
 
 export const rowToDeviceData = (
   row: Omit<Selectable<Device>, 'id'>,

@@ -1,12 +1,12 @@
 import { LexMap, UriString, getBlobCidString } from '@atproto/lex'
 import { AtUri, DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { AccountManager } from '../account-manager/account-manager'
-import { ActorStoreReader } from '../actor-store/actor-store-reader'
-import { BskyAppView } from '../bsky-app-view'
-import { ImageUrlBuilder } from '../image/image-url-builder'
+import { AccountManager } from '../account-manager/account-manager.js'
+import { ActorStoreReader } from '../actor-store/actor-store-reader.js'
+import { BskyAppView } from '../bsky-app-view.js'
+import { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { app } from '../lexicons/index.js'
-import { LocalRecords, RecordDescript } from './types'
+import { LocalRecords, RecordDescript } from './types.js'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 

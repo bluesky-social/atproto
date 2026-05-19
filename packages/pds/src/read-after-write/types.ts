@@ -1,7 +1,7 @@
 import { Cid } from '@atproto/lex-data'
 import { AtUri, DatetimeString } from '@atproto/syntax'
 import { app } from '../lexicons/index.js'
-import { LocalViewer } from './viewer'
+import { LocalViewer } from './viewer.js'
 
 export type LocalRecords = {
   count: number

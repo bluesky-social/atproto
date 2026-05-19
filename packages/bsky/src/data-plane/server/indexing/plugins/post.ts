@@ -1,26 +1,26 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { $Typed, Cid, getBlobCidString, lexParse } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import { app } from '../../../../lexicons'
+import { app } from '../../../../lexicons/index.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   uriToDid,
-} from '../../../../util/uris'
-import { RecordWithMedia } from '../../../../views/types'
-import { parsePostgate } from '../../../../views/util'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { Notification } from '../../db/tables/notification'
-import { countAll, excluded } from '../../db/util'
+} from '../../../../util/uris.js'
+import { RecordWithMedia } from '../../../../views/types.js'
+import { parsePostgate } from '../../../../views/util.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { Notification } from '../../db/tables/notification.js'
+import { countAll, excluded } from '../../db/util.js'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
-} from '../../util'
-import { RecordProcessor } from '../processor'
+} from '../../util.js'
+import { RecordProcessor } from '../processor.js'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>

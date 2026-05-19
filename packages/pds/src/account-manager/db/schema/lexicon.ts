@@ -1,5 +1,5 @@
 import type { LexiconDocument } from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded } from '../../../db/cast'
+import { DateISO, JsonEncoded } from '../../../db/cast.js'
 
 export interface Lexicon {
   nsid: string

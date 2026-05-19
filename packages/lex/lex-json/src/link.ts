@@ -74,7 +74,7 @@ export function parseLexLink(
 
   try {
     return parseCid($link, options)
-  } catch (cause) {
+  } catch {
     return undefined
   }
 }

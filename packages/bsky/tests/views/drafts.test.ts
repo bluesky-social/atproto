@@ -1,4 +1,13 @@
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
   AppBskyDraftCreateDraft,
   AppBskyDraftDefs,
   AppBskyDraftGetDrafts,
@@ -7,7 +16,7 @@ import {
 } from '@atproto/api'
 import { TID } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { paginateAll } from '../_util'
+import { paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -41,7 +50,7 @@ describe('appview drafts views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearDrafts(db)
   })
 

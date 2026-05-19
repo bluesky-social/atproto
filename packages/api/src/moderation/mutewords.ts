@@ -1,4 +1,4 @@
-import { AppBskyActorDefs, AppBskyRichtextFacet } from '../client'
+import { AppBskyActorDefs, AppBskyRichtextFacet } from '../client/index.js'
 
 const REGEX = {
   LEADING_TRAILING_PUNCTUATION: /(?:^\p{P}+|\p{P}+$)/gu,

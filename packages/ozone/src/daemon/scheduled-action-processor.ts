@@ -3,20 +3,23 @@ import { MINUTE, SECOND } from '@atproto/common'
 import {
   assertProtectedTagAction,
   getProtectedTags,
-} from '../api/moderation/util'
-import { Database } from '../db'
-import { ScheduledAction } from '../db/schema/scheduled-action'
+} from '../api/moderation/util.js'
+import { Database } from '../db/index.js'
+import { ScheduledAction } from '../db/schema/scheduled-action.js'
 import {
   ModEventTakedown,
   ModTool,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { dbLogger } from '../logger'
-import { ModerationService, ModerationServiceCreator } from '../mod-service'
-import { RepoSubject } from '../mod-service/subject'
-import { ModEventType } from '../mod-service/types'
-import { ScheduledActionServiceCreator } from '../scheduled-action/service'
-import { SettingService, SettingServiceCreator } from '../setting/service'
-import { retryHttp } from '../util'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { dbLogger } from '../logger.js'
+import {
+  ModerationService,
+  ModerationServiceCreator,
+} from '../mod-service/index.js'
+import { RepoSubject } from '../mod-service/subject.js'
+import { ModEventType } from '../mod-service/types.js'
+import { ScheduledActionServiceCreator } from '../scheduled-action/service.js'
+import { SettingService, SettingServiceCreator } from '../setting/service.js'
+import { retryHttp } from '../util.js'
 
 export class ScheduledActionProcessor {
   destroyed = false

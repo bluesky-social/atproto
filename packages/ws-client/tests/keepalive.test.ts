@@ -1,7 +1,7 @@
 import getPort from 'get-port'
 import { WebSocketServer } from 'ws'
 import { wait } from '@atproto/common'
-import { CloseCode, WebSocketKeepAlive } from '../src'
+import { CloseCode, WebSocketKeepAlive } from '../src/index.js'
 
 describe('WebSocketKeepAlive', () => {
   it('uses a heartbeat to reconnect if a connection is dropped', async () => {

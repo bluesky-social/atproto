@@ -8,8 +8,8 @@ import {
   parseCid,
   toBase64,
 } from '@atproto/lex-data'
-import { CarBlock, readCarStream, writeCarStream } from '../src'
-import fixtures from './car-file-fixtures.json'
+import { CarBlock, readCarStream, writeCarStream } from '../src/index.js'
+import fixtures from './car-file-fixtures.json' with { type: 'json' }
 
 async function dataToCborBlock(data: LexValue): Promise<{
   cid: Cid

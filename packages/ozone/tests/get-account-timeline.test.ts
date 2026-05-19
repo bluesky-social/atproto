@@ -5,9 +5,9 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs'
-import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot } from './_util'
+import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
+import { ids } from '../src/lexicon/lexicons.js'
+import { forSnapshot } from './_util.js'
 
 describe('account timeline', () => {
   let network: TestNetwork

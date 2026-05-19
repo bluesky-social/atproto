@@ -10,11 +10,11 @@ import {
   getBlobCidString,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { AppContext } from '../src'
-import { ActorDb } from '../src/actor-store/db'
-import { DiskBlobStore } from '../src/disk-blobstore'
+import { ActorDb } from '../src/actor-store/db/index.js'
+import { DiskBlobStore } from '../src/disk-blobstore.js'
+import { AppContext } from '../src/index.js'
 import { app } from '../src/lexicons/index.js'
-import { users } from './seeds/users'
+import { users } from './seeds/users.js'
 
 describe('file uploads', () => {
   let network: TestNetworkNoAppView
@@ -46,7 +46,7 @@ describe('file uploads', () => {
   })
 
   let smallBlob: TypedBlobRef
-  let smallFile: Uint8Array
+  let smallFile: Uint8Array<ArrayBuffer>
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
@@ -130,7 +130,7 @@ describe('file uploads', () => {
   })
 
   let largeBlob: TypedBlobRef
-  let largeFile: Uint8Array
+  let largeFile: Uint8Array<ArrayBuffer>
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('../dev-env/assets/hd-key.jpg')

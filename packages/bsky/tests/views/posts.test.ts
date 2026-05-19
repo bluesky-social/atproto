@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
@@ -8,7 +9,7 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromPost } from '../_util'
+import { forSnapshot, stripViewerFromPost } from '../_util.js'
 
 describe('pds posts views', () => {
   let network: TestNetwork

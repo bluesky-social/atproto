@@ -1,8 +1,11 @@
 import * as aws from '@aws-sdk/client-kms'
 import { secp256k1 as noble } from '@noble/curves/secp256k1'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 const keyEncoder = new KeyEncoder('secp256k1')
 

@@ -1,12 +1,12 @@
 import { dedupeStrs } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
+import { DataPlaneClient } from '../data-plane/client/index.js'
 import { app } from '../lexicons/index.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   uriToDid as didFromUri,
-} from '../util/uris'
+} from '../util/uris.js'
 import {
   FeedGenRecord,
   GateRecord,
@@ -22,7 +22,7 @@ import {
   parseRecord,
   parseString,
   split,
-} from './util'
+} from './util.js'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -280,7 +280,7 @@ export class FeedHydrator {
     viewer: DidString | null,
   ): Promise<PostAggs> {
     const map: PostAggs = new HydrationMap()
-    if (!refs.length) map
+    if (!refs.length) return map
 
     const counts = await this.dataplane.getInteractionCounts({
       refs,
