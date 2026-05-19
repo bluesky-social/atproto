@@ -30,6 +30,13 @@ import {
   ProfileViewerStates,
 } from './actor'
 import {
+  ExternalHydrator,
+  SITE_STANDARD_NSID_PREFIX,
+  SiteStandardDocuments,
+  SiteStandardPublications,
+  parseSiteStandardRecordKey,
+} from './external'
+import {
   FeedGenAggs,
   FeedGenViewerStates,
   FeedGens,
@@ -43,12 +50,9 @@ import {
   Postgates,
   Posts,
   Reposts,
-  SiteStandardDocuments,
-  SiteStandardPublications,
   ThreadContexts,
   ThreadRef,
   Threadgates,
-  parseSiteStandardRecordKey,
 } from './feed'
 import {
   BlockEntry,
@@ -196,6 +200,7 @@ export type HydratorConfig = {
 
 export class Hydrator {
   actor: ActorHydrator
+  external: ExternalHydrator
   feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
@@ -209,6 +214,7 @@ export class Hydrator {
   ) {
     this.config = config
     this.actor = new ActorHydrator(dataplane)
+    this.external = new ExternalHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
@@ -630,7 +636,7 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
-      this.feed.getSiteStandardRecordsByRef(siteStandardRefs),
+      this.external.getSiteStandardRecordsByRef(siteStandardRefs),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -792,7 +798,7 @@ export class Hydrator {
     if (!ssUris.length) return { ctx }
 
     const [{ documents, publications }, labels] = await Promise.all([
-      this.feed.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
+      this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
     ])
     if (!ctx.includeTakedowns) {
@@ -1555,8 +1561,6 @@ const externalAssociatedRefs = (
 
 // Standard.site
 // ------------
-
-const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 
 /**
  * Collects standard.site refs across all post layers, deduped by `uri+cid` so

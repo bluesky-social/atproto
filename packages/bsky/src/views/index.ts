@@ -16,14 +16,12 @@ import {
 } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
 import {
-  FeedItem,
-  Like,
-  Post,
-  Repost,
+  AssociatedSiteStandardRecord,
   SiteStandardDocument,
   SiteStandardPublication,
   siteStandardRecordKey,
-} from '../hydration/feed'
+} from '../hydration/external'
+import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
@@ -2564,11 +2562,6 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
-}
-
-type AssociatedSiteStandardRecord<T> = {
-  ref: { uri: AtUriString; cid: string }
-  info: T
 }
 
 /**
