@@ -20,6 +20,7 @@ COPY ./packages/lex ./packages/lex
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/bsky ./packages/bsky
+COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
