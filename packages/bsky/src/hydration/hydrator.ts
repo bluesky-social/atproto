@@ -1565,9 +1565,10 @@ const externalAssociatedRefs = (
 /**
  * Collects standard.site refs across all post layers, deduped by `uri+cid` so
  * the dataplane batch is minimal even if multiple posts in the layer reference
- * the same exact version of an SS record. The downstream hydration maps are
- * keyed by AT-URI; the cid lives on each `RecordInfo` and is checked at lookup
- * time by view-layer code.
+ * the same exact version of an SS record. The same `${uri}@${cid}` keys are
+ * what `getSiteStandardRecordsByRef` uses on the resulting hydration maps,
+ * which lets `lookupAssociatedSiteStandardRecords` do an O(1) version-exact
+ * lookup at view time.
  */
 const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
   const seen = new Set<string>()

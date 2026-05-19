@@ -62,6 +62,11 @@ const presentation = (
 ): Output => {
   const { ctx, params, hydration } = inputs
 
+  // Walk the hydration maps once to build the response's parallel
+  // `associatedRefs` / `associatedRecords` arrays. We then hand
+  // `associatedRefs` back to `externalEmbedFromStandardSite`, which walks the
+  // same maps a second time to build the view; both passes are bounded by
+  // the lex's `uris.maxLength`.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
   for (const [key, info] of hydration.siteStandardDocuments ?? []) {

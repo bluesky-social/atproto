@@ -36,11 +36,6 @@ export type SiteStandardRecords = {
   publications: SiteStandardPublications
 }
 
-export type AssociatedSiteStandardRecord<T> = {
-  ref: { uri: AtUriString; cid: string }
-  info: T
-}
-
 export const siteStandardRecordKey = (uri: string, cid: string) =>
   `${uri}@${cid}`
 export const parseSiteStandardRecordKey = (

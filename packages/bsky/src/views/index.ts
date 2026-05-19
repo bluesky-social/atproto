@@ -16,7 +16,6 @@ import {
 } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
 import {
-  AssociatedSiteStandardRecord,
   SiteStandardDocument,
   SiteStandardPublication,
   siteStandardRecordKey,
@@ -2562,6 +2561,11 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
+}
+
+type AssociatedSiteStandardRecord<T> = {
+  ref: { uri: AtUriString; cid: string }
+  info: T
 }
 
 /**
