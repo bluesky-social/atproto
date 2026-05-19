@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { PageHelper } from './_puppeteer.js'
