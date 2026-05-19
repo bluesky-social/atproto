@@ -2129,14 +2129,15 @@ export class Views {
   ): $Typed<ExternalEmbedView> {
     // Start from the post-author-supplied embed values, then layer
     // SS-derived fields on top so any field present on the hydrated
-    // document/publication wins.
+    // document/publication wins. `uri` and `associatedRefs` are re-set
+    // after the spread to make sure they always come from the embed even
+    // if the overlay shape grows later.
     const ssView = this.externalEmbedFromStandardSite(
       embed.external.associatedRefs,
       state,
     )
     return app.bsky.embed.external.view.$build({
       external: {
-        uri: embed.external.uri,
         title: embed.external.title,
         description: embed.external.description,
         thumb: embed.external.thumb
@@ -2146,8 +2147,9 @@ export class Views {
               getBlobCidString(embed.external.thumb),
             )
           : undefined,
-        associatedRefs: embed.external.associatedRefs,
         ...ssView,
+        uri: embed.external.uri,
+        associatedRefs: embed.external.associatedRefs,
       },
     })
   }
@@ -2625,10 +2627,7 @@ const buildExternalEmbedSourceTheme = (
   if (accent) view.accentRGB = accent
   if (accentForeground) view.accentForegroundRGB = accentForeground
   // No fields set -> don't decorate the view at all.
-  if (!background && !foreground && !accent && !accentForeground) {
-    return undefined
-  }
-  return view
+  return Object.keys(view).length === 0 ? undefined : view
 }
 
 const toColorRgb = (
