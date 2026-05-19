@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-client",
-  "version": "0.0.22",
+  "version": "0.1.0",
   "engines": {
     "node": ">=22"
   },

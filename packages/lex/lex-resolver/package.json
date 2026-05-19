@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-resolver",
-  "version": "0.0.24",
+  "version": "0.1.0",
   "engines": {
     "node": ">=22"
   },
