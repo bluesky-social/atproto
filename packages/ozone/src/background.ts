@@ -12,7 +12,7 @@ export class BackgroundQueue {
   private abortController = new AbortController()
   private queue: PQueue
 
-  public get signal() {
+  public get signal(): AbortSignal {
     return this.abortController.signal
   }
 
@@ -99,7 +99,7 @@ export class PeriodicBackgroundTask {
   private intervalPromise?: Promise<void>
   private runningPromise?: Promise<void>
 
-  public get signal() {
+  public get signal(): AbortSignal {
     return this.abortController.signal
   }
 

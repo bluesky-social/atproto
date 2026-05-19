@@ -1,6 +1,9 @@
 {
   "name": "@atproto/oauth-client-expo",
   "version": "0.0.10",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [

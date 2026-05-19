@@ -1,11 +1,11 @@
-FROM node:20.20-alpine AS build
+FROM node:24.15-alpine3.23 AS build
 
 RUN corepack enable
 
 WORKDIR /app
 
 COPY ./package.json ./
-RUN corepack prepare --activate
+RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
@@ -58,7 +58,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --
 WORKDIR services/bsky
 
 # Uses assets from build stage to reduce build size
-FROM node:20.20-alpine
+FROM node:24.15-alpine3.23
 
 # dumb-init is used to handle signals properly.
 # runit is installed so it can be (optionally) used for logging via svlogd.

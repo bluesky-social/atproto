@@ -1,12 +1,12 @@
 # NOTE there is an additional build stage below that should match
-FROM node:20.20-alpine3.23 AS build
+FROM node:24.15-alpine3.23 AS build
 
 RUN corepack enable
 
 WORKDIR /app
 
 COPY ./package.json ./
-RUN corepack prepare --activate
+RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
@@ -58,7 +58,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --
 WORKDIR services/pds
 
 # Uses assets from build stage to reduce build size
-FROM node:20.20-alpine3.23
+FROM node:24.15-alpine3.23
 
 RUN apk add --update dumb-init
 

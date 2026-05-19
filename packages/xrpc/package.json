@@ -1,6 +1,9 @@
 {
   "name": "@atproto/xrpc",
   "version": "0.7.7",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) client library",
   "keywords": [

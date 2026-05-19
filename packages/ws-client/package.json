@@ -14,7 +14,7 @@
     "directory": "packages/ws-client"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

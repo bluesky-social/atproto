@@ -1,5 +1,10 @@
 type Encoding = 'utf8' | 'base64' | 'base64url'
 
+// Node's buffer module declares this type internally, but referencing it here
+// would couple this file to @types/node. Local copy keeps this module
+// standalone so it compiles in any environment (see tsconfig/isomorphic.json).
+type WithImplicitCoercion<T> = T | { valueOf(): T }
+
 interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
   extends Uint8Array<TArrayBuffer> {
   byteLength: number

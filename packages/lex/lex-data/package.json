@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex-data",
   "version": "0.0.15",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Core utilities for AT Lexicons",
   "keywords": [

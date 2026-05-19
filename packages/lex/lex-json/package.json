@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex-json",
   "version": "0.0.16",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in JSON format",
   "keywords": [
