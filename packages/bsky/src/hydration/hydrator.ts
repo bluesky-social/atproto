@@ -1565,9 +1565,6 @@ const externalAssociatedRefs = (
   return []
 }
 
-// Standard.site
-// ------------
-
 /**
  * Collects standard.site refs across all post layers, deduped by `uri+cid` so
  * the dataplane batch is minimal even if multiple posts in the layer reference
