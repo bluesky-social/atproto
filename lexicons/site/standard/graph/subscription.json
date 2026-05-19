@@ -15,9 +15,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "publication"
-        ],
+        "required": ["publication"],
         "type": "object"
       },
       "type": "record"

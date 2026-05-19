@@ -15,10 +15,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "document",
-          "createdAt"
-        ],
+        "required": ["document", "createdAt"],
         "type": "object"
       },
       "type": "record"

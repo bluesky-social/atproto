@@ -17,18 +17,14 @@
             "type": "string"
           },
           "icon": {
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "description": "Square image to identify the publication. Should be at least 256x256.",
             "maxSize": 1000000,
             "type": "blob"
           },
           "labels": {
             "description": "Self-label values for this publication. Effectively content warnings.",
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union"
           },
           "name": {
@@ -48,10 +44,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "url",
-          "name"
-        ],
+        "required": ["url", "name"],
         "type": "object"
       },
       "type": "record"

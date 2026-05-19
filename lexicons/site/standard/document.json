@@ -17,9 +17,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "did"
-      ],
+      "required": ["did"],
       "type": "object"
     },
     "main": {
@@ -46,9 +44,7 @@
             "type": "array"
           },
           "coverImage": {
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "description": "Image to used for thumbnail or cover image. Less than 1MB is size.",
             "maxSize": 1000000,
             "type": "blob"
@@ -61,9 +57,7 @@
           },
           "labels": {
             "description": "Self-label values for this post. Effectively content warnings.",
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union"
           },
           "links": {
@@ -110,11 +104,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "site",
-          "title",
-          "publishedAt"
-        ],
+        "required": ["site", "title", "publishedAt"],
         "type": "object"
       },
       "type": "record"

@@ -619,7 +619,10 @@ export class Hydrator {
       labelerState,
       starterPackState,
       postgates,
-      { documents: siteStandardDocuments, publications: siteStandardPublications },
+      {
+        documents: siteStandardDocuments,
+        publications: siteStandardPublications,
+      },
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
@@ -1580,7 +1583,9 @@ const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
     for (const item of layer.values()) {
       if (!item) continue
       for (const ref of externalAssociatedRefs(item.record)) {
-        if (!new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)) {
+        if (
+          !new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)
+        ) {
           continue
         }
         const key = `${ref.uri}@${ref.cid}`

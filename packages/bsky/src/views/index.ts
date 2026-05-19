@@ -58,7 +58,6 @@ import {
   ExternalEmbedSourceThemeView,
   ExternalEmbedSourceView,
   ExternalEmbedView,
-  SiteStandardPublicationRecord,
   FeedViewPost,
   FollowRecord,
   GeneratorView,
@@ -96,6 +95,7 @@ import {
   RecordWithMediaView,
   ReplyRef,
   RepostRecord,
+  SiteStandardPublicationRecord,
   StarterPackView,
   StarterPackViewBasic,
   StatusView,
@@ -2180,8 +2180,7 @@ export class Views {
     if (title) overlay.title = title
 
     const description =
-      document?.info.record.description ??
-      publication?.info.record.description
+      document?.info.record.description ?? publication?.info.record.description
     if (description) overlay.description = description
 
     const docCover = document?.info.record.coverImage
@@ -2205,9 +2204,9 @@ export class Views {
     // unit, so doc-scoped and publication-scoped labels end up in the same
     // bucket.
     const labels = [
-      ...(document ? (state.labels?.getBySubject(document.ref.uri) ?? []) : []),
+      ...(document ? state.labels?.getBySubject(document.ref.uri) ?? [] : []),
       ...(publication
-        ? (state.labels?.getBySubject(publication.ref.uri) ?? [])
+        ? state.labels?.getBySubject(publication.ref.uri) ?? []
         : []),
     ]
     if (labels.length) overlay.labels = labels
@@ -2592,9 +2591,7 @@ const lookupAssociatedSiteStandardRecords = (
   state: HydrationState,
 ): {
   document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
 } => {
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   let publication:

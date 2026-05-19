@@ -18,11 +18,7 @@
           "type": "integer"
         }
       },
-      "required": [
-        "r",
-        "g",
-        "b"
-      ],
+      "required": ["r", "g", "b"],
       "type": "object"
     },
     "rgba": {
@@ -48,12 +44,7 @@
           "type": "integer"
         }
       },
-      "required": [
-        "r",
-        "g",
-        "b",
-        "a"
-      ],
+      "required": ["r", "g", "b", "a"],
       "type": "object"
     }
   },

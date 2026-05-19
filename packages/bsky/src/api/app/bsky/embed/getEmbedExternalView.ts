@@ -2,10 +2,7 @@ import { AtUriString, LexMap } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { parseSiteStandardRecordKey } from '../../../../hydration/external'
-import {
-  HydrateCtx,
-  Hydrator,
-} from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app, com } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
