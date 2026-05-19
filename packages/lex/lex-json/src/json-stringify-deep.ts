@@ -12,7 +12,7 @@ const NESTED = Symbol('NESTED')
 const OPEN_BRACKET = '['
 const OPEN_BRACE = '{'
 
-export type JsonStringifyDeepOptions = StackOptions & {
+export type JsonStringifyDeepOptions = Required<StackOptions> & {
   /**
    * AT Protocol spec does not allow numbers outside of the safe integer range
    * (-(2^53 - 1) to 2^53 - 1)). This options allows to disable the check for
@@ -46,7 +46,7 @@ const CLOSE_BRACE_FRAME = rawFrame('}')
  */
 export function jsonStringifyDeep(
   input: JsonValue,
-  options?: JsonStringifyDeepOptions,
+  options: JsonStringifyDeepOptions,
 ): string {
   // Handle primitives and special types at the root level
   const valueJson = hasToJSON(input) ? input.toJSON() : input

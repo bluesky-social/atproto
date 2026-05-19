@@ -6,7 +6,7 @@
 // `deepTransform` and `jsonStringifyDeep`, which need to traverse and
 // transform deeply nested structures without hitting call stack limits.
 
-import { validateMaxUtf8Length } from './validate-max-utf8-length'
+import { validateMaxUtf8Length } from './validate-max-utf8-length.js'
 
 /** @internal */
 export type ArrayFrame = {
