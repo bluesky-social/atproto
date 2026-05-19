@@ -12586,6 +12586,55 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyGroupListMutualGroups: {
+    lexicon: 1,
+    id: 'chat.bsky.group.listMutualGroups',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Returns a page of group conversations that both the requester and the specified actor are members of.',
+        parameters: {
+          type: 'params',
+          required: ['subject'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              convos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.convo.defs#convoView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyGroupRejectJoinRequest: {
     lexicon: 1,
     id: 'chat.bsky.group.rejectJoinRequest',
@@ -13486,6 +13535,7 @@ export const schemaDict = {
               'owner_left',
               'owner_deactivated',
               'owner_deleted',
+              'owner_suspended',
               'owner_taken_down',
               'label_applied',
             ],
@@ -25574,6 +25624,7 @@ export const ids = {
   ChatBskyGroupEnableJoinLink: 'chat.bsky.group.enableJoinLink',
   ChatBskyGroupGetJoinLinkPreview: 'chat.bsky.group.getJoinLinkPreview',
   ChatBskyGroupListJoinRequests: 'chat.bsky.group.listJoinRequests',
+  ChatBskyGroupListMutualGroups: 'chat.bsky.group.listMutualGroups',
   ChatBskyGroupRejectJoinRequest: 'chat.bsky.group.rejectJoinRequest',
   ChatBskyGroupRemoveMembers: 'chat.bsky.group.removeMembers',
   ChatBskyGroupRequestJoin: 'chat.bsky.group.requestJoin',
