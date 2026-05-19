@@ -3,4 +3,4 @@
 '@atproto/ozone': patch
 ---
 
-Force re-build of generated code during CI
+Force re-build of generated code before release
