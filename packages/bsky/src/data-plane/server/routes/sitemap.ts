@@ -1,10 +1,7 @@
 import { gzipSync } from 'node:zlib'
 import { timestampDate } from '@bufbuild/protobuf/wkt'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import {
-  GetSitemapPageRequest,
-  Service,
-} from '../../../proto/bsky_pb.js'
+import { GetSitemapPageRequest, Service } from '../../../proto/bsky_pb.js'
 
 const MOCK_SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

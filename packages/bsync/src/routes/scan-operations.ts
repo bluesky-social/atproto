@@ -3,10 +3,7 @@ import { create } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { AppContext } from '../context.js'
 import { createOperationChannel } from '../db/schema/operation.js'
-import {
-  ScanOperationsResponseSchema,
-  Service,
-} from '../proto/bsync_pb.js'
+import { ScanOperationsResponseSchema, Service } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { combineSignals, validCursor } from './util.js'
 

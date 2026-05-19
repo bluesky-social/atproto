@@ -2445,7 +2445,9 @@ export class Views {
       // the user's first notification is marked unread, and all previous read. in this case,
       // the last seen time will be equal to the first notification's indexed time.
       isRead: lastSeenAt ? lastSeenAt > indexedAt : true,
-      indexedAt: timestampDate(notif.timestamp!).toISOString() as DatetimeString,
+      indexedAt: timestampDate(
+        notif.timestamp!,
+      ).toISOString() as DatetimeString,
       labels: [...labels, ...selfLabels],
     }
   }

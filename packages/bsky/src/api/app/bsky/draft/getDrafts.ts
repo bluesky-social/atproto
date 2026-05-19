@@ -25,10 +25,12 @@ export default function (server: Server, ctx: AppContext) {
           // The date should always be present, but we avoid required fields on protobuf by convention,
           // so requires a fallback value to please TS.
           createdAt: (
-            (d.createdAt && timestampDate(d.createdAt)) ?? new Date(0)
+            (d.createdAt && timestampDate(d.createdAt)) ??
+            new Date(0)
           ).toISOString() as DatetimeString,
           updatedAt: (
-            (d.updatedAt && timestampDate(d.updatedAt)) ?? new Date(0)
+            (d.updatedAt && timestampDate(d.updatedAt)) ??
+            new Date(0)
           ).toISOString() as DatetimeString,
         }
       })
