@@ -1,6 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies'
+import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies.js'
 
 describe('feed hidden replies', () => {
   let network: TestNetwork

@@ -7,13 +7,13 @@ import { MINUTE } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XRPCError, XrpcClient } from '@atproto/xrpc'
-import * as xrpcServer from '../src'
+import * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   closeServer,
   createBasicAuth,
   createServer,
-} from './_util'
+} from './_util.js'
 
 const LEXICONS: LexiconDoc[] = [
   {

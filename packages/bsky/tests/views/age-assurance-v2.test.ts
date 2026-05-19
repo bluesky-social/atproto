@@ -15,13 +15,13 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
   type KWSWebhookAgeVerified,
   serializeKWSAgeVerifiedStatus,
-} from '../../src/api/age-assurance/kws/age-verified'
+} from '../../src/api/age-assurance/kws/age-verified.js'
 import {
   KWSExternalPayloadVersion,
   serializeKWSExternalPayloadV1,
   serializeKWSExternalPayloadV2,
-} from '../../src/api/age-assurance/kws/external-payload'
-import { KwsWebhookBody } from '../../src/api/kws/types'
+} from '../../src/api/age-assurance/kws/external-payload.js'
+import { KwsWebhookBody } from '../../src/api/kws/types.js'
 
 type Database = TestNetwork['bsky']['db']
 

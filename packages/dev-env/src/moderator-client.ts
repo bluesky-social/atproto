@@ -8,7 +8,7 @@ import {
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { TestOzone } from './ozone'
+import { TestOzone } from './ozone.js'
 
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams

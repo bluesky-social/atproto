@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { QueueService } from '../queue/service'
+import { Database } from '../db/index.js'
+import { QueueService } from '../queue/service.js'
 
 export type ReassignReportQueueParams = {
   reportId: number

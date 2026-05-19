@@ -63,7 +63,7 @@
   },
   "overrides": [
     {
-      "files": ["jest.config.js"],
+      "files": ["jest.config.cjs"],
       "env": { "commonjs": true }
     },
     {
@@ -71,7 +71,7 @@
       "env": { "node": true }
     },
     {
-      "files": ["jest.setup.js"],
+      "files": ["test.setup.ts"],
       "env": { "jest": true }
     },
     {

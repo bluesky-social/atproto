@@ -5,10 +5,10 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
-import { ModeratorClient } from './moderator-client'
-import { DidAndKey, OzoneConfig } from './types'
-import { createDidAndKey } from './util'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
+import { ModeratorClient } from './moderator-client.js'
+import { DidAndKey, OzoneConfig } from './types.js'
+import { createDidAndKey } from './util.js'
 
 export class TestOzone {
   constructor(

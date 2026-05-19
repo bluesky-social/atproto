@@ -1,9 +1,9 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AccountPreference } from '../../../../actor-store/preference/reader'
-import { isAccessFull } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { AccountPreference } from '../../../../actor-store/preference/reader.js'
+import { isAccessFull } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { computeProxyTo, pipethrough } from '../../../../pipethrough'
+import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx

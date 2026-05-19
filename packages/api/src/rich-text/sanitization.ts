@@ -1,5 +1,5 @@
-import { RichText } from './rich-text'
-import { UnicodeString } from './unicode'
+import { RichText } from './rich-text.js'
+import { UnicodeString } from './unicode.js'
 
 // this regex is intentionally matching on the zero-with-separator codepoint
 // eslint-disable-next-line no-misleading-character-class

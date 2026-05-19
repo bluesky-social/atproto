@@ -1,7 +1,11 @@
-import { Lexicons } from '../lexicons'
-import { LexXrpcParameters, ValidationError, ValidationResult } from '../types'
-import { array } from './complex'
-import * as PrimitiveValidators from './primitives'
+import { Lexicons } from '../lexicons.js'
+import {
+  LexXrpcParameters,
+  ValidationError,
+  ValidationResult,
+} from '../types.js'
+import { array } from './complex.js'
+import * as PrimitiveValidators from './primitives.js'
 
 export function params(
   lexicons: Lexicons,

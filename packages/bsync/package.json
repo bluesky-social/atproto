@@ -45,7 +45,7 @@
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@types/pg": "^8.6.6",
     "get-port": "^5.1.1",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "ts-node": "^10.8.2",
     "typescript": "^6.0.3"
   }

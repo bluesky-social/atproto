@@ -1,5 +1,5 @@
-import basicSeed from './basic'
-import { SeedClient } from './client'
+import basicSeed from './basic.js'
+import { SeedClient } from './client.js'
 
 export default async (sc: SeedClient) => {
   await basicSeed(sc)

@@ -1,7 +1,7 @@
 import { DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import { Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -9,8 +9,8 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getUnreadCount = createPipeline(

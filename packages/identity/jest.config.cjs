@@ -1,7 +1,8 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  displayName: 'Lexicon Resolver',
+  displayName: 'Identity',
   transform: { '^.+\\.(t|j)s$': '@swc/jest' },
-  setupFiles: ['<rootDir>/../../jest.setup.ts'],
+  transformIgnorePatterns: ['/node_modules/.pnpm/(?!(get-port)@)'],
+  setupFiles: ['<rootDir>/../../test.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
 }

@@ -30,7 +30,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "typescript": "^6.0.3"
   }
 }

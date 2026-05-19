@@ -7,8 +7,8 @@ import {
   useState,
 } from 'react'
 import { type OAuthSession } from '@atproto/oauth-client-browser'
-import { useAbortableEffect } from '../lib/use-abortable-effect'
-import { initPromise, oauthClient, oauthEvents } from '../oauthClient'
+import { useAbortableEffect } from '../lib/use-abortable-effect.js'
+import { initPromise, oauthClient, oauthEvents } from '../oauthClient.js'
 
 export type SignInFunction = (
   input: string,

@@ -1,5 +1,5 @@
 import { isValidTld } from '@atproto/syntax'
-import { ensureHandleServiceConstraints } from '../src/handle'
+import { ensureHandleServiceConstraints } from '../src/handle/index.js'
 
 describe('handle validation', () => {
   it('validates service constraints', () => {

@@ -1,12 +1,12 @@
 import { Selectable } from 'kysely'
 import { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import { app } from '../../../../lexicons'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { countAll, excluded } from '../../db/util'
-import { RecordProcessor } from '../processor'
+import { app } from '../../../../lexicons/index.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { countAll, excluded } from '../../db/util.js'
+import { RecordProcessor } from '../processor.js'
 
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
 

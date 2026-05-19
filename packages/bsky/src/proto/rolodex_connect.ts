@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { DismissMatchRequest, DismissMatchResponse, GetMatchesRequest, GetMatchesResponse, GetSyncStatusRequest, GetSyncStatusResponse, ImportContactsRequest, ImportContactsResponse, PingRequest, PingResponse, RemoveDataRequest, RemoveDataResponse, StartPhoneVerificationRequest, StartPhoneVerificationResponse, VerifyPhoneRequest, VerifyPhoneResponse } from "./rolodex_pb";
+import { DismissMatchRequest, DismissMatchResponse, GetMatchesRequest, GetMatchesResponse, GetSyncStatusRequest, GetSyncStatusResponse, ImportContactsRequest, ImportContactsResponse, PingRequest, PingResponse, RemoveDataRequest, RemoveDataResponse, StartPhoneVerificationRequest, StartPhoneVerificationResponse, VerifyPhoneRequest, VerifyPhoneResponse } from "./rolodex_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**

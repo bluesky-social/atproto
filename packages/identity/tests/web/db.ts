@@ -1,4 +1,4 @@
-import { DidDocument } from '../../src/types'
+import { DidDocument } from '../../src/types.js'
 
 interface DidStore {
   put(key: string, val: string): Promise<void>

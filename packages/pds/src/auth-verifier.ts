@@ -27,8 +27,8 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager/account-manager'
-import { ActorAccount } from './account-manager/helpers/account'
+import { AccountManager } from './account-manager/account-manager.js'
+import { ActorAccount } from './account-manager/helpers/account.js'
 import {
   AccessOutput,
   AdminTokenOutput,
@@ -37,11 +37,11 @@ import {
   RefreshOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
-} from './auth-output'
-import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
-import { softDeleted } from './db'
-import { appendVary } from './util/http'
-import { WithRequired } from './util/types'
+} from './auth-output.js'
+import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
+import { softDeleted } from './db/index.js'
+import { appendVary } from './util/http.js'
+import { WithRequired } from './util/types.js'
 
 export type VerifiedOptions = {
   checkTakedown?: boolean

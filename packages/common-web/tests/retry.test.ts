@@ -1,4 +1,4 @@
-import { retry } from '../src/index'
+import { retry } from '../src/index.js'
 
 describe('retry', () => {
   describe('retry()', () => {

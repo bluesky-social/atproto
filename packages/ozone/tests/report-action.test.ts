@@ -7,7 +7,7 @@ import {
 import {
   REASONMISLEADING,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('report-action', () => {
   let network: TestNetwork

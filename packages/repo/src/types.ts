@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { Cid, LexMap, ifCid } from '@atproto/lex-data'
 import { NsidString, RecordKeyString } from '@atproto/syntax'
-import { BlockMap } from './block-map'
-import { CidSet } from './cid-set'
+import { BlockMap } from './block-map.js'
+import { CidSet } from './cid-set.js'
 
 // Repo nodes
 // ---------------

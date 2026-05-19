@@ -1,8 +1,8 @@
 import { Options as PrettierOptions, format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
 import { type LexiconDoc } from '@atproto/lexicon'
-import { type GeneratedFile } from '../types'
-import { toTitleCase } from './util'
+import { type GeneratedFile } from '../types.js'
+import { toTitleCase } from './util.js'
 
 const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',
@@ -147,7 +147,7 @@ export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
         { name: 'ValidationResult', isTypeOnly: true },
       ])
 
-    //= import { is$typed, maybe$typed, type $Typed } from './util'
+    //= import { is$typed, maybe$typed, type $Typed } from './util.js'
     file
       .addImportDeclaration({
         moduleSpecifier: './util.js',

@@ -25,7 +25,7 @@ import {
   InternalServerError,
   InvalidRequestError,
   XRPCError,
-} from './errors'
+} from './errors.js'
 import {
   Auth,
   Input,
@@ -37,7 +37,7 @@ import {
   RouteOptions,
   UndecodedParams,
   handlerSuccess,
-} from './types'
+} from './types.js'
 
 export type ParamsVerifierInternal<P extends Params = Params> = (
   req: IncomingMessage | ExpressRequest,

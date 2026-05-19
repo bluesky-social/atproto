@@ -6,8 +6,8 @@ import {
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { ServerMailer } from '../src/mailer'
-import userSeed from './seeds/users'
+import { ServerMailer } from '../src/mailer/index.js'
+import userSeed from './seeds/users.js'
 
 describe('email confirmation', () => {
   let network: TestNetworkNoAppView

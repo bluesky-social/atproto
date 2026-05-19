@@ -12,7 +12,7 @@ import {
   ResponseType,
   XRPCError,
   errorResponseBody,
-} from './types'
+} from './types.js'
 
 const ReadableStream =
   globalThis.ReadableStream ||

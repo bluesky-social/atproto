@@ -4,9 +4,9 @@ import {
   AppBskyFeedPost,
   AppBskyGraphList,
 } from '@atproto/api'
-import { langLogger as log } from '../logger'
-import { ContentTagger } from './content-tagger'
-import { code3ToCode2 } from './language-data'
+import { langLogger as log } from '../logger.js'
+import { ContentTagger } from './content-tagger.js'
+import { code3ToCode2 } from './language-data.js'
 
 const ifString = (value: unknown): string | undefined =>
   typeof value === 'string' ? value : undefined

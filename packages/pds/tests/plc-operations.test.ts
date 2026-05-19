@@ -7,7 +7,7 @@ import { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
-import { AppContext } from '../src'
+import { AppContext } from '../src/index.js'
 
 describe('plc operations', () => {
   let network: TestNetworkNoAppView

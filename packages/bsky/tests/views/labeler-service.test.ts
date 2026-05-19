@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyLabelerDefs,
@@ -7,7 +8,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromLabeler } from '../_util'
+import { forSnapshot, stripViewerFromLabeler } from '../_util.js'
 
 describe('labeler service views', () => {
   let network: TestNetwork

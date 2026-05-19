@@ -92,7 +92,7 @@
     "esbuild": "^0.14.48",
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "puppeteer": "^23.11.1",
     "ts-node": "^10.8.2",
     "typescript": "^6.0.3",

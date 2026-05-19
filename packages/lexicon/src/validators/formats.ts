@@ -10,7 +10,7 @@ import {
   isValidTid,
   isValidUri,
 } from '@atproto/syntax'
-import { ValidationError, ValidationResult } from '../types'
+import { ValidationError, ValidationResult } from '../types.js'
 
 export function datetime(path: string, value: string): ValidationResult {
   try {

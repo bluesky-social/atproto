@@ -1,8 +1,8 @@
 import { sql } from 'kysely'
-import { GateRecord, PostRecord, PostReplyRef } from '../../views/types'
-import { parseThreadGate } from '../../views/util'
-import { DatabaseSchema } from './db/database-schema'
-import { valuesList } from './db/util'
+import { GateRecord, PostRecord, PostReplyRef } from '../../views/types.js'
+import { parseThreadGate } from '../../views/util.js'
+import { DatabaseSchema } from './db/database-schema.js'
+import { valuesList } from './db/util.js'
 
 export const getDescendentsQb = (
   db: DatabaseSchema,

@@ -4,10 +4,10 @@ import {
   ForbiddenError,
   InvalidRequestError,
 } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ids } from '../../lexicon/lexicons'
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { ids } from '../../lexicon/lexicons.js'
 import {
   ModEventTag,
   isAgeAssuranceEvent,
@@ -23,17 +23,17 @@ import {
   isModEventTakedown,
   isModEventUnmuteReporter,
   isRevokeAccountCredentialsEvent,
-} from '../../lexicon/types/tools/ozone/moderation/defs'
-import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
-import { httpLogger } from '../../logger'
-import { processReportAction } from '../../mod-service/report'
-import { subjectFromInput } from '../../mod-service/subject'
-import { SettingService } from '../../setting/service'
-import { TagService } from '../../tag-service'
-import { getTagForReport } from '../../tag-service/util'
-import { retryHttp } from '../../util'
-import { getEventType } from '../util'
-import { assertProtectedTagAction, getProtectedTags } from './util'
+} from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import { httpLogger } from '../../logger.js'
+import { processReportAction } from '../../mod-service/report.js'
+import { subjectFromInput } from '../../mod-service/subject.js'
+import { SettingService } from '../../setting/service.js'
+import { TagService } from '../../tag-service/index.js'
+import { getTagForReport } from '../../tag-service/util.js'
+import { retryHttp } from '../../util.js'
+import { getEventType } from '../util.js'
+import { assertProtectedTagAction, getProtectedTags } from './util.js'
 
 const handleModerationEvent = async ({
   ctx,

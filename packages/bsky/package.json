@@ -20,9 +20,9 @@
     "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-redis-and-db.sh jest",
+    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
     "migration:create": "ts-node ./bin/migration-create.ts",
     "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
   },
@@ -80,14 +80,13 @@
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@did-plc/server": "^0.0.1",
-    "@jest/globals": "28",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
-    "jest": "^28.1.2",
     "ts-node": "^10.8.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.16"
   }
 }

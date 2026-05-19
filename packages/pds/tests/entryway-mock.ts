@@ -16,7 +16,10 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { bearerTokenFromReq, createPublicKeyObject } from '../src/auth-verifier'
+import {
+  bearerTokenFromReq,
+  createPublicKeyObject,
+} from '../src/auth-verifier.js'
 import { com } from '../src/lexicons/index.js'
 
 interface Account {

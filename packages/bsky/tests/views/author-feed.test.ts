@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyEmbedImages,
@@ -12,13 +13,13 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
-import { uriToDid } from '../../src/util/uris'
+import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
   paginateAll,
   stripViewer,
   stripViewerFromPost,
-} from '../_util'
+} from '../_util.js'
 
 const isValidReplyRef = asPredicate(AppBskyFeedPost.validateReplyRef)
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
