@@ -13,7 +13,7 @@ import { viewQueueStats } from '../report/views'
 const MOD_EVENT_REPORT_ACTION = 'tools.ozone.moderation.defs#modEventReport'
 const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
 
-type SubjectType = 'account' | 'record' | 'message'
+type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
 type ResolvedAssignment = {
   queueId: number
@@ -478,6 +478,7 @@ export class QueueService {
         'subjectDid',
         'subjectUri',
         'subjectMessageId',
+        'subjectConvoId',
         'meta',
         'createdAt',
       ])
@@ -503,9 +504,11 @@ export class QueueService {
     const rows = events.map((event) => {
       const subjectType: SubjectType = event.subjectMessageId
         ? 'message'
-        : event.subjectUri
-          ? 'record'
-          : 'account'
+        : event.subjectConvoId
+          ? 'conversation'
+          : event.subjectUri
+            ? 'record'
+            : 'account'
 
       let collection: string | null = null
       let recordPath = ''
@@ -545,6 +548,7 @@ export class QueueService {
         did: event.subjectDid,
         recordPath,
         subjectMessageId: event.subjectMessageId,
+        subjectConvoId: event.subjectConvoId,
         createdAt: now,
         updatedAt: now,
       }

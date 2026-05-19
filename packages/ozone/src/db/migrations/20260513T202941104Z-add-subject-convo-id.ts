@@ -14,7 +14,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     ON moderation_event("subjectConvoId")
     WHERE "subjectConvoId" IS NOT NULL
   `.execute(db)
-  
+
   // moderation_subject_status
   await db.schema
     .alterTable('moderation_subject_status')
@@ -44,11 +44,32 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('expiring_tag')
     .columns(['did', 'recordPath', 'convoId'])
     .execute()
+
+  // report table
+  await db.schema
+    .alterTable('report')
+    .addColumn('subjectConvoId', 'varchar')
+    .execute()
+  await db.schema.dropIndex('idx_report_unassigned_id').execute()
+  await sql`CREATE INDEX idx_report_unassigned_id ON report
+    (id)
+    INCLUDE (status, "reportType", "recordPath", "subjectMessageId", "subjectConvoId")
+    WHERE ("queueId" IS NULL AND status != 'closed')`.execute(db)
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  // report
+  await db.schema.dropIndex('idx_report_unassigned_id').execute()
+  await sql`CREATE INDEX idx_report_unassigned_id ON report
+    (id)
+    INCLUDE (status, "reportType", "recordPath", "subjectMessageId")
+    WHERE ("queueId" IS NULL AND status != 'closed')`.execute(db)
+  await db.schema.alterTable('report').dropColumn('subjectConvoId').execute()
+
   // expiring_tag
-  await db.schema.dropIndex('idx_expiring_tag_did_record_path_convo_id').execute()
+  await db.schema
+    .dropIndex('idx_expiring_tag_did_record_path_convo_id')
+    .execute()
   await db.schema.alterTable('expiring_tag').dropColumn('convoId').execute()
 
   // moderation_subject_status
@@ -67,5 +88,8 @@ export async function down(db: Kysely<unknown>): Promise<void> {
 
   // moderation_event
   await db.schema.dropIndex('moderation_event_convo_idx').execute()
-  await db.schema.alterTable('moderation_event').dropColumn('subjectConvoId').execute()
+  await db.schema
+    .alterTable('moderation_event')
+    .dropColumn('subjectConvoId')
+    .execute()
 }
