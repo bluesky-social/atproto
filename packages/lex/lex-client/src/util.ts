@@ -1,3 +1,8 @@
+import {
+  InferRecordKey,
+  LexiconRecordKey,
+  RecordSchema,
+} from '@atproto/lex-schema'
 import type { DidString, Service } from './types.js'
 
 export function applyDefaults<
@@ -132,4 +137,33 @@ export function toReadableStreamPonyfill(
       iterator = undefined
     },
   })
+}
+
+export type RecordKeyOptions<
+  T extends RecordSchema,
+  AlsoOptionalWhenRecordKeyIs extends LexiconRecordKey = never,
+> = T['key'] extends `literal:${string}` | AlsoOptionalWhenRecordKeyIs
+  ? { rkey?: InferRecordKey<T> }
+  : { rkey: InferRecordKey<T> }
+
+export function getDefaultRecordKey<const T extends RecordSchema>(
+  schema: T,
+): undefined | InferRecordKey<T> {
+  // Let the server generate the TID
+  if (schema.key === 'tid') return undefined
+  if (schema.key === 'any') return undefined
+
+  return getLiteralRecordKey(schema)
+}
+
+export function getLiteralRecordKey<const T extends RecordSchema>(
+  schema: T,
+): InferRecordKey<T> {
+  if (schema.key.startsWith('literal:')) {
+    return schema.key.slice(8) as InferRecordKey<T>
+  }
+
+  throw new TypeError(
+    `An "rkey" must be provided for record key type "${schema.key}" (${schema.$type})`,
+  )
 }
