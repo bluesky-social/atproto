@@ -2198,6 +2198,10 @@ export class Views {
     if (document?.info.record.updatedAt) {
       overlay.updatedAt = document.info.record.updatedAt
     }
+    const readingTime = document?.info.record.textContent
+      ? estimateReadingTimeMinutes(document.info.record.textContent)
+      : undefined
+    if (readingTime !== undefined) overlay.readingTime = readingTime
 
     // Merge labels applied to either the document or the publication onto the
     // same `viewExternal.labels` array — clients moderate the embed as single
@@ -2612,6 +2616,19 @@ const lookupAssociatedSiteStandardRecords = (
   }
   return { document, publication }
 }
+
+/**
+ * Estimate reading time in minutes from a plaintext document body. Returns
+ * `undefined` when the input has no countable words. Uses a coarse 200 wpm
+ * heuristic; swap in a more accurate library here if needed (e.g.
+ * `reading-time`).
+ */
+const estimateReadingTimeMinutes = (text: string): number | undefined => {
+  const words = text.trim().split(/\s+/).filter(Boolean).length
+  if (!words) return undefined
+  return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE))
+}
+const WORDS_PER_MINUTE = 200
 
 const buildExternalEmbedSourceTheme = (
   theme: SiteStandardPublicationRecord['basicTheme'],
