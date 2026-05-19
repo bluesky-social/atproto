@@ -1,7 +1,9 @@
 import EventEmitter from 'node:events'
 import { Selectable } from 'kysely'
-import { PoolClient } from 'pg'
-import TypedEmitter from 'typed-emitter'
+// eslint-disable-next-line import/default
+import pg from 'pg'
+type PoolClient = pg.PoolClient
+import type TypedEmitter from 'typed-emitter'
 import { Database } from '../db/index.js'
 import { Label as LabelTable, LabelChannel } from '../db/schema/label.js'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
@@ -142,4 +144,4 @@ type SequencerEvents = {
   close: () => void
 }
 
-export type SequencerEmitter = TypedEmitter<SequencerEvents>
+export type SequencerEmitter = TypedEmitter.default<SequencerEvents>

@@ -1,4 +1,3 @@
-import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -14,6 +13,7 @@ import {
   isAgeAssuranceOverrideEvent,
   isAgeAssurancePurgeEvent,
   isModEventAcknowledge,
+  isModEventDivert,
   isModEventEmail,
   isModEventLabel,
   isModEventMuteReporter,

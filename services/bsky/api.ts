@@ -1,8 +1,10 @@
-/* eslint-env node */
 /* eslint-disable import/order */
+import { createRequire } from 'node:module'
+import assert from 'node:assert'
+import cluster from 'node:cluster'
+import path from 'node:path'
 
-'use strict'
-
+const require = createRequire(import.meta.url)
 const dd = require('dd-trace')
 
 dd.tracer
@@ -13,7 +15,7 @@ dd.tracer
   })
   .use('express', {
     hooks: {
-      request: (span, req) => {
+      request: (span: any, req: any) => {
         maintainXrpcResource(span, req)
       },
     },
@@ -22,7 +24,7 @@ dd.tracer
 // modify tracer in order to track calls to dataplane as a service with proper resource names
 const DATAPLANE_PREFIX = '/bsky.Service/'
 const origStartSpan = dd.tracer._tracer.startSpan
-dd.tracer._tracer.startSpan = function (name, options) {
+dd.tracer._tracer.startSpan = function (name: string, options: any) {
   if (
     name !== 'http.request' ||
     options?.tags?.component !== 'http2' ||
@@ -40,12 +42,8 @@ dd.tracer._tracer.startSpan = function (name, options) {
 }
 
 // Tracer code above must come before anything else
-const assert = require('node:assert')
-const cluster = require('node:cluster')
-const path = require('node:path')
-
-const { BskyAppView, ServerConfig } = require('@atproto/bsky')
-const { Secp256k1Keypair } = require('@atproto/crypto')
+import { BskyAppView, ServerConfig } from '@atproto/bsky'
+import { Secp256k1Keypair } from '@atproto/crypto'
 
 const main = async () => {
   const env = getEnv()
@@ -66,14 +64,14 @@ const getEnv = () => ({
   serviceSigningKey: process.env.BSKY_SERVICE_SIGNING_KEY || undefined,
 })
 
-const maybeParseInt = (str) => {
+const maybeParseInt = (str: string | undefined) => {
   if (!str) return
   const int = parseInt(str, 10)
   if (isNaN(int)) return
   return int
 }
 
-const maintainXrpcResource = (span, req) => {
+const maintainXrpcResource = (span: any, req: any) => {
   // Show actual xrpc method as resource rather than the route pattern
   if (span && req.originalUrl?.startsWith('/xrpc/')) {
     span.setTag(
@@ -93,7 +91,7 @@ const workerCount = maybeParseInt(process.env.CLUSTER_WORKER_COUNT)
 if (workerCount) {
   if (cluster.isPrimary) {
     console.log(`primary ${process.pid} is running`)
-    const workers = new Set()
+    const workers = new Set<ReturnType<typeof cluster.fork>>()
     for (let i = 0; i < workerCount; ++i) {
       workers.add(cluster.fork())
     }

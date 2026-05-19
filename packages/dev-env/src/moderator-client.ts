@@ -2,6 +2,7 @@ import {
   AtpAgent,
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneReportQueryReports as QueryModerationReports,

@@ -4,7 +4,7 @@
   "engines": {
     "node": ">=22"
   },
-  "type": "commonjs",
+  "type": "module",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
@@ -23,8 +23,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon-resolver"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

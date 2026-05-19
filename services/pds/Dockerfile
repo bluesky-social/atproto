@@ -10,6 +10,7 @@ RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
@@ -78,7 +79,7 @@ ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--require=./tracer.js", "index.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"

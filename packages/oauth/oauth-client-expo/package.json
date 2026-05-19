@@ -26,8 +26,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-expo"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -49,5 +47,6 @@
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
-  }
+  },
+  "type": "module"
 }

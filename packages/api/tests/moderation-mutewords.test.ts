@@ -1,4 +1,4 @@
-import { RichText, mock, moderatePost } from '../src//index.js'
+import { RichText, mock, moderatePost } from '../src/index.js'
 import { matchMuteWords } from '../src/moderation/mutewords.js'
 
 describe(`matchMuteWords`, () => {

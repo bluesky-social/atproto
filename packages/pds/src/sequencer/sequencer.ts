@@ -1,5 +1,5 @@
 import EventEmitter from 'node:events'
-import TypedEmitter from 'typed-emitter'
+import type TypedEmitter from 'typed-emitter'
 import { SECOND, wait } from '@atproto/common'
 import { decode as cborDecode } from '@atproto/lex-cbor'
 import { DatetimeString, DidString, HandleString } from '@atproto/syntax'
@@ -258,6 +258,6 @@ type SequencerEvents = {
   close: () => void
 }
 
-export type SequencerEmitter = TypedEmitter<SequencerEvents>
+export type SequencerEmitter = TypedEmitter.default<SequencerEvents>
 
 export default Sequencer

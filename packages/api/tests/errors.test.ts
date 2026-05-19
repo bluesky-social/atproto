@@ -1,5 +1,5 @@
+import { AtpAgent, ComAtprotoServerCreateAccount } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
 
 describe('errors', () => {
   let network: TestNetworkNoAppView
@@ -17,7 +17,7 @@ describe('errors', () => {
   })
 
   it('constructs the correct error instance', async () => {
-    const res = client.api.com.atproto.server.createAccount({
+    const res = client.com.atproto.server.createAccount({
       handle: 'admin.blah',
       email: 'admin@test.com',
       password: 'password',

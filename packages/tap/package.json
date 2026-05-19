@@ -19,8 +19,6 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
@@ -39,5 +37,12 @@
     "typescript": "^6.0.3",
     "@vitest/coverage-v8": "4.0.16",
     "vitest": "^4.0.16"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

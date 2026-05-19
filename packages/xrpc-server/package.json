@@ -16,10 +16,8 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -43,6 +41,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/lex-document": "workspace:^",
+    "@jest/globals": "^30.0.0",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.4",
@@ -50,9 +49,16 @@
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
-    "jose": "^4.15.4",
+    "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

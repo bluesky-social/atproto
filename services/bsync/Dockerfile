@@ -9,6 +9,7 @@ RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
@@ -49,7 +50,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "index.js"]
+CMD ["node", "--enable-source-maps", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsync"

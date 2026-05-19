@@ -1,4 +1,4 @@
-import { ClientOptions } from 'ws'
+import type { ClientOptions } from 'ws'
 import { isPlainObject } from '@atproto/lex-data'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream.js'

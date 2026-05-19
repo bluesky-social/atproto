@@ -16,10 +16,8 @@
   "engines": {
     "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
@@ -31,5 +29,12 @@
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

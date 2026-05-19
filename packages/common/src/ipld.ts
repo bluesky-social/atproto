@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { Transform } from 'node:stream'
-import { Block, ByteView, encode as encodeBlock } from 'multiformats/block'
+import { encode as encodeBlock } from 'multiformats/block'
+import type { BlockView, ByteView } from 'multiformats/block/interface'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { cidForLex, decode, encode } from '@atproto/lex-cbor'
 import {
@@ -33,7 +34,9 @@ export { cborDecodeLegacy as cborDecode }
 /**
  * @deprecated Use {@link encode} and {@link cidForCbor} from `@atproto/lex-cbor` instead.
  */
-export async function dataToCborBlock<T>(value: T): Promise<Block<T>> {
+export async function dataToCborBlock<T>(
+  value: T,
+): Promise<BlockView<T, 0x71, 0x12, 1>> {
   return encodeBlock<T, 0x71, 0x12>({
     value,
     codec: {

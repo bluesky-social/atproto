@@ -17,21 +17,19 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/api"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
     "prebuild": "node ./scripts/generate-code.mjs && ([ -f ./src/client/index.ts ] || pnpm run codegen)",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
-    "await-lock": "^2.2.2",
-    "multiformats": "^9.9.0",
+    "await-lock": "^3.0.0",
+    "multiformats": "^13.0.0",
     "tlds": "^1.234.0",
     "zod": "^3.23.8"
   },
@@ -41,5 +39,12 @@
     "jest": "^30.0.0",
     "prettier": "^3.2.5",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

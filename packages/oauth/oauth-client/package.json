@@ -18,9 +18,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -39,7 +37,7 @@
     "@atproto/oauth-types": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "core-js": "^3",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
-import 'core-js/modules/esnext.symbol.async-dispose'
-import 'core-js/modules/esnext.symbol.dispose'
+import 'core-js/es/symbol/async-dispose.js'
+import 'core-js/es/symbol/dispose.js'
 
 export * from './lexicon-document.js'
 export * from './lexicon-indexer.js'

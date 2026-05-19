@@ -1,4 +1,4 @@
-import { ClientOptions } from 'ws'
+import type { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'

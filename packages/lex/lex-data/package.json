@@ -26,21 +26,17 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": "./dist/index.js",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
   "dependencies": {
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "tslib": "^2.8.1",
-    "uint8arrays": "3.0.0",
+    "uint8arrays": "^5.0.0",
     "unicode-segmenter": "^0.14.0"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import 'core-js/modules/es.symbol.dispose'
+import 'core-js/es/symbol/dispose.js'
 
 export * from '@atproto-labs/did-resolver'
 export {

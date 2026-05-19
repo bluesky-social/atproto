@@ -15,15 +15,6 @@
       "onFail": "error"
     }
   },
-  "pnpm": {
-    "executionEnv": {
-      "nodeVersion": ">=22"
-    },
-    "overrides": {
-      "cookie": "^0.7.2",
-      "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
-    }
-  },
   "scripts": {
     "lint:fix": "pnpm lint --fix",
     "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
@@ -51,9 +42,10 @@
     "@atproto/dev-env": "workspace:^",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
+    "@jest/globals": "^30.0.0",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
-    "@types/jest": "^28.1.4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
@@ -74,6 +66,18 @@
     "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },
+  "pnpm": {
+    "executionEnv": {
+      "nodeVersion": ">=22"
+    },
+    "overrides": {
+      "cookie": "^0.7.2",
+      "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
+    },
+    "patchedDependencies": {
+      "kysely@0.22.0": "patches/kysely@0.22.0.patch"
+    }
+  },
   "workspace": [
     "packages/*",
     "packages/lex/*",
@@ -87,5 +91,6 @@
       "packages/oauth/*",
       "packages/internal/*"
     ]
-  }
+  },
+  "type": "module"
 }

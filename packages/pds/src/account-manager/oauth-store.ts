@@ -321,7 +321,7 @@ export class OAuthStore
   ): Promise<DeviceAccount[]> {
     const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
 
-    const uniqueDids = [...new Set(rows.map((row) => row.did))]
+    const uniqueDids: string[] = [...new Set(rows.map((row) => row.did))]
 
     // Enrich all distinct account with their profile data
     const accounts = new Map(

@@ -16,21 +16,26 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "iso-datestring-validator": "^2.2.2",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "jest": "^30.0.0",
     "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

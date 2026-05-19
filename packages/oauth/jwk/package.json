@@ -19,9 +19,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/jwk"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -29,7 +27,7 @@
     }
   },
   "dependencies": {
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

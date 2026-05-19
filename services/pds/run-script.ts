@@ -1,13 +1,10 @@
-/* eslint-env node */
-
-'use strict'
-const {
+import {
   AppContext,
   envToCfg,
   envToSecrets,
   readEnv,
   scripts,
-} = require('@atproto/pds')
+} from '@atproto/pds'
 
 const main = async () => {
   const env = readEnv()

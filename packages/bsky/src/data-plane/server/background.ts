@@ -5,7 +5,7 @@ import { Database } from './db/index.js'
 // A simple queue for in-process, out-of-band/backgrounded work
 
 export class BackgroundQueue {
-  queue = new PQueue()
+  queue: InstanceType<typeof PQueue> = new PQueue()
   destroyed = false
   constructor(public db: Database) {}
 
