@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-builder",
-  "version": "0.0.23",
+  "version": "0.1.0",
   "engines": {
     "node": ">=22"
   },
