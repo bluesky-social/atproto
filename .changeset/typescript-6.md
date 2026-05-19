@@ -60,6 +60,4 @@
 '@atproto-labs/xrpc-utils': minor
 ---
 
-Build with TypeScript 6.0. Emitted `.d.ts` files now use TypeScript 6's stricter `Uint8Array<ArrayBuffer>` typing in places where Web/Node APIs require buffer-backed (not shared-memory) byte arrays. Consumers compiling against these types on older TypeScript should see no runtime impact, but may need to widen or cast in spots that previously relied on `Uint8Array` defaulting to `<ArrayBufferLike>`.
-
-Internal: tsconfig `moduleResolution: "node"` is silenced via `ignoreDeprecations: "6.0"` for now; the proper migration to `node16`/`bundler` resolution is deferred.
+Build with TypeScript 6.0.
