@@ -807,6 +807,19 @@ export class Hydrator {
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
     ])
+    // The dataplane auto-resolves a document's `site` field, so a request
+    // for a single document can return its publication too. If the caller
+    // also passed a publication URI that doesn't match any document's
+    // `site`, prune it (and only it) to keep the response strictly tied to
+    // the documents we returned. When no documents are hydrated, all
+    // publications are passed through (publication-only resolution).
+    if (documents.size > 0) {
+      const allowedPublicationUris = collectAllowedPublicationUris(documents)
+      for (const key of [...publications.keys()]) {
+        const { uri } = parseSiteStandardRecordKey(key)
+        if (!allowedPublicationUris.has(uri)) publications.delete(key)
+      }
+    }
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, labels)
       actionSiteStandardTakedownLabels(publications, labels)
@@ -1717,6 +1730,22 @@ const actionSiteStandardTakedownLabels = (
       hydrationMap.set(key, null)
     }
   }
+}
+
+/**
+ * Returns the set of publication AT-URIs referenced by `site` on any of the
+ * hydrated documents. Loose documents (whose `site` is a web URL) contribute
+ * nothing.
+ */
+const collectAllowedPublicationUris = (
+  documents: SiteStandardDocuments,
+): Set<string> => {
+  const allowed = new Set<string>()
+  for (const info of documents.values()) {
+    const site = info?.record.site
+    if (site && site.startsWith('at://')) allowed.add(site)
+  }
+  return allowed
 }
 
 const uriToRef = (uri: AtUriString): ItemRef => {
