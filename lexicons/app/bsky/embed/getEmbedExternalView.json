@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Resolve one or more site.standard.* AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is also included when the resolved records can produce a renderable view, but may be omitted when no records were hydratable.",
+      "description": "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is also included when the resolved records can produce a renderable view, but may be omitted when no records were hydratable.",
       "parameters": {
         "type": "params",
         "required": ["url", "uris"],
@@ -12,7 +12,7 @@
           "url": {
             "type": "string",
             "format": "uri",
-            "description": "The canonical web URL the embed represents (typically the URL the user pasted into the composer). Used as the returned view's `uri`."
+            "description": "The canonical web URL the embed represents (typically the URL the user pasted into the composer). Used as the returned view's `uri`. May be used for validation in the future."
           },
           "uris": {
             "type": "array",
@@ -37,7 +37,7 @@
                 "type": "ref",
                 "ref": "com.atproto.repo.strongRef"
               },
-              "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
+              "description": "StrongRefs (URI+CID) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
             },
             "associatedRecords": {
               "type": "array",

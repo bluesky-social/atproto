@@ -2227,7 +2227,7 @@ export class Views {
             getBlobCidString(record.icon),
           )
         : undefined,
-      name: record.name,
+      title: record.name,
       description: record.description,
       theme: record.basicTheme
         ? buildExternalEmbedSourceTheme(record.basicTheme)

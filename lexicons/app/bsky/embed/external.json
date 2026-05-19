@@ -31,7 +31,7 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
-          "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
+          "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view."
         }
       }
     },
@@ -78,7 +78,7 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
-          "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs."
+          "description": "StrongRefs (uri+cid) of the Atmosphere records that backed this view."
         }
       }
     },
@@ -86,13 +86,17 @@
       "type": "object",
       "description": "The source of an external embed, such as a standard.site publication.",
       "properties": {
-        "uri": { "type": "string", "format": "uri" },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI of the source, if available. Example: the https:// URL of a site.standard.publication record."
+        },
         "icon": {
           "type": "string",
           "format": "uri",
           "description": "Fully-qualified URL where an icon representing the source can be fetched. For example, CDN location provided by the App View."
         },
-        "name": { "type": "string" },
+        "title": { "type": "string" },
         "description": { "type": "string" },
         "theme": {
           "type": "ref",

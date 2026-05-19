@@ -38,7 +38,7 @@ export interface External {
   title: string
   description: string
   thumb?: BlobRef
-  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
+  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view. */
   associatedRefs?: ComAtprotoRepoStrongRef.Main[]
 }
 
@@ -81,7 +81,7 @@ export interface ViewExternal {
   readingTime?: number
   labels?: ComAtprotoLabelDefs.Label[]
   source?: ViewExternalSource
-  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
+  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view. */
   associatedRefs?: ComAtprotoRepoStrongRef.Main[]
 }
 
@@ -98,10 +98,11 @@ export function validateViewExternal<V>(v: V) {
 /** The source of an external embed, such as a standard.site publication. */
 export interface ViewExternalSource {
   $type?: 'app.bsky.embed.external#viewExternalSource'
+  /** URI of the source, if available. Example: the https:// URL of a site.standard.publication record. */
   uri?: string
   /** Fully-qualified URL where an icon representing the source can be fetched. For example, CDN location provided by the App View. */
   icon?: string
-  name?: string
+  title?: string
   description?: string
   theme?: ViewExternalSourceTheme
 }

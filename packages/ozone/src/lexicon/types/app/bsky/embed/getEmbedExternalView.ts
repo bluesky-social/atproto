@@ -17,6 +17,8 @@ const is$typed = _is$typed,
 const id = 'app.bsky.embed.getEmbedExternalView'
 
 export type QueryParams = {
+  /** The canonical web URL the embed represents (typically the URL the user pasted into the composer). Used as the returned view's `uri`. May be used for validation in the future. */
+  url: string
   /** AT-URIs of any Atmosphere records that can be resolved and used to construct #externalView views. Example: a site.standard.document and optionally its associated site.standard.publication. */
   uris: string[]
 }
@@ -24,7 +26,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   view?: AppBskyEmbedExternal.View
-  /** StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
+  /** StrongRefs (URI+CID) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs. */
   associatedRefs?: ComAtprotoRepoStrongRef.Main[]
   associatedRecords?: { [_ in string]: unknown }[]
 }

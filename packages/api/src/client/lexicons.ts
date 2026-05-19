@@ -2717,7 +2717,7 @@ export const schemaDict = {
               ref: 'lex:com.atproto.repo.strongRef',
             },
             description:
-              "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
+              'StrongRefs (uri+cid) of the Atmosphere records that backed this view.',
           },
         },
       },
@@ -2783,7 +2783,7 @@ export const schemaDict = {
               ref: 'lex:com.atproto.repo.strongRef',
             },
             description:
-              "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
+              'StrongRefs (uri+cid) of the Atmosphere records that backed this view.',
           },
         },
       },
@@ -2795,6 +2795,8 @@ export const schemaDict = {
           uri: {
             type: 'string',
             format: 'uri',
+            description:
+              'URI of the source, if available. Example: the https:// URL of a site.standard.publication record.',
           },
           icon: {
             type: 'string',
@@ -2802,7 +2804,7 @@ export const schemaDict = {
             description:
               'Fully-qualified URL where an icon representing the source can be fetched. For example, CDN location provided by the App View.',
           },
-          name: {
+          title: {
             type: 'string',
           },
           description: {
@@ -2869,11 +2871,17 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Get a hydrated view of an external embed for one or more site.standard.* AT-URIs. Returns the view plus the strongRefs of records that backed it, suitable for embedding into a post's external.associatedRecords.",
+          "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is also included when the resolved records can produce a renderable view, but may be omitted when no records were hydratable.",
         parameters: {
           type: 'params',
-          required: ['uris'],
+          required: ['url', 'uris'],
           properties: {
+            url: {
+              type: 'string',
+              format: 'uri',
+              description:
+                "The canonical web URL the embed represents (typically the URL the user pasted into the composer). Used as the returned view's `uri`. May be used for validation in the future.",
+            },
             uris: {
               type: 'array',
               description:
@@ -2902,7 +2910,7 @@ export const schemaDict = {
                   ref: 'lex:com.atproto.repo.strongRef',
                 },
                 description:
-                  "StrongRefs (uri+cid) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
+                  "StrongRefs (URI+CID) of the Atmosphere records that backed this view, suitable for embedding into a post's external.associatedRefs.",
               },
               associatedRecords: {
                 type: 'array',
