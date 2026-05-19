@@ -2200,11 +2200,17 @@ export class Views {
       overlay.updatedAt = document.info.record.updatedAt
     }
 
-    const labelSubject = document?.ref.uri ?? publication?.ref.uri
-    const labels = labelSubject
-      ? state.labels?.getBySubject(labelSubject)
-      : undefined
-    if (labels?.length) overlay.labels = labels
+    // Merge labels applied to either the document or the publication onto the
+    // same `viewExternal.labels` array — clients moderate the embed as single
+    // unit, so doc-scoped and publication-scoped labels end up in the same
+    // bucket.
+    const labels = [
+      ...(document ? (state.labels?.getBySubject(document.ref.uri) ?? []) : []),
+      ...(publication
+        ? (state.labels?.getBySubject(publication.ref.uri) ?? [])
+        : []),
+    ]
+    if (labels.length) overlay.labels = labels
 
     if (publication) {
       overlay.source = this.externalEmbedSource(publication)
