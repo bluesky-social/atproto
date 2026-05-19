@@ -1,32 +1,30 @@
-import { dedupeStrs } from '@atproto/common'
 import { LexMap } from '@atproto/lex'
-import { AtUri, AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { parseSiteStandardRecordKey } from '../../../../hydration/feed'
 import { app, com } from '../../../../lexicons/index.js'
 import { StrongRef } from '../../../../views/types.js'
 
-const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
-
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.embed.getEmbedExternalView, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params }) => {
-      const uris = dedupeStrs(
-        params.uris.filter((u) =>
-          new AtUri(u).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-        ),
-      ) as AtUriString[]
+    handler: async ({ params, auth, req }) => {
+      const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const { documents, publications } =
-        await ctx.hydrator.feed.getSiteStandardRecordsByURI(uris)
+      const state = await ctx.hydrator.hydrateEmbedExternalViewFromUris(
+        params.uris,
+        hydrateCtx,
+      )
 
-      // associatedRefs and associatedRecords are returned as parallel arrays:
-      // associatedRecords[i] is the raw record body for associatedRefs[i].
+      // Build associatedRefs from whatever survived hydration (taken-down
+      // records were nulled out). Cardy embeds these into the post's
+      // external.associatedRefs so the read path freezes to these exact
+      // versions.
       const associatedRefs: StrongRef[] = []
       const associatedRecords: LexMap[] = []
-      for (const [key, info] of documents) {
+      for (const [key, info] of state.siteStandardDocuments ?? []) {
         if (!info) continue
         const { uri } = parseSiteStandardRecordKey(key)
         associatedRefs.push(
@@ -34,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         associatedRecords.push(info.record as LexMap)
       }
-      for (const [key, info] of publications) {
+      for (const [key, info] of state.siteStandardPublications ?? []) {
         if (!info) continue
         const { uri } = parseSiteStandardRecordKey(key)
         associatedRefs.push(
@@ -43,19 +41,33 @@ export default function (server: Server, ctx: AppContext) {
         associatedRecords.push(info.record as LexMap)
       }
 
-      // No records hydrated -> nothing to give Cardy; it falls back to its
-      // own link-card rendering and skips writing strongRefs.
       if (!associatedRefs.length) {
         return { encoding: 'application/json', body: {} }
       }
 
-      // TODO(phase 2): build a viewExternal here, populating
-      // createdAt/updatedAt/readingTime/source from the resolved document +
-      // publication. Until then we only return raw refs and records; Cardy
-      // continues to render the link card from its own HTML extraction.
+      const overlay = ctx.views.externalEmbedFromStandardSite(
+        associatedRefs,
+        state,
+      )
+      // viewExternal requires uri/title/description. We fall back to the
+      // request's `url` for `uri` and skip the view if the SS overlay
+      // didn't supply title/description.
+      const view =
+        overlay?.title && overlay?.description
+          ? app.bsky.embed.external.view.$build({
+              external: {
+                ...overlay,
+                uri: params.url,
+                title: overlay.title,
+                description: overlay.description,
+                associatedRefs,
+              },
+            })
+          : undefined
+
       return {
         encoding: 'application/json',
-        body: { associatedRefs, associatedRecords },
+        body: { view, associatedRefs, associatedRecords },
       }
     },
   })

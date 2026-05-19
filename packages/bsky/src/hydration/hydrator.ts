@@ -774,6 +774,39 @@ export class Hydrator {
     })
   }
 
+  /**
+   * Hydrate the state needed to build an `app.bsky.embed.external#view` for
+   * a set of `site.standard.*` AT-URIs at compose-time. Filters input URIs to
+   * SS collections, fetches latest indexed versions plus labels, and gates
+   * taken-down records.
+   */
+  async hydrateEmbedExternalViewFromUris(
+    uris: AtUriString[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const ssUris = dedupeStrs(
+      uris.filter((u) =>
+        new AtUri(u).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+      ),
+    ) as AtUriString[]
+    if (!ssUris.length) return { ctx }
+
+    const [{ documents, publications }, labels] = await Promise.all([
+      this.feed.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
+      this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+    ])
+    if (!ctx.includeTakedowns) {
+      actionSiteStandardTakedownLabels(documents, labels)
+      actionSiteStandardTakedownLabels(publications, labels)
+    }
+    return {
+      ctx,
+      labels,
+      siteStandardDocuments: documents,
+      siteStandardPublications: publications,
+    }
+  }
+
   // app.bsky.feed.defs#threadViewPost
   // - post
   //   - profile

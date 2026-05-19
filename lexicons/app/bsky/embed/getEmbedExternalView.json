@@ -7,8 +7,13 @@
       "description": "Get a hydrated view of an external embed for one or more site.standard.* AT-URIs. Returns the view plus the strongRefs of records that backed it, suitable for embedding into a post's external.associatedRecords.",
       "parameters": {
         "type": "params",
-        "required": ["uris"],
+        "required": ["url", "uris"],
         "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The canonical web URL the embed represents (typically the URL the user pasted into the composer). Used as the returned view's `uri`."
+          },
           "uris": {
             "type": "array",
             "description": "AT-URIs of any Atmosphere records that can be resolved and used to construct #externalView views. Example: a site.standard.document and optionally its associated site.standard.publication.",
