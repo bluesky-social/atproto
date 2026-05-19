@@ -156,7 +156,7 @@ function string(
   path: string,
   def: LexUserType,
   value: unknown,
-): ValidationResult {
+): ValidationResult<string> {
   def = def as LexString
 
   // type
