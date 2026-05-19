@@ -23,7 +23,6 @@
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/syntax": "workspace:^",
-    "iso-datestring-validator": "^2.2.2",
     "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
