@@ -7,7 +7,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('subjectConvoId', 'varchar')
     .execute()
   /// broad index to support conversation-based queries
-  /// volume of matching events should be low
+  /// Users is a convo is capped at 50 so volume of matching events should be low
   /// subsequent ordering and filtering will be efficient
   await sql`
     CREATE INDEX "moderation_event_convo_idx"
