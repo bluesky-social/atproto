@@ -1,0 +1,63 @@
+name: Bump API package version
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/api/**'
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump patch version if already published
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@sokaa-converge'
+
+      - name: Check if version already published
+        id: check
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT=$(node -p "require('./packages/api/package.json').version")
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          # npm view exits non-zero if package/version not found
+          if npm view @sokaa-converge/atproto-custom-api@$CURRENT version \
+               --registry https://npm.pkg.github.com 2>/dev/null; then
+            echo "already_published=true" >> $GITHUB_OUTPUT
+            echo "Version $CURRENT is already published — will bump patch"
+          else
+            echo "already_published=false" >> $GITHUB_OUTPUT
+            echo "Version $CURRENT is not yet published — no bump needed"
+          fi
+
+      - name: Bump patch version
+        if: steps.check.outputs.already_published == 'true'
+        run: |
+          cd packages/api
+          npm version patch --no-git-tag-version
+          NEW=$(node -p "require('./package.json').version")
+          echo "Bumped to $NEW"
+
+      - name: Commit version bump
+        if: steps.check.outputs.already_published == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          NEW=$(node -p "require('./packages/api/package.json').version")
+          git add packages/api/package.json
+          git commit -m "chore(api): bump version to $NEW"
+          git push

@@ -146,6 +146,17 @@ import * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+import * as AppSokaaActorDefs from './types/app/sokaa/actor/defs.js'
+import * as AppSokaaActorGetProfile from './types/app/sokaa/actor/getProfile.js'
+import * as AppSokaaActorProfile from './types/app/sokaa/actor/profile.js'
+import * as AppSokaaEmbedImages from './types/app/sokaa/embed/images.js'
+import * as AppSokaaEmbedVideo from './types/app/sokaa/embed/video.js'
+import * as AppSokaaFeedDefs from './types/app/sokaa/feed/defs.js'
+import * as AppSokaaFeedGetAuthorFeed from './types/app/sokaa/feed/getAuthorFeed.js'
+import * as AppSokaaFeedGetTimeline from './types/app/sokaa/feed/getTimeline.js'
+import * as AppSokaaFeedLike from './types/app/sokaa/feed/like.js'
+import * as AppSokaaFeedPost from './types/app/sokaa/feed/post.js'
+import * as AppSokaaGraphFollow from './types/app/sokaa/graph/follow.js'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
@@ -459,6 +470,17 @@ export * as AppBskyVideoDefs from './types/app/bsky/video/defs.js'
 export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.js'
 export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
+export * as AppSokaaActorDefs from './types/app/sokaa/actor/defs.js'
+export * as AppSokaaActorGetProfile from './types/app/sokaa/actor/getProfile.js'
+export * as AppSokaaActorProfile from './types/app/sokaa/actor/profile.js'
+export * as AppSokaaEmbedImages from './types/app/sokaa/embed/images.js'
+export * as AppSokaaEmbedVideo from './types/app/sokaa/embed/video.js'
+export * as AppSokaaFeedDefs from './types/app/sokaa/feed/defs.js'
+export * as AppSokaaFeedGetAuthorFeed from './types/app/sokaa/feed/getAuthorFeed.js'
+export * as AppSokaaFeedGetTimeline from './types/app/sokaa/feed/getTimeline.js'
+export * as AppSokaaFeedLike from './types/app/sokaa/feed/like.js'
+export * as AppSokaaFeedPost from './types/app/sokaa/feed/post.js'
+export * as AppSokaaGraphFollow from './types/app/sokaa/graph/follow.js'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration.js'
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs.js'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
@@ -766,10 +788,12 @@ export class AtpBaseClient extends XrpcClient {
 export class AppNS {
   _client: XrpcClient
   bsky: AppBskyNS
+  sokaa: AppSokaaNS
 
   constructor(client: XrpcClient) {
     this._client = client
     this.bsky = new AppBskyNS(client)
+    this.sokaa = new AppSokaaNS(client)
   }
 }
 
@@ -3475,6 +3499,419 @@ export class AppBskyVideoNS {
     opts?: AppBskyVideoUploadVideo.CallOptions,
   ): Promise<AppBskyVideoUploadVideo.Response> {
     return this._client.call('app.bsky.video.uploadVideo', opts?.qp, data, opts)
+  }
+}
+
+export class AppSokaaNS {
+  _client: XrpcClient
+  actor: AppSokaaActorNS
+  embed: AppSokaaEmbedNS
+  feed: AppSokaaFeedNS
+  graph: AppSokaaGraphNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.actor = new AppSokaaActorNS(client)
+    this.embed = new AppSokaaEmbedNS(client)
+    this.feed = new AppSokaaFeedNS(client)
+    this.graph = new AppSokaaGraphNS(client)
+  }
+}
+
+export class AppSokaaActorNS {
+  _client: XrpcClient
+  profile: AppSokaaActorProfileRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.profile = new AppSokaaActorProfileRecord(client)
+  }
+
+  getProfile(
+    params?: AppSokaaActorGetProfile.QueryParams,
+    opts?: AppSokaaActorGetProfile.CallOptions,
+  ): Promise<AppSokaaActorGetProfile.Response> {
+    return this._client.call(
+      'app.sokaa.actor.getProfile',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class AppSokaaActorProfileRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppSokaaActorProfile.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.sokaa.actor.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppSokaaActorProfile.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.sokaa.actor.profile',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaActorProfile.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.actor.profile'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.sokaa.actor.profile', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppSokaaEmbedNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+}
+
+export class AppSokaaFeedNS {
+  _client: XrpcClient
+  like: AppSokaaFeedLikeRecord
+  post: AppSokaaFeedPostRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.like = new AppSokaaFeedLikeRecord(client)
+    this.post = new AppSokaaFeedPostRecord(client)
+  }
+
+  getAuthorFeed(
+    params?: AppSokaaFeedGetAuthorFeed.QueryParams,
+    opts?: AppSokaaFeedGetAuthorFeed.CallOptions,
+  ): Promise<AppSokaaFeedGetAuthorFeed.Response> {
+    return this._client.call(
+      'app.sokaa.feed.getAuthorFeed',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getTimeline(
+    params?: AppSokaaFeedGetTimeline.QueryParams,
+    opts?: AppSokaaFeedGetTimeline.CallOptions,
+  ): Promise<AppSokaaFeedGetTimeline.Response> {
+    return this._client.call(
+      'app.sokaa.feed.getTimeline',
+      params,
+      undefined,
+      opts,
+    )
+  }
+}
+
+export class AppSokaaFeedLikeRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppSokaaFeedLike.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.sokaa.feed.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppSokaaFeedLike.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.sokaa.feed.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaFeedLike.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.feed.like'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaFeedLike.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.feed.like'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.sokaa.feed.like', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppSokaaFeedPostRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppSokaaFeedPost.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.sokaa.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppSokaaFeedPost.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.sokaa.feed.post',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaFeedPost.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.feed.post'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.sokaa.feed.post', ...params },
+      { headers },
+    )
+  }
+}
+
+export class AppSokaaGraphNS {
+  _client: XrpcClient
+  follow: AppSokaaGraphFollowRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.follow = new AppSokaaGraphFollowRecord(client)
+  }
+}
+
+export class AppSokaaGraphFollowRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppSokaaGraphFollow.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.sokaa.graph.follow',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppSokaaGraphFollow.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.sokaa.graph.follow',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaGraphFollow.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.graph.follow'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<AppSokaaGraphFollow.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'app.sokaa.graph.follow'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.sokaa.graph.follow', ...params },
+      { headers },
+    )
   }
 }
 
