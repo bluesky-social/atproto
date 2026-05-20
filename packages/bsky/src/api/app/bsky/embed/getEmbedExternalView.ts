@@ -125,8 +125,6 @@ const standardSitePresentation = (
     external: {
       ...overlay,
       uri: params.url,
-      title: overlay.title ?? '',
-      description: overlay.description ?? '',
       associatedRefs,
     },
   })

@@ -2129,11 +2129,12 @@ export class Views {
     embed: ExternalEmbed,
     state: HydrationState,
   ): $Typed<ExternalEmbedView> {
-    // Start from the post-author-supplied embed values, then layer
-    // SS-derived fields on top so any field present on the hydrated
-    // document/publication wins. `uri` and `associatedRefs` are re-set
-    // after the spread to make sure they always come from the embed even
-    // if the overlay shape grows later.
+    // Start from the post-author-supplied embed values, then spread the
+    // SS-derived view on top so any field the hydrated doc/publication
+    // supplies wins (title, description, thumb, source, etc). When no SS
+    // records were hydrated `ssView` is `undefined` and the spread is a
+    // no-op, leaving the base values in place. `associatedRefs` is set
+    // last because the post is authoritative about what was pinned.
     const ssView = this.externalEmbedFromStandardSite({
       associatedRefs: embed.external.associatedRefs,
       state,
@@ -2141,6 +2142,7 @@ export class Views {
     })
     return app.bsky.embed.external.view.$build({
       external: {
+        uri: embed.external.uri,
         title: embed.external.title,
         description: embed.external.description,
         thumb: embed.external.thumb
@@ -2151,7 +2153,6 @@ export class Views {
             )
           : undefined,
         ...ssView,
-        uri: embed.external.uri,
         associatedRefs: embed.external.associatedRefs,
       },
     })
@@ -2162,21 +2163,17 @@ export class Views {
    * and the global hydration state, and we resolve the matching SS records
    * by ref. Used by `externalEmbed`.
    *
-   * Returns a partial `viewExternal` overlay, or `undefined` when no SS
-   * records were hydrated for these refs. Only fields the SS records can
-   * supply are set; callers should layer this on top of a base view
-   * (typically built from the post's embed) so hydrated fields override
-   * author-supplied ones and un-hydratable fields fall through to the base.
-   *
-   * The `uri` field is intentionally not included here since we want to
-   * respect the embed's supplied URI (which might include tracking params,
-   * for example) rather than forcing it to be the canonical URI from the SS
-   * record.
+   * Returns a fully-populated `viewExternal['external']` shape (including
+   * the required `uri`/`title`/`description`), or `undefined` if the
+   * records didn't hydrate, didn't pass URL validation, or couldn't
+   * supply the required fields. Callers spread the result over a base
+   * view to layer SS-derived fields on top of post-author-supplied ones.
    *
    * `assumedUrl` is the canonical web URL the embed claims to represent
    * (the post's `external.uri` on the read path, the request's `url` on
    * compose). Validation logic uses it to confirm the SS records actually
-   * back that URL.
+   * back that URL, and the same value is echoed back as `uri` on the
+   * returned overlay.
    */
   externalEmbedFromStandardSite({
     associatedRefs,
@@ -2186,7 +2183,7 @@ export class Views {
     associatedRefs: ExternalEmbed['external']['associatedRefs']
     state: HydrationState
     assumedUrl: string
-  }): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
+  }): ExternalEmbedView['external'] | undefined {
     const { document, publication } = getSiteStandardRecordsFromHydrationMapsByRefs(
       associatedRefs,
       state.siteStandardDocuments,
@@ -2207,11 +2204,17 @@ export class Views {
    * that `externalEmbedFromStandardSite` does. Used by
    * `getEmbedExternalView`.
    *
+   * Returns a fully-populated `viewExternal['external']` shape (including
+   * the required `uri`/`title`/`description`), or `undefined` if any of
+   * the validation gates rejected the pair or the records couldn't
+   * supply the required fields.
+   *
    * `state` is still needed for label hydration. `assumedUrl` is the
    * canonical web URL the embed claims to represent (the post's
    * `external.uri` on the read path, the request's `url` on compose);
    * validation logic uses it to confirm the SS records actually back that
-   * URL.
+   * URL, and the same value is echoed back as `uri` on the returned
+   * overlay.
    */
   externalEmbedFromStandardSiteRecords({
     document,
@@ -2225,7 +2228,7 @@ export class Views {
       | undefined
     state: HydrationState
     assumedUrl: string
-  }): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
+  }): ExternalEmbedView['external'] | undefined {
     // Three layers of validation gate this overlay:
     //
     //  1. Hydrator nulls taken-down records and mirrors the null across
@@ -2267,7 +2270,9 @@ export class Views {
     // showing
     if (!title) return undefined
 
-    const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {
+    const overlay: ExternalEmbedView['external'] = {
+      // @ts-ignore this is mis-typed
+      uri: assumedUrl,
       title,
       description,
     }
