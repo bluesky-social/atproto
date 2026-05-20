@@ -29,7 +29,10 @@ import { RecordInfo, parseString } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
 import { Notification } from '../proto/bsky_pb.js'
-import { estimateReadingTimeMinutes } from '../util/standard-site.js'
+import {
+  estimateReadingTimeMinutes,
+  validateStandardSiteForUrl,
+} from '../util/standard-site.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -2131,10 +2134,11 @@ export class Views {
     // document/publication wins. `uri` and `associatedRefs` are re-set
     // after the spread to make sure they always come from the embed even
     // if the overlay shape grows later.
-    const ssView = this.externalEmbedFromStandardSite(
-      embed.external.associatedRefs,
+    const ssView = this.externalEmbedFromStandardSite({
+      associatedRefs: embed.external.associatedRefs,
       state,
-    )
+      assumedUrl: embed.external.uri,
+    })
     return app.bsky.embed.external.view.$build({
       external: {
         title: embed.external.title,
@@ -2168,21 +2172,32 @@ export class Views {
    * respect the embed's supplied URI (which might include tracking params,
    * for example) rather than forcing it to be the canonical URI from the SS
    * record.
+   *
+   * `assumedUrl` is the canonical web URL the embed claims to represent
+   * (the post's `external.uri` on the read path, the request's `url` on
+   * compose). Validation logic uses it to confirm the SS records actually
+   * back that URL.
    */
-  externalEmbedFromStandardSite(
-    associatedRefs: ExternalEmbed['external']['associatedRefs'],
-    state: HydrationState,
-  ): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
+  externalEmbedFromStandardSite({
+    associatedRefs,
+    state,
+    assumedUrl,
+  }: {
+    associatedRefs: ExternalEmbed['external']['associatedRefs']
+    state: HydrationState
+    assumedUrl: string
+  }): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
     const { document, publication } = getSiteStandardRecordsFromHydrationMaps(
       associatedRefs,
       state.siteStandardDocuments,
       state.siteStandardPublications,
     )
-    return this.externalEmbedFromStandardSiteRecords(
+    return this.externalEmbedFromStandardSiteRecords({
       document,
       publication,
       state,
-    )
+      assumedUrl,
+    })
   }
 
   /**
@@ -2192,16 +2207,34 @@ export class Views {
    * that `externalEmbedFromStandardSite` does. Used by
    * `getEmbedExternalView`.
    *
-   * `state` is still needed for label hydration.
+   * `state` is still needed for label hydration. `assumedUrl` is the
+   * canonical web URL the embed claims to represent (the post's
+   * `external.uri` on the read path, the request's `url` on compose);
+   * validation logic uses it to confirm the SS records actually back that
+   * URL.
    */
-  externalEmbedFromStandardSiteRecords(
-    document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined,
+  externalEmbedFromStandardSiteRecords({
+    document,
+    publication,
+    state,
+    assumedUrl,
+  }: {
+    document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
     publication:
       | AssociatedSiteStandardRecord<SiteStandardPublication>
-      | undefined,
-    state: HydrationState,
-  ): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
+      | undefined
+    state: HydrationState
+    assumedUrl: string
+  }): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
     if (!document && !publication) return undefined
+    // Confirm the SS records actually back `assumedUrl` (matching site/url
+    // fields, doc.site resolves to the hydrated publication, etc). Drop
+    // the overlay entirely if validation fails — clients fall back to the
+    // bare embed rather than render enrichment from records that don't
+    // belong to this URL.
+    if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
+      return undefined
+    }
 
     const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}
 

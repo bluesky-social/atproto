@@ -39,6 +39,73 @@ export const collectAllowedPublicationUris = (
   return allowed
 }
 
+/**
+ * Parse `url` as HTTP(S) and reduce it to a canonical
+ * `protocol://host/path` string for equality comparison: lowercases host,
+ * strips a trailing slash from the path, and drops query/fragment. Returns
+ * `null` when the input isn't a valid HTTP(S) URL.
+ */
+const canonicalizeHttpUrl = (url: string, base?: string): string | null => {
+  let parsed: URL
+  try {
+    parsed = new URL(url, base)
+  } catch {
+    return null
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+  const path = parsed.pathname === '/' ? '' : parsed.pathname.replace(/\/$/, '')
+  return `${parsed.protocol}//${parsed.host}${path}`
+}
+
+/**
+ * Verify that the supplied SS records actually back `assumedUrl`. The rule
+ * tree mirrors the spec:
+ *
+ * - Loose document (no publication): `document.site` must be HTTP and equal
+ *   `assumedUrl`.
+ * - Document + publication: `document.site` must resolve to the hydrated
+ *   publication, AND `publication.url + document.path` must equal
+ *   `assumedUrl`.
+ * - Publication only: `publication.url` must equal `assumedUrl`.
+ * - Neither: vacuously valid; nothing to render either, but the caller's
+ *   own `if (!document && !publication)` short-circuit handles that.
+ *
+ * URL comparisons normalize protocol/host/path (lowercase host, collapse
+ * `//`, strip trailing slash, ignore query and fragment).
+ */
+export const validateStandardSiteForUrl = (
+  document:
+    | { ref: { uri: string }; info: { record: { site: string; path?: string } } }
+    | undefined,
+  publication:
+    | { ref: { uri: string }; info: { record: { url: string } } }
+    | undefined,
+  assumedUrl: string,
+): boolean => {
+  const canonicalAssumed = canonicalizeHttpUrl(assumedUrl)
+  if (canonicalAssumed === null) return false
+
+  if (document && publication) {
+    if (document.info.record.site !== publication.ref.uri) return false
+    const joined = canonicalizeHttpUrl(
+      document.info.record.path ?? '',
+      publication.info.record.url,
+    )
+    return joined === canonicalAssumed
+  }
+  if (document) {
+    const joined = canonicalizeHttpUrl(
+      document.info.record.path ?? '',
+      document.info.record.site,
+    )
+    return joined === canonicalAssumed
+  }
+  if (publication) {
+    return canonicalizeHttpUrl(publication.info.record.url) === canonicalAssumed
+  }
+  return true
+}
+
 const WORDS_PER_MINUTE = 200
 
 /**

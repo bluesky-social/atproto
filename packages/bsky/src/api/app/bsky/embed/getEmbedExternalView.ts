@@ -138,11 +138,12 @@ const standardSitePresentation = (
   // so were set to null and aren't included in associatedRefs)
   if (!associatedRefs.length) return {}
 
-  const overlay = ctx.views.externalEmbedFromStandardSiteRecords(
-    firstDoc,
-    firstPub,
-    hydration,
-  )
+  const overlay = ctx.views.externalEmbedFromStandardSiteRecords({
+    document: firstDoc,
+    publication: firstPub,
+    state: hydration,
+    assumedUrl: params.url,
+  })
 
   // We always return a view when any record was hydrated. The lex marks
   // `title` and `description` as required, but SS records can produce a
