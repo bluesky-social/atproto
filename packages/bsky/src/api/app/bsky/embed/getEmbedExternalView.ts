@@ -1,6 +1,11 @@
 import { AtUriString, LexMap } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
+import {
+  AssociatedSiteStandardRecord,
+  SiteStandardDocument,
+  SiteStandardPublication,
+} from '../../../../hydration/external.js'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, com } from '../../../../lexicons/index.js'
 import {
@@ -75,43 +80,46 @@ const presentation = (
   // case we skip the prune below (publication-only resolution flow).
   const allowedPublicationUris = collectAllowedPublicationUris(documents)
 
-  // Walk the hydration maps once to build the response's parallel
-  // `associatedRefs` / `associatedRecords` arrays. We then hand
-  // `associatedRefs` back to `externalEmbedFromStandardSite`, which walks the
-  // same maps a second time to build the view; both passes are bounded by
-  // the lex's `uris.maxLength`.
+  // Walk the hydration maps once: build the response's parallel
+  // `associatedRefs` / `associatedRecords` arrays AND capture the first
+  // hydrated doc / publication so we can hand them straight to the view
+  // builder without a second by-ref lookup.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
+  let firstDoc: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  let firstPub:
+    | AssociatedSiteStandardRecord<SiteStandardPublication>
+    | undefined
   for (const [key, info] of documents) {
     if (!info) continue
-    const { uri } = parseSiteStandardRecordKey(key)
+    const ref = parseSiteStandardRecordKey(key)
     associatedRefs.push(
-      com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
+      com.atproto.repo.strongRef.$build({ uri: ref.uri, cid: info.cid }),
     )
     associatedRecords.push(info.record as LexMap)
+    if (!firstDoc) firstDoc = { ref, info }
   }
   // Only apply the allow-set when we hydrated at least one document; with
   // no documents in play we keep every publication (publication-only flow).
   const prunePublications = documents.size > 0
   for (const [key, info] of publications) {
     if (!info) continue
-    const { uri } = parseSiteStandardRecordKey(key)
-    if (prunePublications && !allowedPublicationUris.has(uri)) continue
+    const ref = parseSiteStandardRecordKey(key)
+    if (prunePublications && !allowedPublicationUris.has(ref.uri)) continue
     associatedRefs.push(
-      com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
+      com.atproto.repo.strongRef.$build({ uri: ref.uri, cid: info.cid }),
     )
     associatedRecords.push(info.record as LexMap)
+    if (!firstPub) firstPub = { ref, info }
   }
 
   // Additional guard in case all records in the maps have been takendown (and
   // so were set to null and aren't included in associatedRefs)
   if (!associatedRefs.length) return {}
 
-  // this must happen after we've pruned any publications not associated with a
-  // hydrated document, since the view builder will walk the associatedRefs to
-  // find the records it needs to build the view
-  const overlay = ctx.views.externalEmbedFromStandardSite(
-    associatedRefs,
+  const overlay = ctx.views.externalEmbedFromStandardSiteRecords(
+    firstDoc,
+    firstPub,
     hydration,
   )
   // viewExternal requires uri/title/description, but we fall back to the

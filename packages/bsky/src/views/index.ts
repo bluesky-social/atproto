@@ -17,6 +17,7 @@ import {
 import { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
   AssociatedSiteStandardRecord,
+  SiteStandardDocument,
   SiteStandardPublication,
   getSiteStandardRecordsFromHydrationMaps,
 } from '../hydration/external.js'
@@ -2153,16 +2154,19 @@ export class Views {
   }
 
   /**
-   * Returns a partial `viewExternal` overlay derived from `site.standard.*`
-   * records hydrated into `state`, or `undefined` when no SS records were
-   * hydrated for these refs. Only fields the SS records can supply are set;
-   * callers should layer this on top of a base view (typically built from
-   * the post's embed) so hydrated fields override author-supplied ones and
-   * un-hydratable fields fall through to the base.
+   * Read-path entry point: caller has the post's `external.associatedRefs[]`
+   * and the global hydration state, and we resolve the matching SS records
+   * by ref. Used by `externalEmbed`.
+   *
+   * Returns a partial `viewExternal` overlay, or `undefined` when no SS
+   * records were hydrated for these refs. Only fields the SS records can
+   * supply are set; callers should layer this on top of a base view
+   * (typically built from the post's embed) so hydrated fields override
+   * author-supplied ones and un-hydratable fields fall through to the base.
    *
    * The `uri` field is intentionally not included here since we want to
-   * respect the embed's supplied URI (which might include tracking params, for
-   * example) rather than forcing it to be the canonical URI from the SS
+   * respect the embed's supplied URI (which might include tracking params,
+   * for example) rather than forcing it to be the canonical URI from the SS
    * record.
    */
   externalEmbedFromStandardSite(
@@ -2174,6 +2178,29 @@ export class Views {
       state.siteStandardDocuments,
       state.siteStandardPublications,
     )
+    return this.externalEmbedFromStandardSiteRecords(
+      document,
+      publication,
+      state,
+    )
+  }
+
+  /**
+   * Compose-path entry point: caller already knows which document and
+   * publication backed the request and has them in hand (e.g. from
+   * iterating the SS hydration maps directly). Skips the by-ref lookup
+   * that `externalEmbedFromStandardSite` does. Used by
+   * `getEmbedExternalView`.
+   *
+   * `state` is still needed for label hydration.
+   */
+  externalEmbedFromStandardSiteRecords(
+    document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined,
+    publication:
+      | AssociatedSiteStandardRecord<SiteStandardPublication>
+      | undefined,
+    state: HydrationState,
+  ): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
     if (!document && !publication) return undefined
 
     const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}
