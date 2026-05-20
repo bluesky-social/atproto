@@ -92,12 +92,16 @@ const standardSitePresentation = (
   const publications =
     rawPublications ?? new HydrationMap<string, SiteStandardPublication>()
 
-  // The dataplane auto-resolves each document's `site` field, so a request
-  // for a document plus an unrelated publication URI will return *both*
-  // publications. Drop any publication not referenced by a hydrated
-  // document's `site`. Empty when no documents were hydrated, in which
-  // case we skip the prune below (publication-only resolution flow).
-  const allowedPublicationUris = collectAllowedPublicationUris(documents)
+  // The dataplane auto-resolves each document's `site` field, so a
+  // request for a document plus an unrelated publication URI will return
+  // *both* publications. Compute an allow-set of publication URIs
+  // referenced by hydrated docs and prune anything outside it. When
+  // `allowedPublicationUris` is `undefined`, every publication is allowed
+  // (publication-only resolution flow — no docs to constrain by). An
+  // empty *set* still means "constraint exists, nothing matches" and
+  // drops every publication (e.g. all hydrated docs are loose).
+  const allowedPublicationUris =
+    documents.size > 0 ? collectAllowedPublicationUris(documents) : undefined
 
   // Walk the hydration maps once: build the response's parallel
   // `associatedRefs` / `associatedRecords` arrays AND capture the first
@@ -119,13 +123,10 @@ const standardSitePresentation = (
     associatedRecords.push(info.record as LexMap)
     if (!firstDoc) firstDoc = { ref, info }
   }
-  // Only apply the allow-set when we hydrated at least one document; with
-  // no documents in play we keep every publication (publication-only flow).
-  const prunePublications = documents.size > 0
   for (const [key, info] of publications) {
     if (!info) continue
     const ref = parseSiteStandardRecordKey(key)
-    if (prunePublications && !allowedPublicationUris.has(ref.uri)) continue
+    if (allowedPublicationUris && !allowedPublicationUris.has(ref.uri)) continue
     associatedRefs.push(
       com.atproto.repo.strongRef.$build({ uri: ref.uri, cid: info.cid }),
     )
