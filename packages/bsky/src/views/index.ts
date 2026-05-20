@@ -2333,7 +2333,7 @@ export class Views {
       title: record.name,
       description: record.description,
       theme: record.basicTheme
-        ? buildExternalEmbedSourceTheme(record.basicTheme)
+        ? externalEmbedSourceTheme(record.basicTheme)
         : undefined,
     })
   }
@@ -2666,15 +2666,15 @@ const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
 }
 
-const buildExternalEmbedSourceTheme = (
+const externalEmbedSourceTheme = (
   theme: SiteStandardPublicationRecord['basicTheme'],
 ): ExternalEmbedSourceThemeView | undefined => {
   if (!theme) return undefined
   const view: ExternalEmbedSourceThemeView = {}
-  const background = toColorRgb(theme.background)
-  const foreground = toColorRgb(theme.foreground)
-  const accent = toColorRgb(theme.accent)
-  const accentForeground = toColorRgb(theme.accentForeground)
+  const background = colorRGB(theme.background)
+  const foreground = colorRGB(theme.foreground)
+  const accent = colorRGB(theme.accent)
+  const accentForeground = colorRGB(theme.accentForeground)
   if (background) view.backgroundRGB = background
   if (foreground) view.foregroundRGB = foreground
   if (accent) view.accentRGB = accent
@@ -2683,7 +2683,7 @@ const buildExternalEmbedSourceTheme = (
   return Object.keys(view).length === 0 ? undefined : view
 }
 
-const toColorRgb = (
+const colorRGB = (
   color: { $type?: unknown } | undefined,
 ): ExternalEmbedColorRgb | undefined => {
   if (!color || !site.standard.theme.color.rgb.isTypeOf(color)) return undefined
