@@ -202,7 +202,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
  * - Doc with at-uri `site`: must find a hydrated publication at that
  *   URI. If none was hydrated, the doc/publication chain is incomplete
  *   and the function returns `undefined` for both slots; the doc alone
- *   isn't useful without its source.
+ *   isn't useful without its source (can't verify the pub)
  * - Doc with web-URL `site` (loose): no publication.
  * - No doc hydrated: fall through to the first hydrated publication for
  *   the publication-only resolution flow.

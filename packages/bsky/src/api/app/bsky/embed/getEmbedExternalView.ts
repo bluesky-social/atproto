@@ -115,10 +115,10 @@ const standardSitePresentation = (
     state: hydration,
     assumedUrl: params.url,
   })
-  // The view builder rejected the records (validation failed, or the
-  // pair didn't produce the title/description viewExternal requires).
-  // Return nothing — Cardy falls back to its own card render and
-  // doesn't write strongRefs to the post.
+  // The view builder rejected the records (validation failed, or the pair
+  // didn't produce the title viewExternal requires). Return nothing — Cardy
+  // falls back to its own card render and doesn't write strongRefs to the
+  // post.
   if (!overlay) return {}
 
   const view = app.bsky.embed.external.view.$build({
