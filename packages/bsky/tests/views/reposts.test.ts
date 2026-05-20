@@ -22,7 +22,7 @@ describe('pds repost views', () => {
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

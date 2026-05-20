@@ -50,7 +50,7 @@ describe.skip('pds actor search views', () => {
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActorsTypeahead,
     )
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

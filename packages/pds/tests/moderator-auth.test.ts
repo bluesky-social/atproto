@@ -68,7 +68,7 @@ describe('moderator auth', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.bob,
     }
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

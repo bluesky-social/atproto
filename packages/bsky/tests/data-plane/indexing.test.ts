@@ -37,7 +37,7 @@ describe('indexing', () => {
     // Data in tests is not processed from subscription
     await network.processAll()
     await network.bsky.sub.destroy()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

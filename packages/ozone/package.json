@@ -14,7 +14,8 @@
     "directory": "packages/ozone"
   },
   "scripts": {
-    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "codegen:lex": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "prebuild": "[ -f ./src/lexicon/index.ts ] && [ -z \"$(find ../../lexicons -newer ./src/lexicon/index.ts -type f -print -quit)\" ] || pnpm run codegen:lex",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
