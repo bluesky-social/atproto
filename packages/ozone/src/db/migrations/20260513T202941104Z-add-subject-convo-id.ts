@@ -21,18 +21,26 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('convoId', 'varchar', (col) => col.notNull().defaultTo(''))
     .execute()
   /// Update unique constraint: [did, recordPath] -> [did, recordPath, convoId]
+  /// Create new unique index, drop old constraint, rename new index
+  /// Avoids gap without any constraints
+  await sql`
+    CREATE UNIQUE INDEX "moderation_status_unique_idx_new"
+    ON moderation_subject_status(did, "recordPath", "convoId")
+  `.execute(db)
   await db.schema
     .alterTable('moderation_subject_status')
     .dropConstraint('moderation_status_unique_idx')
     .execute()
-  await db.schema
-    .alterTable('moderation_subject_status')
-    .addUniqueConstraint('moderation_status_unique_idx', [
-      'did',
-      'recordPath',
-      'convoId',
-    ])
-    .execute()
+  await db.schema.dropIndex('moderation_status_unique_idx').ifExists().execute()
+  await sql`
+    ALTER INDEX "moderation_status_unique_idx_new"
+    RENAME TO "moderation_status_unique_idx"
+  `.execute(db)
+  await sql`
+    ALTER TABLE moderation_subject_status
+    ADD CONSTRAINT "moderation_status_unique_idx"
+    UNIQUE USING INDEX "moderation_status_unique_idx"
+  `.execute(db)
 
   // expiring_tag
   await db.schema
@@ -73,14 +81,25 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.alterTable('expiring_tag').dropColumn('convoId').execute()
 
   // moderation_subject_status
+  /// Reverse the unique constraint change: [did, recordPath, convoId] -> [did, recordPath]
+  await sql`
+    CREATE UNIQUE INDEX "moderation_status_unique_idx_old"
+    ON moderation_subject_status(did, "recordPath")
+  `.execute(db)
   await db.schema
     .alterTable('moderation_subject_status')
     .dropConstraint('moderation_status_unique_idx')
     .execute()
-  await db.schema
-    .alterTable('moderation_subject_status')
-    .addUniqueConstraint('moderation_status_unique_idx', ['did', 'recordPath'])
-    .execute()
+  await db.schema.dropIndex('moderation_status_unique_idx').ifExists().execute()
+  await sql`
+    ALTER INDEX "moderation_status_unique_idx_old"
+    RENAME TO "moderation_status_unique_idx"
+  `.execute(db)
+  await sql`
+    ALTER TABLE moderation_subject_status
+    ADD CONSTRAINT "moderation_status_unique_idx"
+    UNIQUE USING INDEX "moderation_status_unique_idx"
+  `.execute(db)
   await db.schema
     .alterTable('moderation_subject_status')
     .dropColumn('convoId')
