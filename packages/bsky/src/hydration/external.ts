@@ -48,6 +48,22 @@ export const parseSiteStandardRecordKey = (
   }
 }
 
+/**
+ * Returns the set of publication AT-URIs referenced by `site` on any of the
+ * hydrated documents. Loose documents (whose `site` is a web URL) contribute
+ * nothing.
+ */
+export const collectAllowedPublicationUris = (
+  documents: SiteStandardDocuments,
+): Set<string> => {
+  const allowed = new Set<string>()
+  for (const info of documents.values()) {
+    const site = info?.record.site
+    if (site && site.startsWith('at://')) allowed.add(site)
+  }
+  return allowed
+}
+
 export class ExternalHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 

@@ -1,7 +1,10 @@
 import { AtUriString, LexMap } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
-import { parseSiteStandardRecordKey } from '../../../../hydration/external.js'
+import {
+  collectAllowedPublicationUris,
+  parseSiteStandardRecordKey,
+} from '../../../../hydration/external.js'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, com } from '../../../../lexicons/index.js'
 import {
@@ -59,6 +62,18 @@ const presentation = (
 ): Output => {
   const { ctx, params, hydration } = inputs
 
+  const documents = hydration.siteStandardDocuments
+  const publications = hydration.siteStandardPublications
+  // The dataplane auto-resolves each document's `site` field, so a request
+  // for a document plus an unrelated publication URI will return *both*
+  // publications. Drop any publication not referenced by a hydrated
+  // document's `site`. Skip the prune entirely when no documents were
+  // hydrated (publication-only resolution flow).
+  const allowedPublicationUris =
+    documents && documents.size > 0
+      ? collectAllowedPublicationUris(documents)
+      : null
+
   // Walk the hydration maps once to build the response's parallel
   // `associatedRefs` / `associatedRecords` arrays. We then hand
   // `associatedRefs` back to `externalEmbedFromStandardSite`, which walks the
@@ -66,7 +81,7 @@ const presentation = (
   // the lex's `uris.maxLength`.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
-  for (const [key, info] of hydration.siteStandardDocuments ?? []) {
+  for (const [key, info] of documents ?? []) {
     if (!info) continue
     const { uri } = parseSiteStandardRecordKey(key)
     associatedRefs.push(
@@ -74,9 +89,10 @@ const presentation = (
     )
     associatedRecords.push(info.record as LexMap)
   }
-  for (const [key, info] of hydration.siteStandardPublications ?? []) {
+  for (const [key, info] of publications ?? []) {
     if (!info) continue
     const { uri } = parseSiteStandardRecordKey(key)
+    if (allowedPublicationUris && !allowedPublicationUris.has(uri)) continue
     associatedRefs.push(
       com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
     )
