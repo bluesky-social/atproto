@@ -22,24 +22,6 @@ export const parseSiteStandardRecordKey = (
 }
 
 /**
- * Returns the set of publication AT-URIs referenced by `site` on any of the
- * supplied documents. Loose documents (whose `site` is a web URL) contribute
- * nothing. Returns an empty set when the input is empty.
- *
- * Typed structurally so this util can stay free of the hydration types.
- */
-export const collectAllowedPublicationUris = (
-  documents: ReadonlyMap<string, { record: { site?: string } } | null>,
-): Set<string> => {
-  const allowed = new Set<string>()
-  for (const info of documents.values()) {
-    const site = info?.record.site
-    if (site && site.startsWith('at://')) allowed.add(site)
-  }
-  return allowed
-}
-
-/**
  * Parse `url` as HTTP(S) and reduce it to a canonical
  * `protocol://host/path` string for equality comparison: lowercases host,
  * strips a trailing slash from the path, and drops query/fragment. Returns
