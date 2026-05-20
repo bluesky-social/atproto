@@ -199,7 +199,7 @@ export class LexDefBuilder {
 
     const ref = await this.addSchema(hash, def, {
       schema: this.pure(
-        `l.procedure($lxm, $params, $input, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
+        `l.procedure($nsid, $params, $input, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
       ),
     })
 
@@ -221,7 +221,7 @@ export class LexDefBuilder {
 
     const ref = await this.addSchema(hash, def, {
       schema: this.pure(
-        `l.query($lxm, $params, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
+        `l.query($nsid, $params, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
       ),
     })
 
@@ -243,7 +243,7 @@ export class LexDefBuilder {
 
     const ref = await this.addSchema(hash, def, {
       schema: this.pure(
-        `l.subscription($lxm, $params, $message${formatErrorsArg(await this.compileErrors(def.errors))})`,
+        `l.subscription($nsid, $params, $message${formatErrorsArg(await this.compileErrors(def.errors))})`,
       ),
     })
 
