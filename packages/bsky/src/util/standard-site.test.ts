@@ -41,9 +41,9 @@ describe(validateStandardSiteForUrl, () => {
     it('accepts when document has no path and assumedUrl is the bare publication url', () => {
       const doc = makeDoc({ site: pubUri })
       const pub = makePub({ url: 'https://example.com' })
-      expect(
-        validateStandardSiteForUrl(doc, pub, 'https://example.com'),
-      ).toBe(true)
+      expect(validateStandardSiteForUrl(doc, pub, 'https://example.com')).toBe(
+        true,
+      )
     })
   })
 
@@ -51,7 +51,11 @@ describe(validateStandardSiteForUrl, () => {
     it('accepts when site is HTTP and matches assumedUrl', () => {
       const doc = makeDoc({ site: 'https://example.com', path: '/posts/hi' })
       expect(
-        validateStandardSiteForUrl(doc, undefined, 'https://example.com/posts/hi'),
+        validateStandardSiteForUrl(
+          doc,
+          undefined,
+          'https://example.com/posts/hi',
+        ),
       ).toBe(true)
     })
 
@@ -60,7 +64,11 @@ describe(validateStandardSiteForUrl, () => {
     it('rejects when site is an at-uri (non-HTTP base canonicalizes to null)', () => {
       const doc = makeDoc({ site: pubUri, path: '/posts/hi' })
       expect(
-        validateStandardSiteForUrl(doc, undefined, 'https://example.com/posts/hi'),
+        validateStandardSiteForUrl(
+          doc,
+          undefined,
+          'https://example.com/posts/hi',
+        ),
       ).toBe(false)
     })
 

@@ -72,7 +72,9 @@ const makePublications = (
 
 describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
   it('returns both slots when refs resolve and doc.site matches the publication', () => {
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications([
       [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
     ])
@@ -108,7 +110,9 @@ describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
   })
 
   it('rejects the whole pair when doc declares an at-uri site but no publication ref was supplied', () => {
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications()
     const result = getSiteStandardRecordsFromHydrationMapsByRefs(
       [{ uri: docUri, cid: docCid }],
@@ -150,7 +154,9 @@ describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
 
   it('returns nothing when the version-exact lookup misses', () => {
     // Doc indexed at one cid; ref points at a different cid.
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications()
     const result = getSiteStandardRecordsFromHydrationMapsByRefs(
       [{ uri: docUri, cid: 'bafy-different' }],
@@ -161,7 +167,9 @@ describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
   })
 
   it('returns nothing when associatedRefs is empty or undefined', () => {
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications([
       [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
     ])
@@ -187,7 +195,9 @@ describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
 
 describe(getSiteStandardRecordsFromHydrationMapsByDocumentUri, () => {
   it('pairs the first hydrated doc with the publication its site points to', () => {
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications([
       [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
     ])
@@ -198,7 +208,9 @@ describe(getSiteStandardRecordsFromHydrationMapsByDocumentUri, () => {
   })
 
   it('rejects the pair when the declared publication was not hydrated', () => {
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications()
     const result = getSiteStandardRecordsFromHydrationMapsByDocumentUri(
       docs,
@@ -230,7 +242,9 @@ describe(getSiteStandardRecordsFromHydrationMapsByDocumentUri, () => {
   })
 
   it('ignores extraneous publications not referenced by the doc', () => {
-    const docs = makeDocuments([[docUri, docCid, makeDocInfo({ site: pubUri })]])
+    const docs = makeDocuments([
+      [docUri, docCid, makeDocInfo({ site: pubUri })],
+    ])
     const pubs = makePublications([
       [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
       [

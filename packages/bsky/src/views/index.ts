@@ -2184,11 +2184,12 @@ export class Views {
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
-    const { document, publication } = getSiteStandardRecordsFromHydrationMapsByRefs(
-      associatedRefs,
-      state.siteStandardDocuments,
-      state.siteStandardPublications,
-    )
+    const { document, publication } =
+      getSiteStandardRecordsFromHydrationMapsByRefs(
+        associatedRefs,
+        state.siteStandardDocuments,
+        state.siteStandardPublications,
+      )
     return this.externalEmbedFromStandardSiteRecords({
       document,
       publication,

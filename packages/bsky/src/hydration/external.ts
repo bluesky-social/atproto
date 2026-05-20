@@ -127,16 +127,12 @@ const buildSiteStandardRecordsHydrationMaps = (
  * the owner DID for blob-cdn URL building, etc.
  */
 export const getSiteStandardRecordsFromHydrationMapsByRefs = (
-  associatedRefs:
-    | readonly { uri: AtUriString; cid: string }[]
-    | undefined,
+  associatedRefs: readonly { uri: AtUriString; cid: string }[] | undefined,
   documents: SiteStandardDocuments | undefined,
   publications: SiteStandardPublications | undefined,
 ): {
   document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
 } => {
   if (!associatedRefs?.length) {
     return { document: undefined, publication: undefined }
@@ -212,9 +208,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
   publications: SiteStandardPublications | undefined,
 ): {
   document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
 } => {
   // First hydrated doc.
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined

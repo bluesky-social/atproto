@@ -66,7 +66,10 @@ const canonicalizeHttpUrl = (url: string, base?: string): string | null => {
  */
 export const validateStandardSiteForUrl = (
   document:
-    | { ref: { uri: string }; info: { record: { site: string; path?: string } } }
+    | {
+        ref: { uri: string }
+        info: { record: { site: string; path?: string } }
+      }
     | undefined,
   publication:
     | { ref: { uri: string }; info: { record: { url: string } } }
