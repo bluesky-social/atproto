@@ -2,3 +2,5 @@
 src/lexicon
 # @atproto/lex
 src/lexicons
+# @bufbuild/buf
+src/proto

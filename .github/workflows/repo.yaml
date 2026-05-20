@@ -30,6 +30,7 @@ jobs:
           path: |
             packages/*/dist
             packages/*/*/dist
+            packages/*/src/proto
             packages/lex/*/src/lexicons
             packages/lex/*/tests/lexicons
             packages/oauth/oauth-client-browser-example/src/lexicons
