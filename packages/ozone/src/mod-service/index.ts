@@ -257,6 +257,8 @@ export class ModerationService {
         .where('subjectConvoId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
+    } else if (subjectType === 'conversation') {
+      builder = builder.where('subjectConvoId', 'is not', null)
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
