@@ -4,8 +4,11 @@ import { AppContext } from '../../../../context.js'
 import {
   AssociatedSiteStandardRecord,
   SiteStandardDocument,
+  SiteStandardDocuments,
   SiteStandardPublication,
+  SiteStandardPublications,
 } from '../../../../hydration/external.js'
+import { HydrationMap } from '../../../../hydration/util.js'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, com } from '../../../../lexicons/index.js'
 import {
@@ -65,13 +68,29 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ): Output => {
-  const { ctx, params, hydration } = inputs
+  const documents = inputs.hydration.siteStandardDocuments
+  const publications = inputs.hydration.siteStandardPublications
+  // Dispatch by record type. Today site.standard is the only kind we know
+  // how to render; future record types get their own branch.
+  if (
+    (documents && documents.size > 0) ||
+    (publications && publications.size > 0)
+  ) {
+    return standardSitePresentation(inputs, documents, publications)
+  }
+  return {}
+}
 
-  const documents = hydration.siteStandardDocuments ?? new Map()
-  const publications = hydration.siteStandardPublications ?? new Map()
-  // Nothing hydrated -> no view, no refs to write. Cardy falls back to its
-  // own link-card rendering.
-  if (documents.size === 0 && publications.size === 0) return {}
+const standardSitePresentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+  rawDocuments: SiteStandardDocuments | undefined,
+  rawPublications: SiteStandardPublications | undefined,
+): Output => {
+  const { ctx, params, hydration } = inputs
+  const documents =
+    rawDocuments ?? new HydrationMap<string, SiteStandardDocument>()
+  const publications =
+    rawPublications ?? new HydrationMap<string, SiteStandardPublication>()
 
   // The dataplane auto-resolves each document's `site` field, so a request
   // for a document plus an unrelated publication URI will return *both*
@@ -90,6 +109,7 @@ const presentation = (
   let firstPub:
     | AssociatedSiteStandardRecord<SiteStandardPublication>
     | undefined
+
   for (const [key, info] of documents) {
     if (!info) continue
     const ref = parseSiteStandardRecordKey(key)
@@ -122,6 +142,7 @@ const presentation = (
     firstPub,
     hydration,
   )
+
   // viewExternal requires uri/title/description, but we fall back to the
   // request's `url` for `uri` and return the view even if we default to empty
   // strings. We did our best.
