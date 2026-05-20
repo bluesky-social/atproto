@@ -98,15 +98,23 @@ const buildSiteStandardRecordsHydrationMaps = (
 }
 
 /**
- * Walks `associatedRefs` and returns the first hydrated document and
- * publication found in the supplied hydration maps. The maps are keyed by
- * `${uri}@${cid}` so a single batch can carry multiple versions of the
- * same URI (different posts pinning different cids); the lookup is
- * version-exact via that composite key.
+ * Resolves `associatedRefs` against the supplied hydration maps and returns
+ * the document/publication pair the post (or compose request) pinned. The
+ * maps are keyed by `${uri}@${cid}` so a single batch can carry multiple
+ * versions of the same URI; the lookup is version-exact via that composite
+ * key.
  *
- * Each slot also carries the matching `ref` so callers can recover the
- * owner DID for blob-cdn URL building, etc. Returns `undefined` for either
- * slot when no matching ref is present or the record wasn't hydrated.
+ * Pairing rules:
+ * - If `associatedRefs` carries both a doc and a publication, the doc's
+ *   `site` field must equal the publication ref's URI. Otherwise the
+ *   embed was misconstructed; both slots come back `undefined`.
+ * - If only a doc is referenced, the publication slot stays `undefined`
+ *   (loose doc or unpublished pairing).
+ * - If only a publication is referenced, the document slot stays
+ *   `undefined`.
+ *
+ * Each returned slot carries the matching `ref` so callers can recover
+ * the owner DID for blob-cdn URL building, etc.
  */
 export const getSiteStandardRecordsFromHydrationMaps = (
   associatedRefs:
@@ -120,11 +128,16 @@ export const getSiteStandardRecordsFromHydrationMaps = (
     | AssociatedSiteStandardRecord<SiteStandardPublication>
     | undefined
 } => {
+  if (!associatedRefs?.length) {
+    return { document: undefined, publication: undefined }
+  }
+
+  // Resolve each ref against the hydration maps, taking the first hit on
+  // each side.
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   let publication:
     | AssociatedSiteStandardRecord<SiteStandardPublication>
     | undefined
-  if (!associatedRefs?.length) return { document, publication }
   for (const ref of associatedRefs) {
     const key = siteStandardRecordKey(ref.uri, ref.cid)
     if (!document) {
@@ -137,5 +150,15 @@ export const getSiteStandardRecordsFromHydrationMaps = (
     }
     if (document && publication) break
   }
+
+  // Both refs resolved: enforce that the doc's `site` actually points at
+  // the supplied publication. Mismatch means the post was misconstructed
+  // (or tampered with), so reject the whole pairing.
+  if (document && publication) {
+    if (document.info.record.site !== publication.ref.uri) {
+      return { document: undefined, publication: undefined }
+    }
+  }
+
   return { document, publication }
 }
