@@ -1,5 +1,15 @@
 # @atproto/ozone
 
+## 0.1.176
+
+### Patch Changes
+
+- [#4968](https://github.com/bluesky-social/atproto/pull/4968) [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Run "lexgen" during CI instead of keeping the generated code in Git
+
+- Updated dependencies [[`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b)]:
+  - @atproto/api@0.20.1
+  - @atproto/common@0.6.1
+
 ## 0.1.175
 
 ### Patch Changes

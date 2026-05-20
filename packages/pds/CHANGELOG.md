@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.4.225
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove un-necessary type casting
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/lex-data@0.1.1
+  - @atproto/common@0.6.1
+  - @atproto/lex@0.1.1
+
 ## 0.4.224
 
 ### Patch Changes

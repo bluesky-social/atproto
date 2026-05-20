@@ -1,5 +1,15 @@
 # @atproto/sync
 
+## 0.3.1
+
+### Patch Changes
+
+- [#4973](https://github.com/bluesky-social/atproto/pull/4973) [`4801600`](https://github.com/bluesky-social/atproto/commit/48016005155c9cecabf3fa9d5e9b3555e84e2dca) Thanks [@dholms](https://github.com/dholms)! - Fix getCursor invocation
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/common@0.6.1
+  - @atproto/lex@0.1.1
+
 ## 0.3.0
 
 ### Minor Changes
