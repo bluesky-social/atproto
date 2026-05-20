@@ -26,18 +26,6 @@ describe(validateStandardSiteForUrl, () => {
       ).toBe(true)
     })
 
-    // this case should never hit this function, but it's here as a fallback
-    it('rejects when site does not resolve to the hydrated publication', () => {
-      const doc = makeDoc({
-        site: 'at://did:plc:other/site.standard.publication/self',
-        path: '/posts/hello',
-      })
-      const pub = makePub({ url: 'https://example.com' })
-      expect(
-        validateStandardSiteForUrl(doc, pub, 'https://example.com/posts/hello'),
-      ).toBe(false)
-    })
-
     it('rejects when joined url+path does not match assumedUrl', () => {
       const doc = makeDoc({ site: pubUri, path: '/posts/hello' })
       const pub = makePub({ url: 'https://example.com' })
@@ -67,8 +55,9 @@ describe(validateStandardSiteForUrl, () => {
       ).toBe(true)
     })
 
-    // this case should never hit this function, but it's here as a fallback
-    it('rejects when site is an at-uri (a publication ref) but no publication was hydrated', () => {
+    // The lookups reject this pairing upstream, but validate as a fallback:
+    // an at-uri base canonicalizes to null and fails the URL match.
+    it('rejects when site is an at-uri (non-HTTP base canonicalizes to null)', () => {
       const doc = makeDoc({ site: pubUri, path: '/posts/hi' })
       expect(
         validateStandardSiteForUrl(doc, undefined, 'https://example.com/posts/hi'),
@@ -107,7 +96,6 @@ describe(validateStandardSiteForUrl, () => {
   })
 
   describe('neither', () => {
-    // this case should never hit this function, but it's here as a fallback
     it('returns true (caller handles the no-records short-circuit)', () => {
       expect(
         validateStandardSiteForUrl(undefined, undefined, 'https://example.com'),

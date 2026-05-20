@@ -2226,25 +2226,50 @@ export class Views {
     state: HydrationState
     assumedUrl: string
   }): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
+    // Three layers of validation gate this overlay:
+    //
+    //  1. Hydrator nulls taken-down records and mirrors the null across
+    //     doc/pub pairs (see `actionSiteStandardTakedownLabels` in
+    //     `hydration/hydrator.ts`).
+    //  2. The lookups guarantee structural agreement between doc and pub
+    //     — matching `site`/`uri`, no orphan doc claiming a missing
+    //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
+    //     and `…ByDocumentUri` in `hydration/external.ts`).
+    //  3. `validateStandardSiteForUrl` below checks that the records back
+    //     the URL the embed claims (see `util/standard-site.ts`).
+    //
+    // If any layer rejected, callers see `undefined` and fall back to the
+    // bare embed rather than render partial / disagreeing enrichment.
     if (!document && !publication) return undefined
-    // Confirm the SS records actually back `assumedUrl` (matching site/url
-    // fields, doc.site resolves to the hydrated publication, etc). Drop
-    // the overlay entirely if validation fails — clients fall back to the
-    // bare embed rather than render enrichment from records that don't
-    // belong to this URL.
     if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
       return undefined
     }
 
-    const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}
-
-    // if we have a document, prefer that for the top-level title/desc
+    // viewExternal requires `title` and `description`. If neither side of
+    // the pair supplies usable values for both, there's no enrichment to
+    // render — return undefined and let the caller fall back.
+    let title: string
+    let description: string
     if (document?.info.record) {
-      overlay.title = document.info.record.title
-      overlay.description = document.info.record.description ?? ''
+      // Treat the document as authoritative for both fields as a unit, so
+      // we never blend a doc's title with a publication's description.
+      title = document.info.record.title
+      description = document.info.record.description ?? ''
+    } else if (publication) {
+      title = publication.info.record.name
+      description = publication.info.record.description ?? ''
     } else {
-      overlay.title = publication?.info.record.name ?? ''
-      overlay.description = publication?.info.record.description ?? ''
+      return undefined
+    }
+
+    // if we don't have a title at this point, something is wrong with the SS
+    // record (it's a required field) and therefore the enrichment isn't worth
+    // showing
+    if (!title) return undefined
+
+    const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {
+      title,
+      description,
     }
 
     const docCover = document?.info.record.coverImage

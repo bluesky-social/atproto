@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is included when at least one record was hydrated, but may be omitted otherwise. When `view` is present, `view.external.title` and `view.external.description` may be empty strings if the resolved records didn't supply them — clients should treat empty values as 'no enrichment for this field' rather than the content being genuinely titleless.",
+      "description": "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs), the raw `associatedRecords`, and a hydrated `view`. The response is empty (`{}`) when no records were resolvable, or when validation determined the resolved records don't actually back the requested URL; clients should fall back to their own link-card rendering in that case and skip writing strongRefs to the post.",
       "parameters": {
         "type": "params",
         "required": ["url", "uris"],
@@ -30,7 +30,7 @@
             "view": {
               "type": "ref",
               "ref": "app.bsky.embed.external#view",
-              "description": "Hydrated view of the embed. Present whenever at least one record was hydrated. `view.external.title` and `view.external.description` may be empty strings when the resolved records didn't supply them; clients should treat that as 'no enrichment for this field.'"
+              "description": "Hydrated view of the embed. Present only when the resolved records back the requested URL and supply enough information to populate the required `viewExternal` fields. Omitted alongside the rest of the response when no records resolved or validation failed."
             },
             "associatedRefs": {
               "type": "array",

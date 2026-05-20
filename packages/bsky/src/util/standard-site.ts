@@ -58,20 +58,29 @@ const canonicalizeHttpUrl = (url: string, base?: string): string | null => {
 }
 
 /**
- * Verify that the supplied SS records actually back `assumedUrl`. The rule
- * tree mirrors the spec:
+ * Confirm that the supplied SS records actually back `assumedUrl`. URL
+ * comparison parses both sides via the WHATWG URL constructor (resolving
+ * the document's `path` against the publication or site as a base) and
+ * compares the canonical `protocol://host/path` forms — host case is
+ * ignored, query/fragment are dropped, trailing slashes stripped.
  *
- * - Loose document (no publication): `document.site` must be HTTP and equal
- *   `assumedUrl`.
- * - Document + publication: `document.site` must resolve to the hydrated
- *   publication, AND `publication.url + document.path` must equal
- *   `assumedUrl`.
- * - Publication only: `publication.url` must equal `assumedUrl`.
- * - Neither: vacuously valid; nothing to render either, but the caller's
- *   own `if (!document && !publication)` short-circuit handles that.
+ * Structural validation of the doc/pub pair (matching `site` ↔ pub URI,
+ * no orphan docs that claim a missing publication) happens upstream in
+ * `getSiteStandardRecordsFromHydrationMapsByRefs` /
+ * `…ByDocumentUri` (see `hydration/external.ts`); by the time this
+ * function runs the pair is already known to be structurally consistent,
+ * so we only check whether the records back the URL.
  *
- * URL comparisons normalize protocol/host/path (lowercase host, collapse
- * `//`, strip trailing slash, ignore query and fragment).
+ * Cases:
+ * - Document + publication: `publication.url + document.path` must
+ *   canonicalize to `assumedUrl`.
+ * - Loose document (web-URL `site`): `document.site + document.path`
+ *   must canonicalize to `assumedUrl`. (Doc with at-uri `site` but no
+ *   publication can't reach this function — the lookups reject it.)
+ * - Publication only: `publication.url` must canonicalize to
+ *   `assumedUrl`.
+ * - Neither: vacuously valid; the caller short-circuits before we get
+ *   here.
  */
 export const validateStandardSiteForUrl = (
   document:
@@ -86,7 +95,6 @@ export const validateStandardSiteForUrl = (
   if (canonicalAssumed === null) return false
 
   if (document && publication) {
-    if (document.info.record.site !== publication.ref.uri) return false
     const joined = canonicalizeHttpUrl(
       document.info.record.path ?? '',
       publication.info.record.url,

@@ -101,10 +101,18 @@ const buildSiteStandardRecordsHydrationMaps = (
 }
 
 /**
- * Strict (read-path) resolution: trust `associatedRefs` as the source of
- * truth and reject any pair that doesn't agree. Posts pin specific
- * `(uri, cid)` strongRefs at write time; this function honors those exact
- * versions and refuses to render enrichment from records that disagree.
+ * Read-path resolution: caller pinned a set of `(uri, cid)` strongRefs in
+ * the post at write time, and we honor those exact versions. Any pair
+ * that doesn't structurally agree is rejected, so downstream callers can
+ * trust the returned shape.
+ *
+ * Same observable contract as
+ * `getSiteStandardRecordsFromHydrationMapsByDocumentUri` (the compose-path
+ * sister) — both functions guarantee that a returned `(doc, pub)` pair
+ * has matching site/uri, and reject orphan docs that claim a
+ * non-hydrated publication. They differ only in how upstream availability
+ * is asserted: this one trusts caller-supplied refs; the sister derives
+ * everything from the dataplane response.
  *
  * Pairing rules:
  * - Both slots referenced: `doc.site` must equal `publication.ref.uri`,
@@ -114,10 +122,6 @@ const buildSiteStandardRecordsHydrationMaps = (
  *   been pinned, but wasn't).
  * - Loose doc (web-URL `site`) referenced: publication stays `undefined`.
  * - Only a publication referenced: document stays `undefined`.
- *
- * For the compose-path counterpart that doesn't have caller-supplied
- * refs and instead resolves doc.site against whatever publications were
- * auto-resolved, see `getSiteStandardRecordsFromHydrationMapsByDocumentUri`.
  *
  * Each returned slot carries the matching `ref` so callers can recover
  * the owner DID for blob-cdn URL building, etc.
@@ -180,10 +184,19 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
 }
 
 /**
- * Compose-path resolution: there are no caller-supplied refs to
- * arbitrate against — the dataplane returns the latest version of each
- * record, including auto-resolved publications. Take the first hydrated
- * document and pair it with the publication its `site` field points at.
+ * Compose-path resolution: no caller-supplied refs — the dataplane
+ * returned the latest version of each record (including any
+ * publications it auto-resolved from a document's `site` field). Take
+ * the first hydrated document and pair it with the publication its
+ * `site` field points at.
+ *
+ * Same observable contract as
+ * `getSiteStandardRecordsFromHydrationMapsByRefs` (the read-path
+ * sister) — both functions guarantee that a returned `(doc, pub)` pair
+ * has matching site/uri, and reject orphan docs that claim a
+ * non-hydrated publication. They differ only in how upstream
+ * availability is asserted: this one walks whatever was returned by the
+ * dataplane; the sister checks against caller-supplied refs.
  *
  * Pairing rules:
  * - Doc with at-uri `site`: must find a hydrated publication at that
@@ -193,9 +206,6 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
  * - Doc with web-URL `site` (loose): no publication.
  * - No doc hydrated: fall through to the first hydrated publication for
  *   the publication-only resolution flow.
- *
- * Sister to `getSiteStandardRecordsFromHydrationMapsByRefs`; see that
- * doc for the shape of returned slots.
  */
 export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
   documents: SiteStandardDocuments | undefined,

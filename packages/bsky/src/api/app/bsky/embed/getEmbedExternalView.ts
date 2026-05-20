@@ -115,20 +115,18 @@ const standardSitePresentation = (
     state: hydration,
     assumedUrl: params.url,
   })
+  // The view builder rejected the records (validation failed, or the
+  // pair didn't produce the title/description viewExternal requires).
+  // Return nothing — Cardy falls back to its own card render and
+  // doesn't write strongRefs to the post.
+  if (!overlay) return {}
 
-  // We always return a view when any record was hydrated. The lex marks
-  // `title` and `description` as required, but SS records can produce a
-  // partial view (e.g. a publication with no description), so we fill
-  // missing fields with empty strings. Clients must treat an empty
-  // `title` or `description` here as "no enrichment for this field"
-  // rather than "the content is genuinely titleless." `uri` always falls
-  // back to the request's `url`.
   const view = app.bsky.embed.external.view.$build({
     external: {
       ...overlay,
       uri: params.url,
-      title: overlay?.title ?? '',
-      description: overlay?.description ?? '',
+      title: overlay.title ?? '',
+      description: overlay.description ?? '',
       associatedRefs,
     },
   })
