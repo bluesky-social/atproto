@@ -16,8 +16,10 @@ import {
 } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
+  AssociatedSiteStandardRecord,
   SiteStandardDocument,
   SiteStandardPublication,
+  getSiteStandardRecordsFromHydrationMaps,
 } from '../hydration/external.js'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
 import { Follow, Verification } from '../hydration/graph.js'
@@ -27,11 +29,7 @@ import { RecordInfo, parseString } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
 import { Notification } from '../proto/bsky_pb.js'
-import {
-  AssociatedSiteStandardRecord,
-  estimateReadingTimeMinutes,
-  lookupAssociatedSiteStandardRecords,
-} from '../util/standard-site.js'
+import { estimateReadingTimeMinutes } from '../util/standard-site.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -2172,10 +2170,11 @@ export class Views {
     associatedRefs: ExternalEmbed['external']['associatedRefs'],
     state: HydrationState,
   ): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
-    const { document, publication } = lookupAssociatedSiteStandardRecords<
-      SiteStandardDocument,
-      SiteStandardPublication
-    >(associatedRefs, state.siteStandardDocuments, state.siteStandardPublications)
+    const { document, publication } = getSiteStandardRecordsFromHydrationMaps(
+      associatedRefs,
+      state.siteStandardDocuments,
+      state.siteStandardPublications,
+    )
     if (!document && !publication) return undefined
 
     const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}

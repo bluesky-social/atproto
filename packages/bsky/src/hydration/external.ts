@@ -34,6 +34,11 @@ export type SiteStandardRecords = {
   publications: SiteStandardPublications
 }
 
+export type AssociatedSiteStandardRecord<T> = {
+  ref: { uri: AtUriString; cid: string }
+  info: T
+}
+
 export class ExternalHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
@@ -90,4 +95,47 @@ const buildSiteStandardRecordsHydrationMaps = (
     )
   }
   return { documents, publications }
+}
+
+/**
+ * Walks `associatedRefs` and returns the first hydrated document and
+ * publication found in the supplied hydration maps. The maps are keyed by
+ * `${uri}@${cid}` so a single batch can carry multiple versions of the
+ * same URI (different posts pinning different cids); the lookup is
+ * version-exact via that composite key.
+ *
+ * Each slot also carries the matching `ref` so callers can recover the
+ * owner DID for blob-cdn URL building, etc. Returns `undefined` for either
+ * slot when no matching ref is present or the record wasn't hydrated.
+ */
+export const getSiteStandardRecordsFromHydrationMaps = (
+  associatedRefs:
+    | readonly { uri: AtUriString; cid: string }[]
+    | undefined,
+  documents: SiteStandardDocuments | undefined,
+  publications: SiteStandardPublications | undefined,
+): {
+  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  publication:
+    | AssociatedSiteStandardRecord<SiteStandardPublication>
+    | undefined
+} => {
+  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+  let publication:
+    | AssociatedSiteStandardRecord<SiteStandardPublication>
+    | undefined
+  if (!associatedRefs?.length) return { document, publication }
+  for (const ref of associatedRefs) {
+    const key = siteStandardRecordKey(ref.uri, ref.cid)
+    if (!document) {
+      const hit = documents?.get(key)
+      if (hit) document = { ref, info: hit }
+    }
+    if (!publication) {
+      const hit = publications?.get(key)
+      if (hit) publication = { ref, info: hit }
+    }
+    if (document && publication) break
+  }
+  return { document, publication }
 }
