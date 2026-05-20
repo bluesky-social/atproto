@@ -1,47 +1,5 @@
-/* eslint-disable import/order */
-import { createRequire } from 'node:module'
 import assert from 'node:assert'
 import cluster from 'node:cluster'
-import path from 'node:path'
-
-const require = createRequire(import.meta.url)
-const dd = require('dd-trace')
-
-dd.tracer
-  .init()
-  .use('http2', {
-    client: true, // calls into dataplane
-    server: false,
-  })
-  .use('express', {
-    hooks: {
-      request: (span: any, req: any) => {
-        maintainXrpcResource(span, req)
-      },
-    },
-  })
-
-// modify tracer in order to track calls to dataplane as a service with proper resource names
-const DATAPLANE_PREFIX = '/bsky.Service/'
-const origStartSpan = dd.tracer._tracer.startSpan
-dd.tracer._tracer.startSpan = function (name: string, options: any) {
-  if (
-    name !== 'http.request' ||
-    options?.tags?.component !== 'http2' ||
-    !options?.tags?.['http.url']
-  ) {
-    return origStartSpan.call(this, name, options)
-  }
-  const uri = new URL(options.tags['http.url'])
-  if (!uri.pathname.startsWith(DATAPLANE_PREFIX)) {
-    return origStartSpan.call(this, name, options)
-  }
-  options.tags['service.name'] = 'dataplane-bsky'
-  options.tags['resource.name'] = uri.pathname.slice(DATAPLANE_PREFIX.length)
-  return origStartSpan.call(this, name, options)
-}
-
-// Tracer code above must come before anything else
 import { BskyAppView, ServerConfig } from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
 
@@ -69,21 +27,6 @@ const maybeParseInt = (str: string | undefined) => {
   const int = parseInt(str, 10)
   if (isNaN(int)) return
   return int
-}
-
-const maintainXrpcResource = (span: any, req: any) => {
-  // Show actual xrpc method as resource rather than the route pattern
-  if (span && req.originalUrl?.startsWith('/xrpc/')) {
-    span.setTag(
-      'resource.name',
-      [
-        req.method,
-        path.posix.join(req.baseUrl || '', req.path || '', '/').slice(0, -1), // Ensures no trailing slash
-      ]
-        .filter(Boolean)
-        .join(' '),
-    )
-  }
 }
 
 const workerCount = maybeParseInt(process.env.CLUSTER_WORKER_COUNT)

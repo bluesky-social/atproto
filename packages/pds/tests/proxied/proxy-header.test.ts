@@ -32,7 +32,7 @@ describe('proxy header', () => {
 
     alice = sc.dids.alice
     await network.processAll()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await proxyServer.close()

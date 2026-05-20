@@ -1,10 +1,3 @@
-/* eslint-disable import/order */
-import { createRequire } from 'node:module'
-
-const require = createRequire(import.meta.url)
-require('dd-trace').init({ logInjection: true })
-
-// Tracer code above must come before anything else
 import { BsyncService, envToCfg, httpLogger, readEnv } from '@atproto/bsync'
 
 const main = async () => {

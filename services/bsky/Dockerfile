@@ -20,6 +20,7 @@ COPY ./packages/lex ./packages/lex
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/bsky ./packages/bsky
+COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -78,7 +79,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "api.ts"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "api.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"

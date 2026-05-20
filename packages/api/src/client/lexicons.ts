@@ -2871,7 +2871,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is included when at least one record was hydrated, but may be omitted otherwise. When `view` is present, `view.external.title` and `view.external.description` may be empty strings if the resolved records didn't supply them — clients should treat empty values as 'no enrichment for this field' rather than the content being genuinely titleless.",
+          "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs), the raw `associatedRecords`, and a hydrated `view`. The response is empty (`{}`) when no records were resolvable, or when validation determined the resolved records don't actually back the requested URL; clients should fall back to their own link-card rendering in that case and skip writing strongRefs to the post.",
         parameters: {
           type: 'params',
           required: ['url', 'uris'],
@@ -2903,7 +2903,7 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:app.bsky.embed.external#view',
                 description:
-                  "Hydrated view of the embed. Present whenever at least one record was hydrated. `view.external.title` and `view.external.description` may be empty strings when the resolved records didn't supply them; clients should treat that as 'no enrichment for this field.'",
+                  'Hydrated view of the embed. Present only when the resolved records back the requested URL and supply enough information to populate the required `viewExternal` fields. Omitted alongside the rest of the response when no records resolved or validation failed.',
               },
               associatedRefs: {
                 type: 'array',
@@ -12761,6 +12761,55 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyGroupListMutualGroups: {
+    lexicon: 1,
+    id: 'chat.bsky.group.listMutualGroups',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. Returns a page of group conversations that both the requester and the specified actor are members of.',
+        parameters: {
+          type: 'params',
+          required: ['subject'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['convos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              convos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.convo.defs#convoView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyGroupRejectJoinRequest: {
     lexicon: 1,
     id: 'chat.bsky.group.rejectJoinRequest',
@@ -13661,6 +13710,7 @@ export const schemaDict = {
               'owner_left',
               'owner_deactivated',
               'owner_deleted',
+              'owner_suspended',
               'owner_taken_down',
               'label_applied',
             ],
@@ -25750,6 +25800,7 @@ export const ids = {
   ChatBskyGroupEnableJoinLink: 'chat.bsky.group.enableJoinLink',
   ChatBskyGroupGetJoinLinkPreview: 'chat.bsky.group.getJoinLinkPreview',
   ChatBskyGroupListJoinRequests: 'chat.bsky.group.listJoinRequests',
+  ChatBskyGroupListMutualGroups: 'chat.bsky.group.listMutualGroups',
   ChatBskyGroupRejectJoinRequest: 'chat.bsky.group.rejectJoinRequest',
   ChatBskyGroupRemoveMembers: 'chat.bsky.group.removeMembers',
   ChatBskyGroupRequestJoin: 'chat.bsky.group.requestJoin',
