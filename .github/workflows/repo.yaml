@@ -25,19 +25,18 @@ jobs:
       - run: pnpm build
       - uses: actions/upload-artifact@v4
         with:
+          # Preserve the result of codegen and build steps.
           name: dist
           retention-days: 2
           path: |
             packages/*/dist
             packages/*/*/dist
+            packages/*/src/lexicons
             packages/lex/*/src/lexicons
             packages/lex/*/tests/lexicons
-            packages/oauth/oauth-client-browser-example/src/lexicons
+            packages/oauth/*/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
             packages/api/src/moderation/const/labels.ts
-            packages/bsky/src/lexicons
-            packages/pds/src/lexicons
-            packages/sync/src/lexicons
 
   changeset:
     name: Changeset
