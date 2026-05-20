@@ -17,7 +17,7 @@
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
     "test:log": "tail -50 test.log | pino-pretty",

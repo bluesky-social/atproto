@@ -20,7 +20,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   },
   "dependencies": {

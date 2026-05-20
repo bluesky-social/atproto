@@ -65,6 +65,6 @@
     "@types/send": "^0.17.4"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

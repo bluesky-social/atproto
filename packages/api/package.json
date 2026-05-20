@@ -21,7 +21,7 @@
     "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
     "codegen:code": "node ./scripts/generate-code.mjs",
     "prebuild": "pnpm run codegen:code && if [ ! -f ./src/client/index.ts ] || [ -n \"$(find ../../lexicons -name '*.json' -newer ./src/client/index.ts -type f -print -quit)\" ]; then pnpm run codegen:lex; fi",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {

@@ -17,7 +17,7 @@
     "directory": "packages/xrpc"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/lexicon": "workspace:^",

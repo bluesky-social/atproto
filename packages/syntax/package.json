@@ -20,7 +20,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "iso-datestring-validator": "^2.2.2",

@@ -33,6 +33,6 @@
     "typescript": "^6.0.3"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsgo --build tsconfig.json"
   }
 }
