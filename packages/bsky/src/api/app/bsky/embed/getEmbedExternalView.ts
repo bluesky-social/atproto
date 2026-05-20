@@ -2,13 +2,10 @@ import { AtUriString, LexMap } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import {
-  AssociatedSiteStandardRecord,
-  SiteStandardDocument,
   SiteStandardDocuments,
-  SiteStandardPublication,
   SiteStandardPublications,
+  getSiteStandardRecordsFromHydrationMapsByDocumentUri,
 } from '../../../../hydration/external.js'
-import { HydrationMap } from '../../../../hydration/util.js'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, com } from '../../../../lexicons/index.js'
 import {
@@ -18,10 +15,6 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline.js'
-import {
-  collectAllowedPublicationUris,
-  parseSiteStandardRecordKey,
-} from '../../../../util/standard-site.js'
 import { Views } from '../../../../views/index.js'
 import { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
 import { resHeaders } from '../../../util.js'
@@ -83,64 +76,42 @@ const presentation = (
 
 const standardSitePresentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
-  rawDocuments: SiteStandardDocuments | undefined,
-  rawPublications: SiteStandardPublications | undefined,
+  documents: SiteStandardDocuments | undefined,
+  publications: SiteStandardPublications | undefined,
 ): Output => {
   const { ctx, params, hydration } = inputs
-  const documents =
-    rawDocuments ?? new HydrationMap<string, SiteStandardDocument>()
-  const publications =
-    rawPublications ?? new HydrationMap<string, SiteStandardPublication>()
 
-  // The dataplane auto-resolves each document's `site` field, so a
-  // request for a document plus an unrelated publication URI will return
-  // *both* publications. Compute an allow-set of publication URIs
-  // referenced by hydrated docs and prune anything outside it. When
-  // `allowedPublicationUris` is `undefined`, every publication is allowed
-  // (publication-only resolution flow — no docs to constrain by). An
-  // empty *set* still means "constraint exists, nothing matches" and
-  // drops every publication (e.g. all hydrated docs are loose).
-  const allowedPublicationUris =
-    documents.size > 0 ? collectAllowedPublicationUris(documents) : undefined
+  // Pick the first hydrated doc, then pair it with the publication its
+  // `site` field points at (if any). Docs the dataplane auto-resolved a
+  // publication for end up matched; unrelated publications fall away.
+  const { document, publication } =
+    getSiteStandardRecordsFromHydrationMapsByDocumentUri(
+      documents,
+      publications,
+    )
 
-  // Walk the hydration maps once: build the response's parallel
-  // `associatedRefs` / `associatedRecords` arrays AND capture the first
-  // hydrated doc / publication so we can hand them straight to the view
-  // builder without a second by-ref lookup.
+  // Emit response refs/records only for the records we actually selected.
+  // Anything else (e.g. extra publications the dataplane returned) is
+  // intentionally excluded so the strongRefs Cardy writes onto the post
+  // match the view we built.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
-  let firstDoc: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  let firstPub:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
-
-  for (const [key, info] of documents) {
-    if (!info) continue
-    const ref = parseSiteStandardRecordKey(key)
+  for (const slot of [document, publication]) {
+    if (!slot) continue
     associatedRefs.push(
-      com.atproto.repo.strongRef.$build({ uri: ref.uri, cid: info.cid }),
+      com.atproto.repo.strongRef.$build({
+        uri: slot.ref.uri,
+        cid: slot.info.cid,
+      }),
     )
-    associatedRecords.push(info.record as LexMap)
-    if (!firstDoc) firstDoc = { ref, info }
-  }
-  for (const [key, info] of publications) {
-    if (!info) continue
-    const ref = parseSiteStandardRecordKey(key)
-    if (allowedPublicationUris && !allowedPublicationUris.has(ref.uri)) continue
-    associatedRefs.push(
-      com.atproto.repo.strongRef.$build({ uri: ref.uri, cid: info.cid }),
-    )
-    associatedRecords.push(info.record as LexMap)
-    if (!firstPub) firstPub = { ref, info }
+    associatedRecords.push(slot.info.record as LexMap)
   }
 
-  // Additional guard in case all records in the maps have been takendown (and
-  // so were set to null and aren't included in associatedRefs)
   if (!associatedRefs.length) return {}
 
   const overlay = ctx.views.externalEmbedFromStandardSiteRecords({
-    document: firstDoc,
-    publication: firstPub,
+    document,
+    publication,
     state: hydration,
     assumedUrl: params.url,
   })

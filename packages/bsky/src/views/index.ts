@@ -19,7 +19,7 @@ import {
   AssociatedSiteStandardRecord,
   SiteStandardDocument,
   SiteStandardPublication,
-  getSiteStandardRecordsFromHydrationMaps,
+  getSiteStandardRecordsFromHydrationMapsByRefs,
 } from '../hydration/external.js'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
 import { Follow, Verification } from '../hydration/graph.js'
@@ -2187,7 +2187,7 @@ export class Views {
     state: HydrationState
     assumedUrl: string
   }): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
-    const { document, publication } = getSiteStandardRecordsFromHydrationMaps(
+    const { document, publication } = getSiteStandardRecordsFromHydrationMapsByRefs(
       associatedRefs,
       state.siteStandardDocuments,
       state.siteStandardPublications,
