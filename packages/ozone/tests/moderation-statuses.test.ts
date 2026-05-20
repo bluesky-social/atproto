@@ -225,13 +225,13 @@ describe('moderation-statuses', () => {
 
       // Verify all starter pack statuses are for starter packs
       expect(onlyStarterPackStatuses.subjectStatuses.length).toBeGreaterThan(0)
-      onlyStarterPackStatuses.subjectStatuses.forEach(status => {
+      onlyStarterPackStatuses.subjectStatuses.forEach((status) => {
         assert(isStrongRef(status.subject))
         expect(status.subject.uri).toContain('app.bsky.graph.starterpack')
       })
       // Verify our specific starter pack is in the results
-      const foundSp = onlyStarterPackStatuses.subjectStatuses.find(s =>
-        isStrongRef(s.subject) && s.subject.uri === sp.uriStr
+      const foundSp = onlyStarterPackStatuses.subjectStatuses.find(
+        (s) => isStrongRef(s.subject) && s.subject.uri === sp.uriStr,
       )
       expect(foundSp).toBeTruthy()
 
@@ -249,7 +249,7 @@ describe('moderation-statuses', () => {
 
       // Verify all post statuses are for posts
       expect(onlyPostStatuses.subjectStatuses.length).toBeGreaterThan(0)
-      onlyPostStatuses.subjectStatuses.forEach(status => {
+      onlyPostStatuses.subjectStatuses.forEach((status) => {
         assert(isStrongRef(status.subject))
         expect(status.subject.uri).toContain('app.bsky.feed.post')
       })

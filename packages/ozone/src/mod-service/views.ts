@@ -51,7 +51,11 @@ import { Un$Typed, asPredicate } from '../lexicon/util.js'
 import { dbLogger, httpLogger } from '../logger.js'
 import { ParsedLabelers } from '../util.js'
 import { moderationSubjectStatusQueryBuilder } from './status.js'
-import { ModSubject, subjectFromEventRow, subjectFromStatusRow } from './subject.js'
+import {
+  ModSubject,
+  subjectFromEventRow,
+  subjectFromStatusRow,
+} from './subject.js'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,

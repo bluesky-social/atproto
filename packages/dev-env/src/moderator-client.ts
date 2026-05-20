@@ -4,12 +4,12 @@ import {
   ChatBskyConvoDefs,
   ComAtprotoAdminDefs,
   ComAtprotoRepoStrongRef,
+  ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneReportQueryReports as QueryModerationReports,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
-  ToolsOzoneModerationDefs,
+  ToolsOzoneReportQueryReports as QueryModerationReports,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'

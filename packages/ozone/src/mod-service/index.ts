@@ -440,9 +440,9 @@ export class ModerationService {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
-      .where((qb) => qb
-        .where('recordPath', '!=', '')
-        .orWhere('convoId', '!=', ''))
+      .where((qb) =>
+        qb.where('recordPath', '!=', '').orWhere('convoId', '!=', ''),
+      )
       .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
       .selectAll()
       .execute()

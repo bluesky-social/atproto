@@ -592,7 +592,16 @@ export class SeedClient<
       | { $type: string }
     reason?: string
     reportedBy: string
-  }) {
+  }): Promise<
+    ComAtprotoModerationCreateReport.OutputSchema & {
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
+    }
+  > {
     const { reasonType, subject, reason, reportedBy } = opts
     const result = await this.agent.com.atproto.moderation.createReport(
       { reasonType, subject, reason },

@@ -210,15 +210,21 @@ describe('moderation-events', () => {
       // Verify all spam events have the correct report type
       expect(spamEvents.events.length).toBeGreaterThan(0)
       spamEvents.events.forEach((event) => {
-        expect(event.event.$type).toEqual('tools.ozone.moderation.defs#modEventReport')
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
         expect((event.event as any).reportType).toEqual(REASONSPAM)
       })
 
       // Verify all misleading events have one of the correct report types
       expect(misleadingEvents.events.length).toBeGreaterThan(0)
       misleadingEvents.events.forEach((event) => {
-        expect(event.event.$type).toEqual('tools.ozone.moderation.defs#modEventReport')
-        expect([REASONMISLEADING, REASONAPPEAL]).toContain((event.event as any).reportType)
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect([REASONMISLEADING, REASONAPPEAL]).toContain(
+          (event.event as any).reportType,
+        )
       })
     })
 
@@ -384,26 +390,28 @@ describe('moderation-events', () => {
 
       // Verify events with addedTags: ['L1'] actually have L1 in their add array
       expect(addFinder.events.length).toBeGreaterThan(0)
-      addFinder.events.forEach(event => {
+      addFinder.events.forEach((event) => {
         assert(ToolsOzoneModerationDefs.isModEventTag(event.event))
         expect(event.event.add).toContain('L1')
       })
-      const foundAddEvent = addFinder.events.find(e => e.id === addEvent.id)
+      const foundAddEvent = addFinder.events.find((e) => e.id === addEvent.id)
       expect(foundAddEvent).toBeTruthy()
 
       // Verify events with addedTags: ['L3'] and removedTags: ['L2'] match
       expect(addAndRemoveFinder.events.length).toBeGreaterThan(0)
-      addAndRemoveFinder.events.forEach(event => {
+      addAndRemoveFinder.events.forEach((event) => {
         assert(ToolsOzoneModerationDefs.isModEventTag(event.event))
         expect(event.event.add).toContain('L3')
         expect(event.event.remove).toContain('L2')
       })
-      const foundAddAndRemoveEvent = addAndRemoveFinder.events.find(e => e.id === addAndRemoveEvent.id)
+      const foundAddAndRemoveEvent = addAndRemoveFinder.events.find(
+        (e) => e.id === addAndRemoveEvent.id,
+      )
       expect(foundAddAndRemoveEvent).toBeTruthy()
 
       // Verify all events with removedTags: ['L2'] actually have L2 in their remove array
       expect(removeFinder.events.length).toBeGreaterThan(0)
-      removeFinder.events.forEach(event => {
+      removeFinder.events.forEach((event) => {
         assert(ToolsOzoneModerationDefs.isModEventTag(event.event))
         expect(event.event.remove).toContain('L2')
       })
@@ -454,12 +462,17 @@ describe('moderation-events', () => {
         }),
       ])
 
-      const starterPackEvent = onlyStarterPackReports.events.find(e =>
-        isStrongRef(e.subject) && e.subject.uri === sp.uriStr
+      const starterPackEvent = onlyStarterPackReports.events.find(
+        (e) => isStrongRef(e.subject) && e.subject.uri === sp.uriStr,
       )
-      assert(starterPackEvent, 'Should find the starter pack event we just created')
+      assert(
+        starterPackEvent,
+        'Should find the starter pack event we just created',
+      )
       assert(isStrongRef(starterPackEvent.subject))
-      expect(starterPackEvent.subject.uri).toContain('app.bsky.graph.starterpack')
+      expect(starterPackEvent.subject.uri).toContain(
+        'app.bsky.graph.starterpack',
+      )
 
       expect(onlyAlicesStarterPackReports.events.length).toEqual(1)
       assert(isStrongRef(onlyAlicesStarterPackReports.events[0].subject))
@@ -603,10 +616,14 @@ describe('moderation-events', () => {
         expect(subject.convoId).toEqual(convoId1)
         expect(subject.did).toEqual(sc.dids.carol)
         // All events should be reports
-        expect(e.event.$type).toEqual('tools.ozone.moderation.defs#modEventReport')
+        expect(e.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
       })
       // Verify we got both reports we created
-      const convo1Comments = convo1Events.events.map(e => (e.event as any).comment)
+      const convo1Comments = convo1Events.events.map(
+        (e) => (e.event as any).comment,
+      )
       expect(convo1Comments).toContain('spam in convo 1')
       expect(convo1Comments).toContain('misleading in convo 1')
 
@@ -620,10 +637,14 @@ describe('moderation-events', () => {
         expect(subject.convoId).toEqual(convoId2)
         expect(subject.did).toEqual(sc.dids.carol)
         // All events should be reports
-        expect(e.event.$type).toEqual('tools.ozone.moderation.defs#modEventReport')
+        expect(e.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
       })
       // Verify we got the report we created
-      const convo2Comments = convo2Events.events.map(e => (e.event as any).comment)
+      const convo2Comments = convo2Events.events.map(
+        (e) => (e.event as any).comment,
+      )
       expect(convo2Comments).toContain('spam in convo 2')
     })
   })
