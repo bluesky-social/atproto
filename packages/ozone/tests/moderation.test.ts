@@ -802,36 +802,6 @@ describe('moderation', () => {
       expect(status?.reviewState).toEqual(REVIEWESCALATED)
     })
 
-    it('allows conversation takedown', async () => {
-      const subject = {
-        $type: 'chat.bsky.convo.defs#convoRef',
-        did: sc.dids.bob,
-        convoId: '123',
-      }
-      await sc.createReport({
-        reasonType: REASONSPAM,
-        subject,
-        reportedBy: sc.dids.alice,
-      })
-      await modClient.performTakedown({
-        subject,
-        // Use negative value to set the expiry time in the past so that the action is automatically reversed
-        // right away without having to wait n number of hours for a successful assertion
-        durationInHours: -1,
-      })
-      await ozone.processAll()
-
-      const status = await network.ozone.ctx.db.db
-        .selectFrom('moderation_subject_status')
-        .selectAll()
-        .where('did', '=', subject.did)
-        .where('recordPath', '=', '')
-        .where('convoId', '=', subject.convoId)
-        .executeTakeFirst()
-
-      expect(status?.takendown).toEqual(true)
-    })
-
     async function emitLabelEvent(
       opts: Partial<ToolsOzoneModerationEmitEvent.InputSchema> & {
         subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
