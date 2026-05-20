@@ -1,5 +1,16 @@
 # @atproto/bsync
 
+## 0.0.27
+
+### Patch Changes
+
+- [#4964](https://github.com/bluesky-social/atproto/pull/4964) [`571582e`](https://github.com/bluesky-social/atproto/commit/571582ea9b1aea56938b8f24daaf49e197a987ef) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove proto buf generated code from version control
+
+- [#4960](https://github.com/bluesky-social/atproto/pull/4960) [`53b1e07`](https://github.com/bluesky-social/atproto/commit/53b1e0731ee0d13c350dd96cbcab88447eaad441) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update protobuf to add `.js` extension
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1)]:
+  - @atproto/common@0.6.1
+
 ## 0.0.26
 
 ### Patch Changes

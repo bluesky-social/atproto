@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.7.1
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow custom `RuntimeImplementation` to return a `SharedArrayBuffer`-backed `Uint8Array` from the `digest()` method. Input to this function will always be `Uint8Array<ArrayBuffer>`.
+
 ## 0.7.0
 
 ### Minor Changes

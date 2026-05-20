@@ -1,5 +1,14 @@
 # @atproto/lexicon-resolver
 
+## 0.4.1
+
+### Patch Changes
+
+- [#4965](https://github.com/bluesky-social/atproto/pull/4965) [`3ea8e1f`](https://github.com/bluesky-social/atproto/commit/3ea8e1f3704c769a215af92ef0d9d46db16ef5f6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove generated code from git
+
+- Updated dependencies [[`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/lex@0.1.1
+
 ## 0.4.0
 
 ### Minor Changes

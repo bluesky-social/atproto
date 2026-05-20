@@ -1,5 +1,19 @@
 # @atproto/bsky
 
+## 0.0.232
+
+### Patch Changes
+
+- [#4964](https://github.com/bluesky-social/atproto/pull/4964) [`571582e`](https://github.com/bluesky-social/atproto/commit/571582ea9b1aea56938b8f24daaf49e197a987ef) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove proto buf generated code from version control
+
+- [#4960](https://github.com/bluesky-social/atproto/pull/4960) [`53b1e07`](https://github.com/bluesky-social/atproto/commit/53b1e0731ee0d13c350dd96cbcab88447eaad441) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update protobuf to add `.js` extension
+
+- Updated dependencies [[`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854), [`4801600`](https://github.com/bluesky-social/atproto/commit/48016005155c9cecabf3fa9d5e9b3555e84e2dca), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/api@0.20.1
+  - @atproto/sync@0.3.1
+  - @atproto/common@0.6.1
+  - @atproto/lex@0.1.1
+
 ## 0.0.231
 
 ### Patch Changes

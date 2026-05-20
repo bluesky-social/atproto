@@ -1,5 +1,18 @@
 # @atproto/lex-client
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `SharedArrayBuffer`-backed `Uint8Array` to be used as `BinaryBodyInit` (used for binary request bodies and unknown response payloads)
+
+- [#4895](https://github.com/bluesky-social/atproto/pull/4895) [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `applyWrites()` method to Lex SDK client class
+
+  Thank you [@TrySound](https://github.com/TrySound) for the suggestion
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1)]:
+  - @atproto/lex-data@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
