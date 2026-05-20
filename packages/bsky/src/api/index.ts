@@ -23,6 +23,7 @@ import createDraft from './app/bsky/draft/createDraft.js'
 import deleteDraft from './app/bsky/draft/deleteDraft.js'
 import getDrafts from './app/bsky/draft/getDrafts.js'
 import updateDraft from './app/bsky/draft/updateDraft.js'
+import getEmbedExternalView from './app/bsky/embed/getEmbedExternalView.js'
 import getActorFeeds from './app/bsky/feed/getActorFeeds.js'
 import getActorLikes from './app/bsky/feed/getActorLikes.js'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed.js'
@@ -117,6 +118,7 @@ export default function (server: Server, ctx: AppContext) {
   deleteDraft(server, ctx)
   getDrafts(server, ctx)
   updateDraft(server, ctx)
+  getEmbedExternalView(server, ctx)
   dismissMatch(server, ctx)
   getMatches(server, ctx)
   getSyncStatus(server, ctx)
