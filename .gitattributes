@@ -2,10 +2,6 @@
 packages/bsky/src/proto/** linguist-generated=true
 packages/bsync/src/proto/** linguist-generated=true
 
-# codegen
-packages/api/src/client/** linguist-generated=true
-packages/ozone/src/lexicon/** linguist-generated=true
-
 # @atproto/lex
 packages/lexicon-resolver/src/lexicons/** linguist-generated=true
 
