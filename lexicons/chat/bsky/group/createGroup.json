@@ -8,9 +8,10 @@
       "errors": [
         { "name": "AccountSuspended" },
         { "name": "BlockedActor" },
-        { "name": "UserForbidsGroups" },
+        { "name": "NewAccountCannotCreateGroup" },
         { "name": "NotFollowedBySender" },
-        { "name": "RecipientNotFound" }
+        { "name": "RecipientNotFound" },
+        { "name": "UserForbidsGroups" }
       ],
       "input": {
         "encoding": "application/json",
