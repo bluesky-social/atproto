@@ -1,7 +1,3 @@
-# buf
-packages/bsky/src/proto/** linguist-generated=true
-packages/bsync/src/proto/** linguist-generated=true
-
 # @atproto/lex
 packages/lexicon-resolver/src/lexicons/** linguist-generated=true
 
