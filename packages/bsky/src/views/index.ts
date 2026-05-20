@@ -18,7 +18,6 @@ import { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
   SiteStandardDocument,
   SiteStandardPublication,
-  siteStandardRecordKey,
 } from '../hydration/external.js'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
 import { Follow, Verification } from '../hydration/graph.js'
@@ -28,6 +27,11 @@ import { RecordInfo, parseString } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
 import { Notification } from '../proto/bsky_pb.js'
+import {
+  AssociatedSiteStandardRecord,
+  estimateReadingTimeMinutes,
+  lookupAssociatedSiteStandardRecords,
+} from '../util/standard-site.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -2168,10 +2172,10 @@ export class Views {
     associatedRefs: ExternalEmbed['external']['associatedRefs'],
     state: HydrationState,
   ): Partial<Omit<ExternalEmbedView['external'], 'uri'>> | undefined {
-    const { document, publication } = lookupAssociatedSiteStandardRecords(
-      associatedRefs,
-      state,
-    )
+    const { document, publication } = lookupAssociatedSiteStandardRecords<
+      SiteStandardDocument,
+      SiteStandardPublication
+    >(associatedRefs, state.siteStandardDocuments, state.siteStandardPublications)
     if (!document && !publication) return undefined
 
     const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}
@@ -2571,64 +2575,6 @@ export class Views {
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
 }
-
-type AssociatedSiteStandardRecord<T> = {
-  ref: { uri: AtUriString; cid: string }
-  info: T
-}
-
-/**
- * Walks `external.associatedRefs` and returns the first hydrated
- * `site.standard.document` and the first hydrated `site.standard.publication`
- * found in `HydrationState`. The hydration maps are keyed by `uri@cid` so a
- * single batch can carry multiple versions of the same URI (different posts
- * pinning different cids); the lookup is version-exact via that composite key.
- *
- * Each slot also carries the matching `ref` so callers can recover the owner
- * DID for blob-cdn URL building, etc.
- *
- * Returns `undefined` for either slot when no matching ref is present or the
- * record wasn't hydrated. Refs of other collections are ignored.
- */
-const lookupAssociatedSiteStandardRecords = (
-  associatedRefs: ExternalEmbed['external']['associatedRefs'],
-  state: HydrationState,
-): {
-  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-} => {
-  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  let publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
-  if (!associatedRefs?.length) return { document, publication }
-  for (const ref of associatedRefs) {
-    const key = siteStandardRecordKey(ref.uri, ref.cid)
-    if (!document) {
-      const hit = state.siteStandardDocuments?.get(key)
-      if (hit) document = { ref, info: hit }
-    }
-    if (!publication) {
-      const hit = state.siteStandardPublications?.get(key)
-      if (hit) publication = { ref, info: hit }
-    }
-    if (document && publication) break
-  }
-  return { document, publication }
-}
-
-/**
- * Estimate reading time in minutes from a plaintext document body. Returns
- * `undefined` when the input has no countable words. Uses a coarse 200 wpm
- * heuristic; swap in a more accurate library here if needed (e.g.
- * `reading-time`).
- */
-const estimateReadingTimeMinutes = (text: string): number | undefined => {
-  const words = text.trim().split(/\s+/).filter(Boolean).length
-  if (!words) return undefined
-  return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE))
-}
-const WORDS_PER_MINUTE = 200
 
 const buildExternalEmbedSourceTheme = (
   theme: SiteStandardPublicationRecord['basicTheme'],

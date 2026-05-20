@@ -14,6 +14,10 @@ import {
   Notification,
   RecordRef,
 } from '../proto/bsky_pb.js'
+import {
+  SITE_STANDARD_NSID_PREFIX,
+  parseSiteStandardRecordKey,
+} from '../util/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import { ParsedLabelers } from '../util.js'
 import {
@@ -34,10 +38,8 @@ import {
 } from './actor.js'
 import {
   ExternalHydrator,
-  SITE_STANDARD_NSID_PREFIX,
   SiteStandardDocuments,
   SiteStandardPublications,
-  parseSiteStandardRecordKey,
 } from './external.js'
 import {
   FeedGenAggs,

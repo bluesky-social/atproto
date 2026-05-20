@@ -5,23 +5,21 @@ import {
   GetSiteStandardRecordsByRefResponse,
   GetSiteStandardRecordsByURIResponse,
 } from '../proto/bsky_pb.js'
+import { siteStandardRecordKey } from '../util/standard-site.js'
 import {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
 } from '../views/types.js'
 import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util.js'
 
-export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
-
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
 /**
- * Keyed by `${uri}@${cid}`. A single hydration batch can pull more than one
- * version of the same URI (different posts pinning different cids), so the
- * composite key is needed for O(1) version-exact lookups. Use
- * `siteStandardRecordKey(uri, cid)` to construct one and
- * `parseSiteStandardRecordKey(key)` to read one back.
+ * Keyed by `${uri}@${cid}` — see `siteStandardRecordKey`. A single hydration
+ * batch can pull more than one version of the same URI (different posts
+ * pinning different cids), so the composite key is needed for O(1)
+ * version-exact lookups.
  */
 export type SiteStandardDocuments = HydrationMap<string, SiteStandardDocument>
 /**
@@ -36,34 +34,6 @@ export type SiteStandardRecords = {
   publications: SiteStandardPublications
 }
 
-export const siteStandardRecordKey = (uri: string, cid: string) =>
-  `${uri}@${cid}`
-export const parseSiteStandardRecordKey = (
-  key: string,
-): { uri: AtUriString; cid: string } => {
-  const at = key.lastIndexOf('@')
-  return {
-    uri: key.slice(0, at) as AtUriString,
-    cid: key.slice(at + 1),
-  }
-}
-
-/**
- * Returns the set of publication AT-URIs referenced by `site` on any of the
- * hydrated documents. Loose documents (whose `site` is a web URL) contribute
- * nothing.
- */
-export const collectAllowedPublicationUris = (
-  documents: SiteStandardDocuments,
-): Set<string> => {
-  const allowed = new Set<string>()
-  for (const info of documents.values()) {
-    const site = info?.record.site
-    if (site && site.startsWith('at://')) allowed.add(site)
-  }
-  return allowed
-}
-
 export class ExternalHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
@@ -76,7 +46,7 @@ export class ExternalHydrator {
     const res = await this.dataplane.getSiteStandardRecordsByRef({
       refs: refs.map(({ uri, cid }) => ({ uri, cid: cid ?? '' })),
     })
-    return collectSiteStandardRecords(res, includeTakedowns)
+    return buildSiteStandardRecordsHydrationMaps(res, includeTakedowns)
   }
 
   async getSiteStandardRecordsByURI(
@@ -86,7 +56,7 @@ export class ExternalHydrator {
     if (!uris.length) return emptySiteStandardRecords()
 
     const res = await this.dataplane.getSiteStandardRecordsByURI({ uris })
-    return collectSiteStandardRecords(res, includeTakedowns)
+    return buildSiteStandardRecordsHydrationMaps(res, includeTakedowns)
   }
 }
 
@@ -95,7 +65,7 @@ const emptySiteStandardRecords = (): SiteStandardRecords => ({
   publications: new HydrationMap(),
 })
 
-const collectSiteStandardRecords = (
+const buildSiteStandardRecordsHydrationMaps = (
   res:
     | GetSiteStandardRecordsByURIResponse
     | GetSiteStandardRecordsByRefResponse,
