@@ -63,7 +63,7 @@ describe('verification views', () => {
       .set({ trustedVerifier: true })
       .where('did', 'in', [verifier1, verifier2, verifier3])
       .execute()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()
