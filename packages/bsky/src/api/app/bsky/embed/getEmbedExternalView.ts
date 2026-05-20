@@ -143,9 +143,13 @@ const standardSitePresentation = (
     hydration,
   )
 
-  // viewExternal requires uri/title/description, but we fall back to the
-  // request's `url` for `uri` and return the view even if we default to empty
-  // strings. We did our best.
+  // We always return a view when any record was hydrated. The lex marks
+  // `title` and `description` as required, but SS records can produce a
+  // partial view (e.g. a publication with no description), so we fill
+  // missing fields with empty strings. Clients must treat an empty
+  // `title` or `description` here as "no enrichment for this field"
+  // rather than "the content is genuinely titleless." `uri` always falls
+  // back to the request's `url`.
   const view = app.bsky.embed.external.view.$build({
     external: {
       ...overlay,

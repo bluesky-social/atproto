@@ -2871,7 +2871,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is also included when the resolved records can produce a renderable view, but may be omitted when no records were hydratable.",
+          "Resolve one or more AT-URIs into the data needed to render an enhanced external embed. Returns `associatedRefs` (strongRefs to embed into a post's external.associatedRefs) and the raw `associatedRecords`; `view` is included when at least one record was hydrated, but may be omitted otherwise. When `view` is present, `view.external.title` and `view.external.description` may be empty strings if the resolved records didn't supply them — clients should treat empty values as 'no enrichment for this field' rather than the content being genuinely titleless.",
         parameters: {
           type: 'params',
           required: ['url', 'uris'],
@@ -2902,6 +2902,8 @@ export const schemaDict = {
               view: {
                 type: 'ref',
                 ref: 'lex:app.bsky.embed.external#view',
+                description:
+                  "Hydrated view of the embed. Present whenever at least one record was hydrated. `view.external.title` and `view.external.description` may be empty strings when the resolved records didn't supply them; clients should treat that as 'no enrichment for this field.'",
               },
               associatedRefs: {
                 type: 'array',
