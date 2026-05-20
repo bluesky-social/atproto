@@ -17,7 +17,6 @@ import {
 import { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
   AssociatedSiteStandardRecord,
-  SiteStandardDocument,
   SiteStandardPublication,
   getSiteStandardRecordsFromHydrationMaps,
 } from '../hydration/external.js'
@@ -2179,12 +2178,14 @@ export class Views {
 
     const overlay: Partial<Omit<ExternalEmbedView['external'], 'uri'>> = {}
 
-    const title = document?.info.record.title ?? publication?.info.record.name
-    if (title) overlay.title = title
-
-    const description =
-      document?.info.record.description ?? publication?.info.record.description
-    if (description) overlay.description = description
+    // if we have a document, prefer that for the top-level title/desc
+    if (document?.info.record) {
+      overlay.title = document.info.record.title
+      overlay.description = document.info.record.description ?? ''
+    } else {
+      overlay.title = publication?.info.record.name ?? ''
+      overlay.description = publication?.info.record.description ?? ''
+    }
 
     const docCover = document?.info.record.coverImage
     if (docCover) {

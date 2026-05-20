@@ -651,8 +651,11 @@ export class Hydrator {
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
-      actionSiteStandardTakedownLabels(siteStandardDocuments, labels)
-      actionSiteStandardTakedownLabels(siteStandardPublications, labels)
+      actionSiteStandardTakedownLabels(
+        siteStandardDocuments,
+        siteStandardPublications,
+        labels,
+      )
     }
     // combine all hydration state
     return mergeManyStates(
@@ -813,8 +816,7 @@ export class Hydrator {
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
     ])
     if (!ctx.includeTakedowns) {
-      actionSiteStandardTakedownLabels(documents, labels)
-      actionSiteStandardTakedownLabels(publications, labels)
+      actionSiteStandardTakedownLabels(documents, publications, labels)
     }
     return {
       ctx,
@@ -1708,19 +1710,53 @@ const actionTakedownLabels = (
 }
 
 /**
- * Like `actionTakedownLabels`, but for hydration maps keyed by the
- * `uri@cid` composite (see `siteStandardRecordKey`). Looks up labels by the
- * subject URI extracted from the key.
+ * Apply takedown labels to the site.standard hydration maps. Per-record
+ * takedowns null any entry whose subject URI is taken down; pair takedowns
+ * propagate that null across doc/publication pairs so we never render half
+ * of a moderated embed. Pairs are discovered via `doc.record.site`; orphan
+ * docs and orphan publications are subject only to the per-record sweep.
  */
 const actionSiteStandardTakedownLabels = (
-  hydrationMap: HydrationMap<string, unknown>,
+  documents: SiteStandardDocuments,
+  publications: SiteStandardPublications,
   labels: Labels,
 ) => {
-  for (const key of hydrationMap.keys()) {
-    const { uri } = parseSiteStandardRecordKey(key)
-    if (labels.get(uri)?.isTakendown) {
-      hydrationMap.set(key, null)
+  // Pairings have to be captured before nulling — the doc record carries
+  // the publication URI in its `site` field, and we lose it once we null.
+  const pairings: { docKey: string; pubKey: string }[] = []
+  if (documents.size > 0 && publications.size > 0) {
+    const pubKeysByUri = new Map<string, string[]>()
+    for (const key of publications.keys()) {
+      const { uri } = parseSiteStandardRecordKey(key)
+      const list = pubKeysByUri.get(uri)
+      if (list) list.push(key)
+      else pubKeysByUri.set(uri, [key])
     }
+    for (const [docKey, doc] of documents) {
+      const site = doc?.record.site
+      if (!site || !site.startsWith('at://')) continue
+      for (const pubKey of pubKeysByUri.get(site) ?? []) {
+        pairings.push({ docKey, pubKey })
+      }
+    }
+  }
+
+  // Per-record takedowns: null any entry whose subject URI is taken down.
+  for (const key of documents.keys()) {
+    const { uri } = parseSiteStandardRecordKey(key)
+    if (labels.get(uri)?.isTakendown) documents.set(key, null)
+  }
+  for (const key of publications.keys()) {
+    const { uri } = parseSiteStandardRecordKey(key)
+    if (labels.get(uri)?.isTakendown) publications.set(key, null)
+  }
+
+  // Pair takedowns: if exactly one side of a pair was nulled above, mirror.
+  for (const { docKey, pubKey } of pairings) {
+    const doc = documents.get(docKey)
+    const pub = publications.get(pubKey)
+    if (doc === null && pub !== null) publications.set(pubKey, null)
+    if (pub === null && doc !== null) documents.set(docKey, null)
   }
 }
 
