@@ -33,9 +33,9 @@ import { didAndSeqForEvt } from '../util.js'
 export type FirehoseOptions = ClientOptions & {
   idResolver: IdResolver
 
-  handleEvent: (evt: Event) => Awaited<void>
+  handleEvent: (evt: Event) => void | Promise<void>
   onError: (err: Error) => void
-  getCursor?: () => Awaited<number | undefined>
+  getCursor?: () => number | undefined | Promise<number | undefined>
 
   runner?: EventRunner // should only set getCursor *or* runner
 
@@ -89,13 +89,13 @@ export class Firehose {
       method: com.atproto.sync.subscribeRepos.$lxm,
       signal: this.abortController.signal,
       getParams: async () => {
-        const getCursorFn = () =>
-          this.opts.runner?.getCursor() ?? this.opts.getCursor
-        if (!getCursorFn) {
-          return undefined
+        let cursor: number | undefined
+        if (this.opts.runner) {
+          cursor = await this.opts.runner.getCursor()
+        } else if (this.opts.getCursor) {
+          cursor = await this.opts.getCursor()
         }
-        const cursor = await getCursorFn()
-        return { cursor }
+        return cursor === undefined ? undefined : { cursor }
       },
       validate: (value: unknown) => {
         const result = com.atproto.sync.subscribeRepos.$message.safeParse(value)
