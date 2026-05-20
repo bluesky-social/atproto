@@ -116,17 +116,13 @@ export class LexDefBuilder {
   }
 
   private addUtils(definitions: Record<string, undefined | string>) {
-    const entries = Object.entries(definitions).filter(
-      (e): e is [(typeof e)[0], NonNullable<(typeof e)[1]>] => e[1] != null,
-    )
-    if (entries.length) {
+    for (const [name, initializer] of Object.entries(definitions)) {
+      if (initializer == null) continue
+
       this.file.addVariableStatement({
         isExported: true,
         declarationKind: VariableDeclarationKind.Const,
-        declarations: entries.map(([name, initializer]) => ({
-          name,
-          initializer,
-        })),
+        declarations: [{ name, initializer }],
       })
     }
   }
@@ -190,25 +186,24 @@ export class LexDefBuilder {
 
     // @TODO Build the types instead of using an inferred type.
 
+    // Declare each piece of the method as its own top-level exported const
+    // *before* `main`, so consumers that import a single helper (e.g.
+    // `$lxm`) only pull in that subtree rather than the whole procedure.
+    // `main.parameters` etc. would otherwise pin `main` in the module graph.
+    this.addUtils({
+      $lxm: '$nsid',
+      $params: await this.compileParamsSchema(def.parameters),
+      $input: await this.compilePayload(def.input),
+      $output: await this.compilePayload(def.output),
+    })
+
     const ref = await this.addSchema(hash, def, {
-      schema: this.pure(`
-        l.procedure(
-          $nsid,
-          ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayload(def.input)},
-          ${await this.compilePayload(def.output)},
-          ${await this.compileErrors(def.errors)}
-        )
-      `),
+      schema: this.pure(
+        `l.procedure($lxm, $params, $input, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
+      ),
     })
 
     this.addMethodTypeUtils(ref, def)
-    this.addUtils({
-      $lxm: this.pure(`${ref.varName}.nsid`),
-      $params: this.pure(`${ref.varName}.parameters`),
-      $input: this.pure(`${ref.varName}.input`),
-      $output: this.pure(`${ref.varName}.output`),
-    })
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
@@ -218,23 +213,19 @@ export class LexDefBuilder {
 
     // @TODO Build the types instead of using an inferred type.
 
+    this.addUtils({
+      $lxm: '$nsid',
+      $params: await this.compileParamsSchema(def.parameters),
+      $output: await this.compilePayload(def.output),
+    })
+
     const ref = await this.addSchema(hash, def, {
-      schema: this.pure(`
-        l.query(
-          $nsid,
-          ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compilePayload(def.output)},
-          ${await this.compileErrors(def.errors)}
-        )
-      `),
+      schema: this.pure(
+        `l.query($lxm, $params, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
+      ),
     })
 
     this.addMethodTypeUtils(ref, def)
-    this.addUtils({
-      $lxm: this.pure(`${ref.varName}.nsid`),
-      $params: `${ref.varName}.parameters`,
-      $output: `${ref.varName}.output`,
-    })
   }
 
   private async addSubscription(hash: string, def: LexiconSubscription) {
@@ -244,23 +235,19 @@ export class LexDefBuilder {
 
     // @TODO Build the types instead of using an inferred type.
 
+    this.addUtils({
+      $lxm: '$nsid',
+      $params: await this.compileParamsSchema(def.parameters),
+      $message: await this.compileBodySchema(def.message?.schema),
+    })
+
     const ref = await this.addSchema(hash, def, {
-      schema: this.pure(`
-        l.subscription(
-          $nsid,
-          ${await this.compileParamsSchema(def.parameters)},
-          ${await this.compileBodySchema(def.message?.schema)},
-          ${await this.compileErrors(def.errors)}
-        )
-      `),
+      schema: this.pure(
+        `l.subscription($lxm, $params, $message${formatErrorsArg(await this.compileErrors(def.errors))})`,
+      ),
     })
 
     this.addMethodTypeUtils(ref, def)
-    this.addUtils({
-      $lxm: this.pure(`${ref.varName}.nsid`),
-      $params: `${ref.varName}.parameters`,
-      $message: `${ref.varName}.message`,
-    })
   }
 
   addMethodTypeUtils(
@@ -454,7 +441,7 @@ export class LexDefBuilder {
       this.addUtils({
         $isTypeOf: markPure(`${ref.varName}.isTypeOf.bind(${ref.varName})`),
         $build: markPure(`${ref.varName}.build.bind(${ref.varName})`),
-        $type: markPure(`${ref.varName}.$type`),
+        $type: `${ref.varName}.$type`,
       })
     }
 
@@ -1018,4 +1005,8 @@ function hasEnum<T extends { enum?: readonly unknown[] }>(
 
 function markPure<T extends string>(v: T): `/*#__PURE__*/ ${T}` {
   return `/*#__PURE__*/ ${v}`
+}
+
+function formatErrorsArg(errors: string) {
+  return errors ? `, ${errors}` : ''
 }
