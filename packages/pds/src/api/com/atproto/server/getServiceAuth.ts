@@ -1,4 +1,5 @@
 import { HOUR, MINUTE } from '@atproto/common'
+import { isAtprotoDid, isAtprotoDidRefAbsolute } from '@atproto/did'
 import { l } from '@atproto/lex'
 import {
   InvalidRequestError,
@@ -25,6 +26,11 @@ export default function (server: Server, ctx: AppContext) {
       additional: [AuthScope.Takendown],
       authorize: (permissions, { params }) => {
         const { aud, lxm = '*' } = params
+        if (!isAtprotoDid(aud) && !isAtprotoDidRefAbsolute(aud)) {
+          throw new InvalidRequestError(
+            'aud must be a valid atproto DID or did#serviceId reference',
+          )
+        }
         permissions.assertRpc({ aud, lxm })
       },
     }),
