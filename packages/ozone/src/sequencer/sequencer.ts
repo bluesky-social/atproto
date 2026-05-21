@@ -1,14 +1,16 @@
 import EventEmitter from 'node:events'
 import { Selectable } from 'kysely'
-import { PoolClient } from 'pg'
-import TypedEmitter from 'typed-emitter'
-import { Database } from '../db'
-import { Label as LabelTable, LabelChannel } from '../db/schema/label'
-import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
-import { seqLogger as log } from '../logger'
-import { ModerationService } from '../mod-service'
+// eslint-disable-next-line import/default
+import pg from 'pg'
+type PoolClient = pg.PoolClient
+import type TypedEmitter from 'typed-emitter'
+import { Database } from '../db/index.js'
+import { Label as LabelTable, LabelChannel } from '../db/schema/label.js'
+import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
+import { seqLogger as log } from '../logger.js'
+import { ModerationService } from '../mod-service/index.js'
 
-export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
+export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
 type LabelRow = Selectable<LabelTable>
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
@@ -142,4 +144,4 @@ type SequencerEvents = {
   close: () => void
 }
 
-export type SequencerEmitter = TypedEmitter<SequencerEvents>
+export type SequencerEmitter = TypedEmitter.default<SequencerEvents>

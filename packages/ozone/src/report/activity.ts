@@ -1,11 +1,11 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { Member } from '../lexicon/types/tools/ozone/team/defs'
+import { Database } from '../db/index.js'
+import { Member } from '../lexicon/types/tools/ozone/team/defs.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
   handleReportUpdate,
-} from './handle-report-update'
+} from './handle-report-update.js'
 
 export type ActivityType =
   | 'queueActivity'

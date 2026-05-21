@@ -1,10 +1,10 @@
 import { TID } from '@atproto/common'
 import { RecordWriteOp, SpaceRepo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { SqlRepoStorage } from '../../../../actor-store/space'
-import { AppContext } from '../../../../context'
+import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, fireNotifyWrite } from './util'
+import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 const writeOpToAction = {
   [WriteOpAction.Create]: 'create' as const,

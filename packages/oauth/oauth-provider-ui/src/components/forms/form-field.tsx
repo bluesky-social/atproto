@@ -1,7 +1,7 @@
 import { JSX, ReactNode, createContext, useMemo } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Override } from '#/lib/util.ts'
-import { useFormContext } from './form-card'
+import { useFormContext } from './form-card.js'
 
 export type FieldsetContextValue = {
   disabled: boolean

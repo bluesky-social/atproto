@@ -6,7 +6,7 @@ import {
   ensureValidHandle,
   ensureValidHandleRegex,
   normalizeAndEnsureValidHandle,
-} from '../src'
+} from '../src/index.js'
 
 describe('handle validation', () => {
   const expectValid = (h: string) => {

@@ -1,7 +1,7 @@
 import { Insertable } from 'kysely'
 import { LEXICON_REFRESH_FREQUENCY, LexiconData } from '@atproto/oauth-provider'
-import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
-import { AccountDb, Lexicon } from '../db'
+import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
+import { AccountDb, Lexicon } from '../db/index.js'
 
 export async function upsert(db: AccountDb, nsid: string, data: LexiconData) {
   const updates: Omit<Insertable<Lexicon>, 'nsid'> = {

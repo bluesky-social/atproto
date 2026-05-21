@@ -1,9 +1,9 @@
-import { ClientOptions } from 'ws'
+import type { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
-import { TapEvent, parseTapEvent } from './types'
-import { formatAdminAuthHeader, isCausedBySignal } from './util'
+import { TapEvent, parseTapEvent } from './types.js'
+import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
 
 export interface HandlerOpts {
   signal: AbortSignal

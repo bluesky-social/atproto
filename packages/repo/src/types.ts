@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { Cid, LexMap, ifCid } from '@atproto/lex-data'
 import { NsidString, RecordKeyString } from '@atproto/syntax'
-import { BlockMap } from './block-map'
-import { CidSet } from './cid-set'
+import { BlockMap } from './block-map.js'
+import { CidSet } from './cid-set.js'
 
 // Repo nodes
 // ---------------
@@ -18,7 +18,7 @@ const cidSchema = z.unknown().transform((input, ctx): Cid => {
   return z.NEVER
 })
 
-const unsignedCommit = z.object({
+const _unsignedCommit = z.object({
   did: z.string(),
   version: z.literal(3),
   data: cidSchema,
@@ -26,7 +26,7 @@ const unsignedCommit = z.object({
   // `prev` added for backwards compatibility with v2, no requirement of keeping around history
   prev: cidSchema.nullable(),
 })
-export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
+export type UnsignedCommit = z.infer<typeof _unsignedCommit> & { sig?: never }
 
 const commit = z.object({
   did: z.string(),
@@ -34,7 +34,7 @@ const commit = z.object({
   data: cidSchema,
   rev: z.string(),
   prev: cidSchema.nullable(),
-  sig: z.instanceof(Uint8Array),
+  sig: z.instanceof(Uint8Array<ArrayBufferLike>),
 })
 export type Commit = z.infer<typeof commit>
 
@@ -44,7 +44,7 @@ const legacyV2Commit = z.object({
   data: cidSchema,
   rev: z.string().optional(),
   prev: cidSchema.nullable(),
-  sig: z.instanceof(Uint8Array),
+  sig: z.instanceof(Uint8Array<ArrayBufferLike>),
 })
 export type LegacyV2Commit = z.infer<typeof legacyV2Commit>
 
@@ -60,7 +60,7 @@ export const schema = {
     version: z.literal(1),
     roots: z.array(cidSchema),
   }),
-  bytes: z.instanceof(Uint8Array),
+  bytes: z.instanceof(Uint8Array<ArrayBufferLike>),
   string: z.string(),
   array: z.array(z.unknown()),
   map: z.record(z.string(), z.unknown()),

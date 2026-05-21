@@ -1,5 +1,5 @@
 import { CommitData, RepoRecord, SpaceRepoStorage } from '@atproto/space'
-import { SpaceTransactor } from './transactor'
+import { SpaceTransactor } from './transactor.js'
 
 export class SqlRepoStorage implements SpaceRepoStorage {
   constructor(

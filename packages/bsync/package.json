@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.0.25",
+  "version": "0.0.27",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -13,19 +13,19 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsync"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
+    "codegen:buf": "buf generate proto",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-db.sh jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": "buf generate proto"
+    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -45,8 +45,15 @@
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@types/pg": "^8.6.6",
     "get-port": "^5.1.1",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "ts-node": "^10.8.2",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

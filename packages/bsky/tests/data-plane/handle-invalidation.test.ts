@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
@@ -37,7 +38,7 @@ describe('handle invalidation', () => {
       }
       return origResolve(handle)
     }
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

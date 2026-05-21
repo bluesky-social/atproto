@@ -1,5 +1,5 @@
 import { MemberCommitData, SpaceMembersStorage } from '@atproto/space'
-import { SpaceTransactor } from './transactor'
+import { SpaceTransactor } from './transactor.js'
 
 export class SqlMembersStorage implements SpaceMembersStorage {
   constructor(

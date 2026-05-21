@@ -1,6 +1,6 @@
 import { NativeModule, requireNativeModule } from 'expo'
 import { SignedJwt, VerifyOptions, VerifyResult } from '@atproto/oauth-client'
-import { ExpoAtprotoOAuthClientModuleEvents } from './ExpoAtprotoOAuthClientModule.types'
+import { ExpoAtprotoOAuthClientModuleEvents } from './ExpoAtprotoOAuthClientModule.types.js'
 
 export type NativeJwk = {
   kty: 'EC'

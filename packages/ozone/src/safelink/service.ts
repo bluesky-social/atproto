@@ -5,9 +5,9 @@ import {
   SafelinkActionType,
   SafelinkPatternType,
   SafelinkReasonType,
-} from '../api/util'
-import { Database } from '../db'
-import { SafelinkEvent, SafelinkRule } from '../db/schema/safelink'
+} from '../api/util.js'
+import { Database } from '../db/index.js'
+import { SafelinkEvent, SafelinkRule } from '../db/schema/safelink.js'
 
 export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
 

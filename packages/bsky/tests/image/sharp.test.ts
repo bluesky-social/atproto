@@ -1,11 +1,12 @@
 import { createReadStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
+import { describe, expect, it } from 'vitest'
 import {
   Options,
   createImageProcessor,
   createImageUpscaler,
   getInfo,
-} from '../../src/image/sharp'
+} from '../../src/image/sharp.js'
 
 describe('sharp image processor', () => {
   it('scales up to cover.', async () => {

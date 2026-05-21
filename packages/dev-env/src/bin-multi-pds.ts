@@ -1,10 +1,10 @@
-import './env'
+import './env.js'
 import getPort from 'get-port'
-import { IntrospectServer } from './introspect'
-import { TestPds } from './pds'
-import { TestPlc } from './plc'
-import { LexiconAuthorityProfile } from './service-profile-lexicon'
-import { mockMailer, mockNetworkUtilities } from './util'
+import { IntrospectServer } from './introspect.js'
+import { TestPds } from './pds.js'
+import { TestPlc } from './plc.js'
+import { LexiconAuthorityProfile } from './service-profile-lexicon.js'
+import { mockMailer, mockNetworkUtilities } from './util.js'
 
 const INTROSPECT_PORT = 2581
 const PRIMARY_PDS_PORT = 2583

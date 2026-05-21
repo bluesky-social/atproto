@@ -1,12 +1,12 @@
-import { OzoneConfig, OzoneSecrets } from '../config'
-import { AppContextOptions } from '../context'
-import { DaemonContext } from './context'
+import { OzoneConfig, OzoneSecrets } from '../config/index.js'
+import { AppContextOptions } from '../context.js'
+import { DaemonContext } from './context.js'
 
-export { EventPusher } from './event-pusher'
-export { BlobDiverter } from './blob-diverter'
-export { EventReverser } from './event-reverser'
-export { ScheduledActionProcessor } from './scheduled-action-processor'
-export { StrikeExpiryProcessor } from './strike-expiry-processor'
+export { EventPusher } from './event-pusher.js'
+export { BlobDiverter } from './blob-diverter.js'
+export { EventReverser } from './event-reverser.js'
+export { ScheduledActionProcessor } from './scheduled-action-processor.js'
+export { StrikeExpiryProcessor } from './strike-expiry-processor.js'
 
 export class OzoneDaemon {
   constructor(public ctx: DaemonContext) {}

@@ -1,9 +1,9 @@
 import { NsidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { formatListCursor } from '../../../../actor-store/space/reader'
-import { AppContext } from '../../../../context'
+import { formatListCursor } from '../../../../actor-store/space/reader.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util'
+import { assertSpaceScope } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRecords, {

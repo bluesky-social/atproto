@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
-import { ActorDb } from '../db'
+import { ActorDb } from '../db/index.js'
 
 // Cursor is `${collection}/${rkey}`. Parser is lenient — returns null for a
 // malformed cursor so callers can choose to ignore it instead of 500ing.

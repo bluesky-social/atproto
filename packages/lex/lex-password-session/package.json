@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex-password-session",
-  "version": "0.0.13",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Password based client authentication for AT Lexicons",
   "keywords": [
@@ -23,14 +26,10 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": "./dist/index.js",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },

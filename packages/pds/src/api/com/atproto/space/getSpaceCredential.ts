@@ -3,7 +3,7 @@ import { getDidKeyFromMultibase } from '@atproto/identity'
 import { createSpaceCredential, verifyMemberGrant } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

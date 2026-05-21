@@ -769,10 +769,10 @@ describe('StringSchema', () => {
   })
 
   it('properly types knownValues in parameters', () => {
-    const schema = string({
+    const _schema = string({
       knownValues: ['active', 'inactive'],
     })
-    type SchemaType = Infer<typeof schema>
+    type SchemaType = Infer<typeof _schema>
     expectTypeOf<{
       foo: SchemaType
     }>().toMatchObjectType<{
@@ -796,8 +796,8 @@ describe('StringSchema', () => {
   })
 
   it('type string<any>() as string', () => {
-    const schema = string<any>()
-    type SchemaType = Infer<typeof schema>
+    const _schema = string<any>()
+    type SchemaType = Infer<typeof _schema>
     expectTypeOf<{
       foo: SchemaType
     }>().toMatchObjectType<{
@@ -806,8 +806,8 @@ describe('StringSchema', () => {
   })
 
   it('type string<StringSchemaOptions>({}) as string', () => {
-    const schema = string<StringSchemaOptions>({})
-    type SchemaType = Infer<typeof schema>
+    const _schema = string<StringSchemaOptions>({})
+    type SchemaType = Infer<typeof _schema>
     expectTypeOf<{
       foo: SchemaType
     }>().toMatchObjectType<{

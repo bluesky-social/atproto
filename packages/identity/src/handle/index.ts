@@ -1,5 +1,5 @@
-import dns from 'node:dns/promises'
-import { HandleResolverOpts } from '../types'
+import * as dns from 'node:dns/promises'
+import { HandleResolverOpts } from '../types.js'
 
 const SUBDOMAIN = '_atproto'
 const PREFIX = 'did='

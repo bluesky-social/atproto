@@ -5,10 +5,10 @@ import {
   OAuthSession,
   RuntimeImplementation,
 } from '@atproto/oauth-client'
-import { default as NativeModule } from './ExpoAtprotoOAuthClientModule'
-import { ExpoOAuthClientInterface } from './expo-oauth-client-interface'
-import { ExpoOAuthClientOptions } from './expo-oauth-client-options'
-import { ExpoKey } from './utils/expo-key'
+import { default as NativeModule } from './ExpoAtprotoOAuthClientModule.js'
+import { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
+import { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
+import { ExpoKey } from './utils/expo-key.js'
 import {
   AuthorizationServerMetadataCache,
   DidCache,
@@ -17,14 +17,15 @@ import {
   ProtectedResourceMetadataCache,
   SessionStore,
   StateStore,
-} from './utils/stores'
+} from './utils/stores.js'
 
 export const CUSTOM_URI_SCHEME_REGEX = /^(?:[^.]+(?:\.[^.]+)+):\/(?:[^/].*)?$/
 const isCustomUriScheme = (uri: string) => CUSTOM_URI_SCHEME_REGEX.test(uri)
 
 const runtimeImplementation: RuntimeImplementation = {
   createKey: async (algs) => ExpoKey.generate(algs),
-  digest: async (bytes, { name }) => NativeModule.digest(bytes, name),
+  digest: async (bytes, { name }) =>
+    NativeModule.digest(bytes, name) as Promise<Uint8Array<ArrayBuffer>>,
   getRandomValues: async (length) => NativeModule.getRandomValues(length),
 }
 

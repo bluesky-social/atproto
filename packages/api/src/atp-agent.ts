@@ -7,21 +7,21 @@ import {
   XrpcClient,
   errorResponseBody,
 } from '@atproto/xrpc'
-import { Agent } from './agent'
+import { Agent } from './agent.js'
 import {
   ComAtprotoServerCreateAccount,
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
   ComAtprotoServerNS,
   ComAtprotoServerRefreshSession,
-} from './client'
-import { schemas } from './client/lexicons'
-import { SessionManager } from './session-manager'
+} from './client/index.js'
+import { schemas } from './client/lexicons.js'
+import { SessionManager } from './session-manager.js'
 import {
   AtpAgentLoginOpts,
   AtpPersistSessionHandler,
   AtpSessionData,
-} from './types'
+} from './types.js'
 
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream

@@ -31,7 +31,7 @@
         "createdAt": { "type": "string", "format": "datetime" }
       }
     },
-    "groupPublicView": {
+    "joinLinkPreviewView": {
       "type": "object",
       "required": ["name", "owner", "memberCount", "requireApproval"],
       "properties": {
@@ -41,7 +41,12 @@
           "ref": "chat.bsky.actor.defs#profileViewBasic"
         },
         "memberCount": { "type": "integer" },
-        "requireApproval": { "type": "boolean" }
+        "requireApproval": { "type": "boolean" },
+        "convo": {
+          "type": "ref",
+          "ref": "chat.bsky.convo.defs#convoView",
+          "description": "Present only if the request is authenticated and the user is a member of the group."
+        }
       }
     },
     "joinRequestView": {

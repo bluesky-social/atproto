@@ -6,13 +6,13 @@ import {
   MethodNotImplementedError,
   Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { KwsExternalPayloadError } from '../../../../kws'
+import { AppContext } from '../../../../context.js'
+import { KwsExternalPayloadError } from '../../../../kws.js'
 import { app } from '../../../../lexicons/index.js'
-import { httpLogger as log } from '../../../../logger'
-import { ActorInfo } from '../../../../proto/bsky_pb'
-import { KwsExternalPayload } from '../../../kws/types'
-import { createStashEvent, getClientUa } from '../../../kws/util'
+import { httpLogger as log } from '../../../../logger.js'
+import { ActorInfo } from '../../../../proto/bsky_pb.js'
+import { KwsExternalPayload } from '../../../kws/types.js'
+import { createStashEvent, getClientUa } from '../../../kws/util.js'
 
 type InputSchema = app.bsky.unspecced.initAgeAssurance.$InputBody
 

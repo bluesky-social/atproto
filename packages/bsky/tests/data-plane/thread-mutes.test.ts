@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 
@@ -24,7 +25,7 @@ describe('thread mutes', () => {
     rootPost = (await sc.post(alice, 'root post')).ref
     replyPost = (await sc.reply(alice, rootPost, rootPost, 'first reply')).ref
     await network.processAll()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

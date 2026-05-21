@@ -1,10 +1,10 @@
 import { cidForLex } from '@atproto/lex-cbor'
 import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { SqlRepoStorage } from '../../../../actor-store/space'
-import { AppContext } from '../../../../context'
+import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, fireNotifyWrite } from './util'
+import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.putRecord, {

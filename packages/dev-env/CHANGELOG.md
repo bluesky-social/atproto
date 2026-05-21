@@ -1,5 +1,71 @@
 # @atproto/dev-env
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854), [`4801600`](https://github.com/bluesky-social/atproto/commit/48016005155c9cecabf3fa9d5e9b3555e84e2dca), [`571582e`](https://github.com/bluesky-social/atproto/commit/571582ea9b1aea56938b8f24daaf49e197a987ef), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86), [`53b1e07`](https://github.com/bluesky-social/atproto/commit/53b1e0731ee0d13c350dd96cbcab88447eaad441)]:
+  - @atproto/api@0.20.1
+  - @atproto/sync@0.3.1
+  - @atproto/bsync@0.0.27
+  - @atproto/bsky@0.0.232
+  - @atproto/pds@0.4.225
+  - @atproto/ozone@0.1.176
+  - @atproto/lex@0.1.1
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/bsky@0.0.231
+  - @atproto/bsync@0.0.26
+  - @atproto/ozone@0.1.175
+  - @atproto/pds@0.4.224
+  - @atproto/api@0.20.0
+  - @atproto/common-web@0.5.0
+  - @atproto/crypto@0.5.0
+  - @atproto/identity@0.5.0
+  - @atproto/lex@0.1.0
+  - @atproto/lexicon@0.7.0
+  - @atproto/sync@0.3.0
+  - @atproto/syntax@0.6.0
+  - @atproto/xrpc-server@0.11.0
+
+## 0.4.9
+
+### Patch Changes
+
+- Updated dependencies [[`cb13878`](https://github.com/bluesky-social/atproto/commit/cb1387899f0b296759ebdf5b8985b6b573091a9a), [`ea4184b`](https://github.com/bluesky-social/atproto/commit/ea4184b9beb9821d806a9540223dab55c2628184), [`04d727c`](https://github.com/bluesky-social/atproto/commit/04d727c69a2683ea15eff70d9d0bb6aa25452778), [`38bc2fa`](https://github.com/bluesky-social/atproto/commit/38bc2faa142d42f95c5b89b5a10bf8ed607fe39f)]:
+  - @atproto/api@0.19.19
+  - @atproto/pds@0.4.223
+  - @atproto/lex@0.0.27
+  - @atproto/xrpc-server@0.10.22
+  - @atproto/bsky@0.0.230
+  - @atproto/sync@0.2.4
+
+## 0.4.8
+
+### Patch Changes
+
+- Updated dependencies [[`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42), [`733d557`](https://github.com/bluesky-social/atproto/commit/733d557d8314265d2c9bdee8d77ba49941dc5d81), [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3)]:
+  - @atproto/api@0.19.17
+  - @atproto/bsky@0.0.229
+  - @atproto/pds@0.4.222
+  - @atproto/lex@0.0.26
+  - @atproto/xrpc-server@0.10.21
+  - @atproto/sync@0.2.3
+
 ## 0.4.7
 
 ### Patch Changes

@@ -5,6 +5,7 @@
   ],
   "compilerOptions": {
     "rootDir": "src",
+    "types": ["vite/client"],
     "paths": {
       "#/*": ["./src/*"]
     }

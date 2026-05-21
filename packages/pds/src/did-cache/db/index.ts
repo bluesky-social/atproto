@@ -1,8 +1,8 @@
-import { Database, Migrator } from '../../db'
-import migrations from './migrations'
-import { DidCacheSchema } from './schema'
+import { Database, Migrator } from '../../db/index.js'
+import migrations from './migrations.js'
+import { DidCacheSchema } from './schema.js'
 
-export * from './schema'
+export * from './schema.js'
 
 export type DidCacheDb = Database<DidCacheSchema>
 

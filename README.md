@@ -36,12 +36,12 @@ Go programming language source code is in [bluesky-social/indigo](https://github
 
 ## Developer Quickstart
 
-We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 18. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
+We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 22 or later. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
 
 There is a Makefile which can help with basic development tasks:
 
 ```shell
-# use existing nvm to install node 18 and pnpm
+# use existing nvm to install node 22 and pnpm
 make nvm-setup
 
 # pull dependencies and build all local packages

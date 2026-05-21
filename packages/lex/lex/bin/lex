@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
 /* eslint-env node */
-/* eslint-disable @typescript-eslint/no-var-requires */
 
 // This file is referenced by the "bin" field in package.json. Because of that,
 // we need this file to exist on disk even before the project is built, so it is
 // written in plain JS. This allows package managers to properly link the CLI
 // command when the monorepo is being setup (during initial "pnpm install").
 
-const yargs = require('yargs')
-const { hideBin } = require('yargs/helpers')
-const { build } = require('@atproto/lex-builder')
-const { install } = require('@atproto/lex-installer')
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
+import { build } from '@atproto/lex-builder'
+import { install } from '@atproto/lex-installer'
 
 yargs(hideBin(process.argv))
   .strict()
@@ -52,12 +51,6 @@ yargs(hideBin(process.argv))
           default: false,
           describe: 'how to handle errors when processing input files',
         },
-        'pure-annotations': {
-          type: 'boolean',
-          default: false,
-          describe:
-            'adds `/*#__PURE__*/` annotations for tree-shaking tools. Set this to true if you are using generated lexicons in a library.',
-        },
         exclude: {
           array: true,
           type: 'string',
@@ -93,6 +86,18 @@ yargs(hideBin(process.argv))
           default: false,
           describe:
             'generate an "index.<fileExt>" file that exports all root-level namespaces',
+        },
+        defsExport: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'when some definitions conflict with child namespaces, this option allows to export lexicon definitions under a separate $defs namespace (e.g. com.example.foo.$defs)',
+        },
+        defaultExport: {
+          type: 'boolean',
+          default: true,
+          describe:
+            'whether to generate a default export for the "main" lexicon definition schema in the parent namespace file',
         },
         ignoreInvalidLexicons: {
           type: 'boolean',

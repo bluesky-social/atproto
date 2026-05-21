@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { Outbox } from '../../sequencer/outbox'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { Outbox } from '../../sequencer/outbox.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.subscribeLabels(async function* ({

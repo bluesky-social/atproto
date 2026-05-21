@@ -1,8 +1,8 @@
 import { isDidString } from '@atproto/lex'
 import { DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { baseNormalizeAndValidate } from '../../../../handle'
+import { AppContext } from '../../../../context.js'
+import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

@@ -7,8 +7,8 @@ import {
   AccessOutput,
   OAuthOutput,
   SpaceCredentialOutput,
-} from '../../../../auth-output'
-import { AppContext } from '../../../../context'
+} from '../../../../auth-output.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 /**

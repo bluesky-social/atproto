@@ -1,10 +1,10 @@
 import events from 'node:events'
 import http from 'node:http'
 import express from 'express'
-import { TestBsky } from './bsky'
-import { TestOzone } from './ozone'
-import { TestPds } from './pds'
-import { TestPlc } from './plc'
+import { TestBsky } from './bsky.js'
+import { TestOzone } from './ozone.js'
+import { TestPds } from './pds.js'
+import { TestPlc } from './plc.js'
 
 export type LexiconAuthorityIntrospection = {
   did: string

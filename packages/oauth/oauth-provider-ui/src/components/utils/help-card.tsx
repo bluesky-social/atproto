@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
 import { Override } from '#/lib/util.ts'
-import { LinkAnchor } from './link-anchor'
+import { LinkAnchor } from './link-anchor.js'
 
 export type HelpCardProps = Override<
   Omit<JSX.IntrinsicElements['p'], 'children'>,

@@ -1,6 +1,9 @@
 {
   "name": "@atproto/api",
-  "version": "0.19.16",
+  "version": "0.20.2",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [
@@ -14,29 +17,35 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/api"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
-    "prebuild": "node ./scripts/generate-code.mjs && ([ -f ./src/client/index.ts ] || pnpm run codegen)",
+    "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
+    "codegen:code": "node ./scripts/generate-code.mjs",
+    "prebuild": "pnpm run codegen:code && if [ ! -f ./src/client/index.ts ] || [ -n \"$(find ../../lexicons -name '*.json' -newer ./src/client/index.ts -type f -print -quit)\" ]; then pnpm run codegen:lex; fi",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
-    "await-lock": "^2.2.2",
-    "multiformats": "^9.9.0",
+    "await-lock": "^3.0.0",
+    "multiformats": "^13.0.0",
     "tlds": "^1.234.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "@jest/globals": "^28.1.3",
-    "jest": "^28.1.2",
+    "jest": "^30.0.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

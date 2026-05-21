@@ -1,7 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getFollowSuggestions(req) {

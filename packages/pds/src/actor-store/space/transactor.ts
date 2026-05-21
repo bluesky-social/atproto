@@ -6,8 +6,8 @@ import {
   MemberOpAction,
   WriteOpAction,
 } from '@atproto/space'
-import { ActorDb } from '../db'
-import { SpaceReader } from './reader'
+import { ActorDb } from '../db/index.js'
+import { SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {
   constructor(public db: ActorDb) {

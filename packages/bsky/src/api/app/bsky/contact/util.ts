@@ -4,8 +4,8 @@ import {
   InvalidRequestError,
   MethodNotImplementedError,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../..'
-import { RolodexClient } from '../../../../rolodex'
+import { AppContext } from '../../../../index.js'
+import { RolodexClient } from '../../../../rolodex.js'
 
 export function assertRolodexOrThrowUnimplemented(
   ctx: AppContext,

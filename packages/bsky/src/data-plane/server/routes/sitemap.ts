@@ -1,7 +1,7 @@
 import { gzipSync } from 'node:zlib'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { GetSitemapPageRequest } from '../../../proto/bsky_pb'
+import { Service } from '../../../proto/bsky_connect.js'
+import { GetSitemapPageRequest } from '../../../proto/bsky_pb.js'
 
 const MOCK_SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

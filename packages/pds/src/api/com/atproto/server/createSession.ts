@@ -5,11 +5,11 @@ import {
   MethodRateLimit,
   Server,
 } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager'
-import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
-import { AppContext } from '../../../../context'
+import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { didDocForSession } from './util'
+import { didDocForSession } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { entrywayClient } = ctx

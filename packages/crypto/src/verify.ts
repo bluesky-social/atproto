@@ -1,7 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
-import { parseDidKey } from './did'
-import { plugins } from './plugins'
-import { VerifyOptions } from './types'
+import { parseDidKey } from './did.js'
+import { plugins } from './plugins.js'
+import { VerifyOptions } from './types.js'
 
 export const verifySignature = (
   didKey: string,

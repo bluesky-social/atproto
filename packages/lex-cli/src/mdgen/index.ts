@@ -13,7 +13,7 @@ export async function process(outFilePath: string, lexicons: LexiconDoc[]) {
   let existingContent = ''
   try {
     existingContent = fs.readFileSync(outFilePath, 'utf8')
-  } catch (e) {
+  } catch {
     // ignore - no existing content
   }
   const fileLines: StringTree = existingContent.split('\n')

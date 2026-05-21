@@ -1,3 +1,9 @@
+import * as isoDatestringValidator from 'iso-datestring-validator'
+
+// Node ESM interop wraps "iso-datestring-validator" as { default: { ... } }
+// @TODO Remove "iso-datestring-validator" dependency
+const { isValidISODateString } = ((m) => m.default ?? m)(isoDatestringValidator)
+
 /**
  * Indicates a date or string is not a valid representation of a datetime
  * according to the atproto
@@ -117,6 +123,35 @@ export function asDatetimeString<I>(input: I): I & DatetimeString {
  */
 export function isDatetimeString<I>(input: I): input is I & DatetimeString {
   return parseString(input).success
+}
+
+/**
+ * Matches any ISO-ish datetime string. This is a more lenient check than
+ * the strict {@link isDatetimeString} guard, which only allows datetimes that
+ * fully conform to the AT Protocol specification (e.g. must include timezone).
+ */
+export function isDatetimeStringLenient<I>(
+  input: I,
+): input is I & DatetimeString {
+  // @NOTE the returned type assertion is inaccurate wrt. the DatetimeString
+  // type definition. A more accurate solution would be to use a branded type
+  // instead of a template literal for the "datetime" format
+
+  if (typeof input !== 'string') return false
+
+  try {
+    if (isValidISODateString(input)) return true
+  } catch {
+    // isValidISODateString can throw on some inputs.
+  }
+
+  // @NOTE The "iso-datestring-validator" implementation is *not* compliant with
+  // the AT Protocol datetime specification. In particular, it rejects some
+  // valid AT Protocol datetimes (eg: "1985-04-12T23:20:50.1235678912345Z",
+  // "1985-04-12T23:20:50.123+01:45", "1985-04-12T23:20:50.1234567890Z"). For
+  // this reason, we run "isDatetimeString" validation if "isValidISODateString"
+  // does not return true.
+  return isDatetimeString(input)
 }
 
 /**

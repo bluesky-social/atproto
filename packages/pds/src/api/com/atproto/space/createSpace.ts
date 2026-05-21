@@ -2,10 +2,10 @@ import { TID } from '@atproto/common'
 import { MemberOpAction, SpaceMembers } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { SqlMembersStorage } from '../../../../actor-store/space'
-import { AppContext } from '../../../../context'
+import { SqlMembersStorage } from '../../../../actor-store/space/index.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util'
+import { assertSpaceScope } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.createSpace, {

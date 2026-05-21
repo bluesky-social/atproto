@@ -5,13 +5,13 @@ import {
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedPost,
-} from '../../client'
-import { $Typed } from '../../client/util'
-import { ModerationDecision } from '../decision'
-import { MuteWordMatch, matchMuteWords } from '../mutewords'
-import { ModerationOpts, ModerationSubjectPost } from '../types'
-import { decideAccount } from './account'
-import { decideProfile } from './profile'
+} from '../../client/index.js'
+import { $Typed } from '../../client/util.js'
+import { ModerationDecision } from '../decision.js'
+import { MuteWordMatch, matchMuteWords } from '../mutewords.js'
+import { ModerationOpts, ModerationSubjectPost } from '../types.js'
+import { decideAccount } from './account.js'
+import { decideProfile } from './profile.js'
 
 export function decidePost(
   subject: ModerationSubjectPost,
