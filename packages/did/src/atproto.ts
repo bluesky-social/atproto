@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { DidDocument, DidService } from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
 import { Did } from './did.js'
-import { canParse, isFragment } from './lib/uri.js'
+import { canParse } from './lib/uri.js'
 import {
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
@@ -115,16 +115,6 @@ function isDidWebWithHttpsPort(did: Did<'web'>): boolean {
   return hasPort
 }
 
-export type AtprotoAudience = `${AtprotoDid}#${string}`
-export const isAtprotoAudience = (value: unknown): value is AtprotoAudience => {
-  if (typeof value !== 'string') return false
-  const hashIndex = value.indexOf('#')
-  if (hashIndex === -1) return false
-  if (value.indexOf('#', hashIndex + 1) !== -1) return false
-  return (
-    isFragment(value, hashIndex + 1) && isAtprotoDid(value.slice(0, hashIndex))
-  )
-}
 
 export type AtprotoData<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
