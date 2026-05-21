@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.3
+
+### Patch Changes
+
+- [#4985](https://github.com/bluesky-social/atproto/pull/4985) [`604e16d`](https://github.com/bluesky-social/atproto/commit/604e16dda2972f0e17cedefc49dafd4ecbfda8f9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update fields that are always present on `viewExternalSource`
+
 ## 0.20.2
 
 ### Patch Changes

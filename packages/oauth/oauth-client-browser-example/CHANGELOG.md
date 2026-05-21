@@ -1,5 +1,11 @@
 # @atproto/oauth-client-browser-example
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4980](https://github.com/bluesky-social/atproto/pull/4980) [`482767c`](https://github.com/bluesky-social/atproto/commit/482767c4bcce95aa390b2992b028fd8e27d162b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve bundle size
+
 ## 0.1.0
 
 ### Minor Changes
