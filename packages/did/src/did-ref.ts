@@ -15,6 +15,7 @@ export const isAtprotoDidRefAbsolute = (
   if (typeof value !== 'string') return false
   const hashIndex = value.indexOf('#')
   if (hashIndex === -1) return false
+  if (hashIndex === value.length - 1) return false
   if (value.indexOf('#', hashIndex + 1) !== -1) return false
   return (
     isFragment(value, hashIndex + 1) &&
