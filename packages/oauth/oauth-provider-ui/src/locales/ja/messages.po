@@ -169,7 +169,7 @@ msgid "Authorize"
 msgstr ""
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:128
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr ""
@@ -490,7 +490,7 @@ msgstr ""
 msgid "just now"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:140
+#: src/pages/account/(authenticated)/apps/page.tsx:137
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr ""
@@ -666,7 +666,7 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:50
+#: src/components/forms/button-cooldown.tsx:60
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr ""
 
@@ -721,11 +721,11 @@ msgstr "パスワードをリセット"
 msgid "Retry"
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:75
+#: src/components/forms/button-cooldown.tsx:85
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:151
+#: src/pages/account/(authenticated)/apps/page.tsx:148
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr ""
