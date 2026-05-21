@@ -87,6 +87,12 @@ yargs(hideBin(process.argv))
           describe:
             'generate an "index.<fileExt>" file that exports all root-level namespaces',
         },
+        defsExport: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'when some definitions conflict with child namespaces, this option allows to export lexicon definitions under a separate $defs namespace (e.g. com.example.foo.$defs)',
+        },
         ignoreInvalidLexicons: {
           type: 'boolean',
           default: false,
