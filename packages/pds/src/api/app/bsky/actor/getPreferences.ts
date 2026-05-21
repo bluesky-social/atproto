@@ -2,7 +2,11 @@ import { Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
 import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
+import {
+  bareDidFromProxyTo,
+  computeProxyTo,
+  pipethrough,
+} from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
@@ -13,8 +17,8 @@ export default function (server: Server, ctx: AppContext) {
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
         const lxm = app.bsky.actor.getPreferences.$lxm
-        const aud = computeProxyTo(ctx, req, lxm)
-        permissions.assertRpc({ aud, lxm })
+        const scopeAud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud: scopeAud, lxm })
       },
     }),
     handler: async ({ auth, req }) => {
@@ -24,9 +28,14 @@ export default function (server: Server, ctx: AppContext) {
       // we need to proxy the request to the requested app view.
       // @TODO This behavior should not be implemented as part of the XRPC framework
       const lxm = app.bsky.actor.getPreferences.$lxm
-      const aud = computeProxyTo(ctx, req, lxm)
-      if (aud !== `${bskyAppView.did}#bsky_appview`) {
-        return pipethrough(ctx, req, { iss: did, aud, lxm })
+      const scopeAud = computeProxyTo(ctx, req, lxm)
+      if (scopeAud !== `${bskyAppView.did}#bsky_appview`) {
+        // Phase 1 of service auth updates: outbound JWT keeps bare-DID aud.
+        return pipethrough(ctx, req, {
+          iss: did,
+          aud: bareDidFromProxyTo(scopeAud),
+          lxm,
+        })
       }
 
       const hasAccessFull =

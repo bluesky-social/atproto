@@ -222,6 +222,13 @@ export function computeProxyTo(
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
+// Bare-DID portion of `proxyTo`, suitable as a service-auth JWT audience
+// (Phase 1 of service auth updates).
+export function bareDidFromProxyTo(proxyTo: string): string {
+  const hashIndex = proxyTo.indexOf('#')
+  return hashIndex === -1 ? proxyTo : proxyTo.slice(0, hashIndex)
+}
+
 export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
