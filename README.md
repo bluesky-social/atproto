@@ -8,8 +8,8 @@ This repository contains Bluesky's reference implementation of AT Protocol, and 
 
 **TypeScript Packages:**
 
-| Package                                                                       | Docs                                       | NPMX                                                                                                            |
-| ----------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Package                                                                       | Docs                                       | NPMX                                                                                                       |
+| ----------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
 | `@atproto/api`: client library                                                | [README](./packages/api/README.md)         | [![NPM](https://img.shields.io/npm/v/@atproto/api)](https://npmx.dev/package/@atproto/api)                 |
 | `@atproto/common-web`: shared code and helpers which can run in web browsers  | [README](./packages/common-web/README.md)  | [![NPM](https://img.shields.io/npm/v/@atproto/common-web)](https://npmx.dev/package/@atproto/common-web)   |
 | `@atproto/common`: shared code and helpers which doesn't work in web browsers | [README](./packages/common/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/common)](https://npmx.dev/package/@atproto/common)           |
