@@ -16,6 +16,12 @@ export type ButtonCooldownProps = Override<
 >
 
 export function ButtonCooldown({
+  // RateLimitedActionOptions
+  action,
+  cooldownSeconds,
+  initialCooldown,
+
+  // ButtonProps
   children,
   onClick,
   disabled = false,
@@ -23,7 +29,11 @@ export function ButtonCooldown({
   ...props
 }: ButtonCooldownProps) {
   const { t } = useLingui()
-  const handler = useRateLimitedAction(props)
+  const handler = useRateLimitedAction({
+    action,
+    cooldownSeconds,
+    initialCooldown,
+  })
   const [isHovered, setIsHovered] = useState(false)
   const remainingSeconds = Math.ceil(handler.remaining)
   const isCoolingDown = !disabled && handler.disabled

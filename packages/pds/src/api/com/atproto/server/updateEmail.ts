@@ -7,9 +7,12 @@ import { requestEmailUpdateAuth } from './requestEmailUpdate.js'
 export default function (server: Server, ctx: AppContext) {
   const { entrywayClient } = ctx
 
+  // @NOTE Ensure that both endpoints use the same authentication logic
+  const auth = requestEmailUpdateAuth(ctx)
+
   if (entrywayClient) {
     server.add(com.atproto.server.updateEmail, {
-      auth: requestEmailUpdateAuth(ctx),
+      auth,
       handler: async ({ auth, input: { body }, req }) => {
         const { headers } = await ctx.entrywayAuthHeaders(
           req,
@@ -25,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
     })
   } else {
     server.add(com.atproto.server.updateEmail, {
-      auth: requestEmailUpdateAuth(ctx),
+      auth,
       handler: async ({ auth, input: { body } }) => {
         const did = auth.credentials.did
         const { token, email } = body

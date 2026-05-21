@@ -23,14 +23,15 @@ const API_ENDPOINT_PREFIX = '/@atproto/oauth-provider/~api'
 export type ApiOptions = JsonClientOptions<ApiEndpoints>
 
 export class Api extends JsonClient<ApiEndpoints> {
-  constructor(readonly options: ApiOptions = {}) {
+  constructor(options: ApiOptions = {}) {
     const baseUrl = new URL(API_ENDPOINT_PREFIX, window.origin).toString()
     super(baseUrl, {
       ...options,
-      headers: async () => ({
-        ...(await options?.headers?.()),
-        [CSRF_HEADER_NAME]: readCookie(CSRF_COOKIE_NAME),
-      }),
+      headers: async function () {
+        const optionsHeaders = await options?.headers?.call(this)
+        const csrfToken = readCookie(CSRF_COOKIE_NAME)
+        return { ...optionsHeaders, [CSRF_HEADER_NAME]: csrfToken }
+      },
     })
   }
 
