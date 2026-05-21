@@ -42,6 +42,23 @@ export type LexBuilderOptions = LexDefBuilderOptions & {
    * @default '.ts'
    */
   fileExt?: string
+  /**
+   * Whether to export the whole defs file as a namespace export (`export * as
+   * $defs from './xyz.defs.js'`). This is useful to have an escape hatch to
+   * access the definitions in case of name conflicts with child namespaces.
+   *
+   * For example if two documents with if `com.example.foo` and
+   * `com.example.foo.bar` coexist, the `com.example.foo.bar` namespace would
+   * shadow any `bar` definition from the `com.example.foo` namespace. In that
+   * case, having the `$defs` namespace export allows to still access those
+   * definitions via `com.example.foo.$defs.bar`.
+   *
+   * @note enabling this will negatively impact bundle size because and
+   * additional namespace object will be generated for each lexicon document.
+   *
+   * @default false
+   */
+  defsExport?: boolean
 }
 
 /**
@@ -221,15 +238,17 @@ export class LexBuilder {
       moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
     })
 
-    // @NOTE Individual exports exports from the defs file might conflict with
-    // child namespaces. For this reason, we also add a namespace export for the
-    // defs (export * as $defs from './xyz.defs.js'). This is an escape hatch
-    // allowing to still access the definitions if a hash get shadowed by a
-    // child namespace.
-    file.addExportDeclaration({
-      moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
-      namespaceExport: '$defs',
-    })
+    if (this.options.defsExport) {
+      // @NOTE Individual exports exports from the defs file might conflict with
+      // child namespaces. For this reason, we also add a namespace export for the
+      // defs (export * as $defs from './xyz.defs.js'). This is an escape hatch
+      // allowing to still access the definitions if a hash get shadowed by a
+      // child namespace.
+      file.addExportDeclaration({
+        moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
+        namespaceExport: '$defs',
+      })
+    }
   }
 
   private async createDefsFile(
