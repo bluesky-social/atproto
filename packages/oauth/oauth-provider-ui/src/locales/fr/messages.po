@@ -26,7 +26,7 @@ msgid "{deltaMinutes} minutes ago"
 msgstr "il y a {deltaMinutes} minutes"
 
 #. placeholder {0}: account.email
-#: src/pages/account/(authenticated)/route.tsx:189
+#: src/pages/account/(authenticated)/route.tsx:198
 msgid "<0>{0}</0> has not been verified yet."
 msgstr "<0>{0}</0> n'a pas encore été vérifié."
 
@@ -82,11 +82,11 @@ msgstr "Un second facteur d'authentification est requis"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "Un service contrôlé par <0>{domain}</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:103
+#: src/pages/account/(authenticated)/route.tsx:112
 msgid "About"
 msgstr "À propos"
 
-#: src/pages/account/(authenticated)/route.tsx:61
+#: src/pages/account/(authenticated)/route.tsx:63
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Compte utilisateur"
@@ -143,7 +143,7 @@ msgstr "N'importe quelle action"
 msgid "Any service"
 msgstr "N'importe quel service"
 
-#: src/pages/account/(authenticated)/route.tsx:74
+#: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr "Applications"
 
@@ -183,6 +183,7 @@ msgstr "Autorisé le {0}"
 msgid "Back"
 msgstr "Retour"
 
+#: src/components/update-handle-view.tsx:104
 #: src/components/sign-up-handle-form.tsx:125
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
@@ -233,13 +234,17 @@ msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:89
+#: src/pages/account/(authenticated)/route.tsx:98
 msgid "Change your account email address"
 msgstr "Changer l'adresse email de votre compte"
 
-#: src/pages/account/(authenticated)/route.tsx:82
+#: src/pages/account/(authenticated)/route.tsx:84
 msgid "Change your account password"
 msgstr "Changer le mot de passe de votre compte"
+
+#: src/pages/account/(authenticated)/route.tsx:91
+msgid "Change your account username"
+msgstr "Modifier le nom d'utilisateur de votre compte"
 
 #: src/components/utils/scope-description.tsx:378
 msgid "Chat"
@@ -326,11 +331,11 @@ msgstr "Refuser l'accès"
 msgid "Details"
 msgstr "Détails"
 
-#: src/pages/account/(authenticated)/route.tsx:67
+#: src/pages/account/(authenticated)/route.tsx:69
 msgid "Devices"
 msgstr "Appareils"
 
-#: src/pages/account/(authenticated)/route.tsx:88
+#: src/pages/account/(authenticated)/route.tsx:97
 #: src/components/sign-up-account-form.tsx:114
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
@@ -428,6 +433,10 @@ msgstr "Échec de la révocation de l'accès"
 msgid "Failed to send verification email"
 msgstr "Échec de l'envoi de l'email de vérification"
 
+#: src/data/handle.ts:40
+msgid "Failed to update username"
+msgstr "Échec de la modification du nom d'utilisateur"
+
 #: src/data/email.ts:126
 msgid "Failed to verify email"
 msgstr "Échec de la vérification de l'adresse email"
@@ -468,6 +477,7 @@ msgstr "Identité"
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
+#: src/components/update-handle-view.tsx:216
 #: src/components/sign-up-handle-form.tsx:254
 msgid "Invalid"
 msgstr "Invalide"
@@ -528,7 +538,7 @@ msgstr "loopback"
 msgid "Make visible"
 msgstr "Rendre visible"
 
-#: src/pages/account/(authenticated)/route.tsx:75
+#: src/pages/account/(authenticated)/route.tsx:77
 msgid "Manage applications that have access to your account"
 msgstr "Gérer les applications qui ont accès à votre compte"
 
@@ -536,7 +546,7 @@ msgstr "Gérer les applications qui ont accès à votre compte"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
 
-#: src/pages/account/(authenticated)/route.tsx:68
+#: src/pages/account/(authenticated)/route.tsx:70
 msgid "Manage your active sessions"
 msgstr "Gérer vos sessions actives"
 
@@ -560,7 +570,7 @@ msgstr "Manquant"
 msgid "Moderate"
 msgstr "Modéré"
 
-#: src/pages/account/(authenticated)/route.tsx:172
+#: src/pages/account/(authenticated)/route.tsx:181
 msgid "My Atmosphere Account"
 msgstr "Mon compte Atmosphère"
 
@@ -593,15 +603,21 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "Aucun email associé à ce compte. La réinitialisation du mot de passe n'est pas disponible."
 
+#: src/pages/account/(authenticated)/handle/page.tsx:18
+msgctxt "HandleChange"
+msgid "No username associated with this account."
+msgstr "Aucun nom d'utilisateur n'est associé à ce compte."
+
 #: src/components/reset-password-view.tsx:116
 msgid "Okay"
 msgstr "OK"
 
+#: src/components/update-handle-view.tsx:109
 #: src/components/sign-up-handle-form.tsx:130
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
-#: src/pages/account/(authenticated)/route.tsx:81
+#: src/pages/account/(authenticated)/route.tsx:83
 #: src/components/sign-up-account-form.tsx:128
 #: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
@@ -652,6 +668,10 @@ msgstr "Veuillez vous identifier pour continuer"
 #: src/data/email.ts:38
 msgid "Please check the email address and try again."
 msgstr "Veuillez vérifier l'adresse email et réessayer."
+
+#: src/data/handle.ts:41
+msgid "Please check the username and try again."
+msgstr "Veuillez vérifier le nom d'utilisateur et réessayer."
 
 #: src/data/password.ts:60
 #: src/data/email.ts:69
@@ -734,6 +754,7 @@ msgstr "Révoquer l'accès"
 msgid "Select another account"
 msgstr "Sélectionner un autre compte"
 
+#: src/components/update-handle-view.tsx:144
 #: src/components/sign-up-handle-form.tsx:169
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
@@ -912,6 +933,10 @@ msgstr "Auprès de"
 msgid "Type your desired username"
 msgstr "Saisissez le nom d'utilisateur souhaité"
 
+#: src/components/update-handle-view.tsx:118
+msgid "Type your new username"
+msgstr "Saisissez votre nouveau nom d'utilisateur"
+
 #: src/contexts/session.tsx:186
 msgid "Unauthorized"
 msgstr "Déconnecté"
@@ -929,14 +954,27 @@ msgstr "Agent utilisateur inconnu"
 msgid "Update"
 msgstr "Modifier"
 
+#: src/components/update-handle-view.tsx:100
+msgid "Update username"
+msgstr "Modifier le nom d'utilisateur"
+
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
 msgstr "Envoyer des fichiers"
+
+#: src/pages/account/(authenticated)/route.tsx:90
+msgid "Username"
+msgstr "Nom d'utilisateur"
 
 #: src/components/sign-in-form.tsx:157
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
+#: src/data/handle.ts:32
+msgid "Username updated"
+msgstr "Nom d'utilisateur modifié"
+
+#: src/components/update-handle-view.tsx:211
 #: src/components/sign-up-handle-form.tsx:249
 msgid "Valid"
 msgstr "Valide"
@@ -949,11 +987,11 @@ msgstr "Code de vérification"
 msgid "Verification email sent"
 msgstr "Code de vérification envoyé"
 
-#: src/pages/account/(authenticated)/route.tsx:96
+#: src/pages/account/(authenticated)/route.tsx:105
 msgid "Verify email address"
 msgstr "Vérifier l'adresse email"
 
-#: src/pages/account/(authenticated)/route.tsx:184
+#: src/pages/account/(authenticated)/route.tsx:193
 msgid "Verify now"
 msgstr "Vérifier maintenant"
 
@@ -965,7 +1003,7 @@ msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
-#: src/pages/account/(authenticated)/route.tsx:97
+#: src/pages/account/(authenticated)/route.tsx:106
 msgid "Verify your email address"
 msgstr "Vérifiez votre adresse email"
 
@@ -997,7 +1035,7 @@ msgstr "Bienvenue"
 msgid "What does this mean?"
 msgstr "Qu'est-ce que ça signifie ?"
 
-#: src/pages/account/(authenticated)/route.tsx:105
+#: src/pages/account/(authenticated)/route.tsx:114
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
@@ -1042,6 +1080,11 @@ msgstr "Votre compte est connecté sur les appareils listés ci-dessous. Si votr
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Votre compte Atmosphère est hébergé chez <0/>."
 
+#: src/components/update-handle-view.tsx:87
+msgctxt "HandleChange"
+msgid "Your current username is <0>@{currentHandle}</0>. Choose a new username below."
+msgstr "Votre nom d'utilisateur actuel est <0>@{currentHandle}</0>. Choisissez un nouveau nom d'utilisateur ci-dessous."
+
 #: src/data/email.ts:119
 msgid "Your email address has been verified."
 msgstr "Votre adresse email a été vérifiée."
@@ -1056,6 +1099,11 @@ msgstr "Votre email a été mis à jour avec <0>{newEmail}</0>. Un code de véri
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
+#. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
+#: src/components/update-handle-view.tsx:173
+msgid "Your new username will be: {0}"
+msgstr "Votre nouveau nom d'utilisateur sera : {0}"
+
 #: src/components/reset-password-view.tsx:105
 msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
@@ -1067,3 +1115,7 @@ msgstr "Votre dépôt contient toutes les données publiquement disponibles sur 
 #: src/contexts/session.tsx:187
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
+
+#: src/data/handle.ts:33
+msgid "Your username has been updated."
+msgstr "Votre nom d'utilisateur a été mis à jour."

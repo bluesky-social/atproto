@@ -1,8 +1,7 @@
 import { DAY, MINUTE } from '@atproto/common'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { httpLogger } from '../../../../logger.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.identity.updateHandle, {
@@ -47,51 +46,7 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      const handle = await ctx.accountManager.normalizeAndValidateHandle(
-        input.body.handle,
-        { did: requester },
-      )
-
-      // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const account = await ctx.accountManager.getAccount(handle, {
-        includeDeactivated: true,
-      })
-
-      if (!account) {
-        if (requester.startsWith('did:plc:')) {
-          await ctx.plcClient.updateHandle(
-            requester,
-            ctx.plcRotationKey,
-            handle,
-          )
-        } else {
-          const resolved = await ctx.idResolver.did.resolveAtprotoData(
-            requester,
-            true,
-          )
-          if (resolved.handle !== handle) {
-            throw new InvalidRequestError(
-              'DID is not properly configured for handle',
-            )
-          }
-        }
-        await ctx.accountManager.updateHandle(requester, handle)
-      } else {
-        // if we found an account with matching handle, check if it is the same as requester
-        // if so emit an identity event, otherwise error.
-        if (account.did !== requester) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
-        }
-      }
-
-      try {
-        await ctx.sequencer.sequenceIdentityEvt(requester, handle)
-      } catch (err) {
-        httpLogger.error(
-          { err, did: requester, handle },
-          'failed to sequence handle update',
-        )
-      }
+      await ctx.accountManager.updateHandle(requester, input.body.handle)
     },
   })
 }

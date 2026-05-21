@@ -26,7 +26,7 @@ msgid "{deltaMinutes} minutes ago"
 msgstr ""
 
 #. placeholder {0}: account.email
-#: src/pages/account/(authenticated)/route.tsx:189
+#: src/pages/account/(authenticated)/route.tsx:198
 msgid "<0>{0}</0> has not been verified yet."
 msgstr ""
 
@@ -82,11 +82,11 @@ msgstr "２番目の認証要素が必要です"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0> によって管理されているサービス"
 
-#: src/pages/account/(authenticated)/route.tsx:103
+#: src/pages/account/(authenticated)/route.tsx:112
 msgid "About"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:61
+#: src/pages/account/(authenticated)/route.tsx:63
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "アカウント"
@@ -143,7 +143,7 @@ msgstr "すべてのメソッド"
 msgid "Any service"
 msgstr "すべてのサービス"
 
-#: src/pages/account/(authenticated)/route.tsx:74
+#: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr ""
 
@@ -183,6 +183,7 @@ msgstr ""
 msgid "Back"
 msgstr "戻る"
 
+#: src/components/update-handle-view.tsx:104
 #: src/components/sign-up-handle-form.tsx:125
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
@@ -233,12 +234,16 @@ msgstr ""
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@handle</0> を変更"
 
-#: src/pages/account/(authenticated)/route.tsx:89
+#: src/pages/account/(authenticated)/route.tsx:98
 msgid "Change your account email address"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:82
+#: src/pages/account/(authenticated)/route.tsx:84
 msgid "Change your account password"
+msgstr ""
+
+#: src/pages/account/(authenticated)/route.tsx:91
+msgid "Change your account username"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx:378
@@ -326,11 +331,11 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:67
+#: src/pages/account/(authenticated)/route.tsx:69
 msgid "Devices"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:88
+#: src/pages/account/(authenticated)/route.tsx:97
 #: src/components/sign-up-account-form.tsx:114
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
@@ -428,6 +433,10 @@ msgstr ""
 msgid "Failed to send verification email"
 msgstr ""
 
+#: src/data/handle.ts:40
+msgid "Failed to update username"
+msgstr ""
+
 #: src/data/email.ts:126
 msgid "Failed to verify email"
 msgstr ""
@@ -468,6 +477,7 @@ msgstr "識別情報"
 msgid "Interface language selector"
 msgstr "言語選択"
 
+#: src/components/update-handle-view.tsx:216
 #: src/components/sign-up-handle-form.tsx:254
 msgid "Invalid"
 msgstr "無効"
@@ -528,7 +538,7 @@ msgstr ""
 msgid "Make visible"
 msgstr "表示する"
 
-#: src/pages/account/(authenticated)/route.tsx:75
+#: src/pages/account/(authenticated)/route.tsx:77
 msgid "Manage applications that have access to your account"
 msgstr ""
 
@@ -536,7 +546,7 @@ msgstr ""
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "あなたの <1>@handle</1> を含む <0>すべての識別情報</0> を管理する"
 
-#: src/pages/account/(authenticated)/route.tsx:68
+#: src/pages/account/(authenticated)/route.tsx:70
 msgid "Manage your active sessions"
 msgstr ""
 
@@ -560,7 +570,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/pages/account/(authenticated)/route.tsx:172
+#: src/pages/account/(authenticated)/route.tsx:181
 msgid "My Atmosphere Account"
 msgstr ""
 
@@ -593,15 +603,21 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr ""
 
+#: src/pages/account/(authenticated)/handle/page.tsx:18
+msgctxt "HandleChange"
+msgid "No username associated with this account."
+msgstr ""
+
 #: src/components/reset-password-view.tsx:116
 msgid "Okay"
 msgstr "OK"
 
+#: src/components/update-handle-view.tsx:109
 #: src/components/sign-up-handle-form.tsx:130
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
-#: src/pages/account/(authenticated)/route.tsx:81
+#: src/pages/account/(authenticated)/route.tsx:83
 #: src/components/sign-up-account-form.tsx:128
 #: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
@@ -651,6 +667,10 @@ msgstr ""
 #: src/data/password.ts:33
 #: src/data/email.ts:38
 msgid "Please check the email address and try again."
+msgstr ""
+
+#: src/data/handle.ts:41
+msgid "Please check the username and try again."
 msgstr ""
 
 #: src/data/password.ts:60
@@ -734,6 +754,7 @@ msgstr ""
 msgid "Select another account"
 msgstr ""
 
+#: src/components/update-handle-view.tsx:144
 #: src/components/sign-up-handle-form.tsx:169
 msgid "Select domain"
 msgstr "ドメインを選択"
@@ -912,6 +933,10 @@ msgstr "対象"
 msgid "Type your desired username"
 msgstr "希望するユーザー名をタイプしてください"
 
+#: src/components/update-handle-view.tsx:118
+msgid "Type your new username"
+msgstr ""
+
 #: src/contexts/session.tsx:186
 msgid "Unauthorized"
 msgstr ""
@@ -929,14 +954,27 @@ msgstr ""
 msgid "Update"
 msgstr "更新"
 
+#: src/components/update-handle-view.tsx:100
+msgid "Update username"
+msgstr ""
+
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
 msgstr "ファイルのアップロード"
+
+#: src/pages/account/(authenticated)/route.tsx:90
+msgid "Username"
+msgstr ""
 
 #: src/components/sign-in-form.tsx:157
 msgid "Username or email address"
 msgstr "ユーザー名またはメールアドレス"
 
+#: src/data/handle.ts:32
+msgid "Username updated"
+msgstr ""
+
+#: src/components/update-handle-view.tsx:211
 #: src/components/sign-up-handle-form.tsx:249
 msgid "Valid"
 msgstr "有効"
@@ -949,11 +987,11 @@ msgstr ""
 msgid "Verification email sent"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:96
+#: src/pages/account/(authenticated)/route.tsx:105
 msgid "Verify email address"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:184
+#: src/pages/account/(authenticated)/route.tsx:193
 msgid "Verify now"
 msgstr ""
 
@@ -965,7 +1003,7 @@ msgstr ""
 msgid "Verify you are human"
 msgstr "あなたが人間であることを確認"
 
-#: src/pages/account/(authenticated)/route.tsx:97
+#: src/pages/account/(authenticated)/route.tsx:106
 msgid "Verify your email address"
 msgstr ""
 
@@ -997,7 +1035,7 @@ msgstr ""
 msgid "What does this mean?"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:105
+#: src/pages/account/(authenticated)/route.tsx:114
 msgid "What is an Atmosphere Account?"
 msgstr ""
 
@@ -1042,6 +1080,11 @@ msgstr ""
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr ""
 
+#: src/components/update-handle-view.tsx:87
+msgctxt "HandleChange"
+msgid "Your current username is <0>@{currentHandle}</0>. Choose a new username below."
+msgstr ""
+
 #: src/data/email.ts:119
 msgid "Your email address has been verified."
 msgstr ""
@@ -1056,6 +1099,11 @@ msgstr ""
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
+#. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
+#: src/components/update-handle-view.tsx:173
+msgid "Your new username will be: {0}"
+msgstr ""
+
 #: src/components/reset-password-view.tsx:105
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
@@ -1066,4 +1114,8 @@ msgstr ""
 
 #: src/contexts/session.tsx:187
 msgid "Your session has expired. Please sign in again."
+msgstr ""
+
+#: src/data/handle.ts:33
+msgid "Your username has been updated."
 msgstr ""

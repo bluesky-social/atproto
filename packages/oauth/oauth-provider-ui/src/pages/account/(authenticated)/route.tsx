@@ -2,6 +2,7 @@ import { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import {
+  AtIcon,
   DevicesIcon,
   EnvelopeIcon,
   GlobeIcon,
@@ -38,6 +39,7 @@ import { Page as AccountOAuthPage } from './apps/page.tsx'
 import { Page as AccountDevicesPage } from './devices/page.tsx'
 import { Page as AccountEmailPage } from './email/page.tsx'
 import { Page as AccountEmailVerifyPage } from './email/verify/page.tsx'
+import { Page as AccountHandlePage } from './handle/page.tsx'
 import { Page as AccountIndexPage } from './page.tsx'
 import { Page as AccountPasswordPage } from './password/page.tsx'
 
@@ -81,6 +83,13 @@ const DEFAULT_PAGES = {
     title: msg`Password`,
     description: msg`Change your account password`,
     component: AccountPasswordPage,
+  },
+  '/handle': {
+    icon: AtIcon,
+    position: 35,
+    title: msg`Username`,
+    description: msg`Change your account username`,
+    component: AccountHandlePage,
   },
   '/email': {
     icon: EnvelopeIcon,

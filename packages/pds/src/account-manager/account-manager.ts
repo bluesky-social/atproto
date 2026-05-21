@@ -1,7 +1,9 @@
 import { KeyObject } from 'node:crypto'
+import { Client as PlcClient } from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
   AtIdentifierString,
@@ -21,7 +23,9 @@ import {
   isServiceDomain,
 } from '../handle/index.js'
 import { com } from '../lexicons/index.js'
+import { httpLogger } from '../logger.js'
 import { ServerMailer } from '../mailer/index.js'
+import { Sequencer } from '../sequencer/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
 import * as account from './helpers/account.js'
 import { AccountStatus, ActorAccount } from './helpers/account.js'
@@ -68,6 +72,9 @@ export class AccountManager {
     readonly idResolver: IdResolver,
     readonly jwtKey: KeyObject,
     readonly mailer: ServerMailer,
+    readonly sequencer: Sequencer,
+    readonly plcClient: PlcClient,
+    readonly plcRotationKey: Keypair,
     readonly serviceDid: string,
     readonly serviceHandleDomains: string[],
     db: AccountManagerDbConfig,
@@ -263,8 +270,53 @@ export class AccountManager {
 
   // @NOTE should always be paired with a sequenceHandle().
   // the token output from this method should be passed to sequenceHandle().
-  async updateHandle(did: DidString, handle: HandleString) {
+  async updateAccountHandle(did: DidString, handle: HandleString) {
     return account.updateHandle(this.db, did, handle)
+  }
+
+  /**
+   * Validates the requested handle, updates the PLC document if needed, persists
+   * the new handle locally, and emits an identity event.
+   *
+   * @throws {InvalidRequestError} when the handle is invalid, taken by another
+   * account, or cannot be resolved for non-service domains.
+   */
+  async updateHandle(did: DidString, rawHandle: string): Promise<HandleString> {
+    const handle = await this.normalizeAndValidateHandle(rawHandle, { did })
+
+    // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
+    const existing = await this.getAccount(handle, {
+      includeDeactivated: true,
+    })
+
+    if (existing) {
+      if (existing.did !== did) {
+        throw new InvalidRequestError(`Handle already taken: ${handle}`)
+      }
+    } else {
+      if (did.startsWith('did:plc:')) {
+        await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
+      } else {
+        const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
+        if (resolved.handle !== handle) {
+          throw new InvalidRequestError(
+            'DID is not properly configured for handle',
+          )
+        }
+      }
+      await this.updateAccountHandle(did, handle)
+    }
+
+    try {
+      await this.sequencer.sequenceIdentityEvt(did, handle)
+    } catch (err) {
+      httpLogger.error(
+        { err, did, handle },
+        'failed to sequence handle update',
+      )
+    }
+
+    return handle
   }
 
   async deleteAccount(did: DidString) {

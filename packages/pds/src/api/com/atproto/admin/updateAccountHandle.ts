@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         } else {
           await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
         }
-        await ctx.accountManager.updateHandle(did, handle)
+        await ctx.accountManager.updateAccountHandle(did, handle)
       }
 
       try {

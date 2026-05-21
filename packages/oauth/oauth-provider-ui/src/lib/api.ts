@@ -4,6 +4,7 @@ import type {
   InitiatePasswordResetInput,
   SignInInput,
   SignUpInput,
+  UpdateHandleInput,
   VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
@@ -49,6 +50,10 @@ export class Api extends JsonClient<ApiEndpoints> {
 
   async validateHandleAvailability(data: VerifyHandleAvailabilityInput) {
     return this.fetch('POST', '/verify-handle-availability', data)
+  }
+
+  async updateHandle(data: UpdateHandleInput) {
+    return this.fetch('POST', '/update-handle', data)
   }
 
   async signUp(data: SignUpInput) {

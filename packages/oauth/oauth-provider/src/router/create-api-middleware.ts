@@ -375,6 +375,31 @@ export function createApiMiddleware<
 
   router.use(
     apiRoute({
+      method: 'POST',
+      endpoint: '/update-handle',
+      schema: z
+        .object({
+          sub: subSchema,
+          handle: handleSchema,
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.updateHandle(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
       method: 'GET',
       endpoint: '/device-sessions',
       schema: undefined,

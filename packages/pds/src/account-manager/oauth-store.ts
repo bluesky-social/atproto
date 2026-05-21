@@ -44,6 +44,7 @@ import {
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
   UpdateEmailRequestOutput,
+  UpdateHandleData,
   UpdateRequestData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
@@ -680,6 +681,40 @@ export class OAuthStore
 
       throw cause
     }
+  }
+
+  async updateHandle({
+    sub: did,
+    handle,
+  }: UpdateHandleData): Promise<Account> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      await this.accountManager.updateHandle(did, handle)
+    } catch (err) {
+      if (err instanceof UserAlreadyExistsError) {
+        throw new HandleUnavailableError('taken', err.message)
+      }
+      if (err instanceof XrpcInvalidRequestError) {
+        throw err.customErrorName === 'HandleNotAvailable'
+          ? new HandleUnavailableError('taken', err.message)
+          : new HandleUnavailableError('syntax', err.message)
+      }
+
+      throw err
+    }
+
+    const account = await this.accountManager.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('Account not found')
+    }
+
+    return this.buildAccount(account)
   }
 
   private async toTokenInfo(

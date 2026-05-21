@@ -361,6 +361,36 @@
               }
               return Response.json({ success: true })
             }
+            case `POST ${API_ENDPOINT_PREFIX}/update-handle`: {
+              const { sub, handle } = JSON.parse(init.body)
+              const account = accounts.get(sub)
+              if (!account) {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Unknown account',
+                  },
+                  { status: 400 },
+                )
+              }
+              for (const [otherSub, otherAccount] of accounts) {
+                if (
+                  otherSub !== sub &&
+                  otherAccount.preferred_username === handle
+                ) {
+                  return Response.json(
+                    {
+                      error: 'handle_unavailable',
+                      reason: 'taken',
+                      error_description: 'Handle already taken',
+                    },
+                    { status: 400 },
+                  )
+                }
+              }
+              account.preferred_username = handle
+              return Response.json({ success: true })
+            }
             case `POST ${API_ENDPOINT_PREFIX}/verify-email-confirm`: {
               const { sub, token, email } = JSON.parse(init.body)
               const account = accounts.get(sub)

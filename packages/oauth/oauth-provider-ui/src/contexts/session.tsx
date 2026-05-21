@@ -204,6 +204,10 @@ export function SessionProvider({
             email: input.email,
             email_verified: true,
           }),
+        '/update-handle': ({ input }) =>
+          updateAccount(input.sub, {
+            preferred_username: input.handle,
+          }),
       },
       headers: session?.ephemeralToken
         ? () => ({ Authorization: `Bearer ${session.ephemeralToken}` })

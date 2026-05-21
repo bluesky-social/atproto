@@ -176,6 +176,22 @@ describe('account manager', () => {
     await page.ensureTextVisibility('Adresse email vérifiée', 'div')
   })
 
+  it('allows changing the username', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.clickOnText("Nom d'utilisateur", 'a')
+
+    await page.typeInInput('handle', 'bob-renamed')
+
+    await page.clickOnText("Modifier le nom d'utilisateur", 'button')
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
+  })
+
   it('allows changing the email address', async () => {
     await using page = await PageHelper.from(browser, { languages })
 

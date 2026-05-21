@@ -5,4 +5,4 @@
 '@atproto/oauth-provider': minor
 ---
 
-Add support for email verification and management in the account management interface
+Add support for email verification and management, and handle (username) updates, in the account management interface

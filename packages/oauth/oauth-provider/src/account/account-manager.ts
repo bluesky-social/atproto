@@ -23,6 +23,7 @@ import {
   SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
+  UpdateHandleData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account-store.js'
@@ -445,6 +446,31 @@ export class AccountManager {
     }
 
     await this.hooks.onVerifyEmailConfirmed?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
+  }
+
+  public async updateHandle(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: UpdateHandleData,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onUpdateHandle?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.updateHandle(input)
+
+    await this.hooks.onUpdatedHandle?.call(null, {
       deviceId,
       deviceMetadata,
       input,
