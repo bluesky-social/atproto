@@ -15,6 +15,7 @@ import {
   LexiconError,
   LexiconIndexer,
   LexiconInteger,
+  LexiconMessage,
   LexiconObject,
   LexiconParameters,
   LexiconPayload,
@@ -179,31 +180,96 @@ export class LexDefBuilder {
     })
   }
 
+  private async addParameters(parameters?: LexiconParameters) {
+    this.addUtils({
+      $params: await this.compileParamsSchema(parameters),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Params',
+      type: `l.InferOutput<typeof $params>`,
+      docs: compileDocs(parameters?.description),
+    })
+  }
+
+  private async addInput(input?: LexiconPayload) {
+    this.addUtils({
+      $input: await this.compilePayload(input),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Input<B = l.BinaryData>',
+      type: `l.InferPayload<typeof $input, B>`,
+      docs: compileDocs(input?.description),
+    })
+
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$InputBody<B = l.BinaryData>',
+      type: `l.InferPayloadBody<typeof $input, B>`,
+      docs: compileDocs(input?.description),
+    })
+  }
+
+  private async addOutput(output?: LexiconPayload) {
+    this.addUtils({
+      $output: await this.compilePayload(output),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Output<B = l.BinaryData>',
+      type: `l.InferPayload<typeof $output, B>`,
+      docs: compileDocs(output?.description),
+    })
+
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$OutputBody<B = l.BinaryData>',
+      type: `l.InferPayloadBody<typeof $output, B>`,
+      docs: compileDocs(output?.description),
+    })
+  }
+
+  private async addMessage(message?: LexiconMessage) {
+    this.addUtils({
+      $message: await this.compileBodySchema(message?.schema),
+    })
+
+    // @TODO Build the types instead of using an inferred type.
+    this.file.addTypeAlias({
+      isExported: true,
+      name: '$Message',
+      type: `l.InferOutput<typeof $message>`,
+      docs: compileDocs(message?.description),
+    })
+  }
+
   private async addProcedure(hash: string, def: LexiconProcedure) {
     if (hash !== 'main') {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
     }
 
-    // @TODO Build the types instead of using an inferred type.
-
     // Declare each piece of the method as its own top-level exported const
     // *before* `main`, so consumers that import a single helper (e.g.
     // `$lxm`) only pull in that subtree rather than the whole procedure.
     // `main.parameters` etc. would otherwise pin `main` in the module graph.
-    this.addUtils({
-      $lxm: '$nsid',
-      $params: await this.compileParamsSchema(def.parameters),
-      $input: await this.compilePayload(def.input),
-      $output: await this.compilePayload(def.output),
-    })
+    this.addUtils({ $lxm: '$nsid' })
 
-    const ref = await this.addSchema(hash, def, {
+    await this.addParameters(def.parameters)
+    await this.addInput(def.input)
+    await this.addOutput(def.output)
+
+    await this.addSchema(hash, def, {
       schema: this.pure(
         `l.procedure($nsid, $params, $input, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
       ),
     })
-
-    this.addMethodTypeUtils(ref, def)
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
@@ -211,21 +277,16 @@ export class LexDefBuilder {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
     }
 
-    // @TODO Build the types instead of using an inferred type.
+    this.addUtils({ $lxm: '$nsid' })
 
-    this.addUtils({
-      $lxm: '$nsid',
-      $params: await this.compileParamsSchema(def.parameters),
-      $output: await this.compilePayload(def.output),
-    })
+    await this.addParameters(def.parameters)
+    await this.addOutput(def.output)
 
-    const ref = await this.addSchema(hash, def, {
+    await this.addSchema(hash, def, {
       schema: this.pure(
         `l.query($nsid, $params, $output${formatErrorsArg(await this.compileErrors(def.errors))})`,
       ),
     })
-
-    this.addMethodTypeUtils(ref, def)
   }
 
   private async addSubscription(hash: string, def: LexiconSubscription) {
@@ -233,74 +294,16 @@ export class LexDefBuilder {
       throw new Error(`Definition ${hash} cannot be of type ${def.type}`)
     }
 
-    // @TODO Build the types instead of using an inferred type.
+    this.addUtils({ $lxm: '$nsid' })
 
-    this.addUtils({
-      $lxm: '$nsid',
-      $params: await this.compileParamsSchema(def.parameters),
-      $message: await this.compileBodySchema(def.message?.schema),
-    })
+    await this.addParameters(def.parameters)
+    await this.addMessage(def.message)
 
-    const ref = await this.addSchema(hash, def, {
+    await this.addSchema(hash, def, {
       schema: this.pure(
         `l.subscription($nsid, $params, $message${formatErrorsArg(await this.compileErrors(def.errors))})`,
       ),
     })
-
-    this.addMethodTypeUtils(ref, def)
-  }
-
-  addMethodTypeUtils(
-    ref: ResolvedRef,
-    def: LexiconProcedure | LexiconQuery | LexiconSubscription,
-  ) {
-    this.file.addTypeAlias({
-      isExported: true,
-      name: '$Params',
-      type: `l.InferMethodParams<typeof ${ref.varName}>`,
-      docs: compileDocs(def.parameters?.description),
-    })
-
-    if (def.type === 'procedure') {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$Input<B = l.BinaryData>',
-        type: `l.InferMethodInput<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.input?.description),
-      })
-
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$InputBody<B = l.BinaryData>',
-        type: `l.InferMethodInputBody<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.input?.description),
-      })
-    }
-
-    if (def.type === 'procedure' || def.type === 'query') {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$Output<B = l.BinaryData>',
-        type: `l.InferMethodOutput<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.output?.description),
-      })
-
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$OutputBody<B = l.BinaryData>',
-        type: `l.InferMethodOutputBody<typeof ${ref.varName}, B>`,
-        docs: compileDocs(def.output?.description),
-      })
-    }
-
-    if (def.type === 'subscription') {
-      this.file.addTypeAlias({
-        isExported: true,
-        name: '$Message',
-        type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
-        docs: compileDocs(def.message?.description),
-      })
-    }
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
