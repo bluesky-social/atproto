@@ -17,7 +17,6 @@ import {
   AuthorizedClients,
   ClientId,
   Code,
-  ConfirmEmailVerificationInput,
   DeviceAccount,
   DeviceData,
   DeviceId,
@@ -46,6 +45,7 @@ import {
   UpdateEmailRequestInput,
   UpdateEmailRequestOutput,
   UpdateRequestData,
+  VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from '@atproto/oauth-provider'
 import {
@@ -630,7 +630,7 @@ export class OAuthStore
     sub: did,
     email,
     token,
-  }: ConfirmEmailVerificationInput): Promise<Account | null> {
+  }: VerifyEmailConfirmInput): Promise<Account | null> {
     // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
     assert(isDidString(did), 'sub must be a valid DID string')
 
