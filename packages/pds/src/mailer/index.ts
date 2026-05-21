@@ -6,6 +6,13 @@ import * as templates from './templates.js'
 
 // @TODO Add support for i18n
 
+const DEFAULT_LOGO_URL =
+  'https://bsky.social/about/images/email/email_logo_default.png'
+const DEFAULT_MARK_URL =
+  'https://bsky.social/about/images/email/email_mark_dark.png'
+const DEFAULT_HOME_URL = 'https://bsky.app'
+const DEFAULT_PRIMARY_COLOR = '#067df7'
+
 export class ServerMailer {
   constructor(
     public readonly transporter: Transporter,
@@ -15,8 +22,23 @@ export class ServerMailer {
   }
 
   // The returned config can be used inside email templates.
-  static getEmailConfig(_config: ServerConfig) {
-    return {}
+  static getEmailConfig(config: ServerConfig) {
+    const { branding } = config
+    const homeUrl =
+      branding.links?.find((link) => link.rel === 'canonical')?.href ??
+      config.service.homeUrl ??
+      DEFAULT_HOME_URL
+
+    return {
+      name: branding.name ?? 'Bluesky',
+      homeUrl,
+      logoUrl: branding.logo ?? DEFAULT_LOGO_URL,
+      markUrl: branding.logo ?? DEFAULT_MARK_URL,
+      primaryColor: branding.colors?.primary ?? DEFAULT_PRIMARY_COLOR,
+      showBskyAppEmailConfirmationLink:
+        config.email?.disableConfirmationLink !== true,
+      footerDescription: '',
+    }
   }
 
   async sendResetPassword(

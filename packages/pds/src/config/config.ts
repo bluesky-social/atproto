@@ -22,8 +22,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     publicUrl,
     did,
     version: env.version, // default?
+    name: env.serviceName,
+    homeUrl: env.homeUrl,
+    logoUrl: env.logoUrl,
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
+    supportUrl: env.supportUrl,
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     maxImportSize: env.maxImportSize,
@@ -152,6 +156,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     emailCfg = {
       smtpUrl: env.emailSmtpUrl,
       fromAddress: env.emailFromAddress,
+      disableConfirmationLink: env.emailDisableConfirmationLink ?? false,
     }
   }
 
@@ -167,6 +172,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmailCfg = {
       smtpUrl: env.moderationEmailSmtpUrl,
       fromAddress: env.moderationEmailAddress,
+      disableConfirmationLink: false,
     }
   }
 
@@ -254,6 +260,62 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     preferCompressed: env.proxyPreferCompressed ?? false,
   }
 
+  const brandingCfg = {
+    name: env.serviceName ?? `${hostname} PDS`,
+    logo: env.logoUrl,
+    colors: {
+      light: env.lightColor,
+      dark: env.darkColor,
+
+      contrastSaturation: env.contrastSaturation,
+
+      primary: env.primaryColor,
+      primaryContrast: env.primaryColorContrast,
+      primaryHue: env.primaryColorHue,
+
+      error: env.errorColor,
+      errorContrast: env.errorColorContrast,
+      errorHue: env.errorColorHue,
+
+      warning: env.warningColor,
+      warningContrast: env.warningColorContrast,
+      warningHue: env.warningColorHue,
+
+      info: env.infoColor,
+      infoContrast: env.infoColorContrast,
+      infoHue: env.infoColorHue,
+
+      success: env.successColor,
+      successContrast: env.successColorContrast,
+      successHue: env.successColorHue,
+    },
+    links: [
+      {
+        title: { en: 'Home', fr: 'Accueil' },
+        href: env.homeUrl,
+        rel: 'canonical' as const, // Prevents login page from being indexed
+      },
+      {
+        title: { en: 'Terms of Service' },
+        href: env.termsOfServiceUrl,
+        rel: 'terms-of-service' as const,
+      },
+      {
+        title: { en: 'Privacy Policy' },
+        href: env.privacyPolicyUrl,
+        rel: 'privacy-policy' as const,
+      },
+      {
+        title: { en: 'Support' },
+        href: env.supportUrl,
+        rel: 'help' as const,
+      },
+    ].filter(
+      <T extends { href?: string }>(f: T): f is T & { href: string } =>
+        f.href != null && f.href !== '',
+    ),
+  }
+
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
@@ -272,61 +334,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                   tokenSalt: env.hcaptchaTokenSalt,
                 }
               : undefined,
-          branding: {
-            name: env.serviceName ?? `${hostname} PDS`,
-            logo: env.logoUrl,
-            colors: {
-              light: env.lightColor,
-              dark: env.darkColor,
-
-              contrastSaturation: env.contrastSaturation,
-
-              primary: env.primaryColor,
-              primaryContrast: env.primaryColorContrast,
-              primaryHue: env.primaryColorHue,
-
-              error: env.errorColor,
-              errorContrast: env.errorColorContrast,
-              errorHue: env.errorColorHue,
-
-              warning: env.warningColor,
-              warningContrast: env.warningColorContrast,
-              warningHue: env.warningColorHue,
-
-              info: env.infoColor,
-              infoContrast: env.infoColorContrast,
-              infoHue: env.infoColorHue,
-
-              success: env.successColor,
-              successContrast: env.successColorContrast,
-              successHue: env.successColorHue,
-            },
-            links: [
-              {
-                title: { en: 'Home', fr: 'Accueil' },
-                href: env.homeUrl,
-                rel: 'canonical' as const, // Prevents login page from being indexed
-              },
-              {
-                title: { en: 'Terms of Service' },
-                href: env.termsOfServiceUrl,
-                rel: 'terms-of-service' as const,
-              },
-              {
-                title: { en: 'Privacy Policy' },
-                href: env.privacyPolicyUrl,
-                rel: 'privacy-policy' as const,
-              },
-              {
-                title: { en: 'Support' },
-                href: env.supportUrl,
-                rel: 'help' as const,
-              },
-            ].filter(
-              <T extends { href?: string }>(f: T): f is T & { href: string } =>
-                f.href != null && f.href !== '',
-            ),
-          },
+          branding: brandingCfg,
           trustedClients: env.trustedOAuthClients,
         },
       }
@@ -358,6 +366,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     fetch: fetchCfg,
     lexicon: lexiconCfg,
     proxy: proxyCfg,
+    branding: brandingCfg,
     oauth: oauthCfg,
   }
 }
@@ -381,6 +390,7 @@ export type ServerConfig = {
   crawlers: string[]
   fetch: FetchConfig
   proxy: ProxyConfig
+  branding: BrandingInput
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
 }
@@ -391,8 +401,12 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
+  name?: string
+  homeUrl?: string
+  logoUrl?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  supportUrl?: string
   acceptingImports: boolean
   maxImportSize?: number
   blobUploadLimit: number
@@ -499,6 +513,7 @@ export type InvitesConfig =
 export type EmailConfig = {
   smtpUrl: string
   fromAddress: string
+  disableConfirmationLink: boolean
 }
 
 export type SubscriptionConfig = {
