@@ -48,7 +48,7 @@
             "chat.bsky.group.editGroup",
             "chat.bsky.group.editJoinLink",
             "chat.bsky.group.enableJoinLink",
-            "chat.bsky.group.getJoinLinkPreview",
+            "chat.bsky.group.getJoinLinksPreview",
             "chat.bsky.group.listJoinRequests",
             "chat.bsky.group.listMutualGroups",
             "chat.bsky.group.rejectJoinRequest",
