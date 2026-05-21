@@ -1,6 +1,6 @@
 import { bench, describe } from 'vitest'
 import {
-  LexParseOptions,
+  JsonToLexOptions,
   jsonToLex,
   lexParse,
   lexParseJsonBytes,
@@ -90,7 +90,7 @@ describe('large structure', () => {
   })
 })
 
-function benchData(data: unknown, options?: LexParseOptions) {
+function benchData(data: unknown, options?: JsonToLexOptions) {
   const body = Buffer.from(JSON.stringify(data))
   const init = {
     headers: { 'Content-Type': 'application/json' },

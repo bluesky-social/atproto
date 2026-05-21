@@ -6,7 +6,7 @@ import {
   isPlainObject,
   ui8Concat,
 } from '@atproto/lex-data'
-import { lexParse, lexToJson } from '@atproto/lex-json'
+import { lexParseJsonBytes, lexToJson } from '@atproto/lex-json'
 import {
   DidString,
   InferMethodInput,
@@ -1071,7 +1071,7 @@ async function getProcedureInput<M extends Procedure>(
 
   if (this.input.encoding === 'application/json') {
     // @TODO limit size?
-    const data = lexParse(await request.text())
+    const data = lexParseJsonBytes(await request.bytes())
     const body = this.input.schema ? this.input.schema.parse(data) : data
     return { encoding, body } as InferMethodInput<M, Body>
   } else if (this.input.encoding) {

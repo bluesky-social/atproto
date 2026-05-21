@@ -12,7 +12,7 @@ Conventions and patterns for writing vitest tests in this codebase.
 Always import test utilities from `vitest`. Use named imports:
 
 ```ts
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, it, test, vi } from 'vitest'
 ```
 
 Only import what you use. Add `vi` only when using mock functions. Add `assert` only when narrowing types.
@@ -27,6 +27,9 @@ Pass the function/class under test directly as the `describe` label when possibl
 // Function reference as label (preferred when testing a single export)
 describe(parseCid, () => { ... })
 describe(isLexValue, () => { ... })
+
+// Class reference as label
+describe(Stack, () => { ... })
 
 // String label for conceptual groups or when testing multiple related behaviors
 describe('roundtrip toBase64 <-> fromBase64', () => { ... })
@@ -48,53 +51,95 @@ describe(someFunction, () => {
 For features with a default behavior and an override, cover both:
 
 ```ts
-describe('validateResponse', () => {
+describe(validateResponse, () => {
   it('rejects invalid response body by default', ...)
   it('accepts invalid response body when disabled', ...)
   it('succeeds with valid response body when enabled', ...)
 })
 ```
 
-For safety-critical code, group edge cases under a `'safety'` or `'edge cases'` describe:
+## Parameterized Tests
+
+Use `test.each` loops over test case arrays. This is preferred when individual tests run multiple checks on the same input values. When only individual checks are performed, prefer inlining all the checks.
 
 ```ts
-describe('safety', () => {
-  it('handles cyclic structures without infinite loops', () => { ... })
-  it('handles deep structures without exceeding call stack', () => { ... })
+// AVOID - using test.each for single assertions makes it harder to read and debug
+describe(isLexScalar, () => {
+  test.each([
+    { value: 'foo', expected: true },
+    { value: 42, expected: true },
+    { value: 3.14, expected: false },
+    { value: undefined, expected: false },
+  ])('$value', ({ value, expected }) => {
+    expect(isLexScalar(value)).toBe(expected)
+  })
+})
+
+// PREFERRED - inline assertions for simple cases
+describe(isLexScalar, () => {
+  it('returns true for valid values', () => {
+    expect(isLexScalar('foo')).toBe(true)
+    expect(isLexScalar(42)).toBe(true)
+  })
+  it('returns false for invalid values', () => {
+    expect(isLexScalar(3.14)).toBe(false)
+    expect(isLexScalar(undefined)).toBe(false)
+  })
 })
 ```
 
-## Parameterized Tests
-
-Use `for...of` loops over test case arrays instead of `it.each`:
+For more complex cases, `test.each` is great for reducing boilerplate and improving maintainability:
 
 ```ts
-describe(isLexScalar, () => {
-  for (const { note, value, expected } of [
-    { note: 'string', value: 'hello', expected: true },
-    { note: 'boolean', value: true, expected: true },
-    { note: 'null', value: null, expected: true },
-    { note: 'number (float)', value: 3.14, expected: false },
-    { note: 'undefined', value: undefined, expected: false },
-  ]) {
-    it(note, () => {
-      expect(isLexScalar(value)).toBe(expected)
-    })
-  }
+// PREFERRED - using test.each for multiple assertions on the same input values
+test.each([
+  { text: 'hello', length: 5 },
+  { text: '👋', length: 4 },
+  { text: '𐍈', length: 4 },
+])('$text', ({ text, length }) => {
+  expect(utf8Len(text)).toBe(length)
+  expect(utf8Len(text)).toBe(Buffer.byteLength(text, 'utf8'))
 })
 ```
 
 This also works for running the same test suite against multiple implementations:
 
 ```ts
-for (const utf8Len of [utf8LenNode!, utf8LenCompute!] as const) {
-  describe(utf8Len, () => {
-    it('computes utf8 string length', () => {
-      expect(utf8Len('a')).toBe(1)
+// Display the function/class name in test titles using "%o"
+describe.each([utf8LenNode, utf8LenCompute])('%o', (utf8Len) => {
+  // Type narrowing for better editor support (if needed)
+  assert(utf8Len)
+
+  // Do not use test.each for single assertions
+  expect(utf8Len('hello')).toBe(5)
+  expect(utf8Len('👋')).toBe(4)
+  expect(utf8Len('𐍈')).toBe(4)
+})
+```
+
+When test cases are too long, use a `name` property for better titles:
+
+```ts
+test.each([
+  { name: 'empty array', input: [] },
+  { name: 'array of numbers', input: [1, 2, 3] },
+  { name: 'array of strings', input: ['a', 'b'] },
+])('valid: $name', ({ input }) => {
+  describe(isLexValue, () => {
+    it('returns true', () => {
+      expect(isLexValue(input)).toBe(true)
     })
   })
-}
+
+  describe(jsonToLex, () => {
+    it('roundtrips through JSON', () => {
+      expect(lexToJson(jsonToLex(input))).toStrictEqual(input)
+    })
+  })
+})
 ```
+
+When editing and existing test suite, replace existing loops with `test.each`/`describe.each`.
 
 ## Assertions
 
@@ -105,16 +150,14 @@ Use `assert()` from vitest for type narrowing and boolean checks. **Always prefe
 ```ts
 // Narrow to a specific type before further assertions
 assert(err instanceof XrpcFetchError)
-expect(err.cause).toBeInstanceOf(TypeError)
+expect(err.message).toBe('Fetch failed')
 
 // Discriminated union checks - PREFERRED
 assert(result.success)
 expect(result.body).toEqual({ value: 'hello' })
-// TypeScript now knows result.body exists
 
 assert(!result.success)
-expect(result).toBeInstanceOf(XrpcResponseError)
-// TypeScript now knows result has error properties
+expect(result.message).toContain('invalid response body')
 
 // DON'T do this - it doesn't narrow types
 expect(result.success).toBe(true) // ❌ No type narrowing
@@ -128,12 +171,9 @@ if (result.success) {
 For thrown errors, prefer `rejects.toSatisfy()` over `rejects.toThrow()` when you need multiple detailed assertions:
 
 ```ts
-await expect(
-  someAsyncFn(),
-).rejects.toSatisfy((err) => {
+await expect(someAsyncFn()).rejects.toSatisfy((err) => {
   assert(err instanceof SomeError)
-  expect(err.cause).toBeInstanceOf(TypeError)
-  expect(err.message).toContain('failed')
+  expect(err.message).toBe('Fetch failed')
   return true // must return true
 })
 ```
@@ -144,7 +184,9 @@ For simple "it throws" checks, `toThrow()` is fine:
 
 ```ts
 expect(() => parseCid(invalidStr)).toThrow()
-expect(() => cidForRawHash(new Uint8Array(31))).toThrow('Invalid SHA-256 hash length')
+expect(() => cidForRawHash(new Uint8Array(31))).toThrow(
+  'Invalid SHA-256 hash length',
+)
 ```
 
 ## Mock Functions
@@ -207,7 +249,9 @@ it('throws TypeError when fetch is not available', () => {
   try {
     // @ts-expect-error removing fetch to simulate missing environment
     globalThis.fetch = undefined
-    expect(() => buildAgent({ service: 'https://example.com' })).toThrow(TypeError)
+    expect(() => buildAgent({ service: 'https://example.com' })).toThrow(
+      'fetch is not available in this environment',
+    )
   } finally {
     globalThis.fetch = originalFetch
   }
@@ -243,5 +287,11 @@ describe('roundtrip toBase64 <-> fromBase64', () => {
 ## Running Tests
 
 ```bash
+# From project folder
+pnpm test
+pnpm test path/to/file.test.ts
+
+# From repo root
+pnpm exec vitest run
 pnpm exec vitest run path/to/file.test.ts
 ```
