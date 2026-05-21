@@ -1,6 +1,6 @@
 import { Keypair, hkdfSha256, hmacSha256, randomBytes } from '@atproto/crypto'
-import { SetHash } from './set-hash'
-import { SignedCommit, SpaceContext } from './types'
+import { SetHash } from './set-hash.js'
+import { SignedCommit, SpaceContext } from './types.js'
 
 export const createCommit = async (
   setHash: SetHash,

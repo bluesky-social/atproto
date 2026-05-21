@@ -1,3 +1,4 @@
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
   MemberAlreadyExistsError,
@@ -15,7 +16,7 @@ import {
   createSpaceCredential,
   verifyMemberGrant,
   verifySpaceCredential,
-} from '../src'
+} from '../src/index.js'
 
 const testSpace: SpaceContext = {
   spaceDid: 'did:example:space',

@@ -1,3 +1,3 @@
-export * from './types'
-export * from './memory-repo-storage'
-export * from './memory-members-storage'
+export * from './types.js'
+export * from './memory-repo-storage.js'
+export * from './memory-members-storage.js'

@@ -1,9 +1,9 @@
 import { Keypair } from '@atproto/crypto'
 import { cidForLex } from '@atproto/lex-cbor'
-import { createCommit, verifyCommit } from './commit'
-import { RecordAlreadyExistsError, RecordNotFoundError } from './error'
-import { SetHash } from './set-hash'
-import { SpaceRepoStorage } from './storage'
+import { createCommit, verifyCommit } from './commit.js'
+import { RecordAlreadyExistsError, RecordNotFoundError } from './error.js'
+import { SetHash } from './set-hash.js'
+import { SpaceRepoStorage } from './storage/index.js'
 import {
   CommitData,
   PreparedWrite,
@@ -12,8 +12,8 @@ import {
   SignedCommit,
   SpaceContext,
   WriteOpAction,
-} from './types'
-import { formatRecordElement } from './util'
+} from './types.js'
+import { formatRecordElement } from './util.js'
 
 type Params = {
   storage: SpaceRepoStorage
@@ -184,4 +184,4 @@ export class SpaceRepo {
   }
 }
 
-export { RecordAlreadyExistsError, RecordNotFoundError } from './error'
+export { RecordAlreadyExistsError, RecordNotFoundError } from './error.js'

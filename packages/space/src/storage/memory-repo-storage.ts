@@ -1,6 +1,6 @@
-import { CommitData, RepoRecord, WriteOpAction } from '../types'
-import { formatDataKey, parseDataKey } from '../util'
-import { SpaceRepoStorage } from './types'
+import { CommitData, RepoRecord, WriteOpAction } from '../types.js'
+import { formatDataKey, parseDataKey } from '../util.js'
+import { SpaceRepoStorage } from './types.js'
 
 export class MemoryRepoStorage implements SpaceRepoStorage {
   private data = new Map<string, RepoRecord>()

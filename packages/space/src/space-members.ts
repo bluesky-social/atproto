@@ -1,8 +1,8 @@
 import { Keypair } from '@atproto/crypto'
-import { createCommit, verifyCommit } from './commit'
-import { MemberAlreadyExistsError, MemberNotFoundError } from './error'
-import { SetHash } from './set-hash'
-import { SpaceMembersStorage } from './storage'
+import { createCommit, verifyCommit } from './commit.js'
+import { MemberAlreadyExistsError, MemberNotFoundError } from './error.js'
+import { SetHash } from './set-hash.js'
+import { SpaceMembersStorage } from './storage/index.js'
 import {
   MemberCommitData,
   MemberOpAction,
@@ -10,7 +10,7 @@ import {
   PreparedMemberOp,
   SignedCommit,
   SpaceContext,
-} from './types'
+} from './types.js'
 
 type Params = {
   storage: SpaceMembersStorage
@@ -141,4 +141,4 @@ export class SpaceMembers {
   }
 }
 
-export { MemberAlreadyExistsError, MemberNotFoundError } from './error'
+export { MemberAlreadyExistsError, MemberNotFoundError } from './error.js'

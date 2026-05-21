@@ -1,5 +1,5 @@
 import { cidForLex } from '@atproto/lex-cbor'
-import { RepoRecord } from './types'
+import { RepoRecord } from './types.js'
 
 export const formatDataKey = (collection: string, rkey: string): string => {
   return collection + '/' + rkey

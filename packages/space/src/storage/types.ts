@@ -1,4 +1,4 @@
-import { CommitData, MemberCommitData, RepoRecord } from '../types'
+import { CommitData, MemberCommitData, RepoRecord } from '../types.js'
 
 export interface SpaceRepoStorage {
   // Record reads

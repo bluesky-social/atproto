@@ -1,12 +1,12 @@
 import { ScopeMissingError, ScopePermissions } from '@atproto/oauth-scopes'
 import { DidString } from '@atproto/syntax'
-import { assertSpaceScope } from '../src/api/com/atproto/space/util'
+import { assertSpaceScope } from '../src/api/com/atproto/space/util.js'
 import {
   AccessOutput,
   OAuthOutput,
   SpaceCredentialOutput,
-} from '../src/auth-output'
-import { AuthScope } from '../src/auth-scope'
+} from '../src/auth-output.js'
+import { AuthScope } from '../src/auth-scope.js'
 
 const SPACE = 'ats://did:plc:owner/com.atmoboards.forum/default'
 const DID = 'did:plc:user' as DidString

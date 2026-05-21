@@ -14,6 +14,7 @@ export default defineConfig({
     projects: [
       'packages/bsky',
       'packages/lex/*',
+      'packages/space',
       'packages/syntax',
       'packages/tap',
     ],

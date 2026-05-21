@@ -1,5 +1,5 @@
-import { MemberCommitData, MemberOpAction } from '../types'
-import { SpaceMembersStorage } from './types'
+import { MemberCommitData, MemberOpAction } from '../types.js'
+import { SpaceMembersStorage } from './types.js'
 
 export class MemoryMembersStorage implements SpaceMembersStorage {
   private members = new Set<string>()
