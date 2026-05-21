@@ -1,6 +1,7 @@
+import { beforeAll, describe, expect, it } from 'vitest'
 import { cidForCbor } from '@atproto/common'
 import { Cid } from '@atproto/lex'
-import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
+import { BadPathError, ImageUriBuilder } from '../../src/image/uri.js'
 
 describe('image uri builder', () => {
   const endpoint = 'https://example.com/img'

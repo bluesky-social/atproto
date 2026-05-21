@@ -1,7 +1,10 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.3.6",
-  "type": "commonjs",
+  "version": "0.4.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
@@ -9,7 +12,7 @@
     "lexicon"
   ],
   "scripts": {
-    "test": "jest",
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json",
     "prebuild": "pnpm run codegen",
     "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
@@ -20,8 +23,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon-resolver"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -38,7 +39,7 @@
   },
   "devDependencies": {
     "@atproto/lex-cbor": "workspace:^",
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.16"
   }
 }

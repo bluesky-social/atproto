@@ -1,13 +1,13 @@
 import { Kysely, sql } from 'kysely'
-import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
+import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs.js'
 import {
   REVIEWESCALATED,
   REVIEWOPEN,
-} from '../../lexicon/types/tools/ozone/moderation/defs'
-import { DatabaseSchemaType } from '../schema'
-import * as modEvent from '../schema/moderation_event'
-import * as modStatus from '../schema/moderation_subject_status'
-import * as recordEventsStats from '../schema/record_events_stats'
+} from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { DatabaseSchemaType } from '../schema/index.js'
+import * as modEvent from '../schema/moderation_event.js'
+import * as modStatus from '../schema/moderation_subject_status.js'
+import * as recordEventsStats from '../schema/record_events_stats.js'
 
 export async function up(db: Kysely<any>): Promise<void> {
   // Used by "tools.ozone.moderation.queryStatuses". Reduces query cost by two

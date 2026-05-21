@@ -6,7 +6,7 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import { isDidString } from '@atproto/lex'
 import { DidString } from '@atproto/syntax'
-import { MockEntryway } from './entryway-mock'
+import { MockEntryway } from './entryway-mock.js'
 
 describe('entryway', () => {
   let plc: TestPlc

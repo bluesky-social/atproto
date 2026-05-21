@@ -12,28 +12,28 @@ import {
 import { Cid } from '@atproto/lex-data'
 import { currentDatetimeString, isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../auth-scope'
-import { softDeleted } from '../db'
-import { hasExplicitSlur } from '../handle/explicit-slurs'
+import { AuthScope } from '../auth-scope.js'
+import { softDeleted } from '../db/index.js'
+import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import {
   baseNormalizeAndValidate,
   ensureHandleServiceConstraints,
   isServiceDomain,
-} from '../handle/index'
+} from '../handle/index.js'
 import { com } from '../lexicons/index.js'
 import { ServerMailer } from '../mailer/index.js'
-import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
-import * as account from './helpers/account'
+import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
+import * as account from './helpers/account.js'
 import { AccountStatus, ActorAccount } from './helpers/account.js'
-import * as auth from './helpers/auth'
-import * as emailToken from './helpers/email-token'
-import * as invite from './helpers/invite'
-import * as password from './helpers/password'
-import * as repo from './helpers/repo'
-import * as scrypt from './helpers/scrypt'
-import * as token from './helpers/token'
+import * as auth from './helpers/auth.js'
+import * as emailToken from './helpers/email-token.js'
+import * as invite from './helpers/invite.js'
+import * as password from './helpers/password.js'
+import * as repo from './helpers/repo.js'
+import * as scrypt from './helpers/scrypt.js'
+import * as token from './helpers/token.js'
 
-export { AccountStatus, formatAccountStatus } from './helpers/account'
+export { AccountStatus, formatAccountStatus } from './helpers/account.js'
 
 /**
  * Thrown by {@link AccountManager.login} when the identifier resolved to a

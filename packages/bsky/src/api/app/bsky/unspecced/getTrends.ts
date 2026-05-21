@@ -1,12 +1,12 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
 import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFn,
@@ -14,8 +14,8 @@ import {
   RulesFn,
   SkeletonFn,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getTrends = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -144,7 +144,7 @@ type Params = app.bsky.unspecced.getTrendingTopics.$Params & {
 type SkeletonState = app.bsky.unspecced.getTrendsSkeleton.$OutputBody
 
 function getUniqueDidsFromTrends(
-  trends?: app.bsky.unspecced.defs.$defs.SkeletonTrend[],
+  trends?: app.bsky.unspecced.defs.SkeletonTrend[],
 ): DidString[] {
   if (!trends) return []
 

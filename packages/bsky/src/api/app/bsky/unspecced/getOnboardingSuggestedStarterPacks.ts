@@ -2,12 +2,12 @@ import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client } from '@atproto/lex'
 import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFn,
@@ -15,8 +15,8 @@ import {
   RulesFn,
   SkeletonFn,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getOnboardingSuggestedStarterPacks = createPipeline(

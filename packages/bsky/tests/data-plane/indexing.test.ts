@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyFeedLike,
@@ -14,8 +15,8 @@ import { Cid } from '@atproto/lex'
 import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../../src/data-plane/server/db'
-import { forSnapshot } from '../_util'
+import { Database } from '../../src/data-plane/server/db/index.js'
+import { forSnapshot } from '../_util.js'
 
 describe('indexing', () => {
   let network: TestNetwork
@@ -36,7 +37,7 @@ describe('indexing', () => {
     // Data in tests is not processed from subscription
     await network.processAll()
     await network.bsky.sub.destroy()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

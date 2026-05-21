@@ -1,8 +1,11 @@
-import { PoorlyFormattedDidError, UnsupportedDidMethodError } from '../errors'
-import { DidResolverOpts } from '../types'
-import { BaseResolver } from './base-resolver'
-import { DidPlcResolver } from './plc-resolver'
-import { DidWebResolver } from './web-resolver'
+import {
+  PoorlyFormattedDidError,
+  UnsupportedDidMethodError,
+} from '../errors.js'
+import { DidResolverOpts } from '../types.js'
+import { BaseResolver } from './base-resolver.js'
+import { DidPlcResolver } from './plc-resolver.js'
+import { DidWebResolver } from './web-resolver.js'
 
 export class DidResolver extends BaseResolver {
   methods: Map<string, BaseResolver>

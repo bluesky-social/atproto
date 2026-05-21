@@ -1,6 +1,7 @@
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetwork } from '@atproto/dev-env'
 import { lexStringify } from '@atproto/lex'
-import { StashClient } from '../dist/stash'
+import { StashClient } from '../dist/stash.js'
 import { app } from '../src/lexicons/index.js'
 
 type Database = TestNetwork['bsky']['db']

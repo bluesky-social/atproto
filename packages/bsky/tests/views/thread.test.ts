@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetPostThread,
@@ -11,7 +12,7 @@ import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
-} from '../_util'
+} from '../_util.js'
 
 describe('appview thread views', () => {
   let network: TestNetwork

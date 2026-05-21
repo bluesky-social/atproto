@@ -1,7 +1,7 @@
-import { ModerationDecision } from '../decision'
-import { ModerationOpts, ModerationSubjectProfile } from '../types'
-import { decideAccount } from './account'
-import { decideProfile } from './profile'
+import { ModerationDecision } from '../decision.js'
+import { ModerationOpts, ModerationSubjectProfile } from '../types.js'
+import { decideAccount } from './account.js'
+import { decideProfile } from './profile.js'
 
 export function decideStatus(
   subject: ModerationSubjectProfile,

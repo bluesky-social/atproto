@@ -1,11 +1,11 @@
 import { Cid } from '@atproto/lex-data'
-import { writeCarStream } from '../car'
-import { CidSet } from '../cid-set'
-import { MissingBlocksError } from '../error'
-import { MST } from '../mst'
-import { ReadableBlockstore, RepoStorage } from '../storage'
-import { CarBlock, RecordPath, def } from '../types'
-import * as util from '../util'
+import { writeCarStream } from '../car.js'
+import { CidSet } from '../cid-set.js'
+import { MissingBlocksError } from '../error.js'
+import { MST } from '../mst/index.js'
+import { ReadableBlockstore, RepoStorage } from '../storage/index.js'
+import { CarBlock, RecordPath, def } from '../types.js'
+import * as util from '../util.js'
 
 // Full Repo
 // -------------

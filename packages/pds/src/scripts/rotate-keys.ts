@@ -6,11 +6,11 @@ import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { DidString, isDidString } from '@atproto/lex'
-import { ActorStore } from '../actor-store/actor-store'
-import { SyncEvtData } from '../repo'
-import { Sequencer } from '../sequencer'
-import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db'
-import { parseIntArg } from './util'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { SyncEvtData } from '../repo/index.js'
+import { Sequencer } from '../sequencer/index.js'
+import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db.js'
+import { parseIntArg } from './util.js'
 
 export type RotateKeysContext = {
   sequencer: Sequencer

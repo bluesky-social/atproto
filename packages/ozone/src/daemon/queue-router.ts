@@ -1,8 +1,8 @@
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db'
-import { dbLogger } from '../logger'
-import { QueueServiceCreator } from '../queue/service'
-import { initJobCursor } from './job-cursor'
+import { Database } from '../db/index.js'
+import { dbLogger } from '../logger.js'
+import { QueueServiceCreator } from '../queue/service.js'
+import { initJobCursor } from './job-cursor.js'
 
 const JOB_NAME = 'queue_router'
 const BATCH_SIZE = 100

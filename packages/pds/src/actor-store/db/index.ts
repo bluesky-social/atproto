@@ -1,7 +1,7 @@
-import { Database, Migrator } from '../../db'
-import migrations from './migrations'
-import { DatabaseSchema } from './schema'
-export * from './schema'
+import { Database, Migrator } from '../../db/index.js'
+import migrations from './migrations/index.js'
+import { DatabaseSchema } from './schema/index.js'
+export * from './schema/index.js'
 
 export type ActorDb = Database<DatabaseSchema>
 

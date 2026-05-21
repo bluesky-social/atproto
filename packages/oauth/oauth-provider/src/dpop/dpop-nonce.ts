@@ -14,7 +14,7 @@ export const rotationIntervalSchema = z
 const SECRET_BYTE_LENGTH = 32
 
 export const secretBytesSchema = z
-  .instanceof(Uint8Array)
+  .instanceof(Uint8Array<ArrayBufferLike>)
   .refine((secret) => secret.length === SECRET_BYTE_LENGTH, {
     message: `Secret must be exactly ${SECRET_BYTE_LENGTH} bytes long`,
   })

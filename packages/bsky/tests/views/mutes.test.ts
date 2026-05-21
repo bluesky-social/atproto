@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppBskyGraphGetMutes, AtpAgent, ids } from '@atproto/api'
 import {
   SeedClient,
@@ -5,7 +6,7 @@ import {
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
+import { forSnapshot, paginateAll } from '../_util.js'
 
 describe('mute views', () => {
   let network: TestNetwork
@@ -53,7 +54,7 @@ describe('mute views', () => {
         },
       )
     }
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

@@ -1,7 +1,7 @@
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
+import { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, com } from '../lexicons/index.js'
-import { ParsedLabelers } from '../util'
+import { ParsedLabelers } from '../util.js'
 import { Label, LabelerRecord } from '../views/types.js'
 import {
   HydrationMap,
@@ -10,7 +10,7 @@ import {
   parseJsonBytes,
   parseRecord,
   parseString,
-} from './util'
+} from './util.js'
 
 export type { Label }
 

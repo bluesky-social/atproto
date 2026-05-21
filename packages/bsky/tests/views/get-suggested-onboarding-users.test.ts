@@ -2,6 +2,7 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
   AtpAgent,

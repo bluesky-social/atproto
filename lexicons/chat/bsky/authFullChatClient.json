@@ -17,6 +17,7 @@
           "inheritAud": true,
           "lxm": [
             "chat.bsky.actor.deleteAccount",
+            "chat.bsky.actor.getStatus",
             "chat.bsky.convo.acceptConvo",
             "chat.bsky.convo.addReaction",
             "chat.bsky.convo.deleteMessageForSelf",
@@ -49,6 +50,7 @@
             "chat.bsky.group.enableJoinLink",
             "chat.bsky.group.getJoinLinkPreview",
             "chat.bsky.group.listJoinRequests",
+            "chat.bsky.group.listMutualGroups",
             "chat.bsky.group.rejectJoinRequest",
             "chat.bsky.group.removeMembers",
             "chat.bsky.group.requestJoin"

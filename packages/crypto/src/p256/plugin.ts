@@ -1,7 +1,7 @@
-import { P256_DID_PREFIX, P256_JWT_ALG } from '../const'
-import { DidKeyPlugin } from '../types'
-import { compressPubkey, decompressPubkey } from './encoding'
-import { verifyDidSig } from './operations'
+import { P256_DID_PREFIX, P256_JWT_ALG } from '../const.js'
+import { DidKeyPlugin } from '../types.js'
+import { compressPubkey, decompressPubkey } from './encoding.js'
+import { verifyDidSig } from './operations.js'
 
 export const p256Plugin: DidKeyPlugin = {
   prefix: P256_DID_PREFIX,

@@ -1,7 +1,7 @@
 import { mapDefined } from '@atproto/common'
 import { DatetimeString, INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const infos = mapDefined(
         dids,
-        (did): com.atproto.admin.defs.$defs.AccountView | undefined => {
+        (did): com.atproto.admin.defs.AccountView | undefined => {
           const info = actors.get(did)
           if (!info) return
           if (info.takedownRef && !includeTakedowns) return

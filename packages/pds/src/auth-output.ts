@@ -1,6 +1,6 @@
 import { ScopePermissions } from '@atproto/oauth-scopes'
 import { DidString } from '@atproto/syntax'
-import { AuthScope } from './auth-scope'
+import { AuthScope } from './auth-scope.js'
 
 export type UnauthenticatedOutput = {
   credentials: null

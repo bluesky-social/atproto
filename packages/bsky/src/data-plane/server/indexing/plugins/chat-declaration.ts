@@ -1,10 +1,10 @@
 import { Cid } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { chat } from '../../../../lexicons'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import { chat } from '../../../../lexicons/index.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 

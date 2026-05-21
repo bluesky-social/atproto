@@ -1,5 +1,5 @@
-import { AppContext } from '../../context'
-import { Server, TOOLS_OZONE_TEAM } from '../../lexicon'
+import { AppContext } from '../../context.js'
+import { Server, TOOLS_OZONE_TEAM } from '../../lexicon/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.server.getConfig({

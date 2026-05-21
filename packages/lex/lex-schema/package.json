@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex-schema",
-  "version": "0.0.20",
+  "version": "0.1.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Lexicon schema system for AT Lexicons",
   "keywords": [
@@ -23,14 +26,10 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": "./dist/index.js",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -38,7 +37,6 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@standard-schema/spec": "^1.1.0",
-    "iso-datestring-validator": "^2.2.2",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

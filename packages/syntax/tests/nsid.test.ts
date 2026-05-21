@@ -8,7 +8,7 @@ import {
   parseNsid,
   validateNsid,
   validateNsidRegex,
-} from '../src'
+} from '../src/index.js'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {

@@ -19,6 +19,7 @@ import { XrpcResponse, XrpcResponseOptions } from './response.js'
 import { BinaryBodyInit } from './types.js'
 import {
   XrpcRequestHeadersOptions,
+  asUint8ArrayArrayBuffer,
   buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
@@ -335,13 +336,17 @@ function xrpcProcedureInput(
       return buildPayload(input, body, encodingHint)
     case 'object': {
       if (body === null) break
-      if (
-        ArrayBuffer.isView(body) ||
+      if (ArrayBuffer.isView(body)) {
+        return buildPayload(input, asUint8ArrayArrayBuffer(body), encodingHint)
+      } else if (
         body instanceof ArrayBuffer ||
         body instanceof ReadableStream
       ) {
         return buildPayload(input, body, encodingHint)
       } else if (isAsyncIterable(body)) {
+        // @NOTE While fetch() does not allow SharedArrayBuffer-backed
+        // Uint8Arrays as "body", it **does** allow using ReadableStreams made
+        // of Uint8Arrays<SharedArrayBuffer> (tested on NodeJS 22) as "body".
         return buildPayload(input, toReadableStream(body), encodingHint)
       } else if (isBlobLike(body)) {
         return buildPayload(input, body, encodingHint || body.type)

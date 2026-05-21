@@ -5,13 +5,13 @@ import {
   DeleteEvent,
   LexIndexer,
   UpdateEvent,
-} from '../src/lex-indexer'
-import { IdentityEvent, RecordEvent } from '../src/types'
+} from '../src/lex-indexer.js'
+import { IdentityEvent, RecordEvent } from '../src/types.js'
 import {
   createIdentityEvent,
   createMockOpts,
   createRecordEvent as baseCreateRecordEvent,
-} from './_util'
+} from './_util.js'
 
 // Test lexicon definitions
 const postNsid = 'com.example.post'

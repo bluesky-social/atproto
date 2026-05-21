@@ -1,13 +1,13 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../db'
-import { Report } from '../db/schema/report'
-import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports'
+import { Database } from '../db/index.js'
+import { Report } from '../db/schema/report.js'
+import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
   handleReportUpdate,
-} from '../report/handle-report-update'
+} from '../report/handle-report-update.js'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number

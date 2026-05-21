@@ -1,5 +1,5 @@
 import { SeedClient } from '@atproto/dev-env'
-import basicSeed from './basic'
+import basicSeed from './basic.js'
 
 export default async (sc: SeedClient) => {
   await basicSeed(sc)

@@ -5,9 +5,9 @@ import {
   AppBskyEmbedVideo,
   AppBskyFeedPost,
 } from '@atproto/api'
-import { ids } from '../lexicon/lexicons'
-import { langLogger as log } from '../logger'
-import { ContentTagger } from './content-tagger'
+import { ids } from '../lexicon/lexicons.js'
+import { langLogger as log } from '../logger.js'
+import { ContentTagger } from './content-tagger.js'
 
 export class EmbedTagger extends ContentTagger {
   tagPrefix = 'embed:'

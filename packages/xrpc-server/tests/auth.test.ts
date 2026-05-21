@@ -2,18 +2,21 @@ import { KeyObject, createPrivateKey } from 'node:crypto'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import { MINUTE } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XRPCError, XrpcClient } from '@atproto/xrpc'
-import * as xrpcServer from '../src'
+import * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   closeServer,
   createBasicAuth,
   createServer,
-} from './_util'
+} from './_util.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 const LEXICONS: LexiconDoc[] = [
   {

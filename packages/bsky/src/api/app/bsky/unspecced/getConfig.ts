@@ -1,5 +1,5 @@
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE

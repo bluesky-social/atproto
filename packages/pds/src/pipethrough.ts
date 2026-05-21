@@ -21,10 +21,10 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { isAccessPrivileged } from './auth-scope'
-import { AppContext } from './context'
+import { isAccessPrivileged } from './auth-scope.js'
+import { AppContext } from './context.js'
 import { chat, com, tools } from './lexicons/index.js'
-import { httpLogger } from './logger'
+import { httpLogger } from './logger.js'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({

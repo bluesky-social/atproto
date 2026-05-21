@@ -21,7 +21,7 @@ import type {
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
 import { upsert } from '#/lib/util.ts'
 import { useCurrentLocale } from '#/locales/locale-provider'
-import { useNotificationsContext } from './notifications'
+import { useNotificationsContext } from './notifications.js'
 
 export type { Session }
 

@@ -6,7 +6,7 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { $Typed } from '@atproto/lex'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
-import usersSeed from './seeds/users'
+import usersSeed from './seeds/users.js'
 
 describe('moderator auth', () => {
   let network: TestNetworkNoAppView
@@ -68,7 +68,7 @@ describe('moderator auth', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.bob,
     }
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

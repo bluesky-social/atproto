@@ -9,17 +9,17 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { Database } from '../db'
-import { LabelRow } from '../db/schema/label'
-import { ids } from '../lexicon/lexicons'
-import { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
+import { Database } from '../db/index.js'
+import { LabelRow } from '../db/schema/label.js'
+import { ids } from '../lexicon/lexicons.js'
+import { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs.js'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
 import {
   Label,
   validateSelfLabels,
-} from '../lexicon/types/com/atproto/label/defs'
-import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
+} from '../lexicon/types/com/atproto/label/defs.js'
+import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport.js'
+import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs.js'
 import {
   BlobView,
   ModEventView,
@@ -46,17 +46,17 @@ import {
   isModEventTakedown,
   isRecordEvent,
   isScheduleTakedownEvent,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { Un$Typed, asPredicate } from '../lexicon/util'
-import { dbLogger, httpLogger } from '../logger'
-import { ParsedLabelers } from '../util'
-import { moderationSubjectStatusQueryBuilder } from './status'
-import { subjectFromEventRow, subjectFromStatusRow } from './subject'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { Un$Typed, asPredicate } from '../lexicon/util.js'
+import { dbLogger, httpLogger } from '../logger.js'
+import { ParsedLabelers } from '../util.js'
+import { moderationSubjectStatusQueryBuilder } from './status.js'
+import { subjectFromEventRow, subjectFromStatusRow } from './subject.js'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
-} from './types'
-import { formatLabel, getPdsAgentForRepo, signLabel } from './util'
+} from './types.js'
+import { formatLabel, getPdsAgentForRepo, signLabel } from './util.js'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 

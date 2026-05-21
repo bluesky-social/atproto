@@ -58,13 +58,13 @@ describe(BytesCid, () => {
   it('throws an error for invalid CID bytes', () => {
     expect(
       () => new BytesCid(new Uint8Array([2, 0x55, 0x12, 3, 1, 2, 3])),
-    ).toThrowError('Unsupported CID version')
-    expect(() => new BytesCid(new Uint8Array([1, 0x55, 0x12]))).toThrowError(
+    ).toThrow('Unsupported CID version')
+    expect(() => new BytesCid(new Uint8Array([1, 0x55, 0x12]))).toThrow(
       'CID bytes are too short',
     )
     expect(
       () => new BytesCid(new Uint8Array([1, 0x55, 0x12, 4, 1, 2, 3])),
-    ).toThrowError('CID bytes length mismatch')
+    ).toThrow('CID bytes length mismatch')
   })
 })
 

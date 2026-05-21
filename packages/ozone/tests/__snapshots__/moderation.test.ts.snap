@@ -1,26 +1,26 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`moderation reporting creates reports of a DM chat. 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 14,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
-    "subject": Object {
+    "subject": {
       "$type": "chat.bsky.convo.defs#messageRef",
       "convoId": "testconvoid1",
       "did": "user(1)",
       "messageId": "testmessageid1",
     },
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 16,
     "reason": "defamation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
-    "subject": Object {
+    "subject": {
       "$type": "chat.bsky.convo.defs#messageRef",
       "convoId": "",
       "did": "user(1)",
@@ -31,25 +31,25 @@ Array [
 `;
 
 exports[`moderation reporting creates reports of a record. 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 7,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
       "uri": "record(0)",
     },
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 9,
     "reason": "defamation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(1)",
       "uri": "record(1)",
@@ -59,24 +59,24 @@ Array [
 `;
 
 exports[`moderation reporting creates reports of a repo. 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 1,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(1)",
     },
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 3,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(1)",
     },

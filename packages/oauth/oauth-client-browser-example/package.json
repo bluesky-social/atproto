@@ -1,6 +1,9 @@
 {
   "name": "@atproto/oauth-client-browser-example",
-  "version": "0.0.10",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Example single page application app using ATPROTO OAuth",
   "keywords": [
@@ -17,17 +20,16 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-browser"
   },
-  "bin": "./server.js",
-  "type": "commonjs",
-  "main": "./dist/files.json",
+  "bin": "./server.cjs",
+  "type": "module",
   "exports": {
     ".": "./dist/files.json",
     "./server": {
-      "import": "./server.js"
+      "default": "./server.cjs"
     }
   },
   "files": [
-    "server.js",
+    "server.cjs",
     "dist"
   ],
   "devDependencies": {

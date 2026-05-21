@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { DidString } from '@atproto/lex'
-import { TestPds } from './pds'
+import { TestPds } from './pds.js'
 
 export type ServiceUserDetails = {
   email: string

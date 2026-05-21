@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - msi/pds-lexification
+      - divy/esm-datadog
 
 env:
   REGISTRY: ghcr.io

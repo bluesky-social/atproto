@@ -4,12 +4,12 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
   SqlRepoReader,
-} from '../../../../actor-store/repo/sql-repo-reader'
-import { AuthScope } from '../../../../auth-scope'
-import { isUserOrAdmin } from '../../../../auth-verifier'
-import { AppContext } from '../../../../context'
+} from '../../../../actor-store/repo/sql-repo-reader.js'
+import { AuthScope } from '../../../../auth-scope.js'
+import { isUserOrAdmin } from '../../../../auth-verifier.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertRepoAvailability } from './util'
+import { assertRepoAvailability } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.sync.getRepo, {

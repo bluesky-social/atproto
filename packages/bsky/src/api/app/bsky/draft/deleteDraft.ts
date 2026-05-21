@@ -1,7 +1,7 @@
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { app } from '../../../../lexicons'
-import { Namespaces } from '../../../../stash'
+import { AppContext } from '../../../../context.js'
+import { app } from '../../../../lexicons/index.js'
+import { Namespaces } from '../../../../stash.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.draft.deleteDraft, {

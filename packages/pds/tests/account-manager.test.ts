@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { PageHelper } from './_puppeteer.js'
@@ -129,7 +130,7 @@ describe('account manager', () => {
 
     expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
 
-    const [params] = sendResetPasswordMock.mock.lastCall
+    const [params] = sendResetPasswordMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'bob.test',
       token: expect.any(String),

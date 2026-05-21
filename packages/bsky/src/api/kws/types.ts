@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { KwsConfig, ServerConfig } from '../../config'
-import { AppContext } from '../../context'
-import { KwsClient } from '../../kws'
+import { KwsConfig, ServerConfig } from '../../config.js'
+import { AppContext } from '../../context.js'
+import { KwsClient } from '../../kws.js'
 
 export type AppContextWithKwsClient = AppContext & {
   kwsClient: KwsClient
