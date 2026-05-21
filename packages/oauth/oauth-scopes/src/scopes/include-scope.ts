@@ -1,4 +1,7 @@
-import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
+import {
+  AtprotoScopeAud,
+  isAtprotoDidRefAbsolute,
+} from '@atproto/did'
 import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
@@ -23,7 +26,7 @@ export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 export class IncludeScope {
   constructor(
     public readonly nsid: Nsid,
-    public readonly aud: undefined | AtprotoAudience = undefined,
+    public readonly aud: undefined | AtprotoScopeAud = undefined,
   ) {}
 
   toString() {
@@ -166,7 +169,7 @@ export class IncludeScope {
       aud: {
         multiple: false,
         required: false,
-        validate: isAtprotoAudience,
+        validate: isAtprotoDidRefAbsolute,
       },
     },
     'nsid',
