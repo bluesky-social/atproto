@@ -51,12 +51,6 @@ yargs(hideBin(process.argv))
           default: false,
           describe: 'how to handle errors when processing input files',
         },
-        'pure-annotations': {
-          type: 'boolean',
-          default: false,
-          describe:
-            'adds `/*#__PURE__*/` annotations for tree-shaking tools. Set this to true if you are using generated lexicons in a library.',
-        },
         exclude: {
           array: true,
           type: 'string',

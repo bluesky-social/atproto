@@ -24,7 +24,6 @@ Promise.all([
     ],
     lib: '@atproto/lex-schema',
     pretty: true,
-    pureAnnotations: true,
     indexFile: true,
   }),
 
