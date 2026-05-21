@@ -26,11 +26,6 @@ export default function (server: Server, ctx: AppContext) {
       additional: [AuthScope.Takendown],
       authorize: (permissions, { params }) => {
         const { aud, lxm = '*' } = params
-        if (!isAtprotoDid(aud) && !isAtprotoDidRefAbsolute(aud)) {
-          throw new InvalidRequestError(
-            'aud must be a valid atproto DID or did#serviceId reference',
-          )
-        }
         permissions.assertRpc({ aud, lxm })
       },
     }),
@@ -39,6 +34,12 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE "exp" is expressed in seconds since epoch, not milliseconds
       const { aud, exp, lxm = null } = params
+
+      if (!isAtprotoDid(aud) && !isAtprotoDidRefAbsolute(aud)) {
+        throw new InvalidRequestError(
+          'aud must be a valid atproto DID or did#serviceId reference',
+        )
+      }
 
       // Takendown accounts should not be able to generate service auth tokens except for methods necessary for account migration
       if (auth.credentials.type === 'access') {
