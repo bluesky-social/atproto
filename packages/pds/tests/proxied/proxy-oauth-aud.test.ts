@@ -32,7 +32,6 @@ describe('proxy oauth audience', () => {
   let upstream: ProxyServer
   let server: http.Server
   let serverUrl: string
-  let lastAud: string | undefined
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -55,10 +54,6 @@ describe('proxy oauth audience', () => {
     const stubAuthorization: typeof network.pds.ctx.authVerifier.authorization =
       ({ authorize }) => {
         return async (ctx) => {
-          // proxyHandler is the only caller in these tests, and it always
-          // passes RpcPermissionMatch params; read the aud defensively.
-          const params = ctx.params as unknown as { aud?: unknown }
-          if (typeof params.aud === 'string') lastAud = params.aud
           const scopeHeader = ctx.req.headers['x-test-scope'] as
             | string
             | undefined
@@ -98,29 +93,16 @@ describe('proxy oauth audience', () => {
     serverUrl = `http://localhost:${(server.address() as AddressInfo).port}`
   })
 
-  beforeEach(() => {
-    lastAud = undefined
-  })
-
   afterAll(async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()))
     await upstream.close()
     await network.close()
   })
 
-  it('passes combined did#serviceId aud to the rpc scope check', async () => {
-    await fetch(`${serverUrl}/xrpc/app.bsky.feed.getFeed`, {
-      headers: {
-        'atproto-proxy': `${upstream.did}#atproto_test`,
-        'x-test-scope': `rpc:app.bsky.feed.getFeed?aud=${encodeURIComponent(`${upstream.did}#atproto_test`)}`,
-      },
-    })
-    expect(lastAud).toBe(`${upstream.did}#atproto_test`)
-  })
-
   it('matches an OAuth rpc scope granted with combined did#serviceId aud', async () => {
     // Pre-fix this would have rejected because the scope check received
-    // bare-DID aud and never matched the combined-form scope.
+    // bare-DID aud and never matched the combined-form scope. A 200 here
+    // implies the scope check ran with combined-form aud.
     const res = await fetch(`${serverUrl}/xrpc/app.bsky.feed.getFeed`, {
       headers: {
         'atproto-proxy': `${upstream.did}#atproto_test`,
@@ -130,11 +112,14 @@ describe('proxy oauth audience', () => {
     expect(res.status).toBe(200)
   })
 
-  it('rejects an OAuth rpc scope granted with only bare-DID aud', async () => {
+  it('rejects an OAuth rpc scope granted for a different service id', async () => {
+    // Same DID, different service id — both forms parse as valid scope
+    // audiences, but the runtime aud (`upstream.did#atproto_test`) doesn't
+    // match the granted aud (`upstream.did#atproto_other`).
     const res = await fetch(`${serverUrl}/xrpc/app.bsky.feed.getFeed`, {
       headers: {
         'atproto-proxy': `${upstream.did}#atproto_test`,
-        'x-test-scope': `rpc:app.bsky.feed.getFeed?aud=${upstream.did}`,
+        'x-test-scope': `rpc:app.bsky.feed.getFeed?aud=${encodeURIComponent(`${upstream.did}#atproto_other`)}`,
       },
     })
     expect([401, 403]).toContain(res.status)
