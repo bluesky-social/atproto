@@ -1,7 +1,3 @@
-> [!IMPORTANT]
->
-> This package is currently in **preview**. The API and features are subject to change before the stable release. See the [Changelog](./CHANGELOG.md) for version history.
-
 Type-safe Lexicon tooling for AT Protocol data.
 
 - Fetch and manage Lexicon schemas, generate TypeScript validators
