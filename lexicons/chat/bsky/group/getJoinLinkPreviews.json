@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "chat.bsky.group.getJoinLinksPreview",
+  "id": "chat.bsky.group.getJoinLinkPreviews",
   "defs": {
     "main": {
       "type": "query",
