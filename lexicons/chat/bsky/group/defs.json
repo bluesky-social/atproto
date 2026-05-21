@@ -83,6 +83,29 @@
         },
         "requestedAt": { "type": "string", "format": "datetime" }
       }
+    },
+    "joinRequestConvoView": {
+      "description": "A join request from the perspective of the requester, including enough group context to render the request in a list (e.g. group name, owner, member count).",
+      "type": "object",
+      "required": [
+        "convoId",
+        "name",
+        "owner",
+        "memberCount",
+        "memberLimit",
+        "requestedAt"
+      ],
+      "properties": {
+        "convoId": { "type": "string" },
+        "name": { "type": "string" },
+        "owner": {
+          "type": "ref",
+          "ref": "chat.bsky.actor.defs#profileViewBasic"
+        },
+        "memberCount": { "type": "integer" },
+        "memberLimit": { "type": "integer" },
+        "requestedAt": { "type": "string", "format": "datetime" }
+      }
     }
   }
 }

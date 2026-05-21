@@ -356,6 +356,10 @@
           "type": "string",
           "format": "datetime"
         },
+        "joinRequestCount": {
+          "type": "integer",
+          "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
+        },
         "joinLink": {
           "type": "ref",
           "ref": "chat.bsky.group.defs#joinLinkView"
