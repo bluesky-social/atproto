@@ -1,5 +1,14 @@
 # @atproto/xrpc-server
 
+## 0.11.1
+
+### Patch Changes
+
+- [#4969](https://github.com/bluesky-social/atproto/pull/4969) [`57ecbda`](https://github.com/bluesky-social/atproto/commit/57ecbdac3eb14fdbc853456371e84a5098e91c4b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Uses the http res's log Pino logger upon rate limit computation error, allowing to log the failure in the context of an http request
+
+- Updated dependencies [[`482767c`](https://github.com/bluesky-social/atproto/commit/482767c4bcce95aa390b2992b028fd8e27d162b2)]:
+  - @atproto/lex-client@0.1.2
+
 ## 0.11.0
 
 ### Minor Changes
