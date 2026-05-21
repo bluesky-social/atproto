@@ -57,9 +57,14 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       }
 
       const { url: origin, did, serviceId } = await parseProxyInfo(ctx, req, lxm)
-      const aud = `${did}#${serviceId}`
+      // Phase 1 asymmetry: the scope check sees the combined did#serviceId
+      // form (so OAuth callers' rpc:?aud=did#service scopes match), while the
+      // outbound service-auth JWT keeps bare-DID aud regardless of session
+      // type. Slice D will introduce a config flag to flip the JWT side.
+      const scopeAud = `${did}#${serviceId}`
+      const tokenAud = did
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+      const authResult = await performAuth({ req, res, params: { lxm, aud: scopeAud } })
 
       const { credentials } = excludeErrorResult(authResult)
 
@@ -81,11 +86,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        // Phase 1: scope check uses the combined did#serviceId form (so
-        // OAuth callers' rpc:?aud=did#service scopes match); the outbound
-        // service-auth JWT keeps bare-DID aud regardless of session type.
-        // Slice D will introduce a config flag to flip the JWT side.
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, did, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, tokenAud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -161,8 +162,7 @@ export async function pipethrough(
 
   const lxm = parseReqNsid(req)
 
-  const { url: origin, did } = await parseProxyInfo(ctx, req, lxm)
-  const aud = did
+  const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
 
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin,
