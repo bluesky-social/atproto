@@ -25,6 +25,7 @@ Promise.all([
     lib: '@atproto/lex-schema',
     pretty: true,
     indexFile: true,
+    defaultExport: true,
   }),
 
   // For tests

@@ -22,15 +22,15 @@ import { Agent, AgentOptions, buildAgent } from './agent.js'
 import { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
-// the needed lexicons directly.
-import { main as applyWrites } from './lexicons/com/atproto/repo/applyWrites.js'
-import { main as createRecord } from './lexicons/com/atproto/repo/createRecord.js'
-import { main as deleteRecord } from './lexicons/com/atproto/repo/deleteRecord.js'
-import { main as getRecord } from './lexicons/com/atproto/repo/getRecord.js'
-import { main as listRecords } from './lexicons/com/atproto/repo/listRecords.js'
-import { main as putRecord } from './lexicons/com/atproto/repo/putRecord.js'
-import { main as uploadBlob } from './lexicons/com/atproto/repo/uploadBlob.js'
-import { main as getBlob } from './lexicons/com/atproto/sync/getBlob.js'
+// the needed lexicon schemas directly.
+import applyWrites from './lexicons/com/atproto/repo/applyWrites.js'
+import createRecord from './lexicons/com/atproto/repo/createRecord.js'
+import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.js'
+import getRecord from './lexicons/com/atproto/repo/getRecord.js'
+import listRecords from './lexicons/com/atproto/repo/listRecords.js'
+import putRecord from './lexicons/com/atproto/repo/putRecord.js'
+import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
+import getBlob from './lexicons/com/atproto/sync/getBlob.js'
 import {
   XrpcResponse,
   XrpcResponseBody,

@@ -59,6 +59,23 @@ export type LexBuilderOptions = LexDefBuilderOptions & {
    * @default false
    */
   defsExport?: boolean
+  /**
+   * Whether to generate a default export for the "main" lexicon definition
+   * schema in the parent namespace file.
+   *
+   * This allows simpler access the main schema when importing directly from the
+   * file instead of using the full namespace as in:
+   * `com.atproto.repo.getRecord`.
+   *
+   * ```ts
+   * import getRecord from './com/atproto/repo/getRecord.js'
+   * // instead of
+   * import { main as getRecord } from './com/atproto/repo/getRecord.js'
+   * ```
+   *
+   * @default false
+   */
+  defaultExport?: boolean
 }
 
 /**
@@ -247,6 +264,14 @@ export class LexBuilder {
       file.addExportDeclaration({
         moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
         namespaceExport: '$defs',
+      })
+    }
+
+    if (this.options.defaultExport && doc.defs.main != null) {
+      // export { main as default } from './xyz.defs.js'
+      file.addExportDeclaration({
+        moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
+        namedExports: [{ name: 'main', alias: 'default' }],
       })
     }
   }

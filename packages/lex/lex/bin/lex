@@ -93,6 +93,12 @@ yargs(hideBin(process.argv))
           describe:
             'when some definitions conflict with child namespaces, this option allows to export lexicon definitions under a separate $defs namespace (e.g. com.example.foo.$defs)',
         },
+        defaultExport: {
+          type: 'boolean',
+          default: true,
+          describe:
+            'whether to generate a default export for the "main" lexicon definition schema in the parent namespace file',
+        },
         ignoreInvalidLexicons: {
           type: 'boolean',
           default: false,

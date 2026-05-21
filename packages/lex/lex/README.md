@@ -54,6 +54,14 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
   - [Type definitions](#type-definitions)
   - [Building data](#building-data)
   - [Validation Helpers](#validation-helpers)
+    - [`$nsid` - Namespace Identifier](#nsid---namespace-identifier)
+    - [`$type` - Type Identifier](#type---type-identifier)
+    - [`$check(data)` - Type Guard](#checkdata---type-guard)
+    - [`$parse(data)` - Parse and Validate](#parsedata---parse-and-validate)
+    - [`$validate(data)` - Validate a value against the schema](#validatedata---validate-a-value-against-the-schema)
+    - [`$safeParse(data, options?)` - Parse a value against a schema and get the resulting value](#safeparsedata-options---parse-a-value-against-a-schema-and-get-the-resulting-value)
+    - [`$build(data)` - Build with Defaults](#builddata---build-with-defaults)
+    - [`$isTypeOf(data)` - Type Discriminator](#istypeofdata---type-discriminator)
 - [Data Model](#data-model)
   - [Types](#types)
   - [JSON Encoding](#json-encoding)
@@ -61,20 +69,56 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 - [Making simple XRPC Requests](#making-simple-xrpc-requests)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
+    - [Unauthenticated Client](#unauthenticated-client)
+    - [Authenticated Client with OAuth](#authenticated-client-with-oauth)
+    - [Authenticated Client with Password](#authenticated-client-with-password)
+    - [Client with Service Proxy (authenticated only)](#client-with-service-proxy-authenticated-only)
+    - [Validation and Strictness Options](#validation-and-strictness-options)
   - [Core Methods](#core-methods)
+    - [`client.call()`](#clientcall)
+    - [`client.create()`](#clientcreate)
+    - [`client.get()`](#clientget)
+    - [`client.put()`](#clientput)
+    - [`client.delete()`](#clientdelete)
+    - [`client.list()`](#clientlist)
+    - [`client.applyWrites()`](#clientapplywrites)
   - [Error Handling](#error-handling)
+    - [Safe Methods](#safe-methods)
+    - [XrpcFailure Type](#xrpcfailure-type)
   - [Authentication Methods](#authentication-methods)
+    - [`client.did`](#clientdid)
+    - [`client.assertAuthenticated()`](#clientassertauthenticated)
+    - [`client.assertDid`](#clientassertdid)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
 - [Utilities](#utilities)
   - [Datetime Strings](#datetime-strings)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
+    - [Development Workflow](#development-workflow)
   - [Tree-Shaking](#tree-shaking)
+    - [Namespace notation](#namespace-notation)
+    - [Explicit `.main` reference](#explicit-main-reference)
+    - [Direct named import from the schema file](#direct-named-import-from-the-schema-file)
+    - [Default import (recommended)](#default-import-recommended)
+    - [Drawbacks of the default export](#drawbacks-of-the-default-export)
+    - [Summary](#summary)
   - [Blob references](#blob-references)
+    - [TypedBlobRef: The Current Standard](#typedblobref-the-current-standard)
+    - [LegacyBlobRef: Historical Format](#legacyblobref-historical-format)
+    - [Working with Both Formats](#working-with-both-formats)
   - [Actions](#actions)
+    - [What are Actions?](#what-are-actions)
+    - [Using Actions](#using-actions)
+    - [Composing Multiple Operations](#composing-multiple-operations)
+    - [Higher-Order Actions](#higher-order-actions)
   - [Creating a Client from Another Client](#creating-a-client-from-another-client)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
+    - [Creating Posts](#creating-posts)
+    - [Following Users](#following-users)
+    - [Updating Profile with Retry Logic](#updating-profile-with-retry-logic)
+    - [Packaging Actions as a Library](#packaging-actions-as-a-library)
+    - [Best Practices for Actions](#best-practices-for-actions)
   - [Standard Schema Compatibility](#standard-schema-compatibility)
 - [License](#license)
 
@@ -197,6 +241,7 @@ Options:
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
 - `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
+- `--no-defaultExport` - Disable generation of a `default` export of the `main` schema in each schema's namespace file (default exports are enabled by default; see [Tree-Shaking](#tree-shaking))
 
 ### Generated Schema Structure
 
@@ -1064,16 +1109,104 @@ This ensures that:
 
 ### Tree-Shaking
 
-The generated TypeScript is optimized for tree-shaking. Import only what you need:
+The generated TypeScript code is structured to be tree-shakeable, but the way you reference schemas has a meaningful impact on the final bundle size. There are several ways to refer to a generated schema, and each comes with different trade-offs.
+
+#### Namespace notation
+
+The most ergonomic style is to use a namespace import and reference schemas through dotted paths:
 
 ```typescript
-// Import specific methods
-import { post } from './lexicons/app/bsky/feed/post.js'
-import { getProfile } from './lexicons/app/bsky/actor/getProfile.js'
+import * as com from './lexicons/com.js'
 
-// Or use namespace imports (still tree-shakeable)
-import * as app from './lexicons/app.js'
+await client.call(com.atproto.repo.getRecord, {
+  /* ... */
+})
 ```
+
+This style is convenient and reads naturally as it mirrors the NSID of the schema. However, it produces the largest bundles. From the bundler's point of view, `com.atproto.repo.getRecord` is the whole schema namespace (which contains the `main` schema as well as helpers, and any other definitions). The bundler cannot know that `client.call()` only consumes the `main` schema, so it has to keep the rest of the namespace alive in the bundle.
+
+#### Explicit `.main` reference
+
+You can mitigate the bundle-size cost by explicitly naming the `main` definition:
+
+```typescript
+import * as com from './lexicons/com.js'
+
+await client.call(com.atproto.repo.getRecord.main, {
+  /* ... */
+})
+```
+
+This lets the bundler drop the sibling definitions inside `getRecord` that aren't referenced. The drawback is that it leaks an implementation detail: the `main` segment of the path. In Lexicon, `main` is typically implicit:
+
+- Records use a `$type` of `app.bsky.feed.post` (no `#main`)
+- XRPC endpoints are exposed as `/xrpc/com.atproto.repo.getRecord` (no `main`)
+
+So writing `.main` in application code feels verbose compared to how Lexicons are normally referred to.
+
+#### Direct named import from the schema file
+
+You can also import the `main` schema directly from the file that defines it:
+
+```typescript
+import { main as getRecord } from './lexicons/com/atproto/repo/getRecord.js'
+
+await client.call(getRecord, {
+  /* ... */
+})
+```
+
+This produces equally small bundles as the explicit `.main` reference, but it still surfaces the `main` identifier: you have to know to import `main` and likely rename it.
+
+#### Default import (recommended)
+
+To make the small-bundle path also the ergonomic path, every namespace file generated by `lex build` re-exports the `main` schema as its `default` export:
+
+```typescript
+// generated file: ./lexicons/com/atproto/repo/getRecord.js
+export * from './getRecord.defs.js'
+export { main as default } from './getRecord.defs.js'
+```
+
+This means you can write:
+
+```typescript
+import getRecord from './lexicons/com/atproto/repo/getRecord.js'
+import post from './lexicons/app/bsky/feed/post.js'
+
+await client.call(getRecord, {
+  /* ... */
+})
+await client.create(post, {
+  /* ... */
+})
+```
+
+This is the most bundle-friendly style: the bundler only pulls in the `main` schema, and the import name doesn't have to mention `main` at all. This helps keeping application code aligned with how Lexicons are usually identified.
+
+#### Drawbacks of the default export
+
+The `default` re-export is enabled by default but has two minor drawbacks:
+
+1. It is one additional property on the namespace module, which can very slightly increase bundle size if you also use the namespace in some places.
+2. Any Lexicon document whose path segment is literally `default` (for example a hypothetical `com.example.records.default`) would conflict with the generated `default` export.
+
+If either of these matters for your use case, you can disable the generation of `default` exports with the `--no-defaultExport` flag:
+
+```bash
+lex build --no-defaultExport
+```
+
+#### Summary
+
+| Style                                                  | Bundle size | Ergonomics                   |
+| ------------------------------------------------------ | ----------- | ---------------------------- |
+| `com.atproto.repo.getRecord` (namespace)               | Largest     | Best: matches the NSID       |
+| `com.atproto.repo.getRecord.main`                      | Small       | Leaks the `main` identifier  |
+| `import { main as getRecord } from '.../getRecord.js'` | Small       | Verbose, leaks `main`        |
+| `import getRecord from '.../getRecord.js'`             | Small       | Concise, no `main` in source |
+
+For libraries and applications where bundle size matters (typically anything shipped to a browser), prefer the default-import style. For scripts, tests, and server-side code where the bundle size of generated schemas is not a concern, the namespace style is perfectly fine.
 
 ### Blob references
 
