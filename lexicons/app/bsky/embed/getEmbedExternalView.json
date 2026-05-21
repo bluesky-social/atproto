@@ -46,14 +46,6 @@
                 "type": "unknown",
                 "description": "The raw record data of the Atmosphere records that backed this view. This is returned for convenience, to avoid the need for the client to separately fetch the record data for the associatedRefs. Example: the site.standard.document and site.standard.publication records that backed this view."
               }
-            },
-            "associatedProfiles": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.actor.defs#profileViewBasic"
-              },
-              "description": "Profiles of the owners of the Atmosphere records that backed this view."
             }
           }
         }

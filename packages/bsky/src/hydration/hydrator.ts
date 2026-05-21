@@ -802,6 +802,7 @@ export class Hydrator {
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
+    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const ssUris = dedupeStrs(
@@ -810,10 +811,12 @@ export class Hydrator {
       ),
     ) as AtUriString[]
     if (!ssUris.length) return { ctx }
+    const ssDids = dedupeStrs(dids)
 
-    const [{ documents, publications }, labels] = await Promise.all([
+    const [{ documents, publications }, labels, profiles] = await Promise.all([
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+      this.hydrateProfilesBasic(ssDids, ctx)
     ])
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)

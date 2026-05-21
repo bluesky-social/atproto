@@ -18,6 +18,8 @@ import {
 import { Views } from '../../../../views/index.js'
 import { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
 import { resHeaders } from '../../../util.js'
+import { AtUri, DidString } from '@atproto/syntax'
+import { dedupeStrs } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   const getEmbedExternalView = createPipeline(
@@ -45,7 +47,12 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
-  return { uris: inputs.params.uris as AtUriString[] }
+  const uris = inputs.params.uris as AtUriString[]
+  const dids = uris.map((uri) => new AtUri(uri).did)
+  return {
+    uris,
+    dids
+  }
 }
 
 const hydration = async (
@@ -54,6 +61,7 @@ const hydration = async (
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydrateEmbedExternalViewFromUris(
     skeleton.uris,
+    skeleton.dids,
     params.hydrateCtx,
   )
 }
@@ -63,6 +71,7 @@ const presentation = (
 ): Output => {
   const documents = inputs.hydration.siteStandardDocuments
   const publications = inputs.hydration.siteStandardPublications
+  const profile = inputs.ctx.views.profileDetailed(inputs.skeleton.did, inputs.hydration)
   // Dispatch by record type. Today site.standard is the only kind we know
   // how to render; future record types get their own branch.
   if (
@@ -143,6 +152,7 @@ type Params = app.bsky.embed.getEmbedExternalView.$Params & {
 
 type Skeleton = {
   uris: AtUriString[]
+  dids: DidString[]
 }
 
 type Output = {
