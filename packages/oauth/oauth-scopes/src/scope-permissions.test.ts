@@ -265,7 +265,7 @@ describe('ScopePermissions', () => {
     })
   })
 
-  describe('assertRpc combined-aud (issue #4850)', () => {
+  describe('assertRpc combined-aud', () => {
     it('allows did#serviceId aud when scope grants the same combined form', () => {
       const set = new ScopePermissions(
         'rpc:app.bsky.feed.getFeed?aud=did:web:example.com%23bsky_appview',

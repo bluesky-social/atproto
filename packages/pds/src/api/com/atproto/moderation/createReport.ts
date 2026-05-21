@@ -11,12 +11,15 @@ export default function (server: Server, ctx: AppContext) {
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
         const lxm = com.atproto.moderation.createReport.$lxm
-        const aud = computeProxyTo(ctx, req, lxm)
-        permissions.assertRpc({ aud, lxm })
+        const scopeAud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud: scopeAud, lxm })
       },
     }),
     handler: async ({ auth, params, input: { body }, req }) => {
-      const { url, did: aud } = await parseProxyInfo(
+      // Phase 1 of service auth updates: scope check (in authorize, above)
+      // sees the combined did#serviceId form, the outbound service-auth JWT
+      // keeps bare-DID aud.
+      const { url, did: tokenAud } = await parseProxyInfo(
         ctx,
         req,
         com.atproto.moderation.createReport.$lxm,
@@ -24,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const { headers } = await ctx.serviceAuthHeaders(
         auth.credentials.did,
-        aud,
+        tokenAud,
         com.atproto.moderation.createReport.$lxm,
       )
 
