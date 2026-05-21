@@ -1,5 +1,11 @@
 # @atproto/lex-data
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix typing of internal NodeJS buffer
+
 ## 0.1.0
 
 ### Minor Changes

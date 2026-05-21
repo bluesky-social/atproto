@@ -1,5 +1,23 @@
 # @atproto/api
 
+## 0.20.2
+
+### Patch Changes
+
+- [#4975](https://github.com/bluesky-social/atproto/pull/4975) [`5b43753`](https://github.com/bluesky-social/atproto/commit/5b43753aa5e32edfa8aebbcc6f1e8ba777657c07) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4915](https://github.com/bluesky-social/atproto/pull/4915) [`2c958f8`](https://github.com/bluesky-social/atproto/commit/2c958f88219b7c796a884a37da13847bb817c8e6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add rich metadata fields to `app.bsky.embed.external#viewExternal`, and a new
+  query method `app.bsky.embed.getEmbedExternalView`. Also changes
+  `associatedRecords` to `associatedRefs` on the `app.bsky.embed.external` record.
+
+## 0.20.1
+
+### Patch Changes
+
+- [#4963](https://github.com/bluesky-social/atproto/pull/4963) [`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4968](https://github.com/bluesky-social/atproto/pull/4968) [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Run "lexgen" during CI instead of keeping the generated code in Git
+
 ## 0.20.0
 
 ### Minor Changes

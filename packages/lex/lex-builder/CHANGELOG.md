@@ -1,5 +1,11 @@
 # @atproto/lex-builder
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4972](https://github.com/bluesky-social/atproto/pull/4972) [`fb1b403`](https://github.com/bluesky-social/atproto/commit/fb1b40350d46f3c49e512b7e24b071b03902e3b8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix XRPC methods being non tree-shakable
+
 ## 0.1.0
 
 ### Minor Changes

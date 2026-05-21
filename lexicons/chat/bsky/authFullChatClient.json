@@ -17,6 +17,7 @@
           "inheritAud": true,
           "lxm": [
             "chat.bsky.actor.deleteAccount",
+            "chat.bsky.actor.getStatus",
             "chat.bsky.convo.acceptConvo",
             "chat.bsky.convo.addReaction",
             "chat.bsky.convo.deleteMessageForSelf",

@@ -144,7 +144,7 @@ type Params = app.bsky.unspecced.getTrendingTopics.$Params & {
 type SkeletonState = app.bsky.unspecced.getTrendsSkeleton.$OutputBody
 
 function getUniqueDidsFromTrends(
-  trends?: app.bsky.unspecced.defs.$defs.SkeletonTrend[],
+  trends?: app.bsky.unspecced.defs.SkeletonTrend[],
 ): DidString[] {
   if (!trends) return []
 

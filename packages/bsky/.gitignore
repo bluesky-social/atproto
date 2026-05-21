@@ -1,5 +1,3 @@
-# @atproto/lex-cli
-src/lexicon
 # @atproto/lex
 src/lexicons
 # @bufbuild/buf
