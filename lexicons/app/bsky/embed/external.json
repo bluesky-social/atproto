@@ -85,6 +85,7 @@
     "viewExternalSource": {
       "type": "object",
       "description": "The source of an external embed, such as a standard.site publication.",
+      "required": ["uri", "title"],
       "properties": {
         "uri": {
           "type": "string",
