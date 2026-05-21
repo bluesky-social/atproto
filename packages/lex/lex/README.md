@@ -1075,14 +1075,6 @@ import { getProfile } from './lexicons/app/bsky/actor/getProfile.js'
 import * as app from './lexicons/app.js'
 ```
 
-For library authors, use `--pure-annotations` when building:
-
-```bash
-lex build --pure-annotations
-```
-
-This will make the generated code more easily tree-shakeable from places that import your library.
-
 ### Blob references
 
 In AT Protocol, binary data (blobs) are referenced using blob references, which include metadata like MIME type and size. These references allow PDSs to determine which binary data ("files") is referenced by records.
