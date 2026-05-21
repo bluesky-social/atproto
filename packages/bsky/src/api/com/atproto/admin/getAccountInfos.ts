@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const infos = mapDefined(
         dids,
-        (did): com.atproto.admin.defs.$defs.AccountView | undefined => {
+        (did): com.atproto.admin.defs.AccountView | undefined => {
           const info = actors.get(did)
           if (!info) return
           if (info.takedownRef && !includeTakedowns) return
