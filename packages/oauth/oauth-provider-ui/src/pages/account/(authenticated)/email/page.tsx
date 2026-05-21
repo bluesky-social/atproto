@@ -3,8 +3,8 @@ import { UpdateEmailView } from '#/components/update-email-view.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
-  useChangeEmailRequest,
   useUpdateEmailConfirm,
+  useUpdateEmailRequest,
   useVerifyEmailConfirm,
   useVerifyEmailRequest,
 } from '#/data/email'
@@ -13,7 +13,7 @@ export function Page() {
   const { account } = useAuthenticatedSession()
   const { email, sub } = account
 
-  const changeRequest = useChangeEmailRequest()
+  const updateRequest = useUpdateEmailRequest()
   const updateConfirm = useUpdateEmailConfirm()
   const verifyRequest = useVerifyEmailRequest()
   const verifyConfirm = useVerifyEmailConfirm()
@@ -31,12 +31,12 @@ export function Page() {
   return (
     <UpdateEmailView
       email={email}
-      requestPending={changeRequest.isPending}
+      requestPending={updateRequest.isPending}
       confirmPending={updateConfirm.isPending}
       verifyRequestPending={verifyRequest.isPending}
       verifyConfirmPending={verifyConfirm.isPending}
       onRequest={async () => {
-        await changeRequest.mutateAsync({ sub })
+        await updateRequest.mutateAsync({ sub })
       }}
       onConfirm={async ({ email, token }) => {
         await updateConfirm.mutateAsync({ sub, token, email })

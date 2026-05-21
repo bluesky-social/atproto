@@ -10,7 +10,7 @@ import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
 import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
-export function useChangeEmailRequest() {
+export function useUpdateEmailRequest() {
   const api = useApi()
   const { t } = useLingui()
   const { notify } = useNotificationsContext()
