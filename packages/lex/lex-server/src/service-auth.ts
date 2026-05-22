@@ -2,7 +2,10 @@ import * as crypto from '@atproto/crypto'
 import {
   AtprotoDid,
   AtprotoDidDocument,
+  AtprotoTokenAud,
   Did,
+  isAtprotoDid,
+  isAtprotoDidRefAbsolute,
   matchesIdentifier,
 } from '@atproto/did'
 import { fromBase64, isPlainObject, utf8FromBase64 } from '@atproto/lex-data'
@@ -63,13 +66,15 @@ export type UniqueNonceChecker = (nonce: string) => Promise<boolean>
  */
 export type ServiceAuthOptions = CreateDidResolverOptions & {
   /**
-   * Expected audience ("aud") claim in the JWT token.
+   * Expected audience(s) for the JWT `aud` claim.
    *
-   * This should be the DID of your service. The token must include this
-   * value in its `aud` claim to be accepted. Set to `null` to skip
+   * Pass a single value to require an exact match, or an array to allow any
+   * of several values. Each entry may be a bare atproto DID (e.g.
+   * `did:web:api.example.com`) or a combined reference (e.g.
+   * `did:web:api.example.com#bsky_appview`). Set to `null` to skip
    * audience verification (not recommended for production).
    */
-  audience: null | DidString
+  audience: null | AtprotoTokenAud | readonly AtprotoTokenAud[]
   /**
    * Function to check and record nonce uniqueness.
    *
@@ -306,7 +311,7 @@ export type ParseJwtOptions = {
   /** Maximum age in seconds for token validity window. */
   maxAge: number
   /** Expected audience claim, or null to skip audience verification. */
-  audience: null | DidString
+  audience: null | AtprotoTokenAud | readonly AtprotoTokenAud[]
   /** Function to check nonce uniqueness. */
   unique: UniqueNonceChecker
   /** Expected lexicon method NSID for the `lxm` claim. */
@@ -406,10 +411,17 @@ async function parseJwt(
     )
   }
 
-  if (options.audience !== null && options.audience !== payload.aud) {
-    throw new LexServerAuthError('AuthenticationRequired', 'Invalid audience', {
-      Bearer: { error: 'InvalidAudience' },
-    })
+  if (options.audience !== null) {
+    const accepted: readonly AtprotoTokenAud[] = Array.isArray(options.audience)
+      ? options.audience
+      : [options.audience]
+    if (!accepted.includes(payload.aud as AtprotoTokenAud)) {
+      throw new LexServerAuthError(
+        'AuthenticationRequired',
+        'Invalid audience',
+        { Bearer: { error: 'InvalidAudience' } },
+      )
+    }
   }
 
   const now = Math.floor(Date.now() / 1000)
@@ -479,7 +491,7 @@ function isHeaderObject(obj: unknown): obj is HeaderObject {
 
 type PayloadObject = {
   iss: DidString
-  aud: DidString
+  aud: AtprotoTokenAud
   exp: number
   iat?: number
   nbf?: number
@@ -497,7 +509,7 @@ export function isPayloadObject(obj: unknown): obj is PayloadObject {
     (obj.nbf === undefined || isPositiveInt(obj.nbf)) &&
     isPositiveInt(obj.exp) &&
     isDidString(obj.iss) &&
-    isDidString(obj.aud)
+    isAtprotoTokenAud(obj.aud)
   )
 }
 
@@ -508,6 +520,10 @@ function timeDiff(t1: number, t2?: number): number {
 
 function isPositiveInt(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0
+}
+
+function isAtprotoTokenAud(value: unknown): value is AtprotoTokenAud {
+  return isAtprotoDid(value) || isAtprotoDidRefAbsolute(value)
 }
 
 function jsonFromBase64<T>(b64: string, isType: (obj: unknown) => obj is T): T {
