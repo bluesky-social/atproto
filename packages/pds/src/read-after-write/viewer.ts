@@ -39,14 +39,14 @@ export class LocalViewer {
     return this.imageUrlBuilder.build(pattern, this.did, cid) as UriString
   }
 
-  async serviceAuthHeaders(did: string, lxm: string) {
+  async serviceAuthHeaders(did: DidString, lxm: string) {
     if (!this.bskyAppView) {
       throw new Error('Could not find bsky appview did')
     }
     const keypair = await this.actorStoreReader.keypair()
 
     return createServiceAuthHeaders({
-      iss: did as `did:${string}:${string}`,
+      iss: did,
       aud: this.bskyAppView.did,
       lxm,
       keypair,

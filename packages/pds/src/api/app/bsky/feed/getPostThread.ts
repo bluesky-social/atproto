@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { isHandleString, l } from '@atproto/lex'
-import { AtUri, AtUriString } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
@@ -185,7 +185,7 @@ const readAfterWriteNotFound = async (
   ctx: AppContext,
   localViewer: LocalViewer,
   params: app.bsky.feed.getPostThread.$Params,
-  requester: string,
+  requester: DidString,
   rev: string,
   resolvedUri: AtUri,
 ): Promise<{

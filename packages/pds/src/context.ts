@@ -9,6 +9,7 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
 import {
   AccessTokenMode,
   JoseKey,
@@ -503,12 +504,12 @@ export class AppContext {
     })
   }
 
-  async appviewAuthHeaders(did: string, lxm: string) {
+  async appviewAuthHeaders(did: DidString, lxm: string) {
     assert(this.bskyAppView)
     return this.serviceAuthHeaders(did, this.bskyAppView.did, lxm)
   }
 
-  async entrywayAuthHeaders(req: express.Request, did: string, lxm: string) {
+  async entrywayAuthHeaders(req: express.Request, did: DidString, lxm: string) {
     assert(this.cfg.entryway)
     const headers = await this.serviceAuthHeaders(
       did,
@@ -522,24 +523,20 @@ export class AppContext {
     return forwardedFor(req, authPassthru(req))
   }
 
-  async serviceAuthHeaders(
-    did: string,
-    aud: string,
-    lxm: string,
-  ): Promise<{ headers: Record<string, string> }> {
+  async serviceAuthHeaders(did: DidString, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
-      iss: did as `did:${string}:${string}`,
+      iss: did,
       aud,
       lxm,
       keypair,
     })
   }
 
-  async serviceAuthJwt(did: string, aud: string, lxm: string): Promise<string> {
+  async serviceAuthJwt(did: DidString, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceJwt({
-      iss: did as `did:${string}:${string}`,
+      iss: did,
       aud,
       lxm,
       keypair,

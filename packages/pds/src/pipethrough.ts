@@ -9,6 +9,7 @@ import {
   streamToNodeBuffer,
 } from '@atproto/common'
 import { RpcPermissionMatch } from '@atproto/oauth-scopes'
+import { DidString } from '@atproto/syntax'
 import {
   CatchallHandler,
   HandlerPipeThroughBuffer,
@@ -130,7 +131,7 @@ export type PipethroughOptions = {
    * Specify the issuer (requester) for service auth. If not provided, no
    * authorization headers will be added to the request.
    */
-  iss?: string
+  iss?: DidString
 
   /**
    * Override the audience for service auth. If not provided, the audience will

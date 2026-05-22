@@ -1,6 +1,7 @@
 import express from 'express'
 import { LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
+import { DidString } from '@atproto/syntax'
 import {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
@@ -31,7 +32,7 @@ export const pipethroughReadAfterWrite = async <
   },
 >(
   ctx: AppContext,
-  reqCtx: { req: express.Request; auth: { credentials: { did: string } } },
+  reqCtx: { req: express.Request; auth: { credentials: { did: DidString } } },
   ns: l.Main<M>,
   munge: MungeFn<l.InferMethodOutputBody<M>>,
 ): Promise<
