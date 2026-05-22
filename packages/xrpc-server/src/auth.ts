@@ -5,11 +5,12 @@ import { DidString, isDidString } from '@atproto/lex-schema'
 import { AuthRequiredError } from './errors.js'
 
 type ServiceJwtParams = {
-  iss: string
+  iss: DidString | `${DidString}#${string}`
   aud: string
   iat?: number
   exp?: number
   lxm: string | null
+  kid?: string
   keypair: crypto.Keypair
 }
 
@@ -18,7 +19,7 @@ type ServiceJwtHeaders = {
 } & Record<string, unknown>
 
 type ServiceJwtPayload = {
-  iss: DidString | `${DidString}#${string}`
+  iss: DidString
   aud: string
   exp: number
   lxm?: string
@@ -28,7 +29,9 @@ type ServiceJwtPayload = {
 export const createServiceJwt = async (
   params: ServiceJwtParams,
 ): Promise<string> => {
-  const { iss, aud, keypair } = params
+  const { aud, keypair } = params
+  const iss = stripDidFragment(params.iss)
+  const kid = params.kid ?? '#atproto'
   const iat = params.iat ?? Math.floor(Date.now() / 1e3)
   const exp = params.exp ?? iat + MINUTE / 1e3
   const lxm = params.lxm ?? undefined
@@ -36,6 +39,7 @@ export const createServiceJwt = async (
   const header = {
     typ: 'JWT',
     alg: keypair.jwtAlg,
+    kid,
   }
   const payload = common.noUndefinedVals({
     iat,
@@ -213,6 +217,11 @@ const parsePayload = (b64: string): ServiceJwtPayload => {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   return payload
+}
+
+function stripDidFragment(iss: string): DidString {
+  const hashIdx = iss.indexOf('#')
+  return (hashIdx === -1 ? iss : iss.slice(0, hashIdx)) as DidString
 }
 
 function isDidStringOrService(
