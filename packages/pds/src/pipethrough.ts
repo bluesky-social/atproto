@@ -63,11 +63,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         serviceId,
       } = await parseProxyInfo(ctx, req, lxm)
       // Phase 1 of service auth updates: the scope check sees the combined
-      // did#serviceId form (so OAuth callers' rpc:?aud=did#service scopes
-      // match), while the outbound service-auth JWT keeps bare-DID aud
-      // regardless of session type.
+      // did#serviceId form so OAuth callers' rpc:?aud=did#service scopes
+      // match. The outbound service-auth JWT keeps bare-DID aud unless
+      // ctx.cfg.proxy.serviceAuthCombinedAud is enabled.
       const scopeAud = `${did}#${serviceId}`
-      const tokenAud = did
+      const tokenAud = ctx.cfg.proxy.serviceAuthCombinedAud ? scopeAud : did
 
       const authResult = await performAuth({
         req,
