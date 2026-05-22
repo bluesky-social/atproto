@@ -1,27 +1,25 @@
-import { AtprotoDid, isAtprotoDid } from './atproto.js'
+import { Did, isDid } from './did.js'
 import { isFragment } from './lib/uri.js'
 
 /**
- * An atproto-constrained absolute DID reference: `${AtprotoDid}#${fragment}`.
+ * An absolute DID reference: `${Did}#${fragment}`.
+ *
+ * @see {@link https://www.w3.org/TR/did-core/#did-url-syntax}
  */
-export type AtprotoDidRefAbsolute = `${AtprotoDid}#${string}`
+export type DidRefAbsolute<M extends string = string> = `${Did<M>}#${string}`
 
-export const isAtprotoDidRefAbsolute = (
-  value: unknown,
-): value is AtprotoDidRefAbsolute => {
+export const isDidRefAbsolute = (value: unknown): value is DidRefAbsolute => {
   if (typeof value !== 'string') return false
   const hashIndex = value.indexOf('#')
   if (hashIndex === -1) return false // no '#'
   if (hashIndex === value.length - 1) return false // empty fragment
   if (value.indexOf('#', hashIndex + 1) !== -1) return false // more than one '#'
-  return (
-    isFragment(value, hashIndex + 1) && isAtprotoDid(value.slice(0, hashIndex))
-  )
+  return isFragment(value, hashIndex + 1) && isDid(value.slice(0, hashIndex))
 }
 
 /**
- * A relative DID reference, e.g. `#atproto`. The optional `id` parameter
- * narrows the fragment.
+ * A relative DID reference (a `#fragment` resolved against the surrounding
+ * DID document's `id`). The optional `id` parameter narrows the fragment.
  */
 export type DidRefRelative<I extends string = string> = `#${I}`
 

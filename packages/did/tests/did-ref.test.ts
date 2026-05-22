@@ -1,4 +1,5 @@
-import { isAtprotoDidRefAbsolute, isDidRefRelative } from '../src/did-ref.js'
+import { isAtprotoDidRefAbsolute } from '../src/atproto.js'
+import { isDidRefRelative } from '../src/did-ref.js'
 
 describe('isAtprotoDidRefAbsolute', () => {
   it('accepts well-formed absolute references', () => {

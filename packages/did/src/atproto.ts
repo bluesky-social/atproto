@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { DidDocument, DidService } from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
+import { DidRefAbsolute, isDidRefAbsolute } from './did-ref.js'
 import { Did } from './did.js'
 import { canParse } from './lib/uri.js'
 import {
@@ -219,4 +220,16 @@ export function isAtprotoVerificationMethod<
     ) &&
     matchesIdentifier(this.id, 'atproto', method.id)
   )
+}
+
+/**
+ * An atproto-constrained absolute DID reference: `${AtprotoDid}#${fragment}`.
+ */
+export type AtprotoDidRefAbsolute = DidRefAbsolute<AtprotoIdentityDidMethods>
+
+export function isAtprotoDidRefAbsolute(
+  value: unknown,
+): value is AtprotoDidRefAbsolute {
+  if (!isDidRefAbsolute(value)) return false
+  return isAtprotoDid(value.slice(0, value.indexOf('#')))
 }
