@@ -83,8 +83,8 @@ export class RpcPermission
 
   static scopeNeededFor(options: RpcPermissionMatch): string {
     return RpcPermission.parser.format({
-      aud: options.aud as AudParam,
-      lxm: [options.lxm as LxmParam],
+      aud: options.aud as AtprotoDidRefAbsolute,
+      lxm: [options.lxm as Nsid],
     })
   }
 }
