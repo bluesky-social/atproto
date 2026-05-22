@@ -277,7 +277,7 @@ describe('Auth', () => {
         jwt,
         'did:example:aud',
         null,
-        async (_did, forceRefresh) => {
+        async (_did, _kid, forceRefresh) => {
           if (forceRefresh) {
             usedKeypair2 = true
             return keypair2.did()
@@ -315,6 +315,141 @@ describe('Auth', () => {
         },
       )
       await expect(tryVerify).resolves.toEqual(payload)
+    })
+
+    describe('Phase 1 service auth updates', () => {
+      it('accepts an ownDid array and matches any entry', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        const jwt = await xrpcServer.createServiceJwt({
+          iss: 'did:example:iss',
+          aud: 'did:web:appview.test#bsky_appview',
+          keypair,
+          lxm: 'app.bsky.feed.getFeed',
+        })
+        const validated = await xrpcServer.verifyJwt(
+          jwt,
+          ['did:web:other.test', 'did:web:appview.test#bsky_appview'],
+          'app.bsky.feed.getFeed',
+          async () => keypair.did(),
+        )
+        expect(validated.aud).toBe('did:web:appview.test#bsky_appview')
+      })
+
+      it('rejects when payload.aud is not in ownDid array', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        const jwt = await xrpcServer.createServiceJwt({
+          iss: 'did:example:iss',
+          aud: 'did:web:appview.test#bsky_appview',
+          keypair,
+          lxm: 'app.bsky.feed.getFeed',
+        })
+        const tryVerify = xrpcServer.verifyJwt(
+          jwt,
+          ['did:web:other.test'],
+          'app.bsky.feed.getFeed',
+          async () => keypair.did(),
+        )
+        await expect(tryVerify).rejects.toThrow(
+          /audience does not match service did/,
+        )
+      })
+
+      it('forwards kid header to getSigningKey (default #atproto)', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        const jwt = await xrpcServer.createServiceJwt({
+          iss: 'did:example:iss',
+          aud: 'did:web:appview.test',
+          keypair,
+          lxm: 'app.bsky.feed.getFeed',
+        })
+        let receivedKid: string | undefined
+        await xrpcServer.verifyJwt(
+          jwt,
+          'did:web:appview.test',
+          'app.bsky.feed.getFeed',
+          async (_iss, kid) => {
+            receivedKid = kid
+            return keypair.did()
+          },
+        )
+        expect(receivedKid).toBe('#atproto')
+      })
+
+      it('forwards kid header to getSigningKey (#atproto_label for ozone)', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        const jwt = await xrpcServer.createServiceJwt({
+          iss: 'did:example:iss',
+          kid: '#atproto_label',
+          aud: 'did:web:appview.test',
+          keypair,
+          lxm: 'app.bsky.feed.getFeed',
+        })
+        let receivedKid: string | undefined
+        await xrpcServer.verifyJwt(
+          jwt,
+          'did:web:appview.test',
+          'app.bsky.feed.getFeed',
+          async (_iss, kid) => {
+            receivedKid = kid
+            return keypair.did()
+          },
+        )
+        expect(receivedKid).toBe('#atproto_label')
+      })
+
+      it('emits bare-DID iss even if caller passed combined iss', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        const jwt = await xrpcServer.createServiceJwt({
+          iss: 'did:example:iss#atproto_labeler',
+          aud: 'did:web:appview.test',
+          keypair,
+          lxm: 'app.bsky.feed.getFeed',
+        })
+        const validated = await xrpcServer.verifyJwt(
+          jwt,
+          'did:web:appview.test',
+          'app.bsky.feed.getFeed',
+          async () => keypair.did(),
+        )
+        expect(validated.iss).toBe('did:example:iss')
+      })
+
+      it('falls back to iss fragment as kid when header.kid is absent', async () => {
+        // Manually craft a JWT with combined iss and no kid header to
+        // simulate an older caller. Sign with Secp256k1 manually.
+        const keypair = await Secp256k1Keypair.create()
+        const header = { typ: 'JWT', alg: keypair.jwtAlg }
+        const payload = {
+          iat: Math.floor(Date.now() / 1e3),
+          iss: 'did:example:iss#atproto_labeler',
+          aud: 'did:web:appview.test',
+          exp: Math.floor(Date.now() / 1e3) + 60,
+          lxm: 'app.bsky.feed.getFeed',
+        }
+        const headerB64 = Buffer.from(JSON.stringify(header)).toString(
+          'base64url',
+        )
+        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString(
+          'base64url',
+        )
+        const sig = Buffer.from(
+          await keypair.sign(
+            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
+          ),
+        )
+        const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
+        let receivedKid: string | undefined
+        await xrpcServer.verifyJwt(
+          jwt,
+          'did:web:appview.test',
+          'app.bsky.feed.getFeed',
+          async (_iss, kid) => {
+            receivedKid = kid
+            return keypair.did()
+          },
+        )
+        expect(receivedKid).toBe('#atproto_labeler')
+      })
     })
   })
 })
