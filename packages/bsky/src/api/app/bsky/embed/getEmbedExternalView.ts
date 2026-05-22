@@ -1,4 +1,6 @@
+import { mapDefined } from '@atproto/common'
 import { AtUriString, LexMap } from '@atproto/lex'
+import { AtUri, DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import {
@@ -16,10 +18,12 @@ import {
   noRules,
 } from '../../../../pipeline.js'
 import { Views } from '../../../../views/index.js'
-import { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
+import {
+  ExternalEmbedView,
+  ProfileViewBasic,
+  StrongRef,
+} from '../../../../views/types.js'
 import { resHeaders } from '../../../util.js'
-import { AtUri, DidString } from '@atproto/syntax'
-import { dedupeStrs } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   const getEmbedExternalView = createPipeline(
@@ -51,7 +55,7 @@ const skeleton = async (
   const dids = uris.map((uri) => new AtUri(uri).did)
   return {
     uris,
-    dids
+    dids,
   }
 }
 
@@ -69,16 +73,19 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ): Output => {
-  const documents = inputs.hydration.siteStandardDocuments
-  const publications = inputs.hydration.siteStandardPublications
-  const profile = inputs.ctx.views.profileDetailed(inputs.skeleton.did, inputs.hydration)
+  const { ctx, hydration, skeleton } = inputs
+  const documents = hydration.siteStandardDocuments
+  const publications = hydration.siteStandardPublications
+  const profiles = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profileBasic(did, hydration),
+  ) as ProfileViewBasic[]
   // Dispatch by record type. Today site.standard is the only kind we know
   // how to render; future record types get their own branch.
   if (
     (documents && documents.size > 0) ||
     (publications && publications.size > 0)
   ) {
-    return standardSitePresentation(inputs, documents, publications)
+    return standardSitePresentation(inputs, documents, publications, profiles)
   }
   return {}
 }
@@ -87,6 +94,7 @@ const standardSitePresentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
   documents: SiteStandardDocuments | undefined,
   publications: SiteStandardPublications | undefined,
+  associatedProfiles: ProfileViewBasic[],
 ): Output => {
   const { ctx, params, hydration } = inputs
 
@@ -135,6 +143,7 @@ const standardSitePresentation = (
       ...overlay,
       uri: params.url,
       associatedRefs,
+      associatedProfiles,
     },
   })
 

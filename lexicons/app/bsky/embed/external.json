@@ -84,7 +84,7 @@
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "app.bsky.actor.defs#profileViewDetailed"
+            "ref": "app.bsky.actor.defs#profileViewBasic"
           },
           "description": "Profiles of the owners of the Atmosphere records that backed this view."
         }

@@ -816,17 +816,41 @@ export class Hydrator {
     const [{ documents, publications }, labels, profiles] = await Promise.all([
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
-      this.hydrateProfilesBasic(ssDids, ctx)
+      this.hydrateProfilesBasic(ssDids, ctx),
     ])
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
     }
-    return {
+    // Edge case: a document's `site` may resolve to a publication owned by a
+    // different repo than any of the input URIs (the dataplane returns it
+    // even though it wasn't requested directly). Top up profile coverage for
+    // any such DIDs with a serial second hydration so `associatedProfiles`
+    // is complete.
+    const knownDids = new Set<string>(ssDids)
+    const extraDids: DidString[] = []
+    for (const key of documents.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownDids.has(did)) {
+        knownDids.add(did)
+        extraDids.push(did)
+      }
+    }
+    for (const key of publications.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownDids.has(did)) {
+        knownDids.add(did)
+        extraDids.push(did)
+      }
+    }
+    const profilesState = extraDids.length
+      ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
+      : profiles
+    return mergeStates(profilesState, {
       ctx,
       labels,
       siteStandardDocuments: documents,
       siteStandardPublications: publications,
-    }
+    })
   }
 
   // app.bsky.feed.defs#threadViewPost
