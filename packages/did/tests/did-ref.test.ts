@@ -1,9 +1,4 @@
-import {
-  AtprotoAudience,
-  isAtprotoAudience,
-  isAtprotoDidRefAbsolute,
-  isDidRefRelative,
-} from '../src/did-ref.js'
+import { isAtprotoDidRefAbsolute, isDidRefRelative } from '../src/did-ref.js'
 
 describe('isAtprotoDidRefAbsolute', () => {
   it('accepts well-formed absolute references', () => {
@@ -69,19 +64,5 @@ describe('isDidRefRelative', () => {
     expect(isDidRefRelative('#a#b')).toBe(false)
     expect(isDidRefRelative(null)).toBe(false)
     expect(isDidRefRelative(123)).toBe(false)
-  })
-})
-
-describe('AtprotoAudience deprecated alias', () => {
-  it('still type-checks as the same shape', () => {
-    const sample: AtprotoAudience = 'did:web:example.com#svc'
-    expect(isAtprotoAudience(sample)).toBe(true)
-  })
-
-  it('isAtprotoAudience matches isAtprotoDidRefAbsolute behavior', () => {
-    expect(isAtprotoAudience('did:plc:l3rouwludahu3ui3bt66mfvj#atproto')).toBe(
-      true,
-    )
-    expect(isAtprotoAudience('did:plc:l3rouwludahu3ui3bt66mfvj')).toBe(false)
   })
 })

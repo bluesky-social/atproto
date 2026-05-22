@@ -1,16 +1,21 @@
-import { AtprotoScopeAud, isAtprotoDidRefAbsolute } from '@atproto/did'
+import { AtprotoDidRefAbsolute, isAtprotoDidRefAbsolute } from '@atproto/did'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import { NeRoArray, ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 
-export { type AtprotoScopeAud, type Nsid, isAtprotoDidRefAbsolute, isNsid }
+export {
+  type AtprotoDidRefAbsolute,
+  type Nsid,
+  isAtprotoDidRefAbsolute,
+  isNsid,
+}
 
 export type LxmParam = '*' | Nsid
 export const isLxmParam = (value: unknown): value is LxmParam =>
   value === '*' || isNsid(value)
-export type AudParam = '*' | AtprotoScopeAud
+export type AudParam = '*' | AtprotoDidRefAbsolute
 export const isAudParam = (value: unknown): value is AudParam =>
   value === '*' || isAtprotoDidRefAbsolute(value)
 
@@ -23,8 +28,8 @@ export class RpcPermission
   implements ResourcePermission<'rpc', RpcPermissionMatch>
 {
   constructor(
-    public readonly aud: '*' | AtprotoScopeAud,
-    public readonly lxm: NeRoArray<'*' | Nsid>,
+    public readonly aud: AudParam,
+    public readonly lxm: NeRoArray<LxmParam>,
   ) {}
 
   matches(options: RpcPermissionMatch) {
@@ -78,8 +83,8 @@ export class RpcPermission
 
   static scopeNeededFor(options: RpcPermissionMatch): string {
     return RpcPermission.parser.format({
-      aud: options.aud as AtprotoScopeAud,
-      lxm: [options.lxm as Nsid],
+      aud: options.aud as AudParam,
+      lxm: [options.lxm as LxmParam],
     })
   }
 }

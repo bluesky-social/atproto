@@ -3,9 +3,6 @@ import { isFragment } from './lib/uri.js'
 
 /**
  * An atproto-constrained absolute DID reference: `${AtprotoDid}#${fragment}`.
- *
- * This is the same shape as the legacy `AtprotoAudience` type, kept under a
- * more accurate name now that the union is reused for non-audience contexts.
  */
 export type AtprotoDidRefAbsolute = `${AtprotoDid}#${string}`
 
@@ -40,21 +37,3 @@ export function isDidRefRelative<I extends string = string>(
   if (id !== undefined && value !== `#${id}`) return false // id mismatch
   return true
 }
-
-/**
- * The shape of `aud=...` values appearing in OAuth scopes — always combined.
- */
-export type AtprotoScopeAud = AtprotoDidRefAbsolute
-
-/**
- * The shape of `aud` claims in atproto service-auth JWTs — bare DID or
- * combined absolute reference. Phase 1 accepts both.
- */
-export type AtprotoTokenAud = AtprotoDid | AtprotoDidRefAbsolute
-
-/** @deprecated use {@link AtprotoScopeAud} or {@link AtprotoDidRefAbsolute}. */
-export type AtprotoAudience = AtprotoDidRefAbsolute
-
-/** @deprecated use {@link isAtprotoDidRefAbsolute}. */
-export const isAtprotoAudience: (value: unknown) => value is AtprotoAudience =
-  isAtprotoDidRefAbsolute

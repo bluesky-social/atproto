@@ -1,5 +1,5 @@
 ---
-'@atproto/did': patch
+'@atproto/did': minor
 ---
 
-Add `AtprotoDidRefAbsolute`, `DidRefRelative`, `AtprotoScopeAud`, and `AtprotoTokenAud` types and predicates. `AtprotoAudience` is renamed to `AtprotoDidRefAbsolute`; the old name is retained as a deprecated alias.
+Add `AtprotoDidRefAbsolute`, `DidRefRelative` types and predicates. The legacy `AtprotoAudience` and `isAtprotoAudience` are removed (breaking) — they are superseded by `AtprotoDidRefAbsolute` / `isAtprotoDidRefAbsolute`.
