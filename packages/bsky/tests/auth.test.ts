@@ -89,4 +89,31 @@ describe('auth', () => {
       ),
     ).rejects.toThrow()
   })
+
+  it('rejects a service auth token missing the lxm claim', async () => {
+    const aliceKeypair = await network.pds.ctx.actorStore.keypair(alice)
+    // Manually craft a JWT without lxm
+    const header = { typ: 'JWT', alg: aliceKeypair.jwtAlg, kid: '#atproto' }
+    const payload = {
+      iat: Math.floor(Date.now() / 1e3),
+      iss: alice,
+      aud: network.bsky.ctx.cfg.serverDid,
+      exp: Math.floor(Date.now() / 1e3) + 60,
+    }
+    const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url')
+    const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
+    const sig = Buffer.from(
+      await aliceKeypair.sign(
+        Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
+      ),
+    )
+    const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
+
+    await expect(
+      agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.carol },
+        { headers: { authorization: `Bearer ${jwt}` } },
+      ),
+    ).rejects.toThrow(/lexicon method|BadJwtLexiconMethod|lxm/i)
+  })
 })

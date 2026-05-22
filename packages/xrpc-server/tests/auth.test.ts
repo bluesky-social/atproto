@@ -451,6 +451,62 @@ describe('Auth', () => {
         expect(receivedKid).toBe('#atproto_labeler')
       })
     })
+
+    describe('strict lxm', () => {
+      it('rejects a token missing lxm when verifier expects lxm', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        // Manually craft a JWT with no lxm claim
+        const header = { typ: 'JWT', alg: keypair.jwtAlg, kid: '#atproto' }
+        const payload = {
+          iat: Math.floor(Date.now() / 1e3),
+          iss: 'did:example:iss',
+          aud: 'did:web:appview.test',
+          exp: Math.floor(Date.now() / 1e3) + 60,
+        }
+        const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url')
+        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
+        const sig = Buffer.from(
+          await keypair.sign(
+            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
+          ),
+        )
+        const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
+        await expect(
+          xrpcServer.verifyJwt(
+            jwt,
+            'did:web:appview.test',
+            'app.bsky.feed.getFeed',
+            async () => keypair.did(),
+          ),
+        ).rejects.toThrow(/missing jwt lexicon method/)
+      })
+
+      it('accepts a token missing lxm when verifier passes lxm: null (escape hatch)', async () => {
+        const keypair = await Secp256k1Keypair.create()
+        const header = { typ: 'JWT', alg: keypair.jwtAlg, kid: '#atproto' }
+        const payload = {
+          iat: Math.floor(Date.now() / 1e3),
+          iss: 'did:example:iss',
+          aud: 'did:web:appview.test',
+          exp: Math.floor(Date.now() / 1e3) + 60,
+        }
+        const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url')
+        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
+        const sig = Buffer.from(
+          await keypair.sign(
+            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
+          ),
+        )
+        const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
+        const result = await xrpcServer.verifyJwt(
+          jwt,
+          'did:web:appview.test',
+          null, // escape hatch
+          async () => keypair.did(),
+        )
+        expect(result.lxm).toBeUndefined()
+      })
+    })
   })
 })
 

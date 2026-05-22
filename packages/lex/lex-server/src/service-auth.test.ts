@@ -59,7 +59,7 @@ describe('serviceAuth - lxm validation', () => {
     expect(resolve).toHaveBeenCalled()
   })
 
-  it('skips lxm check when payload has no lxm claim', async () => {
+  it('rejects a token missing the lxm claim', async () => {
     const { auth, resolve } = setup()
     const jwt = makeJwt(basePayload())
     const request = new Request(`https://api.example.com/xrpc/${nsid}`, {
@@ -68,8 +68,8 @@ describe('serviceAuth - lxm validation', () => {
 
     await expect(
       auth({ request, method: { nsid } as any, params: {} }),
-    ).rejects.toThrow()
-    expect(resolve).toHaveBeenCalled()
+    ).rejects.toThrow('Missing JWT lexicon method ("lxm")')
+    expect(resolve).not.toHaveBeenCalled()
   })
 
   it('rejects an empty-string lxm claim against a real NSID', async () => {
