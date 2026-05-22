@@ -362,14 +362,7 @@ export class AuthVerifier {
       getSigningKey,
       verifySignatureWithKey,
     )
-    if (
-      !payload.iss.endsWith('#atproto_labeler') ||
-      payload.lxm !== undefined
-    ) {
-      // @TODO currently permissive of labelers who dont set lxm yet.
-      // we'll allow ozone self-hosters to upgrade before removing this condition.
-      assertLxmCheck()
-    }
+    assertLxmCheck()
     return { iss: payload.iss, aud: payload.aud }
   }
 
