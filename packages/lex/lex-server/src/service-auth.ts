@@ -6,7 +6,7 @@ import {
   Did,
   isAtprotoDid,
   isAtprotoDidRefAbsolute,
-  matchesIdentifier,
+  lookupDidReference,
 } from '@atproto/did'
 import { fromBase64, isPlainObject, utf8FromBase64 } from '@atproto/lex-data'
 import { DidString, isDidString } from '@atproto/lex-schema'
@@ -195,7 +195,9 @@ export function serviceAuth({
         )
       })
 
-    const key = getAtprotoSigningKey(didDocument)
+    const kid =
+      jwt.header.kid ?? extractIssFragment(jwt.payload.iss) ?? '#atproto'
+    const key = getAtprotoSigningKey(didDocument, kid)
 
     if (!key || !(await verifyJwt(jwt, key))) {
       signal.throwIfAborted()
@@ -213,7 +215,7 @@ export function serviceAuth({
         })
 
       // Verify again with the fresh key (if it changed)
-      const keyFresh = getAtprotoSigningKey(didDocument)
+      const keyFresh = getAtprotoSigningKey(didDocument, kid)
       if (!keyFresh || key === keyFresh || !(await verifyJwt(jwt, keyFresh))) {
         throw new LexServerAuthError(
           'AuthenticationRequired',
@@ -249,22 +251,21 @@ async function verifyJwt(jwt: ParsedJwt, key: Did<'key'>) {
 
 function getAtprotoSigningKey(
   didDocument: AtprotoDidDocument,
+  kid: string,
 ): null | Did<'key'> {
   try {
-    const key = didDocument.verificationMethod?.find(
-      isAtprotoVerificationMethod,
-      didDocument,
-    )
-
-    if (key?.publicKeyMultibase) {
-      if (key.type === 'EcdsaSecp256r1VerificationKey2019') {
-        const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
+    // Normalize kid to a relative reference for lookupDidReference
+    const ref = (kid.startsWith('#') ? kid : `#${kid}`) as `#${string}`
+    const vm = lookupDidReference(didDocument, ref, 'verificationMethod')
+    if (vm && typeof vm !== 'string' && vm.publicKeyMultibase) {
+      if (vm.type === 'EcdsaSecp256r1VerificationKey2019') {
+        const keyBytes = crypto.multibaseToBytes(vm.publicKeyMultibase)
         return crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
-      } else if (key.type === 'EcdsaSecp256k1VerificationKey2019') {
-        const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
+      } else if (vm.type === 'EcdsaSecp256k1VerificationKey2019') {
+        const keyBytes = crypto.multibaseToBytes(vm.publicKeyMultibase)
         return crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
-      } else if (key.type === 'Multikey') {
-        const parsed = crypto.parseMultikey(key.publicKeyMultibase)
+      } else if (vm.type === 'Multikey') {
+        const parsed = crypto.parseMultikey(vm.publicKeyMultibase)
         return crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
       }
     }
@@ -275,16 +276,6 @@ function getAtprotoSigningKey(
   return null
 }
 
-function isAtprotoVerificationMethod<
-  V extends string | { id: string; type: string; publicKeyMultibase?: string },
->(
-  this: AtprotoDidDocument,
-  vm: V,
-): vm is Exclude<V, string> & {
-  id: `${string}#atproto`
-} {
-  return typeof vm === 'object' && matchesIdentifier(this.id, 'atproto', vm.id)
-}
 
 async function parseJwtBearer(
   request: Request,
@@ -480,12 +471,13 @@ async function parseJwt(
 
 const textEncoder = /*#__PURE__*/ new TextEncoder()
 
-type HeaderObject = { alg: string; typ?: string }
+type HeaderObject = { alg: string; typ?: string; kid?: string }
 function isHeaderObject(obj: unknown): obj is HeaderObject {
   return (
     isPlainObject(obj) &&
     typeof obj.alg === 'string' &&
-    (obj.typ === undefined || typeof obj.typ === 'string')
+    (obj.typ === undefined || typeof obj.typ === 'string') &&
+    (obj.kid === undefined || typeof obj.kid === 'string')
   )
 }
 
@@ -520,6 +512,11 @@ function timeDiff(t1: number, t2?: number): number {
 
 function isPositiveInt(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0
+}
+
+function extractIssFragment(iss: string): string | null {
+  const hashIdx = iss.indexOf('#')
+  return hashIdx === -1 ? null : iss.slice(hashIdx)
 }
 
 function isAtprotoTokenAud(value: unknown): value is AtprotoTokenAud {
