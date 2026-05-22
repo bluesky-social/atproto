@@ -1,6 +1,5 @@
-import { mapDefined } from '@atproto/common'
 import { AtUriString, LexMap } from '@atproto/lex'
-import { AtUri, DidString } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import {
@@ -51,12 +50,7 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
-  const uris = inputs.params.uris as AtUriString[]
-  const dids = uris.map((uri) => new AtUri(uri).did)
-  return {
-    uris,
-    dids,
-  }
+  return { uris: inputs.params.uris as AtUriString[] }
 }
 
 const hydration = async (
@@ -65,7 +59,6 @@ const hydration = async (
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydrateEmbedExternalViewFromUris(
     skeleton.uris,
-    skeleton.dids,
     params.hydrateCtx,
   )
 }
@@ -73,19 +66,16 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ): Output => {
-  const { ctx, hydration, skeleton } = inputs
+  const { hydration } = inputs
   const documents = hydration.siteStandardDocuments
   const publications = hydration.siteStandardPublications
-  const profiles = mapDefined(skeleton.dids, (did) =>
-    ctx.views.profileBasic(did, hydration),
-  ) as ProfileViewBasic[]
   // Dispatch by record type. Today site.standard is the only kind we know
   // how to render; future record types get their own branch.
   if (
     (documents && documents.size > 0) ||
     (publications && publications.size > 0)
   ) {
-    return standardSitePresentation(inputs, documents, publications, profiles)
+    return standardSitePresentation(inputs, documents, publications)
   }
   return {}
 }
@@ -94,7 +84,6 @@ const standardSitePresentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
   documents: SiteStandardDocuments | undefined,
   publications: SiteStandardPublications | undefined,
-  associatedProfiles: ProfileViewBasic[],
 ): Output => {
   const { ctx, params, hydration } = inputs
 
@@ -110,9 +99,11 @@ const standardSitePresentation = (
   // Emit response refs/records only for the records we actually selected.
   // Anything else (e.g. extra publications the dataplane returned) is
   // intentionally excluded so the strongRefs Cardy writes onto the post
-  // match the view we built.
+  // match the view we built. Profiles are emitted in the same order as
+  // refs (one per slot) so consumers can match by index.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
+  const associatedProfiles: ProfileViewBasic[] = []
   for (const slot of [document, publication]) {
     if (!slot) continue
     associatedRefs.push(
@@ -122,6 +113,11 @@ const standardSitePresentation = (
       }),
     )
     associatedRecords.push(slot.info.record as LexMap)
+    const profile = ctx.views.profileBasic(
+      new AtUri(slot.ref.uri).did,
+      hydration,
+    )
+    if (profile) associatedProfiles.push(profile as ProfileViewBasic)
   }
 
   if (!associatedRefs.length) return {}
@@ -161,7 +157,6 @@ type Params = app.bsky.embed.getEmbedExternalView.$Params & {
 
 type Skeleton = {
   uris: AtUriString[]
-  dids: DidString[]
 }
 
 type Output = {

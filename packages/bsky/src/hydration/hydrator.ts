@@ -802,7 +802,6 @@ export class Hydrator {
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
-    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const ssUris = dedupeStrs(
@@ -811,12 +810,12 @@ export class Hydrator {
       ),
     ) as AtUriString[]
     if (!ssUris.length) return { ctx }
-    const ssDids = dedupeStrs(dids)
+    const dids = dedupeStrs(ssUris.map((uri) => new AtUri(uri).did))
 
     const [{ documents, publications }, labels, profiles] = await Promise.all([
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
-      this.hydrateProfilesBasic(ssDids, ctx),
+      this.hydrateProfilesBasic(dids, ctx),
     ])
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
@@ -826,15 +825,8 @@ export class Hydrator {
     // even though it wasn't requested directly). Top up profile coverage for
     // any such DIDs with a serial second hydration so `associatedProfiles`
     // is complete.
-    const knownDids = new Set<string>(ssDids)
+    const knownDids = new Set<string>(dids)
     const extraDids: DidString[] = []
-    for (const key of documents.keys()) {
-      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
-      if (!knownDids.has(did)) {
-        knownDids.add(did)
-        extraDids.push(did)
-      }
-    }
     for (const key of publications.keys()) {
       const did = uriToDid(parseSiteStandardRecordKey(key).uri)
       if (!knownDids.has(did)) {
@@ -845,6 +837,7 @@ export class Hydrator {
     const profilesState = extraDids.length
       ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
       : profiles
+
     return mergeStates(profilesState, {
       ctx,
       labels,
