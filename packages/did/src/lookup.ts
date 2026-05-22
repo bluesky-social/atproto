@@ -1,5 +1,5 @@
 import { DidService } from './did-document.js'
-import { AtprotoDidDocument } from './atproto.js'
+import { AtprotoDidDocument, VerificationMethod } from './atproto.js'
 import { AtprotoDidRefAbsolute } from './did-ref.js'
 
 /**
@@ -10,10 +10,6 @@ type DidDocumentSection =
   | 'service'
   | 'assertionMethod'
   | 'authentication'
-
-type VerificationMethod = NonNullable<
-  AtprotoDidDocument['verificationMethod']
->[number]
 
 type EntryFor<S extends DidDocumentSection> = S extends 'verificationMethod'
   ? VerificationMethod
