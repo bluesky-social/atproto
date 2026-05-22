@@ -262,9 +262,9 @@ describe(validateStandardSiteForUrl, () => {
         const doc = makeDoc(
           path === undefined ? { site: baseUrl } : { site: baseUrl, path },
         )
-        expect(
-          validateStandardSiteForUrl(doc, undefined, assumedUrl),
-        ).toBe(expected)
+        expect(validateStandardSiteForUrl(doc, undefined, assumedUrl)).toBe(
+          expected,
+        )
       })
     }
   })
