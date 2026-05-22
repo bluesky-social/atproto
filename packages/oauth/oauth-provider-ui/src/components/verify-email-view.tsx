@@ -12,7 +12,6 @@ export type VerifyEmailViewProps = {
     data: { token: string },
     signal: AbortSignal,
   ) => void | PromiseLike<void>
-  onDone: () => void
   /**
    * When set, renders a "Cancel" action on the Request and Confirm steps.
    * Used by callers that embed this view as an optional step in a larger flow
@@ -35,7 +34,6 @@ export function VerifyEmailView({
   confirmPending,
   onRequest,
   onConfirm,
-  onDone,
   onCancel,
   children,
   cancelLabel,
@@ -65,7 +63,6 @@ export function VerifyEmailView({
         cancelLabel={cancelLabel}
         onSubmit={async (data, signal) => {
           await onConfirm(data, signal)
-          if (!signal.aborted) onDone()
         }}
       />
     </div>

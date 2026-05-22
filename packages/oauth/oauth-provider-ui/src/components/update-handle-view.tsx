@@ -1,228 +1,89 @@
-import { Trans, useLingui } from '@lingui/react/macro'
-import { AtIcon, CheckIcon, XIcon } from '@phosphor-icons/react'
-import { clsx } from 'clsx'
-import { JSX, useCallback, useEffect, useRef, useState } from 'react'
+import { Trans } from '@lingui/react/macro'
+import { useRef, useState } from 'react'
+import { Button } from '#/components/forms/button.tsx'
 import {
   AsyncActionController,
   FormCardAsync,
 } from '#/components/forms/form-card-async.tsx'
-import { InputText } from '#/components/forms/input-text.tsx'
-import {
-  MAX_FULL_LENGTH,
-  MAX_LENGTH,
-  MIN_LENGTH,
-  ValidDomain,
-  isValidDomain,
-} from '#/lib/handle'
+import { InputHandleDomain } from '#/components/forms/input-handle-domain.tsx'
 import { mergeRefs } from '#/lib/ref.ts'
 
-function useSegmentValidator(domain: ValidDomain) {
-  const minLen = MIN_LENGTH
-  const maxLen = Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
-
-  const validateSegment = useCallback(
-    (segment: string) => {
-      const validLength = segment.length >= minLen && segment.length <= maxLen
-      const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/g.test(segment)
-
-      return { validLength, validCharset, valid: validLength && validCharset }
-    },
-    [maxLen, minLen],
-  )
-
-  return {
-    minLength: minLen,
-    maxLength: maxLen,
-    validateSegment,
-  }
-}
-
 export type UpdateHandleViewProps = {
-  currentHandle: string
+  currentHandle?: string
   domains: string[]
   pending?: boolean
   onSubmit: (data: { handle: string }) => void | PromiseLike<void>
 }
 
+enum ViewState {
+  Idle,
+  Update,
+}
+
 export function UpdateHandleView({
   currentHandle,
-  domains: availableDomains,
+  domains,
   pending,
   onSubmit,
 }: UpdateHandleViewProps) {
-  const { t } = useLingui()
-  const domains = availableDomains.filter(isValidDomain)
-
+  const [viewState, setViewState] = useState<ViewState>(ViewState.Idle)
   const formRef = useRef<AsyncActionController>(null)
+  const [handle, setHandle] = useState<string | undefined>(currentHandle)
 
-  const [domainIdx, setDomainIdx] = useState(() => {
-    const idx = domains.findIndex((d) => currentHandle.endsWith(d))
-    return idx === -1 ? 0 : idx
-  })
-  const [segment, setSegment] = useState('')
-
-  useEffect(() => {
-    setDomainIdx((v) => Math.min(v, domains.length - 1))
-  }, [domains.length])
-
-  const domain: ValidDomain | null = domains[domainIdx] || domains[0] || null
-
-  const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
-
-  const validity = validateSegment(segment)
-  const handle =
-    domain && validity.valid ? `${segment}${domain}` : undefined
-
-  useEffect(() => {
-    formRef.current?.reset()
-  }, [handle])
-
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const preview = `@${segment}${domain ?? ''}`
-
-  return (
-    <div className="space-y-4">
-      <p>
-        <Trans context="HandleChange">
-          Your current username is <strong>@{currentHandle}</strong>. Choose a
-          new username below.
-        </Trans>
-      </p>
-
+  if (viewState === ViewState.Update) {
+    return (
       <FormCardAsync
         ref={mergeRefs([formRef])}
         invalid={!handle}
         disabled={pending}
         onSubmit={async () => {
-          if (handle) await onSubmit({ handle })
+          if (handle) {
+            await onSubmit({ handle })
+            setViewState(ViewState.Idle)
+          }
+        }}
+        onCancel={() => {
+          setViewState(ViewState.Idle)
         }}
         submitLabel={<Trans>Update username</Trans>}
       >
-        <div>
-          <ValidationMessage hasValue={!!segment} valid={validity.validLength}>
-            <Trans>
-              Between {minLength} and {maxLength} characters
-            </Trans>
-          </ValidationMessage>
-          <ValidationMessage hasValue={!!segment} valid={validity.validCharset}>
-            <Trans>Only letters, numbers, and hyphens</Trans>
-          </ValidationMessage>
-        </div>
-
-        <InputText
-          ref={inputRef}
-          icon={<AtIcon aria-hidden weight="bold" className="size-5" />}
-          name="handle"
-          type="text"
-          title={t`Type your new username`}
-          pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
-          minLength={minLength}
-          maxLength={maxLength}
-          autoCapitalize="none"
-          autoCorrect="off"
-          autoComplete="off"
-          dir="auto"
-          enterKeyHint="done"
-          autoFocus
-          required
-          value={segment}
-          onChange={(event) => {
-            const value = event.target.value.toLowerCase()
-            const selectionStart = event.target.selectionStart
-            const selectionEnd = event.target.selectionEnd
-            event.target.value = value
-            event.target.setSelectionRange(selectionStart, selectionEnd)
-            setSegment(value)
+        <InputHandleDomain
+          handle={handle}
+          onHandle={(value) => {
+            formRef.current?.reset()
+            setHandle(value)
           }}
-          append={
-            domains.length > 1 && (
-              <select
-                onClick={(event) => event.stopPropagation()}
-                onMouseDown={(event) => event.stopPropagation()}
-                value={domainIdx}
-                aria-label={t`Select domain`}
-                onChange={(event) => {
-                  setDomainIdx(Number(event.target.value))
-                  inputRef.current?.focus()
-                }}
-                className={clsx(
-                  'block w-full',
-                  'rounded-lg',
-                  'p-2 pr-1',
-                  'text-sm',
-                  'cursor-pointer',
-                  'transition duration-300 ease-in-out',
-                  'outline-none',
-                  'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-                  'accent-primary',
-                  'text-text-light',
-                  'hover:bg-gray-300 dark:hover:bg-gray-600',
-                  'bg-gray-200 dark:bg-gray-700',
-                )}
-              >
-                {domains.map((d, idx) => (
-                  <option key={d} value={idx}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            )
-          }
-          bellow={
-            <Trans>
-              Your new username will be:{' '}
-              {segment.length ? (
-                <strong className="text-text-default">{preview}</strong>
-              ) : (
-                <span aria-hidden className="bg-text-light w-24 rounded-md p-2" />
-              )}
-            </Trans>
-          }
+          domains={domains}
+          name="handle"
+          required
+          autoFocus
+          enterKeyHint="done"
         />
       </FormCardAsync>
-    </div>
-  )
-}
+    )
+  }
 
-type ValidationMessageProps = JSX.IntrinsicElements['div'] & {
-  valid: boolean
-  hasValue: boolean
-}
-
-function ValidationMessage({
-  valid,
-  hasValue,
-  children,
-  className,
-  ...props
-}: ValidationMessageProps) {
-  const { t } = useLingui()
   return (
-    <div
-      {...props}
-      className={clsx('flex flex-row items-center gap-2', className)}
-    >
-      {hasValue ? (
-        <>
-          {valid ? (
-            <CheckIcon
-              className="text-success inline-block h-4 w-4"
-              aria-label={t`Valid`}
-            />
-          ) : (
-            <XIcon
-              className="text-error inline-block h-4 w-4"
-              aria-label={t`Invalid`}
-            />
-          )}
-        </>
-      ) : (
-        <div aria-hidden className="flex h-4 w-4 items-center justify-center">
-          <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
-        </div>
-      )}
-      <div className="text-sm">{children}</div>
+    <div className="space-y-4">
+      <p>
+        {currentHandle ? (
+          <Trans context="HandleChange">
+            Your current username is <strong>@{currentHandle}</strong>.
+          </Trans>
+        ) : (
+          <Trans context="HandleChange">You don't have a username yet.</Trans>
+        )}
+      </p>
+
+      <Button
+        color="primary"
+        onClick={() => {
+          setHandle(currentHandle)
+          setViewState(ViewState.Update)
+        }}
+      >
+        <Trans>Update username</Trans>
+      </Button>
     </div>
   )
 }

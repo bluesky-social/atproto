@@ -11,7 +11,7 @@ import {
 
 export function Page() {
   const { account } = useAuthenticatedSession()
-  const { email, sub } = account
+  const { email, sub, email_verified } = account
 
   const updateRequest = useUpdateEmailRequest()
   const updateConfirm = useUpdateEmailConfirm()
@@ -31,6 +31,7 @@ export function Page() {
   return (
     <UpdateEmailView
       email={email}
+      emailVerified={email_verified}
       requestPending={updateRequest.isPending}
       confirmPending={updateConfirm.isPending}
       verifyRequestPending={verifyRequest.isPending}

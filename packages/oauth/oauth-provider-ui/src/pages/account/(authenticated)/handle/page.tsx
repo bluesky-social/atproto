@@ -1,6 +1,4 @@
-import { Trans } from '@lingui/react/macro'
 import { UpdateHandleView } from '#/components/update-handle-view.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { useUpdateHandle } from '#/data/handle'
@@ -11,16 +9,6 @@ export function Page() {
   const { sub, preferred_username: currentHandle } = account
 
   const updateHandle = useUpdateHandle()
-
-  if (!currentHandle) {
-    return (
-      <Admonition role="status">
-        <Trans context="HandleChange">
-          No username associated with this account.
-        </Trans>
-      </Admonition>
-    )
-  }
 
   return (
     <UpdateHandleView

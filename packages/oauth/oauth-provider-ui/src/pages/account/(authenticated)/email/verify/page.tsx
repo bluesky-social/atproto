@@ -32,9 +32,9 @@ export function Page() {
       }}
       onConfirm={async ({ token }) => {
         await verifyConfirm.mutateAsync({ sub, token, email })
+        navigate({ to: '/account' })
       }}
       onCancel={() => navigate({ to: '/account' })}
-      onDone={() => navigate({ to: '/account' })}
     />
   )
 }
