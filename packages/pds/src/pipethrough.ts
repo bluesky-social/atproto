@@ -56,7 +56,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did, serviceId } = await parseProxyInfo(ctx, req, lxm)
+      const {
+        url: origin,
+        did,
+        serviceId,
+      } = await parseProxyInfo(ctx, req, lxm)
       // Phase 1 of service auth updates: the scope check sees the combined
       // did#serviceId form (so OAuth callers' rpc:?aud=did#service scopes
       // match), while the outbound service-auth JWT keeps bare-DID aud
@@ -64,7 +68,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const scopeAud = `${did}#${serviceId}`
       const tokenAud = did
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud: scopeAud } })
+      const authResult = await performAuth({
+        req,
+        res,
+        params: { lxm, aud: scopeAud },
+      })
 
       const { credentials } = excludeErrorResult(authResult)
 

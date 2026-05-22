@@ -115,7 +115,6 @@ function isDidWebWithHttpsPort(did: Did<'web'>): boolean {
   return hasPort
 }
 
-
 export type AtprotoData<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
 > = {

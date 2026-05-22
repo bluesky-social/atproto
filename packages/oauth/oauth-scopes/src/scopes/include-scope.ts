@@ -1,7 +1,4 @@
-import {
-  AtprotoScopeAud,
-  isAtprotoDidRefAbsolute,
-} from '@atproto/did'
+import { AtprotoScopeAud, isAtprotoDidRefAbsolute } from '@atproto/did'
 import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'

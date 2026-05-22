@@ -18,8 +18,7 @@ export const isAtprotoDidRefAbsolute = (
   if (hashIndex === value.length - 1) return false // empty fragment
   if (value.indexOf('#', hashIndex + 1) !== -1) return false // more than one '#'
   return (
-    isFragment(value, hashIndex + 1) &&
-    isAtprotoDid(value.slice(0, hashIndex))
+    isFragment(value, hashIndex + 1) && isAtprotoDid(value.slice(0, hashIndex))
   )
 }
 
@@ -57,6 +56,5 @@ export type AtprotoTokenAud = AtprotoDid | AtprotoDidRefAbsolute
 export type AtprotoAudience = AtprotoDidRefAbsolute
 
 /** @deprecated use {@link isAtprotoDidRefAbsolute}. */
-export const isAtprotoAudience: (
-  value: unknown,
-) => value is AtprotoAudience = isAtprotoDidRefAbsolute
+export const isAtprotoAudience: (value: unknown) => value is AtprotoAudience =
+  isAtprotoDidRefAbsolute
