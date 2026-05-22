@@ -271,7 +271,7 @@ export class AuthVerifier {
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
-      iss: [this.modServiceDid, `${this.modServiceDid}#atproto_labeler`],
+      iss: [this.modServiceDid],
     })
     return { credentials: { type: 'mod_service', aud, iss } }
   }
@@ -312,17 +312,16 @@ export class AuthVerifier {
   }> {
     const getSigningKey = async (
       iss: string,
+      kid: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
     ): Promise<string> => {
       if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      const [did, serviceId] = iss.split('#')
-      const keyId =
-        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+      const keyId = kid.startsWith('#') ? kid.slice(1) : kid
       let identity: GetIdentityByDidResponse
       try {
-        identity = await this.dataplane.getIdentityByDid({ did })
+        identity = await this.dataplane.getIdentityByDid({ did: iss })
       } catch (err) {
         if (isDataplaneError(err, Code.NotFound)) {
           throw new AuthRequiredError('identity unknown')
@@ -375,10 +374,7 @@ export class AuthVerifier {
   }
 
   isModService(iss: string): boolean {
-    return [
-      this.modServiceDid,
-      `${this.modServiceDid}#atproto_labeler`,
-    ].includes(iss)
+    return iss === this.modServiceDid
   }
 
   nullCreds(): NullOutput {
