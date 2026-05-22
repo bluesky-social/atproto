@@ -612,6 +612,11 @@ export class Hydrator {
     const siteStandardLabelSubjects = dedupeStrs(
       siteStandardRefs.map((ref) => ref.uri),
     )
+    // Site-standard record owners need profile basics so we can populate
+    // `associatedProfiles` on the external embed view. Include them in the
+    // post-author profile fetch below; any DIDs surfaced later by the
+    // dataplane are picked up by the top-up after the parallel batch.
+    const ssRefDids = siteStandardRefs.map((ref) => uriToDid(ref.uri))
 
     const [
       postAggs,
@@ -638,7 +643,10 @@ export class Hydrator {
         ctx.labelers,
       ),
       this.hydratePostBlocks(posts, ctx),
-      this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
+      this.hydrateProfiles(
+        dedupeStrs([...allPostUris.map(didFromUri), ...ssRefDids]),
+        ctx,
+      ),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
@@ -657,9 +665,30 @@ export class Hydrator {
         labels,
       )
     }
+    // Defensive top-up: in the unlikely case the dataplane returned a
+    // publication owned by a DID not present in the post-author or
+    // pinned-ref sets, fetch its profile serially and fold it in.
+    const knownProfileDids = new Set<string>([
+      ...allPostUris.map(didFromUri),
+      ...ssRefDids,
+    ])
+    const extraSsDids: DidString[] = []
+    for (const key of siteStandardPublications.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownProfileDids.has(did)) {
+        knownProfileDids.add(did)
+        extraSsDids.push(did)
+      }
+    }
+    const mergedProfileState = extraSsDids.length
+      ? mergeStates(
+          profileState,
+          await this.hydrateProfilesBasic(extraSsDids, ctx),
+        )
+      : profileState
     // combine all hydration state
     return mergeManyStates(
-      profileState,
+      mergedProfileState,
       listState,
       feedGenState,
       labelerState,

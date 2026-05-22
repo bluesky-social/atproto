@@ -2140,6 +2140,14 @@ export class Views {
       state,
       assumedUrl: embed.external.uri,
     })
+    // Profiles of the owners of pinned `associatedRefs`. Hydrator covers
+    // these DIDs alongside post-author profiles, so misses here only
+    // happen when an actor is unavailable (suspended, deleted, etc.) —
+    // drop those rather than emit `undefined` slots.
+    const associatedProfiles = mapDefined(
+      embed.external.associatedRefs ?? [],
+      (ref) => this.profileBasic(uriToDid(ref.uri), state),
+    ) as ProfileViewBasic[]
     return app.bsky.embed.external.view.$build({
       external: {
         uri: embed.external.uri,
@@ -2154,6 +2162,7 @@ export class Views {
           : undefined,
         ...ssView,
         associatedRefs: embed.external.associatedRefs,
+        associatedProfiles,
       },
     })
   }
