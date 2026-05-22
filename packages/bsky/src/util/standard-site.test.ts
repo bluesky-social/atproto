@@ -101,6 +101,13 @@ describe(validateStandardSiteForUrl, () => {
         validateStandardSiteForUrl(undefined, pub, 'https://other.com'),
       ).toBe(false)
     })
+
+    it('accepts when assumedUrl has a trailing slash and publication.url does not', () => {
+      const pub = makePub({ url: 'https://atproto.com/blog' })
+      expect(
+        validateStandardSiteForUrl(undefined, pub, 'https://atproto.com/blog/'),
+      ).toBe(true)
+    })
   })
 
   describe('neither', () => {
