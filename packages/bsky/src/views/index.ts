@@ -28,6 +28,7 @@ import { Label } from '../hydration/label.js'
 import { RecordInfo, parseString } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
+import { viewsLogger } from '../logger.js'
 import { Notification } from '../proto/bsky_pb.js'
 import {
   estimateReadingTimeMinutes,
@@ -2246,6 +2247,13 @@ export class Views {
     // bare embed rather than render partial / disagreeing enrichment.
     if (!document && !publication) return undefined
     if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
+      viewsLogger.warn(
+        {
+          documentUri: document?.ref.uri,
+          publicationUri: publication?.ref.uri,
+        },
+        'SS record(s) failed URL validation for external embed',
+      )
       return undefined
     }
 
