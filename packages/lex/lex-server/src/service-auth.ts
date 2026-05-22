@@ -184,7 +184,7 @@ export function serviceAuth({
       unique,
     })
 
-    const issBare = stripIssFragment(jwt.payload.iss) as DidString
+    const issBare = stripIssFragment(jwt.payload.iss)
 
     let didDocument: AtprotoDidDocument = await didResolver
       .resolve(issBare, { signal })
@@ -525,9 +525,9 @@ function extractIssFragment(iss: string): string | null {
   return hashIdx === -1 ? null : iss.slice(hashIdx)
 }
 
-function stripIssFragment(iss: string): string {
+function stripIssFragment(iss: string): DidString {
   const hashIdx = iss.indexOf('#')
-  return hashIdx === -1 ? iss : iss.slice(0, hashIdx)
+  return (hashIdx === -1 ? iss : iss.slice(0, hashIdx)) as DidString
 }
 
 function isAtprotoTokenAud(value: unknown): value is AtprotoTokenAud {
