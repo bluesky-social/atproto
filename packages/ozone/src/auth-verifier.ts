@@ -99,8 +99,18 @@ export class AuthVerifier {
   standard = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
     const getSigningKey = async (
       did: string,
+      kid: string,
       forceRefresh: boolean,
     ): Promise<string> => {
+      // ozone only verifies caller tokens that should sign with #atproto.
+      // The bsky-style kid: '#atproto_label' is for ozone calling bsky,
+      // not for callers calling ozone.
+      if (kid !== '#atproto') {
+        throw new AuthRequiredError(
+          `unsupported kid for ozone caller: ${kid}`,
+          'BadJwtSignature',
+        )
+      }
       const atprotoData = await this.idResolver.did.resolveAtprotoData(
         did,
         forceRefresh,

@@ -4,6 +4,7 @@ import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
+import { DidString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { AssignmentService } from './assignment/index.js'
 import { AuthVerifier } from './auth-verifier.js'
@@ -129,7 +130,8 @@ export class AppContext {
 
     const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
-        iss: `${cfg.service.did}#atproto_labeler`,
+        iss: cfg.service.did as DidString,
+        kid: '#atproto_label',
         aud,
         lxm,
         keypair: signingKey,
@@ -351,9 +353,9 @@ export class AppContext {
   }
 
   async serviceAuthHeaders(aud: string, lxm: string) {
-    const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
-      iss,
+      iss: this.cfg.service.did as DidString,
+      kid: '#atproto_label',
       aud,
       lxm,
       keypair: this.signingKey,

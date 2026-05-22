@@ -2,6 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import { allFulfilled } from '@atproto/common'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { DidString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../background.js'
 import { OzoneConfig, OzoneSecrets } from '../config/index.js'
@@ -62,7 +63,8 @@ export class DaemonContext {
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
-        iss: `${cfg.service.did}#atproto_labeler`,
+        iss: cfg.service.did as DidString,
+        kid: '#atproto_label',
         aud,
         lxm,
         keypair: signingKey,
