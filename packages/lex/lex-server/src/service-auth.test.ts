@@ -202,6 +202,37 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
       expect(result.did).toBe(fixture.issuer)
       expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
     })
+
+    it('maps iss-fragment #atproto_labeler to #atproto_label when kid header absent', async () => {
+      // Older callers (notably labelers) emit combined iss like
+      // did#atproto_labeler with no kid header. The verifier must map the
+      // service-id fragment to the key-id (#atproto_label) so the lookup
+      // succeeds against the published verification method.
+      const { fixture, signJwt } = await makeFullFixture()
+      const payload = {
+        iss: `${fixture.issuer}#atproto_labeler`,
+        aud: fixture.audience,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60,
+        lxm: nsid,
+      }
+      const header = { alg: 'ES256K', typ: 'JWT' }
+      const jwt = await signJwt({ keypair: fixture.labelerKp, header, payload })
+
+      const resolve = vi.fn(async () => fixture.didDocument)
+      const auth = serviceAuth({
+        audience: fixture.audience,
+        unique: async () => true,
+        didResolver: { resolve },
+      })
+      const request = new Request(`https://api.example.com/xrpc/${nsid}`, {
+        headers: { authorization: `Bearer ${jwt}` },
+      })
+
+      const result = await auth({ request, method: { nsid } as any, params: {} })
+      expect(result.did).toBe(fixture.issuer)
+      expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
+    })
   })
 })
 

@@ -198,7 +198,7 @@ export function serviceAuth({
       })
 
     const kid =
-      jwt.header.kid ?? extractIssFragment(jwt.payload.iss) ?? '#atproto'
+      jwt.header.kid ?? serviceFragmentToKid(extractIssFragment(jwt.payload.iss) ?? '#atproto')
     const key = getAtprotoSigningKey(didDocument, kid)
 
     if (!key || !(await verifyJwt(jwt, key))) {
@@ -525,6 +525,15 @@ function isPositiveInt(value: unknown): value is number {
 function extractIssFragment(iss: string): string | null {
   const hashIdx = iss.indexOf('#')
   return hashIdx === -1 ? null : iss.slice(hashIdx)
+}
+
+// Maps known atproto service ids to their corresponding key ids in the
+// DID document. Used as a Phase 1 back-compat helper when older tokens
+// emit the service id (e.g. '#atproto_labeler') as iss-fragment instead
+// of a kid header naming the key directly (e.g. '#atproto_label').
+function serviceFragmentToKid(fragment: string): string {
+  if (fragment === '#atproto_labeler') return '#atproto_label'
+  return fragment
 }
 
 function stripIssFragment(iss: string): DidString {

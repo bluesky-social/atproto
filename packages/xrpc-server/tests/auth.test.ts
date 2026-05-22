@@ -421,6 +421,44 @@ describe('Auth', () => {
         const header = { typ: 'JWT', alg: keypair.jwtAlg }
         const payload = {
           iat: Math.floor(Date.now() / 1e3),
+          iss: 'did:example:iss#atproto',
+          aud: 'did:web:appview.test',
+          exp: Math.floor(Date.now() / 1e3) + 60,
+          lxm: 'app.bsky.feed.getFeed',
+        }
+        const headerB64 = Buffer.from(JSON.stringify(header)).toString(
+          'base64url',
+        )
+        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString(
+          'base64url',
+        )
+        const sig = Buffer.from(
+          await keypair.sign(
+            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
+          ),
+        )
+        const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
+        let receivedKid: string | undefined
+        await xrpcServer.verifyJwt(
+          jwt,
+          'did:web:appview.test',
+          'app.bsky.feed.getFeed',
+          async (_iss, kid) => {
+            receivedKid = kid
+            return keypair.did()
+          },
+        )
+        expect(receivedKid).toBe('#atproto')
+      })
+
+      it('maps iss-fragment #atproto_labeler to #atproto_label when kid header absent', async () => {
+        // Older callers emitted combined iss with no kid header. The verifier
+        // must map the service-id fragment (#atproto_labeler) to the key-id
+        // (#atproto_label) for back-compat with existing ozone DID documents.
+        const keypair = await Secp256k1Keypair.create()
+        const header = { typ: 'JWT', alg: keypair.jwtAlg }
+        const payload = {
+          iat: Math.floor(Date.now() / 1e3),
           iss: 'did:example:iss#atproto_labeler',
           aud: 'did:web:appview.test',
           exp: Math.floor(Date.now() / 1e3) + 60,
@@ -448,7 +486,7 @@ describe('Auth', () => {
             return keypair.did()
           },
         )
-        expect(receivedKid).toBe('#atproto_labeler')
+        expect(receivedKid).toBe('#atproto_label')
       })
     })
 

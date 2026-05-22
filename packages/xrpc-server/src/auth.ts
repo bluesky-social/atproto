@@ -141,7 +141,7 @@ export const verifyJwt = async (
   const kid =
     typeof header['kid'] === 'string'
       ? header['kid']
-      : extractIssFragment(payload.iss) ?? '#atproto'
+      : serviceFragmentToKid(extractIssFragment(payload.iss) ?? '#atproto')
 
   // payload.iss may carry a fragment from older callers; strip it for
   // downstream resolution. The bare DID portion must be a valid DID.
@@ -245,4 +245,13 @@ function stripIssFragment(iss: string): DidString {
 function extractIssFragment(iss: string): string | null {
   const hashIdx = iss.indexOf('#')
   return hashIdx === -1 ? null : iss.slice(hashIdx)
+}
+
+// Maps known atproto service ids to their corresponding key ids in the
+// DID document. Used as a Phase 1 back-compat helper when older tokens
+// emit the service id (e.g. '#atproto_labeler') as iss-fragment instead
+// of a kid header naming the key directly (e.g. '#atproto_label').
+function serviceFragmentToKid(fragment: string): string {
+  if (fragment === '#atproto_labeler') return '#atproto_label'
+  return fragment
 }
