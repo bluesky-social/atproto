@@ -1,5 +1,4 @@
 import { AtUriString, LexMap } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import {
@@ -17,11 +16,7 @@ import {
   noRules,
 } from '../../../../pipeline.js'
 import { Views } from '../../../../views/index.js'
-import {
-  ExternalEmbedView,
-  ProfileViewBasic,
-  StrongRef,
-} from '../../../../views/types.js'
+import { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
 import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -103,7 +98,6 @@ const standardSitePresentation = (
   // refs (one per slot) so consumers can match by index.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
-  const associatedProfiles: ProfileViewBasic[] = []
   for (const slot of [document, publication]) {
     if (!slot) continue
     associatedRefs.push(
@@ -113,11 +107,6 @@ const standardSitePresentation = (
       }),
     )
     associatedRecords.push(slot.info.record as LexMap)
-    const profile = ctx.views.profileBasic(
-      new AtUri(slot.ref.uri).did,
-      hydration,
-    )
-    if (profile) associatedProfiles.push(profile as ProfileViewBasic)
   }
 
   if (!associatedRefs.length) return {}
@@ -139,7 +128,6 @@ const standardSitePresentation = (
       ...overlay,
       uri: params.url,
       associatedRefs,
-      associatedProfiles,
     },
   })
 
