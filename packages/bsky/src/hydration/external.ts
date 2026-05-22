@@ -1,6 +1,7 @@
 import { AtUriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
+import { hydrationLogger } from '../logger.js'
 import {
   GetSiteStandardRecordsByRefResponse,
   GetSiteStandardRecordsByURIResponse,
@@ -162,6 +163,14 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   // (or tampered with), so reject the whole pairing.
   if (document && publication) {
     if (document.info.record.site !== publication.ref.uri) {
+      hydrationLogger.warn(
+        {
+          documentUri: document.ref.uri,
+          documentSite: document.info.record.site,
+          publicationUri: publication.ref.uri,
+        },
+        'site.standard byRefs lookup failed: doc.site does not match hydrated publication.uri',
+      )
       return { document: undefined, publication: undefined }
     }
   }
@@ -172,6 +181,10 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   if (document && !publication) {
     const site = document.info.record.site
     if (site && site.startsWith('at://')) {
+      hydrationLogger.warn(
+        { documentUri: document.ref.uri, documentSite: site },
+        'site.standard byRefs lookup failed: document.site is AT URI but no matching publication was hydrated',
+      )
       return { document: undefined, publication: undefined }
     }
   }
@@ -234,6 +247,10 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
         }
       }
       if (!publication) {
+        hydrationLogger.warn(
+          { documentUri: document.ref.uri, documentSite: site },
+          'site.standard byDocumentUri lookup failed: document.site is AT URI but no matching publication was hydrated',
+        )
         return { document: undefined, publication: undefined }
       }
     }

@@ -2263,7 +2263,7 @@ export class Views {
           documentUri: document?.ref.uri,
           publicationUri: publication?.ref.uri,
         },
-        'SS record(s) failed URL validation for external embed',
+        'site.standard URL validation failed',
       )
       return undefined
     }
