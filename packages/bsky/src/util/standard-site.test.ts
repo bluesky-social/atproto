@@ -158,29 +158,114 @@ describe(validateStandardSiteForUrl, () => {
     }
   })
 
-  describe('publication.url variants', () => {
-    it('accepts when publication.url has trailing slash', () => {
-      const doc = makeDoc({ site: pubUri, path: '/posts/hello' })
-      const pub = makePub({ url: 'https://example.com/' })
-      expect(
-        validateStandardSiteForUrl(doc, pub, 'https://example.com/posts/hello'),
-      ).toBe(true)
-    })
-
-    it('accepts when document.path lacks a leading slash', () => {
-      const doc = makeDoc({ site: pubUri, path: 'posts/hello' })
-      const pub = makePub({ url: 'https://example.com/' })
-      expect(
-        validateStandardSiteForUrl(doc, pub, 'https://example.com/posts/hello'),
-      ).toBe(true)
-    })
-
-    it('handles publication.url with sub-path and document.path joining onto it', () => {
-      const doc = makeDoc({ site: pubUri, path: 'hello' })
-      const pub = makePub({ url: 'https://example.com/blog/' })
-      expect(
-        validateStandardSiteForUrl(doc, pub, 'https://example.com/blog/hello'),
-      ).toBe(true)
-    })
+  describe('path joining (root domain × subpath × slash placement)', () => {
+    // Real-world example that originally broke:
+    //   pub.url:  'https://atproto.com/blog'
+    //   doc.path: '/indexing-standard-site'
+    //   expected: 'https://atproto.com/blog/indexing-standard-site'
+    // `new URL('/indexing-standard-site', 'https://atproto.com/blog')` would
+    // resolve to 'https://atproto.com/indexing-standard-site' (the leading
+    // slash on path swallows the base's pathname under WHATWG semantics) —
+    // we want path-append, not relative resolution.
+    for (const { note, baseUrl, path, assumedUrl, expected } of [
+      // Root-domain base, all four slash combinations.
+      {
+        note: 'root base, base/, path/',
+        baseUrl: 'https://example.com/',
+        path: '/posts/hello',
+        assumedUrl: 'https://example.com/posts/hello',
+        expected: true,
+      },
+      {
+        note: 'root base, base/, path-no-slash',
+        baseUrl: 'https://example.com/',
+        path: 'posts/hello',
+        assumedUrl: 'https://example.com/posts/hello',
+        expected: true,
+      },
+      {
+        note: 'root base, base-no-slash, path/',
+        baseUrl: 'https://example.com',
+        path: '/posts/hello',
+        assumedUrl: 'https://example.com/posts/hello',
+        expected: true,
+      },
+      {
+        note: 'root base, base-no-slash, path-no-slash',
+        baseUrl: 'https://example.com',
+        path: 'posts/hello',
+        assumedUrl: 'https://example.com/posts/hello',
+        expected: true,
+      },
+      // Subpath base, all four slash combinations (the regression case).
+      {
+        note: 'subpath base, base/, path/',
+        baseUrl: 'https://atproto.com/blog/',
+        path: '/indexing-standard-site',
+        assumedUrl: 'https://atproto.com/blog/indexing-standard-site',
+        expected: true,
+      },
+      {
+        note: 'subpath base, base/, path-no-slash',
+        baseUrl: 'https://atproto.com/blog/',
+        path: 'indexing-standard-site',
+        assumedUrl: 'https://atproto.com/blog/indexing-standard-site',
+        expected: true,
+      },
+      {
+        note: 'subpath base, base-no-slash, path/ (regression)',
+        baseUrl: 'https://atproto.com/blog',
+        path: '/indexing-standard-site',
+        assumedUrl: 'https://atproto.com/blog/indexing-standard-site',
+        expected: true,
+      },
+      {
+        note: 'subpath base, base-no-slash, path-no-slash',
+        baseUrl: 'https://atproto.com/blog',
+        path: 'indexing-standard-site',
+        assumedUrl: 'https://atproto.com/blog/indexing-standard-site',
+        expected: true,
+      },
+      // Empty path: assumedUrl should equal the base.
+      {
+        note: 'empty path, root base, no trailing slash',
+        baseUrl: 'https://example.com',
+        path: undefined,
+        assumedUrl: 'https://example.com',
+        expected: true,
+      },
+      {
+        note: 'empty path, subpath base, with trailing slash',
+        baseUrl: 'https://atproto.com/blog/',
+        path: undefined,
+        assumedUrl: 'https://atproto.com/blog',
+        expected: true,
+      },
+      // Negative: subpath base with assumedUrl that lost the subpath
+      // (what `new URL`'s relative resolution would have produced).
+      {
+        note: 'rejects when assumed URL drops the subpath',
+        baseUrl: 'https://atproto.com/blog',
+        path: '/indexing-standard-site',
+        assumedUrl: 'https://atproto.com/indexing-standard-site',
+        expected: false,
+      },
+    ]) {
+      it(`doc + pub: ${note}`, () => {
+        const doc = makeDoc(
+          path === undefined ? { site: pubUri } : { site: pubUri, path },
+        )
+        const pub = makePub({ url: baseUrl })
+        expect(validateStandardSiteForUrl(doc, pub, assumedUrl)).toBe(expected)
+      })
+      it(`loose doc: ${note}`, () => {
+        const doc = makeDoc(
+          path === undefined ? { site: baseUrl } : { site: baseUrl, path },
+        )
+        expect(validateStandardSiteForUrl(doc, undefined, assumedUrl)).toBe(
+          expected,
+        )
+      })
+    }
   })
 })
