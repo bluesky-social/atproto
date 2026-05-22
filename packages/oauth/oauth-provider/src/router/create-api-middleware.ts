@@ -271,6 +271,110 @@ export function createApiMiddleware<
 
   router.use(
     apiRoute({
+      method: 'POST',
+      endpoint: '/update-email-request',
+      schema: z
+        .object({
+          sub: subSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        const { tokenRequired } =
+          await server.accountManager.updateEmailRequest(
+            this.deviceId,
+            this.deviceMetadata,
+            this.input,
+            account,
+          )
+
+        return { json: { tokenRequired } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/update-email-confirm',
+      schema: z
+        .object({
+          sub: subSchema,
+          token: emailOtpSchema,
+          email: emailSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.updateEmailConfirm(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/verify-email-request',
+      schema: z
+        .object({
+          sub: subSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.verifyEmailRequest(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/verify-email-confirm',
+      schema: z
+        .object({
+          sub: subSchema,
+          token: emailOtpSchema,
+          email: emailSchema,
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.verifyEmailConfirm(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
       method: 'GET',
       endpoint: '/device-sessions',
       schema: undefined,

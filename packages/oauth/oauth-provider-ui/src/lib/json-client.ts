@@ -21,7 +21,7 @@ export type EndpointDefinition =
     }
 export type EndpointDefinitions = { [path: EndpointPath]: EndpointDefinition }
 
-export type JsonClientOptions = {
+export type JsonClientOptions<Endpoints extends EndpointDefinitions> = {
   onFetchError?: (
     err: unknown,
     context: {
@@ -31,13 +31,25 @@ export type JsonClientOptions = {
       options?: Options
     },
   ) => void
+  onFetchSuccess?: {
+    [Path in keyof Endpoints & string]?: (data: {
+      json: Endpoints[Path] extends { output: infer Output } ? Output : never
+      method: string
+      input: Endpoints[Path] extends { method: 'GET'; params: infer Params }
+        ? Params
+        : Endpoints[Path] extends { method: 'POST'; input: infer Input }
+          ? Input
+          : undefined
+      options?: Options
+    }) => void
+  }
   headers?: () => Awaitable<Record<string, string | undefined>>
 }
 
 export class JsonClient<Endpoints extends EndpointDefinitions> {
   constructor(
     protected readonly baseUrl: string,
-    protected readonly options?: JsonClientOptions,
+    protected readonly options?: JsonClientOptions<Endpoints>,
   ) {}
 
   public async fetch<Path extends EndpointPath & keyof Endpoints>(
@@ -97,12 +109,19 @@ export class JsonClient<Endpoints extends EndpointDefinitions> {
 
       const json = await response.json()
 
-      if (response.ok) return json as Endpoints[Path]['output']
-      else throw this.parseError(response, json)
+      if (response.ok) {
+        this.options?.onFetchSuccess?.[path]?.call(null, {
+          json,
+          method,
+          input,
+          options,
+        } as any)
+        return json as Endpoints[Path]['output']
+      } else throw this.parseError(response, json)
     } catch (err) {
       const context = { method, path, input, options }
       console.warn('API request failed', err, context)
-      this.options?.onFetchError?.(err, context)
+      this.options?.onFetchError?.call(null, err, context)
       throw err
     }
   }

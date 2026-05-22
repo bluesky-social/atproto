@@ -6,20 +6,16 @@ import {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
-import { Override } from '#/lib/util.ts'
 import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
 export function useResetPasswordRequest() {
   const api = useApi()
   const { t } = useLingui()
   const { notify } = useNotificationsContext()
-  const currentLocale = useCurrentLocale()
+  const locale = useCurrentLocale()
 
   return useMutation({
-    async mutationFn({
-      locale = currentLocale,
-      email,
-    }: Override<InitiatePasswordResetInput, { locale?: string }>) {
+    async mutationFn({ email }: Omit<InitiatePasswordResetInput, 'locale'>) {
       return api.fetch('POST', '/reset-password-request', { locale, email })
     },
     onSuccess(_data, _variables, _context) {

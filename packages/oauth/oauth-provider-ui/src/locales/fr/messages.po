@@ -25,6 +25,11 @@ msgstr "il y a {deltaHours} heures"
 msgid "{deltaMinutes} minutes ago"
 msgstr "il y a {deltaMinutes} minutes"
 
+#. placeholder {0}: account.email
+#: src/pages/account/(authenticated)/route.tsx:189
+msgid "<0>{0}</0> has not been verified yet."
+msgstr "<0>{0}</0> n'a pas encore été vérifié."
+
 #: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT Protocol</0> — Documentation technique pour les développeurs"
@@ -39,11 +44,11 @@ msgstr "<0>En savoir plus</0><1>Vous voulez en savoir plus sur la technologie et
 
 #: src/pages/account/(authenticated)/about/page.tsx:84
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
-msgstr "<0>Ce site web : le centre de contrôle de votre compte</0><1>Le site web sur lequel vous êtes actuellement est votre <2>centre de gestion de compte</2>. Ici, vous pouvez :</1><3><4>Mettre à jour votre adresse e-mail et votre mot de passe</4><5>Gérer vos données personnelles et les paramètres de sécurité</5><6>Afficher et gérer les sessions actives sur tous les appareils (navigateurs où vous êtes connecté)</6></3><7>C'est ici que vous pouvez contrôler les aspects fondamentaux de votre identité Atmosphère, indépendamment des aspects spécifiques liés à une application, comme par exemple le profil que vous avez sur <8>Bluesky</8>.</7><9>Votre compte Atmosphère est actuellement hébergé par <10/>, l'un des nombreux fournisseurs d'hébergement du réseau Atmosphère. Vous pouvez à tout moment changer de fournisseur sans perdre votre compte, votre identité ou vos données.</9>"
+msgstr "<0>Ce site web : le centre de contrôle de votre compte</0><1>Le site web sur lequel vous êtes actuellement est votre <2>centre de gestion de compte</2>. Ici, vous pouvez :</1><3><4>Mettre à jour votre adresse email et votre mot de passe</4><5>Gérer vos données personnelles et les paramètres de sécurité</5><6>Afficher et gérer les sessions actives sur tous les appareils (navigateurs où vous êtes connecté)</6></3><7>C'est ici que vous pouvez contrôler les aspects fondamentaux de votre identité Atmosphère, indépendamment des aspects spécifiques liés à une application, comme par exemple le profil que vous avez sur <8>Bluesky</8>.</7><9>Votre compte Atmosphère est actuellement hébergé par <10/>, l'un des nombreux fournisseurs d'hébergement du réseau Atmosphère. Vous pouvez à tout moment changer de fournisseur sans perdre votre compte, votre identité ou vos données.</9>"
 
 #: src/pages/account/(authenticated)/about/page.tsx:24
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
-msgstr "<0>Utilisez-le avec plusieurs applications</0><1>Votre compte Atmosphère fonctionne avec le réseau social <2>Bluesky</2> ainsi que toutes les autres applications sociales construites sur le même réseau.</1><3>De la même manière que vous pouvez utiliser la même adresse e-mail pour vous connecter à différents sites web, votre compte Atmosphère vous permet de vous connecter à différentes applications sociales tout en conservant la même identité, les mêmes connexions et le même contenu.</3><4>Lorsque vous voyez des options pour vous connecter avec un \"compte Atmosphère\" ou un \"pseudo Internet\" sur d'autres applications, vous pouvez utiliser votre compte existant <5><6/></5> plutôt que d'en créer un nouveau.</4>"
+msgstr "<0>Utilisez-le avec plusieurs applications</0><1>Votre compte Atmosphère fonctionne avec le réseau social <2>Bluesky</2> ainsi que toutes les autres applications sociales construites sur le même réseau.</1><3>De la même manière que vous pouvez utiliser la même adresse email pour vous connecter à différents sites web, votre compte Atmosphère vous permet de vous connecter à différentes applications sociales tout en conservant la même identité, les mêmes connexions et le même contenu.</3><4>Lorsque vous voyez des options pour vous connecter avec un \"compte Atmosphère\" ou un \"pseudo Internet\" sur d'autres applications, vous pouvez utiliser votre compte existant <5><6/></5> plutôt que d'en créer un nouveau.</4>"
 
 #: src/pages/account/(authenticated)/about/page.tsx:13
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
@@ -77,11 +82,11 @@ msgstr "Un second facteur d'authentification est requis"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "Un service contrôlé par <0>{domain}</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:77
+#: src/pages/account/(authenticated)/route.tsx:103
 msgid "About"
 msgstr "À propos"
 
-#: src/pages/account/(authenticated)/route.tsx:50
+#: src/pages/account/(authenticated)/route.tsx:61
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Compte utilisateur"
@@ -138,7 +143,7 @@ msgstr "N'importe quelle action"
 msgid "Any service"
 msgstr "N'importe quel service"
 
-#: src/pages/account/(authenticated)/route.tsx:63
+#: src/pages/account/(authenticated)/route.tsx:74
 msgid "Apps"
 msgstr "Applications"
 
@@ -164,7 +169,7 @@ msgid "Authorize"
 msgstr "Autoriser"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:128
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
@@ -213,7 +218,8 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Appeler"
 
-#: src/contexts/authentication.tsx:173
+#: src/contexts/authentication.tsx:174
+#: src/components/update-email-view.tsx:69
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card-async.tsx:42
 msgid "Cancel"
@@ -227,7 +233,11 @@ msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:71
+#: src/pages/account/(authenticated)/route.tsx:89
+msgid "Change your account email address"
+msgstr "Changer l'adresse email de votre compte"
+
+#: src/pages/account/(authenticated)/route.tsx:82
 msgid "Change your account password"
 msgstr "Changer le mot de passe de votre compte"
 
@@ -240,7 +250,12 @@ msgstr "Discussions"
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 
-#: src/data/password.ts:29
+#: src/data/email.ts:92
+msgid "Check your inbox for the verification code."
+msgstr "Consultez votre boîte de réception pour obtenir le code de vérification."
+
+#: src/data/password.ts:25
+#: src/data/email.ts:30
 msgid "Check your inbox."
 msgstr "Vérifiez votre boîte de réception."
 
@@ -311,10 +326,11 @@ msgstr "Refuser l'accès"
 msgid "Details"
 msgstr "Détails"
 
-#: src/pages/account/(authenticated)/route.tsx:56
+#: src/pages/account/(authenticated)/route.tsx:67
 msgid "Devices"
 msgstr "Appareils"
 
+#: src/pages/account/(authenticated)/route.tsx:88
 #: src/components/sign-up-account-form.tsx:114
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
@@ -325,6 +341,18 @@ msgstr "Email"
 #: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
 msgstr "Adresse email"
+
+#: src/data/email.ts:29
+msgid "Email change request sent"
+msgstr "Demande de modification d'email envoyée"
+
+#: src/data/email.ts:60
+msgid "Email change successful"
+msgstr "Modification de l'adresse email réussie"
+
+#: src/data/email.ts:118
+msgid "Email verified"
+msgstr "Adresse email vérifiée"
 
 #: src/components/forms/input-new-password.tsx:44
 msgid "Enter a password"
@@ -367,6 +395,10 @@ msgstr "Développer les détails"
 msgid "Extra"
 msgstr "Extra"
 
+#: src/data/email.ts:68
+msgid "Failed to change email"
+msgstr "Échec de la modification de l'adresse email"
+
 #: src/pages/account/(authenticated)/devices/page.tsx:34
 #: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
@@ -376,17 +408,29 @@ msgstr "Échec du chargement des applications connectées"
 msgid "Failed to remove device"
 msgstr "Échec de la suppression de l'appareil"
 
-#: src/data/password.ts:36
+#: src/data/email.ts:37
+msgid "Failed to request email change"
+msgstr "Échec de la demande de modification d'adresse email"
+
+#: src/data/password.ts:32
 msgid "Failed to request password reset"
 msgstr "Échec de la demande de réinitialisation du mot de passe"
 
-#: src/data/password.ts:63
+#: src/data/password.ts:59
 msgid "Failed to reset password"
 msgstr "Échec de la réinitialisation du mot de passe"
 
 #: src/pages/account/(authenticated)/apps/page.tsx:116
 msgid "Failed to revoke access"
 msgstr "Échec de la révocation de l'accès"
+
+#: src/data/email.ts:99
+msgid "Failed to send verification email"
+msgstr "Échec de l'envoi de l'email de vérification"
+
+#: src/data/email.ts:126
+msgid "Failed to verify email"
+msgstr "Échec de la vérification de l'adresse email"
 
 #: src/components/reset-password-view.tsx:43
 msgid "Forgot Password"
@@ -446,7 +490,7 @@ msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"
 msgid "just now"
 msgstr "à l'instant"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:140
+#: src/pages/account/(authenticated)/apps/page.tsx:137
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Dernier accès <0/>"
@@ -484,7 +528,7 @@ msgstr "loopback"
 msgid "Make visible"
 msgstr "Rendre visible"
 
-#: src/pages/account/(authenticated)/route.tsx:64
+#: src/pages/account/(authenticated)/route.tsx:75
 msgid "Manage applications that have access to your account"
 msgstr "Gérer les applications qui ont accès à votre compte"
 
@@ -492,7 +536,7 @@ msgstr "Gérer les applications qui ont accès à votre compte"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
 
-#: src/pages/account/(authenticated)/route.tsx:57
+#: src/pages/account/(authenticated)/route.tsx:68
 msgid "Manage your active sessions"
 msgstr "Gérer vos sessions actives"
 
@@ -516,7 +560,7 @@ msgstr "Manquant"
 msgid "Moderate"
 msgstr "Modéré"
 
-#: src/pages/account/(authenticated)/route.tsx:140
+#: src/pages/account/(authenticated)/route.tsx:172
 msgid "My Atmosphere Account"
 msgstr "Mon compte Atmosphère"
 
@@ -524,7 +568,11 @@ msgstr "Mon compte Atmosphère"
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/reset-password-confirm-form.tsx:60
+#: src/components/reset-email-confirm-form.tsx:70
+msgid "New email address"
+msgstr "Nouvelle adresse email"
+
+#: src/components/reset-password-confirm-form.tsx:59
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
@@ -534,7 +582,13 @@ msgstr "Nouveau mot de passe"
 msgid "Next"
 msgstr "Suivant"
 
-#: src/pages/account/(authenticated)/password/page.tsx:21
+#: src/pages/account/(authenticated)/email/page.tsx:24
+#: src/pages/account/(authenticated)/email/verify/page.tsx:18
+msgctxt "EmailChange"
+msgid "No email associated with this account."
+msgstr "Aucun email associé à ce compte."
+
+#: src/pages/account/(authenticated)/password/page.tsx:20
 msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "Aucun email associé à ce compte. La réinitialisation du mot de passe n'est pas disponible."
@@ -547,18 +601,18 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
-#: src/pages/account/(authenticated)/route.tsx:70
+#: src/pages/account/(authenticated)/route.tsx:81
 #: src/components/sign-up-account-form.tsx:128
 #: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr "Mot de passe"
 
-#: src/data/password.ts:28
+#: src/data/password.ts:24
 msgid "Password reset email sent"
 msgstr "E-mail de réinitialisation du mot de passe envoyé"
 
-#: src/data/password.ts:55
+#: src/data/password.ts:51
 msgid "Password reset successful"
 msgstr "Réinitialisation du mot de passe réussie"
 
@@ -594,15 +648,25 @@ msgstr "Effectuer des actions authentifiées vers <0>n'importe quel service</0> 
 msgid "Please authenticate to continue"
 msgstr "Veuillez vous identifier pour continuer"
 
-#: src/data/password.ts:37
+#: src/data/password.ts:33
+#: src/data/email.ts:38
 msgid "Please check the email address and try again."
-msgstr "Veuillez vérifier l'adresse e-mail et réessayer."
+msgstr "Veuillez vérifier l'adresse email et réessayer."
 
-#: src/data/password.ts:64
+#: src/data/password.ts:60
+#: src/data/email.ts:69
 msgid "Please check your reset code and try again."
 msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
 
-#: src/components/forms/button-cooldown.tsx:48
+#: src/data/email.ts:127
+msgid "Please check your verification code and try again."
+msgstr "Veuillez vérifier votre code de vérification et réessayer."
+
+#: src/data/email.ts:100
+msgid "Please try again in a moment."
+msgstr "Veuillez réessayer dans un instant."
+
+#: src/components/forms/button-cooldown.tsx:60
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
 
@@ -622,11 +686,11 @@ msgstr "Lire et envoyer des messages"
 
 #: src/components/utils/scope-description.tsx:229
 msgid "Read and update your account's email address"
-msgstr "Lire et mettre à jour l'adresse e-mail de votre compte"
+msgstr "Lire et mettre à jour l'adresse email de votre compte"
 
 #: src/components/utils/scope-description.tsx:231
 msgid "Read your account's email address"
-msgstr "Lire l'adresse e-mail de votre compte"
+msgstr "Lire l'adresse email de votre compte"
 
 #: src/components/sign-in-form.tsx:235
 #: src/components/sign-in-form.tsx:240
@@ -638,7 +702,8 @@ msgstr "Se souvenir de ce compte sur cet appareil"
 msgid "Repository"
 msgstr "Données publiques"
 
-#: src/components/reset-password-confirm-form.tsx:46
+#: src/components/reset-password-confirm-form.tsx:45
+#: src/components/reset-email-confirm-form.tsx:55
 msgid "Reset code"
 msgstr "Code de réinitialisation"
 
@@ -656,11 +721,11 @@ msgstr "Réinitialisez votre mot de passe"
 msgid "Retry"
 msgstr "Réessayer"
 
-#: src/components/forms/button-cooldown.tsx:71
+#: src/components/forms/button-cooldown.tsx:85
 msgid "Retry in {remainingSeconds}s"
 msgstr "Réessayer dans {remainingSeconds}s"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:151
+#: src/pages/account/(authenticated)/apps/page.tsx:148
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Révoquer l'accès"
@@ -677,7 +742,7 @@ msgstr "Sélectionner le domaine"
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
-#: src/pages/account/(authenticated)/password/page.tsx:51
+#: src/components/forms/button-request-reset.tsx:11
 msgctxt "PasswordReset"
 msgid "Send reset code"
 msgstr "Envoyer le code"
@@ -823,10 +888,20 @@ msgstr "Ce pseudonyme est réservé"
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/pages/account/(authenticated)/password/page.tsx:34
+#: src/components/update-email-view.tsx:77
+msgctxt "EmailChange"
+msgid "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
+msgstr "Pour changer votre email, nous enverrons un code de confirmation à <0>{email}</0>. Saisissez le code ci-dessous ainsi que votre nouvelle adresse email."
+
+#: src/pages/account/(authenticated)/password/page.tsx:33
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr "Pour réinitialiser votre mot de passe, nous enverrons un code de vérification à <0>{email}</0>. Saisissez le code ci-dessous pour définir un nouveau mot de passe."
+
+#: src/components/verify-email-view.tsx:47
+msgctxt "EmailVerify"
+msgid "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
+msgstr "Pour vérifier votre email, nous enverrons un code de vérification à <0>{email}</0>. Saisissez le code ci-dessous pour confirmer que vous possédez cette adresse."
 
 #: src/components/utils/scope-description.tsx:524
 msgctxt "RPC aud"
@@ -837,7 +912,7 @@ msgstr "Auprès de"
 msgid "Type your desired username"
 msgstr "Saisissez le nom d'utilisateur souhaité"
 
-#: src/contexts/session.tsx:152
+#: src/contexts/session.tsx:186
 msgid "Unauthorized"
 msgstr "Déconnecté"
 
@@ -866,6 +941,22 @@ msgstr "Nom d'utilisateur ou adresse email"
 msgid "Valid"
 msgstr "Valide"
 
+#: src/components/verify-email-confirm-form.tsx:52
+msgid "Verification code"
+msgstr "Code de vérification"
+
+#: src/data/email.ts:91
+msgid "Verification email sent"
+msgstr "Code de vérification envoyé"
+
+#: src/pages/account/(authenticated)/route.tsx:96
+msgid "Verify email address"
+msgstr "Vérifier l'adresse email"
+
+#: src/pages/account/(authenticated)/route.tsx:184
+msgid "Verify now"
+msgstr "Vérifier maintenant"
+
 #: src/components/sign-in-form.tsx:226
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
@@ -873,6 +964,10 @@ msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez
 #: src/components/sign-up-view.tsx:122
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
+
+#: src/pages/account/(authenticated)/route.tsx:97
+msgid "Verify your email address"
+msgstr "Vérifiez votre adresse email"
 
 #: src/components/consent-form.tsx:117
 msgid "wants to access your <0/> account"
@@ -902,7 +997,7 @@ msgstr "Bienvenue"
 msgid "What does this mean?"
 msgstr "Qu'est-ce que ça signifie ?"
 
-#: src/pages/account/(authenticated)/route.tsx:79
+#: src/pages/account/(authenticated)/route.tsx:105
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
@@ -922,7 +1017,11 @@ msgstr "Vous êtes redirigé..."
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 
-#: src/data/password.ts:56
+#: src/data/email.ts:61
+msgid "You can now sign in with your new email."
+msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email."
+
+#: src/data/password.ts:52
 #: src/components/reset-password-view.tsx:112
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
@@ -943,6 +1042,15 @@ msgstr "Votre compte est connecté sur les appareils listés ci-dessous. Si votr
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Votre compte Atmosphère est hébergé chez <0/>."
 
+#: src/data/email.ts:119
+msgid "Your email address has been verified."
+msgstr "Votre adresse email a été vérifiée."
+
+#: src/components/update-email-view.tsx:56
+msgctxt "EmailChange"
+msgid "Your email has been updated to <0>{newEmail}</0>. A verification code has been sent to the new address."
+msgstr "Votre email a été mis à jour avec <0>{newEmail}</0>. Un code de vérification a été envoyé à la nouvelle adresse."
+
 #. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
 #: src/components/sign-up-handle-form.tsx:203
 msgid "Your full username will be: {0}"
@@ -956,6 +1064,6 @@ msgstr "Votre mot de passe a été mis à jour !"
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau AT Protocol, telles que les publications, les likes et les suivis de Bluesky. Il contient également les données créées via d'autres applications auxquelles vous vous êtes connecté en utilisant ce compte. L'application demande les autorisations nécessaires pour publier les modifications suivantes sur votre dépôt :"
 
-#: src/contexts/session.tsx:153
+#: src/contexts/session.tsx:187
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
