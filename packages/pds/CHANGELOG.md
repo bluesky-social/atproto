@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.5.0
+
+### Minor Changes
+
+- [#4883](https://github.com/bluesky-social/atproto/pull/4883) [`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for email verification and management in the account management interface
+
+### Patch Changes
+
+- Updated dependencies [[`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d)]:
+  - @atproto/oauth-provider@0.18.0
+
 ## 0.4.226
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.234
+
+### Patch Changes
+
+- [#4993](https://github.com/bluesky-social/atproto/pull/4993) [`9378a82`](https://github.com/bluesky-social/atproto/commit/9378a82740529a7004e280fe71e91c611acc3905) Thanks [@blackmichael](https://github.com/blackmichael)! - Add associatedProfiles to app.bsky.embed.getEmbedExternalView output
+
+- [#4995](https://github.com/bluesky-social/atproto/pull/4995) [`753ac51`](https://github.com/bluesky-social/atproto/commit/753ac51fde9d1feea8128745c049584a995855f7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update Standard Site validation to fix path resolution
+
+- Updated dependencies [[`4984994`](https://github.com/bluesky-social/atproto/commit/4984994f7d3f0773b03c61dccd68286e42e0c6af)]:
+  - @atproto/api@0.20.5
+
 ## 0.0.233
 
 ### Patch Changes
