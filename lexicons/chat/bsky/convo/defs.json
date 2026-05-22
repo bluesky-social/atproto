@@ -364,6 +364,10 @@
           "type": "ref",
           "ref": "chat.bsky.group.defs#joinLinkView"
         },
+        "memberLimit": {
+          "type": "integer",
+          "description": "The maximum number of members allowed in the group conversation."
+        },
         "lockStatus": {
           "description": "The lock status of the conversation.",
           "type": "ref",
