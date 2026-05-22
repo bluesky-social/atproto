@@ -683,38 +683,32 @@ export class OAuthStore
     }
   }
 
-  async updateHandle({
-    sub: did,
-    handle,
-  }: UpdateHandleData): Promise<Account> {
+  async updateHandle({ sub: did, handle }: UpdateHandleData): Promise<Account> {
     // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
     assert(isDidString(did), 'sub must be a valid DID string')
 
     try {
-      await this.accountManager.updateHandle(did, handle)
+      const account = await this.accountManager.updateHandle(did, handle)
+
+      return this.buildAccount(account)
     } catch (err) {
-      if (err instanceof UserAlreadyExistsError) {
-        throw new HandleUnavailableError('taken', err.message)
-      }
       if (err instanceof XrpcInvalidRequestError) {
-        throw err.customErrorName === 'HandleNotAvailable'
-          ? new HandleUnavailableError('taken', err.message)
-          : new HandleUnavailableError('syntax', err.message)
+        if (err.customErrorName === 'HandleNotAvailable') {
+          throw new HandleUnavailableError('taken', err.message)
+        }
+
+        if (
+          err.customErrorName === 'InvalidHandle' ||
+          err.customErrorName === 'UnsupportedDomain'
+        ) {
+          throw new HandleUnavailableError('syntax', err.message)
+        }
+
+        throw new InvalidRequestError(err.message, err)
       }
 
       throw err
     }
-
-    const account = await this.accountManager.getAccount(did, {
-      includeDeactivated: true,
-      includeTakenDown: true,
-    })
-
-    if (!account) {
-      throw new InvalidRequestError('Account not found')
-    }
-
-    return this.buildAccount(account)
   }
 
   private async toTokenInfo(

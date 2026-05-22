@@ -268,12 +268,6 @@ export class AccountManager {
     return { accessJwt, refreshJwt }
   }
 
-  // @NOTE should always be paired with a sequenceHandle().
-  // the token output from this method should be passed to sequenceHandle().
-  async updateAccountHandle(did: DidString, handle: HandleString) {
-    return account.updateHandle(this.db, did, handle)
-  }
-
   /**
    * Validates the requested handle, updates the PLC document if needed, persists
    * the new handle locally, and emits an identity event.
@@ -281,20 +275,15 @@ export class AccountManager {
    * @throws {InvalidRequestError} when the handle is invalid, taken by another
    * account, or cannot be resolved for non-service domains.
    */
-  async updateHandle(did: DidString, rawHandle: string): Promise<HandleString> {
-    const handle = await this.normalizeAndValidateHandle(rawHandle, { did })
+  async updateHandle(
+    did: DidString,
+    newHandle: string,
+  ): Promise<ActorAccount & { handle: HandleString }> {
+    const { account, handle } = await this.validateHandleUpdate(did, newHandle)
 
-    // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-    const existing = await this.getAccount(handle, {
-      includeDeactivated: true,
-    })
-
-    if (existing) {
-      if (existing.did !== did) {
-        throw new InvalidRequestError(`Handle already taken: ${handle}`)
-      }
-    } else {
+    if (account.handle !== handle) {
       if (did.startsWith('did:plc:')) {
+        // @TODO We should verify the status before issuing a PLC update.
         await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
       } else {
         const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
@@ -304,19 +293,62 @@ export class AccountManager {
           )
         }
       }
-      await this.updateAccountHandle(did, handle)
     }
+
+    // @NOTE If the next line fails (for any reason), we don't "rollback" the
+    // PLC update above. The caller can just call this method again.
+    await this.updateAccountHandle(did, handle)
+
+    return { ...account, handle }
+  }
+
+  async validateHandleUpdate(
+    did: DidString,
+    newHandle: string,
+    options?: { allowAnyValid?: boolean },
+  ): Promise<{
+    did: DidString
+    handle: HandleString
+    // Returned for convenience
+    account: ActorAccount
+  }> {
+    const account = await this.getAccount(did, { includeDeactivated: true })
+    if (!account) {
+      throw new InvalidRequestError('Account not found')
+    }
+
+    const handle = await this.normalizeAndValidateHandle(newHandle, {
+      ...options,
+      did,
+    })
+
+    // Pessimistic check to handle spam: also enforced by updateAccountHandle() and the db.
+    const existing = await this.getAccount(handle, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (existing && existing.did !== did) {
+      throw new InvalidRequestError(
+        `Handle already taken: ${handle}`,
+        'HandleNotAvailable',
+      )
+    }
+
+    return { did, handle, account }
+  }
+
+  async updateAccountHandle(
+    did: DidString,
+    handle: HandleString,
+  ): Promise<void> {
+    await account.updateHandle(this.db, did, handle)
 
     try {
       await this.sequencer.sequenceIdentityEvt(did, handle)
     } catch (err) {
-      httpLogger.error(
-        { err, did, handle },
-        'failed to sequence handle update',
-      )
+      httpLogger.error({ err, did, handle }, 'failed to sequence handle update')
     }
-
-    return handle
   }
 
   async deleteAccount(did: DidString) {
@@ -689,7 +721,7 @@ export class AccountManager {
     email: string,
     token?: string,
     opts?: { locale?: string; sendConfirmationEmail?: boolean },
-  ) {
+  ): Promise<ActorAccount> {
     if (!isEmailValid(email) || isDisposableEmail(email)) {
       throw new InvalidRequestError(
         'This email address is not supported, please use a different email.',

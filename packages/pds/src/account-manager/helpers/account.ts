@@ -13,11 +13,11 @@ import { AccountDb, ActorEntry } from '../db/index.js'
 
 export class UserAlreadyExistsError extends Error {
   name = 'UserAlreadyExistsError'
-  constructor(options?: ErrorOptions) {
-    super(
-      'This email address is already in use, please use a different email.',
-      options,
-    )
+  constructor(
+    message = 'This email address is already in use, please use a different email.',
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
   }
 }
 
