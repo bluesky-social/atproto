@@ -176,11 +176,7 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
       expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
     })
 
-    // Case 4 is BLOCKED: the implementation needs to strip the fragment from
-    // iss before validation (like xrpc-server does). Currently isPayloadObject
-    // rejects combined DIDs because isDidString doesn't allow '#' in DIDs.
-    // See xrpc-server/src/auth.ts lines 146-151 for the correct pattern.
-    it.skip('falls back to iss fragment as kid when header.kid is absent', async () => {
+    it('falls back to iss fragment as kid when header.kid is absent', async () => {
       const { fixture, signJwt } = await makeFullFixture()
       const payload = {
         iss: `${fixture.issuer}#atproto_label`,
@@ -204,10 +200,7 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
 
       const result = await auth({ request, method: { nsid } as any, params: {} })
       expect(result.did).toBe(fixture.issuer)
-      expect(resolve).toHaveBeenCalledWith(
-        `${fixture.issuer}#atproto_label`,
-        expect.anything(),
-      )
+      expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
     })
   })
 })

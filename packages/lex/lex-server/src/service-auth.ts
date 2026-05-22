@@ -184,8 +184,10 @@ export function serviceAuth({
       unique,
     })
 
+    const issBare = stripIssFragment(jwt.payload.iss) as DidString
+
     let didDocument: AtprotoDidDocument = await didResolver
-      .resolve(jwt.payload.iss, { signal })
+      .resolve(issBare, { signal })
       .catch((cause) => {
         throw new LexServerAuthError(
           'AuthenticationRequired',
@@ -204,7 +206,7 @@ export function serviceAuth({
 
       // Try refreshing the DID document in case it was updated
       didDocument = await didResolver
-        .resolve(jwt.payload.iss, { signal, noCache: true })
+        .resolve(issBare, { signal, noCache: true })
         .catch((cause) => {
           throw new LexServerAuthError(
             'AuthenticationRequired',
@@ -482,6 +484,10 @@ function isHeaderObject(obj: unknown): obj is HeaderObject {
 }
 
 type PayloadObject = {
+  // Phase 1 of service auth updates: iss may carry a back-compat
+  // fragment (e.g. `did:plc:xxx#atproto_label`). The bare DID portion
+  // is validated; downstream code strips the fragment before
+  // passing to didResolver / getSigningKey.
   iss: DidString
   aud: AtprotoTokenAud
   exp: number
@@ -500,7 +506,7 @@ export function isPayloadObject(obj: unknown): obj is PayloadObject {
     (obj.iat === undefined || isPositiveInt(obj.iat)) &&
     (obj.nbf === undefined || isPositiveInt(obj.nbf)) &&
     isPositiveInt(obj.exp) &&
-    isDidString(obj.iss) &&
+    isDidString(stripIssFragment(obj.iss)) &&
     isAtprotoTokenAud(obj.aud)
   )
 }
@@ -517,6 +523,11 @@ function isPositiveInt(value: unknown): value is number {
 function extractIssFragment(iss: string): string | null {
   const hashIdx = iss.indexOf('#')
   return hashIdx === -1 ? null : iss.slice(hashIdx)
+}
+
+function stripIssFragment(iss: string): string {
+  const hashIdx = iss.indexOf('#')
+  return hashIdx === -1 ? iss : iss.slice(0, hashIdx)
 }
 
 function isAtprotoTokenAud(value: unknown): value is AtprotoTokenAud {
