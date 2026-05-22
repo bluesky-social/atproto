@@ -524,6 +524,8 @@ async function handleApprovalCallback(
           accessJwt: tokens.accessJwt,
           refreshJwt: tokens.refreshJwt,
           created: false,
+          emailConfirmed: true,
+          wsocialVerified: 'wid',
         },
       })
       log.info({ did: approvalDid }, 'link_wid upgrade completed successfully')

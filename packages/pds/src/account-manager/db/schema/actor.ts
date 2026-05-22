@@ -1,6 +1,12 @@
 import { Selectable } from 'kysely'
 
-export type AccountType = 'bot' | 'personal' | 'test' | 'organization' | 'unverified'
+export type AccountType =
+  | 'bot'
+  | 'personal'
+  | 'test'
+  | 'organization'
+  | 'unverified'
+  | 'service'
 
 export interface Actor {
   did: string
@@ -17,4 +23,3 @@ export type ActorEntry = Selectable<Actor>
 export const tableName = 'actor'
 
 export type PartialDB = { [tableName]: Actor }
-

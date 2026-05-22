@@ -9,6 +9,8 @@ const VALID_ACCOUNT_TYPES: AccountType[] = [
   'bot',
   'organization',
   'test',
+  'unverified',
+  'service',
 ]
 
 export default function (server: Server, ctx: AppContext) {
@@ -38,7 +40,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Account not found: ${did}`)
       }
 
-      await ctx.accountManager.updateAccountType(did, accountType as AccountType)
+      await ctx.accountManager.updateAccountType(
+        did,
+        accountType as AccountType,
+      )
 
       return {
         encoding: 'application/json',

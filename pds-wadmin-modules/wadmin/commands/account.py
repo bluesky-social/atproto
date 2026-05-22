@@ -154,7 +154,28 @@ def set_email(ctx, did: str, email: str):
     console.print(f"  Email: {email}")
 
 
-ACCOUNT_TYPES = ["personal", "bot", "organization", "test", "service"]
+ACCOUNT_TYPES = ["personal", "bot", "organization", "test", "unverified", "service"]
+
+
+@account.command("list-unverified-email")
+@click.pass_context
+def list_unverified(ctx):
+    """List active accounts that do not have the email-verified flag set."""
+    from .wid import exec_sqlite
+    config: Config = ctx.obj["config"]
+
+    sql = """
+SELECT actor.handle, actor.did, account.email, actor.accountType, actor.createdAt
+FROM account
+JOIN actor ON actor.did = account.did
+WHERE account.emailConfirmedAt IS NULL
+  AND actor.deactivatedAt IS NULL
+  AND (actor.takedownRef IS NULL OR actor.takedownRef = '')
+ORDER BY actor.handle ASC;
+""".strip()
+
+    output = exec_sqlite(config, sql)
+    console.print(output)
 
 
 @account.command("set-type")
@@ -162,7 +183,7 @@ ACCOUNT_TYPES = ["personal", "bot", "organization", "test", "service"]
 @click.argument("account_type", metavar="TYPE", type=click.Choice(ACCOUNT_TYPES))
 @click.pass_context
 def set_type(ctx, did: str, account_type: str):
-    """Set the account type (personal, bot, organization, test)."""
+    """Set the account type (personal, bot, organization, test, unverified, service)."""
     client: PDSClient = ctx.obj["client"]
 
     response = client.call(

@@ -17,7 +17,7 @@
             },
             "accountType": {
               "type": "string",
-              "knownValues": ["personal", "bot", "organization", "test"],
+              "knownValues": ["personal", "bot", "organization", "test", "unverified", "service"],
               "description": "New account type"
             }
           }

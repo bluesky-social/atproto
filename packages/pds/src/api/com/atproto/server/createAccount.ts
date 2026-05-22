@@ -13,6 +13,7 @@ import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { syncEvtDataFromCommit } from '../../../../sequencer'
 import { sendIdentityEventWithRetry } from '../../../../sequencer/identity-event-helper'
+import { applyNewAccountDefaults } from '../../../../services/account-defaults'
 import { safeResolveDidDoc } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -168,6 +169,8 @@ export default function (server: Server, ctx: AppContext) {
         }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
+
+        await applyNewAccountDefaults(ctx, did, req.log)
       } catch (err) {
         // this will only be reached if the actor store _did not_ exist before
         await ctx.actorStore.destroy(did)
