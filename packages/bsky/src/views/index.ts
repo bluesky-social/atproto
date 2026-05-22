@@ -2330,7 +2330,8 @@ export class Views {
       [document?.ref.uri, publication?.ref.uri],
       (uri) => (uri ? this.profileBasic(uriToDid(uri), state) : undefined),
     ) as ProfileViewBasic[]
-    if (associatedProfiles.length) overlay.associatedProfiles = associatedProfiles
+    if (associatedProfiles.length)
+      overlay.associatedProfiles = associatedProfiles
 
     return overlay
   }
