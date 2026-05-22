@@ -30,7 +30,7 @@ export const createServiceJwt = async (
   params: ServiceJwtParams,
 ): Promise<string> => {
   const { aud, keypair } = params
-  const iss = stripDidFragment(params.iss)
+  const iss = stripIssFragment(params.iss)
   const kid = params.kid ?? '#atproto'
   const iat = params.iat ?? Math.floor(Date.now() / 1e3)
   const exp = params.exp ?? iat + MINUTE / 1e3
@@ -75,10 +75,11 @@ export type VerifySignatureWithKeyFn = (
 
 export const verifyJwt = async (
   jwtStr: string,
-  ownDid: string | null, // null indicates to skip the audience check
+  ownDid: string | string[] | null, // null indicates to skip the audience check
   lxm: string | null, // null indicates to skip the lxm check
   getSigningKey: (
-    iss: DidString | `${DidString}#${string}`,
+    iss: DidString,
+    kid: string,
     forceRefresh: boolean,
   ) => Promise<string>,
   verifySignatureWithKey: VerifySignatureWithKeyFn = cryptoVerifySignatureWithKey,
@@ -114,11 +115,14 @@ export const verifyJwt = async (
   if (Date.now() / 1000 > payload.exp) {
     throw new AuthRequiredError('jwt expired', 'JwtExpired')
   }
-  if (ownDid !== null && payload.aud !== ownDid) {
-    throw new AuthRequiredError(
-      'jwt audience does not match service did',
-      'BadJwtAudience',
-    )
+  if (ownDid !== null) {
+    const accepted = Array.isArray(ownDid) ? ownDid : [ownDid]
+    if (!accepted.includes(payload.aud)) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
   }
   if (lxm !== null && payload.lxm !== lxm) {
     throw new AuthRequiredError(
@@ -128,14 +132,28 @@ export const verifyJwt = async (
       'BadJwtLexiconMethod',
     )
   }
-  if (!payload.iss || !isDidStringOrService(payload.iss)) {
+  if (typeof payload.iss !== 'string' || payload.iss.length === 0) {
+    throw new AuthRequiredError('jwt iss is not a valid did', 'BadJwtIss')
+  }
+
+  // kid resolution: header.kid > fragment of iss (back-compat for older
+  // callers that emitted combined iss) > '#atproto' (default).
+  const kid =
+    typeof header['kid'] === 'string'
+      ? header['kid']
+      : extractIssFragment(payload.iss) ?? '#atproto'
+
+  // payload.iss may carry a fragment from older callers; strip it for
+  // downstream resolution. The bare DID portion must be a valid DID.
+  const issBare = stripIssFragment(payload.iss)
+  if (!isDidString(issBare)) {
     throw new AuthRequiredError('jwt iss is not a valid did', 'BadJwtIss')
   }
 
   const msgBytes = Buffer.from(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = Buffer.from(sig, 'base64url')
 
-  const signingKey = await getSigningKey(payload.iss, false)
+  const signingKey = await getSigningKey(issBare, kid, false)
   const { alg } = header
 
   let validSig: boolean
@@ -150,7 +168,7 @@ export const verifyJwt = async (
 
   if (!validSig) {
     // get fresh signing key in case it failed due to a recent rotation
-    const freshSigningKey = await getSigningKey(payload.iss, true)
+    const freshSigningKey = await getSigningKey(issBare, kid, true)
     try {
       validSig =
         freshSigningKey !== signingKey
@@ -176,7 +194,7 @@ export const verifyJwt = async (
     )
   }
 
-  return payload
+  return { ...payload, iss: issBare }
 }
 
 export const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
@@ -219,26 +237,12 @@ const parsePayload = (b64: string): ServiceJwtPayload => {
   return payload
 }
 
-function stripDidFragment(iss: string): DidString {
+function stripIssFragment(iss: string): DidString {
   const hashIdx = iss.indexOf('#')
   return (hashIdx === -1 ? iss : iss.slice(0, hashIdx)) as DidString
 }
 
-function isDidStringOrService(
-  value: string,
-): value is DidString | `${DidString}#${string}` {
-  const hashIdx = value.indexOf('#')
-  if (hashIdx === -1) {
-    return isDidString(value)
-  }
-
-  // basic validation of the fragment part
-  const fragmentLen = value.length - hashIdx - 1
-  if (fragmentLen < 1 || value.includes('#', hashIdx + 1)) {
-    return false
-  }
-
-  // Validate the did part
-  const didPart = value.slice(0, hashIdx)
-  return isDidString(didPart)
+function extractIssFragment(iss: string): string | null {
+  const hashIdx = iss.indexOf('#')
+  return hashIdx === -1 ? null : iss.slice(hashIdx)
 }
