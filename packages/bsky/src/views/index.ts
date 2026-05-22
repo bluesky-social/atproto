@@ -2162,7 +2162,9 @@ export class Views {
           : undefined,
         ...ssView,
         associatedRefs: embed.external.associatedRefs,
-        associatedProfiles,
+        associatedProfiles: associatedProfiles.length
+          ? associatedProfiles
+          : undefined,
       },
     })
   }

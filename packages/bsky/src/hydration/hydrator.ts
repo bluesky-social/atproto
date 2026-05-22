@@ -838,7 +838,7 @@ export class Hydrator {
       ),
     ) as AtUriString[]
     if (!ssUris.length) return { ctx }
-    const dids = dedupeStrs(ssUris.map((uri) => new AtUri(uri).did))
+    const dids = dedupeStrs(ssUris.map((uri) => uriToDid(uri)))
 
     const [{ documents, publications }, labels, profiles] = await Promise.all([
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
