@@ -18,8 +18,8 @@ export default function (server: Server, ctx: AppContext) {
       checkTakedown: true,
       authorize: (permissions, { req }) => {
         const lxm = app.bsky.actor.putPreferences.$lxm
-        const scopeAud = computeProxyTo(ctx, req, lxm)
-        permissions.assertRpc({ aud: scopeAud, lxm })
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
       },
     }),
     handler: async ({ req, auth, input }) => {
@@ -29,12 +29,12 @@ export default function (server: Server, ctx: AppContext) {
       // we need to proxy the request to the requested app view.
       // @TODO This behavior should not be implemented as part of the XRPC framework
       const lxm = app.bsky.actor.putPreferences.$lxm
-      const scopeAud = computeProxyTo(ctx, req, lxm)
-      if (scopeAud !== `${bskyAppView.did}#bsky_appview`) {
+      const aud = computeProxyTo(ctx, req, lxm)
+      if (aud !== `${bskyAppView.did}#bsky_appview`) {
         // Phase 1 of service auth updates: outbound JWT keeps bare-DID aud.
         return pipethrough(ctx, req, {
           iss: did,
-          aud: bareDidFromProxyTo(scopeAud),
+          aud: bareDidFromProxyTo(aud),
           lxm,
         })
       }
