@@ -158,6 +158,7 @@ export function readEnv() {
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
     proxyMaxRetries: envInt('PDS_PROXY_MAX_RETRIES'),
     proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
+    proxyServiceAuthCombinedAud: envBool('PDS_PROXY_SERVICE_AUTH_COMBINED_AUD'),
 
     // lexicon resolution
     lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),

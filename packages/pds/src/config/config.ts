@@ -259,6 +259,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         ? env.proxyMaxRetries
         : 0,
     preferCompressed: env.proxyPreferCompressed ?? false,
+    serviceAuthCombinedAud: env.proxyServiceAuthCombinedAud ?? false,
   }
 
   const brandingCfg = {
@@ -482,6 +483,16 @@ export type ProxyConfig = {
    * content over uncompressed one.
    */
   preferCompressed: boolean
+
+  /**
+   * When enabled, the catchall service-proxy handler issues outbound
+   * service-auth JWTs whose `aud` claim is the combined `did#serviceId`
+   * form. When disabled (the default), `aud` is the bare DID. This is the
+   * Phase 1 of service auth updates rollout knob: receivers that have
+   * adopted combined-aud verification (via xrpc-server / lex-server's
+   * widened audience matching) can opt their PDS in here.
+   */
+  serviceAuthCombinedAud: boolean
 }
 
 export type OAuthConfig = {
