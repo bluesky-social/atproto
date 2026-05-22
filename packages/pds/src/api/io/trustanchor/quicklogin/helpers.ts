@@ -11,8 +11,7 @@ import {
 import { hasExplicitSlur } from '../../../../handle/explicit-slurs'
 import { prepareCreate } from '../../../../repo/prepare'
 import { sendIdentityEventWithRetry } from '../../../../sequencer/identity-event-helper'
-import { subscribeToLists } from '../../../../services/list-subscription'
-import { setThreadViewPreferences } from '../../../../services/thread-preferences'
+import { applyNewAccountDefaults } from '../../../../services/account-defaults'
 import { QuickLoginResult } from './store'
 
 export type NeuroCallbackPayload = {
@@ -260,63 +259,7 @@ export async function createAccountViaQuickLogin(
   await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
   await ctx.sequencer.sequenceCommit(did, commit)
 
-  // Subscribe to default lists (for human and test accounts)
-  // Note: Both real users (isTestUser=0) and test users (isTestUser=1) get subscribed
-  // to ensure testers have the same experience as real users
-  if (ctx.cfg.wsocial.defaultSubscribeLists.length > 0) {
-    try {
-      const subscribedCount = await subscribeToLists(
-        ctx,
-        did,
-        ctx.cfg.wsocial.defaultSubscribeLists,
-      )
-      if (log && sessionId) {
-        log.info(
-          { sessionId, did, subscribedCount },
-          'Subscribed new account to default lists',
-        )
-      }
-    } catch (err) {
-      // Log error but don't fail account creation
-      if (log && sessionId) {
-        log.error(
-          { sessionId, did, err },
-          'Failed to subscribe account to default lists',
-        )
-      }
-    }
-  }
-
-  // Set default thread view preferences (for human and test accounts)
-  // Note: Both real users (isTestUser=0) and test users (isTestUser=1) get these preferences
-  // to ensure testers have the same experience as real users
-  if (ctx.cfg.wsocial.defaultThreadPref.enabled) {
-    try {
-      await setThreadViewPreferences(ctx, did, {
-        treeViewEnabled: ctx.cfg.wsocial.defaultThreadPref.treeViewEnabled,
-        sort: ctx.cfg.wsocial.defaultThreadPref.sort,
-      })
-      if (log && sessionId) {
-        log.info(
-          {
-            sessionId,
-            did,
-            treeViewEnabled: ctx.cfg.wsocial.defaultThreadPref.treeViewEnabled,
-            sort: ctx.cfg.wsocial.defaultThreadPref.sort,
-          },
-          'Set default thread view preferences for new account',
-        )
-      }
-    } catch (err) {
-      // Log error but don't fail account creation
-      if (log && sessionId) {
-        log.error(
-          { sessionId, did, err },
-          'Failed to set thread view preferences',
-        )
-      }
-    }
-  }
+  await applyNewAccountDefaults(ctx, did, logger)
 
   // Create session
   const { accessJwt, refreshJwt } = await ctx.accountManager.createSession(
