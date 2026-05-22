@@ -46,7 +46,7 @@ export class LocalViewer {
     const keypair = await this.actorStoreReader.keypair()
 
     return createServiceAuthHeaders({
-      iss: did,
+      iss: did as `did:${string}:${string}`,
       aud: this.bskyAppView.did,
       lxm,
       keypair,

@@ -522,20 +522,24 @@ export class AppContext {
     return forwardedFor(req, authPassthru(req))
   }
 
-  async serviceAuthHeaders(did: string, aud: string, lxm: string) {
+  async serviceAuthHeaders(
+    did: string,
+    aud: string,
+    lxm: string,
+  ): Promise<{ headers: Record<string, string> }> {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
-      iss: did,
+      iss: did as `did:${string}:${string}`,
       aud,
       lxm,
       keypair,
     })
   }
 
-  async serviceAuthJwt(did: string, aud: string, lxm: string) {
+  async serviceAuthJwt(did: string, aud: string, lxm: string): Promise<string> {
     const keypair = await this.actorStore.keypair(did)
     return createServiceJwt({
-      iss: did,
+      iss: did as `did:${string}:${string}`,
       aud,
       lxm,
       keypair,
