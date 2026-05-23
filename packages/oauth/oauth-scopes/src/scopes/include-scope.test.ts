@@ -58,6 +58,15 @@ describe('IncludeScope', () => {
             aud: 'did:web:example.com#my_service',
           })
         })
+
+        it('parsing of wildcard aud', () => {
+          expect(
+            IncludeScope.fromString('include:com.example.baz?aud=*'),
+          ).toMatchObject({
+            nsid: 'com.example.baz',
+            aud: '*',
+          })
+        })
       })
 
       describe('rejects', () => {
@@ -109,6 +118,11 @@ describe('IncludeScope', () => {
             ).toString(),
           ).toEqual(
             'include:com.example.foo?aud=did:web:example.com%23my_service',
+          )
+        })
+        it('formating of scope with wildcard aud', () => {
+          expect(new IncludeScope('com.example.foo', '*').toString()).toEqual(
+            'include:com.example.foo?aud=*',
           )
         })
       })
@@ -259,6 +273,22 @@ describe('IncludeScope', () => {
               'rpc:com.example.calendar.listEvents?aud=did:web:example.com%23foo',
               'rpc:com.example.calendar.getEventDetails?aud=did:web:example.com%23foo',
             ])
+          })
+
+          it('inherits wildcard aud', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth?aud=*', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'rpc',
+                    inheritAud: true,
+                    lxm: ['com.example.calendar.listEvents'],
+                  },
+                ],
+              }),
+            ).toEqual(['rpc:com.example.calendar.listEvents?aud=*'])
           })
         })
 
