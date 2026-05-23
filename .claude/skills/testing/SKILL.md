@@ -23,6 +23,7 @@ Runner-reference summary:
 
 - **Unit tests** live next to the unit being tested as `foo.ts` + `foo.test.ts`. This is the default — prefer it whenever the test does not need infra, or complex cross-package setup.
 - **End-to-end / integration tests** live in a top-level `./tests` folder inside the package (for example, the `pds` and `bsky` packages each have their own `./tests` folder). Use this for tests that boot real services, hit a database, or exercise multiple modules together.
+- **Shared test helpers** live in `./tests/_util.ts` (or `./tests/_util/*`). The leading underscore keeps them out of glob-based test discovery. Used by [packages/bsky/tests/_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/tap/tests/_util.ts](../../../packages/tap/tests/_util.ts).
 
 ## TypeScript config for tests
 
@@ -51,3 +52,5 @@ From a package directory:
 pnpm test                         # full suite (vitest run / jest)
 pnpm test -- path/to/file.test.ts # single file
 ```
+
+For packages whose tests need postgres + redis (`bsky`, `pds`, `ozone`), always go through `pnpm test` — the `test` script wraps invocations in [packages/dev-infra/with-test-redis-and-db.sh](../../../packages/dev-infra/with-test-redis-and-db.sh). Calling `pnpm exec vitest run` (or `jest`) directly will fail because the infra isn't started. These packages are intentionally absent from the root [vitest.config.ts](../../../vitest.config.ts) `projects` list for the same reason.

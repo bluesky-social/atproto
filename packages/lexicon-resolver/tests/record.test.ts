@@ -1,5 +1,4 @@
-import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { AtUriString, l } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'

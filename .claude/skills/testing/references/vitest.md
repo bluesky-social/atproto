@@ -32,7 +32,7 @@ When a package doesn't yet have vitest set up:
 
    **Do not add the package to the root `projects` list if its tests depend on dev-infra** (postgres + redis docker stack). The workspace-level runner does not start dev-infra, so those tests would fail when invoked from the root. This is why `packages/bsky` is intentionally omitted from the root config — it must be run from its own directory via `pnpm test`, which goes through [packages/dev-infra/with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh). See the comment in [vitest.config.ts](../../../../vitest.config.ts) for context.
 
-4. Create `tsconfig.tests.json` extending the shared vitest config:
+4. Create `tsconfig.tests.json` extending the shared vitest config. Always extend `../../tsconfig/vitest.json` (the jest-typed `../../tsconfig/tests.json` pulls in `@types/jest` and is for jest packages only):
 
    ```json
    {
@@ -47,6 +47,8 @@ When a package doesn't yet have vitest set up:
 
    The shared [tsconfig/vitest.json](../../../../tsconfig/vitest.json) supplies `lib`, `module`, and `noEmit`. Make sure the package's root `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.tests.json`.
 
+   Extend `include` for any additional test-only sources the package has — benchmarks (`./src/**/*.bench.ts`), ambient declarations (`./src/core-js.d.ts`), etc.
+
 ## Imports
 
 Always import test utilities from `vitest` using named imports:
@@ -55,6 +57,13 @@ Always import test utilities from `vitest` using named imports:
 import { assert, describe, expect, it, vi } from 'vitest'
 ```
 
+Pick between `it` and `test` based on what the label is:
+
+- **`it('<description>', ...)`** — use when the label is a sentence describing behavior. Reads as "it <description>". Example: `it('rejects invalid request bodies', ...)`.
+- **`test(implementation, ...)`** / **`test.each(cases)(...)`** — use when the label is a specific case identifier: a function reference, a fixture name, a parameterized case. Reads as "test <case>". Example: `test(parseCid, ...)`, `test.each(fixtures)('%s', ...)`.
+
+For `assert`, prefer vitest's named import over `node:assert`.
+
 ## Test structure
 
 ### Describe labels
@@ -62,12 +71,19 @@ import { assert, describe, expect, it, vi } from 'vitest'
 Pass the function/class reference as the describe label when the export is a named function or class. Use a string label when testing an arrow function assigned to a variable, a class method, or multiple related behaviors that don't map to a single export:
 
 ```ts
-// Function reference as label (preferred when testing a single export)
+// Function or class reference as label (preferred when testing a single export)
 describe(parseCid, () => { ... })
 describe(isLexValue, () => { ... })
+describe(XrpcResponseError, () => { ... })
 
 // String label for conceptual groups or when testing multiple related behaviors
 describe('roundtrip toBase64 <-> fromBase64', () => { ... })
+```
+
+**Integration tests are an exception.** End-to-end suites under a package's `./tests` folder typically span many endpoints and don't map to a single export — string labels are the norm there:
+
+```ts
+describe('pds profile views', () => { ... })
 ```
 
 ### Grouping
@@ -101,11 +117,11 @@ it('handles deep structures without exceeding call stack', () => { ... })
 
 ## Parameterized tests
 
-Use `it.each` over test case arrays:
+Use `test.each` over test case arrays — each row is a specific case, not a behavior description:
 
 ```ts
 describe(isLexScalar, () => {
-  it.each([
+  test.each([
     { note: 'string', value: 'hello', expected: true },
     { note: 'number (int)', value: 42, expected: true },
     { note: 'null', value: null, expected: true },
@@ -117,7 +133,7 @@ describe(isLexScalar, () => {
 })
 ```
 
-This also works for running the same test suite against multiple implementations:
+This also works for running the same test suite against multiple implementations. The outer `describe.each` parameterizes the suite by implementation; the inner labels stay as `it('<description>', ...)` because they describe behavior:
 
 ```ts
 describe.each([utf8LenNode, utf8LenCompute] as const)('%o', (utf8Len) => {
@@ -155,6 +171,9 @@ expect(result.success).toBe(true) // ❌ No type narrowing
 if (result.success) {
   expect(result.body).toEqual({ value: 'hello' }) // Still need type guard
 }
+
+// DON'T do this either - even less informative on failure
+expect(result).toMatchObject({ success: true }) // ❌ No narrowing, weak diagnostic
 ```
 
 ### Error assertions with `rejects.toSatisfy`
@@ -231,6 +250,28 @@ it('sends an update email when the address changes', async () => {
 
 This applies broadly to anything resource-like that exposes `[Symbol.dispose]` / `[Symbol.asyncDispose]` — reach for `using` (or `await using`) before falling back to manual cleanup.
 
+### Mocking node built-ins
+
+`vi.mock` of a node built-in usually needs both default and named exports, since callers may use either form:
+
+```ts
+vi.mock('node:dns/promises', () => {
+  const mock = { resolveTxt: vi.fn() }
+  return { default: mock, ...mock }
+})
+```
+
+### Partial module mocks with `vi.importActual`
+
+Spread the actual module to mock only specific exports:
+
+```ts
+vi.mock('../../src/api/age-assurance/const.js', async () => {
+  const actual = await vi.importActual<typeof import('...')>('...')
+  return { ...actual, FOO: 'overridden' }
+})
+```
+
 ## Test fixtures
 
 Define reusable fixtures at the top of the file, outside describe blocks:
@@ -242,6 +283,48 @@ const cborCid = parseCid(cborCidStr, { flavor: 'cbor' })
 ```
 
 Keep fixtures minimal and focused on what the tests need.
+
+### JSON fixture files
+
+When fixtures are large or shared across SDKs (`interop-test-files/`, generated vector files), import them with the JSON import attribute and feed them to `test.each`. Each fixture is a case identifier, so use `test.each` (not `it.each`) and use `$name` (or another property) as the label template:
+
+```ts
+import fixtures from './fixtures.json' with { type: 'json' }
+
+describe('decode', () => {
+  test.each(fixtures)('$name', ({ input, expected }) => {
+    expect(decode(input)).toEqual(expected)
+  })
+})
+```
+
+For text-based interop fixtures, read the file at module load, parse it once, and pass the resulting array straight to `test.each`:
+
+```ts
+const fixtureCases = fs
+  .readFileSync(
+    path.join(__dirname, '../../../interop-test-files/syntax/aturi_valid.txt'),
+    'utf8',
+  )
+  .split('\n')
+  .filter((l) => l && !l.startsWith('#'))
+
+test.each(fixtureCases)('%s', (line) => { ... })
+```
+
+When the same suite must run against several implementations of the same interface, parameterize the suite with `describe.each` (the implementation is the case identifier) and keep the inner labels as `it('<description>', ...)`:
+
+```ts
+describe.each([utf8LenNode, utf8LenCompute] as const)('%o', (utf8Len) => {
+  assert(utf8Len)
+
+  it('computes utf8 string length', () => {
+    expect(utf8Len('a')).toBe(1)
+  })
+})
+```
+
+Reach for raw `for (const x of cases) { test(x.name, ...) }` only when the body shape genuinely can't be expressed via `test.each` — for example, when each case needs a different `describe` nesting or a different number of assertions.
 
 ## TypeScript in tests
 
@@ -256,6 +339,20 @@ await xrpc(fetchHandler, testQuery, {
   validateRequest: true,
 })
 ```
+
+### Type-level assertions with `expectTypeOf`
+
+For assertions about _types_ (not runtime values), use vitest's `expectTypeOf`:
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+expectTypeOf(result).toEqualTypeOf<{ value: string }>()
+expectTypeOf(handler).parameter(0).toMatchTypeOf<Request>()
+expectTypeOf(client.foo).not.toBeAny()
+```
+
+`expectTypeOf` is preferred over a hand-rolled `const expectType = <T>(_: T) => {}` helper. It compiles to nothing at runtime, so it's free.
 
 ## Roundtrip tests
 
@@ -279,5 +376,5 @@ describe('roundtrip toBase64 <-> fromBase64', () => {
 ## Running tests
 
 ```bash
-pnpm exec vitest run path/to/file.test.ts
+pnpm run test -- path/to/file.test.ts
 ```
