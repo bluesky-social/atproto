@@ -119,9 +119,7 @@ describe('NSID validation', () => {
       'org.4chan.lex.getThing',
       'test.12345.record',
       'xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two',
-    ])('%s', (validNsid) => {
-      expectValid(validNsid)
-    })
+    ])('%s', expectValid)
   })
 
   describe('invalid NSIDs', () => {
@@ -155,24 +153,15 @@ describe('NSID validation', () => {
       'com.-example.foo',
       'com.example.0foo',
       'com.example.f-o',
-    ])('%s', (invalidNsid) => {
-      expect(validateNsid(invalidNsid)).toMatchObject({
-        success: false,
-        message: expect.any(String),
-      })
-    })
+    ])('%s', expectInvalid)
   })
 
   describe('conforms to interop valid NSIDs', () => {
-    test.each(readInteropLines('nsid_syntax_valid.txt'))('%s', (line) => {
-      expectValid(line)
-    })
+    test.each(readInteropLines('nsid_syntax_valid.txt'))('%s', expectValid)
   })
 
   describe('conforms to interop invalid NSIDs', () => {
-    test.each(readInteropLines('nsid_syntax_invalid.txt'))('%s', (line) => {
-      expectInvalid(line)
-    })
+    test.each(readInteropLines('nsid_syntax_invalid.txt'))('%s', expectInvalid)
   })
 })
 
