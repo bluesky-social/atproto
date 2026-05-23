@@ -257,27 +257,6 @@ await xrpc(fetchHandler, testQuery, {
 })
 ```
 
-## Global stubbing
-
-When testing code that uses a global, temporarily replace it and restore in a `finally` block:
-
-```ts
-it('throws TypeError when fetch is not available', () => {
-  const originalFetch = globalThis.fetch
-  try {
-    // @ts-expect-error removing fetch to simulate missing environment
-    globalThis.fetch = undefined
-    expect(() => buildAgent({ service: 'https://example.com' })).toThrow(
-      TypeError,
-    )
-  } finally {
-    globalThis.fetch = originalFetch
-  }
-})
-```
-
-Use `try/finally` (not `beforeEach`/`afterEach`) when the stub is scoped to a single test.
-
 ## Roundtrip tests
 
 When testing encode/decode or serialize/deserialize pairs, add a dedicated roundtrip describe:
