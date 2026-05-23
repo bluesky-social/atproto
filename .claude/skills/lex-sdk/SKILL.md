@@ -1,19 +1,27 @@
 ---
 name: lex-sdk
 description: >
-  Use this skill whenever code interacts with `@atproto/lex` (or its
-  sub-packages `@atproto/lex-client`, `@atproto/lex-data`, `@atproto/lex-json`,
-  `@atproto/lex-cbor`, `@atproto/lex-schema`, `@atproto/xrpc-server`). Trigger
-  when the user makes XRPC calls with `Client`, `xrpc`, `xrpcSafe`, defines
-  XRPC server routes (`createServer`, `server.add`), validates lexicon-derived
-  data (`$build`, `$matches`, `$isTypeOf`, `$parse`, `$safeParse`,
-  `$validate`), processes AT Protocol data (JSON ↔ Lex with `lexParse` /
-  `lexStringify` / `jsonToLex` / `lexToJson`, CBOR with `@atproto/lex-cbor`),
-  installs or builds lexicons (`lex install`, `lex build`), works with branded
-  strings (`DidString`, `HandleString`, `AtUriString`, `Cid`, `DatetimeString`),
-  handles blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`), or migrates a
-  package from the legacy `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc`
-  / `@atproto/lex-cli` stack to `@atproto/lex` ("lexification").
+  Use this skill whenever code interacts with the `@atproto/lex` SDK family.
+  This family covers `@atproto/lex` and its companion packages:
+  `@atproto/lex-client`, `@atproto/lex-data`, `@atproto/lex-json`, and
+  `@atproto/lex-schema` (all re-exported by `@atproto/lex`), plus
+  `@atproto/lex-cbor` and `@atproto/xrpc-server` (related companion packages
+  that must be imported directly — they are NOT re-exported by `@atproto/lex`).
+  Trigger on ANY of the following (OR logic — match any one):
+  (1) XRPC calls with `Client`, `xrpc`, or `xrpcSafe`;
+  (2) defining XRPC server routes (`createServer`, `server.add`);
+  (3) validating lexicon-derived data (`$build`, `$matches`, `$isTypeOf`,
+  `$parse`, `$safeParse`, `$validate`);
+  (4) processing AT Protocol data: JSON ↔ Lex with `lexParse` / `lexStringify` /
+  `jsonToLex` / `lexToJson`, or CBOR via the separate `@atproto/lex-cbor` package;
+  (5) installing or building lexicons (`lex install`, `lex build`);
+  (6) working with branded strings (`DidString`, `HandleString`, `AtUriString`,
+  `Cid`, `DatetimeString`);
+  (7) handling blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`);
+  (8) migrating a package from the legacy `@atproto/api` / `@atproto/lexicon` /
+  `@atproto/xrpc` / `@atproto/lex-cli` stack to `@atproto/lex` ("lexification").
+  When a task matches multiple triggers, consult all corresponding references
+  in the routing table below before responding.
 ---
 
 # `@atproto/lex` SDK
@@ -22,8 +30,14 @@ description: >
 TypeScript schemas from Lexicon JSON, validates and builds data at runtime,
 and provides an XRPC client + helpers for building services.
 
-This skill is split into focused references. Read **only** the ones relevant
-to the current task — they are self-contained.
+This skill is split into focused references. Read the ones relevant to the
+current task — they are self-contained. If the task involves more than one
+concern (e.g., migrating a client that also uses CBOR, or both server routes
+and data validation), read **all** references whose Task column matches; when
+in doubt, prefer reading more references over fewer. If a referenced `.md`
+file is unavailable or cannot be read, state which file is missing and respond
+using only the information in this SKILL.md and general AT Protocol knowledge,
+noting the limitation explicitly.
 
 ## When to read which reference
 
@@ -40,8 +54,15 @@ to the current task — they are self-contained.
 
 ## Top-level package layout
 
-`@atproto/lex` re-exports from these focused sub-packages — importing from
-either path works:
+The `@atproto/lex` SDK family is split into two groups:
+
+- **Re-exported sub-packages**: `@atproto/lex-client`, `@atproto/lex-schema`,
+  `@atproto/lex-data`, `@atproto/lex-json`. Importing from either
+  `@atproto/lex` or the sub-package path works.
+- **Companion packages (NOT re-exported)**: `@atproto/lex-cbor` and
+  `@atproto/xrpc-server`. These are part of the SDK family and trigger this
+  skill, but they must be imported directly from their own package paths —
+  never from `@atproto/lex`.
 
 | Sub-package            | Provides                                                                                                                                                                                                             |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -61,3 +82,7 @@ either path works:
 - Import the namespace tree from the index: `import { app, com, chat } from './lexicons/index.js'`.
 - Schemas are accessed by NSID dot-path: `app.bsky.feed.post`,
   `com.atproto.repo.getRecord`, `app.bsky.feed.defs.postView`.
+
+## Related skills
+
+When writing or migrating tests for code that uses `@atproto/lex`, also see the [testing skill](../testing/SKILL.md) — it covers runner choice (vitest vs jest), test file location, and tsconfig setup.

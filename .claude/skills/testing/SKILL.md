@@ -7,9 +7,16 @@ description: Testing practices for this monorepo — choosing between unit and e
 
 This monorepo uses two test runners. **Vitest is the standard going forward.** Jest is deprecated and only used by packages that haven't been migrated yet — write new jest tests _only_ in packages that already use jest.
 
-For runner-specific patterns and assertions, follow the relevant reference:
+Decide which runner to use by following these steps in order:
 
-- [references/vitest.md](references/vitest.md) — preferred. Patterns for writing vitest tests, plus instructions for adopting vitest in a package that doesn't have tests yet.
+1. Does the package directory contain `vitest.config.ts`? → use Vitest, follow [references/vitest.md](references/vitest.md).
+2. Does the package directory contain `jest.config.cjs`? → use Jest, follow [references/jest.md](references/jest.md).
+3. Neither exists? → the package has no tests yet. Adopt Vitest: before writing any test code, create `vitest.config.ts` and `tsconfig.tests.json` by following the setup section of [references/vitest.md](references/vitest.md), then write the test.
+4. Does the test code import `@atproto/lex` (or sub-packages)? → also consult the [lex-sdk skill](../lex-sdk/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
+
+Runner-reference summary:
+
+- [references/vitest.md](references/vitest.md) — preferred. Patterns for writing vitest tests, plus setup instructions for adopting vitest in a package that doesn't have tests yet.
 - [references/jest.md](references/jest.md) — deprecated. Only for adding cases to existing jest test files or maintaining them until migration.
 
 ## Test file location

@@ -9,12 +9,12 @@ This is the TypeScript reference implementation of [AT Protocol](https://atproto
 Workspace layout (see [pnpm-workspace.yaml](./pnpm-workspace.yaml) and [tsconfig.json](./tsconfig.json)):
 
 - [packages/\*](packages/) — top-level libraries: `api`, `common`, `crypto`, `identity`, `lexicon`, `repo`, `syntax`, `xrpc`, `xrpc-server`, `pds`, `bsky`, `bsync`, `ozone`, `dev-env`, `dev-infra`, etc.
-- [packages/lex/\*](packages/lex/) — the modern type-safe Lexicon SDK family (`@atproto/lex`, `lex-builder`, `lex-cbor`, `lex-client`, `lex-data`, `lex-document`, `lex-json`, `lex-resolver`, `lex-server`, `lex-schema`, `lex-installer`, `lex-password-session`). New service code should use this in preference to the older `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack — see the `backend-lexification` skill.
+- [packages/lex/\*](packages/lex/) — the modern type-safe Lexicon SDK family (`@atproto/lex`, `lex-builder`, `lex-cbor`, `lex-client`, `lex-data`, `lex-document`, `lex-json`, `lex-resolver`, `lex-server`, `lex-schema`, `lex-installer`, `lex-password-session`). New service code should use this in preference to the older `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack — see the `lex-sdk` skill.
 - [packages/oauth/\*](packages/oauth/) — OAuth client/provider implementations and JWK helpers.
 - [packages/internal/\*](packages/internal/) — `@atproto-labs/*` internal shared utilities (fetch, handle/identity/DID resolvers, simple-store, pipe, xrpc-utils, rollup plugin).
 - [services/{pds,bsky,bsync,ozone}](services/) — thin runtime wrappers; the actual implementation code lives in `packages/{pds,bsky,bsync,ozone}`.
 - [lexicons/](lexicons/) — canonical JSON Lexicon schemas for `com.atproto.*`, `app.bsky.*`, `chat.bsky.*`, `tools.ozone.*`. These are the source-of-truth that codegen consumes.
-- [interop-test-files/](interop-test-files/) — language-neutral protocol conformance fixtures.
+- [interop-test-files/](interop-test-files/) — language-neutral protocol conformance fixtures. Don't edit unless changing protocol-level behavior; these are shared across SDKs.
 
 ## Common commands
 
@@ -27,8 +27,7 @@ pnpm build --force  # recursive, topo-sorted build
 pnpm codegen        # recursive codegen across packages that define one
 ```
 
-> [!NOTE]
-> If the build fails due to a generated file in [packages/api](packages/api) or [packages/ozone](packages/ozone) being out of date, run `pnpm run '/^codegen/' && pnpm run build` from those packages, then re-run the build. This is only needed on these two packages because their `prebuild` step will skip codegen as a performance optimization.
+The [Makefile](Makefile) wraps the most common entry points: `make build`, `make test`, `make lint`, `make fmt`, `make codegen`, `make run-dev-env` (boots the in-process PDS+AppView+bsync+plc+ozone constellation), `make run-dev-env-logged` (same with `pino-pretty` log output), `make fmt-lexicons` (eslint-fix on `lexicons/*.json`).
 
 Per-package work — **always run from inside the package directory**, not from the root:
 
@@ -57,9 +56,6 @@ pnpm test -- path/to/file.test.ts        # vitest or jest, depending on package
 
 Tests that need infra are wrapped by [packages/dev-infra/with-test-redis-and-db.sh](packages/dev-infra/with-test-redis-and-db.sh), which boots a postgres + redis docker-compose stack. The root `pnpm test` uses this wrapper automatically; per-package `pnpm test` for `pds`/`bsky`/etc. does the same.
 
-> [!NOTE]
-> If an end-to-end test fails, it might be due to the infra containing data from a previous test run. If docker containers are not created/destroyed when running an end-to-end test, they can be destroyed using `cd packages/dev-infra && docker compose down --volumes` to reset the state.
-
 Test files live next to the code (`foo.ts` + `foo.test.ts`) for unit tests. End-to-end tests live in a package's top-level `./tests` directory (e.g. [packages/bsky/tests](packages/bsky/tests), [packages/pds/tests](packages/pds/tests)). Each package has three tsconfig files: `tsconfig.json` (project references), `tsconfig.build.json` (excludes `*.test.ts`, emits `./dist`), and `tsconfig.tests.json` (extends `tsconfig/vitest.json` or `tsconfig/tests.json`).
 
 ## Codegen
@@ -69,7 +65,7 @@ Most packages run `lex build --clear --indexFile --lexicons ../../lexicons` as a
 Two generations of lexicon tooling coexist:
 
 - **Old**: `@atproto/lex-cli` generates code consumed via `@atproto/api`, `@atproto/lexicon`, `@atproto/xrpc`. `AtpAgent`, `ids.XxxYyy`, `jsonStringToLex`.
-- **New**: `@atproto/lex` family — type-safe schemas, namespace accessors, branded string types, `Client` (replaces `AtpAgent`), `lexParse` (replaces `jsonStringToLex`). When migrating a package from old to new, use the `backend-lexification` skill.
+- **New**: `@atproto/lex` family — type-safe schemas, namespace accessors, branded string types, `Client` (replaces `AtpAgent`), `lexParse` (replaces `jsonStringToLex`). When migrating a package from old to new, use the `lex-sdk` skill (specifically its `lexification-server.md` / `lexification-client.md` references).
 
 ## Architecture notes
 
@@ -88,3 +84,8 @@ Two generations of lexicon tooling coexist:
 - Don't refactor unrelated code; this project's contribution guidelines explicitly discourage large refactors and unsolicited tooling changes (see [README.md](README.md) "Contributions").
 - Don't add new dependencies without strong justification.
 - When picking lexicon SDK APIs in new code, prefer the `@atproto/lex` family over the old `@atproto/api` stack.
+
+## Troubleshooting
+
+- **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) or [packages/ozone](packages/ozone) being out of date, run `pnpm run '/^codegen/' && pnpm run build` from those packages, then re-run the build. This is only needed on these two packages because their `prebuild` step skips codegen as a performance optimization.
+- **End-to-end test fails with stale infra.** If docker containers persist across test runs, reset them with `cd packages/dev-infra && docker compose down --volumes`.
