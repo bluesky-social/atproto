@@ -4,15 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a signed token on behalf of the requesting DID for the requested service.",
+      "description": "Get a signed token on behalf of the requesting DID for the requested service, which can be used to make an authenticated XRPC HTTP API request. Implemented by PDS, requires authentication, and constrained by session permissions.",
       "parameters": {
         "type": "params",
         "required": ["aud"],
         "properties": {
           "aud": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the service that the token will be used to authenticate with"
+            "description": "The \"audience\" DID service reference for the intended recipient of the request. Syntax is a DID with a service endpoint id, separated by a hash (eg 'did:web:example.com#app_svc'). For OAuth clients, this field must exactly match the 'aud' granted via permission. Use of a bare DID (with no hash or service id) is deprecated, and does not work with OAuth clients."
           },
           "exp": {
             "type": "integer",
@@ -21,7 +20,7 @@
           "lxm": {
             "type": "string",
             "format": "nsid",
-            "description": "Lexicon (XRPC) method to bind the requested token to"
+            "description": "Lexicon (XRPC) method to bind the requested token to. This field is effectively required."
           }
         }
       },
