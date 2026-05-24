@@ -10,7 +10,6 @@ import {
 import { InputText } from '#/components/forms/input-text.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import {
-  MAX_FULL_LENGTH,
   MAX_LENGTH,
   MIN_LENGTH,
   ValidDomain,
@@ -19,9 +18,9 @@ import {
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
-function useSegmentValidator(domain: ValidDomain) {
+function useSegmentValidator() {
   const minLen = MIN_LENGTH
-  const maxLen = Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
+  const maxLen = MAX_LENGTH
 
   const validateSegment = useCallback(
     (segment: string) => {
@@ -95,7 +94,7 @@ export function SignUpHandleForm({
 
   const domain: ValidDomain | null = domains[domainIdx] || domains[0] || null
 
-  const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
+  const { minLength, maxLength, validateSegment } = useSegmentValidator()
 
   const validity = validateSegment(segment)
   const handle = domain && validity.valid ? `${segment}${domain}` : undefined
