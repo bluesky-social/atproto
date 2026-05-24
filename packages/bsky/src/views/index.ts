@@ -2326,8 +2326,14 @@ export class Views {
     // covers these DIDs alongside post-author profiles, so misses here
     // only happen when an actor is unavailable (suspended, deleted, etc.)
     // — drop those rather than emit `undefined` slots.
-    const uniqueDids = dedupeStrs(mapDefined([document?.ref.uri, publication?.ref.uri], (uri) => uri ? uriToDid(uri) : undefined) as DidString[])
-    const associatedProfiles = mapDefined(uniqueDids, (did) => this.profileBasic(did, state)) as ProfileViewBasic[]
+    const uniqueDids = dedupeStrs(
+      mapDefined([document?.ref.uri, publication?.ref.uri], (uri) =>
+        uri ? uriToDid(uri) : undefined,
+      ) as DidString[],
+    )
+    const associatedProfiles = mapDefined(uniqueDids, (did) =>
+      this.profileBasic(did, state),
+    ) as ProfileViewBasic[]
     if (associatedProfiles.length)
       overlay.associatedProfiles = associatedProfiles
 
