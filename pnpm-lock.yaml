@@ -1786,6 +1786,9 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/did':
+        specifier: workspace:^
+        version: link:../did
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity

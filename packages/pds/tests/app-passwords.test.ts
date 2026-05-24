@@ -115,7 +115,7 @@ describe('app_passwords', () => {
   it('restricts service auth token methods for non-privileged access tokens', async () => {
     const attemptCaseSensitive = appAgent.api.com.atproto.server.getServiceAuth(
       {
-        aud: 'did:example:test',
+        aud: network.pds.ctx.cfg.service.did,
         lxm: 'com.atproto.server.createAccount',
       },
     )
@@ -124,7 +124,7 @@ describe('app_passwords', () => {
     )
     const attemptCaseInsensitive =
       appAgent.api.com.atproto.server.getServiceAuth({
-        aud: 'did:example:test',
+        aud: network.pds.ctx.cfg.service.did,
         lxm: 'com.atproto.server.createaccount',
       })
     await expect(attemptCaseInsensitive).rejects.toThrow(
@@ -134,7 +134,7 @@ describe('app_passwords', () => {
 
   it('allows privileged service auth token scopes for privileged access tokens', async () => {
     await priviAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
+      aud: network.pds.ctx.cfg.service.did,
       lxm: 'com.atproto.server.createAccount',
     })
   })
@@ -165,7 +165,7 @@ describe('app_passwords', () => {
 
     // allows privileged app passwords or higher
     const priviAttempt = appAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
+      aud: network.pds.ctx.cfg.service.did,
       lxm: 'com.atproto.server.createAccount',
     })
     await expect(priviAttempt).rejects.toThrow(
@@ -211,7 +211,7 @@ describe('app_passwords', () => {
 
     // allows privileged app passwords or higher
     await priviAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
+      aud: network.pds.ctx.cfg.service.did,
     })
 
     // allows only full access auth
