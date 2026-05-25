@@ -228,10 +228,16 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as EuWsocialAdminAddNeuroLink from './types/eu/wsocial/admin/addNeuroLink.js'
 import * as EuWsocialAdminCreatePassInvitation from './types/eu/wsocial/admin/createPassInvitation.js'
+import * as EuWsocialAdminGetNeuroLink from './types/eu/wsocial/admin/getNeuroLink.js'
+import * as EuWsocialAdminListNeuroAccounts from './types/eu/wsocial/admin/listNeuroAccounts.js'
+import * as EuWsocialAdminRemoveNeuroLink from './types/eu/wsocial/admin/removeNeuroLink.js'
+import * as EuWsocialAdminUpdateNeuroLink from './types/eu/wsocial/admin/updateNeuroLink.js'
 import * as EuWsocialQuickloginLinkWid from './types/eu/wsocial/quicklogin/linkWid.js'
 import * as EuWsocialServerAllocateWidForAccount from './types/eu/wsocial/server/allocateWidForAccount.js'
 import * as EuWsocialServerCheckHandleAvailability from './types/eu/wsocial/server/checkHandleAvailability.js'
+import * as EuWsocialServerRequestAccountDelete from './types/eu/wsocial/server/requestAccountDelete.js'
 import * as IoTrustanchorAdminClearInventory from './types/io/trustanchor/admin/clearInventory.js'
 import * as IoTrustanchorAdminCreateAccountSession from './types/io/trustanchor/admin/createAccountSession.js'
 import * as IoTrustanchorAdminCreateBotAccount from './types/io/trustanchor/admin/createBotAccount.js'
@@ -3381,6 +3387,18 @@ export class EuWsocialAdminNS {
     this._server = server
   }
 
+  addNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminAddNeuroLink.QueryParams,
+      EuWsocialAdminAddNeuroLink.HandlerInput,
+      EuWsocialAdminAddNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.addNeuroLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createPassInvitation<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3390,6 +3408,54 @@ export class EuWsocialAdminNS {
     >,
   ) {
     const nsid = 'eu.wsocial.admin.createPassInvitation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminGetNeuroLink.QueryParams,
+      EuWsocialAdminGetNeuroLink.HandlerInput,
+      EuWsocialAdminGetNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.getNeuroLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listNeuroAccounts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminListNeuroAccounts.QueryParams,
+      EuWsocialAdminListNeuroAccounts.HandlerInput,
+      EuWsocialAdminListNeuroAccounts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.listNeuroAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminRemoveNeuroLink.QueryParams,
+      EuWsocialAdminRemoveNeuroLink.HandlerInput,
+      EuWsocialAdminRemoveNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.removeNeuroLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialAdminUpdateNeuroLink.QueryParams,
+      EuWsocialAdminUpdateNeuroLink.HandlerInput,
+      EuWsocialAdminUpdateNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.admin.updateNeuroLink' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -3442,6 +3508,18 @@ export class EuWsocialServerNS {
     >,
   ) {
     const nsid = 'eu.wsocial.server.checkHandleAvailability' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  requestAccountDelete<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      EuWsocialServerRequestAccountDelete.QueryParams,
+      EuWsocialServerRequestAccountDelete.HandlerInput,
+      EuWsocialServerRequestAccountDelete.HandlerOutput
+    >,
+  ) {
+    const nsid = 'eu.wsocial.server.requestAccountDelete' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

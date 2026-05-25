@@ -12,26 +12,24 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'io.trustanchor.admin.setAccountType'
+const id = 'eu.wsocial.admin.updateNeuroLink'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** DID of the account to update */
+  /** The DID of the account. */
   did: string
-  /** New account type */
-  accountType:
-    | 'personal'
-    | 'bot'
-    | 'organization'
-    | 'test'
-    | 'unverified'
-    | 'service'
-    | (string & {})
+  /** The new JID (W ID) to link to this account. */
+  newJid: string
 }
 
 export interface OutputSchema {
   success: boolean
+  did: string
+  /** Previous JID (if any) */
+  oldJid?: string
+  newJid: string
+  updatedAt: string
 }
 
 export interface HandlerInput {
@@ -48,6 +46,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'NotFound' | 'InvalidJid' | 'JidInUse'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

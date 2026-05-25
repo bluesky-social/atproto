@@ -12,32 +12,27 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'io.trustanchor.admin.setAccountType'
+const id = 'eu.wsocial.admin.getNeuroLink'
 
-export type QueryParams = {}
-
-export interface InputSchema {
-  /** DID of the account to update */
+export type QueryParams = {
+  /** The DID of the account. */
   did: string
-  /** New account type */
-  accountType:
-    | 'personal'
-    | 'bot'
-    | 'organization'
-    | 'test'
-    | 'unverified'
-    | 'service'
-    | (string & {})
 }
+export type InputSchema = undefined
 
 export interface OutputSchema {
-  success: boolean
+  did: string
+  handle: string
+  email?: string
+  /** JID (W ID) - unified for both real and test users */
+  jid?: string
+  /** Whether this is a test user account */
+  isTestUser?: boolean
+  linkedAt?: string
+  lastLoginAt?: string
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'

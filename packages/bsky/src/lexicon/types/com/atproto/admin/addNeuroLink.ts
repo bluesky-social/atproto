@@ -12,26 +12,22 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'io.trustanchor.admin.setAccountType'
+const id = 'com.atproto.admin.addNeuroLink'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** DID of the account to update */
+  /** The JID (W ID) to link. */
+  jid: string
+  /** The DID of the account to link to. */
   did: string
-  /** New account type */
-  accountType:
-    | 'personal'
-    | 'bot'
-    | 'organization'
-    | 'test'
-    | 'unverified'
-    | 'service'
-    | (string & {})
 }
 
 export interface OutputSchema {
   success: boolean
+  jid: string
+  did: string
+  linkedAt: string
 }
 
 export interface HandlerInput {
@@ -48,6 +44,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'NotFound' | 'JidInUse'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

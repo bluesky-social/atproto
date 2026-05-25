@@ -648,7 +648,9 @@ def sync_brevo(ctx, dry_run: bool, promote_started_after: int):
             # Ask PDS whether this DID is WID-linked
             neuro_resp = client.call(
                 "GET",
+                # FIXME Replace in June 2026:
                 "com.atproto.admin.getNeuroLink",
+                #"eu.wsocial.admin.getNeuroLink",
                 params={"did": consuming_did},
             )
             if not neuro_resp.success or not neuro_resp.data:

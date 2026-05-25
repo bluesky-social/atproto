@@ -1,0 +1,57 @@
+{
+  "lexicon": 1,
+  "id": "eu.wsocial.admin.removeNeuroLink",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove a Neuro/W ID link from an account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["jid", "did"],
+          "properties": {
+            "jid": {
+              "type": "string",
+              "description": "The JID (W ID) to unlink."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the account to unlink from."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["success", "jid", "did"],
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "jid": {
+              "type": "string"
+            },
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "warning": {
+              "type": "string",
+              "description": "Set when this was the last link for this account."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "NotFound",
+          "description": "No link found for this (jid, did) pair."
+        }
+      ]
+    }
+  }
+}
