@@ -59,6 +59,6 @@ jobs:
       - name: Redeploy on Railway
         run: |
           npm install -g @railway/cli
-          railway redeploy --yes
+          railway redeploy --service "${{ secrets.RAILWAY_ATPROTO_ID }}" --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

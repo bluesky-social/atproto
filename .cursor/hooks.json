@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "node .cursor/hooks/prettier-format.js",
+        "matcher": "Write|StrReplace"
+      }
+    ]
+  }
+}

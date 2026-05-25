@@ -7,6 +7,15 @@ import { type ServerEnvironment, readEnv } from '@atproto/pds'
 /** Merge `readEnv()` into TestPds options; omit undefined so dev-env defaults still apply. */
 function pdsEnvFromProcess(): Partial<ServerEnvironment> {
   const raw = readEnv()
+
+  // If S3/R2 is configured, exclude disk blobstore settings to avoid conflicts.
+  // readEnv() maps PDS_BLOBSTORE_DISK_LOCATION → blobstoreDiskLocation; if that
+  // var exists alongside PDS_BLOBSTORE_S3_BUCKET, envToCfg would throw.
+  if (raw.blobstoreS3Bucket) {
+    delete raw.blobstoreDiskLocation
+    delete raw.blobstoreDiskTmpLocation
+  }
+
   const out = Object.fromEntries(
     Object.entries(raw).filter(([, v]) => v !== undefined),
   ) as Partial<ServerEnvironment>
@@ -76,9 +85,15 @@ async function main() {
       ...(process.env.PDS_DATA_DIRECTORY
         ? { dataDirectory: process.env.PDS_DATA_DIRECTORY }
         : {}),
-      ...(process.env.PDS_BLOB_STORE_LOCATION
-        ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
-        : {}),
+      // Blobstore selection: S3/R2 takes priority over disk.
+      // TestPds always sets a default blobstoreDiskLocation (tmpdir); we must
+      // explicitly override it to undefined when S3 is configured, otherwise
+      // envToCfg throws "Cannot set both S3 and disk blobstore env vars".
+      ...(process.env.PDS_BLOBSTORE_S3_BUCKET
+        ? { blobstoreDiskLocation: undefined }
+        : process.env.PDS_BLOB_STORE_LOCATION
+          ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
+          : {}),
     },
   })
 
@@ -104,7 +119,11 @@ async function main() {
     `💾 PDS storage:    ${process.env.PDS_DATA_DIRECTORY ?? 'tmpdir (ephemeral)'}`,
   )
   console.log(
-    `💾 PDS blobs:      ${process.env.PDS_BLOB_STORE_LOCATION ?? 'tmpdir (ephemeral)'}`,
+    `💾 PDS blobs:      ${
+      process.env.PDS_BLOBSTORE_S3_BUCKET
+        ? `S3/R2 bucket=${process.env.PDS_BLOBSTORE_S3_BUCKET} endpoint=${process.env.PDS_BLOBSTORE_S3_ENDPOINT ?? 'AWS'}`
+        : process.env.PDS_BLOB_STORE_LOCATION ?? 'tmpdir (ephemeral)'
+    }`,
   )
   console.log('💡 Point Sokaa / AtpAgent service URL at:', pdsPublicUrl)
   console.log('💡 Press Ctrl+C to stop\n')
