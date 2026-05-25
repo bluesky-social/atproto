@@ -4,13 +4,10 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'lexicons/**'
-      - 'packages/lex-cli/src/**'
 
 jobs:
   codegen-check:
-    name: Verify generated files are up to date
+    name: codegen-check
     runs-on: ubuntu-22.04
 
     steps:

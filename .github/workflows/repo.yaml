@@ -52,7 +52,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
+        # Sokaa: reduced from 8 shards (upstream atproto default) to 2.
+        # The proxied/ bsky tests are excluded (see packages/pds/jest.config.js),
+        # which cuts the test count substantially. 2 shards is sufficient.
+        shard: [1/2, 2/2]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
