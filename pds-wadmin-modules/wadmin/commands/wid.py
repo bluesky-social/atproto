@@ -152,7 +152,9 @@ def list_command(ctx):
     client: PDSClient = ctx.obj["client"]
 
     # Call API to get neuro accounts
+    # FIXME Replace in June 2026:
     response = client.call("GET", "com.atproto.admin.listNeuroAccounts", params={"limit": 1000})
+    #response = client.call("GET", "eu.wsocial.admin.listNeuroAccounts", params={"limit": 1000})
 
     if not response.success:
         print_error(f"Failed to list accounts: {response.error}")
@@ -221,7 +223,9 @@ def show(ctx, did: str):
     """Show detailed information for a specific W ID account."""
     client: PDSClient = ctx.obj["client"]
 
+    # FIXME Replace in June 2026:
     response = client.call("GET", "com.atproto.admin.getNeuroLink", params={"did": did})
+    #response = client.call("GET", "eu.wsocial.admin.getNeuroLink", params={"did": did})
 
     if not response.success:
         print_error(f"Failed to fetch account details: {response.error}")
@@ -281,7 +285,9 @@ def update(ctx, did: str, new_jid: str):
         "newJid": new_jid
     }
 
+    # FIXME Replace in June 2026:
     response = client.call("POST", "com.atproto.admin.updateNeuroLink", data=data)
+    #response = client.call("POST", "eu.wsocial.admin.updateNeuroLink", data=data)
 
     if not response.success:
         print_error(f"Failed to update W ID: {response.error}")
@@ -310,7 +316,9 @@ def link_command(ctx, did: str, jid: str):
     """Link a JID (W ID) to an account."""
     client: PDSClient = ctx.obj["client"]
 
+    # FIXME Replace in June 2026:
     response = client.call("POST", "com.atproto.admin.addNeuroLink", data={"jid": jid, "did": did})
+    #response = client.call("POST", "eu.wsocial.admin.addNeuroLink", data={"jid": jid, "did": did})
 
     if not response.success:
         print_error(f"Failed to link JID: {response.error}")
@@ -331,7 +339,9 @@ def unlink_command(ctx, did: str, jid: str):
     """Remove a JID (W ID) link from an account."""
     client: PDSClient = ctx.obj["client"]
 
+    # FIXME Replace in June 2026:
     response = client.call("POST", "com.atproto.admin.removeNeuroLink", data={"jid": jid, "did": did})
+    #response = client.call("POST", "eu.wsocial.admin.removeNeuroLink", data={"jid": jid, "did": did})
 
     if not response.success:
         print_error(f"Failed to remove link: {response.error}")
@@ -429,7 +439,9 @@ def links_command(ctx, jid_or_did: str):
 
     if jid_or_did.startswith("did:"):
         # Look up by DID via getNeuroLink
+        # FIXME Replace in June 2026:
         response = client.call("GET", "com.atproto.admin.getNeuroLink", params={"did": jid_or_did})
+        #response = client.call("GET", "eu.wsocial.admin.getNeuroLink", params={"did": jid_or_did})
         if not response.success:
             print_error(f"Failed to fetch links: {response.error}")
             raise click.Abort()
@@ -445,7 +457,9 @@ def links_command(ctx, jid_or_did: str):
                           f"last_login {link.get('lastLoginAt', '—') or '—'}")
     else:
         # Look up by JID — search via listNeuroAccounts (no direct JID endpoint)
+        # FIXME Replace in June 2026:
         response = client.call("GET", "com.atproto.admin.listNeuroAccounts", params={"limit": 1000})
+        #response = client.call("GET", "eu.wsocial.admin.listNeuroAccounts", params={"limit": 1000})
         if not response.success:
             print_error(f"Failed to fetch accounts: {response.error}")
             raise click.Abort()
@@ -1019,7 +1033,9 @@ def scan_handles(ctx, pattern: Optional[str], workers: int, limit: int):
         params = {"limit": 1000}
         if cursor:
             params["cursor"] = cursor
+        # FIXME Replace in June 2026:
         response = client.call("GET", "com.atproto.admin.listNeuroAccounts", params=params)
+        #response = client.call("GET", "eu.wsocial.admin.listNeuroAccounts", params=params)
         if not response.success:
             print_error(f"Failed to list accounts: {response.error}")
             raise click.Abort()

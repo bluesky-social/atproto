@@ -1,51 +1,13 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+// BACKWARDS-COMPAT SHIM — delegates to eu.wsocial.admin.getNeuroLink.
+// Safe to delete after September 2026 once all pds-wadmin deployments have
+// been updated to call eu.wsocial.admin.getNeuroLink directly.
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import * as impl from '../../../eu/wsocial/admin/neuroLinkHandlers'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getNeuroLink({
     auth: ctx.authVerifier.adminToken,
-    handler: async ({ params }) => {
-      const { did } = params
-
-      const [account, actor, neuroLinks] = await Promise.all([
-        ctx.accountManager.getAccount(did),
-        ctx.accountManager.db.db
-          .selectFrom('actor')
-          .select(['accountType'])
-          .where('did', '=', did)
-          .executeTakeFirst(),
-        ctx.accountManager.db.db
-          .selectFrom('neuro_identity_link')
-          .selectAll()
-          .where('did', '=', did)
-          .orderBy('linkedAt', 'asc')
-          .execute(),
-      ])
-
-      if (!account) {
-        throw new InvalidRequestError('Account not found', 'NotFound')
-      }
-
-      const primary = neuroLinks[0]
-
-      return {
-        encoding: 'application/json',
-        body: {
-          did: account.did,
-          handle: account.handle || '',
-          email: account.email || undefined,
-          accountType: actor?.accountType || 'organization',
-          jid: primary?.jid || undefined,
-          linkedAt: primary?.linkedAt || undefined,
-          lastLoginAt: primary?.lastLoginAt || undefined,
-          neuroLinks: neuroLinks.map((l) => ({
-            jid: l.jid,
-            linkedAt: l.linkedAt || undefined,
-            lastLoginAt: l.lastLoginAt || undefined,
-          })),
-        },
-      }
-    },
+    handler: ({ params }) => impl.getNeuroLink(ctx, params),
   })
 }

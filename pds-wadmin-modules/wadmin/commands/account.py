@@ -26,7 +26,9 @@ def list_command(ctx):
     """List all accounts."""
     client: PDSClient = ctx.obj["client"]
 
+    # FIXME Replace in June 2026:
     response = client.call("GET", "com.atproto.admin.listNeuroAccounts", params={"limit": 1000})
+    #response = client.call("GET", "eu.wsocial.admin.listNeuroAccounts", params={"limit": 1000})
 
     if not response.success:
         print_error(f"Failed to list accounts: {response.error}")
@@ -78,7 +80,9 @@ def delete(ctx, did: str):
     console.print("Fetching account details...")
     console.print()
 
+    # FIXME Replace in June 2026:
     response = client.call("GET", "com.atproto.admin.getNeuroLink", params={"did": did})
+    #response = client.call("GET", "eu.wsocial.admin.getNeuroLink", params={"did": did})
 
     if not response.success:
         print_error("Failed to fetch account details", response.error or "Unknown error")

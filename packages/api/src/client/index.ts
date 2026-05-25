@@ -171,6 +171,7 @@ import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
 import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+import * as ComAtprotoAdminAddNeuroLink from './types/com/atproto/admin/addNeuroLink.js'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
@@ -184,6 +185,7 @@ import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getS
 import * as ComAtprotoAdminImportAccount from './types/com/atproto/admin/importAccount.js'
 import * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
 import * as ComAtprotoAdminMigrateAccount from './types/com/atproto/admin/migrateAccount.js'
+import * as ComAtprotoAdminRemoveNeuroLink from './types/com/atproto/admin/removeNeuroLink.js'
 import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
@@ -490,6 +492,7 @@ export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
 export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+export * as ComAtprotoAdminAddNeuroLink from './types/com/atproto/admin/addNeuroLink.js'
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
@@ -503,6 +506,7 @@ export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getS
 export * as ComAtprotoAdminImportAccount from './types/com/atproto/admin/importAccount.js'
 export * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
 export * as ComAtprotoAdminMigrateAccount from './types/com/atproto/admin/migrateAccount.js'
+export * as ComAtprotoAdminRemoveNeuroLink from './types/com/atproto/admin/removeNeuroLink.js'
 export * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
@@ -3915,6 +3919,17 @@ export class ComAtprotoAdminNS {
     this._client = client
   }
 
+  addNeuroLink(
+    data?: ComAtprotoAdminAddNeuroLink.InputSchema,
+    opts?: ComAtprotoAdminAddNeuroLink.CallOptions,
+  ): Promise<ComAtprotoAdminAddNeuroLink.Response> {
+    return this._client
+      .call('com.atproto.admin.addNeuroLink', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminAddNeuroLink.toKnownErr(e)
+      })
+  }
+
   deleteAccount(
     data?: ComAtprotoAdminDeleteAccount.InputSchema,
     opts?: ComAtprotoAdminDeleteAccount.CallOptions,
@@ -4054,6 +4069,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.migrateAccount', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminMigrateAccount.toKnownErr(e)
+      })
+  }
+
+  removeNeuroLink(
+    data?: ComAtprotoAdminRemoveNeuroLink.InputSchema,
+    opts?: ComAtprotoAdminRemoveNeuroLink.CallOptions,
+  ): Promise<ComAtprotoAdminRemoveNeuroLink.Response> {
+    return this._client
+      .call('com.atproto.admin.removeNeuroLink', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminRemoveNeuroLink.toKnownErr(e)
       })
   }
 

@@ -1,0 +1,46 @@
+{
+  "lexicon": 1,
+  "id": "eu.wsocial.server.requestAccountDelete",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Initiate account deletion. Returns the deletion method(s) available for this account: 'wid' for WID-only accounts (no real email), 'email' for email+password accounts, or 'wid+email' for accounts with both. When the method includes 'wid', a QuickLogin QR session is started and the session fields are returned. When the method includes 'email', a deletion token is sent to the account's email address. Requires a full-access session token (not OAuth).",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["method"],
+          "properties": {
+            "method": {
+              "type": "string",
+              "knownValues": ["wid", "email", "wid+email"],
+              "description": "Which deletion flow(s) are available. 'wid' = WID QR scan only (no real email on account). 'email' = email token only (no WID). 'wid+email' = both flows are available; a QR session has been started and an email token has been sent."
+            },
+            "sessionId": {
+              "type": "string",
+              "description": "Present when method is 'wid' or 'wid+email'. The QuickLogin session ID for polling status."
+            },
+            "sessionToken": {
+              "type": "string",
+              "description": "Present when method is 'wid' or 'wid+email'. Opaque session token for authenticating polling requests."
+            },
+            "qrCodeUrl": {
+              "type": "string",
+              "description": "Present when method is 'wid' or 'wid+email'. Base64 image data URL of the QR code to display."
+            },
+            "expiresAt": {
+              "type": "string",
+              "description": "Present when method is 'wid' or 'wid+email'. ISO timestamp after which the QR session expires."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "NoDeleteMethod",
+          "description": "Account has neither a WID association nor a verified email address and cannot be deleted through this endpoint."
+        }
+      ]
+    }
+  }
+}

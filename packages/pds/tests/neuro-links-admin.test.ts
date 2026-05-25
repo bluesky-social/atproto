@@ -2,11 +2,14 @@
  * Admin Neuro Link API Tests
  *
  * Tests the many-to-many WID <-> WSOC account linking endpoints:
- *   - com.atproto.admin.addNeuroLink
- *   - com.atproto.admin.removeNeuroLink
- *   - com.atproto.admin.getNeuroLink
- *   - com.atproto.admin.listNeuroAccounts
- *   - com.atproto.admin.updateNeuroLink (deprecated, but still functional)
+ *   - eu.wsocial.admin.addNeuroLink
+ *   - eu.wsocial.admin.removeNeuroLink
+ *   - eu.wsocial.admin.getNeuroLink
+ *   - eu.wsocial.admin.listNeuroAccounts
+ *   - eu.wsocial.admin.updateNeuroLink (deprecated, but still functional)
+ *
+ * The old com.atproto.admin.* paths remain as backwards-compat shims
+ * and can be deleted after September 2026.
  *
  * Also verifies:
  *   - Unauthenticated callers are rejected (401)
@@ -139,7 +142,7 @@ describe('admin neuro link management', () => {
       const { status } = await unauthFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.addNeuroLink',
+        'eu.wsocial.admin.addNeuroLink',
         { jid: 'alice@wsocial.eu', did: aliceDid },
       )
       expect(status).toBe(401)
@@ -149,7 +152,7 @@ describe('admin neuro link management', () => {
       const { status } = await unauthFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.removeNeuroLink',
+        'eu.wsocial.admin.removeNeuroLink',
         { jid: 'alice@wsocial.eu', did: aliceDid },
       )
       expect(status).toBe(401)
@@ -159,7 +162,7 @@ describe('admin neuro link management', () => {
       const { status } = await unauthFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.getNeuroLink',
+        'eu.wsocial.admin.getNeuroLink',
         undefined,
         {
           did: aliceDid,
@@ -172,7 +175,7 @@ describe('admin neuro link management', () => {
       const { status } = await unauthFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.listNeuroAccounts',
+        'eu.wsocial.admin.listNeuroAccounts',
       )
       expect(status).toBe(401)
     })
@@ -181,7 +184,7 @@ describe('admin neuro link management', () => {
       const { status } = await unauthFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.updateNeuroLink',
+        'eu.wsocial.admin.updateNeuroLink',
         { did: aliceDid, newJid: 'new@wsocial.eu' },
       )
       expect(status).toBe(401)
@@ -197,7 +200,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.addNeuroLink',
+        'eu.wsocial.admin.addNeuroLink',
         { jid: 'alice@wsocial.eu', did: aliceDid },
       )
       expect(status).toBe(200)
@@ -212,7 +215,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.addNeuroLink',
+        'eu.wsocial.admin.addNeuroLink',
         { jid: 'alice@wsocial.eu', did: bobDid },
       )
       expect(status).toBe(200)
@@ -224,7 +227,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.addNeuroLink',
+        'eu.wsocial.admin.addNeuroLink',
         { jid: 'alice@wsocial.eu', did: aliceDid },
       )
       expect(status).toBe(400)
@@ -236,7 +239,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.addNeuroLink',
+        'eu.wsocial.admin.addNeuroLink',
         { jid: 'ghost@wsocial.eu', did: 'did:plc:doesnotexist000000000000' },
       )
       expect(status).toBe(400)
@@ -254,7 +257,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.getNeuroLink',
+        'eu.wsocial.admin.getNeuroLink',
         undefined,
         { did: aliceDid },
       )
@@ -282,7 +285,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.getNeuroLink',
+        'eu.wsocial.admin.getNeuroLink',
         undefined,
         { did: carol.did },
       )
@@ -301,7 +304,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.listNeuroAccounts',
+        'eu.wsocial.admin.listNeuroAccounts',
       )
       expect(status).toBe(200)
       const d = data as Record<string, unknown>
@@ -318,7 +321,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.listNeuroAccounts',
+        'eu.wsocial.admin.listNeuroAccounts',
       )
       expect(status).toBe(200)
       const d = data as Record<string, unknown>
@@ -341,7 +344,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.removeNeuroLink',
+        'eu.wsocial.admin.removeNeuroLink',
         { jid: 'alice@wsocial.eu', did: bobDid },
       )
       expect(status).toBe(200)
@@ -355,7 +358,7 @@ describe('admin neuro link management', () => {
       const { data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.getNeuroLink',
+        'eu.wsocial.admin.getNeuroLink',
         undefined,
         { did: aliceDid },
       )
@@ -369,7 +372,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.removeNeuroLink',
+        'eu.wsocial.admin.removeNeuroLink',
         { jid: 'alice@wsocial.eu', did: aliceDid },
       )
       expect(status).toBe(200)
@@ -382,7 +385,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.removeNeuroLink',
+        'eu.wsocial.admin.removeNeuroLink',
         { jid: 'nobody@wsocial.eu', did: aliceDid },
       )
       expect(status).toBe(400)
@@ -415,11 +418,11 @@ describe('admin neuro link management', () => {
     })
 
     it('can link multiple JIDs to the same account', async () => {
-      await adminFetch(pdsUrl, 'POST', 'com.atproto.admin.addNeuroLink', {
+      await adminFetch(pdsUrl, 'POST', 'eu.wsocial.admin.addNeuroLink', {
         jid: 'dan-phone@wsocial.eu',
         did: danDid,
       })
-      await adminFetch(pdsUrl, 'POST', 'com.atproto.admin.addNeuroLink', {
+      await adminFetch(pdsUrl, 'POST', 'eu.wsocial.admin.addNeuroLink', {
         jid: 'dan-tablet@wsocial.eu',
         did: danDid,
       })
@@ -427,7 +430,7 @@ describe('admin neuro link management', () => {
       const { data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.getNeuroLink',
+        'eu.wsocial.admin.getNeuroLink',
         undefined,
         { did: danDid },
       )
@@ -439,7 +442,7 @@ describe('admin neuro link management', () => {
     })
 
     it('removing one JID does not affect the other', async () => {
-      await adminFetch(pdsUrl, 'POST', 'com.atproto.admin.removeNeuroLink', {
+      await adminFetch(pdsUrl, 'POST', 'eu.wsocial.admin.removeNeuroLink', {
         jid: 'dan-phone@wsocial.eu',
         did: danDid,
       })
@@ -447,7 +450,7 @@ describe('admin neuro link management', () => {
       const { data } = await adminFetch(
         pdsUrl,
         'GET',
-        'com.atproto.admin.getNeuroLink',
+        'eu.wsocial.admin.getNeuroLink',
         undefined,
         { did: danDid },
       )
@@ -488,7 +491,7 @@ describe('admin neuro link management', () => {
         .deleteFrom('neuro_identity_link')
         .where('did', 'in', [eveDid, frankDid])
         .execute()
-      await adminFetch(pdsUrl, 'POST', 'com.atproto.admin.addNeuroLink', {
+      await adminFetch(pdsUrl, 'POST', 'eu.wsocial.admin.addNeuroLink', {
         jid: 'eve-old@wsocial.eu',
         did: eveDid,
       })
@@ -498,7 +501,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.updateNeuroLink',
+        'eu.wsocial.admin.updateNeuroLink',
         { did: eveDid, newJid: 'eve-new@wsocial.eu' },
       )
       expect(status).toBe(200)
@@ -510,7 +513,7 @@ describe('admin neuro link management', () => {
 
     it('rejects updating to a JID already linked to a different account', async () => {
       // First give frank a link
-      await adminFetch(pdsUrl, 'POST', 'com.atproto.admin.addNeuroLink', {
+      await adminFetch(pdsUrl, 'POST', 'eu.wsocial.admin.addNeuroLink', {
         jid: 'frank@wsocial.eu',
         did: frankDid,
       })
@@ -518,7 +521,7 @@ describe('admin neuro link management', () => {
       const { status, data } = await adminFetch(
         pdsUrl,
         'POST',
-        'com.atproto.admin.updateNeuroLink',
+        'eu.wsocial.admin.updateNeuroLink',
         { did: eveDid, newJid: 'frank@wsocial.eu' },
       )
       expect(status).toBe(400)

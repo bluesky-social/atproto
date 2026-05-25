@@ -10515,6 +10515,68 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminAddNeuroLink: {
+    lexicon: 1,
+    id: 'com.atproto.admin.addNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Add a Neuro/W ID link to an account (many-to-many: one JID can link to multiple accounts).',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jid', 'did'],
+            properties: {
+              jid: {
+                type: 'string',
+                description: 'The JID (W ID) to link.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account to link to.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'jid', 'did', 'linkedAt'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              jid: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              linkedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'The account DID was not found on this server.',
+          },
+          {
+            name: 'JidInUse',
+            description: 'This JID is already linked to this account.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoAdminDefs: {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
@@ -11292,6 +11354,64 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ComAtprotoAdminRemoveNeuroLink: {
+    lexicon: 1,
+    id: 'com.atproto.admin.removeNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove a Neuro/W ID link from an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jid', 'did'],
+            properties: {
+              jid: {
+                type: 'string',
+                description: 'The JID (W ID) to unlink.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account to unlink from.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'jid', 'did'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              jid: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              warning: {
+                type: 'string',
+                description:
+                  'Set when this was the last link for this account.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No link found for this (jid, did) pair.',
+          },
+        ],
       },
     },
   },
@@ -14215,6 +14335,11 @@ export const schemaDict = {
                 description:
                   'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
                 knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
+              wsocialVerified: {
+                type: 'string',
+                description:
+                  "W Identity verification status for the account. Null means unverified. 'wid' means verified via W Identity. 'admin' means admin-provisioned.",
               },
             },
           },
@@ -21271,6 +21396,7 @@ export const ids = {
   ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
   ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
   ChatBskyModerationUpdateActorAccess: 'chat.bsky.moderation.updateActorAccess',
+  ComAtprotoAdminAddNeuroLink: 'com.atproto.admin.addNeuroLink',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
   ComAtprotoAdminDisableAccountInvites:
@@ -21285,6 +21411,7 @@ export const ids = {
   ComAtprotoAdminImportAccount: 'com.atproto.admin.importAccount',
   ComAtprotoAdminListNeuroAccounts: 'com.atproto.admin.listNeuroAccounts',
   ComAtprotoAdminMigrateAccount: 'com.atproto.admin.migrateAccount',
+  ComAtprotoAdminRemoveNeuroLink: 'com.atproto.admin.removeNeuroLink',
   ComAtprotoAdminSearchAccounts: 'com.atproto.admin.searchAccounts',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
