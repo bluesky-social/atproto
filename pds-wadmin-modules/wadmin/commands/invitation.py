@@ -184,6 +184,17 @@ def create_pass(ctx, email: str, handle: Optional[str]):
                     console.print(f"  From: {email_result['from_name']} <{email_result['from_email']}>")
                 if email_result.get("message_id"):
                     console.print(f"  Message ID: {email_result['message_id']}")
+
+                # Add contact to Brevo list 24 (Invited)
+                contact_result = brevo.add_contact_to_list(
+                    api_key=config.brevo_api_key,  # type: ignore
+                    email=result.get("email", email),
+                    list_id=brevo.BREVO_INVITED_LIST_ID,
+                )
+                if contact_result["success"]:
+                    console.print(f"  Added to Brevo list {brevo.BREVO_INVITED_LIST_ID} (Invited)")
+                else:
+                    console.print(f"  [dim]Brevo list add failed: {contact_result['error']}[/dim]")
             else:
                 print_error(f"Email sending failed: {email_result.get('error', 'Unknown error')}")
 
@@ -545,10 +556,182 @@ def purge(ctx, status: str, before: Optional[str], no_sync: bool):
             console.print("[dim]Note: Brevo not configured, skipping sync[/dim]")
 
 
+@invitation.command("sync-brevo")
+@click.option("--dry-run", is_flag=True, help="Show what would happen without making changes")
+@click.option(
+    "--promote-started-after",
+    default=48,
+    type=int,
+    metavar="HOURS",
+    help="Move pending contacts from list 24 → 25 after this many hours without progress. Default: 48",
+)
+@click.pass_context
+def sync_brevo(ctx, dry_run: bool, promote_started_after: int):
+    """Sync invitation lifecycle to Brevo contact lists.
+
+    Scans all invitations and moves contacts to the correct Brevo list:
+
+    \b
+      24 Invited    – invitation email sent, no action yet
+      25 Started    – still pending after HOURS (proxy for "opened but didn't finish")
+      26 Registered – account created with email+password
+      27 Onboarded  – account linked to W Identity
+
+    Run this on a regular schedule (e.g. hourly cron) to keep Brevo in sync.
+    """
+    from datetime import timezone
+
+    client: PDSClient = ctx.obj["client"]
+    config: Config = ctx.obj["config"]
+
+    require_brevo_config(config)
+
+    brevo_mod = _get_brevo()
+    api_key = config.brevo_api_key  # type: ignore
+
+    if dry_run:
+        console.print("[bold yellow]DRY RUN — no changes will be made[/bold yellow]")
+        console.print()
+
+    # ── 1. Fetch all invitations (pending + consumed) ──────────────────────
+    console.print("Fetching invitations from PDS...")
+
+    all_invitations = []
+    for status in ("pending", "consumed"):
+        resp = client.call(
+            "GET",
+            "io.trustanchor.admin.listInvitations",
+            params={"status": status, "limit": 1000},
+        )
+        if resp.success and resp.data:
+            all_invitations.extend(resp.data.get("invitations", []))
+
+    if not all_invitations:
+        print_info("No invitations found")
+        return
+
+    console.print(f"  {len(all_invitations)} invitations loaded")
+    console.print()
+
+    # ── 2. Classify each invitation ────────────────────────────────────────
+    # Buckets: to_25, to_26, to_27
+    to_25: list = []   # pending + email sent > N hours ago → Started
+    to_26: list = []   # consumed + accountType unverified  → Registered
+    to_27: list = []   # consumed + jid present             → Onboarded
+
+    now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+    for inv in all_invitations:
+        inv_status = inv.get("status", "")
+        email = inv.get("email")
+        if not email:
+            continue
+
+        if inv_status == "pending":
+            # Only promote to 25 if the invitation email was actually sent
+            email_sent_at = inv.get("emailLastSentAt")
+            if not email_sent_at:
+                continue
+            try:
+                sent_dt = datetime.fromisoformat(email_sent_at.replace("Z", "+00:00"))
+                hours_elapsed = (now_utc - sent_dt).total_seconds() / 3600
+            except Exception:
+                continue
+            if hours_elapsed >= promote_started_after:
+                to_25.append(inv)
+
+        elif inv_status == "consumed":
+            consuming_did = inv.get("consumingDid")
+            if not consuming_did:
+                continue
+
+            # Ask PDS whether this DID is WID-linked
+            neuro_resp = client.call(
+                "GET",
+                "com.atproto.admin.getNeuroLink",
+                params={"did": consuming_did},
+            )
+            if not neuro_resp.success or not neuro_resp.data:
+                console.print(f"  [dim]Could not fetch account info for {consuming_did}, skipping[/dim]")
+                continue
+
+            jid = neuro_resp.data.get("jid")
+            if jid:
+                to_27.append(inv)
+            else:
+                to_26.append(inv)
+
+    # ── 3. Report classification ───────────────────────────────────────────
+    console.print(f"  → list {brevo_mod.BREVO_STARTED_LIST_ID} (Started):    {len(to_25)} contacts"
+                  f"  [dim](pending ≥ {promote_started_after}h)[/dim]")
+    console.print(f"  → list {brevo_mod.BREVO_REGISTERED_LIST_ID} (Registered): {len(to_26)} contacts"
+                  f"  [dim](consumed, email+password)[/dim]")
+    console.print(f"  → list {brevo_mod.BREVO_ONBOARDED_LIST_ID} (Onboarded):  {len(to_27)} contacts"
+                  f"  [dim](consumed, WID-linked)[/dim]")
+    console.print()
+
+    if dry_run:
+        if to_25:
+            console.print("[bold]Would move to list 25 (Started):[/bold]")
+            for inv in to_25:
+                console.print(f"  {inv.get('email')}  (sent {inv.get('emailLastSentAt', '?')})")
+        if to_26:
+            console.print("[bold]Would move to list 26 (Registered):[/bold]")
+            for inv in to_26:
+                console.print(f"  {inv.get('email')}  (consumed {inv.get('consumedAt', '?')})")
+        if to_27:
+            console.print("[bold]Would move to list 27 (Onboarded):[/bold]")
+            for inv in to_27:
+                console.print(f"  {inv.get('email')}  (consumed {inv.get('consumedAt', '?')})")
+        return
+
+    # ── 4. Apply moves ─────────────────────────────────────────────────────
+    # Each contact lives in exactly one list at a time (the most recent stage).
+    # We try each possible source list in reverse-chronological order and stop
+    # at the first success, which also removes the contact from that source list.
+    def _move_to(inv_list: list, source_lists: list, to_list_id: int, label: str):
+        ok = fail = 0
+        for inv in inv_list:
+            email = inv.get("email")
+            moved = False
+            for from_id in source_lists:
+                result = brevo_mod.move_contact_between_lists(
+                    api_key=api_key,
+                    email=email,
+                    from_list_id=from_id,
+                    to_list_id=to_list_id,
+                )
+                if result["success"]:
+                    moved = True
+                    break
+            if moved:
+                ok += 1
+            else:
+                fail += 1
+                console.print(f"  [dim]{email}: could not move to list {to_list_id} from any source[/dim]")
+        if ok or fail:
+            console.print(f"  list {to_list_id} ({label}): {ok} moved, {fail} failed")
+
+    # 24 → 25: can only come from 24 (never been promoted yet)
+    _move_to(to_25,
+             [brevo_mod.BREVO_INVITED_LIST_ID],
+             brevo_mod.BREVO_STARTED_LIST_ID, "Started")
+    # 25 or 24 → 26: contact may have already been promoted to 25
+    _move_to(to_26,
+             [brevo_mod.BREVO_STARTED_LIST_ID, brevo_mod.BREVO_INVITED_LIST_ID],
+             brevo_mod.BREVO_REGISTERED_LIST_ID, "Registered")
+    # 26, 25, or 24 → 27: contact could be at any prior stage
+    _move_to(to_27,
+             [brevo_mod.BREVO_REGISTERED_LIST_ID, brevo_mod.BREVO_STARTED_LIST_ID, brevo_mod.BREVO_INVITED_LIST_ID],
+             brevo_mod.BREVO_ONBOARDED_LIST_ID, "Onboarded")
+
+    console.print()
+    print_success("Brevo sync complete")
+
+
 @invitation.command()
 @click.pass_context
 def stock(ctx):
-    """Show overall invitation system status (inventory + invitations + Brevo)."""
     client: PDSClient = ctx.obj["client"]
     config: Config = ctx.obj["config"]
 
@@ -630,19 +813,23 @@ def stock(ctx):
         try:
             brevo = _get_brevo()
 
-            # Get counts for each list
-            waitlist_result = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_WAITLIST_LIST_ID)  # type: ignore
-            invited_result = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_INVITED_LIST_ID)  # type: ignore
-            onboarded_result = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_ONBOARDED_LIST_ID)  # type: ignore
+            # Get counts for each onboarding lifecycle list
+            waitlist_result   = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_WAITLIST_LIST_ID)  # type: ignore
+            invited_result    = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_INVITED_LIST_ID)  # type: ignore
+            started_result    = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_STARTED_LIST_ID)  # type: ignore
+            registered_result = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_REGISTERED_LIST_ID)  # type: ignore
+            onboarded_result  = brevo.get_list_count(config.brevo_api_key, brevo.BREVO_ONBOARDED_LIST_ID)  # type: ignore
 
             if waitlist_result["success"]:
-                console.print(f"   Waitlist ({brevo.BREVO_WAITLIST_LIST_ID}):  {waitlist_result['count']} contacts")
-
+                console.print(f"   Waitlist   ({brevo.BREVO_WAITLIST_LIST_ID}):  {waitlist_result['count']} contacts")
             if invited_result["success"]:
-                console.print(f"   Invited ({brevo.BREVO_INVITED_LIST_ID}):   {invited_result['count']} contacts")
-
+                console.print(f"   Invited    ({brevo.BREVO_INVITED_LIST_ID}):  {invited_result['count']} contacts")
+            if started_result["success"]:
+                console.print(f"   Started    ({brevo.BREVO_STARTED_LIST_ID}):  {started_result['count']} contacts")
+            if registered_result["success"]:
+                console.print(f"   Registered ({brevo.BREVO_REGISTERED_LIST_ID}):  {registered_result['count']} contacts")
             if onboarded_result["success"]:
-                console.print(f"   Onboarded ({brevo.BREVO_ONBOARDED_LIST_ID}): {onboarded_result['count']} contacts")
+                console.print(f"   Onboarded  ({brevo.BREVO_ONBOARDED_LIST_ID}):  {onboarded_result['count']} contacts")
 
         except Exception as e:
             console.print(f"   [dim]Error fetching Brevo list counts: {str(e)}[/dim]")
@@ -654,15 +841,15 @@ def stock(ctx):
     console.print("═" * 63)
 
 
-@invitation.command("send-batch")
+@invitation.command("send-batch-wid")
 @click.option("--from-list", default=None, type=int, help="Fetch contacts from Brevo list ID (23=Waitlist, 24=Invited, 27=Onboarded)")
 @click.option("--count", default=0, type=int, help="Number of contacts to fetch from Brevo list")
 @click.option("--emails", default=None, help="Comma-separated email list")
 @click.option("--emails-file", type=click.Path(exists=True), help="File with emails (one per line)")
 @click.option("--dry-run", is_flag=True, help="Show what would happen without sending")
 @click.pass_context
-def send_batch(ctx, from_list: Optional[int], count: int, emails: Optional[str], emails_file: Optional[str], dry_run: bool):
-    """Send invitations in batch."""
+def send_batch_wid(ctx, from_list: Optional[int], count: int, emails: Optional[str], emails_file: Optional[str], dry_run: bool):
+    """Send WID invitations in batch (allocates one W Identity per recipient)."""
     client: PDSClient = ctx.obj["client"]
     config: Config = ctx.obj["config"]
 
@@ -867,6 +1054,198 @@ def send_batch(ctx, from_list: Optional[int], count: int, emails: Optional[str],
         console.print(f"✗ Emails Failed:       {email_fail_count}")
 
     if fail_count > 0 or email_fail_count > 0:
+        console.print()
+        console.print("Errors:")
+        for error in errors:
+            console.print(f"  {error}")
+
+
+@invitation.command("send-batch-pass")
+@click.option("--from-list", default=None, type=int, help="Fetch contacts from Brevo list ID")
+@click.option("--count", default=0, type=int, help="Number of contacts to fetch from Brevo list")
+@click.option("--emails", default=None, help="Comma-separated email list")
+@click.option("--emails-file", type=click.Path(exists=True), help="File with emails (one per line)")
+@click.option("--dry-run", is_flag=True, help="Show what would happen without sending")
+@click.pass_context
+def send_batch_pass(ctx, from_list: Optional[int], count: int, emails: Optional[str], emails_file: Optional[str], dry_run: bool):
+    """Send email+password invitations in batch (no WID allocation)."""
+    client: PDSClient = ctx.obj["client"]
+    config: Config = ctx.obj["config"]
+
+    # Determine email source
+    email_list: List[str] = []
+
+    if from_list:
+        if not config.has_brevo_config():
+            print_error(
+                "Brevo not configured",
+                "Set BREVO_API_KEY and BREVO_INVITATION_TEMPLATE_ID in Vault or environment"
+            )
+            raise click.Abort()
+
+        console.print(f"Fetching contacts from Brevo list {from_list}...")
+
+        try:
+            brevo = _get_brevo()
+            result = brevo.get_list_contacts(
+                api_key=config.brevo_api_key,  # type: ignore
+                list_id=from_list,
+                limit=count if count > 0 else 500
+            )
+
+            if not result["success"]:
+                print_error(f"Failed to fetch contacts: {result.get('error')}")
+                raise click.Abort()
+
+            email_list = [contact["email"] for contact in result["contacts"]]
+            console.print(f"✓ Fetched {len(email_list)} contacts from list {from_list}")
+            console.print()
+
+        except Exception as e:
+            print_error(f"Failed to fetch contacts: {str(e)}")
+            raise click.Abort()
+
+    elif emails:
+        email_list = [e.strip() for e in emails.split(",") if e.strip()]
+
+    elif emails_file:
+        with open(emails_file, 'r') as f:
+            email_list = [line.strip() for line in f if line.strip()]
+
+    else:
+        print_error("Must specify --from-list, --emails, or --emails-file")
+        raise click.Abort()
+
+    batch_size = len(email_list)
+
+    if batch_size == 0:
+        print_error("No emails to send to")
+        raise click.Abort()
+
+    if batch_size > 500:
+        print_error(f"Batch size too large ({batch_size}). Maximum is 500 emails per batch.")
+        raise click.Abort()
+
+    console.print()
+    console.print("═" * 63)
+    console.print("Batch Pass Invitation Send")
+    console.print("═" * 63)
+    console.print(f"Emails to send: {batch_size}")
+    console.print()
+
+    if dry_run:
+        console.print("🔍 DRY RUN MODE - No invitations will be created or emails sent")
+        console.print()
+        console.print("Would send pass invitations to:")
+        for email in email_list:
+            console.print(f"  {email}")
+        console.print()
+        console.print("To proceed, re-run without --dry-run flag")
+        return
+
+    if not click.confirm(f"Send {batch_size} pass invitations?"):
+        console.print("Cancelled")
+        return
+
+    console.print()
+    console.print("Sending pass invitations...")
+    console.print()
+
+    send_emails = config.has_brevo_config()
+    brevo_module = None
+    pass_template_id = config.brevo_pass_template_id or 29
+
+    if send_emails:
+        try:
+            brevo_module = _get_brevo()
+        except Exception:
+            send_emails = False
+
+    success_count = 0
+    fail_count = 0
+    email_success_count = 0
+    email_fail_count = 0
+    errors: List[str] = []
+
+    for email in email_list:
+        console.print(f"  {email} ... ", end="")
+
+        data: dict = {"email": email}
+        response = client.call("POST", "eu.wsocial.admin.createPassInvitation", data=data)
+
+        if not response.success:
+            console.print("✗", style="error")
+            fail_count += 1
+            errors.append(f"{email}: {response.error}")
+            continue
+
+        console.print("✓ invite", style="success", end="")
+        success_count += 1
+
+        if send_emails and brevo_module and response.data:
+            onboarding_url = response.data.get("onboardingUrl")
+            if onboarding_url:
+                try:
+                    email_result = brevo_module.send_invitation_email_with_params(
+                        api_key=config.brevo_api_key,  # type: ignore
+                        template_id=pass_template_id,
+                        email=email,
+                        params={"ONBOARDING_URL": onboarding_url},
+                        from_email=config.invitation_email_from or "invitations@wsocial.app",
+                        from_name=config.invitation_mail_from_name or "W Social Team",
+                    )
+
+                    if email_result["success"]:
+                        console.print(" ✓ email", style="success", end="")
+                        email_success_count += 1
+
+                        # Add to list 24 (Invited), or move from source list if using --from-list
+                        if from_list and from_list != brevo_module.BREVO_INVITED_LIST_ID:
+                            move_result = brevo_module.move_contact_between_lists(
+                                api_key=config.brevo_api_key,  # type: ignore
+                                email=email,
+                                from_list_id=from_list,
+                                to_list_id=brevo_module.BREVO_INVITED_LIST_ID,
+                            )
+                            if move_result["success"]:
+                                console.print(" ✓ moved", style="success")
+                            else:
+                                console.print(" - (move skipped)", style="dim")
+                        else:
+                            add_result = brevo_module.add_contact_to_list(
+                                api_key=config.brevo_api_key,  # type: ignore
+                                email=email,
+                                list_id=brevo_module.BREVO_INVITED_LIST_ID,
+                            )
+                            if add_result["success"]:
+                                console.print(" ✓ list24", style="success")
+                            else:
+                                console.print()
+                    else:
+                        console.print(" ✗ email", style="error")
+                        email_fail_count += 1
+                        errors.append(f"{email}: Email failed - {email_result.get('error')}")
+                except Exception as e:
+                    console.print(" ✗ email", style="error")
+                    email_fail_count += 1
+                    errors.append(f"{email}: Email error - {str(e)}")
+            else:
+                console.print()
+        else:
+            console.print()
+
+    console.print()
+    console.print("═" * 63)
+    console.print("Batch Pass Send Complete")
+    console.print("═" * 63)
+    console.print(f"✓ Invitations Created: {success_count}")
+    console.print(f"✗ Invitations Failed:  {fail_count}")
+
+    if send_emails:
+        console.print(f"✓ Emails Sent:         {email_success_count}")
+        console.print(f"✗ Emails Failed:       {email_fail_count}")
+
+    if errors:
         console.print()
         console.print("Errors:")
         for error in errors:

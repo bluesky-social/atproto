@@ -22,8 +22,10 @@ except ImportError as e:
 
 # Brevo List IDs
 BREVO_WAITLIST_LIST_ID = 23     # Users who signed up for early access
-BREVO_INVITED_LIST_ID = 24      # Invitations sent, waiting for onboarding
-BREVO_ONBOARDED_LIST_ID = 27    # Completed first login
+BREVO_INVITED_LIST_ID = 24      # Invitation sent, waiting to start onboarding
+BREVO_STARTED_LIST_ID = 25      # Started onboarding (email+password form opened), not yet done
+BREVO_REGISTERED_LIST_ID = 26   # Account created with email+password
+BREVO_ONBOARDED_LIST_ID = 27    # Completed first login via W Identity
 
 
 def fetch_and_encode_qr_code(qr_code_url: str, timeout: int = 10) -> Optional[str]:
@@ -283,6 +285,49 @@ def get_list_count(api_key: str, list_id: int) -> Dict:
             "name": None,
             "error": str(e),
         }
+
+
+def add_contact_to_list(
+    api_key: str,
+    email: str,
+    list_id: int,
+) -> Dict:
+    """
+    Ensure a contact exists in Brevo and add them to a list.
+
+    Creates the contact if they don't exist yet (idempotent). Safe to call
+    multiple times — calling again when already in the list is a no-op.
+
+    Args:
+        api_key: Brevo API key
+        email: Contact email address
+        list_id: Brevo list ID to add the contact to
+
+    Returns:
+        dict with keys: success (bool), error (str)
+    """
+    try:
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = api_key
+        api_instance = sib_api_v3_sdk.ContactsApi(
+            sib_api_v3_sdk.ApiClient(configuration)
+        )
+
+        # CreateContact with update_enabled=True is idempotent: creates if new,
+        # updates (no-op) if existing, and always applies list_ids.
+        create_contact = sib_api_v3_sdk.CreateContact(
+            email=email,
+            list_ids=[list_id],
+            update_enabled=True,
+        )
+        api_instance.create_contact(create_contact)
+
+        return {"success": True, "error": None}
+
+    except ApiException as e:
+        return {"success": False, "error": str(e)}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def move_contact_between_lists(
