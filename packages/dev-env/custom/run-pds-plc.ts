@@ -76,13 +76,15 @@ async function main() {
       ...(process.env.PDS_DATA_DIRECTORY
         ? { dataDirectory: process.env.PDS_DATA_DIRECTORY }
         : {}),
-      // Only apply disk blobstore location when not using S3/R2.
-      // If PDS_BLOBSTORE_S3_BUCKET is set, pdsEnvFromProcess() already carries
-      // the S3 config; setting blobstoreDiskLocation alongside it would throw.
-      ...(!process.env.PDS_BLOBSTORE_S3_BUCKET &&
-      process.env.PDS_BLOB_STORE_LOCATION
-        ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
-        : {}),
+      // Blobstore selection: S3/R2 takes priority over disk.
+      // TestPds always sets a default blobstoreDiskLocation (tmpdir); we must
+      // explicitly override it to undefined when S3 is configured, otherwise
+      // envToCfg throws "Cannot set both S3 and disk blobstore env vars".
+      ...(process.env.PDS_BLOBSTORE_S3_BUCKET
+        ? { blobstoreDiskLocation: undefined }
+        : process.env.PDS_BLOB_STORE_LOCATION
+          ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
+          : {}),
     },
   })
 
