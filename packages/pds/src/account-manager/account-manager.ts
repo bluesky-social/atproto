@@ -359,7 +359,7 @@ export class AccountManager {
     // For soft deleted accounts don't store refresh token so that it can't be rotated.
     if (!isSoftDeleted) {
       const refreshPayload = auth.decodeRefreshToken(refreshJwt)
-      await auth.storeRefreshToken(this.db, refreshPayload, appPassword)
+      await auth.storeRefreshToken(this.db, refreshPayload, appPassword, jid)
     }
     return { accessJwt, refreshJwt }
   }
@@ -397,6 +397,7 @@ export class AccountManager {
       serviceDid: this.serviceDid,
       scope: auth.formatScope(token.appPassword),
       jti: nextId,
+      jid: token.loginJid,
     })
 
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
@@ -408,7 +409,7 @@ export class AccountManager {
             expiresAt: expiresAt.toISOString(),
             nextId,
           }),
-          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPassword),
+          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPassword, token.loginJid),
         ]),
       )
     } catch (err) {

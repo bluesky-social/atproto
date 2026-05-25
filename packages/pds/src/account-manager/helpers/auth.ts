@@ -100,6 +100,7 @@ export const storeRefreshToken = async (
   db: AccountDb,
   payload: RefreshToken,
   appPassword: AppPassDescript | null,
+  loginJid?: string,
 ) => {
   const [result] = await db.executeWithRetry(
     db.db
@@ -109,6 +110,7 @@ export const storeRefreshToken = async (
         did: payload.sub,
         appPasswordName: appPassword?.name,
         expiresAt: new Date(payload.exp * 1000).toISOString(),
+        loginJid: loginJid ?? null,
       })
       .onConflict((oc) => oc.doNothing()), // E.g. when re-granting during a refresh grace period
   )
@@ -128,12 +130,13 @@ export const getRefreshToken = async (db: AccountDb, id: string) => {
     .select('app_password.privileged')
     .executeTakeFirst()
   if (!res) return null
-  const { did, expiresAt, appPasswordName, nextId, privileged } = res
+  const { did, expiresAt, appPasswordName, nextId, loginJid, privileged } = res
   return {
     id,
     did,
     expiresAt,
     nextId,
+    loginJid: loginJid ?? undefined,
     appPassword: appPasswordName
       ? {
           name: appPasswordName,

@@ -56,6 +56,33 @@ export default function (server: Server, ctx: AppContext) {
         )
         .execute()
 
+      // Security: verify the caller's DID is still linked to this JID.
+      // If the link has been removed (e.g. admin unlinked the account) we must
+      // not expose other accounts that remain linked to the same JID.
+      // Fall through to the no-JID path, which returns only the caller's own session.
+      const callerIsLinked = linkedDids.some((row) => row.did === callerDid)
+      if (!callerIsLinked) {
+        const callerHandle = await getHandleForDid(ctx, callerDid)
+        const callerTokens = await ctx.accountManager.createSession(
+          callerDid,
+          null,
+          false,
+        )
+        return {
+          encoding: 'application/json' as const,
+          body: {
+            accounts: [
+              {
+                did: callerDid,
+                handle: callerHandle,
+                accessJwt: callerTokens.accessJwt,
+                refreshJwt: callerTokens.refreshJwt,
+              },
+            ],
+          },
+        }
+      }
+
       // Deduplicate DIDs, caller first
       const seen = new Set<string>()
       const orderedDids: string[] = []
