@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * afterFileEdit hook — runs Prettier on the file the agent just wrote.
+ * afterFileEdit hook ? runs Prettier on the file the agent just wrote.
  * Supports Write and StrReplace tool events.
  * Skips files Prettier doesn't know about (e.g. lock files, binaries).
  */
@@ -34,7 +34,6 @@ process.stdin.on('end', () => {
     const ext = path.extname(filePath).toLowerCase()
     if (!PRETTIER_EXTENSIONS.has(ext)) process.exit(0)
 
-    // Resolve to absolute path if needed
     const absPath = path.isAbsolute(filePath)
       ? filePath
       : path.join(process.cwd(), filePath)
@@ -52,7 +51,7 @@ process.stdin.on('end', () => {
 
     execSync(`node "${prettierBin}" --write "${absPath}"`, { stdio: 'ignore' })
   } catch (_) {
-    // Fail open — never block the agent
+    // Fail open ? never block the agent
   }
   process.exit(0)
 })
