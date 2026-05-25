@@ -76,7 +76,11 @@ async function main() {
       ...(process.env.PDS_DATA_DIRECTORY
         ? { dataDirectory: process.env.PDS_DATA_DIRECTORY }
         : {}),
-      ...(process.env.PDS_BLOB_STORE_LOCATION
+      // Only apply disk blobstore location when not using S3/R2.
+      // If PDS_BLOBSTORE_S3_BUCKET is set, pdsEnvFromProcess() already carries
+      // the S3 config; setting blobstoreDiskLocation alongside it would throw.
+      ...(!process.env.PDS_BLOBSTORE_S3_BUCKET &&
+      process.env.PDS_BLOB_STORE_LOCATION
         ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
         : {}),
     },
@@ -104,7 +108,11 @@ async function main() {
     `💾 PDS storage:    ${process.env.PDS_DATA_DIRECTORY ?? 'tmpdir (ephemeral)'}`,
   )
   console.log(
-    `💾 PDS blobs:      ${process.env.PDS_BLOB_STORE_LOCATION ?? 'tmpdir (ephemeral)'}`,
+    `💾 PDS blobs:      ${
+      process.env.PDS_BLOBSTORE_S3_BUCKET
+        ? `S3/R2 bucket=${process.env.PDS_BLOBSTORE_S3_BUCKET} endpoint=${process.env.PDS_BLOBSTORE_S3_ENDPOINT ?? 'AWS'}`
+        : process.env.PDS_BLOB_STORE_LOCATION ?? 'tmpdir (ephemeral)'
+    }`,
   )
   console.log('💡 Point Sokaa / AtpAgent service URL at:', pdsPublicUrl)
   console.log('💡 Press Ctrl+C to stop\n')
