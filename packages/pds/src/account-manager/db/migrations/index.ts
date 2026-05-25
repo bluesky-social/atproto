@@ -20,6 +20,7 @@ import * as mig019 from './019-invitation-email-message-id'
 import * as mig020 from './020-many-to-many-neuro-links'
 import * as mig021 from './021-unverified-account-type'
 import * as mig022 from './022-invitation-invite-code'
+import * as mig023 from './023-refresh-token-login-jid'
 
 export default {
   '001': mig001,
@@ -44,4 +45,5 @@ export default {
   '020': mig020,
   '021': mig021,
   '022': mig022,
+  '023': mig023,
 }
