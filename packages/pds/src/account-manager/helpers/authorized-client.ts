@@ -4,8 +4,8 @@ import {
   ClientId,
   Sub,
 } from '@atproto/oauth-provider'
-import { fromJson, toDateISO, toJson } from '../../db'
-import { AccountDb } from '../db'
+import { fromJson, toDateISO, toJson } from '../../db/index.js'
+import { AccountDb } from '../db/index.js'
 
 export async function upsert(
   db: AccountDb,

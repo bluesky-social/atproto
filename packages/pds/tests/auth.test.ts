@@ -2,7 +2,7 @@ import * as jose from 'jose'
 import { request as undiciRequest } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { createRefreshToken } from '../src/account-manager/helpers/auth'
+import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView
@@ -331,7 +331,9 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow('Invalid token type')
+    await expect(refreshWithAccess).rejects.toThrow(
+      'Token could not be verified',
+    )
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {

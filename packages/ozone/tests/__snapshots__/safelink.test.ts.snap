@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`safelink management addRule allows admins to add rules 1`] = `
-Object {
+{
   "action": "block",
   "comment": "Known phishing domain targeting users",
   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -15,8 +15,8 @@ Object {
 `;
 
 exports[`safelink management queryEvents allows querying safelink events 1`] = `
-Array [
-  Object {
+[
+  {
     "action": "block",
     "comment": "Escalated to block",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -27,7 +27,7 @@ Array [
     "reason": "phishing",
     "url": "https://events-test.com",
   },
-  Object {
+  {
     "action": "warn",
     "comment": "Initial rule creation",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -38,7 +38,7 @@ Array [
     "reason": "spam",
     "url": "https://events-test.com",
   },
-  Object {
+  {
     "action": "warn",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
@@ -48,7 +48,7 @@ Array [
     "reason": "spam",
     "url": "https://query-test2.com/specific-path",
   },
-  Object {
+  {
     "action": "block",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
@@ -58,7 +58,7 @@ Array [
     "reason": "phishing",
     "url": "https://query-test1.com",
   },
-  Object {
+  {
     "action": "block",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
@@ -68,7 +68,7 @@ Array [
     "reason": "spam",
     "url": "https://remove-test2.com",
   },
-  Object {
+  {
     "action": "block",
     "comment": "Removing rule - false positive",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -79,7 +79,7 @@ Array [
     "reason": "csam",
     "url": "https://remove-test.com",
   },
-  Object {
+  {
     "action": "block",
     "comment": "Rule to be removed",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -90,7 +90,7 @@ Array [
     "reason": "csam",
     "url": "https://remove-test.com",
   },
-  Object {
+  {
     "action": "block",
     "comment": "Updated: confirmed phishing site",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -101,7 +101,7 @@ Array [
     "reason": "phishing",
     "url": "https://update-test.com",
   },
-  Object {
+  {
     "action": "warn",
     "comment": "Initially marked as spam",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -112,7 +112,7 @@ Array [
     "reason": "spam",
     "url": "https://update-test.com",
   },
-  Object {
+  {
     "action": "block",
     "comment": "Known phishing domain targeting users",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -127,8 +127,8 @@ Array [
 `;
 
 exports[`safelink management queryRules allows querying all active rules 1`] = `
-Array [
-  Object {
+[
+  {
     "action": "warn",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
@@ -137,7 +137,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://query-test2.com/specific-path",
   },
-  Object {
+  {
     "action": "block",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
@@ -146,7 +146,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://query-test1.com",
   },
-  Object {
+  {
     "action": "block",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
@@ -155,7 +155,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://remove-test2.com",
   },
-  Object {
+  {
     "action": "block",
     "comment": "Updated: confirmed phishing site",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -165,7 +165,7 @@ Array [
     "updatedAt": "1970-01-01T00:00:00.000Z",
     "url": "https://update-test.com",
   },
-  Object {
+  {
     "action": "block",
     "comment": "Known phishing domain targeting users",
     "createdAt": "1970-01-01T00:00:00.000Z",

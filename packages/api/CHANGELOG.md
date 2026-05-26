@@ -1,5 +1,129 @@
 # @atproto/api
 
+## 0.20.5
+
+### Patch Changes
+
+- [#4998](https://github.com/bluesky-social/atproto/pull/4998) [`4984994`](https://github.com/bluesky-social/atproto/commit/4984994f7d3f0773b03c61dccd68286e42e0c6af) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.4
+
+### Patch Changes
+
+- [#4987](https://github.com/bluesky-social/atproto/pull/4987) [`7fecf13`](https://github.com/bluesky-social/atproto/commit/7fecf13852eff09c0dd55da0258cf779688a36e6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4987](https://github.com/bluesky-social/atproto/pull/4987) [`7fecf13`](https://github.com/bluesky-social/atproto/commit/7fecf13852eff09c0dd55da0258cf779688a36e6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4991](https://github.com/bluesky-social/atproto/pull/4991) [`86bb63e`](https://github.com/bluesky-social/atproto/commit/86bb63ef97d487abe55a5a263261b4af2b5d7664) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.3
+
+### Patch Changes
+
+- [#4985](https://github.com/bluesky-social/atproto/pull/4985) [`604e16d`](https://github.com/bluesky-social/atproto/commit/604e16dda2972f0e17cedefc49dafd4ecbfda8f9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update fields that are always present on `viewExternalSource`
+
+## 0.20.2
+
+### Patch Changes
+
+- [#4975](https://github.com/bluesky-social/atproto/pull/4975) [`5b43753`](https://github.com/bluesky-social/atproto/commit/5b43753aa5e32edfa8aebbcc6f1e8ba777657c07) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4915](https://github.com/bluesky-social/atproto/pull/4915) [`2c958f8`](https://github.com/bluesky-social/atproto/commit/2c958f88219b7c796a884a37da13847bb817c8e6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add rich metadata fields to `app.bsky.embed.external#viewExternal`, and a new
+  query method `app.bsky.embed.getEmbedExternalView`. Also changes
+  `associatedRecords` to `associatedRefs` on the `app.bsky.embed.external` record.
+
+## 0.20.1
+
+### Patch Changes
+
+- [#4963](https://github.com/bluesky-social/atproto/pull/4963) [`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4968](https://github.com/bluesky-social/atproto/pull/4968) [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Run "lexgen" during CI instead of keeping the generated code in Git
+
+## 0.20.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common-web@0.5.0
+  - @atproto/lexicon@0.7.0
+  - @atproto/syntax@0.6.0
+  - @atproto/xrpc@0.8.0
+
+## 0.19.19
+
+### Patch Changes
+
+- [#4945](https://github.com/bluesky-social/atproto/pull/4945) [`cb13878`](https://github.com/bluesky-social/atproto/commit/cb1387899f0b296759ebdf5b8985b6b573091a9a) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4947](https://github.com/bluesky-social/atproto/pull/4947) [`ea4184b`](https://github.com/bluesky-social/atproto/commit/ea4184b9beb9821d806a9540223dab55c2628184) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Updates contract defined in #4912 to replace `associatedRecord: string` with `associatedRecords: StrongRef[]`
+
+- [#4946](https://github.com/bluesky-social/atproto/pull/4946) [`38bc2fa`](https://github.com/bluesky-social/atproto/commit/38bc2faa142d42f95c5b89b5a10bf8ed607fe39f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.18
+
+### Patch Changes
+
+- [#4932](https://github.com/bluesky-social/atproto/pull/4932) [`18d3114`](https://github.com/bluesky-social/atproto/commit/18d311494038b73e3c3429e504ca6cc05bba5f6d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4933](https://github.com/bluesky-social/atproto/pull/4933) [`0533a5f`](https://github.com/bluesky-social/atproto/commit/0533a5f60ecc1f15feb9c4940781bc7e217a3644) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - trigger build after github actions previously disabled
+
+## 0.19.17
+
+### Patch Changes
+
+- [#4924](https://github.com/bluesky-social/atproto/pull/4924) [`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4926](https://github.com/bluesky-social/atproto/pull/4926) [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.16
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+## 0.19.15
+
+### Patch Changes
+
+- [#4912](https://github.com/bluesky-social/atproto/pull/4912) [`450f26a`](https://github.com/bluesky-social/atproto/commit/450f26ac854cf53484dd887204447c8ead78d3b2) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `associatedRecord` to `app.bsky.embed.external` record.
+
+## 0.19.14
+
+### Patch Changes
+
+- [#4894](https://github.com/bluesky-social/atproto/pull/4894) [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1) Thanks [@foysalit](https://github.com/foysalit)! - Add expiring tags in ozone
+
+## 0.19.13
+
+### Patch Changes
+
+- [#4906](https://github.com/bluesky-social/atproto/pull/4906) [`2879b56`](https://github.com/bluesky-social/atproto/commit/2879b56a04d37fc93d5afb51cf6131fb7c156b85) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4769](https://github.com/bluesky-social/atproto/pull/4769) [`02b8b32`](https://github.com/bluesky-social/atproto/commit/02b8b32d2fd57ade330d18fbfc8d0d25ed95e476) Thanks [@whyrusleeping](https://github.com/whyrusleeping)! - Update blur behaviors to be more comprehensive and cover more surfaces.
+
+## 0.19.12
+
+### Patch Changes
+
+- [#4903](https://github.com/bluesky-social/atproto/pull/4903) [`3f1cb53`](https://github.com/bluesky-social/atproto/commit/3f1cb5374cec92b4422bbb9a7d6f06dba77396ae) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.11
+
+### Patch Changes
+
+- [#4876](https://github.com/bluesky-social/atproto/pull/4876) [`03445ee`](https://github.com/bluesky-social/atproto/commit/03445eef45d9fba66d48ea5ca86742685d91faa5) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.19.10
 
 ### Patch Changes

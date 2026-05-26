@@ -1,4 +1,4 @@
-import { featureGatesLogger } from '../logger'
+import { featureGatesLogger } from '../logger.js'
 
 type Events = {
   'experiment:viewed': {

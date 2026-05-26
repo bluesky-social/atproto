@@ -1,7 +1,7 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ids } from '../../lexicon/lexicons'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { ids } from '../../lexicon/lexicons.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.searchRepos({

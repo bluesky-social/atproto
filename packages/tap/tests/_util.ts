@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws'
-import { HandlerOpts } from '../src/channel'
-import { IdentityEvent, RecordEvent } from '../src/types'
+import { HandlerOpts } from '../src/channel.js'
+import { IdentityEvent, RecordEvent } from '../src/types.js'
 
 export type MockOpts = HandlerOpts & { acked: boolean }
 

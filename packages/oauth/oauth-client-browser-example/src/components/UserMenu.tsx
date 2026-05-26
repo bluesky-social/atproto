@@ -12,8 +12,8 @@ export function UserMenu() {
   const { signOut } = useOAuthContext()
   const session = useOAuthSession()
 
-  const profileQuery = useLexRecord(app.bsky.actor.profile)
-  const sessionQuery = useLexQuery(com.atproto.server.getSession)
+  const profileQuery = useLexRecord(app.bsky.actor.profile.main)
+  const sessionQuery = useLexQuery(com.atproto.server.getSession.main)
 
   const displayName = profileQuery.data?.value?.displayName
   const handle = sessionQuery.data?.body.handle

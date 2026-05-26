@@ -1,7 +1,11 @@
 import PQueue from 'p-queue'
-import { Database } from './db'
-import { dbLogger } from './logger'
-import { boundAbortController, isCausedBySignal, startInterval } from './util'
+import { Database } from './db/index.js'
+import { dbLogger } from './logger.js'
+import {
+  boundAbortController,
+  isCausedBySignal,
+  startInterval,
+} from './util.js'
 
 type Task = (db: Database, signal: AbortSignal) => Promise<void>
 
@@ -12,7 +16,7 @@ export class BackgroundQueue {
   private abortController = new AbortController()
   private queue: PQueue
 
-  public get signal() {
+  public get signal(): AbortSignal {
     return this.abortController.signal
   }
 
@@ -99,7 +103,7 @@ export class PeriodicBackgroundTask {
   private intervalPromise?: Promise<void>
   private runningPromise?: Promise<void>
 
-  public get signal() {
+  public get signal(): AbortSignal {
     return this.abortController.signal
   }
 

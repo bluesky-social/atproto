@@ -22,7 +22,7 @@ export function InputCheckbox({
   // input
   id,
   ref,
-  disabled,
+  disabled: disabledProp,
   title,
   'aria-label': ariaLabel = title,
   'aria-labelledby': ariaLabelledBy,
@@ -34,6 +34,7 @@ export function InputCheckbox({
   const ctx = useContext(FieldsetContext)
 
   const inputId = id ?? htmlFor
+  const disabled = disabledProp ?? ctx.disabled
 
   return (
     <InputContainer
@@ -41,7 +42,8 @@ export function InputCheckbox({
       icon={
         <Checkbox
           {...props}
-          disabled={disabled ?? ctx.disabled}
+          className="size-4"
+          disabled={disabled}
           title={title}
           aria-label={ariaLabel}
           aria-labelledby={

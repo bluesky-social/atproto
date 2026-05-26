@@ -5,8 +5,8 @@ import {
   mock,
   moderatePost,
   moderateProfile,
-} from '../src'
-import './util/moderation-behavior'
+} from '../src/index.js'
+import './util/moderation-behavior.js'
 
 interface ScenarioResult {
   profileList?: string[]

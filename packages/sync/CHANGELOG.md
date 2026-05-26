@@ -1,5 +1,53 @@
 # @atproto/sync
 
+## 0.3.1
+
+### Patch Changes
+
+- [#4973](https://github.com/bluesky-social/atproto/pull/4973) [`4801600`](https://github.com/bluesky-social/atproto/commit/48016005155c9cecabf3fa9d5e9b3555e84e2dca) Thanks [@dholms](https://github.com/dholms)! - Fix getCursor invocation
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/common@0.6.1
+  - @atproto/lex@0.1.1
+
+## 0.3.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common@0.6.0
+  - @atproto/identity@0.5.0
+  - @atproto/lex@0.1.0
+  - @atproto/repo@0.10.0
+  - @atproto/syntax@0.6.0
+  - @atproto/xrpc-server@0.11.0
+
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.27
+  - @atproto/xrpc-server@0.10.22
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.26
+  - @atproto/xrpc-server@0.10.21
+
 ## 0.2.2
 
 ### Patch Changes

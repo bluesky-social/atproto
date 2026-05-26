@@ -1,6 +1,9 @@
 {
   "name": "@atproto/xrpc",
-  "version": "0.7.7",
+  "version": "0.8.0",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) client library",
   "keywords": [
@@ -13,8 +16,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/xrpc"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.build.json"
   },
@@ -23,6 +24,13 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

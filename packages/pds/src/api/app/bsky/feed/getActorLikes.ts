@@ -1,11 +1,11 @@
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { computeProxyTo } from '../../../../pipethrough'
+import { computeProxyTo } from '../../../../pipethrough.js'
 import {
   MungeFn,
   pipethroughReadAfterWrite,
-} from '../../../../read-after-write'
+} from '../../../../read-after-write/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return

@@ -1,7 +1,7 @@
 import { Sender, WebSocketServer } from 'ws'
 import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('verification-listener', () => {
   let network: TestNetwork

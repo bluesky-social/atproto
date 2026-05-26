@@ -10,7 +10,7 @@ import { Admonition } from '#/components/utils/admonition.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
-import { LayoutApp } from './components/layouts/layout-app'
+import { LayoutApp } from './components/layouts/layout-app.js'
 
 const {
   //
@@ -48,7 +48,11 @@ function CookieErrorView() {
         {Array.from(new Map(url.searchParams)).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
-        <Admonition role="status">
+        <Admonition
+          role="alert"
+          variant="warning"
+          title={<Trans>Cookie Error</Trans>}
+        >
           <Trans>
             It seems that your browser is not accepting cookies. Press
             "Continue" to try again. If the error persists, please ensure that

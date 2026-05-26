@@ -1,14 +1,15 @@
-FROM node:20.20-alpine AS build
+FROM node:24.15-alpine3.23 AS build
 
 RUN corepack enable
 
 WORKDIR /app
 
 COPY ./package.json ./
-RUN corepack prepare --activate
+RUN corepack install
 
 # Move files into the image and install
 COPY ./*.* ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
@@ -19,6 +20,7 @@ COPY ./packages/lex ./packages/lex
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/bsky ./packages/bsky
+COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -62,7 +64,7 @@ RUN --mount=type=cache,target=/root/.pnpm-store \
 WORKDIR services/bsky
 
 # Uses assets from build stage to reduce build size
-FROM node:20.20-alpine
+FROM node:24.15-alpine3.23
 
 # dumb-init is used to handle signals properly.
 # runit is installed so it can be (optionally) used for logging via svlogd.

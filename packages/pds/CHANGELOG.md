@@ -1,5 +1,95 @@
 # @atproto/pds
 
+## 0.5.0
+
+### Minor Changes
+
+- [#4883](https://github.com/bluesky-social/atproto/pull/4883) [`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for email verification and management in the account management interface
+
+### Patch Changes
+
+- Updated dependencies [[`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d)]:
+  - @atproto/oauth-provider@0.18.0
+
+## 0.4.226
+
+### Patch Changes
+
+- [#4989](https://github.com/bluesky-social/atproto/pull/4989) [`37bff2b`](https://github.com/bluesky-social/atproto/commit/37bff2b52c871a7b593f4cce641d988336c8543d) Thanks [@dholms](https://github.com/dholms)! - Bump request JSON size limit on createRecord, putRecord, and applyWrites.
+
+## 0.4.225
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove un-necessary type casting
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/lex-data@0.1.1
+  - @atproto/common@0.6.1
+  - @atproto/lex@0.1.1
+
+## 0.4.224
+
+### Patch Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+- Updated dependencies [[`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common@0.6.0
+  - @atproto/aws@0.3.0
+  - @atproto/crypto@0.5.0
+  - @atproto/identity@0.5.0
+  - @atproto/lex@0.1.0
+  - @atproto/lex-cbor@0.1.0
+  - @atproto/lex-data@0.1.0
+  - @atproto/lex-json@0.1.0
+  - @atproto/oauth-provider@0.17.0
+  - @atproto/oauth-scopes@0.4.0
+  - @atproto/repo@0.10.0
+  - @atproto/syntax@0.6.0
+  - @atproto/xrpc@0.8.0
+  - @atproto/xrpc-server@0.11.0
+  - @atproto-labs/fetch-node@0.3.0
+  - @atproto-labs/simple-store@0.4.0
+  - @atproto-labs/simple-store-memory@0.2.0
+  - @atproto-labs/simple-store-redis@0.1.0
+  - @atproto-labs/xrpc-utils@0.1.0
+
+## 0.4.223
+
+### Patch Changes
+
+- [#4844](https://github.com/bluesky-social/atproto/pull/4844) [`04d727c`](https://github.com/bluesky-social/atproto/commit/04d727c69a2683ea15eff70d9d0bb6aa25452778) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add account manager tests
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.27
+  - @atproto/xrpc-server@0.10.22
+  - @atproto/oauth-provider@0.16.5
+
+## 0.4.222
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.26
+  - @atproto/xrpc-server@0.10.21
+  - @atproto/oauth-provider@0.16.4
+
+## 0.4.221
+
+### Patch Changes
+
+- [#4757](https://github.com/bluesky-social/atproto/pull/4757) [`877e629`](https://github.com/bluesky-social/atproto/commit/877e6293b93b2c32342b2023ab4f0c0e1cce643a) Thanks [@devinivy](https://github.com/devinivy)! - Remove legacy JWT typ check.
+
+- Updated dependencies [[`5d3e248`](https://github.com/bluesky-social/atproto/commit/5d3e248c262f45e3ca471d8d2381830a4cd896ae)]:
+  - @atproto/oauth-provider@0.16.3
+
 ## 0.4.220
 
 ### Patch Changes

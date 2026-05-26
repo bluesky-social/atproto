@@ -1,8 +1,8 @@
 import { ToolsOzoneModerationGetAccountTimeline } from '@atproto/api'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ids } from '../../lexicon/lexicons'
-import { dateFromDatetime } from '../../mod-service/util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { ids } from '../../lexicon/lexicons.js'
+import { dateFromDatetime } from '../../mod-service/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getAccountTimeline({

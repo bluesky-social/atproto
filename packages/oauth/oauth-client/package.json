@@ -1,6 +1,9 @@
 {
   "name": "@atproto/oauth-client",
-  "version": "0.6.0",
+  "version": "0.7.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "OAuth client for ATPROTO PDS. This package serves as common base for environment-specific implementations (NodeJS, Browser, React-Native).",
   "keywords": [
@@ -15,9 +18,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -36,11 +37,11 @@
     "@atproto/oauth-types": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "core-js": "^3",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

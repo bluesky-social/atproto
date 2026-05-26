@@ -1,16 +1,16 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`verification list returns paginated list of verifications 1`] = `
-Object {
+{
   "$type": "tools.ozone.verification.defs#verificationView",
   "createdAt": "1970-01-01T00:00:00.000Z",
   "displayName": "bobby",
   "handle": "bob.test",
   "issuer": "user(0)",
-  "issuerProfile": Object {
+  "issuerProfile": {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
-    "associated": Object {
-      "activitySubscription": Object {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
       "feedgens": 0,
@@ -27,15 +27,15 @@ Object {
     "followsCount": 3,
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [
-      Object {
+    "labels": [
+      {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
         "uri": "record(1)",
         "val": "self-label-a",
       },
-      Object {
+      {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
@@ -44,33 +44,33 @@ Object {
       },
     ],
     "postsCount": 4,
-    "verification": Object {
+    "verification": {
       "trustedVerifierStatus": "valid",
-      "verifications": Array [],
+      "verifications": [],
       "verifiedStatus": "none",
     },
-    "viewer": Object {
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
   },
-  "issuerRepo": Object {
+  "issuerRepo": {
     "$type": "tools.ozone.moderation.defs#repoViewDetail",
     "did": "user(0)",
     "email": "alice@test.com",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invites": Array [],
+    "invites": [],
     "invitesDisabled": false,
-    "labels": Array [],
-    "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
+    "labels": [],
+    "moderation": {},
+    "relatedRecords": [
+      {
         "$type": "app.bsky.actor.profile",
-        "avatar": Object {
+        "avatar": {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object {
+          "ref": {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -78,13 +78,13 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "displayName": "ali",
-        "labels": Object {
+        "labels": {
           "$type": "com.atproto.label.defs#selfLabels",
-          "values": Array [
-            Object {
+          "values": [
+            {
               "val": "self-label-a",
             },
-            Object {
+            {
               "val": "self-label-b",
             },
           ],
@@ -93,10 +93,10 @@ Object {
     ],
   },
   "subject": "user(1)",
-  "subjectProfile": Object {
+  "subjectProfile": {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
-    "associated": Object {
-      "activitySubscription": Object {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
       "feedgens": 0,
@@ -113,12 +113,12 @@ Object {
     "followsCount": 2,
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "postsCount": 3,
-    "verification": Object {
+    "verification": {
       "trustedVerifierStatus": "none",
-      "verifications": Array [
-        Object {
+      "verifications": [
+        {
           "createdAt": "1970-01-01T00:00:00.000Z",
           "isValid": true,
           "issuer": "user(0)",
@@ -127,28 +127,28 @@ Object {
       ],
       "verifiedStatus": "valid",
     },
-    "viewer": Object {
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
   },
-  "subjectRepo": Object {
+  "subjectRepo": {
     "$type": "tools.ozone.moderation.defs#repoViewDetail",
     "did": "user(1)",
     "email": "bob@test.com",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invites": Array [],
+    "invites": [],
     "invitesDisabled": false,
-    "labels": Array [],
-    "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
+    "labels": [],
+    "moderation": {},
+    "relatedRecords": [
+      {
         "$type": "app.bsky.actor.profile",
-        "avatar": Object {
+        "avatar": {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object {
+          "ref": {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -165,16 +165,16 @@ Object {
 `;
 
 exports[`verification list returns paginated list of verifications 2`] = `
-Object {
+{
   "$type": "tools.ozone.verification.defs#verificationView",
   "createdAt": "1970-01-01T00:00:00.000Z",
   "displayName": "",
   "handle": "carol.test",
   "issuer": "user(0)",
-  "issuerProfile": Object {
+  "issuerProfile": {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
-    "associated": Object {
-      "activitySubscription": Object {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
       "feedgens": 0,
@@ -191,15 +191,15 @@ Object {
     "followsCount": 3,
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [
-      Object {
+    "labels": [
+      {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
         "uri": "record(1)",
         "val": "self-label-a",
       },
-      Object {
+      {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
@@ -208,33 +208,33 @@ Object {
       },
     ],
     "postsCount": 4,
-    "verification": Object {
+    "verification": {
       "trustedVerifierStatus": "valid",
-      "verifications": Array [],
+      "verifications": [],
       "verifiedStatus": "none",
     },
-    "viewer": Object {
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
   },
-  "issuerRepo": Object {
+  "issuerRepo": {
     "$type": "tools.ozone.moderation.defs#repoViewDetail",
     "did": "user(0)",
     "email": "alice@test.com",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invites": Array [],
+    "invites": [],
     "invitesDisabled": false,
-    "labels": Array [],
-    "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
+    "labels": [],
+    "moderation": {},
+    "relatedRecords": [
+      {
         "$type": "app.bsky.actor.profile",
-        "avatar": Object {
+        "avatar": {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object {
+          "ref": {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -242,13 +242,13 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "displayName": "ali",
-        "labels": Object {
+        "labels": {
           "$type": "com.atproto.label.defs#selfLabels",
-          "values": Array [
-            Object {
+          "values": [
+            {
               "val": "self-label-a",
             },
-            Object {
+            {
               "val": "self-label-b",
             },
           ],
@@ -260,10 +260,10 @@ Object {
   "revokedAt": "1970-01-01T00:00:00.000Z",
   "revokedBy": "user(0)",
   "subject": "user(1)",
-  "subjectProfile": Object {
+  "subjectProfile": {
     "$type": "app.bsky.actor.defs#profileViewDetailed",
-    "associated": Object {
-      "activitySubscription": Object {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
       "feedgens": 0,
@@ -275,24 +275,24 @@ Object {
     "followersCount": 2,
     "followsCount": 1,
     "handle": "carol.test",
-    "labels": Array [],
+    "labels": [],
     "postsCount": 2,
-    "viewer": Object {
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
   },
-  "subjectRepo": Object {
+  "subjectRepo": {
     "$type": "tools.ozone.moderation.defs#repoViewDetail",
     "did": "user(1)",
     "email": "carol@test.com",
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invites": Array [],
+    "invites": [],
     "invitesDisabled": false,
-    "labels": Array [],
-    "moderation": Object {},
-    "relatedRecords": Array [],
+    "labels": [],
+    "moderation": {},
+    "relatedRecords": [],
   },
   "updatedAt": "1970-01-01T00:00:00.000Z",
   "uri": "record(0)",

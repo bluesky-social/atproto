@@ -5,9 +5,9 @@ import {
   toString as ui8ToString,
 } from 'uint8arrays'
 import { SupportedEncodings } from 'uint8arrays/to-string'
-import { SECP256K1_JWT_ALG } from '../const'
-import * as did from '../did'
-import { Keypair } from '../types'
+import { SECP256K1_JWT_ALG } from '../const.js'
+import * as did from '../did.js'
+import { Keypair } from '../types.js'
 
 export type Secp256k1KeypairOptions = {
   exportable: boolean

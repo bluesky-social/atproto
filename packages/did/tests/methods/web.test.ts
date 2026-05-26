@@ -63,7 +63,7 @@ describe('assertDidWeb', () => {
 
   it('throws if called with non string argument', () => {
     for (const [val, message] of INVALID) {
-      expect(() => assertDidWeb(val)).toThrowError(
+      expect(() => assertDidWeb(val)).toThrow(
         new InvalidDidError(
           typeof val === 'string' ? val : typeof val,
           message,
@@ -98,7 +98,7 @@ describe('asDidWeb', () => {
 
   it('throws if called with invalid dids', () => {
     for (const [val, message] of INVALID) {
-      expect(() => asDidWeb(val)).toThrowError(
+      expect(() => asDidWeb(val)).toThrow(
         new InvalidDidError(
           typeof val === 'string' ? val : typeof val,
           message,

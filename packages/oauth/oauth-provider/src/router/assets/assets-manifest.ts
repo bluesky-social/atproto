@@ -1,4 +1,5 @@
 import { createReadStream } from 'node:fs'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import type { Manifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
@@ -34,8 +35,9 @@ const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
 export function parseAssetsManifest(manifestPath: string) {
   // Using `require` instead of `JSON.parse(readFileSync())` so that node's
   // watch mode can pick up changes to the manifest file.
+  const require = createRequire(import.meta.url)
 
-  // eslint-disable-next-line
+  // eslint-disable-next-line import/no-dynamic-require
   const manifest = require(manifestPath) as Manifest
 
   const assets = new Map<string, Asset>(

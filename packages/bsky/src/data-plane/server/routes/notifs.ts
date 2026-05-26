@@ -4,7 +4,7 @@ import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { app } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect'
+import { Service } from '../../../proto/bsky_connect.js'
 import {
   ChatNotificationInclude,
   ChatNotificationPreference,
@@ -12,11 +12,11 @@ import {
   NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
-} from '../../../proto/bsky_pb'
-import { Namespaces } from '../../../stash'
-import { Database } from '../db'
-import { IsoSortAtKey } from '../db/pagination'
-import { countAll, notSoftDeletedClause } from '../db/util'
+} from '../../../proto/bsky_pb.js'
+import { Namespaces } from '../../../stash.js'
+import { Database } from '../db/index.js'
+import { IsoSortAtKey } from '../db/pagination.js'
+import { countAll, notSoftDeletedClause } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getNotifications(req) {

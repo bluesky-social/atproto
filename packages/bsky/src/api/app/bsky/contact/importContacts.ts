@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
 import { DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { ImportContactsMatch } from '../../../../proto/rolodex_pb'
-import { RolodexClient } from '../../../../rolodex'
-import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
+} from '../../../../pipeline.js'
+import { ImportContactsMatch } from '../../../../proto/rolodex_pb.js'
+import { RolodexClient } from '../../../../rolodex.js'
+import { Views } from '../../../../views/index.js'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const importContacts = createPipeline(

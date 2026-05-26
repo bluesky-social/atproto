@@ -1,5 +1,5 @@
 import { GeneratedAlways, Selectable } from 'kysely'
-import { MuteOperation_Type } from '../../proto/bsync_pb'
+import { MuteOperation_Type } from '../../proto/bsync_pb.js'
 
 export interface MuteOp {
   id: GeneratedAlways<number>

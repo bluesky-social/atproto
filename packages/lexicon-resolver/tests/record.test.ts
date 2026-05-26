@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { AtUriString, l } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
@@ -19,7 +20,7 @@ describe('Record resolution', () => {
       rpc: { fetch },
       idResolver: network.pds.ctx.idResolver,
     })
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

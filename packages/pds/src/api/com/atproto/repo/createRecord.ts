@@ -5,16 +5,16 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { dbLogger } from '../../../../logger'
+import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
   prepareCreate,
   prepareDelete,
-} from '../../../../repo'
+} from '../../../../repo/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.repo.createRecord, {
@@ -44,6 +44,9 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 3,
       },
     ],
+    opts: {
+      jsonLimit: 1_000_000,
+    },
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body

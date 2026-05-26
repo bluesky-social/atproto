@@ -1,48 +1,33 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
 import {
   RateLimiterAbstract,
   RateLimiterMemory,
   RateLimiterRedis,
   RateLimiterRes,
 } from 'rate-limiter-flexible'
-import { ResponseType, XRPCError } from './errors'
-import { logger } from './logger'
+import { ResponseType, XRPCError } from './errors.js'
 
 // @NOTE Do not depend (directly or indirectly) on "./types" here, as it would
 // create a circular dependency.
 
-export interface RateLimiterContext {
-  req: IncomingMessage
-  res?: ServerResponse
-}
+export type { RateLimiterAbstract }
 
-export type CalcKeyFn<C extends RateLimiterContext = RateLimiterContext> = (
-  ctx: C,
-) => string | null
-export type CalcPointsFn<C extends RateLimiterContext = RateLimiterContext> = (
-  ctx: C,
-) => number
+export type CalcKeyFn<C = unknown> = (ctx: C) => string | null
+export type CalcPointsFn<C = unknown> = (ctx: C) => number
 
-export interface RateLimiterI<
-  C extends RateLimiterContext = RateLimiterContext,
-> {
+export interface RateLimiterI<C = unknown> {
   consume: RateLimiterConsume<C>
   reset: RateLimiterReset<C>
 }
 
-export type RateLimiterConsumeOptions<
-  C extends RateLimiterContext = RateLimiterContext,
-> = {
+export type RateLimiterConsumeOptions<C = unknown> = {
   calcKey?: CalcKeyFn<C>
   calcPoints?: CalcPointsFn<C>
 }
 
-export type RateLimiterConsume<
-  C extends RateLimiterContext = RateLimiterContext,
-> = (
+export type RateLimiterConsume<C = unknown> = (
   ctx: C,
   opts?: RateLimiterConsumeOptions<C>,
-) => Promise<RateLimiterStatus | RateLimitExceededError | null>
+) => Promise<RateLimiterStatus | null>
 
 export type RateLimiterStatus = {
   limit: number
@@ -53,31 +38,41 @@ export type RateLimiterStatus = {
   isFirstInDuration: boolean
 }
 
-export type RateLimiterResetOptions<
-  C extends RateLimiterContext = RateLimiterContext,
-> = {
+export type RateLimiterResetOptions<C = unknown> = {
   calcKey?: CalcKeyFn<C>
 }
 
-export type RateLimiterReset<
-  C extends RateLimiterContext = RateLimiterContext,
-> = (ctx: C, opts?: RateLimiterResetOptions<C>) => Promise<void>
+export type RateLimiterReset<C = unknown> = (
+  ctx: C,
+  opts?: RateLimiterResetOptions<C>,
+) => Promise<void>
 
-export type RateLimiterOptions<
-  C extends RateLimiterContext = RateLimiterContext,
-> = {
+export type RateLimiterErrorHandlerDetails = {
+  key: string
+  points: number
+  limiter: {
+    keyPrefix: string
+    points: number
+    duration: number
+  }
+}
+export type RateLimiterErrorHandler<C = unknown> = (
+  err: unknown,
+  ctx: C,
+  details: RateLimiterErrorHandlerDetails,
+) => Promise<RateLimiterStatus | null>
+
+export type RateLimiterOptions<C = unknown> = {
   keyPrefix: string
   durationMs: number
   points: number
   calcKey: CalcKeyFn<C>
   calcPoints: CalcPointsFn<C>
-  failClosed?: boolean
+  onError?: RateLimiterErrorHandler<C>
 }
 
-export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
-  implements RateLimiterI<C>
-{
-  private readonly failClosed?: boolean
+export class RateLimiter<C = unknown> implements RateLimiterI<C> {
+  private readonly onError?: RateLimiterErrorHandler<C>
   private readonly calcKey: CalcKeyFn<C>
   private readonly calcPoints: CalcPointsFn<C>
 
@@ -86,7 +81,7 @@ export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
     options: RateLimiterOptions<C>,
   ) {
     this.limiter = limiter
-    this.failClosed = options.failClosed ?? false
+    this.onError = options.onError
     this.calcKey = options.calcKey
     this.calcPoints = options.calcPoints
   }
@@ -94,7 +89,7 @@ export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
   async consume(
     ctx: C,
     opts?: RateLimiterConsumeOptions<C>,
-  ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
+  ): Promise<RateLimiterStatus | null> {
     const calcKey = opts?.calcKey ?? this.calcKey
     const key = calcKey(ctx)
     if (key === null) {
@@ -105,28 +100,26 @@ export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
     if (points < 1) {
       return null
     }
+    const { limiter } = this
     try {
-      const res = await this.limiter.consume(key, points)
-      return formatLimiterStatus(this.limiter, res)
+      const res = await limiter.consume(key, points)
+      return formatLimiterStatus(limiter, res)
     } catch (err) {
-      // yes this library rejects with a res not an error
       if (err instanceof RateLimiterRes) {
-        const status = formatLimiterStatus(this.limiter, err)
-        return new RateLimitExceededError(status)
+        // Wrap rate-limiter-flexible error into our own error type
+        const status = formatLimiterStatus(limiter, err)
+        throw new RateLimitExceededError(status)
+      } else if (err instanceof RateLimitExceededError) {
+        // Propagate RateLimitExceededError errors
+        throw err
       } else {
-        if (this.failClosed) {
-          throw err
-        }
-        logger.error(
-          {
-            err,
-            keyPrefix: this.limiter.keyPrefix,
-            points: this.limiter.points,
-            duration: this.limiter.duration,
-          },
-          'rate limiter failed to consume points',
-        )
-        return null
+        // Most likely a system error (failed to connect to Redis, etc). Allow
+        // the caller to decide how to handle it (fail open by allowing the
+        // request, fail closed by rejecting the request, etc).
+        const { onError } = this
+        if (onError) return onError(err, ctx, { key, points, limiter })
+
+        throw err
       }
     }
   }
@@ -145,9 +138,7 @@ export class RateLimiter<C extends RateLimiterContext = RateLimiterContext>
   }
 }
 
-export class MemoryRateLimiter<
-  C extends RateLimiterContext = RateLimiterContext,
-> extends RateLimiter<C> {
+export class MemoryRateLimiter<C = unknown> extends RateLimiter<C> {
   constructor(options: RateLimiterOptions<C>) {
     const limiter = new RateLimiterMemory({
       keyPrefix: options.keyPrefix,
@@ -158,9 +149,7 @@ export class MemoryRateLimiter<
   }
 }
 
-export class RedisRateLimiter<
-  C extends RateLimiterContext = RateLimiterContext,
-> extends RateLimiter<C> {
+export class RedisRateLimiter<C = unknown> extends RateLimiter<C> {
   constructor(storeClient: unknown, options: RateLimiterOptions<C>) {
     const limiter = new RateLimiterRedis({
       storeClient,
@@ -186,9 +175,7 @@ export const formatLimiterStatus = (
   }
 }
 
-export type WrappedRateLimiterOptions<
-  C extends RateLimiterContext = RateLimiterContext,
-> = {
+export type WrappedRateLimiterOptions<C = unknown> = {
   calcKey?: CalcKeyFn<C>
   calcPoints?: CalcPointsFn<C>
 }
@@ -197,10 +184,7 @@ export type WrappedRateLimiterOptions<
  * Wraps a {@link RateLimiterI} instance with custom key and points calculation
  * functions.
  */
-export class WrappedRateLimiter<
-  C extends RateLimiterContext = RateLimiterContext,
-> implements RateLimiterI<C>
-{
+export class WrappedRateLimiter<C = unknown> implements RateLimiterI<C> {
   private constructor(
     private readonly rateLimiter: RateLimiterI<C>,
     private readonly options: Readonly<WrappedRateLimiterOptions<C>>,
@@ -219,7 +203,7 @@ export class WrappedRateLimiter<
     })
   }
 
-  static from<C extends RateLimiterContext = RateLimiterContext>(
+  static from<C = unknown>(
     rateLimiter: RateLimiterI<C>,
     { calcKey, calcPoints }: WrappedRateLimiterOptions<C> = {},
   ): RateLimiterI<C> {
@@ -234,10 +218,7 @@ export class WrappedRateLimiter<
  * The combined rate limiter will return the tightest (most restrictive) of all
  * the provided rate limiters.
  */
-export class CombinedRateLimiter<
-  C extends RateLimiterContext = RateLimiterContext,
-> implements RateLimiterI<C>
-{
+export class CombinedRateLimiter<C = unknown> implements RateLimiterI<C> {
   private constructor(
     private readonly rateLimiters: readonly RateLimiterI<C>[],
   ) {}
@@ -245,7 +226,18 @@ export class CombinedRateLimiter<
   async consume(ctx: C, opts?: RateLimiterConsumeOptions<C>) {
     const promises: ReturnType<RateLimiterConsume>[] = []
     for (const rl of this.rateLimiters) promises.push(rl.consume(ctx, opts))
-    return Promise.all(promises).then(getTightestLimit)
+    const results = await Promise.all(promises)
+
+    // Compute the tightest rate limit status (the one with the least remaining points)
+    let lowest: RateLimiterStatus | null = null
+    for (const resp of results) {
+      if (resp === null) continue
+      if (lowest === null || resp.remainingPoints < lowest.remainingPoints) {
+        lowest = resp
+      }
+    }
+
+    return lowest
   }
 
   async reset(ctx: C, opts?: RateLimiterResetOptions<C>) {
@@ -254,93 +246,13 @@ export class CombinedRateLimiter<
     await Promise.all(promises)
   }
 
-  static from<C extends RateLimiterContext = RateLimiterContext>(
+  static from<C = unknown>(
     rateLimiters: readonly RateLimiterI<C>[],
   ): RateLimiterI<C> | undefined {
     if (rateLimiters.length === 0) return undefined
     if (rateLimiters.length === 1) return rateLimiters[0]
     return new CombinedRateLimiter(rateLimiters)
   }
-}
-
-const getTightestLimit = (
-  resps: (RateLimiterStatus | RateLimitExceededError | null)[],
-): RateLimiterStatus | RateLimitExceededError | null => {
-  let lowest: RateLimiterStatus | null = null
-  for (const resp of resps) {
-    if (resp === null) continue
-    if (resp instanceof RateLimitExceededError) return resp
-    if (lowest === null || resp.remainingPoints < lowest.remainingPoints) {
-      lowest = resp
-    }
-  }
-  return lowest
-}
-
-export type RouteRateLimiterOptions<
-  C extends RateLimiterContext = RateLimiterContext,
-> = {
-  bypass?: (ctx: C) => boolean
-}
-
-/**
- * Wraps a {@link RateLimiterI} interface into a class that will apply the
- * appropriate headers to the response if a limit is exceeded.
- */
-export class RouteRateLimiter<C extends RateLimiterContext = RateLimiterContext>
-  implements RateLimiterI<C>
-{
-  constructor(
-    private readonly rateLimiter: RateLimiterI<C>,
-    private readonly options: Readonly<RouteRateLimiterOptions<C>> = {},
-  ) {}
-
-  async handle(ctx: C): Promise<RateLimiterStatus | null> {
-    const { bypass } = this.options
-    if (bypass && bypass(ctx)) {
-      return null
-    }
-
-    const result = await this.consume(ctx)
-    if (result instanceof RateLimitExceededError) {
-      setStatusHeaders(ctx, result.status)
-      throw result
-    } else if (result != null) {
-      setStatusHeaders(ctx, result)
-    }
-
-    return result
-  }
-
-  async consume(...args: Parameters<RateLimiterConsume<C>>) {
-    return this.rateLimiter.consume(...args)
-  }
-
-  async reset(...args: Parameters<RateLimiterReset<C>>) {
-    return this.rateLimiter.reset(...args)
-  }
-
-  static from<C extends RateLimiterContext = RateLimiterContext>(
-    rateLimiters: readonly RateLimiterI<C>[],
-    { bypass }: RouteRateLimiterOptions<C> = {},
-  ): RouteRateLimiter<C> | undefined {
-    const rateLimiter = CombinedRateLimiter.from(rateLimiters)
-    if (!rateLimiter) return undefined
-
-    return new RouteRateLimiter(rateLimiter, { bypass })
-  }
-}
-
-function setStatusHeaders<C extends RateLimiterContext = RateLimiterContext>(
-  ctx: C,
-  status: RateLimiterStatus,
-) {
-  const resetAt = Math.floor((Date.now() + status.msBeforeNext) / 1e3)
-
-  ctx.res?.setHeader('RateLimit-Limit', status.limit)
-  ctx.res?.setHeader('RateLimit-Reset', resetAt)
-  ctx.res?.setHeader('RateLimit-Remaining', status.remainingPoints)
-  ctx.res?.setHeader('RateLimit-Policy', `${status.limit};w=${status.duration}`)
 }
 
 export class RateLimitExceededError extends XRPCError {

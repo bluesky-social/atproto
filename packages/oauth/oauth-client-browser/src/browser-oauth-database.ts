@@ -42,7 +42,7 @@ export type Schema = {
   dpopNonceCache: Item<string>
   handleCache: Item<ResolvedHandle>
   authorizationServerMetadataCache: Item<OAuthAuthorizationServerMetadata>
-  protectedResourceMetadataCache: Item<OAuthProtectedResourceMetadata>
+  protectedResourceMetadataCache: Item<OAuthProtectedResourceMetadata | null>
 }
 
 export type DatabaseStore<V extends Value> = SimpleStore<string, V>
@@ -213,7 +213,7 @@ export class BrowserOAuthDatabase {
 
   getProtectedResourceMetadataCache():
     | undefined
-    | DatabaseStore<OAuthProtectedResourceMetadata> {
+    | DatabaseStore<OAuthProtectedResourceMetadata | null> {
     return this.createStore('protectedResourceMetadataCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,

@@ -1,9 +1,9 @@
 import { PlainMessage, Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { DraftInfo } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { IsoUpdatedAtKey } from '../db/pagination'
+import { Service } from '../../../proto/bsky_connect.js'
+import { DraftInfo } from '../../../proto/bsky_pb.js'
+import { Database } from '../db/index.js'
+import { IsoUpdatedAtKey } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorDrafts(req) {

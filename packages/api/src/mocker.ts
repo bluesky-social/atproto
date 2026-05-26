@@ -6,8 +6,8 @@ import {
   AppBskyGraphDefs,
   AppBskyNotificationListNotifications,
   ComAtprotoLabelDefs,
-} from './client'
-import { $Typed, Un$Typed } from './client/util'
+} from './client/index.js'
+import { $Typed, Un$Typed } from './client/util.js'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 

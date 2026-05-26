@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxies appview procedures', () => {
   let network: TestNetwork

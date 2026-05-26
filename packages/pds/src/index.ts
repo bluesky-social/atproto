@@ -9,7 +9,11 @@ import http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
+// eslint-disable-next-line import/no-named-as-default-member
+const { createHttpTerminator } = httpTerminator
+type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import {
   MemoryRateLimiter,
@@ -19,29 +23,33 @@ import {
   XRPCError,
   createServer,
 } from '@atproto/xrpc-server'
-import apiRoutes from './api'
-import * as authRoutes from './auth-routes'
-import * as basicRoutes from './basic-routes'
-import { ServerConfig, ServerSecrets } from './config'
-import { AppContext, AppContextOptions } from './context'
-import * as error from './error'
+import apiRoutes from './api/index.js'
+import * as authRoutes from './auth-routes.js'
+import * as basicRoutes from './basic-routes.js'
+import { ServerConfig, ServerSecrets } from './config/index.js'
+import { AppContext, AppContextOptions } from './context.js'
+import * as error from './error.js'
 import { app } from './lexicons.js'
-import { loggerMiddleware } from './logger'
-import { proxyHandler } from './pipethrough'
-import compression from './util/compression'
-import * as wellKnown from './well-known'
+import { loggerMiddleware } from './logger.js'
+import { proxyHandler } from './pipethrough.js'
+import compression from './util/compression.js'
+import * as wellKnown from './well-known.js'
 
 export * from './lexicons.js'
-export { createSecretKeyObject } from './auth-verifier'
-export * from './config'
-export { AppContext } from './context'
-export { Database } from './db'
-export { DiskBlobStore } from './disk-blobstore'
-export { httpLogger } from './logger'
-export { type CommitDataWithOps, type PreparedWrite } from './repo'
-export * as repoPrepare from './repo/prepare'
-export { scripts } from './scripts'
-export * as sequencer from './sequencer'
+export {
+  bearerTokenFromReq,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier.js'
+export * from './config/index.js'
+export { AppContext } from './context.js'
+export { Database } from './db/index.js'
+export { DiskBlobStore } from './disk-blobstore.js'
+export { httpLogger } from './logger.js'
+export { type CommitDataWithOps, type PreparedWrite } from './repo/index.js'
+export * as repoPrepare from './repo/prepare.js'
+export { scripts } from './scripts/index.js'
+export * as sequencer from './sequencer/index.js'
 
 /**
  * @deprecated Legacy export for backwards compatibility

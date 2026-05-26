@@ -33,6 +33,7 @@ export function InputText({
   ...props
 }: InputTextProps) {
   const ctx = useContext(FieldsetContext)
+  const isDisabled = disabled ?? ctx.disabled
 
   const inputRef = useRef<HTMLInputElement>(null)
   const focusedRef = useRef(false) // ref instead of state to avoid re-renders
@@ -62,13 +63,17 @@ export function InputText({
     >
       <input
         {...props}
-        disabled={disabled ?? ctx.disabled}
+        disabled={isDisabled}
         title={title}
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy ?? ctx.labelId}
         ref={mergeRefs([ref, inputRef])}
-        className="outline-hidden w-full text-ellipsis bg-transparent bg-clip-padding text-base text-inherit dark:placeholder-gray-400"
+        className={clsx(
+          'outline-hidden w-full text-ellipsis bg-transparent bg-clip-padding text-base text-inherit dark:placeholder-gray-400',
+          // Disabled state is handled by the parent Fieldset, or parent form element.
+          isDisabled ? 'opacity-60' : 'inert:opacity-60',
+        )}
         onFocus={(event) => {
           onFocus?.(event)
           if (!event.defaultPrevented) focusedRef.current = true

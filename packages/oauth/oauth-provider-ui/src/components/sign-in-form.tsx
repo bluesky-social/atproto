@@ -222,7 +222,7 @@ export function SignInForm({
         />
       </FormField>
 
-      <Admonition role="status" title={<Trans>Warning</Trans>}>
+      <Admonition role="note" title={<Trans>Warning</Trans>}>
         <Trans>
           Verify the website address before entering your password. Only sign in
           on sites you recognize and trust.

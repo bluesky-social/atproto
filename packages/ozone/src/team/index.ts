@@ -2,13 +2,13 @@ import { Selectable } from 'kysely'
 import AtpAgent from '@atproto/api'
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { Member } from '../db/schema/member'
-import { ids } from '../lexicon/lexicons'
-import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { httpLogger } from '../logger'
-import { AuthHeaders } from '../mod-service/views'
+import { Database } from '../db/index.js'
+import { Member } from '../db/schema/member.js'
+import { ids } from '../lexicon/lexicons.js'
+import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs.js'
+import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
+import { httpLogger } from '../logger.js'
+import { AuthHeaders } from '../mod-service/views.js'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 
@@ -265,6 +265,17 @@ export class TeamService {
 
       lastDid = dids.at(-1) || ''
     } while (lastDid)
+  }
+
+  async viewByDids(dids: string[]): Promise<Map<string, TeamMember>> {
+    if (!dids.length) return new Map()
+    const members = await this.db.db
+      .selectFrom('member')
+      .selectAll()
+      .where('did', 'in', dids)
+      .execute()
+    const memberViews = await this.view(members)
+    return new Map(memberViews.map((m) => [m.did, m]))
   }
 
   async view(members: Selectable<Member>[]): Promise<TeamMember[]> {

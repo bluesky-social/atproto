@@ -5,16 +5,16 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
+import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
 import {
   REVIEWOPEN,
   SubjectStatusView,
   isAccountHosting,
   isRecordHosting,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent'
+} from '../src/lexicon/types/tools/ozone/moderation/defs.js'
+import { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent.js'
 
 describe('record and account events on moderation subjects', () => {
   let network: TestNetwork

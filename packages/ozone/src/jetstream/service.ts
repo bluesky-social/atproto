@@ -82,6 +82,7 @@ export class Jetstream {
     for await (const message of this.ws) {
       const parsedMessage = JSON.parse(message.toString())
       if (parsedMessage.kind === 'commit') {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
         const { collection, operation, record } = parsedMessage.commit || {}
 
         if (operation === 'create') {

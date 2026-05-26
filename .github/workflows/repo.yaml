@@ -2,8 +2,6 @@ name: Repository CI
 
 on:
   pull_request:
-    branches:
-      - '*'
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
@@ -24,22 +22,51 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
 
+      # lex-cli code generation can be a bottleneck. The "prebuild" script in
+      # the "api" and "ozone" packages only re-runs lex-cli when needed: if the
+      # generated output is missing, or if any lexicon JSON has a newer mtime
+      # than the generated files. We cache the generated output keyed on the
+      # content of the lexicon JSONs (plus the package.json files that define
+      # the codegen command), so unchanged lexicons restore from cache.
+      #
+      # However, on a cache hit we have to fix mtimes by hand.
+      # `actions/checkout` writes every checked-out file (including
+      # lexicons/**/*.json) with mtime = checkout time, while `actions/cache`
+      # restores files with their original archived mtime (older). Without
+      # intervention, every lexicon JSON looks "newer" than the restored
+      # generated files and the prebuild script would re-run lex-cli even though
+      # nothing has changed. Touching the restored files brings their mtime to
+      # "now", so the prebuild's `find -newer` check correctly reports no newer
+      # lexicons.
+      - uses: actions/cache@v4
+        id: lex-cli-cache
+        with:
+          path: |
+            packages/api/src/client
+            packages/ozone/src/lexicon
+          key: lex-cli-${{ hashFiles('lexicons/**/*.json', 'packages/api/package.json', 'packages/ozone/package.json') }}
+      - if: steps.lex-cli-cache.outputs.cache-hit == 'true'
+        run: find packages/api/src/client packages/ozone/src/lexicon -exec touch {} +
+
       - run: pnpm build
+
       - uses: actions/upload-artifact@v4
         with:
+          # Preserve the result of codegen and build steps.
           name: dist
           retention-days: 2
           path: |
             packages/*/dist
             packages/*/*/dist
+            packages/*/src/proto
+            packages/*/src/lexicons
             packages/lex/*/src/lexicons
             packages/lex/*/tests/lexicons
-            packages/oauth/oauth-client-browser-example/src/lexicons
+            packages/oauth/*/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
+            packages/api/src/client
             packages/api/src/moderation/const/labels.ts
-            packages/bsky/src/lexicons
-            packages/pds/src/lexicons
-            packages/sync/src/lexicons
+            packages/ozone/src/lexicon
 
   changeset:
     name: Changeset

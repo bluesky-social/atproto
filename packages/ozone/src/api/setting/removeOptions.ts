@@ -1,7 +1,7 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Member } from '../../db/schema/member'
-import { Server } from '../../lexicon'
+import { AppContext } from '../../context.js'
+import { Member } from '../../db/schema/member.js'
+import { Server } from '../../lexicon/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.setting.removeOptions({

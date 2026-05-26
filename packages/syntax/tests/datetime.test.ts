@@ -3,10 +3,11 @@ import { describe, expect, it, test } from 'vitest'
 import {
   InvalidDatetimeError,
   ensureValidDatetime,
-  isValidDatetime,
+  isDatetimeString,
+  isDatetimeStringLenient,
   normalizeDatetime,
   normalizeDatetimeAlways,
-} from '../src'
+} from '../src/index.js'
 
 const interopValid = readLines(
   `${__dirname}/interop-files/datetime_syntax_valid.txt`,
@@ -18,29 +19,38 @@ const interopInvalidParse = readLines(
   `${__dirname}/interop-files/datetime_parse_invalid.txt`,
 )
 
+// These strings come from the test suite in "@atproto/lexicon", kept around
+// to ensure compatibility with legacy implementation.
+const legacyValid = [
+  '2022-12-12T00:50:36.809Z',
+  '2022-12-12T00:50:36Z',
+  '2022-12-12T00:50:36.8Z',
+  '2022-12-12T00:50:36.80Z',
+  '2022-12-12T00:50:36+00:00',
+  '2022-12-12T00:50:36.8+00:00',
+  '2022-12-11T19:50:36-05:00',
+  '2022-12-11T19:50:36.8-05:00',
+  '2022-12-11T19:50:36.80-05:00',
+  '2022-12-11T19:50:36.809-05:00',
+]
+
 describe(ensureValidDatetime, () => {
-  describe('valid interop', () => {
-    for (const dt of interopValid) {
-      test(dt, () => {
-        expect(() => ensureValidDatetime(dt)).not.toThrow()
-      })
-    }
+  describe('Interop valid', () => {
+    test.each(interopValid)('%s', (dt) => {
+      expect(() => ensureValidDatetime(dt)).not.toThrow()
+    })
   })
 
-  describe('fails on interop (invalid syntax)', () => {
-    for (const dt of interopInvalidSyntax) {
-      test(dt, () => {
-        expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
-      })
-    }
+  describe('Interop invalid syntax', () => {
+    test.each(interopInvalidSyntax)('%s', (dt) => {
+      expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
+    })
   })
 
-  describe('fails on interop (invalid parse)', () => {
-    for (const dt of interopInvalidParse) {
-      test(dt, () => {
-        expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
-      })
-    }
+  describe('Interop invalid parse', () => {
+    test.each(interopInvalidParse)('%s', (dt) => {
+      expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
+    })
   })
 
   it('rejects datetime that normalizes past year 9999 due to negative offset', () => {
@@ -52,64 +62,85 @@ describe(ensureValidDatetime, () => {
   })
 })
 
-describe(isValidDatetime, () => {
-  describe('valid interop', () => {
-    for (const dt of interopValid) {
-      test(dt, () => {
-        expect(isValidDatetime(dt)).toBe(true)
-      })
-    }
+describe(isDatetimeString, () => {
+  describe('Interop valid', () => {
+    test.each(interopValid)('%s', (dt) => {
+      expect(isDatetimeString(dt)).toBe(true)
+    })
   })
 
-  describe('fails on interop (invalid syntax)', () => {
-    for (const dt of interopInvalidSyntax) {
-      test(dt, () => {
-        expect(isValidDatetime(dt)).toBe(false)
-      })
-    }
+  describe('Interop invalid syntax', () => {
+    test.each(interopInvalidSyntax)('%s', (dt) => {
+      expect(isDatetimeString(dt)).toBe(false)
+    })
   })
 
-  describe('fails on interop (invalid parse)', () => {
-    for (const dt of interopInvalidParse) {
-      test(dt, () => {
-        expect(isValidDatetime(dt)).toBe(false)
-      })
-    }
+  describe('Interop invalid parse', () => {
+    test.each(interopInvalidParse)('%s', (dt) => {
+      expect(isDatetimeString(dt)).toBe(false)
+    })
+  })
+
+  describe('succeeds on legacy valid', () => {
+    test.each(legacyValid)('%s', (dt) => {
+      expect(isDatetimeString(dt)).toBe(true)
+    })
   })
 
   it('rejects datetime that normalizes past year 9999 due to negative offset', () => {
     // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to
     // UTC advances it to 10000-01-01T00:00:00Z, which is out of range
-    expect(isValidDatetime('9999-12-31T23:59:00-00:01')).toBe(false)
+    expect(isDatetimeString('9999-12-31T23:59:00-00:01')).toBe(false)
+  })
+})
+
+describe(isDatetimeStringLenient, () => {
+  describe('Interop valid', () => {
+    test.each(interopValid)('%s', (dt) => {
+      expect(isDatetimeStringLenient(dt)).toBe(true)
+    })
+  })
+
+  // Because of it leniency, the "isDatetimeStringLenient" implementation does
+  // not fail on some of the invalid syntax cases, so these tests are skipped.
+  describe.skip('Interop invalid syntax', () => {
+    test.each(interopInvalidSyntax)('%s', (dt) => {
+      expect(isDatetimeStringLenient(dt)).toBe(false)
+    })
+  })
+
+  describe('Interop invalid parse', () => {
+    test.each(interopInvalidParse)('%s', (dt) => {
+      expect(isDatetimeStringLenient(dt)).toBe(false)
+    })
+  })
+
+  describe('Legacy valid', () => {
+    test.each(legacyValid)('%s', (dt) => {
+      expect(isDatetimeStringLenient(dt)).toBe(true)
+    })
   })
 })
 
 describe(normalizeDatetime, () => {
-  describe('valid interop', () => {
-    for (const dt of interopValid) {
-      test(dt, () => {
-        expect(() => normalizeDatetime(dt)).not.toThrow()
-      })
-    }
+  describe('Interop valid', () => {
+    test.each(interopValid)('%s', (dt) => {
+      expect(() => normalizeDatetime(dt)).not.toThrow()
+    })
   })
 
   // @NOTE Normalize will actually succeed on some of the invalid syntax cases,
   // because it is more lenient than the regex validation.
+  describe.skip('Interop invalid syntax', () => {
+    test.each(interopInvalidSyntax)('%s', (dt) => {
+      expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
+    })
+  })
 
-  // describe('fails on interop (invalid syntax)', () => {
-  //   for (const dt of interopInvalidSyntax) {
-  //     test(dt, () => {
-  //       expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
-  //     })
-  //   }
-  // })
-
-  describe('fails on interop (invalid parse)', () => {
-    for (const dt of interopInvalidParse) {
-      test(dt, () => {
-        expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
-      })
-    }
+  describe('Interop invalid parse', () => {
+    test.each(interopInvalidParse)('%s', (dt) => {
+      expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
+    })
   })
 
   it('normalizes valid input', () => {
@@ -220,30 +251,24 @@ describe(normalizeDatetimeAlways, () => {
     )
   })
 
-  describe('valid interop', () => {
-    for (const dt of interopValid) {
-      test(dt, () => {
-        // @NOTE we can't test the returned value as some will normalize while others won't.
-        expect(() => normalizeDatetimeAlways(dt)).not.toThrow()
-      })
-    }
+  describe('Interop valid', () => {
+    test.each(interopValid)('%s', (dt) => {
+      // @NOTE we can't test the returned value as some will normalize while others won't.
+      expect(() => normalizeDatetimeAlways(dt)).not.toThrow()
+    })
   })
 
-  describe('succeeds on interop (invalid syntax)', () => {
-    for (const dt of interopInvalidSyntax) {
-      test(dt, () => {
-        // @NOTE we can't test the returned value as some will normalize while others won't.
-        expect(() => normalizeDatetimeAlways(dt)).not.toThrow()
-      })
-    }
+  describe('Interop invalid syntax', () => {
+    test.each(interopInvalidSyntax)('%s', (dt) => {
+      // @NOTE we can't test the returned value as some will normalize while others won't.
+      expect(() => normalizeDatetimeAlways(dt)).not.toThrow()
+    })
   })
 
-  describe('succeeds on interop invalid parse', () => {
-    for (const dt of interopInvalidParse) {
-      test(dt, () => {
-        expect(normalizeDatetimeAlways(dt)).toEqual('1970-01-01T00:00:00.000Z')
-      })
-    }
+  describe('Interop invalid parse', () => {
+    test.each(interopInvalidParse)('%s', (dt) => {
+      expect(normalizeDatetimeAlways(dt)).toEqual('1970-01-01T00:00:00.000Z')
+    })
   })
 })
 

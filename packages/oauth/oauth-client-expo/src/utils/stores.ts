@@ -6,8 +6,8 @@ import type {
   ResolvedHandle,
   Session,
 } from '@atproto/oauth-client'
-import { ExpoKey } from './expo-key'
-import { MMKVSimpleStoreTTL } from './mmkv-simple-store-ttl'
+import { ExpoKey } from './expo-key.js'
+import { MMKVSimpleStoreTTL } from './mmkv-simple-store-ttl.js'
 
 const MMKV_ID = 'expo-atproto-oauth-client'
 
@@ -22,7 +22,7 @@ export class AuthorizationServerMetadataCache extends MMKVSimpleStoreTTL<OAuthAu
   }
 }
 
-export class ProtectedResourceMetadataCache extends MMKVSimpleStoreTTL<OAuthProtectedResourceMetadata> {
+export class ProtectedResourceMetadataCache extends MMKVSimpleStoreTTL<OAuthProtectedResourceMetadata | null> {
   constructor() {
     super({
       id: `${MMKV_ID}.protectedResourceMetadata`,

@@ -1,8 +1,8 @@
 import { chunkArray } from '@atproto/common'
 import { Cid, parseCid } from '@atproto/lex-data'
 import { BlockMap, CommitData, RepoStorage } from '@atproto/repo'
-import { ActorDb, RepoBlock } from '../db'
-import { SqlRepoReader } from './sql-repo-reader'
+import { ActorDb, RepoBlock } from '../db/index.js'
+import { SqlRepoReader } from './sql-repo-reader.js'
 
 export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   cache = new BlockMap()

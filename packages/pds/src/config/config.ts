@@ -3,7 +3,7 @@ import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
 import { ensureValidDid } from '@atproto/syntax'
-import { ServerEnvironment } from './env'
+import { ServerEnvironment } from './env.js'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION

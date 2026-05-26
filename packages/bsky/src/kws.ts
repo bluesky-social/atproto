@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { KwsExternalPayload } from './api/kws/types'
-import { serializeExternalPayload } from './api/kws/util'
-import { buildBasicAuth } from './auth-verifier'
-import { KwsConfig } from './config'
-import { httpLogger as log } from './logger'
+import { KwsExternalPayload } from './api/kws/types.js'
+import { serializeExternalPayload } from './api/kws/util.js'
+import { buildBasicAuth } from './auth-verifier.js'
+import { KwsConfig } from './config.js'
+import { httpLogger as log } from './logger.js'
 
 export const createKwsClient = (cfg: KwsConfig): KwsClient => {
   return new KwsClient(cfg)

@@ -1,7 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { getMemberRole } from '../util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { getMemberRole } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.team.updateMember({

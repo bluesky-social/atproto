@@ -1,82 +1,56 @@
 import { Trans } from '@lingui/react/macro'
-import { useEffect, useMemo, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useErrorMessage } from '#/hooks/use-error-message.ts'
-import { Api } from '#/lib/api.ts'
-import { JsonErrorResponse } from '#/lib/json-client.ts'
-import { Admonition } from './admonition.tsx'
+import { Action, Admonition } from './admonition.tsx'
+import { ErrorDetails } from './error-details.tsx'
 
 export type ErrorCardProps = {
+  className?: string
+  children?: ReactNode
   error: unknown
   reset?: () => void
 }
 
-export function ErrorCard({ error, reset }: ErrorCardProps) {
+export function ErrorCard({
+  error,
+  reset,
+  className,
+  children,
+}: ErrorCardProps) {
   const [inputCount, setInputCount] = useState(0)
   // Every 5th input will toggle showing the details
   const showDetails = ((inputCount / 5) | 0) % 2 === 1
 
   const errorMessage = useErrorMessage(error)
 
-  const parsedError = useMemo(
-    () =>
-      error instanceof JsonErrorResponse
-        ? // Already parsed:
-          error
-        : // If "error" is a json object, try parsing it as a JsonErrorResponse:
-          Api.parseError(error) ?? error,
-    [error],
-  )
-
   useEffect(() => {
     // For debugging purposes
-    console.warn('Displayed error details:', parsedError)
+    console.warn('Displayed error details:', error)
 
     // Reset the input count when the error changes
     setInputCount(0)
-  }, [parsedError])
+  }, [error])
 
   return (
     <Admonition
-      onClick={(event) => {
-        if (!event.defaultPrevented) {
-          setInputCount((c) => c + 1)
-        }
-      }}
       role="alert"
+      className={className}
+      onClick={() => setInputCount((c) => c + 1)}
       title={errorMessage}
+      append={showDetails && <ErrorDetails error={error} />}
       action={
-        reset != null
-          ? {
-              children: <Trans>Retry</Trans>,
-              onClick: (event) => {
-                if (!event.defaultPrevented) {
-                  event.preventDefault()
-                  reset()
-                }
-              },
-            }
-          : undefined
+        reset != null && (
+          <Action onClick={() => reset()}>
+            <Trans>Retry</Trans>
+          </Action>
+        )
       }
-      append={
-        showDetails &&
-        (parsedError instanceof JsonErrorResponse ? (
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
-            <dt className="font-semibold">
-              <Trans>Code</Trans>
-            </dt>
-            <dd>
-              <code>{parsedError.error}</code>
-            </dd>
-
-            <dt className="font-semibold">
-              <Trans>Description</Trans>
-            </dt>
-            <dd>{parsedError.description}</dd>
-          </dl>
-        ) : (
-          <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
-        ))
-      }
-    />
+    >
+      {children}
+    </Admonition>
   )
 }
+
+export const errorCardRender = (props: ErrorCardProps) => (
+  <ErrorCard {...props} />
+)

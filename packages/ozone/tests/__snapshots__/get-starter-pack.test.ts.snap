@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 1`] = `
-Object {
-  "starterPack": Object {
+{
+  "starterPack": {
     "cid": "cids(0)",
-    "creator": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "creator": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
@@ -15,15 +15,15 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
-      "labels": Array [
-        Object {
+      "labels": [
+        {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(0)",
           "uri": "record(3)",
           "val": "self-label-a",
         },
-        Object {
+        {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(0)",
@@ -31,17 +31,17 @@ Object {
           "val": "self-label-b",
         },
       ],
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
-    "feeds": Array [
-      Object {
+    "feeds": [
+      {
         "cid": "cids(3)",
-        "creator": Object {
-          "associated": Object {
-            "activitySubscription": Object {
+        "creator": {
+          "associated": {
+            "activitySubscription": {
               "allowSubscriptions": "followers",
             },
           },
@@ -52,15 +52,15 @@ Object {
           "displayName": "ali",
           "handle": "alice.test",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [
-            Object {
+          "labels": [
+            {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
               "src": "user(0)",
               "uri": "record(3)",
               "val": "self-label-a",
             },
-            Object {
+            {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
               "src": "user(0)",
@@ -68,7 +68,7 @@ Object {
               "val": "self-label-b",
             },
           ],
-          "viewer": Object {
+          "viewer": {
             "blockedBy": false,
             "muted": false,
           },
@@ -76,50 +76,50 @@ Object {
         "did": "did:web:example.com",
         "displayName": "alice's feedgen",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
+        "labels": [],
         "likeCount": 0,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": {},
       },
     ],
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "joinedAllTimeCount": 0,
     "joinedWeekCount": 0,
-    "labels": Array [],
-    "list": Object {
+    "labels": [],
+    "list": {
       "cid": "cids(4)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "listItemCount": 3,
       "name": "n/a",
       "purpose": "app.bsky.graph.defs#referencelist",
       "uri": "record(1)",
-      "viewer": Object {
+      "viewer": {
         "muted": false,
       },
     },
-    "listItemsSample": Array [
-      Object {
-        "subject": Object {
-          "associated": Object {
-            "activitySubscription": Object {
+    "listItemsSample": [
+      {
+        "subject": {
+          "associated": {
+            "activitySubscription": {
               "allowSubscriptions": "followers",
             },
           },
           "did": "user(2)",
           "handle": "carol.test",
-          "labels": Array [],
-          "viewer": Object {
+          "labels": [],
+          "viewer": {
             "blockedBy": false,
             "muted": false,
           },
         },
         "uri": "record(4)",
       },
-      Object {
-        "subject": Object {
-          "associated": Object {
-            "activitySubscription": Object {
+      {
+        "subject": {
+          "associated": {
+            "activitySubscription": {
               "allowSubscriptions": "followers",
             },
           },
@@ -130,28 +130,28 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
-          "viewer": Object {
+          "labels": [],
+          "viewer": {
             "blockedBy": false,
             "muted": false,
           },
         },
         "uri": "record(5)",
       },
-      Object {
-        "subject": Object {
-          "associated": Object {
-            "activitySubscription": Object {
+      {
+        "subject": {
+          "associated": {
+            "activitySubscription": {
               "allowSubscriptions": "followers",
             },
-            "chat": Object {
+            "chat": {
               "allowIncoming": "none",
             },
           },
           "did": "user(5)",
           "handle": "dan.test",
-          "labels": Array [],
-          "viewer": Object {
+          "labels": [],
+          "viewer": {
             "blockedBy": false,
             "muted": false,
           },
@@ -159,11 +159,11 @@ Object {
         "uri": "record(6)",
       },
     ],
-    "record": Object {
+    "record": {
       "$type": "app.bsky.graph.starterpack",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "feeds": Array [
-        Object {
+      "feeds": [
+        {
           "uri": "record(2)",
         },
       ],
@@ -176,11 +176,11 @@ Object {
 `;
 
 exports[`admin get starter pack view getStarterPack() gets a starterpack while taken down 1`] = `
-Object {
+{
   "cid": "cids(0)",
-  "creator": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "creator": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
@@ -189,15 +189,15 @@ Object {
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
-    "labels": Array [
-      Object {
+    "labels": [
+      {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
         "uri": "record(3)",
         "val": "self-label-a",
       },
-      Object {
+      {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
@@ -205,17 +205,17 @@ Object {
         "val": "self-label-b",
       },
     ],
-    "viewer": Object {
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
   },
-  "feeds": Array [
-    Object {
+  "feeds": [
+    {
       "cid": "cids(3)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
@@ -226,15 +226,15 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
+        "labels": [
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
           },
-          Object {
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
@@ -242,7 +242,7 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "viewer": Object {
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
@@ -250,40 +250,40 @@ Object {
       "did": "did:web:example.com",
       "displayName": "alice's feedgen",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 0,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": {},
     },
   ],
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "joinedAllTimeCount": 0,
   "joinedWeekCount": 0,
-  "labels": Array [],
-  "list": Object {
+  "labels": [],
+  "list": {
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 3,
     "name": "n/a",
     "purpose": "app.bsky.graph.defs#referencelist",
     "uri": "record(1)",
-    "viewer": Object {
+    "viewer": {
       "muted": false,
     },
   },
-  "listItemsSample": Array [
-    Object {
-      "subject": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+  "listItemsSample": [
+    {
+      "subject": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
         "did": "user(2)",
         "handle": "carol.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(6)",
           "following": "record(5)",
@@ -292,10 +292,10 @@ Object {
       },
       "uri": "record(4)",
     },
-    Object {
-      "subject": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "subject": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
@@ -306,8 +306,8 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "followedBy": "record(9)",
           "following": "record(8)",
@@ -316,20 +316,20 @@ Object {
       },
       "uri": "record(7)",
     },
-    Object {
-      "subject": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "subject": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
-          "chat": Object {
+          "chat": {
             "allowIncoming": "none",
           },
         },
         "did": "user(5)",
         "handle": "dan.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "following": "record(11)",
           "muted": false,
@@ -338,11 +338,11 @@ Object {
       "uri": "record(10)",
     },
   ],
-  "record": Object {
+  "record": {
     "$type": "app.bsky.graph.starterpack",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "feeds": Array [
-      Object {
+    "feeds": [
+      {
         "uri": "record(2)",
       },
     ],
@@ -354,11 +354,11 @@ Object {
 `;
 
 exports[`admin get starter pack view getStarterPack() gets a starterpack while taken down 2`] = `
-Object {
+{
   "cid": "cids(0)",
-  "creator": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "creator": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
@@ -367,15 +367,15 @@ Object {
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
-    "labels": Array [
-      Object {
+    "labels": [
+      {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
         "uri": "record(3)",
         "val": "self-label-a",
       },
-      Object {
+      {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
@@ -383,17 +383,17 @@ Object {
         "val": "self-label-b",
       },
     ],
-    "viewer": Object {
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
   },
-  "feeds": Array [
-    Object {
+  "feeds": [
+    {
       "cid": "cids(3)",
-      "creator": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+      "creator": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
@@ -404,15 +404,15 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
+        "labels": [
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
           },
-          Object {
+          {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "src": "user(0)",
@@ -420,7 +420,7 @@ Object {
             "val": "self-label-b",
           },
         ],
-        "viewer": Object {
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
@@ -428,17 +428,17 @@ Object {
       "did": "did:web:example.com",
       "displayName": "alice's feedgen",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "likeCount": 0,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": {},
     },
   ],
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "joinedAllTimeCount": 0,
   "joinedWeekCount": 0,
-  "labels": Array [
-    Object {
+  "labels": [
+    {
       "cid": "cids(0)",
       "cts": "1970-01-01T00:00:00.000Z",
       "src": "user(2)",
@@ -446,40 +446,40 @@ Object {
       "val": "!takedown",
     },
   ],
-  "list": Object {
+  "list": {
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": [],
     "listItemCount": 3,
     "name": "n/a",
     "purpose": "app.bsky.graph.defs#referencelist",
     "uri": "record(1)",
-    "viewer": Object {
+    "viewer": {
       "muted": false,
     },
   },
-  "listItemsSample": Array [
-    Object {
-      "subject": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+  "listItemsSample": [
+    {
+      "subject": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
         "did": "user(3)",
         "handle": "carol.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
       },
       "uri": "record(4)",
     },
-    Object {
-      "subject": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "subject": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
         },
@@ -490,28 +490,28 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
       },
       "uri": "record(5)",
     },
-    Object {
-      "subject": Object {
-        "associated": Object {
-          "activitySubscription": Object {
+    {
+      "subject": {
+        "associated": {
+          "activitySubscription": {
             "allowSubscriptions": "followers",
           },
-          "chat": Object {
+          "chat": {
             "allowIncoming": "none",
           },
         },
         "did": "user(6)",
         "handle": "dan.test",
-        "labels": Array [],
-        "viewer": Object {
+        "labels": [],
+        "viewer": {
           "blockedBy": false,
           "muted": false,
         },
@@ -519,11 +519,11 @@ Object {
       "uri": "record(6)",
     },
   ],
-  "record": Object {
+  "record": {
     "$type": "app.bsky.graph.starterpack",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "feeds": Array [
-      Object {
+    "feeds": [
+      {
         "uri": "record(2)",
       },
     ],
