@@ -20,6 +20,8 @@ description: >
   (7) handling blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`);
   (8) migrating a package from the legacy `@atproto/api` / `@atproto/lexicon` /
   `@atproto/xrpc` / `@atproto/lex-cli` stack to `@atproto/lex` ("lexification").
+  (9) replacement for zod/joi/ajv validation libraries, in projects that already
+  require `@atproto/lex`.
   When a task matches multiple triggers, consult all corresponding references
   in the routing table below before responding.
 ---
@@ -41,16 +43,16 @@ noting the limitation explicitly.
 
 ## When to read which reference
 
-| Reference                                                                | Task                                                                                                                                                                         |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [references/setup.md](./references/setup.md)                             | Install lexicons, configure `lex build`, set up scripts/gitignore                                                                                                            |
-| [references/schemas.md](./references/schemas.md)                         | Use generated schemas: `$build`, `$matches`, `$isTypeOf`, `$parse`, `$safeParse`, `$validate`, `$type`, `$lxm`, `$Params`, `$Output`                                         |
-| [references/data-model.md](./references/data-model.md)                   | Work with AT Proto data: `LexValue`, `Cid`, `BlobRef`, JSON ↔ Lex, CBOR, datetime, branded strings (`DidString`, `HandleString`, `AtUriString`, …), `graphemeLen`/`utf8Len` |
-| [references/xrpc.md](./references/xrpc.md)                               | Make low-level XRPC calls with `xrpc()` / `xrpcSafe()`, handle `XrpcResponseError` / `XrpcInvalidResponseError` / `XrpcInternalError`                                        |
-| [references/client.md](./references/client.md)                           | Use the `Client` class: auth, `call`/`create`/`get`/`put`/`delete`/`list`/`applyWrites`, labelers, Actions, service proxy                                                    |
-| [references/server.md](./references/server.md)                           | Define XRPC server routes with `@atproto/xrpc-server` (`createServer`, `server.add`, handler shape)                                                                          |
-| [references/lexification-server.md](./references/lexification-server.md) | Migrate **service / server** code from the legacy stack (old `src/lexicon/`, `ids.*`, `Server` from generated code, `server.app.bsky.…()` chains)                            |
-| [references/lexification-client.md](./references/lexification-client.md) | Migrate **client / consumer** code from the legacy stack (`AtpAgent` → `Client`, `.data` → `.body`, `XRPCError` → `XrpcError`, `jsonStringToLex` → `lexParse`, etc.)         |
+| Reference                                                                | Task                                                                                                                                                                              |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [references/setup.md](./references/setup.md)                             | Install lexicons, configure `lex build`, set up scripts/gitignore                                                                                                                 |
+| [references/schemas.md](./references/schemas.md)                         | Use generated schemas: `$build`, `$matches`, `$isTypeOf`, `$parse`, `$safeParse`, `$validate`, `$type`, `$lxm`, `$Params`, `$Output`. Create custom schemas with the `l` builder. |
+| [references/data-model.md](./references/data-model.md)                   | Work with AT Proto data: `LexValue`, `Cid`, `BlobRef`, JSON ↔ Lex, CBOR, datetime, branded strings (`DidString`, `HandleString`, `AtUriString`, …), `graphemeLen`/`utf8Len`      |
+| [references/xrpc.md](./references/xrpc.md)                               | Make low-level XRPC calls with `xrpc()` / `xrpcSafe()`, handle `XrpcResponseError` / `XrpcInvalidResponseError` / `XrpcInternalError`                                             |
+| [references/client.md](./references/client.md)                           | Use the `Client` class: auth, `call`/`create`/`get`/`put`/`delete`/`list`/`applyWrites`, labelers, Actions, service proxy                                                         |
+| [references/server.md](./references/server.md)                           | Define XRPC server routes with `@atproto/xrpc-server` (`createServer`, `server.add`, handler shape)                                                                               |
+| [references/lexification-server.md](./references/lexification-server.md) | Migrate **service / server** code from the legacy stack (old `src/lexicon/`, `ids.*`, `Server` from generated code, `server.app.bsky.…()` chains)                                 |
+| [references/lexification-client.md](./references/lexification-client.md) | Migrate **client / consumer** code from the legacy stack (`AtpAgent` → `Client`, `.data` → `.body`, `XRPCError` → `XrpcError`, `jsonStringToLex` → `lexParse`, etc.)              |
 
 ## Top-level package layout
 

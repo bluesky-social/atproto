@@ -1,10 +1,9 @@
 # Data model: types, JSON, CBOR, branded strings, blobs
 
-The AT Protocol data model extends JSON with two extra primitives —
-**CIDs** (content-addressed links) and **bytes** (raw binary). It can be
-encoded as JSON for XRPC or as CBOR (DRISL) for storage. `@atproto/lex`
-re-exports everything you need; the underlying packages are
-`@atproto/lex-data` (types) and `@atproto/lex-json` (JSON helpers).
+The AT Protocol data model extends JSON with two extra primitives — **CIDs**
+(content-addressed links) and **bytes** (raw binary). It can be encoded as JSON
+or as CBOR. `@atproto/lex` re-exports most of what you need; the underlying
+packages are `@atproto/lex-data` (types) and `@atproto/lex-json` (JSON helpers).
 
 ## Lex value types
 
@@ -30,14 +29,17 @@ if (isTypedLexMap(data)) {
 
 ## CIDs
 
-A `Cid` is a structured value, not a string.
+A `Cid` is an objet interface that represents a parsed CID string (`CidString`).
 
 ```ts
 import { Cid, parseCid, ifCid, isCid } from '@atproto/lex'
 
-const cid = parseCid('bafyreiabc...') // throws on invalid
-const maybe = ifCid(value) // Cid | null
-isCid(value) // type guard
+const cidString: CidString = 'bafyreiabc...'
+
+const cidMaybe: Cid | null = parseCidSafe(CidString)
+const cid: Cid = parseCid(CidString) // throws on invalid
+const maybe = ifCid(unknownValue) // Cid | undefined
+isCid(unknownValue) // type guard
 ```
 
 In Lex JSON, CIDs are encoded as `{ "$link": "bafyrei..." }`.
@@ -82,9 +84,8 @@ const obj = lexToJson({ ref: someCid, data: someBytes })
 `lexParse<T>()` accepts a type parameter — no `as` cast needed:
 
 ```ts
-const sub = lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
-  Buffer.from(payload).toString('utf8'),
-)
+const sub =
+  lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(json)
 ```
 
 Low-level encode/decode for individual fields (rarely needed):
@@ -97,9 +98,9 @@ import {
   encodeLexBytes,
 } from '@atproto/lex'
 
-parseLexLink({ $link: 'bafy...' }) // Cid
+parseLexLink({ $link: 'bafy...' }) // Cid (throws on invalid)
 encodeLexLink(someCid) // { $link: '...' }
-parseLexBytes({ $bytes: 'SGVsbG8=' }) // Uint8Array
+parseLexBytes({ $bytes: 'SGVsbG8=' }) // Uint8Array (throws on invalid)
 encodeLexBytes(new Uint8Array([1, 2, 3])) // { $bytes: '...' }
 ```
 
@@ -114,6 +115,8 @@ import type { LexValue } from '@atproto/lex'
 
 const cborBytes: Uint8Array = encode(someLexValue)
 const value: LexValue = decode(cborBytes)
+
+const valueCasted = decode<{ foo: LexValue }>(cborBytes)
 ```
 
 Use CBOR for repo storage, signed records, and anywhere [DRISL](https://dasl.ing/drisl.html)
@@ -185,8 +188,9 @@ if (typeof iss === 'string' && isDidString(iss)) {
 ```
 
 > [!NOTE]
-> Some of these types are also exported from `@atproto/syntax`. **Prefer
-> `@atproto/lex` imports** — they are the canonical home and integrate
+>
+> Some of these string formats are also exported from `@atproto/syntax`.
+> **Prefer `@atproto/lex` imports** — they are the canonical home and integrate
 > with generated schemas.
 
 ### Casting at boundaries
@@ -200,8 +204,9 @@ qb.where('actor.did', '=', filter.sub! as DidString)
 post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
 ```
 
-Avoid `assert()` calls — use type guards (`isDidString` etc.) where you
-need a runtime check, and `as` casts at known-safe boundaries.
+Avoid `assert()` calls — use type guards (`asAtUriString`, `assertAtUriString`,
+`isDidString`, etc.) where you need a runtime check, and `as` casts at
+known-safe boundaries.
 
 ## Blob references
 

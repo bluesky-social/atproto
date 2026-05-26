@@ -27,18 +27,38 @@ Sub-definitions are accessed as siblings of `.Main` (e.g.
 
 ## Validation methods (cheat sheet)
 
-| Method                       | Throws? | Validates?              | Coerces / applies defaults? | Use when                                 |
-| ---------------------------- | ------- | ----------------------- | --------------------------- | ---------------------------------------- |
-| `$check(data)`               | no      | yes (boolean)           | no                          | Type-guard in `if`/filter                |
-| `$matches(data)`             | no      | yes (boolean)           | no                          | Same as `$check`, more common name       |
-| `$isTypeOf(data)`            | no      | **only checks `$type`** | no                          | Already-validated unions/arrays          |
-| `$parse(data, opts?)`        | yes     | yes                     | yes                         | Parse untrusted JSON, get clean value    |
-| `$safeParse(data, opts?)`    | no      | yes                     | yes                         | Parse with `result.success` discriminant |
-| `$validate(data, opts?)`     | yes     | yes                     | no                          | Confirm an existing value matches as-is  |
-| `$safeValidate(data, opts?)` | no      | yes                     | no                          | Same, with discriminated result          |
-| `$build(data)`               | no      | **no**                  | sets `$type`                | Construct a typed object literal         |
+| Method                       | Throws? | Validates?              | Coerces / applies defaults? | Use when                                     |
+| ---------------------------- | ------- | ----------------------- | --------------------------- | -------------------------------------------- |
+| `$assert(data)`              | yes     | yes                     | no                          | Type-assertion                               |
+| `$check(data)`               | yes     | yes                     | no                          | Runtime assertion, but does not narrow types |
+| `$matches(data)`             | no      | yes (boolean)           | no                          | Same as `$check`, more common name           |
+| `$isTypeOf(data)`            | no      | **only checks `$type`** | no                          | Already-validated unions/arrays              |
+| `$parse(data, opts?)`        | yes     | yes                     | yes                         | Parse untrusted JSON, get clean value        |
+| `$safeParse(data, opts?)`    | no      | yes                     | yes                         | Parse with `result.success` discriminant     |
+| `$validate(data, opts?)`     | yes     | yes                     | no                          | Confirm an existing value matches as-is      |
+| `$safeValidate(data, opts?)` | no      | yes                     | no                          | Same, with discriminated result              |
+| `$build(data)`               | no      | **no**                  | sets `$type`                | Construct a typed object literal             |
 
-### `$check` / `$matches` — type guard
+### `$assert` - type assertion
+
+```ts
+app.bsky.feed.post.$assert(data)
+// data: app.bsky.feed.post.Main
+```
+
+## `$check` - runtime check
+
+Same as `$assert` but without the type narrowing. Use only when working with generic schemas, and `.assert`/`.$assert` yields the following ts error:
+
+> 'schema' needs an explicit type annotation.
+> Assertions require every name in the call target to be declared with an explicit type annotation. `ts(2775)`
+
+```ts
+declare const schema: RecordSchema | ObjectSchema
+schema.$check(data) // void
+```
+
+### `$matches` — type guard
 
 ```ts
 if (app.bsky.feed.post.$check(data)) {
@@ -71,7 +91,7 @@ const result = app.bsky.feed.post.$safeParse(unknownData)
 if (result.success) {
   result.value // typed
 } else {
-  result.error // ZodError-like
+  result.error // StandardSchemaV1.FailureResult
 }
 ```
 
@@ -133,26 +153,10 @@ responses across all calls. See [client.md](client.md).
 
 ## Token values
 
-For lexicon `token` definitions, the constant is exposed via `.value`:
+For lexicon `token` definitions, the constant is exposed via `.$token`:
 
 ```ts
-const CURATELIST = app.bsky.graph.defs.curatelist.value // 'app.bsky.graph.defs#curatelist'
-```
-
-## Standard Schema interface
-
-Every schema implements [Standard Schema](https://standardschema.dev/) v1
-via a `~standard` property. Use it with form/validation libraries that
-support the spec:
-
-```ts
-const schema = app.bsky.feed.post
-schema['~standard'].version // 1
-schema['~standard'].vendor // '@atproto/lex-schema'
-const result = schema['~standard'].validate(data)
-if ('value' in result)
-  result.value // parsed
-else result.issues // errors
+const CURATELIST = app.bsky.graph.defs.curatelist.$token // 'app.bsky.graph.defs#curatelist'
 ```
 
 Standard Schema validation runs in **parse mode** — defaults and coercion
@@ -160,8 +164,9 @@ apply to the output.
 
 ## Building schemas with `l`
 
-For occasional needs to define schemas in code (rather than via JSON
-lexicons + `lex build`), `@atproto/lex-schema` exports an `l` namespace:
+To define schemas in code (rather than via JSON lexicons + `lex build`),
+`@atproto/lex-schema` exports an `l` namespace that implements the Standard
+Schema builder API:
 
 ```ts
 import { l } from '@atproto/lex'
@@ -170,6 +175,8 @@ const myObj = l.typedObject('com.example.thing', {
   name: l.string(),
   count: l.optional(l.integer()),
 })
+
+type MyObj = l.Infer<typeof myObj> // { name: string; count?: number }
 ```
 
 Common builders:
@@ -189,3 +196,21 @@ The `l` namespace also exports the datetime helpers (`l.toDatetimeString`,
 In normal application code, **prefer the generated schemas** from
 `./lexicons/`. Use `l.*` only when authoring a lexicon or one-off schema
 inline.
+
+## Standard Schema interface
+
+Every schema implements [Standard Schema](https://standardschema.dev/) v1
+via a `~standard` property. Use it with form/validation libraries that
+support the spec:
+
+```ts
+const schema = app.bsky.feed.post
+schema['~standard'].version // 1
+schema['~standard'].vendor // '@atproto/lex-schema'
+const result = schema['~standard'].validate(data)
+if (!result.issues) {
+  result.value // parsed
+} else {
+  result.issues // errors
+}
+```

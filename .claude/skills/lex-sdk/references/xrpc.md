@@ -81,7 +81,7 @@ if (result.success) {
 } else {
   result.error // XRPC error code (string)
   result.message // human-readable message
-  result.shouldRetry // boolean (transient?)
+  result.shouldRetry() // boolean (transient?)
 }
 ```
 
