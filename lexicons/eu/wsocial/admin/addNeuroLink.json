@@ -1,0 +1,61 @@
+{
+  "lexicon": 1,
+  "id": "eu.wsocial.admin.addNeuroLink",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a Neuro/W ID link to an account (many-to-many: one JID can link to multiple accounts).",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["jid", "did"],
+          "properties": {
+            "jid": {
+              "type": "string",
+              "description": "The JID (W ID) to link."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the account to link to."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["success", "jid", "did", "linkedAt"],
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "jid": {
+              "type": "string"
+            },
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "linkedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "NotFound",
+          "description": "The account DID was not found on this server."
+        },
+        {
+          "name": "JidInUse",
+          "description": "This JID is already linked to this account."
+        }
+      ]
+    }
+  }
+}

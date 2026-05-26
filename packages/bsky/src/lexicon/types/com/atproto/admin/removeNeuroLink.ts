@@ -12,26 +12,23 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'io.trustanchor.admin.setAccountType'
+const id = 'com.atproto.admin.removeNeuroLink'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** DID of the account to update */
+  /** The JID (W ID) to unlink. */
+  jid: string
+  /** The DID of the account to unlink from. */
   did: string
-  /** New account type */
-  accountType:
-    | 'personal'
-    | 'bot'
-    | 'organization'
-    | 'test'
-    | 'unverified'
-    | 'service'
-    | (string & {})
 }
 
 export interface OutputSchema {
   success: boolean
+  jid: string
+  did: string
+  /** Set when this was the last link for this account. */
+  warning?: string
 }
 
 export interface HandlerInput {
@@ -48,6 +45,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'NotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

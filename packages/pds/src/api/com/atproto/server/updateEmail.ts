@@ -53,8 +53,10 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      // require valid token if account email is confirmed
-      if (account.emailConfirmedAt) {
+      // require valid token if account email is confirmed (skip for placeholder emails used by WID accounts)
+      const isPlaceholderEmail =
+        !account.email || account.email.endsWith('.invalid')
+      if (account.emailConfirmedAt && !isPlaceholderEmail) {
         if (!token) {
           throw new InvalidRequestError(
             'confirmation token required',

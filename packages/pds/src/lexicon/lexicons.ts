@@ -15976,6 +15976,68 @@ export const schemaDict = {
       },
     },
   },
+  EuWsocialAdminAddNeuroLink: {
+    lexicon: 1,
+    id: 'eu.wsocial.admin.addNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Add a Neuro/W ID link to an account (many-to-many: one JID can link to multiple accounts).',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jid', 'did'],
+            properties: {
+              jid: {
+                type: 'string',
+                description: 'The JID (W ID) to link.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account to link to.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'jid', 'did', 'linkedAt'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              jid: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              linkedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'The account DID was not found on this server.',
+          },
+          {
+            name: 'JidInUse',
+            description: 'This JID is already linked to this account.',
+          },
+        ],
+      },
+    },
+  },
   EuWsocialAdminCreatePassInvitation: {
     lexicon: 1,
     id: 'eu.wsocial.admin.createPassInvitation',
@@ -16036,6 +16098,264 @@ export const schemaDict = {
           },
           {
             name: 'InviteCodeGenerationError',
+          },
+        ],
+      },
+    },
+  },
+  EuWsocialAdminGetNeuroLink: {
+    lexicon: 1,
+    id: 'eu.wsocial.admin.getNeuroLink',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get Neuro/W ID link for an account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the account.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+              },
+              email: {
+                type: 'string',
+              },
+              jid: {
+                type: 'string',
+                description:
+                  'JID (W ID) - unified for both real and test users',
+              },
+              isTestUser: {
+                type: 'boolean',
+                description: 'Whether this is a test user account',
+              },
+              linkedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+              lastLoginAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  EuWsocialAdminListNeuroAccounts: {
+    lexicon: 1,
+    id: 'eu.wsocial.admin.listNeuroAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all accounts with their Neuro/W ID links.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 100,
+              description: 'Maximum number of accounts to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:eu.wsocial.admin.listNeuroAccounts#neuroAccountView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      neuroAccountView: {
+        type: 'object',
+        required: ['did', 'handle'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+          },
+          email: {
+            type: 'string',
+          },
+          jid: {
+            type: 'string',
+            description: 'JID (W ID) - unified for both real and test users',
+          },
+          isTestUser: {
+            type: 'boolean',
+            description: 'Whether this is a test user account',
+          },
+          linkedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastLoginAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  EuWsocialAdminRemoveNeuroLink: {
+    lexicon: 1,
+    id: 'eu.wsocial.admin.removeNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove a Neuro/W ID link from an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jid', 'did'],
+            properties: {
+              jid: {
+                type: 'string',
+                description: 'The JID (W ID) to unlink.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account to unlink from.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'jid', 'did'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              jid: {
+                type: 'string',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              warning: {
+                type: 'string',
+                description:
+                  'Set when this was the last link for this account.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No link found for this (jid, did) pair.',
+          },
+        ],
+      },
+    },
+  },
+  EuWsocialAdminUpdateNeuroLink: {
+    lexicon: 1,
+    id: 'eu.wsocial.admin.updateNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update the Neuro/W ID link for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'newJid'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account.',
+              },
+              newJid: {
+                type: 'string',
+                description: 'The new JID (W ID) to link to this account.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'did', 'newJid', 'updatedAt'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              oldJid: {
+                type: 'string',
+                description: 'Previous JID (if any)',
+              },
+              newJid: {
+                type: 'string',
+              },
+              updatedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+          {
+            name: 'InvalidJid',
+          },
+          {
+            name: 'JidInUse',
           },
         ],
       },
@@ -16161,6 +16481,59 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  EuWsocialServerRequestAccountDelete: {
+    lexicon: 1,
+    id: 'eu.wsocial.server.requestAccountDelete',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate account deletion. Returns the deletion method(s) available for this account: 'wid' for WID-only accounts (no real email), 'email' for email+password accounts, or 'wid+email' for accounts with both. When the method includes 'wid', a QuickLogin QR session is started and the session fields are returned. When the method includes 'email', a deletion token is sent to the account's email address. Requires a full-access session token (not OAuth).",
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['method'],
+            properties: {
+              method: {
+                type: 'string',
+                knownValues: ['wid', 'email', 'wid+email'],
+                description:
+                  "Which deletion flow(s) are available. 'wid' = WID QR scan only (no real email on account). 'email' = email token only (no WID). 'wid+email' = both flows are available; a QR session has been started and an email token has been sent.",
+              },
+              sessionId: {
+                type: 'string',
+                description:
+                  "Present when method is 'wid' or 'wid+email'. The QuickLogin session ID for polling status.",
+              },
+              sessionToken: {
+                type: 'string',
+                description:
+                  "Present when method is 'wid' or 'wid+email'. Opaque session token for authenticating polling requests.",
+              },
+              qrCodeUrl: {
+                type: 'string',
+                description:
+                  "Present when method is 'wid' or 'wid+email'. Base64 image data URL of the QR code to display.",
+              },
+              expiresAt: {
+                type: 'string',
+                description:
+                  "Present when method is 'wid' or 'wid+email'. ISO timestamp after which the QR session expires.",
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NoDeleteMethod',
+            description:
+              'Account has neither a WID association nor a verified email address and cannot be deleted through this endpoint.',
+          },
+        ],
       },
     },
   },
@@ -16863,7 +17236,14 @@ export const schemaDict = {
               },
               accountType: {
                 type: 'string',
-                knownValues: ['personal', 'bot', 'organization', 'test'],
+                knownValues: [
+                  'personal',
+                  'bot',
+                  'organization',
+                  'test',
+                  'unverified',
+                  'service',
+                ],
                 description: 'New account type',
               },
             },
@@ -22879,12 +23259,18 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  EuWsocialAdminAddNeuroLink: 'eu.wsocial.admin.addNeuroLink',
   EuWsocialAdminCreatePassInvitation: 'eu.wsocial.admin.createPassInvitation',
+  EuWsocialAdminGetNeuroLink: 'eu.wsocial.admin.getNeuroLink',
+  EuWsocialAdminListNeuroAccounts: 'eu.wsocial.admin.listNeuroAccounts',
+  EuWsocialAdminRemoveNeuroLink: 'eu.wsocial.admin.removeNeuroLink',
+  EuWsocialAdminUpdateNeuroLink: 'eu.wsocial.admin.updateNeuroLink',
   EuWsocialQuickloginLinkWid: 'eu.wsocial.quicklogin.linkWid',
   EuWsocialServerAllocateWidForAccount:
     'eu.wsocial.server.allocateWidForAccount',
   EuWsocialServerCheckHandleAvailability:
     'eu.wsocial.server.checkHandleAvailability',
+  EuWsocialServerRequestAccountDelete: 'eu.wsocial.server.requestAccountDelete',
   IoTrustanchorAdminClearInventory: 'io.trustanchor.admin.clearInventory',
   IoTrustanchorAdminCreateAccountSession:
     'io.trustanchor.admin.createAccountSession',

@@ -13,28 +13,30 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.atproto.server.getSession'
+const id = 'com.atproto.admin.removeNeuroLink'
 
 export type QueryParams = {}
-export type InputSchema = undefined
+
+export interface InputSchema {
+  /** The JID (W ID) to unlink. */
+  jid: string
+  /** The DID of the account to unlink from. */
+  did: string
+}
 
 export interface OutputSchema {
-  handle: string
+  success: boolean
+  jid: string
   did: string
-  didDoc?: { [_ in string]: unknown }
-  email?: string
-  emailConfirmed?: boolean
-  emailAuthFactor?: boolean
-  active?: boolean
-  /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
-  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
-  /** W Identity verification status for the account. Null means unverified. 'wid' means verified via W Identity. 'admin' means admin-provisioned. */
-  wsocialVerified?: string
+  /** Set when this was the last link for this account. */
+  warning?: string
 }
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
 }
 
 export interface Response {
@@ -43,6 +45,16 @@ export interface Response {
   data: OutputSchema
 }
 
+export class NotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'NotFound') return new NotFoundError(e)
+  }
+
   return e
 }
