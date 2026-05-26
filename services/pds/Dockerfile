@@ -51,11 +51,14 @@ COPY ./packages/xrpc ./packages/xrpc
 COPY ./services/pds ./services/pds
 
 # install all deps
-RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
-RUN pnpm run --recursive --stream --filter '@atproto/pds...' build
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm run --recursive --stream --filter '@atproto/pds...' build
 # install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false > /dev/null
 
 WORKDIR services/pds
 
