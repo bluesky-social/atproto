@@ -1,4 +1,3 @@
-import { StandardSchemaV1 } from '@standard-schema/spec'
 import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
 
 const STRING_PREVIEW_MAX_LENGTH = 256
@@ -16,7 +15,7 @@ const STRING_PREVIEW_TRUNCATED_SUFFIX = '…'
  * the {@link message} property for human-readable error messages (that don't
  * contain the error path)
  */
-export abstract class Issue implements StandardSchemaV1.Issue {
+export abstract class Issue {
   abstract readonly message: string
 
   constructor(

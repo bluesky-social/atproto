@@ -1,4 +1,3 @@
-import { StandardSchemaV1 } from '@standard-schema/spec'
 import { LexError } from '@atproto/lex-data'
 import { arrayAgg } from '../util/array-agg.js'
 import { ResultFailure } from './result.js'
@@ -37,7 +36,7 @@ import {
  */
 export class LexValidationError
   extends LexError<'InvalidRequest'>
-  implements StandardSchemaV1.FailureResult, ResultFailure<LexValidationError>
+  implements ResultFailure<LexValidationError>
 {
   name = 'LexValidationError'
 

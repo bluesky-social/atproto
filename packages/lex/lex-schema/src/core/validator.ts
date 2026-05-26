@@ -1,4 +1,3 @@
-import { StandardSchemaV1 } from '@standard-schema/spec'
 import type * as Result from './result.js'
 import { LexValidationError } from './validation-error.js'
 import {
@@ -17,17 +16,14 @@ import {
  *
  * @typeParam TValue - The type of the validated value
  * @extends Result.ResultSuccess<TValue>
- * @extends StandardSchemaV1.SuccessResult<TValue>
  */
-export type ValidationSuccess<TValue = unknown> = Result.ResultSuccess<TValue> &
-  StandardSchemaV1.SuccessResult<TValue>
+export type ValidationSuccess<TValue = unknown> = Result.ResultSuccess<TValue>
 
 /**
  * Represents a failed validation result containing a {@link LexValidationError}.
  *
  * @see {@link LexValidationError}
  * @extends Result.ResultFailure<LexValidationError>
- * @extends StandardSchemaV1.FailureResult
  */
 export type ValidationFailure = LexValidationError
 
