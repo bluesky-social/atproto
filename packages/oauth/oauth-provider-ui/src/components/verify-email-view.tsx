@@ -42,7 +42,7 @@ export function VerifyEmailView({
     <div className="space-y-4">
       {children ?? (
         <p>
-          <Trans context="EmailVerify">
+          <Trans context="Email">
             To verify your email, we'll send a verification code to{' '}
             <strong>{email}</strong>. Enter the code below to confirm that you
             own this address.

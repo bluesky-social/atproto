@@ -183,8 +183,7 @@ msgstr "Authorized on {0}"
 msgid "Back"
 msgstr "Back"
 
-#: src/components/update-handle-view.tsx:104
-#: src/components/sign-up-handle-form.tsx:125
+#: src/components/forms/input-handle-domain.tsx:86
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
@@ -220,7 +219,7 @@ msgid "Call"
 msgstr "Call"
 
 #: src/contexts/authentication.tsx:174
-#: src/components/update-email-view.tsx:69
+#: src/components/update-email-view.tsx:99
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card-async.tsx:42
 msgid "Cancel"
@@ -477,8 +476,7 @@ msgstr "Identity"
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/update-handle-view.tsx:216
-#: src/components/sign-up-handle-form.tsx:254
+#: src/components/forms/input-handle-domain.tsx:228
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -603,17 +601,11 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "No email associated with this account. Password reset is unavailable."
 
-#: src/pages/account/(authenticated)/handle/page.tsx:18
-msgctxt "HandleChange"
-msgid "No username associated with this account."
-msgstr "No username associated with this account."
-
 #: src/components/reset-password-view.tsx:116
 msgid "Okay"
 msgstr "Okay"
 
-#: src/components/update-handle-view.tsx:109
-#: src/components/sign-up-handle-form.tsx:130
+#: src/components/forms/input-handle-domain.tsx:91
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
@@ -754,8 +746,7 @@ msgstr "Revoke access"
 msgid "Select another account"
 msgstr "Select another account"
 
-#: src/components/update-handle-view.tsx:144
-#: src/components/sign-up-handle-form.tsx:169
+#: src/components/forms/input-handle-domain.tsx:128
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -897,6 +888,16 @@ msgstr "This application is requesting the following permissions (scopes) to acc
 msgid "This authorization request has been denied. Please try again."
 msgstr "This authorization request has been denied. Please try again."
 
+#: src/components/update-email-view.tsx:163
+msgctxt "Email"
+msgid "This email address has been verified."
+msgstr "This email address has been verified."
+
+#: src/components/update-email-view.tsx:165
+msgctxt "Email"
+msgid "This email address has not been verified. Please verify your email to access all features of your account."
+msgstr "This email address has not been verified. Please verify your email to access all features of your account."
+
 #: src/hooks/use-error-message.ts:52
 msgid "This email is already used"
 msgstr "This email is already used"
@@ -909,8 +910,8 @@ msgstr "This handle is reserved"
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
-#: src/components/update-email-view.tsx:77
-msgctxt "EmailChange"
+#: src/components/update-email-view.tsx:109
+msgctxt "Email"
 msgid "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 msgstr "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 
@@ -919,8 +920,8 @@ msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 
-#: src/components/verify-email-view.tsx:47
-msgctxt "EmailVerify"
+#: src/components/verify-email-view.tsx:45
+msgctxt "Email"
 msgid "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
 msgstr "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
 
@@ -929,13 +930,9 @@ msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Towards"
 
-#: src/components/sign-up-handle-form.tsx:139
-msgid "Type your desired username"
-msgstr "Type your desired username"
-
-#: src/components/update-handle-view.tsx:118
-msgid "Type your new username"
-msgstr "Type your new username"
+#: src/components/forms/input-handle-domain.tsx:98
+msgid "Type your username"
+msgstr "Type your username"
 
 #: src/contexts/session.tsx:186
 msgid "Unauthorized"
@@ -950,11 +947,16 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
 
+#: src/components/update-email-view.tsx:150
+msgctxt "Email"
+msgid "Update"
+msgstr "Update"
+
 #: src/components/utils/scope-description.tsx:665
 msgid "Update"
 msgstr "Update"
 
-#: src/components/update-handle-view.tsx:100
+#: src/components/update-handle-view.tsx:77
 msgid "Update username"
 msgstr "Update username"
 
@@ -974,8 +976,7 @@ msgstr "Username or email address"
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/update-handle-view.tsx:211
-#: src/components/sign-up-handle-form.tsx:249
+#: src/components/forms/input-handle-domain.tsx:223
 msgid "Valid"
 msgstr "Valid"
 
@@ -986,6 +987,11 @@ msgstr "Verification code"
 #: src/data/email.ts:91
 msgid "Verification email sent"
 msgstr "Verification email sent"
+
+#: src/components/update-email-view.tsx:139
+msgctxt "Email"
+msgid "Verify"
+msgstr "Verify"
 
 #: src/pages/account/(authenticated)/route.tsx:105
 msgid "Verify email address"
@@ -1051,7 +1057,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/sign-up-handle-form.tsx:215
+#: src/components/sign-up-handle-form.tsx:79
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
@@ -1080,29 +1086,24 @@ msgstr "Your account is signed in on the devices listed below. If your account w
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Your Atmosphere account is hosted by <0/>."
 
-#: src/components/update-handle-view.tsx:87
-msgctxt "HandleChange"
-msgid "Your current username is <0>@{currentHandle}</0>. Choose a new username below."
-msgstr "Your current username is <0>@{currentHandle}</0>. Choose a new username below."
-
 #: src/data/email.ts:119
 msgid "Your email address has been verified."
 msgstr "Your email address has been verified."
 
-#: src/components/update-email-view.tsx:56
-msgctxt "EmailChange"
-msgid "Your email has been updated to <0>{newEmail}</0>. A verification code has been sent to the new address."
-msgstr "Your email has been updated to <0>{newEmail}</0>. A verification code has been sent to the new address."
+#: src/components/update-email-view.tsx:156
+msgctxt "Email"
+msgid "Your email address is <0>{email}</0>."
+msgstr "Your email address is <0>{email}</0>."
 
-#. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/sign-up-handle-form.tsx:203
+#: src/components/update-email-view.tsx:83
+msgctxt "Email"
+msgid "Your email has been updated to <0>{email}</0>. A verification code has been sent to the new address. Enter the code below to confirm that you own this address."
+msgstr "Your email has been updated to <0>{email}</0>. A verification code has been sent to the new address. Enter the code below to confirm that you own this address."
+
+#. placeholder {0}: preview ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
+#: src/components/forms/input-handle-domain.tsx:161
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
-
-#. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/update-handle-view.tsx:173
-msgid "Your new username will be: {0}"
-msgstr "Your new username will be: {0}"
 
 #: src/components/reset-password-view.tsx:105
 msgid "Your password has been updated!"
@@ -1119,3 +1120,8 @@ msgstr "Your session has expired. Please sign in again."
 #: src/data/handle.ts:33
 msgid "Your username has been updated."
 msgstr "Your username has been updated."
+
+#: src/components/update-handle-view.tsx:82
+msgctxt "HandleChange"
+msgid "Your username is <0>@{currentHandle}</0>."
+msgstr "Your username is <0>@{currentHandle}</0>."

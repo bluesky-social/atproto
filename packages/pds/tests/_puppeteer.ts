@@ -85,6 +85,8 @@ export class PageHelper implements AsyncDisposable {
   async typeIn(selector: string, text: string) {
     const elementHandle = await this.getVisibleElement(selector)
     elementHandle.focus()
+    await elementHandle.click({ clickCount: 3 }) // Select all existing text
+    await elementHandle.press('Backspace') // Clear the input
     await elementHandle.type(text)
     return elementHandle
   }

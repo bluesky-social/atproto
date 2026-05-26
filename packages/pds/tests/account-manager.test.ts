@@ -44,7 +44,7 @@ describe('account manager', () => {
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.assertTitle(`S'identifier`)
+    await page.assertTitle(`Se connecter`)
 
     await page.clickOnText('Créer un nouveau compte')
 
@@ -55,7 +55,7 @@ describe('account manager', () => {
     await page.typeInInput('email', 'bob@test.com')
     await page.typeInInput('password', 'bob-pass')
 
-    await page.clickOnText("S'inscrire")
+    await page.clickOnText('Inscription')
 
     await page.assertTitle(`Compte utilisateur`)
 
@@ -137,7 +137,7 @@ describe('account manager', () => {
     await page.typeInInput('code', params.token)
     await page.typeInInput('password', 'bob-new-pass')
 
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Valider')
 
     await page.ensureTextVisibility(
       'Réinitialisation du mot de passe réussie',
@@ -171,7 +171,7 @@ describe('account manager', () => {
     })
 
     await page.typeInInput('code', params.token)
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Valider')
 
     await page.ensureTextVisibility('Adresse email vérifiée', 'div')
   })
@@ -183,13 +183,15 @@ describe('account manager', () => {
 
     await page.clickOnText("Nom d'utilisateur", 'a')
 
+    await page.clickOnText("Modifier le nom d'utilisateur", 'button')
+
     await page.typeInInput('handle', 'bob-renamed')
 
-    await page.clickOnText("Modifier le nom d'utilisateur", 'button')
+    await page.clickOnText('Valider')
 
     await page.waitForNetworkIdle()
 
-    await page.ensureTextVisibility('bob-renamed.test', 'span')
+    await page.ensureTextVisibility('@bob-renamed.test', 'strong')
   })
 
   it('allows changing the email address', async () => {
@@ -198,6 +200,8 @@ describe('account manager', () => {
     await page.goto(new URL('/account', network.pds.url))
 
     await page.clickOnText('Email', 'a')
+
+    await page.clickOnText('Modifier', 'button')
 
     using sendUpdateEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
@@ -225,7 +229,7 @@ describe('account manager', () => {
 
     await page.typeInInput('code', updateParams.token)
     await page.typeInInput('email', 'bob-new-email@example.com')
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Valider')
 
     await page.ensureTextVisibility(
       "Modification de l'adresse email réussie",
@@ -241,7 +245,7 @@ describe('account manager', () => {
     })
 
     await page.typeInInput('code', confirmParams.token)
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Valider')
 
     await page.ensureTextVisibility('Adresse email vérifiée', 'div')
   })

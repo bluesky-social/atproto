@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ButtonRequestReset } from '#/components/forms/button-request-reset'
 import { ResetEmailConfirmForm } from '#/components/reset-email-confirm-form.tsx'
 import { Button } from './forms/button.tsx'
+import { FormCard } from './forms/form-card.tsx'
 import { VerifyEmailView } from './verify-email-view.tsx'
 
 export type UpdateEmailViewProps = {
@@ -79,7 +80,7 @@ export function UpdateEmailView({
       >
         {viewState === ViewState.VerifyNew && (
           <p>
-            <Trans context="EmailVerify">
+            <Trans context="Email">
               Your email has been updated to <strong>{email}</strong>. A
               verification code has been sent to the new address. Enter the code
               below to confirm that you own this address.
@@ -105,7 +106,7 @@ export function UpdateEmailView({
           }}
         >
           <p>
-            <Trans context="EmailChange">
+            <Trans context="Email">
               To change your email, we'll send a confirmation code to{' '}
               <strong>{email}</strong>. Enter the code below along with your new
               email address.
@@ -124,49 +125,49 @@ export function UpdateEmailView({
   }
 
   return (
-    <div>
+    <FormCard
+      actions={
+        <>
+          {!emailVerified && (
+            <Button
+              color="primary"
+              type="submit"
+              onClick={() => {
+                setViewState(ViewState.Verify)
+              }}
+            >
+              <Trans context="Email">Verify</Trans>
+            </Button>
+          )}
+          <Button
+            color="primary"
+            type={emailVerified ? 'button' : 'submit'}
+            transparent={emailVerified}
+            onClick={() => {
+              setViewState(ViewState.Update)
+            }}
+          >
+            <Trans context="Email">Update</Trans>
+          </Button>
+        </>
+      }
+    >
       <p>
-        <Trans context="EmailChange">
-          Your current email is <strong>{email}</strong>.
+        <Trans context="Email">
+          Your email address is <strong>{email}</strong>.
         </Trans>
       </p>
 
-      {emailVerified ? (
-        <p>
-          <Trans context="EmailChange">
-            This email address has been verified.
-          </Trans>
-        </p>
-      ) : (
-        <p>
-          <Trans context="EmailChange">
+      <p className="mt-2 text-sm text-neutral-500">
+        {emailVerified ? (
+          <Trans context="Email">This email address has been verified.</Trans>
+        ) : (
+          <Trans context="Email">
             This email address has not been verified. Please verify your email
             to access all features of your account.
           </Trans>
-        </p>
-      )}
-
-      <div className="flex flex-row flex-wrap items-center justify-end space-x-2">
-        <div className="flex-auto" />
-        {!emailVerified && (
-          <Button
-            color="primary"
-            onClick={() => {
-              setViewState(ViewState.Verify)
-            }}
-          >
-            <Trans>Verify email</Trans>
-          </Button>
         )}
-        <Button
-          color="primary"
-          onClick={() => {
-            setViewState(ViewState.Update)
-          }}
-        >
-          <Trans>Update email</Trans>
-        </Button>
-      </div>
-    </div>
+      </p>
+    </FormCard>
   )
 }

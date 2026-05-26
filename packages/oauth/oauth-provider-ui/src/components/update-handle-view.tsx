@@ -7,6 +7,7 @@ import {
 } from '#/components/forms/form-card-async.tsx'
 import { InputHandleDomain } from '#/components/forms/input-handle-domain.tsx'
 import { mergeRefs } from '#/lib/ref.ts'
+import { FormCard } from './forms/form-card'
 
 export type UpdateHandleViewProps = {
   currentHandle?: string
@@ -45,7 +46,6 @@ export function UpdateHandleView({
         onCancel={() => {
           setViewState(ViewState.Idle)
         }}
-        submitLabel={<Trans>Update username</Trans>}
       >
         <InputHandleDomain
           handle={handle}
@@ -64,26 +64,25 @@ export function UpdateHandleView({
   }
 
   return (
-    <div className="space-y-4">
+    <FormCard
+      actions={
+        <Button
+          type="submit"
+          color="primary"
+          onClick={() => {
+            setHandle(currentHandle)
+            setViewState(ViewState.Update)
+          }}
+        >
+          <Trans>Update username</Trans>
+        </Button>
+      }
+    >
       <p>
-        {currentHandle ? (
-          <Trans context="HandleChange">
-            Your current username is <strong>@{currentHandle}</strong>.
-          </Trans>
-        ) : (
-          <Trans context="HandleChange">You don't have a username yet.</Trans>
-        )}
+        <Trans context="HandleChange">
+          Your username is <strong>@{currentHandle}</strong>.
+        </Trans>
       </p>
-
-      <Button
-        color="primary"
-        onClick={() => {
-          setHandle(currentHandle)
-          setViewState(ViewState.Update)
-        }}
-      >
-        <Trans>Update username</Trans>
-      </Button>
-    </div>
+    </FormCard>
   )
 }
