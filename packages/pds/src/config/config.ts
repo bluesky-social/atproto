@@ -1,9 +1,14 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
+import {
+  BrandingInput as BrandingConfig,
+  HcaptchaConfig,
+} from '@atproto/oauth-provider'
 import { ensureValidDid } from '@atproto/syntax'
 import { ServerEnvironment } from './env.js'
+
+export type { BrandingConfig }
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -22,12 +27,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     publicUrl,
     did,
     version: env.version, // default?
-    name: env.serviceName,
-    homeUrl: env.homeUrl,
-    logoUrl: env.logoUrl,
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
-    supportUrl: env.supportUrl,
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     maxImportSize: env.maxImportSize,
@@ -390,7 +391,7 @@ export type ServerConfig = {
   crawlers: string[]
   fetch: FetchConfig
   proxy: ProxyConfig
-  branding: BrandingInput
+  branding: BrandingConfig
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
 }
@@ -401,12 +402,8 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
-  name?: string
-  homeUrl?: string
-  logoUrl?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
-  supportUrl?: string
   acceptingImports: boolean
   maxImportSize?: number
   blobUploadLimit: number
@@ -491,7 +488,7 @@ export type OAuthConfig = {
   issuer: string
   provider?: {
     hcaptcha?: HcaptchaConfig
-    branding: BrandingInput
+    branding: BrandingConfig
     trustedClients?: string[]
   }
 }

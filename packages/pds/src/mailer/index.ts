@@ -1,6 +1,6 @@
 import { SendMailOptions, Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
-import { ServerConfig } from '../config/index.js'
+import { BrandingConfig, EmailConfig } from '../config/index.js'
 import { mailerLogger } from '../logger.js'
 import * as templates from './templates.js'
 
@@ -14,30 +14,24 @@ const DEFAULT_HOME_URL = 'https://bsky.app'
 const DEFAULT_PRIMARY_COLOR = '#067df7'
 
 export class ServerMailer {
+  private readonly config: templates.Config
+
   constructor(
     public readonly transporter: Transporter,
-    private readonly config: ServerConfig,
+    private readonly email: EmailConfig | null,
+    branding: BrandingConfig,
   ) {
     transporter.use('compile', htmlToText())
-  }
 
-  // The returned config can be used inside email templates.
-  static getEmailConfig(config: ServerConfig) {
-    const { branding } = config
-    const homeUrl =
-      branding.links?.find((link) => link.rel === 'canonical')?.href ??
-      config.service.homeUrl ??
-      DEFAULT_HOME_URL
-
-    return {
-      name: branding.name ?? 'Bluesky',
-      homeUrl,
+    this.config = {
+      serviceName: branding.name ?? 'Bluesky',
+      homeUrl:
+        branding.links?.find((link) => link.rel === 'canonical')?.href ??
+        DEFAULT_HOME_URL,
       logoUrl: branding.logo ?? DEFAULT_LOGO_URL,
       markUrl: branding.logo ?? DEFAULT_MARK_URL,
       primaryColor: branding.colors?.primary ?? DEFAULT_PRIMARY_COLOR,
-      showBskyAppEmailConfirmationLink:
-        config.email?.disableConfirmationLink !== true,
-      footerDescription: '',
+      showBskyAppEmailConfirmationLink: email?.disableConfirmationLink !== true,
     }
   }
 
@@ -89,14 +83,14 @@ export class ServerMailer {
   ) {
     const html = templates[templateName]({
       ...params,
-      config: ServerMailer.getEmailConfig(this.config),
+      config: this.config,
     } as any)
     const res = await this.transporter.sendMail({
       ...mailOpts,
-      from: mailOpts.from ?? this.config.email?.fromAddress,
+      from: mailOpts.from ?? this.email?.fromAddress,
       html,
     })
-    if (!this.config.email?.smtpUrl) {
+    if (!this.email?.smtpUrl) {
       mailerLogger.debug(
         'No SMTP URL has been configured. Intended to send email:\n' +
           JSON.stringify(res, null, 2),
