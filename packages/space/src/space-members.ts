@@ -1,7 +1,7 @@
 import { Keypair } from '@atproto/crypto'
 import { createCommit, verifyCommit } from './commit.js'
 import { MemberAlreadyExistsError, MemberNotFoundError } from './error.js'
-import { SetHash } from './set-hash.js'
+import { LtHash } from './lthash.js'
 import { SpaceMembersStorage } from './storage/index.js'
 import {
   MemberCommitData,
@@ -14,16 +14,16 @@ import {
 
 type Params = {
   storage: SpaceMembersStorage
-  setHash?: SetHash
+  setHash?: LtHash
 }
 
 export class SpaceMembers {
   storage: SpaceMembersStorage
-  setHash: SetHash
+  setHash: LtHash
 
   constructor(params: Params) {
     this.storage = params.storage
-    this.setHash = params.setHash ?? new SetHash()
+    this.setHash = params.setHash ?? new LtHash()
   }
 
   static create(storage: SpaceMembersStorage): SpaceMembers {
@@ -31,9 +31,9 @@ export class SpaceMembers {
   }
 
   static async load(storage: SpaceMembersStorage): Promise<SpaceMembers> {
-    const stored = await storage.getSetHash()
+    const stored = await storage.getSetHashState()
     if (stored) {
-      return new SpaceMembers({ storage, setHash: new SetHash(stored) })
+      return new SpaceMembers({ storage, setHash: new LtHash(stored) })
     }
     return SpaceMembers.recompute(storage)
   }
@@ -41,18 +41,18 @@ export class SpaceMembers {
   static async loadOrCreate(
     storage: SpaceMembersStorage,
   ): Promise<SpaceMembers> {
-    const stored = await storage.getSetHash()
+    const stored = await storage.getSetHashState()
     if (stored) {
-      return new SpaceMembers({ storage, setHash: new SetHash(stored) })
+      return new SpaceMembers({ storage, setHash: new LtHash(stored) })
     }
     return new SpaceMembers({ storage })
   }
 
   static async recompute(storage: SpaceMembersStorage): Promise<SpaceMembers> {
-    const setHash = new SetHash()
+    const setHash = new LtHash()
     const members = await storage.getMembers()
     for (const did of members) {
-      await setHash.add(did)
+      setHash.add(did)
     }
     return new SpaceMembers({ storage, setHash })
   }
@@ -62,7 +62,7 @@ export class SpaceMembers {
   ): Promise<MemberCommitData> {
     const operations = Array.isArray(ops) ? ops : [ops]
     const prepared: PreparedMemberOp[] = []
-    const newSetHash = new SetHash(this.setHash.toBytes())
+    const newSetHash = new LtHash(this.setHash.toBytes())
 
     for (const op of operations) {
       if (op.action === MemberOpAction.Add) {
@@ -70,7 +70,7 @@ export class SpaceMembers {
         if (exists) {
           throw new MemberAlreadyExistsError(op.did)
         }
-        await newSetHash.add(op.did)
+        newSetHash.add(op.did)
         prepared.push({
           action: MemberOpAction.Add,
           did: op.did,
@@ -80,7 +80,7 @@ export class SpaceMembers {
         if (!exists) {
           throw new MemberNotFoundError(op.did)
         }
-        await newSetHash.remove(op.did)
+        newSetHash.remove(op.did)
         prepared.push({
           action: MemberOpAction.Remove,
           did: op.did,
@@ -96,7 +96,7 @@ export class SpaceMembers {
 
   async applyCommit(commit: MemberCommitData): Promise<void> {
     await this.storage.applyCommit(commit)
-    this.setHash = new SetHash(commit.setHash)
+    this.setHash = new LtHash(commit.setHash)
   }
 
   async addMember(did: string): Promise<MemberCommitData> {
@@ -135,7 +135,7 @@ export class SpaceMembers {
 
   verifyCommit(space: SpaceContext, commit: SignedCommit): boolean {
     return (
-      this.setHash.equals(new SetHash(commit.hash)) &&
+      commit.hash.equals(this.setHash.digest()) &&
       verifyCommit(space, commit)
     )
   }

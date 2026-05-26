@@ -1,3 +1,4 @@
+import { LtHash } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
@@ -27,10 +28,14 @@ export default function (server: Server, ctx: AppContext) {
         store.space.getMemberState(space),
       )
 
+      const setHash = state?.setHash
+        ? new LtHash(state.setHash).digest().toString('hex')
+        : undefined
+
       return {
         encoding: 'application/json' as const,
         body: {
-          setHash: state?.setHash ? state.setHash.toString('hex') : undefined,
+          setHash,
           rev: state?.rev ?? undefined,
         },
       }

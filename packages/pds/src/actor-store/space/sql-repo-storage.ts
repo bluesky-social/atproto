@@ -40,7 +40,7 @@ export class SqlRepoStorage implements SpaceRepoStorage {
     return results
   }
 
-  async getSetHash(): Promise<Buffer | null> {
+  async getSetHashState(): Promise<Buffer | null> {
     const state = await this.txn.getRepoState(this.space)
     return state?.setHash ?? null
   }

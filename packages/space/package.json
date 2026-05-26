@@ -25,7 +25,8 @@
   "dependencies": {
     "@atproto/crypto": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
-    "@atproto/lex-data": "workspace:^"
+    "@atproto/lex-data": "workspace:^",
+    "@noble/hashes": "^1.6.1"
   },
   "devDependencies": {
     "typescript": "^6.0.3",

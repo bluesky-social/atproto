@@ -16,7 +16,7 @@ export class SqlMembersStorage implements SpaceMembersStorage {
     return this.txn.isMember(this.space, did)
   }
 
-  async getSetHash(): Promise<Buffer | null> {
+  async getSetHashState(): Promise<Buffer | null> {
     const state = await this.txn.getMemberState(this.space)
     return state?.setHash ?? null
   }

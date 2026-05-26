@@ -1,15 +1,15 @@
 import { Keypair, hkdfSha256, hmacSha256, randomBytes } from '@atproto/crypto'
-import { SetHash } from './set-hash.js'
+import { LtHash } from './lthash.js'
 import { SignedCommit, SpaceContext } from './types.js'
 
 export const createCommit = async (
-  setHash: SetHash,
+  setHash: LtHash,
   space: SpaceContext,
   keypair: Keypair,
 ): Promise<SignedCommit> => {
-  const hash = setHash.toBytes()
+  const hash = setHash.digest()
   const ikm = Buffer.from(randomBytes(32))
-  const hmac = deriveKeyAndHmac(ikm, setHash.toBytes(), space)
+  const hmac = deriveKeyAndHmac(ikm, hash, space)
   const sig = Buffer.from(await keypair.sign(ikm))
   return { hash, hmac, ikm, sig }
 }

@@ -1,6 +1,6 @@
 import { SeedClient, TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
 import { Client, DidString, xrpc } from '@atproto/lex'
-import { SetHash } from '@atproto/space'
+import { LtHash } from '@atproto/space'
 import { NsidString, SpaceUriString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
@@ -565,13 +565,13 @@ describe('spaces', () => {
     )
     expect(incremental.ops.length).toBe(2)
 
-    const applied = new SetHash()
+    const applied = new LtHash()
     for (const op of incremental.ops) {
       if (op.cid && (op.action === 'create' || op.action === 'update')) {
-        await applied.add(`${op.collection}/${op.rkey}:${op.cid}`)
+        applied.add(`${op.collection}/${op.rkey}:${op.cid}`)
       }
     }
-    expect(applied.equals(new SetHash(incremental.setHash!))).toBe(false)
+    expect(applied.equals(new LtHash(incremental.setHash!))).toBe(false)
 
     // Recovery: paginated listRecords across all collections → recompute.
     const allRecords: { collection: string; rkey: string; cid: string }[] = []
@@ -587,14 +587,14 @@ describe('spaces', () => {
     }
     expect(allRecords.length).toBe(5)
 
-    const recomputed = new SetHash()
+    const recomputed = new LtHash()
     for (const r of allRecords) {
-      await recomputed.add(`${r.collection}/${r.rkey}:${r.cid}`)
+      recomputed.add(`${r.collection}/${r.rkey}:${r.cid}`)
     }
     const repoState = await pds2.ctx.actorStore.read(bobDid, (store) =>
       store.space.getRepoState(spaceUri),
     )
-    expect(recomputed.equals(new SetHash(repoState!.setHash!))).toBe(true)
+    expect(recomputed.equals(new LtHash(repoState!.setHash!))).toBe(true)
   })
 
   // ---------------- Adversarial ----------------

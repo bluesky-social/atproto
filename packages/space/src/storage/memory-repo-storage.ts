@@ -4,7 +4,7 @@ import { SpaceRepoStorage } from './types.js'
 
 export class MemoryRepoStorage implements SpaceRepoStorage {
   private data = new Map<string, RepoRecord>()
-  private setHash: Buffer | null = null
+  private setHashState: Buffer | null = null
 
   async getRecord(
     collection: string,
@@ -38,8 +38,8 @@ export class MemoryRepoStorage implements SpaceRepoStorage {
     return results
   }
 
-  async getSetHash(): Promise<Buffer | null> {
-    return this.setHash
+  async getSetHashState(): Promise<Buffer | null> {
+    return this.setHashState
   }
 
   async applyCommit(commit: CommitData): Promise<void> {
@@ -54,11 +54,11 @@ export class MemoryRepoStorage implements SpaceRepoStorage {
         this.data.delete(key)
       }
     }
-    this.setHash = Buffer.from(commit.setHash)
+    this.setHashState = Buffer.from(commit.setHash)
   }
 
   async destroy(): Promise<void> {
     this.data.clear()
-    this.setHash = null
+    this.setHashState = null
   }
 }

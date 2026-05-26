@@ -2,7 +2,7 @@ import { Keypair } from '@atproto/crypto'
 import { cidForLex } from '@atproto/lex-cbor'
 import { createCommit, verifyCommit } from './commit.js'
 import { RecordAlreadyExistsError, RecordNotFoundError } from './error.js'
-import { SetHash } from './set-hash.js'
+import { LtHash } from './lthash.js'
 import { SpaceRepoStorage } from './storage/index.js'
 import {
   CommitData,
@@ -18,18 +18,18 @@ import { formatRecordElement } from './util.js'
 type Params = {
   storage: SpaceRepoStorage
   did: string
-  setHash?: SetHash
+  setHash?: LtHash
 }
 
 export class SpaceRepo {
   storage: SpaceRepoStorage
   did: string
-  setHash: SetHash
+  setHash: LtHash
 
   constructor(params: Params) {
     this.storage = params.storage
     this.did = params.did
-    this.setHash = params.setHash ?? new SetHash()
+    this.setHash = params.setHash ?? new LtHash()
   }
 
   static create(storage: SpaceRepoStorage, did: string): SpaceRepo {
@@ -40,9 +40,9 @@ export class SpaceRepo {
     storage: SpaceRepoStorage,
     did: string,
   ): Promise<SpaceRepo> {
-    const stored = await storage.getSetHash()
+    const stored = await storage.getSetHashState()
     if (stored) {
-      return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
+      return new SpaceRepo({ storage, did, setHash: new LtHash(stored) })
     }
     return SpaceRepo.recompute(storage, did)
   }
@@ -51,9 +51,9 @@ export class SpaceRepo {
     storage: SpaceRepoStorage,
     did: string,
   ): Promise<SpaceRepo> {
-    const stored = await storage.getSetHash()
+    const stored = await storage.getSetHashState()
     if (stored) {
-      return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
+      return new SpaceRepo({ storage, did, setHash: new LtHash(stored) })
     }
     return new SpaceRepo({ storage, did })
   }
@@ -62,12 +62,12 @@ export class SpaceRepo {
     storage: SpaceRepoStorage,
     did: string,
   ): Promise<SpaceRepo> {
-    const setHash = new SetHash()
+    const setHash = new LtHash()
     const collections = await storage.listCollections()
     for (const collection of collections) {
       const records = await storage.listRecords(collection)
       for (const { rkey, record } of records) {
-        await setHash.add(await formatRecordElement(collection, rkey, record))
+        setHash.add(await formatRecordElement(collection, rkey, record))
       }
     }
     return new SpaceRepo({ storage, did, setHash })
@@ -78,7 +78,7 @@ export class SpaceRepo {
   ): Promise<CommitData> {
     const ops = Array.isArray(writes) ? writes : [writes]
     const prepared: PreparedWrite[] = []
-    const newSetHash = new SetHash(this.setHash.toBytes())
+    const newSetHash = new LtHash(this.setHash.toBytes())
 
     for (const op of ops) {
       if (op.action === WriteOpAction.Create) {
@@ -87,7 +87,7 @@ export class SpaceRepo {
           throw new RecordAlreadyExistsError(op.collection, op.rkey)
         }
         const cid = await cidForLex(op.record)
-        await newSetHash.add(
+        newSetHash.add(
           await formatRecordElement(op.collection, op.rkey, op.record),
         )
         prepared.push({
@@ -102,11 +102,11 @@ export class SpaceRepo {
         if (!existing) {
           throw new RecordNotFoundError(op.collection, op.rkey)
         }
-        await newSetHash.remove(
+        newSetHash.remove(
           await formatRecordElement(op.collection, op.rkey, existing),
         )
         const cid = await cidForLex(op.record)
-        await newSetHash.add(
+        newSetHash.add(
           await formatRecordElement(op.collection, op.rkey, op.record),
         )
         prepared.push({
@@ -121,7 +121,7 @@ export class SpaceRepo {
         if (!existing) {
           throw new RecordNotFoundError(op.collection, op.rkey)
         }
-        await newSetHash.remove(
+        newSetHash.remove(
           await formatRecordElement(op.collection, op.rkey, existing),
         )
         prepared.push({
@@ -140,7 +140,7 @@ export class SpaceRepo {
 
   async applyCommit(commit: CommitData): Promise<void> {
     await this.storage.applyCommit(commit)
-    this.setHash = new SetHash(commit.setHash)
+    this.setHash = new LtHash(commit.setHash)
   }
 
   async applyWrites(
@@ -178,7 +178,7 @@ export class SpaceRepo {
 
   verifyCommit(space: SpaceContext, commit: SignedCommit): boolean {
     return (
-      this.setHash.equals(new SetHash(commit.hash)) &&
+      commit.hash.equals(this.setHash.digest()) &&
       verifyCommit(space, commit)
     )
   }

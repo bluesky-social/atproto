@@ -1,4 +1,5 @@
 import { l } from '@atproto/lex'
+import { LtHash } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -42,7 +43,9 @@ export default function (server: Server, ctx: AppContext) {
             cid: op.cid ? (op.cid as l.CidString) : undefined,
             prev: op.prev ? (op.prev as l.CidString) : undefined,
           })),
-          setHash: result.setHash ? result.setHash.toString('hex') : undefined,
+          setHash: result.setHash
+            ? new LtHash(result.setHash).digest().toString('hex')
+            : undefined,
           rev: result.rev ?? undefined,
         },
       }

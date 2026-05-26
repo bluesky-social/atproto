@@ -6,8 +6,8 @@ import {
   MemoryMembersStorage,
   MemoryRepoStorage,
   RecordAlreadyExistsError,
+  LtHash,
   RecordNotFoundError,
-  SetHash,
   SpaceContext,
   SpaceMembers,
   SpaceRepo,
@@ -209,51 +209,6 @@ describe('SpaceRepo', () => {
   })
 })
 
-describe('SetHash', () => {
-  it('starts empty as zeroed bytes', () => {
-    const h = new SetHash()
-    expect(h.toBytes()).toEqual(Buffer.alloc(32))
-  })
-
-  it('constructs from hex', () => {
-    const h1 = new SetHash()
-    expect(h1.toHex()).toBe('0'.repeat(64))
-    const h2 = new SetHash(h1.toHex())
-    expect(h1.equals(h2)).toBe(true)
-  })
-
-  it('constructs from bytes', () => {
-    const bytes = Buffer.alloc(32, 0xab)
-    const h = new SetHash(bytes)
-    expect(h.toBytes()).toEqual(bytes)
-  })
-
-  it('is order-independent', async () => {
-    const h1 = new SetHash()
-    await h1.add('alpha')
-    await h1.add('beta')
-
-    const h2 = new SetHash()
-    await h2.add('beta')
-    await h2.add('alpha')
-
-    expect(h1.equals(h2)).toBe(true)
-  })
-
-  it('remove reverses add', async () => {
-    const h = new SetHash()
-    await h.add('element')
-    await h.remove('element')
-    expect(h.equals(new SetHash())).toBe(true)
-  })
-
-  it('does not copy internal state on construct from bytes', () => {
-    const bytes = Buffer.alloc(32, 0xab)
-    const h = new SetHash(bytes)
-    bytes[0] = 0xff
-    expect(h.toBytes()[0]).toBe(0xab)
-  })
-})
 
 describe('SpaceMembers', () => {
   let members: SpaceMembers
@@ -300,7 +255,7 @@ describe('SpaceMembers', () => {
   })
 
   it('remove reverses add for setHash', async () => {
-    const emptyHash = new SetHash(members.setHash.toBytes())
+    const emptyHash = new LtHash(members.setHash.toBytes())
 
     await members.addMember('did:plc:alice')
     await members.removeMember('did:plc:alice')
@@ -355,6 +310,18 @@ describe('commits', () => {
     expect(commit.hmac).toBeInstanceOf(Buffer)
     expect(commit.ikm).toBeInstanceOf(Buffer)
     expect(commit.sig).toBeInstanceOf(Buffer)
+  })
+
+  it('commit.hash equals setHash.digest() (32 bytes)', async () => {
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
+    const commit = await repo.commit(testSpace, keypair)
+    expect(commit.hash).toEqual(repo.setHash.digest())
+    expect(commit.hash).toHaveLength(32)
   })
 
   it('produces different ikm per commit (deniability)', async () => {

@@ -81,13 +81,15 @@ Sync is pull-based. Applications are responsible for staying in sync with all me
 
 Each user’s permissioned repo within a space is represented by a cryptographic commit: a compact digest that characterizes the current set of live records, independent of history.
 
-We use ECMH (Elliptic Curve Multiset Hash), a set hash where adding or removing an element is a single point operation rather than a full recompute of the hash. Two permissioned repos with the same live records produce the same digest regardless of the history of operations.
+We use LtHash, a lattice-based homomorphic set hash whose collision resistance reduces to the Short Integer Solution problem (Lewi et al., IACR 2019/227, also deployed by Meta). The standard parameters are `n=1024` lanes of `q=2^16`, giving ~200-bit collision resistance. Adding or removing an element is a single XOF expansion plus a lane-wise modular addition over a 2048-byte state. Two permissioned repos with the same live records produce the same state regardless of the history of operations.
+
+The commitment value exchanged on the wire is `sha256(state)`: a 32-byte digest derived from the 2048-byte lattice state. This keeps the on-wire commit shape compact while leaving the homomorphic arithmetic to the full LtHash state held in storage. The size tradeoff (~2KB persisted state vs. e.g. ECMH's ~32 bytes) buys a self-contained primitive with no hash-to-curve, no point-validation footguns, and no new cryptographic dependencies.
 
 This commitment plays the same role as the MST root hash for public data: a single value that definitively characterizes what's in the repo. Unlike the MST, it does not support partial sync or single record proofs. The tradeoff is a noticeably lower overhead cryptographic structure and sync protocol.
 
-The ECMH for a permissioned repo is authenticated using a randomly generated and transient HMAC key, which is in turn signed by the user’s atproto signing key.
+The digest for a permissioned repo is authenticated using a randomly generated and transient HMAC key, which is in turn signed by the user’s atproto signing key.
 
-The commit is composed of the ECMH hash, the computed HMAC, the HMAC key, and the signature.
+The commit is composed of the digest, the computed HMAC, the HMAC key, and the signature.
 
 Each commit is authenticated for only one party and is not intended to be rebroadcast. HMACs are used to provide deniability in the event a signature is exposed. Every reader who reads a permissioned repo from a PDS will receive a different HMAC key.
 

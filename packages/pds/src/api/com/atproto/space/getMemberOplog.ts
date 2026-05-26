@@ -1,4 +1,5 @@
 import { l } from '@atproto/lex'
+import { LtHash } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
@@ -37,7 +38,9 @@ export default function (server: Server, ctx: AppContext) {
             action: op.action as 'add' | 'remove' | l.UnknownString,
             did: op.did as l.DidString,
           })),
-          setHash: result.setHash ? result.setHash.toString('hex') : undefined,
+          setHash: result.setHash
+            ? new LtHash(result.setHash).digest().toString('hex')
+            : undefined,
           rev: result.rev ?? undefined,
         },
       }

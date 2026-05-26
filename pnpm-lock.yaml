@@ -2004,6 +2004,9 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
+      '@noble/hashes':
+        specifier: ^1.6.1
+        version: 1.7.0
     devDependencies:
       typescript:
         specifier: ^6.0.3

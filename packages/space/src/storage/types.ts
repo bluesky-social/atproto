@@ -10,7 +10,7 @@ export interface SpaceRepoStorage {
   ): Promise<{ rkey: string; record: RepoRecord }[]>
 
   // Set hash
-  getSetHash(): Promise<Buffer | null>
+  getSetHashState(): Promise<Buffer | null>
 
   // Atomic commit
   applyCommit(commit: CommitData): Promise<void>
@@ -22,7 +22,7 @@ export interface SpaceRepoStorage {
 export interface SpaceMembersStorage {
   getMembers(): Promise<string[]>
   isMember(did: string): Promise<boolean>
-  getSetHash(): Promise<Buffer | null>
+  getSetHashState(): Promise<Buffer | null>
   applyCommit(commit: MemberCommitData): Promise<void>
   destroy(): Promise<void>
 }

@@ -3,7 +3,7 @@ import { SpaceMembersStorage } from './types.js'
 
 export class MemoryMembersStorage implements SpaceMembersStorage {
   private members = new Set<string>()
-  private setHash: Buffer | null = null
+  private setHashState: Buffer | null = null
 
   async getMembers(): Promise<string[]> {
     return [...this.members]
@@ -13,8 +13,8 @@ export class MemoryMembersStorage implements SpaceMembersStorage {
     return this.members.has(did)
   }
 
-  async getSetHash(): Promise<Buffer | null> {
-    return this.setHash
+  async getSetHashState(): Promise<Buffer | null> {
+    return this.setHashState
   }
 
   async applyCommit(commit: MemberCommitData): Promise<void> {
@@ -25,11 +25,11 @@ export class MemoryMembersStorage implements SpaceMembersStorage {
         this.members.delete(op.did)
       }
     }
-    this.setHash = Buffer.from(commit.setHash)
+    this.setHashState = Buffer.from(commit.setHash)
   }
 
   async destroy(): Promise<void> {
     this.members.clear()
-    this.setHash = null
+    this.setHashState = null
   }
 }
