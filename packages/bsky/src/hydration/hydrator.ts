@@ -612,6 +612,15 @@ export class Hydrator {
     const siteStandardLabelSubjects = dedupeStrs(
       siteStandardRefs.map((ref) => ref.uri),
     )
+    // Site-standard record owners need profile basics so we can populate
+    // `associatedProfiles` on the external embed view. Include them in the
+    // post-author profile fetch below; any DIDs surfaced later by the
+    // dataplane are picked up by the top-up after the parallel batch.
+    const ssRefDids = siteStandardRefs.map((ref) => uriToDid(ref.uri))
+    const knownProfileDids = dedupeStrs([
+      ...allPostUris.map(didFromUri),
+      ...ssRefDids,
+    ])
 
     const [
       postAggs,
@@ -638,7 +647,7 @@ export class Hydrator {
         ctx.labelers,
       ),
       this.hydratePostBlocks(posts, ctx),
-      this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
+      this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
@@ -657,9 +666,28 @@ export class Hydrator {
         labels,
       )
     }
+
+    // Defensive top-up: in the unlikely case the dataplane returned a
+    // publication owned by a DID not present in the post-author or
+    // pinned-ref sets, fetch its profile serially and fold it in.
+    const knownProfileDidsSet = new Set(knownProfileDids)
+    const extraSsDids: DidString[] = []
+    for (const key of siteStandardPublications.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownProfileDidsSet.has(did)) {
+        knownProfileDidsSet.add(did)
+        extraSsDids.push(did)
+      }
+    }
+    const mergedProfileState = extraSsDids.length
+      ? mergeStates(
+          profileState,
+          await this.hydrateProfilesBasic(extraSsDids, ctx),
+        )
+      : profileState
     // combine all hydration state
     return mergeManyStates(
-      profileState,
+      mergedProfileState,
       listState,
       feedGenState,
       labelerState,
@@ -810,20 +838,40 @@ export class Hydrator {
       ),
     ) as AtUriString[]
     if (!ssUris.length) return { ctx }
+    const dids = dedupeStrs(ssUris.map((uri) => uriToDid(uri)))
 
-    const [{ documents, publications }, labels] = await Promise.all([
+    const [{ documents, publications }, labels, profiles] = await Promise.all([
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+      this.hydrateProfilesBasic(dids, ctx),
     ])
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
     }
-    return {
+    // Edge case: a document's `site` may resolve to a publication owned by a
+    // different repo than any of the input URIs (the dataplane returns it
+    // even though it wasn't requested directly). Top up profile coverage for
+    // any such DIDs with a serial second hydration so `associatedProfiles`
+    // is complete.
+    const knownDids = new Set<string>(dids)
+    const extraDids: DidString[] = []
+    for (const key of publications.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownDids.has(did)) {
+        knownDids.add(did)
+        extraDids.push(did)
+      }
+    }
+    const profilesState = extraDids.length
+      ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
+      : profiles
+
+    return mergeStates(profilesState, {
       ctx,
       labels,
       siteStandardDocuments: documents,
       siteStandardPublications: publications,
-    }
+    })
   }
 
   // app.bsky.feed.defs#threadViewPost

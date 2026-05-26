@@ -58,7 +58,7 @@ describe('server', () => {
 
   it('limits size of json input.', async () => {
     const res = await fetch(
-      `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
+      `${network.pds.url}/xrpc/com.atproto.identity.updateHandle`,
       {
         method: 'POST',
         body: '"' + 'x'.repeat(150 * 1024) + '"', // ~150kb

@@ -39,7 +39,6 @@ export function ResetPasswordConfirmForm({
       {...props}
       onSubmit={async (signal) => {
         if (token && password) return onSubmit({ token, password }, signal)
-        else throw new Error('Token and password are required')
       }}
       invalid={invalid || !token || !password}
     >

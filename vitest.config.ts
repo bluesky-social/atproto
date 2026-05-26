@@ -12,10 +12,16 @@ export default defineConfig({
       ],
     },
     projects: [
-      'packages/bsky',
       'packages/lex/*',
       'packages/syntax',
       'packages/tap',
+
+      // The following packages use vitest but require dev-infra to be started &
+      // stopped between runs, we don't enable it here (when running "pnpm
+      // test:unit" or the "vitest.explorer" VSCode extension). Use "pnpm test"
+      // from the package root instead.
+
+      // 'packages/bsky',
     ],
   },
 })

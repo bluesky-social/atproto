@@ -25,6 +25,7 @@ export type LayoutPageProps = {
   title?: string | MessageDescriptor
   links: ReadonlyArray<LayoutPageLink>
   children?: ReactNode
+  prepend?: ReactNode
 }
 
 export function LayoutPage({
@@ -32,6 +33,7 @@ export function LayoutPage({
   basePath,
   title,
   links,
+  prepend,
 }: LayoutPageProps) {
   const { _ } = useLingui()
   const { pathname } = useRouterState().location
@@ -47,6 +49,8 @@ export function LayoutPage({
       title={title}
       header={<AccountSelector className="shrink-0" size="lg" />}
     >
+      {prepend}
+
       <div className="flex w-full flex-1 flex-col md:flex-row">
         <aside
           className={`shrink-0 p-4 md:px-8 ${atBase ? 'w-full md:w-auto' : 'hidden max-w-xs md:block'}`}

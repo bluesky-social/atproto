@@ -108,12 +108,6 @@ describe('account manager', () => {
   })
 
   it('allows changing the password', async () => {
-    const sendResetPasswordMock = jest
-      .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
-      .mockImplementation(async () => {
-        // noop
-      })
-
     await using page = await PageHelper.from(browser, { languages })
 
     await page.goto(new URL('/account', network.pds.url))
@@ -122,7 +116,11 @@ describe('account manager', () => {
 
     await page.clickOnText('Mot de passe', 'a')
 
-    expect(sendResetPasswordMock).toHaveBeenCalledTimes(0)
+    using sendResetPasswordMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+      .mockImplementation(async () => {
+        // noop
+      })
 
     await page.clickOnText('Envoyer le code')
 
@@ -145,7 +143,90 @@ describe('account manager', () => {
       'Réinitialisation du mot de passe réussie',
       'div',
     )
+  })
 
-    sendResetPasswordMock.mockRestore()
+  it('allows validating the email address', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.clickOnText('Vérifier maintenant', 'button')
+
+    using sendConfirmEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await page.clickOnText('Envoyer le code', 'button')
+
+    await page.waitForNetworkIdle()
+
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendConfirmEmailMock.mock.lastCall!
+    expect(params).toEqual({
+      locale: 'fr',
+      token: expect.any(String),
+    })
+
+    await page.typeInInput('code', params.token)
+    await page.clickOnText('Soumettre')
+
+    await page.ensureTextVisibility('Adresse email vérifiée', 'div')
+  })
+
+  it('allows changing the email address', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.clickOnText('Email', 'a')
+
+    using sendUpdateEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    using sendConfirmEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await page.clickOnText('Envoyer le code', 'button')
+
+    await page.waitForNetworkIdle()
+
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(1)
+
+    const [updateParams] = sendUpdateEmailMock.mock.lastCall!
+    expect(updateParams).toEqual({
+      locale: 'fr',
+      token: expect.any(String),
+    })
+
+    await page.typeInInput('code', updateParams.token)
+    await page.typeInInput('email', 'bob-new-email@example.com')
+    await page.clickOnText('Soumettre')
+
+    await page.ensureTextVisibility(
+      "Modification de l'adresse email réussie",
+      'div',
+    )
+
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(1)
+
+    const [confirmParams] = sendConfirmEmailMock.mock.lastCall!
+    expect(confirmParams).toEqual({
+      locale: 'fr',
+      token: expect.any(String),
+    })
+
+    await page.typeInInput('code', confirmParams.token)
+    await page.clickOnText('Soumettre')
+
+    await page.ensureTextVisibility('Adresse email vérifiée', 'div')
   })
 })

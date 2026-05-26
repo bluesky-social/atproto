@@ -1,7 +1,6 @@
 import { Trans } from '@lingui/react/macro'
-import { PaperPlaneTiltIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
+import { ButtonRequestReset } from '#/components/forms/button-request-reset.tsx'
 import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -37,20 +36,12 @@ export function Page() {
         </Trans>
       </p>
 
-      <ButtonCooldown
-        onClick={async () => {
-          await resetPasswordRequest.mutateAsync({ email })
-        }}
-        cooldownSeconds={30}
+      <ButtonRequestReset
+        action={async () => resetPasswordRequest.mutateAsync({ email })}
         loading={resetPasswordRequest.isPending}
         disabled={success}
         className="max-w-full"
-      >
-        <PaperPlaneTiltIcon aria-hidden className="mr-2" weight="bold" />
-        <span className="flex-1 truncate">
-          <Trans context="PasswordReset">Send reset code</Trans>
-        </span>
-      </ButtonCooldown>
+      />
 
       <ResetPasswordConfirmForm
         disabled={success || resetPasswordConfirm.isPending}

@@ -88,7 +88,7 @@
           {
             sub: 'did:plc:dpajgwmnecpdyjyqzjzm6bnb',
             email: 'eric@foobar.com',
-            email_verified: true,
+            email_verified: false,
             name: 'Tom Sawyeeeeeeeeeee',
             preferred_username: 'test.esb.lol',
             picture:
@@ -97,7 +97,7 @@
           {
             sub: 'did:plc:matttmattmattmattmattmat',
             email: 'matthieu@foobar.com',
-            email_verified: true,
+            email_verified: false,
             name: 'Matthieu',
             preferred_username: 'matthieu.bsky.test',
             picture: /** @type {sting|undefined} */ (undefined),
@@ -308,6 +308,92 @@
               return Response.json({ available: true })
             case `POST ${API_ENDPOINT_PREFIX}/reset-password-confirm`:
               return Response.json({ available: true })
+            case `POST ${API_ENDPOINT_PREFIX}/update-email-request`: {
+              const { sub } = JSON.parse(init.body)
+              if (!accounts.has(sub)) {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Unknown account',
+                  },
+                  { status: 400 },
+                )
+              }
+              return Response.json({ tokenRequired: true })
+            }
+            case `POST ${API_ENDPOINT_PREFIX}/update-email-confirm`: {
+              const { sub, token, email } = JSON.parse(init.body)
+              const account = accounts.get(sub)
+              if (!account) {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Unknown account',
+                  },
+                  { status: 400 },
+                )
+              }
+              if (token !== 'AAAAA-AAAAA') {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Invalid token',
+                  },
+                  { status: 400 },
+                )
+              }
+              // Mirror the real behavior: changing email resets the
+              // email_verified flag and triggers a new verification email.
+              account.email = email
+              account.email_verified = false
+              return Response.json({ success: true })
+            }
+            case `POST ${API_ENDPOINT_PREFIX}/verify-email-request`: {
+              const { sub } = JSON.parse(init.body)
+              if (!accounts.has(sub)) {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Unknown account',
+                  },
+                  { status: 400 },
+                )
+              }
+              return Response.json({ success: true })
+            }
+            case `POST ${API_ENDPOINT_PREFIX}/verify-email-confirm`: {
+              const { sub, token, email } = JSON.parse(init.body)
+              const account = accounts.get(sub)
+              if (!account) {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Unknown account',
+                  },
+                  { status: 400 },
+                )
+              }
+              if (token !== 'AAAAA-AAAAA') {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Invalid token',
+                  },
+                  { status: 400 },
+                )
+              }
+              if (account.email !== email) {
+                return Response.json(
+                  {
+                    error: 'invalid_request',
+                    error_description: 'Email mismatch',
+                  },
+                  { status: 400 },
+                )
+              }
+              account.email_verified = true
+              return Response.json({ success: true })
+            }
           }
         }
 
