@@ -8,7 +8,7 @@ import {
   MIN_LENGTH,
   ValidDomain,
   isValidDomain,
-} from '#/lib/handle'
+} from '#/lib/handle.ts'
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'

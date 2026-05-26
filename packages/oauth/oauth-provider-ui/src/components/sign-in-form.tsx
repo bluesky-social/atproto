@@ -17,7 +17,7 @@ import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
-import { isValidDomain } from '#/lib/handle'
+import { isValidDomain } from '#/lib/handle.ts'
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
