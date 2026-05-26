@@ -1,5 +1,21 @@
 # @atproto/pds
 
+## 0.5.1
+
+### Patch Changes
+
+- [#4992](https://github.com/bluesky-social/atproto/pull/4992) [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc) Thanks [@devinivy](https://github.com/devinivy)! - Fix OAuth service-proxying audience check to use combined `did#serviceId` form, matching the shape of granted `rpc:` scopes.
+
+- [#5009](https://github.com/bluesky-social/atproto/pull/5009) [`d5ca2b8`](https://github.com/bluesky-social/atproto/commit/d5ca2b850463097710a69439f06a5fb14c2d4194) Thanks [@matthieusieben](https://github.com/matthieusieben)! - 3rd party branding, optional bsky link removal in email templates
+
+- [#4992](https://github.com/bluesky-social/atproto/pull/4992) [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc) Thanks [@devinivy](https://github.com/devinivy)! - `getServiceAuth` now accepts the combined `did#serviceId` form for its `aud` parameter, in addition to the bare DID form.
+
+- Updated dependencies [[`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/lex@0.1.3
+  - @atproto/oauth-scopes@0.5.0
+  - @atproto/did@0.5.0
+  - @atproto/oauth-provider@0.18.1
+
 ## 0.5.0
 
 ### Minor Changes

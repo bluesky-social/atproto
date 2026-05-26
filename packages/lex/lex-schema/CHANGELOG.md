@@ -1,5 +1,11 @@
 # @atproto/lex-schema
 
+## 0.1.2
+
+### Patch Changes
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `$token` accessor for `token` lexicon values schemas
+
 ## 0.1.1
 
 ### Patch Changes

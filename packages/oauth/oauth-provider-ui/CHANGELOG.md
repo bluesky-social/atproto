@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.7.1
+
+### Patch Changes
+
+- [#5008](https://github.com/bluesky-social/atproto/pull/5008) [`30ccc25`](https://github.com/bluesky-social/atproto/commit/30ccc25adfa8ef3b5393c65ab8af9b827e1e2c80) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Increase maximum handle length in OAuth flow
+
 ## 0.7.0
 
 ### Minor Changes
