@@ -7,19 +7,27 @@ import {
 } from '../src/index.js'
 
 describe('valid interop', () => {
-  for (const value of readLines(
-    `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_valid.txt`,
-  )) {
-    testValid(value)
-  }
+  test.each(
+    readLines(
+      `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_valid.txt`,
+    ),
+  )('%s', (value) => {
+    expect(isAtUriString(value)).toBe(true)
+    expect(isAtUriString(value, { strict: false })).toBe(true)
+    expect(() => assertAtUriString(value)).not.toThrow()
+    expect(() => assertAtUriString(value, { strict: false })).not.toThrow()
+  })
 })
 
 describe('invalid interop', () => {
-  for (const value of readLines(
-    `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_invalid.txt`,
-  )) {
-    testInvalid(value)
-  }
+  test.each(
+    readLines(
+      `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_invalid.txt`,
+    ),
+  )('%s', (value) => {
+    expect(isAtUriString(value)).toBe(false)
+    expect(() => assertAtUriString(value)).toThrow(InvalidAtUriError)
+  })
 })
 
 describe('custom cases', () => {

@@ -724,18 +724,14 @@ describe('pds profile views', () => {
   })
 
   it('filters out Go zero-value dates from dataplane', async () => {
-    // Spy on the dataplane getActors method
-    const getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
+    using getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
 
-    // Call the original implementation but modify the result
     getActorsSpy.mockImplementationOnce(async (req) => {
-      // Call the real method
       const result = await network.bsky.ctx.dataplane.getActors(req)
 
-      // Modify the result to inject a Go zero-value date
+      // Inject a Go zero-value date (0001-01-01 00:00:00 UTC)
       if (result.actors.length > 0 && result.actors[0]) {
         const actor = result.actors[0]
-        // Create a Timestamp with Go zero-value (0001-01-01 00:00:00 UTC)
         const goZeroDate = new Date(-62135596800000)
         actor.createdAt = Timestamp.fromDate(goZeroDate)
       }
@@ -750,11 +746,8 @@ describe('pds profile views', () => {
       },
     )
 
-    // The createdAt should be undefined because the hydration layer filters it out
+    // The hydration layer filters Go zero-values out
     expect(data.createdAt).toBeUndefined()
-
-    // Clean up
-    getActorsSpy.mockRestore()
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {
