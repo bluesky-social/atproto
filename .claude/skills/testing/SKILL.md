@@ -23,7 +23,7 @@ Runner-reference summary:
 
 - **Unit tests** live next to the unit being tested as `foo.ts` + `foo.test.ts`. This is the default — prefer it whenever the test does not need infra, or complex cross-package setup.
 - **End-to-end / integration tests** live in a top-level `./tests` folder inside the package (for example, the `pds` and `bsky` packages each have their own `./tests` folder). Use this for tests that boot real services, hit a database, or exercise multiple modules together.
-- **Shared test helpers** live in `./tests/_util.ts` (or `./tests/_util/*`). The leading underscore keeps them out of glob-based test discovery. Used by [packages/bsky/tests/_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/tap/tests/_util.ts](../../../packages/tap/tests/_util.ts).
+- **Shared test helpers** live in `./tests/_util.ts` (or `./tests/_util/*`). The leading underscore keeps them out of glob-based test discovery. Used by [packages/bsky/tests/\_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/tap/tests/\_util.ts](../../../packages/tap/tests/_util.ts).
 
 ## TypeScript config for tests
 
