@@ -173,7 +173,14 @@ export type CreateRecordOptions = Omit<
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
   swapCommit?: string
-  /** Whether to validate the record against its lexicon schema. */
+  /**
+   * Whether the PDS should validate the record against its lexicon schema.
+   * When `true`, the PDS is asked to explicitly validate the record. When
+   * `false`, the PDS is asked to explicitly skip validation. When `undefined`
+   * (default), the PDS decides -- typically validating only collections whose
+   * schemas it knows. This is server-side validation; for client-side
+   * validation before sending, use {@link XrpcRequestProcessingOptions.validateRequest}.
+   */
   validate?: boolean
 }
 
@@ -216,7 +223,14 @@ export type PutRecordOptions = Omit<XrpcOptions<typeof putRecord>, 'body'> & {
   swapCommit?: string
   /** Compare-and-swap on the record CID. If specified, must match current record. */
   swapRecord?: string
-  /** Whether to validate the record against its lexicon schema. */
+  /**
+   * Whether the PDS should validate the record against its lexicon schema.
+   * When `true`, the PDS is asked to explicitly validate the record. When
+   * `false`, the PDS is asked to explicitly skip validation. When `undefined`
+   * (default), the PDS decides — typically validating only collections whose
+   * schemas it knows. This is server-side validation; for client-side
+   * validation before sending, use {@link XrpcRequestProcessingOptions.validateRequest}.
+   */
   validate?: boolean
 }
 
@@ -250,7 +264,13 @@ export type ApplyWritesOptions = Omit<
 > & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
-  /** Whether the PDS should validate the records against their lexicon schemas. */
+  /**
+   * Whether the PDS should validate the records against their lexicon schemas.
+   * When `true`, the PDS is asked to explicitly validate every record. When
+   * `false`, the PDS is asked to explicitly skip validation. When `undefined`
+   * (default), the PDS decides — typically validating only collections whose
+   * schemas it knows.
+   */
   validate?: boolean
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
   swapCommit?: CidString

@@ -39,6 +39,7 @@
     "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
+    "@atproto/did": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",

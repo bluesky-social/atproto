@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ResultFailure, ResultSuccess, success } from './result.js'
+import type * as Result from './result.js'
 import { LexValidationError } from './validation-error.js'
 import {
   Issue,
@@ -15,16 +14,16 @@ import {
 /**
  * Represents a successful validation result.
  *
- * @typeParam Value - The type of the validated value
+ * @typeParam TValue - The type of the validated value
+ * @extends Result.ResultSuccess<TValue>
  */
-export type ValidationSuccess<Value = unknown> = ResultSuccess<Value>
+export type ValidationSuccess<TValue = unknown> = Result.ResultSuccess<TValue>
 
 /**
  * Represents a failed validation result containing a {@link LexValidationError}.
  *
- * @extends ResultFailure<LexValidationError>
- * @see {@link ResultFailure}
  * @see {@link LexValidationError}
+ * @extends Result.ResultFailure<LexValidationError>
  */
 export type ValidationFailure = LexValidationError
 
@@ -429,24 +428,14 @@ export class ValidationContext {
   }
 
   /**
-   * Creates a successful validation result with the given value.
+   * Helper method to create a successful validation result.
    *
    * @typeParam V - The value type
    * @param value - The validated value
    * @returns A successful validation result
    */
-  success<V>(value: V): ValidationResult<V> {
-    return success(value)
-  }
-
-  /**
-   * Creates a failed validation result with the given error.
-   *
-   * @param reason - The validation error
-   * @returns A failed validation result
-   */
-  failure(reason: LexValidationError): ValidationFailure {
-    return reason
+  success<V>(value: V): ValidationSuccess<V> {
+    return { success: true, value }
   }
 
   /**
@@ -457,8 +446,8 @@ export class ValidationContext {
    * @param issue - The validation issue that caused the failure
    * @returns A failed validation result
    */
-  issue(issue: Issue) {
-    return this.failure(new LexValidationError([...this.issues, issue]))
+  issue(issue: Issue): ValidationFailure {
+    return new LexValidationError([...this.issues, issue])
   }
 
   /**
