@@ -2,7 +2,11 @@ import { Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
 import { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
+import {
+  bareDidFromProxyTo,
+  computeProxyTo,
+  pipethrough,
+} from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
@@ -26,7 +30,12 @@ export default function (server: Server, ctx: AppContext) {
       const lxm = app.bsky.actor.getPreferences.$lxm
       const aud = computeProxyTo(ctx, req, lxm)
       if (aud !== `${bskyAppView.did}#bsky_appview`) {
-        return pipethrough(ctx, req, { iss: did, aud, lxm })
+        // Phase 1 of service auth updates: outbound JWT keeps bare-DID aud.
+        return pipethrough(ctx, req, {
+          iss: did,
+          aud: bareDidFromProxyTo(aud),
+          lxm,
+        })
       }
 
       const hasAccessFull =

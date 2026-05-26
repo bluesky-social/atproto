@@ -77,6 +77,7 @@ describe('proxy header', () => {
     ).resolves.toEqual({
       did: proxyServer.did,
       url: proxyServer.url,
+      serviceId: 'atproto_test',
     })
   })
 

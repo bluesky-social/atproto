@@ -56,9 +56,23 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+      const {
+        url: origin,
+        did,
+        serviceId,
+      } = await parseProxyInfo(ctx, req, lxm)
+      // Phase 1 of service auth updates: the scope check sees the combined
+      // did#serviceId form (so OAuth callers' rpc:?aud=did#service scopes
+      // match), while the outbound service-auth JWT keeps bare-DID aud
+      // regardless of session type.
+      const scopeAud = `${did}#${serviceId}`
+      const tokenAud = did
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+      const authResult = await performAuth({
+        req,
+        res,
+        params: { lxm, aud: scopeAud },
+      })
 
       const { credentials } = excludeErrorResult(authResult)
 
@@ -80,7 +94,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, tokenAud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -216,18 +230,25 @@ export function computeProxyTo(
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
+// Bare-DID portion of `proxyTo`, suitable as a service-auth JWT audience
+// (Phase 1 of service auth updates).
+export function bareDidFromProxyTo(proxyTo: string): string {
+  const hashIndex = proxyTo.indexOf('#')
+  return hashIndex === -1 ? proxyTo : proxyTo.slice(0, hashIndex)
+}
+
 export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): Promise<{ url: string; did: string }> {
+): Promise<{ url: string; did: string; serviceId: string }> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const { serviceInfo } = defaultService(ctx, lxm)
-  if (serviceInfo) return serviceInfo
+  const { serviceId, serviceInfo } = defaultService(ctx, lxm)
+  if (serviceInfo) return { ...serviceInfo, serviceId }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -236,7 +257,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; url: string }> => {
+): Promise<{ did: string; url: string; serviceId: string }> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -260,13 +281,14 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
 
   // Special case a configured appview, while still proxying correctly any other appview
   if (
     ctx.cfg.bskyAppView &&
     proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
   ) {
-    return { did, url: ctx.cfg.bskyAppView.url }
+    return { did, url: ctx.cfg.bskyAppView.url, serviceId }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -274,13 +296,12 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did')
   }
 
-  const serviceId = proxyTo.slice(hashIndex)
-  const url = getServiceEndpoint(didDoc, { id: serviceId })
+  const url = getServiceEndpoint(didDoc, { id: `#${serviceId}` })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url }
+  return { did, url, serviceId }
 }
 
 /**
