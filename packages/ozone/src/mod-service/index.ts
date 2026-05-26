@@ -245,10 +245,14 @@ export class ModerationService {
       if (!includeAllUserRecords) {
         if (subjectAtUri?.collection === 'chat.bsky.convo') {
           builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
+        } else if (subjectUri) {
+          builder = builder.where('subjectUri', '=', subjectUri)
         } else {
+          // Account-level: subjectUri IS NULL also matches conversation events,
+          // so explicitly exclude them.
           builder = builder
-            .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
-            .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+            .where('subjectUri', 'is', null)
+            .where('subjectConvoId', 'is', null)
         }
       }
     } else if (subjectType === 'account') {
@@ -1156,22 +1160,28 @@ export class ModerationService {
             '=',
             subjectInfo.convoId,
           )
-        } else {
-          builder = builder.where((qb) =>
-            subjectInfo.recordPath
-              ? qb.where(
-                  'moderation_subject_status.recordPath',
-                  '=',
-                  subjectInfo.recordPath,
-                )
-              : qb.where('moderation_subject_status.recordPath', '=', ''),
+        } else if (subjectInfo.recordPath) {
+          builder = builder.where(
+            'moderation_subject_status.recordPath',
+            '=',
+            subjectInfo.recordPath,
           )
+        } else {
+          // Account-level: recordPath = '' also matches conversation statuses,
+          // so explicitly exclude them.
+          builder = builder
+            .where('moderation_subject_status.recordPath', '=', '')
+            .where('moderation_subject_status.convoId', '=', '')
         }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('moderation_subject_status.recordPath', '=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '=', '')
+        .where('moderation_subject_status.convoId', '=', '')
     } else if (subjectType === 'record') {
       builder = builder.where('moderation_subject_status.recordPath', '!=', '')
+    } else if (subjectType === 'conversation') {
+      builder = builder.where('moderation_subject_status.convoId', '!=', '')
     }
 
     // Only fetch items that belongs to the specified queue when specified

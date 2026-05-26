@@ -109,7 +109,8 @@
             "#repoView",
             "#repoViewNotFound",
             "#recordView",
-            "#recordViewNotFound"
+            "#recordViewNotFound",
+            "#convoView"
           ]
         },
         "subjectBlobs": {
@@ -961,6 +962,14 @@
       "required": ["uri"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "convoView": {
+      "type": "object",
+      "required": ["did", "convoId"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "convoId": { "type": "string" }
       }
     },
     "moderation": {

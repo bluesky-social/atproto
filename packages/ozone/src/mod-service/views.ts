@@ -555,10 +555,10 @@ export class ModerationViews {
 
   async subject(subject: ModSubject): Promise<SubjectView> {
     if (subject.isConvo()) {
-      // TODO: update this later
       return {
-        $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+        $type: 'tools.ozone.moderation.defs#convoView',
         did: subject.did,
+        convoId: subject.convoId,
       }
     } else if (subject.isRepo()) {
       const repos = await this.repos([subject.did])
