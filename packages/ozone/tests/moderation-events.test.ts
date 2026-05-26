@@ -208,7 +208,7 @@ describe('moderation-events', () => {
       ])
 
       // Verify all spam events have the correct report type
-      expect(spamEvents.events.length).toBeGreaterThan(0)
+      expect(spamEvents.events.length).toEqual(6)
       spamEvents.events.forEach((event) => {
         expect(event.event.$type).toEqual(
           'tools.ozone.moderation.defs#modEventReport',
@@ -217,7 +217,7 @@ describe('moderation-events', () => {
       })
 
       // Verify all misleading events have one of the correct report types
-      expect(misleadingEvents.events.length).toBeGreaterThan(0)
+      expect(misleadingEvents.events.length).toEqual(2)
       misleadingEvents.events.forEach((event) => {
         expect(event.event.$type).toEqual(
           'tools.ozone.moderation.defs#modEventReport',
