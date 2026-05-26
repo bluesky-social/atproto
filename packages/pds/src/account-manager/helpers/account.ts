@@ -195,13 +195,19 @@ export const updateHandle = async (
   did: DidString,
   handle: HandleString,
 ) => {
+  // No-op if the handle is the same, but still returns 1 row affected, so that
+  // it can be used to check for existence of the account.
   const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
-        db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
+        db.db
+          .selectFrom('actor')
+          .where('handle', '=', handle)
+          .where('did', '!=', did)
+          .selectAll(),
       ),
   )
   if (res.numUpdatedRows < 1) {

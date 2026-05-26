@@ -38,7 +38,9 @@ export default function (server: Server, ctx: AppContext) {
     server.add(com.atproto.admin.updateAccountHandle, {
       auth: ctx.authVerifier.adminToken,
       handler: async ({ input: { body } }) => {
-        await ctx.accountManager.updateHandle(body.did, body.handle)
+        await ctx.accountManager.updateHandle(body.did, body.handle, {
+          allowAnyValid: true,
+        })
       },
     })
   }

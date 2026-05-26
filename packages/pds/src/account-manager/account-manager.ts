@@ -145,7 +145,7 @@ export class AccountManager {
     handle: string,
     {
       did,
-      allowAnyValid,
+      allowAnyValid = false,
     }: {
       did?: string
       allowAnyValid?: boolean
@@ -278,8 +278,13 @@ export class AccountManager {
   async updateHandle(
     did: DidString,
     newHandle: string,
+    options?: { allowAnyValid?: boolean },
   ): Promise<ActorAccount & { handle: HandleString }> {
-    const { account, handle } = await this.validateHandleUpdate(did, newHandle)
+    const { account, handle } = await this.validateHandleUpdate(
+      did,
+      newHandle,
+      options,
+    )
 
     if (account.handle !== handle) {
       if (did.startsWith('did:plc:')) {
@@ -318,7 +323,7 @@ export class AccountManager {
     }
 
     const handle = await this.normalizeAndValidateHandle(newHandle, {
-      ...options,
+      allowAnyValid: options?.allowAnyValid,
       did,
     })
 
