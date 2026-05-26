@@ -1,5 +1,14 @@
 # @atproto/lex-client
 
+## 0.1.3
+
+### Patch Changes
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused utilities
+
+- Updated dependencies [[`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc)]:
+  - @atproto/lex-schema@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes

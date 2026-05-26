@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.6
+
+### Patch Changes
+
+- [#4999](https://github.com/bluesky-social/atproto/pull/4999) [`126ac1e`](https://github.com/bluesky-social/atproto/commit/126ac1ead8c44065e3fa7c02efba7bd20551ee99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.5
 
 ### Patch Changes
