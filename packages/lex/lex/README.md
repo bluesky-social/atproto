@@ -52,7 +52,8 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
   - [Validation Helpers](#validation-helpers)
     - [`$nsid` - Namespace Identifier](#nsid---namespace-identifier)
     - [`$type` - Type Identifier](#type---type-identifier)
-    - [`$check(data)` - Type Guard](#checkdata---type-guard)
+    - [`$matches(data)` - Type Guard](#matchesdata---type-guard)
+    - [`$assert(data)` - Type-Narrowing Assertion](#assertdata---type-narrowing-assertion)
     - [`$parse(data)` - Parse and Validate](#parsedata---parse-and-validate)
     - [`$validate(data)` - Validate a value against the schema](#validatedata---validate-a-value-against-the-schema)
     - [`$safeParse(data, options?)` - Parse a value against a schema and get the resulting value](#safeparsedata-options---parse-a-value-against-a-schema-and-get-the-resulting-value)
@@ -116,6 +117,7 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
     - [Packaging Actions as a Library](#packaging-actions-as-a-library)
     - [Best Practices for Actions](#best-practices-for-actions)
   - [Standard Schema Compatibility](#standard-schema-compatibility)
+  - [Validating Generic Schemas with `$check`](#validating-generic-schemas-with-check)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -305,7 +307,7 @@ console.log(app.bsky.feed.post.$type) // 'app.bsky.feed.post'
 console.log(app.bsky.actor.defs.profileViewBasic.$type) // 'app.bsky.actor.defs#profileViewBasic'
 ```
 
-#### `$check(data)` - Type Guard
+#### `$matches(data)` - Type Guard
 
 Returns `true` if data matches the schema, `false` otherwise. Acts as a TypeScript type guard:
 
@@ -319,11 +321,32 @@ const data = {
   createdAt: l.currentDatetimeString(),
 }
 
-if (app.bsky.feed.post.$check(data)) {
+if (app.bsky.feed.post.$matches(data)) {
   // TypeScript knows data is a Post here
   console.log(data.text)
 }
 ```
+
+#### `$assert(data)` - Type-Narrowing Assertion
+
+Throws if `data` does not match the schema. When the schema is statically known (e.g. `app.bsky.feed.post`), TypeScript narrows the type of `data` after the call:
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const data: unknown = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: l.currentDatetimeString(),
+}
+
+app.bsky.feed.post.$assert(data)
+// TypeScript now knows data is app.bsky.feed.post.Main
+console.log(data.text)
+```
+
+For library code that operates on a schema parameter whose type cannot be fully expressed, see [Validating Generic Schemas with `$check`](#validating-generic-schemas-with-check).
 
 #### `$parse(data)` - Parse and Validate
 
@@ -334,7 +357,7 @@ import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 try {
-  const post = app.bsky.feed.post.$main.$parse({
+  const post = app.bsky.feed.post.main.$parse({
     $type: 'app.bsky.feed.post',
     text: 'Hello!',
     createdAt: l.currentDatetimeString(),
@@ -706,7 +729,7 @@ console.log(result.cid)
 Options:
 
 - `rkey` - Custom record key (auto-generated if not provided)
-- `validate` - Asks the PDS to validate the record against schema when processing the request
+- `validate` - Tri-state instruction to the PDS. `true` forces server-side schema validation, `false` explicitly disables it, and `undefined` (default) lets the PDS decide (it validates only collections whose schemas it knows)
 - `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - CID for optimistic concurrency control
 
@@ -748,8 +771,8 @@ await client.put(app.bsky.actor.profile, {
 Options:
 
 - `rkey` - Record key (required for non-literal keys)
-- `validate` - Validate record against schema before updating (falls back to `validateRequest` option if not specified)
-- `validateRequest` - Alternative way to enable validation (used if `validate` is not specified)
+- `validate` - Tri-state instruction to the PDS. `true` forces server-side schema validation, `false` explicitly disables it, and `undefined` (default) lets the PDS decide (it validates only collections whose schemas it knows)
+- `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - Expected repo commit CID
 - `swapRecord` - Expected record CID
 
@@ -826,7 +849,7 @@ for (const result of response.body.results) {
 Options:
 
 - `repo` - Repository identifier (defaults to authenticated user's DID)
-- `validate` - Asks the PDS to validate records against schema
+- `validate` - Tri-state instruction to the PDS. `true` forces server-side schema validation, `false` explicitly disables it, and `undefined` (default) lets the PDS decide (it validates only collections whose schemas it knows)
 - `swapCommit` - CID for optimistic concurrency control
 
 > [!NOTE]
@@ -1739,6 +1762,29 @@ if ('value' in result) {
 ```
 
 When validated through the Standard Schema interface, schemas operate in "parse" mode, meaning transformations like defaults and coercions are applied to the output.
+
+### Validating Generic Schemas with `$check`
+
+`$check(data)` is the non-narrowing counterpart to [`$assert(data)`](#assertdata---type-narrowing-assertion): both throw when `data` does not match the schema, but `$check` does not refine the static type of its argument.
+
+`$check` is rarely needed in application code — prefer `$assert`. It is intended for library-style code that takes a schema as a generic parameter, where TypeScript cannot satisfy the assertion-signature requirement and `$assert` produces the following error:
+
+> 'schema' needs an explicit type annotation.
+> Assertions require every name in the call target to be declared with an explicit type annotation. `ts(2775)`
+
+In that situation, switch to `$check`:
+
+```typescript
+import type { RecordSchema, ObjectSchema } from '@atproto/lex'
+
+function ensureMatches<S extends RecordSchema | ObjectSchema>(
+  schema: S,
+  data: unknown,
+) {
+  // schema.$assert(data) // ❌ ts(2775): needs an explicit type annotation
+  schema.$check(data) // ✅ throws on invalid, no type narrowing
+}
+```
 
 ## License
 
