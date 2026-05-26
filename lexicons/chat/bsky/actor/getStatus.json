@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatDisabled", "canCreateGroups"],
+          "required": ["chatDisabled", "canCreateGroups", "groupMemberLimit"],
           "properties": {
             "chatDisabled": {
               "type": "boolean",
@@ -18,6 +18,10 @@
             "canCreateGroups": {
               "type": "boolean",
               "description": "Whether the viewer's account is allowed to create group chats. New accounts are restricted from creating groups."
+            },
+            "groupMemberLimit": {
+              "type": "integer",
+              "description": "The maximum number of members allowed in a group conversation."
             }
           }
         }

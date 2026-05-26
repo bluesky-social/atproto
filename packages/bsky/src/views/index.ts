@@ -28,6 +28,7 @@ import { Label } from '../hydration/label.js'
 import { RecordInfo, parseString } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
+import { viewsLogger } from '../logger.js'
 import { Notification } from '../proto/bsky_pb.js'
 import {
   estimateReadingTimeMinutes,
@@ -2246,6 +2247,13 @@ export class Views {
     // bare embed rather than render partial / disagreeing enrichment.
     if (!document && !publication) return undefined
     if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
+      viewsLogger.warn(
+        {
+          documentUri: document?.ref.uri,
+          publicationUri: publication?.ref.uri,
+        },
+        'site.standard URL validation failed',
+      )
       return undefined
     }
 
@@ -2313,6 +2321,17 @@ export class Views {
     if (publication) {
       overlay.source = this.externalEmbedSource(publication)
     }
+
+    // Profiles of the owners of the records backing this embed. Hydrator
+    // covers these DIDs alongside post-author profiles, so misses here
+    // only happen when an actor is unavailable (suspended, deleted, etc.)
+    // — drop those rather than emit `undefined` slots.
+    const associatedProfiles = mapDefined(
+      [document?.ref.uri, publication?.ref.uri],
+      (uri) => (uri ? this.profileBasic(uriToDid(uri), state) : undefined),
+    ) as ProfileViewBasic[]
+    if (associatedProfiles.length)
+      overlay.associatedProfiles = associatedProfiles
 
     return overlay
   }

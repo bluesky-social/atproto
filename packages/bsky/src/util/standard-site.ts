@@ -27,10 +27,10 @@ export const parseSiteStandardRecordKey = (
  * strips a trailing slash from the path, and drops query/fragment. Returns
  * `null` when the input isn't a valid HTTP(S) URL.
  */
-const canonicalizeHttpUrl = (url: string, base?: string): string | null => {
+const canonicalizeHttpUrl = (url: string): string | null => {
   let parsed: URL
   try {
-    parsed = new URL(url, base)
+    parsed = new URL(url)
   } catch {
     return null
   }
@@ -40,11 +40,32 @@ const canonicalizeHttpUrl = (url: string, base?: string): string | null => {
 }
 
 /**
- * Confirm that the supplied SS records actually back `assumedUrl`. URL
- * comparison parses both sides via the WHATWG URL constructor (resolving
- * the document's `path` against the publication or site as a base) and
- * compares the canonical `protocol://host/path` forms — host case is
- * ignored, query/fragment are dropped, trailing slashes stripped.
+ * Append `path` to `base` with exactly one slash between, or return `base`
+ * unchanged when `path` is empty. Unlike `new URL(path, base)`, a leading
+ * slash on `path` does NOT swallow `base`'s pathname — so
+ * `joinPath('https://x.com/blog', '/foo')` is `https://x.com/blog/foo`,
+ * not `https://x.com/foo`.
+ */
+const joinPath = (base: string, path: string): string => {
+  if (!path) return base
+  const baseTrimmed = base.endsWith('/') ? base.slice(0, -1) : base
+  const pathTrimmed = path.startsWith('/') ? path.slice(1) : path
+  return `${baseTrimmed}/${pathTrimmed}`
+}
+
+/**
+ * Confirm that the supplied SS records actually back `assumedUrl`. The
+ * record-side URL is built by concatenating the publication URL (or the
+ * loose-doc site) with the document's `path` field, then both sides are
+ * canonicalized for equality: lowercase host, query/fragment dropped,
+ * trailing slash stripped.
+ *
+ * Path concatenation is `base + '/' + path` semantics — a leading `/` on
+ * `path` does NOT swallow the base's pathname (the way
+ * `new URL(path, base)` would). So
+ * `'https://atproto.com/blog' + '/indexing-standard-site'` resolves to
+ * `https://atproto.com/blog/indexing-standard-site` regardless of which
+ * side carries the slash.
  *
  * Structural validation of the doc/pub pair (matching `site` ↔ pub URI,
  * no orphan docs that claim a missing publication) happens upstream in
@@ -81,15 +102,13 @@ export const validateStandardSiteForUrl = (
 
   if (document && publication) {
     const joined = canonicalizeHttpUrl(
-      document.info.record.path ?? '',
-      publication.info.record.url,
+      joinPath(publication.info.record.url, document.info.record.path ?? ''),
     )
     return joined === canonicalAssumed
   }
   if (document) {
     const joined = canonicalizeHttpUrl(
-      document.info.record.path ?? '',
-      document.info.record.site,
+      joinPath(document.info.record.site, document.info.record.path ?? ''),
     )
     return joined === canonicalAssumed
   }

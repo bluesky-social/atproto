@@ -61,8 +61,9 @@ const hydration = async (
 const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ): Output => {
-  const documents = inputs.hydration.siteStandardDocuments
-  const publications = inputs.hydration.siteStandardPublications
+  const { hydration } = inputs
+  const documents = hydration.siteStandardDocuments
+  const publications = hydration.siteStandardPublications
   // Dispatch by record type. Today site.standard is the only kind we know
   // how to render; future record types get their own branch.
   if (
@@ -93,7 +94,8 @@ const standardSitePresentation = (
   // Emit response refs/records only for the records we actually selected.
   // Anything else (e.g. extra publications the dataplane returned) is
   // intentionally excluded so the strongRefs Cardy writes onto the post
-  // match the view we built.
+  // match the view we built. Profiles are emitted in the same order as
+  // refs (one per slot) so consumers can match by index.
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
   for (const slot of [document, publication]) {
