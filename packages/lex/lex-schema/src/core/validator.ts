@@ -435,7 +435,7 @@ export class ValidationContext {
    * @returns A successful validation result
    */
   success<V>(value: V): ValidationSuccess<V> {
-    return { success: true, value, reason: undefined }
+    return { success: true, value }
   }
 
   /**
