@@ -192,6 +192,7 @@ describe('expiring tags', () => {
         eventId: 0,
         did: sc.dids.carol,
         recordPath: '',
+        convoId: '',
         tag: 'skip-tag',
         expiresAt: new Date(Date.now() - 1000).toISOString(),
         createdBy: sc.dids.alice,

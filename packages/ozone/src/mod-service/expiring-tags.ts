@@ -7,6 +7,7 @@ export type ExpiringTagRow = Selectable<ExpiringTag>
 export type ExpiringTagGroup = {
   did: string
   recordPath: string
+  convoId: string
   createdBy: string
   tags: string[]
   ids: number[]
@@ -18,6 +19,7 @@ export async function insertExpiringTags(
     eventId: number
     did: string
     recordPath: string
+    convoId: string
     tags: string[]
     expiresAt: string
     createdBy: string
@@ -30,6 +32,7 @@ export async function insertExpiringTags(
         eventId: params.eventId,
         did: params.did,
         recordPath: params.recordPath,
+        convoId: params.convoId,
         tag,
         expiresAt: params.expiresAt,
         createdBy: params.createdBy,
@@ -43,6 +46,7 @@ export async function removeExpiringTags(
   params: {
     did: string
     recordPath: string
+    convoId: string
     tags: string[]
   },
 ): Promise<void> {
@@ -50,6 +54,7 @@ export async function removeExpiringTags(
     .deleteFrom('expiring_tag')
     .where('did', '=', params.did)
     .where('recordPath', '=', params.recordPath)
+    .where('convoId', '=', params.convoId)
     .where('tag', 'in', params.tags)
     .execute()
 }
@@ -73,15 +78,16 @@ export async function getExpiredTags(
 
   if (!rows.length) return []
 
-  // Group by (did, recordPath, createdBy) so each reversal event has the correct author
+  // Group by (did, recordPath, convoId, createdBy) so each reversal event has the correct author
   const grouped = new Map<string, ExpiringTagGroup>()
   for (const row of rows) {
-    const key = `${row.did}|${row.recordPath}|${row.createdBy}`
+    const key = `${row.did}|${row.recordPath}|${row.convoId}|${row.createdBy}`
     let group = grouped.get(key)
     if (!group) {
       group = {
         did: row.did,
         recordPath: row.recordPath,
+        convoId: row.convoId,
         createdBy: row.createdBy,
         tags: [],
         ids: [],

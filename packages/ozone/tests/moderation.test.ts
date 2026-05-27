@@ -197,6 +197,53 @@ describe('moderation', () => {
         ),
       ).toBe(true)
     })
+
+    it('creates reports of convo', async () => {
+      const convoId1 = 'convoId1'
+      const convoId2 = 'convoId2'
+      const reportA = await sc.createReport({
+        reportedBy: sc.dids.alice,
+        reasonType: REASONSPAM,
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+      })
+      const reportB = await sc.createReport({
+        reportedBy: sc.dids.carol,
+        reasonType: REASONOTHER,
+        reason: 'defamation',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId2,
+        },
+      })
+
+      // Verify reportA
+      expect(reportA.subject.$type).toBe('chat.bsky.convo.defs#convoRef')
+      expect(ChatBskyConvoDefs.isConvoRef(reportA.subject)).toBe(true)
+      if (ChatBskyConvoDefs.isConvoRef(reportA.subject)) {
+        expect(reportA.subject.convoId).toBe(convoId1)
+        expect(reportA.subject.did).toBe(sc.dids.carol)
+      }
+      expect(reportA.reasonType).toBe(REASONSPAM)
+      expect(reportA.reportedBy).toBe(sc.dids.alice)
+      expect(reportA.id).toBeGreaterThan(0)
+
+      // Verify reportB
+      expect(reportB.subject.$type).toBe('chat.bsky.convo.defs#convoRef')
+      expect(ChatBskyConvoDefs.isConvoRef(reportB.subject)).toBe(true)
+      if (ChatBskyConvoDefs.isConvoRef(reportB.subject)) {
+        expect(reportB.subject.convoId).toBe(convoId2)
+        expect(reportB.subject.did).toBe(sc.dids.carol)
+      }
+      expect(reportB.reasonType).toBe(REASONOTHER)
+      expect(reportB.reason).toBe('defamation')
+      expect(reportB.reportedBy).toBe(sc.dids.carol)
+      expect(reportB.id).toBeGreaterThan(reportA.id)
+    })
   })
 
   describe('actioning', () => {
@@ -727,6 +774,32 @@ describe('moderation', () => {
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
       })
+    })
+
+    it('allows conversation escalate', async () => {
+      const subject = {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did: sc.dids.bob,
+        convoId: '123',
+      }
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventEscalate',
+          comment: 'Y',
+        },
+        subject,
+        createdBy: 'did:example:admin',
+      })
+
+      const status = await network.ozone.ctx.db.db
+        .selectFrom('moderation_subject_status')
+        .selectAll()
+        .where('did', '=', subject.did)
+        .where('recordPath', '=', '')
+        .where('convoId', '=', subject.convoId)
+        .executeTakeFirst()
+
+      expect(status?.reviewState).toEqual(REVIEWESCALATED)
     })
 
     async function emitLabelEvent(

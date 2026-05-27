@@ -51,7 +51,11 @@ import { Un$Typed, asPredicate } from '../lexicon/util.js'
 import { dbLogger, httpLogger } from '../logger.js'
 import { ParsedLabelers } from '../util.js'
 import { moderationSubjectStatusQueryBuilder } from './status.js'
-import { subjectFromEventRow, subjectFromStatusRow } from './subject.js'
+import {
+  ModSubject,
+  subjectFromEventRow,
+  subjectFromStatusRow,
+} from './subject.js'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
@@ -297,14 +301,8 @@ export class ModerationViews {
   async eventDetail(
     result: ModerationEventRowWithHandle,
   ): Promise<ModEventViewDetail> {
-    const subjectId =
-      result.subjectType === 'com.atproto.admin.defs#repoRef'
-        ? result.subjectDid
-        : result.subjectUri
-    if (!subjectId) {
-      throw new Error(`Bad subject: ${result.id}`)
-    }
-    const subject = await this.subject(subjectId)
+    const modSubject = subjectFromEventRow(result)
+    const subject = await this.subject(modSubject)
     const eventView = this.formatEvent(result)
     const allBlobs = 'value' in subject ? findBlobRefs(subject.value) : []
     const subjectBlobs = await this.blob(
@@ -555,10 +553,16 @@ export class ModerationViews {
   }
   // Partial view for subjects
 
-  async subject(subject: string): Promise<SubjectView> {
-    if (subject.startsWith('did:')) {
-      const repos = await this.repos([subject])
-      const repo = repos.get(subject)
+  async subject(subject: ModSubject): Promise<SubjectView> {
+    if (subject.isConvo()) {
+      return {
+        $type: 'tools.ozone.moderation.defs#convoView',
+        did: subject.did,
+        convoId: subject.convoId,
+      }
+    } else if (subject.isRepo()) {
+      const repos = await this.repos([subject.did])
+      const repo = repos.get(subject.did)
       if (repo) {
         return {
           ...repo,
@@ -567,23 +571,23 @@ export class ModerationViews {
       } else {
         return {
           $type: 'tools.ozone.moderation.defs#repoViewNotFound',
-          did: subject,
+          did: subject.did,
         }
       }
-    } else {
-      const records = await this.records([{ uri: subject }])
-      const record = records.get(subject)
+    } else if (subject.isRecord()) {
+      const uri = subject.uri
+      const records = await this.records([{ uri }])
+      const record = records.get(uri)
       if (record) {
         return {
           ...record,
           $type: 'tools.ozone.moderation.defs#recordView',
         }
-      } else {
-        return {
-          $type: 'tools.ozone.moderation.defs#recordViewNotFound',
-          uri: subject,
-        }
       }
+    }
+    return {
+      $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+      did: subject.did,
     }
   }
 
@@ -691,7 +695,8 @@ export class ModerationViews {
                 'moderation_subject_status.recordPath',
                 '=',
                 sub.recordPath ?? '',
-              ),
+              )
+              .where('moderation_subject_status.convoId', '=', ''),
           )
         }
         return qb

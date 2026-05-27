@@ -49,7 +49,8 @@
           "refs": [
             "com.atproto.admin.defs#repoRef",
             "com.atproto.repo.strongRef",
-            "chat.bsky.convo.defs#messageRef"
+            "chat.bsky.convo.defs#messageRef",
+            "chat.bsky.convo.defs#convoRef"
           ]
         },
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
@@ -108,7 +109,8 @@
             "#repoView",
             "#repoViewNotFound",
             "#recordView",
-            "#recordViewNotFound"
+            "#recordViewNotFound",
+            "#convoView"
           ]
         },
         "subjectBlobs": {
@@ -130,7 +132,8 @@
           "refs": [
             "com.atproto.admin.defs#repoRef",
             "com.atproto.repo.strongRef",
-            "chat.bsky.convo.defs#messageRef"
+            "chat.bsky.convo.defs#messageRef",
+            "chat.bsky.convo.defs#convoRef"
           ]
         },
         "hosting": {
@@ -959,6 +962,14 @@
       "required": ["uri"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "convoView": {
+      "type": "object",
+      "required": ["did", "convoId"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "convoId": { "type": "string" }
       }
     },
     "moderation": {
