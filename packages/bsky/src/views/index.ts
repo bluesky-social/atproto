@@ -543,6 +543,8 @@ export class Views {
 
         return {
           issuer,
+          displayName,
+          handle,
           uri,
           isValid,
           createdAt,
