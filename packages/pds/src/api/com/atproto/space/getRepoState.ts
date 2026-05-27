@@ -1,8 +1,7 @@
-import { LtHash } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRepoState, {
@@ -22,20 +21,21 @@ export default function (server: Server, ctx: AppContext) {
         assertSpaceScope(auth, space, { action: 'read' })
       }
 
-      const state = await ctx.actorStore.read(did, (store) =>
-        store.space.getRepoState(space),
-      )
-
-      const setHash = state?.setHash
-        ? new LtHash(state.setHash).digest().toString('hex')
-        : undefined
+      const commit = await ctx.actorStore.read(did, async (store) => {
+        const state = await store.space.getRepoState(space)
+        const keypair = await store.keypair()
+        return buildSignedCommit({
+          spaceUri: space,
+          userDid: did,
+          scope: 'records',
+          state,
+          keypair,
+        })
+      })
 
       return {
         encoding: 'application/json' as const,
-        body: {
-          setHash,
-          rev: state?.rev ?? undefined,
-        },
+        body: { commit },
       }
     },
   })

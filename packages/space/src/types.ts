@@ -64,7 +64,7 @@ export type SpaceContext = {
   spaceType: string
   spaceKey: string
   userDid: string
-  rev: number
+  rev: string
   scope: 'records' | 'members'
 }
 
@@ -74,8 +74,11 @@ export type UnsignedCommit = {
   ikm: Buffer
 }
 
+// `rev` rides along on the commit because it's part of the HKDF info — a
+// reader needs it to reconstruct the SpaceContext used for HMAC verification.
 export type SignedCommit = UnsignedCommit & {
   sig: Buffer
+  rev: string
 }
 
 export enum MemberOpAction {

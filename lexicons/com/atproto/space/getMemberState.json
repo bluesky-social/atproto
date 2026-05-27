@@ -21,13 +21,10 @@
         "schema": {
           "type": "object",
           "properties": {
-            "setHash": {
-              "type": "string",
-              "description": "Hex-encoded set hash of the member list."
-            },
-            "rev": {
-              "type": "string",
-              "description": "Current revision of the member list."
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.space.defs#signedCommit",
+              "description": "Signed commitment over the current member list. Includes the LtHash digest (commit.hash) and the rev. Absent when the member list has never changed."
             }
           }
         }

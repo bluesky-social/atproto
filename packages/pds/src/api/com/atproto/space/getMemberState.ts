@@ -1,9 +1,8 @@
-import { LtHash } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getMemberState, {
@@ -24,20 +23,21 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const ownerDid = new SpaceUri(space).spaceDid
-      const state = await ctx.actorStore.read(ownerDid, (store) =>
-        store.space.getMemberState(space),
-      )
-
-      const setHash = state?.setHash
-        ? new LtHash(state.setHash).digest().toString('hex')
-        : undefined
+      const commit = await ctx.actorStore.read(ownerDid, async (store) => {
+        const state = await store.space.getMemberState(space)
+        const keypair = await store.keypair()
+        return buildSignedCommit({
+          spaceUri: space,
+          userDid: ownerDid,
+          scope: 'members',
+          state,
+          keypair,
+        })
+      })
 
       return {
         encoding: 'application/json' as const,
-        body: {
-          setHash,
-          rev: state?.rev ?? undefined,
-        },
+        body: { commit },
       }
     },
   })

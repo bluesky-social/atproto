@@ -26,13 +26,10 @@
         "schema": {
           "type": "object",
           "properties": {
-            "setHash": {
-              "type": "string",
-              "description": "Hex-encoded set hash of the repo."
-            },
-            "rev": {
-              "type": "string",
-              "description": "Current revision of the repo."
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.space.defs#signedCommit",
+              "description": "Signed commitment over the current repo state. Includes the LtHash digest (commit.hash) and the rev. Absent when the repo has never been written to."
             }
           }
         }

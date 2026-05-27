@@ -1,6 +1,8 @@
+import { Keypair } from '@atproto/crypto'
 import { getPdsEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
 import { SpacePermissionMatch } from '@atproto/oauth-scopes'
+import { LtHash, SpaceContext, createCommit } from '@atproto/space'
 import { DidString, SpaceUri, SpaceUriString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import {
@@ -35,6 +37,45 @@ export function assertSpaceScope(
     skey: parsed.skey,
     ...match,
   } as SpacePermissionMatch)
+}
+
+/**
+ * Build a wire-format `signedCommit` from the stored LtHash state + rev.
+ * Returns undefined if either is missing (the repo / member list has never
+ * been written to).
+ *
+ * `userDid` is the subject the commit is bound to: the record-author for
+ * record commits, the space owner for member commits.
+ */
+export async function buildSignedCommit(opts: {
+  spaceUri: string
+  userDid: string
+  scope: 'records' | 'members'
+  state: { setHash: Buffer | null; rev: string | null } | null
+  keypair: Keypair
+}): Promise<com.atproto.space.defs.SignedCommit | undefined> {
+  const { spaceUri, userDid, scope, state, keypair } = opts
+  if (!state?.setHash || !state.rev) return undefined
+
+  const uri = new SpaceUri(spaceUri)
+  const spaceCtx: SpaceContext = {
+    spaceDid: uri.spaceDid,
+    spaceType: uri.spaceType,
+    spaceKey: uri.skey,
+    userDid,
+    rev: state.rev,
+    scope,
+  }
+  const lthash = new LtHash(state.setHash)
+  const signed = await createCommit(lthash, spaceCtx, keypair)
+
+  return com.atproto.space.defs.signedCommit.build({
+    hash: new Uint8Array(signed.hash),
+    hmac: new Uint8Array(signed.hmac),
+    ikm: new Uint8Array(signed.ikm),
+    sig: new Uint8Array(signed.sig),
+    rev: signed.rev,
+  })
 }
 
 export async function fireNotifyWrite(

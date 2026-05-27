@@ -1,9 +1,8 @@
 import { l } from '@atproto/lex'
-import { LtHash } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRepoOplog, {
@@ -23,14 +22,29 @@ export default function (server: Server, ctx: AppContext) {
         assertSpaceScope(auth, space, { action: 'read' })
       }
 
-      const result = await ctx.actorStore.read(did, (store) =>
-        store.space.getRepoOplog(space, { since, limit }),
-      )
+      const result = await ctx.actorStore.read(did, async (store) => {
+        const oplog = await store.space.getRepoOplog(space, { since, limit })
+        // Only sign a commit when this batch drains the oplog to head —
+        // otherwise the rev we'd bind into the commit may be ahead of the
+        // ops we returned to the client. They'll get the commit on the
+        // final, smaller-than-limit batch.
+        const caughtUp = oplog.ops.length < limit
+        const commit = caughtUp
+          ? await buildSignedCommit({
+              spaceUri: space,
+              userDid: did,
+              scope: 'records',
+              state: { setHash: oplog.setHash, rev: oplog.rev },
+              keypair: await store.keypair(),
+            })
+          : undefined
+        return { oplog, commit }
+      })
 
       return {
         encoding: 'application/json' as const,
         body: {
-          ops: result.ops.map((op) => ({
+          ops: result.oplog.ops.map((op) => ({
             rev: op.rev,
             idx: op.idx,
             action: op.action as
@@ -43,10 +57,7 @@ export default function (server: Server, ctx: AppContext) {
             cid: op.cid ? (op.cid as l.CidString) : undefined,
             prev: op.prev ? (op.prev as l.CidString) : undefined,
           })),
-          setHash: result.setHash
-            ? new LtHash(result.setHash).digest().toString('hex')
-            : undefined,
-          rev: result.rev ?? undefined,
+          commit: result.commit,
         },
       }
     },

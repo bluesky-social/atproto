@@ -23,7 +23,7 @@ const testSpace: SpaceContext = {
   spaceType: 'app.bsky.group',
   spaceKey: 'test',
   userDid: 'did:example:alice',
-  rev: 0,
+  rev: '3kbcq3p7ad400',
   scope: 'records',
 }
 

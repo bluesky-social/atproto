@@ -1,10 +1,9 @@
 import { l } from '@atproto/lex'
-import { LtHash } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getMemberOplog, {
@@ -25,23 +24,32 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const ownerDid = new SpaceUri(space).spaceDid
-      const result = await ctx.actorStore.read(ownerDid, (store) =>
-        store.space.getMemberOplog(space, { since, limit }),
-      )
+      const result = await ctx.actorStore.read(ownerDid, async (store) => {
+        const oplog = await store.space.getMemberOplog(space, { since, limit })
+        // See getRepoOplog: only sign once the batch reaches head.
+        const caughtUp = oplog.ops.length < limit
+        const commit = caughtUp
+          ? await buildSignedCommit({
+              spaceUri: space,
+              userDid: ownerDid,
+              scope: 'members',
+              state: { setHash: oplog.setHash, rev: oplog.rev },
+              keypair: await store.keypair(),
+            })
+          : undefined
+        return { oplog, commit }
+      })
 
       return {
         encoding: 'application/json' as const,
         body: {
-          ops: result.ops.map((op) => ({
+          ops: result.oplog.ops.map((op) => ({
             rev: op.rev,
             idx: op.idx,
             action: op.action as 'add' | 'remove' | l.UnknownString,
             did: op.did as l.DidString,
           })),
-          setHash: result.setHash
-            ? new LtHash(result.setHash).digest().toString('hex')
-            : undefined,
-          rev: result.rev ?? undefined,
+          commit: result.commit,
         },
       }
     },

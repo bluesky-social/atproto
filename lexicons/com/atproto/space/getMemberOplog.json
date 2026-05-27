@@ -40,13 +40,10 @@
                 "ref": "#opEntry"
               }
             },
-            "setHash": {
-              "type": "string",
-              "description": "Current hex-encoded set hash."
-            },
-            "rev": {
-              "type": "string",
-              "description": "Current revision."
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.space.defs#signedCommit",
+              "description": "Signed commitment over the current member list. Includes the LtHash digest (commit.hash) and the rev. Only returned when the response drains the oplog to head — backfill responses omit it."
             },
             "cursor": {
               "type": "string"

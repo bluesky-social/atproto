@@ -11,7 +11,7 @@ export const createCommit = async (
   const ikm = Buffer.from(randomBytes(32))
   const hmac = deriveKeyAndHmac(ikm, hash, space)
   const sig = Buffer.from(await keypair.sign(ikm))
-  return { hash, hmac, ikm, sig }
+  return { hash, hmac, ikm, sig, rev: space.rev }
 }
 
 export const verifyCommit = (
@@ -41,7 +41,7 @@ const encodeCommitInfo = (space: SpaceContext): Buffer => {
     space.spaceType,
     space.spaceKey,
     space.userDid,
-    space.rev.toString(),
+    space.rev,
     space.scope,
   ]
   const parts: Buffer[] = [DOMAIN_PREFIX]

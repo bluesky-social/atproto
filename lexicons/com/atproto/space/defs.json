@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.defs",
+  "defs": {
+    "signedCommit": {
+      "type": "object",
+      "description": "A signed commitment over the current state of a permissioned repo or member list. The hash is sha256 of the LtHash state. The HMAC binds the hash to a per-call IKM, which is signed by the user's atproto signing key — providing deniability on rebroadcast.",
+      "required": ["hash", "hmac", "ikm", "sig", "rev"],
+      "properties": {
+        "hash": {
+          "type": "bytes",
+          "description": "sha256 digest of the LtHash state (32 bytes)."
+        },
+        "hmac": {
+          "type": "bytes",
+          "description": "HMAC-SHA256 over hash, keyed by HKDF(ikm, info=commitInfo)."
+        },
+        "ikm": {
+          "type": "bytes",
+          "description": "Per-commit input keying material (32 random bytes). Signed by the user."
+        },
+        "sig": {
+          "type": "bytes",
+          "description": "Signature over ikm by the user's atproto signing key."
+        },
+        "rev": {
+          "type": "string",
+          "description": "Repo revision (TID) bound into the commit info."
+        }
+      }
+    }
+  }
+}
