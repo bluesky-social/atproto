@@ -1,5 +1,31 @@
 # @atproto/lex
 
+## 0.1.3
+
+### Patch Changes
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix README
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `yargs` depedency
+
+- Updated dependencies [[`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc)]:
+  - @atproto/lex-schema@0.1.2
+  - @atproto/lex-client@0.1.3
+
+## 0.1.2
+
+### Patch Changes
+
+- [#4984](https://github.com/bluesky-social/atproto/pull/4984) [`5bdb4ad`](https://github.com/bluesky-social/atproto/commit/5bdb4addd6a3798bf6c8c391c74044b3e251008a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `default` export of "main" schema in the namespace file
+
+- [#4979](https://github.com/bluesky-social/atproto/pull/4979) [`314df62`](https://github.com/bluesky-social/atproto/commit/314df62537bb519231aa375dd3a38360afc79ce0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Always add `#__PURE__` annotations to function calls
+
+- [#4983](https://github.com/bluesky-social/atproto/pull/4983) [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the generation of the `$defs` namespace optional by default
+
+- Updated dependencies [[`3aae4fe`](https://github.com/bluesky-social/atproto/commit/3aae4fe43448dca860fc6c4a24d18bfa64de084b), [`5bdb4ad`](https://github.com/bluesky-social/atproto/commit/5bdb4addd6a3798bf6c8c391c74044b3e251008a), [`3aae4fe`](https://github.com/bluesky-social/atproto/commit/3aae4fe43448dca860fc6c4a24d18bfa64de084b), [`314df62`](https://github.com/bluesky-social/atproto/commit/314df62537bb519231aa375dd3a38360afc79ce0), [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41), [`482767c`](https://github.com/bluesky-social/atproto/commit/482767c4bcce95aa390b2992b028fd8e27d162b2)]:
+  - @atproto/lex-builder@0.1.2
+  - @atproto/lex-client@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

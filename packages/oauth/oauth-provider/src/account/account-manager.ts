@@ -8,6 +8,7 @@ import { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
@@ -20,12 +21,18 @@ import {
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
+  UpdateEmailConfirmInput,
+  UpdateEmailRequestInput,
+  VerifyEmailConfirmInput,
+  VerifyEmailRequestInput,
 } from './account-store.js'
 import { SignInData } from './sign-in-data.js'
 import { SignUpInput } from './sign-up-input.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 const BRUTE_FORCE_MITIGATION_DELAY = 300
+
+// @TODO Add rate limit to all the OAuth routes.
 
 export class AccountManager {
   protected readonly inviteCodeRequired: boolean
@@ -119,42 +126,39 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: SignUpInput,
   ): Promise<Account> {
-    await this.hooks.onSignUpAttempt?.call(null, {
-      input,
-      deviceId,
-      deviceMetadata,
-    })
-
-    const data = await this.buildSignupData(input, deviceId, deviceMetadata)
-
-    // Mitigation against brute forcing email of users.
-    // @TODO Add rate limit to all the OAuth routes.
-    const account = await constantTime(
-      BRUTE_FORCE_MITIGATION_DELAY,
-      async () => {
-        return this.store.createAccount(data)
-      },
-    ).catch((err) => {
-      throw InvalidRequestError.from(err, 'Account creation failed')
-    })
-
-    try {
-      await this.hooks.onSignedUp?.call(null, {
-        data,
-        account,
+    return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
+      await this.hooks.onSignUpAttempt?.call(null, {
+        input,
         deviceId,
         deviceMetadata,
       })
 
-      return account
-    } catch (err) {
-      await this.removeDeviceAccount(deviceId, account.sub)
+      const data = await this.buildSignupData(input, deviceId, deviceMetadata)
 
-      throw InvalidRequestError.from(
-        err,
-        'The account was successfully created but something went wrong, try signing-in.',
-      )
-    }
+      const account = await callAsync(() =>
+        this.store.createAccount(data),
+      ).catch((err) => {
+        throw InvalidRequestError.from(err, 'Account creation failed')
+      })
+
+      try {
+        await this.hooks.onSignedUp?.call(null, {
+          data,
+          account,
+          deviceId,
+          deviceMetadata,
+        })
+
+        return account
+      } catch (err) {
+        await this.removeDeviceAccount(deviceId, account.sub)
+
+        throw InvalidRequestError.from(
+          err,
+          'The account was successfully created but something went wrong, try signing-in.',
+        )
+      }
+    })
   }
 
   public async authenticateAccount(
@@ -163,7 +167,7 @@ export class AccountManager {
     data: SignInData,
     clientId?: ClientId,
   ): Promise<Account> {
-    try {
+    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       await this.hooks.onSignInAttempt?.call(null, {
         data,
         deviceId,
@@ -171,15 +175,9 @@ export class AccountManager {
         clientId,
       })
 
-      let account: Account
-      try {
-        account = await constantTime(
-          TIMING_ATTACK_MITIGATION_DELAY,
-          async () => {
-            return this.store.authenticateAccount(data)
-          },
-        )
-      } catch (err) {
+      const account = await callAsync(() =>
+        this.store.authenticateAccount(data),
+      ).catch(async (err) => {
         // Only notify for credential failures (e.g. unknown identifier, wrong
         // password). Server errors and flows that require an additional factor
         // (e.g. SecondAuthenticationFactorRequiredError) are not "failed
@@ -213,8 +211,9 @@ export class AccountManager {
             throw new InvalidRequestError(err.error_description)
           }
         }
+
         throw err
-      }
+      })
 
       await this.hooks.onSignedIn?.call(null, {
         data,
@@ -225,12 +224,12 @@ export class AccountManager {
       })
 
       return account
-    } catch (err) {
+    }).catch((err) => {
       throw InvalidRequestError.from(
         err,
         'Unable to sign-in due to an unexpected server error',
       )
-    }
+    })
   }
 
   public async upsertDeviceAccount(
@@ -294,18 +293,16 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: ResetPasswordRequestInput,
   ) {
-    await this.hooks.onResetPasswordRequest?.call(null, {
-      input,
-      deviceId,
-      deviceMetadata,
-    })
-
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
+      await this.hooks.onResetPasswordRequest?.call(null, {
+        input,
+        deviceId,
+        deviceMetadata,
+      })
+
       const account = await this.store.resetPasswordRequest(input)
 
-      if (!account) {
-        return // Silently ignore to prevent user enumeration
-      }
+      // @NOTE Do not throw here, to prevent user enumeration
 
       await this.hooks.onResetPasswordRequested?.call(null, {
         input,
@@ -321,13 +318,13 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: ResetPasswordConfirmInput,
   ) {
-    await this.hooks.onResetPasswordConfirm?.call(null, {
-      input,
-      deviceId,
-      deviceMetadata,
-    })
-
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
+      await this.hooks.onResetPasswordConfirm?.call(null, {
+        input,
+        deviceId,
+        deviceMetadata,
+      })
+
       const account = await this.store.resetPasswordConfirm(input)
 
       if (!account) {
@@ -340,6 +337,8 @@ export class AccountManager {
         deviceMetadata,
         account,
       })
+
+      return account
     })
   }
 
@@ -347,5 +346,111 @@ export class AccountManager {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       return this.store.verifyHandleAvailability(handle)
     })
+  }
+
+  public async updateEmailRequest(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: UpdateEmailRequestInput,
+    account: Account,
+  ): Promise<{ tokenRequired: boolean }> {
+    await this.hooks.onChangeEmailRequest?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const { tokenRequired } = await this.store.updateEmailRequest(input)
+
+    await this.hooks.onChangeEmailRequested?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    return { tokenRequired: tokenRequired === true }
+  }
+
+  public async updateEmailConfirm(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: UpdateEmailConfirmInput,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onUpdateEmailConfirm?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.updateEmailConfirm(input)
+
+    if (!updatedAccount) {
+      throw new InvalidRequestError('Invalid token')
+    }
+
+    await this.hooks.onUpdateEmailConfirmed?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
+  }
+
+  public async verifyEmailRequest(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: VerifyEmailRequestInput,
+    account: Account,
+  ): Promise<void> {
+    await this.hooks.onVerifyEmailRequest?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    await this.store.verifyEmailRequest(input)
+
+    await this.hooks.onVerifyEmailRequested?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+  }
+
+  public async verifyEmailConfirm(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: VerifyEmailConfirmInput,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onVerifyEmailConfirm?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.verifyEmailConfirm(input)
+
+    if (!updatedAccount) {
+      throw new InvalidRequestError('Invalid token')
+    }
+
+    await this.hooks.onVerifyEmailConfirmed?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
   }
 }

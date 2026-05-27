@@ -33,6 +33,7 @@
     "dev:tsc": "tsc --build tsconfig.json --preserveWatchOutput --watch",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm test --stream --recursive",
     "test:withFlags": "pnpm run test --",
+    "test:unit": "vitest --run",
     "bench": "vitest bench --run",
     "changeset": "changeset",
     "publish:ci": "pnpm build && jq '.devEngines.packageManager.onFail = \"warn\"' package.json > package.json.tmp && mv package.json.tmp package.json && changeset publish",

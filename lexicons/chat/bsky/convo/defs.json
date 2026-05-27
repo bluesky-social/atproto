@@ -340,7 +340,13 @@
     "groupConvo": {
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
-      "required": ["name", "lockStatus", "memberCount", "createdAt"],
+      "required": [
+        "name",
+        "lockStatus",
+        "memberCount",
+        "memberLimit",
+        "createdAt"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -356,9 +362,17 @@
           "type": "string",
           "format": "datetime"
         },
+        "joinRequestCount": {
+          "type": "integer",
+          "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
+        },
         "joinLink": {
           "type": "ref",
           "ref": "chat.bsky.group.defs#joinLinkView"
+        },
+        "memberLimit": {
+          "type": "integer",
+          "description": "The maximum number of members allowed in the group conversation."
         },
         "lockStatus": {
           "description": "The lock status of the conversation.",

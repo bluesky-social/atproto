@@ -156,7 +156,7 @@ export class AppContext {
         ? nodemailer.createTransport(cfg.email.smtpUrl)
         : nodemailer.createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, cfg)
+    const mailer = new ServerMailer(mailTransport, cfg.email, cfg.branding)
 
     const modMailTransport =
       cfg.moderationEmail !== null
@@ -270,6 +270,7 @@ export class AppContext {
     const accountManager = new AccountManager(
       idResolver,
       jwtSecretKey,
+      mailer,
       cfg.service.did,
       cfg.identity.serviceHandleDomains,
       cfg.db,

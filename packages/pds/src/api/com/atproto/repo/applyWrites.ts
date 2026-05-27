@@ -65,6 +65,10 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
 
+    opts: {
+      jsonLimit: 1_000_000,
+    },
+
     handler: async ({ input, auth }) => {
       const { repo, validate, swapCommit, writes } = input.body
 

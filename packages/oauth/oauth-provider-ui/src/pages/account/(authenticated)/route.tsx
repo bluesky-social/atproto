@@ -1,14 +1,18 @@
 import { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 import {
   DevicesIcon,
+  EnvelopeIcon,
   GlobeIcon,
   HouseSimpleIcon,
   IconProps,
   KeyIcon,
   QuestionIcon,
+  ShieldCheckIcon,
 } from '@phosphor-icons/react'
 import {
+  Link,
   Outlet,
   RegisteredRouter,
   ToPathOption,
@@ -16,17 +20,24 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { FunctionComponent, ReactNode, useEffect, useMemo, useRef } from 'react'
+import { Button } from '#/components/forms/button.tsx'
 import {
   LayoutPage,
   LayoutPageLink,
 } from '#/components/layouts/layout-page.tsx'
-import { AuthenticationProvider } from '#/contexts/authentication.tsx'
+import { Admonition } from '#/components/utils/admonition.tsx'
+import {
+  AuthenticationProvider,
+  useAuthenticatedSession,
+} from '#/contexts/authentication.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
 import { Explicit } from '#/lib/util.ts'
 import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
 import { Page as AccountOAuthPage } from './apps/page.tsx'
 import { Page as AccountDevicesPage } from './devices/page.tsx'
+import { Page as AccountEmailPage } from './email/page.tsx'
+import { Page as AccountEmailVerifyPage } from './email/verify/page.tsx'
 import { Page as AccountIndexPage } from './page.tsx'
 import { Page as AccountPasswordPage } from './password/page.tsx'
 
@@ -71,6 +82,21 @@ const DEFAULT_PAGES = {
     description: msg`Change your account password`,
     component: AccountPasswordPage,
   },
+  '/email': {
+    icon: EnvelopeIcon,
+    position: 40,
+    title: msg`Email`,
+    description: msg`Change your account email address`,
+    component: AccountEmailPage,
+  },
+  '/email/verify': {
+    hidden: true,
+    icon: ShieldCheckIcon,
+    position: 45,
+    title: msg`Verify email address`,
+    description: msg`Verify your email address`,
+    component: AccountEmailVerifyPage,
+  },
   '/about': {
     icon: QuestionIcon,
     position: 50,
@@ -87,11 +113,13 @@ export function buildRoutes<T extends `/${string}`>(
   const subPages = { ...DEFAULT_PAGES, ...customPages }
 
   const route = createRoute({
-    path,
-    component: (props) => (
-      <Page basePath={path} subPages={subPages} {...props} />
-    ),
     getParentRoute: () => RootRoute,
+    path,
+    component: () => (
+      <AuthGate signOutTo={path as any}>
+        <Page basePath={path as any} subPages={subPages} />
+      </AuthGate>
+    ),
   })
 
   const childRoutes = (
@@ -110,6 +138,8 @@ function Page({
   basePath: ToPathOption<RegisteredRouter, '/', undefined>
   subPages: SubPages
 }) {
+  const { account } = useAuthenticatedSession()
+
   const links = useMemo<readonly LayoutPageLink[]>(() => {
     return Object.entries(subPages)
       .sort(([ap, a], [bp, b]) => {
@@ -134,16 +164,37 @@ function Page({
       )
   }, [subPages, basePath])
 
+  const showVerificationBanner =
+    !!account.email && account.email_verified === false
+
   return (
-    <AuthGate signOutTo={basePath}>
-      <LayoutPage
-        title={msg`My Atmosphere Account`}
-        basePath={basePath}
-        links={links}
-      >
-        <Outlet />
-      </LayoutPage>
-    </AuthGate>
+    <LayoutPage
+      title={msg`My Atmosphere Account`}
+      basePath={basePath}
+      links={links}
+      prepend={
+        showVerificationBanner && (
+          <Admonition
+            role="status"
+            variant="info"
+            className="m-4"
+            action={
+              <Link to={`${basePath}/email/verify` as any}>
+                <Button color="info" size="sm">
+                  <Trans>Verify now</Trans>
+                </Button>
+              </Link>
+            }
+          >
+            <Trans>
+              <strong>{account.email}</strong> has not been verified yet.
+            </Trans>
+          </Admonition>
+        )
+      }
+    >
+      <Outlet />
+    </LayoutPage>
   )
 }
 

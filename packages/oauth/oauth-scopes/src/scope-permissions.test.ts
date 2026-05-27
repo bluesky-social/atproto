@@ -265,78 +265,39 @@ describe('ScopePermissions', () => {
     })
   })
 
-  describe('allowsSpace', () => {
-    it('should grant read on tuple match', () => {
-      const set = new ScopePermissions('space:com.example.group')
-      expect(
-        set.allowsSpace({
-          type: 'com.example.group',
-          did: 'did:plc:abc',
-          skey: 'default',
-          action: 'read',
-        }),
-      ).toBe(true)
-    })
-
-    it('should refuse writes when no collection is listed', () => {
-      const set = new ScopePermissions('space:com.example.group')
-      expect(
-        set.allowsSpace({
-          type: 'com.example.group',
-          did: 'did:plc:abc',
-          skey: 'default',
-          collection: 'com.example.event',
-          action: 'create',
-        }),
-      ).toBe(false)
-    })
-
-    it('should grant writes scoped by collection and action', () => {
+  describe('assertRpc combined-aud', () => {
+    it('allows did#serviceId aud when scope grants the same combined form', () => {
       const set = new ScopePermissions(
-        'space:com.example.group?collection=com.example.event&action=create',
+        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com%23bsky_appview',
       )
-      expect(
-        set.allowsSpace({
-          type: 'com.example.group',
-          did: 'did:plc:abc',
-          skey: 'default',
-          collection: 'com.example.event',
-          action: 'create',
+      expect(() =>
+        set.assertRpc({
+          aud: 'did:web:example.com#bsky_appview',
+          lxm: 'app.bsky.feed.getFeed',
         }),
-      ).toBe(true)
-
-      // Control
-
-      expect(
-        set.allowsSpace({
-          type: 'com.example.group',
-          did: 'did:plc:abc',
-          skey: 'default',
-          collection: 'com.example.event',
-          action: 'delete',
-        }),
-      ).toBe(false)
-      expect(
-        set.allowsSpace({
-          type: 'com.example.group',
-          did: 'did:plc:abc',
-          skey: 'default',
-          collection: 'com.example.other',
-          action: 'create',
-        }),
-      ).toBe(false)
+      ).not.toThrow()
     })
 
-    it('should ignore transition:generic', () => {
-      const set = new ScopePermissions('transition:generic')
-      expect(
-        set.allowsSpace({
-          type: 'com.example.group',
-          did: 'did:plc:abc',
-          skey: 'default',
-          action: 'read',
+    it('rejects bare-DID aud when scope grants a combined form', () => {
+      const set = new ScopePermissions(
+        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com%23bsky_appview',
+      )
+      expect(() =>
+        set.assertRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
         }),
-      ).toBe(false)
+      ).toThrow()
+    })
+
+    it('allows wildcard aud against a combined-form match', () => {
+      const set = new ScopePermissions('rpc:app.bsky.feed.getFeed?aud=*')
+      expect(() =>
+        set.assertRpc({
+          aud: 'did:web:example.com#bsky_appview',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
+      ).not.toThrow()
     })
   })
 })

@@ -1,5 +1,19 @@
 # @atproto/lex-builder
 
+## 0.1.2
+
+### Patch Changes
+
+- [#4981](https://github.com/bluesky-social/atproto/pull/4981) [`3aae4fe`](https://github.com/bluesky-social/atproto/commit/3aae4fe43448dca860fc6c4a24d18bfa64de084b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove need for inference when computing XRPC method derived types
+
+- [#4984](https://github.com/bluesky-social/atproto/pull/4984) [`5bdb4ad`](https://github.com/bluesky-social/atproto/commit/5bdb4addd6a3798bf6c8c391c74044b3e251008a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `default` export of "main" schema in the namespace file
+
+- [#4981](https://github.com/bluesky-social/atproto/pull/4981) [`3aae4fe`](https://github.com/bluesky-social/atproto/commit/3aae4fe43448dca860fc6c4a24d18bfa64de084b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `lexiconMessageSchema` (and type) for subscription messages
+
+- [#4979](https://github.com/bluesky-social/atproto/pull/4979) [`314df62`](https://github.com/bluesky-social/atproto/commit/314df62537bb519231aa375dd3a38360afc79ce0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Always add `#__PURE__` annotations to function calls
+
+- [#4983](https://github.com/bluesky-social/atproto/pull/4983) [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the generation of the `$defs` namespace optional by default
+
 ## 0.1.1
 
 ### Patch Changes

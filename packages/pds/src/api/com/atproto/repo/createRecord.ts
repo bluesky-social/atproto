@@ -44,6 +44,9 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 3,
       },
     ],
+    opts: {
+      jsonLimit: 1_000_000,
+    },
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body

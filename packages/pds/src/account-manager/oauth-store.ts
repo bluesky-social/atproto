@@ -41,7 +41,12 @@ import {
   TokenId,
   TokenInfo,
   TokenStore,
+  UpdateEmailConfirmInput,
+  UpdateEmailRequestInput,
+  UpdateEmailRequestOutput,
   UpdateRequestData,
+  VerifyEmailConfirmInput,
+  VerifyEmailRequestInput,
 } from '@atproto/oauth-provider'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
@@ -58,7 +63,7 @@ import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
 import * as accountHelper from './helpers/account.js'
-import { AccountStatus } from './helpers/account.js'
+import { AccountStatus, UserAlreadyExistsError } from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -601,6 +606,80 @@ export class OAuthStore
   async findTokenByCode(code: Code): Promise<TokenInfo | null> {
     const row = await tokenHelper.findByQB(this.db, { code }).executeTakeFirst()
     return row ? this.toTokenInfo(row) : null
+  }
+
+  async verifyEmailRequest({
+    sub: did,
+    locale,
+  }: VerifyEmailRequestInput): Promise<void> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      await this.accountManager.requestEmailConfirmation(did, { locale })
+    } catch (err) {
+      if (err instanceof XrpcAuthRequiredError) {
+        throw new InvalidRequestError(err.message, err)
+      }
+
+      throw err
+    }
+  }
+
+  async verifyEmailConfirm({
+    sub: did,
+    email,
+    token,
+  }: VerifyEmailConfirmInput): Promise<Account | null> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      const account = await this.accountManager.confirmEmail(did, email, token)
+
+      return this.buildAccount(account)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        return null
+      }
+
+      throw err
+    }
+  }
+
+  async updateEmailRequest({
+    sub: did,
+    locale,
+  }: UpdateEmailRequestInput): Promise<UpdateEmailRequestOutput> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    return this.accountManager.requestEmailUpdate(did, { locale })
+  }
+
+  async updateEmailConfirm({
+    sub: did,
+    token,
+    email,
+    locale,
+  }: UpdateEmailConfirmInput): Promise<Account | null> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      const account = await this.accountManager.updateEmail(did, email, token, {
+        sendConfirmationEmail: true,
+        locale,
+      })
+
+      return this.buildAccount(account)
+    } catch (cause) {
+      if (cause instanceof UserAlreadyExistsError) {
+        throw new InvalidRequestError(cause.message, cause)
+      }
+
+      throw cause
+    }
   }
 
   private async toTokenInfo(

@@ -1,4 +1,6 @@
 import { KeyObject } from 'node:crypto'
+import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import {
@@ -19,6 +21,7 @@ import {
   isServiceDomain,
 } from '../handle/index.js'
 import { com } from '../lexicons/index.js'
+import { ServerMailer } from '../mailer/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
 import * as account from './helpers/account.js'
 import { AccountStatus, ActorAccount } from './helpers/account.js'
@@ -64,6 +67,7 @@ export class AccountManager {
   constructor(
     readonly idResolver: IdResolver,
     readonly jwtKey: KeyObject,
+    readonly mailer: ServerMailer,
     readonly serviceDid: string,
     readonly serviceHandleDomains: string[],
     db: AccountManagerDbConfig,
@@ -548,26 +552,143 @@ export class AccountManager {
     await emailToken.deleteEmailToken(this.db, did, purpose)
   }
 
-  async confirmEmail(opts: { did: DidString; token: string }) {
-    const { did, token } = opts
-    await emailToken.assertValidToken(this.db, did, 'confirm_email', token)
-    const now = currentDatetimeString()
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        emailToken.deleteEmailToken(dbTxn, did, 'confirm_email'),
-        account.setEmailConfirmedAt(dbTxn, did, now),
-      ]),
-    )
+  async requestEmailConfirmation(did: DidString, opts?: { locale?: string }) {
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    if (!account.email) {
+      throw new InvalidRequestError('account does not have an email address')
+    }
+
+    const locale = opts?.locale
+    const token = await this.createEmailToken(did, 'confirm_email')
+
+    await this.mailer.sendConfirmEmail({ token, locale }, { to: account.email })
   }
 
-  async updateEmail(opts: { did: DidString; email: string }) {
+  async confirmEmail(did: DidString, email: string, token: string) {
+    const user = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!user) {
+      throw new InvalidRequestError('user not found', 'AccountNotFound')
+    }
+
+    if (user.email !== email.toLowerCase()) {
+      throw new InvalidRequestError('invalid email', 'InvalidEmail')
+    }
+
+    await emailToken.assertValidToken(this.db, did, 'confirm_email', token)
+    const now = currentDatetimeString()
+    await this.db.transaction(async (dbTxn) => {
+      await emailToken.deleteEmailToken(dbTxn, did, 'confirm_email')
+      await account.setEmailConfirmedAt(dbTxn, did, now)
+    })
+
+    user.emailConfirmedAt = now
+
+    return user
+  }
+
+  async requestEmailUpdate(
+    did: DidString,
+    opts?: { locale?: string },
+  ): Promise<{ tokenRequired: boolean }> {
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    if (!account.email) {
+      throw new InvalidRequestError('account does not have an email address')
+    }
+
+    const token = account.emailConfirmedAt
+      ? await this.createEmailToken(did, 'update_email')
+      : null
+
+    if (token) {
+      await this.mailer.sendUpdateEmail(
+        { token, locale: opts?.locale },
+        { to: account.email },
+      )
+    }
+
+    return { tokenRequired: !!token }
+  }
+
+  /**
+   * @throws UserAlreadyExistsError if the new email is already in use by another account
+   */
+  async updateEmail(
+    did: DidString,
+    email: string,
+    token?: string,
+    opts?: { locale?: string; sendConfirmationEmail?: boolean },
+  ) {
+    if (!isEmailValid(email) || isDisposableEmail(email)) {
+      throw new InvalidRequestError(
+        'This email address is not supported, please use a different email.',
+      )
+    }
+
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    const tokenRequired = !!account.emailConfirmedAt
+
+    // require a token if account email is confirmed
+    if (!token && tokenRequired) {
+      throw new InvalidRequestError(
+        'confirmation token required',
+        'TokenRequired',
+      )
+    }
+
+    if (token) {
+      await this.assertValidEmailToken(did, 'update_email', token)
+    }
+
+    await this.updateAccountEmail({ did, email })
+
+    account.email = email
+    account.emailConfirmedAt = null
+
+    // Proactively send a confirmation email so that the user can confirm the
+    // new email immediately.
+    if (opts?.sendConfirmationEmail) {
+      const token = await this.createEmailToken(did, 'confirm_email')
+      const locale = opts.locale
+      await this.mailer.sendConfirmEmail({ token, locale }, { to: email })
+    }
+
+    return account
+  }
+
+  async updateAccountEmail(opts: { did: DidString; email: string }) {
     const { did, email } = opts
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        account.updateEmail(dbTxn, did, email),
-        emailToken.deleteAllEmailTokens(dbTxn, did),
-      ]),
-    )
+    await this.db.transaction(async (dbTxn) => {
+      await account.updateEmail(dbTxn, did, email)
+      await emailToken.deleteAllEmailTokens(dbTxn, did)
+    })
   }
 
   async resetPassword(opts: { password: string; token: string }) {

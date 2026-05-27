@@ -1,5 +1,27 @@
 # @atproto/oauth-provider
 
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies [[`30ccc25`](https://github.com/bluesky-social/atproto/commit/30ccc25adfa8ef3b5393c65ab8af9b827e1e2c80), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/oauth-provider-ui@0.7.1
+  - @atproto/oauth-scopes@0.5.0
+  - @atproto/did@0.5.0
+  - @atproto/oauth-types@0.7.1
+
+## 0.18.0
+
+### Minor Changes
+
+- [#4883](https://github.com/bluesky-social/atproto/pull/4883) [`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for email verification and management in the account management interface
+
+### Patch Changes
+
+- Updated dependencies [[`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d)]:
+  - @atproto/oauth-provider-api@0.6.0
+  - @atproto/oauth-provider-ui@0.7.0
+
 ## 0.17.0
 
 ### Minor Changes

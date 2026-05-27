@@ -1,5 +1,33 @@
 # @atproto/api
 
+## 0.20.6
+
+### Patch Changes
+
+- [#4999](https://github.com/bluesky-social/atproto/pull/4999) [`126ac1e`](https://github.com/bluesky-social/atproto/commit/126ac1ead8c44065e3fa7c02efba7bd20551ee99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.5
+
+### Patch Changes
+
+- [#4998](https://github.com/bluesky-social/atproto/pull/4998) [`4984994`](https://github.com/bluesky-social/atproto/commit/4984994f7d3f0773b03c61dccd68286e42e0c6af) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.4
+
+### Patch Changes
+
+- [#4987](https://github.com/bluesky-social/atproto/pull/4987) [`7fecf13`](https://github.com/bluesky-social/atproto/commit/7fecf13852eff09c0dd55da0258cf779688a36e6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4987](https://github.com/bluesky-social/atproto/pull/4987) [`7fecf13`](https://github.com/bluesky-social/atproto/commit/7fecf13852eff09c0dd55da0258cf779688a36e6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4991](https://github.com/bluesky-social/atproto/pull/4991) [`86bb63e`](https://github.com/bluesky-social/atproto/commit/86bb63ef97d487abe55a5a263261b4af2b5d7664) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.3
+
+### Patch Changes
+
+- [#4985](https://github.com/bluesky-social/atproto/pull/4985) [`604e16d`](https://github.com/bluesky-social/atproto/commit/604e16dda2972f0e17cedefc49dafd4ecbfda8f9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update fields that are always present on `viewExternalSource`
+
 ## 0.20.2
 
 ### Patch Changes
