@@ -4,10 +4,10 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a single record from a permissioned space.",
+      "description": "Get a single record from a permissioned space. Callable with either OAuth (for the authenticated user's own data) or a space-credential (for syncing services).",
       "parameters": {
         "type": "params",
-        "required": ["space", "collection", "rkey"],
+        "required": ["space", "repo", "collection", "rkey"],
         "properties": {
           "space": {
             "type": "string",
@@ -17,7 +17,7 @@
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the member whose repo to read from. If omitted, defaults to the authenticated user (OAuth auth). Required when using space-credential auth."
+            "description": "The DID of the member whose repo to read from."
           },
           "collection": {
             "type": "string",
@@ -28,11 +28,6 @@
             "type": "string",
             "format": "record-key",
             "description": "The Record Key."
-          },
-          "cid": {
-            "type": "string",
-            "format": "cid",
-            "description": "The CID of the version of the record. If not specified, then return the most recent version."
           }
         }
       },
@@ -44,7 +39,7 @@
           "properties": {
             "uri": {
               "type": "string",
-              "description": "URI of the record. Scheme TBD."
+              "format": "space-uri"
             },
             "cid": {
               "type": "string",
@@ -57,9 +52,11 @@
         }
       },
       "errors": [
-        {
-          "name": "RecordNotFound"
-        }
+        { "name": "RecordNotFound" },
+        { "name": "SpaceNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
       ]
     }
   }

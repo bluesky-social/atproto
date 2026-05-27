@@ -9,12 +9,17 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "collection", "rkey"],
+          "required": ["space", "repo", "collection", "rkey"],
           "properties": {
             "space": {
               "type": "string",
               "format": "space-uri",
               "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the repo to delete from (the authenticated member)."
             },
             "collection": {
               "type": "string",
@@ -25,16 +30,6 @@
               "type": "string",
               "format": "record-key",
               "description": "The Record Key."
-            },
-            "swapRecord": {
-              "type": "string",
-              "format": "cid",
-              "description": "Compare and swap with the previous record by CID."
-            },
-            "swapCommit": {
-              "type": "string",
-              "format": "cid",
-              "description": "Compare and swap with the previous commit by CID."
             }
           }
         }
@@ -43,13 +38,22 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "properties": {}
+          "required": ["repoHash", "rev"],
+          "properties": {
+            "repoHash": {
+              "type": "bytes",
+              "description": "sha256 digest of the LtHash state of the writer's repo after this delete (32 bytes)."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Repo revision (TID) of the resulting commit."
+            }
+          }
         }
       },
       "errors": [
-        {
-          "name": "InvalidSwap"
-        }
+        { "name": "SpaceNotFound" },
+        { "name": "NotAMember" }
       ]
     }
   }

@@ -25,14 +25,8 @@
         }
       },
       "errors": [
-        {
-          "name": "SpaceNotFound",
-          "description": "The specified space does not exist."
-        },
-        {
-          "name": "NotSpaceOwner",
-          "description": "The authenticated user is not the owner of this space."
-        }
+        { "name": "SpaceNotFound" },
+        { "name": "NotSpaceOwner" }
       ]
     }
   }

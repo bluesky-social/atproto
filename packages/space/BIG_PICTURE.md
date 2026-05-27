@@ -41,7 +41,7 @@ We haven't settled on a scheme yet. It probably won't be at:// — permissioned 
 
 ## Member list
 
-Each space has a single member list. Each entry is a (DID, read|write) tuple. Write access is inclusive of read access. This is the only ACL data structure.
+Each space has a single member list. Each entry is a DID. This is the only ACL data structure.
 
 Write enforcement is ultimately handled by readers of the space. Any user can purport to write to a space on their PDS, but readers of the space compare incoming records against the member list and use that to define the real content perimeter.
 

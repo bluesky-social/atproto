@@ -29,10 +29,7 @@
         }
       },
       "errors": [
-        {
-          "name": "AccountNotFound",
-          "description": "The specified DID is not hosted on this PDS."
-        }
+        { "name": "AccountNotFound" }
       ]
     }
   }

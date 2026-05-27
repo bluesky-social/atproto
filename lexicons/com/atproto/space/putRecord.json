@@ -9,13 +9,17 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "collection", "rkey", "record"],
-          "nullable": ["swapRecord"],
+          "required": ["space", "repo", "collection", "rkey", "record"],
           "properties": {
             "space": {
               "type": "string",
               "format": "space-uri",
               "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the repo to write to (the authenticated member)."
             },
             "collection": {
               "type": "string",
@@ -35,16 +39,6 @@
             "record": {
               "type": "unknown",
               "description": "The record to write."
-            },
-            "swapRecord": {
-              "type": "string",
-              "format": "cid",
-              "description": "Compare and swap with the previous record by CID."
-            },
-            "swapCommit": {
-              "type": "string",
-              "format": "cid",
-              "description": "Compare and swap with the previous commit by CID."
             }
           }
         }
@@ -53,15 +47,24 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "cid"],
+          "required": ["uri", "cid", "repoHash", "rev"],
           "properties": {
             "uri": {
               "type": "string",
-              "description": "URI of the written record. Scheme TBD."
+              "format": "space-uri",
+              "description": "URI of the written record."
             },
             "cid": {
               "type": "string",
               "format": "cid"
+            },
+            "repoHash": {
+              "type": "bytes",
+              "description": "sha256 digest of the LtHash state of the writer's repo after this write (32 bytes)."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Repo revision (TID) of the resulting commit."
             },
             "validationStatus": {
               "type": "string",
@@ -71,9 +74,8 @@
         }
       },
       "errors": [
-        {
-          "name": "InvalidSwap"
-        }
+        { "name": "SpaceNotFound" },
+        { "name": "NotAMember" }
       ]
     }
   }

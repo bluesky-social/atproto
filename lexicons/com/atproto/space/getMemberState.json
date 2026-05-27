@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the current state of the member list for a space. Must be called on the space owner's PDS. Requires a space credential.",
+      "description": "Get the current state of the member list for a space. Must be called on the space owner's PDS. Callable with either OAuth (for the space owner) or a space-credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -30,9 +30,7 @@
         }
       },
       "errors": [
-        {
-          "name": "SpaceNotFound"
-        }
+        { "name": "SpaceNotFound" }
       ]
     }
   }

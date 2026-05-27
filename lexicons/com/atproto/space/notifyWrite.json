@@ -9,17 +9,17 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "did", "rev"],
+          "required": ["space", "repo", "rev"],
           "properties": {
             "space": {
               "type": "string",
               "format": "space-uri",
               "description": "Reference to the space."
             },
-            "did": {
+            "repo": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the user who wrote data."
+              "description": "The DID of the member who wrote data."
             },
             "rev": {
               "type": "string",

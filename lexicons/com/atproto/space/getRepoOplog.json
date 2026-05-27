@@ -4,20 +4,20 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the operation log for a user's permissioned repo within a space. Used for incremental sync. Requires a space credential.",
+      "description": "Get the operation log for a member's permissioned repo within a space. Used for incremental sync. If a syncer falls behind compaction, oplog replay will produce a hash mismatch against the current commitment; the syncer then falls back to full-state recovery via listRecords + getRecord. Callable with either OAuth (for the authenticated user's own data) or a space-credential (for syncing services).",
       "parameters": {
         "type": "params",
-        "required": ["space", "did"],
+        "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
             "format": "space-uri",
             "description": "Reference to the space."
           },
-          "did": {
+          "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the user whose oplog to retrieve."
+            "description": "The DID of the member whose oplog to retrieve."
           },
           "since": {
             "type": "string",
@@ -57,41 +57,23 @@
         }
       },
       "errors": [
-        {
-          "name": "SpaceNotFound"
-        }
+        { "name": "SpaceNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
       ]
     },
     "opEntry": {
       "type": "object",
-      "required": ["rev", "idx", "action", "collection", "rkey"],
+      "description": "A single operation in a permissioned repo's oplog. cid is null for deletes; prev is null for creates. Operations sharing the same rev belong to the same batch.",
+      "required": ["rev", "collection", "rkey", "cid", "prev"],
+      "nullable": ["cid", "prev"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "idx": {
-          "type": "integer"
-        },
-        "action": {
-          "type": "string",
-          "knownValues": ["create", "update", "delete"]
-        },
-        "collection": {
-          "type": "string",
-          "format": "nsid"
-        },
-        "rkey": {
-          "type": "string",
-          "format": "record-key"
-        },
-        "cid": {
-          "type": "string",
-          "format": "cid"
-        },
-        "prev": {
-          "type": "string",
-          "format": "cid"
-        }
+        "rev": { "type": "string" },
+        "collection": { "type": "string", "format": "nsid" },
+        "rkey": { "type": "string", "format": "record-key" },
+        "cid": { "type": "string", "format": "cid" },
+        "prev": { "type": "string", "format": "cid" }
       }
     }
   }

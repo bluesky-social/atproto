@@ -30,13 +30,8 @@
         }
       },
       "errors": [
-        {
-          "name": "SpaceNotFound"
-        },
-        {
-          "name": "NotAMember",
-          "description": "The authenticated user is not a member of this space."
-        }
+        { "name": "SpaceNotFound" },
+        { "name": "NotAMember" }
       ]
     }
   }

@@ -9,12 +9,17 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "writes"],
+          "required": ["space", "repo", "writes"],
           "properties": {
             "space": {
               "type": "string",
               "format": "space-uri",
               "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the repo to write to (the authenticated member)."
             },
             "validate": {
               "type": "boolean",
@@ -27,11 +32,6 @@
                 "refs": ["#create", "#update", "#delete"],
                 "closed": true
               }
-            },
-            "swapCommit": {
-              "type": "string",
-              "format": "cid",
-              "description": "If provided, the entire operation will fail if the current commit CID does not match this value."
             }
           }
         }
@@ -40,7 +40,16 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["repoHash", "rev"],
           "properties": {
+            "repoHash": {
+              "type": "bytes",
+              "description": "sha256 digest of the LtHash state of the writer's repo after this batch (32 bytes)."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Repo revision (TID) of the resulting commit."
+            },
             "results": {
               "type": "array",
               "items": {
@@ -53,10 +62,8 @@
         }
       },
       "errors": [
-        {
-          "name": "InvalidSwap",
-          "description": "Indicates that the 'swapCommit' parameter did not match current commit."
-        }
+        { "name": "SpaceNotFound" },
+        { "name": "NotAMember" }
       ]
     },
     "create": {
@@ -116,7 +123,8 @@
       "required": ["uri", "cid"],
       "properties": {
         "uri": {
-          "type": "string"
+          "type": "string",
+          "format": "space-uri"
         },
         "cid": {
           "type": "string",
@@ -133,7 +141,8 @@
       "required": ["uri", "cid"],
       "properties": {
         "uri": {
-          "type": "string"
+          "type": "string",
+          "format": "space-uri"
         },
         "cid": {
           "type": "string",

@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifySpaceDeleted",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify a member's PDS or a syncing service that a space has been deleted. Sent by the space owner's PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-uri",
+              "description": "Reference to the deleted space."
+            }
+          }
+        }
+      }
+    }
+  }
+}

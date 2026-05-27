@@ -13,6 +13,16 @@
             "type": "string",
             "format": "space-uri",
             "description": "Reference to the space."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of members to return."
+          },
+          "cursor": {
+            "type": "string"
           }
         }
       },
@@ -22,6 +32,9 @@
           "type": "object",
           "required": ["members"],
           "properties": {
+            "cursor": {
+              "type": "string"
+            },
             "members": {
               "type": "array",
               "items": {
@@ -33,22 +46,16 @@
         }
       },
       "errors": [
-        {
-          "name": "SpaceNotFound"
-        }
+        { "name": "SpaceNotFound" }
       ]
     },
     "member": {
       "type": "object",
-      "required": ["did", "addedAt"],
+      "required": ["did"],
       "properties": {
         "did": {
           "type": "string",
           "format": "did"
-        },
-        "addedAt": {
-          "type": "string",
-          "format": "datetime"
         }
       }
     }

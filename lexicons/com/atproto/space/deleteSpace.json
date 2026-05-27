@@ -1,25 +1,20 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.addMember",
+  "id": "com.atproto.space.deleteSpace",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a member to a space. Requires auth as the space owner.",
+      "description": "Tombstone a space. The authenticated user must be the space owner. After deletion, all reads and writes against the space will fail with SpaceNotFound. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "did"],
+          "required": ["space"],
           "properties": {
             "space": {
               "type": "string",
               "format": "space-uri",
-              "description": "Reference to the space."
-            },
-            "did": {
-              "type": "string",
-              "format": "did",
-              "description": "The DID of the member to add."
+              "description": "Reference to the space to delete."
             }
           }
         }

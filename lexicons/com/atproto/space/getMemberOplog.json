@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the member operation log for a space. Used for incremental sync of the member list. Must be called on the space owner's PDS. Requires a space credential.",
+      "description": "Get the member operation log for a space. Used for incremental sync of the member list. If a syncer falls behind compaction, oplog replay will produce a hash mismatch against the current commitment; the syncer then falls back to full-state recovery via getMembers. Must be called on the space owner's PDS. Callable with either OAuth (for the space owner) or a space-credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -51,30 +51,19 @@
           }
         }
       },
-      "errors": [
-        {
-          "name": "SpaceNotFound"
-        }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }]
     },
     "opEntry": {
       "type": "object",
-      "required": ["rev", "idx", "action", "did"],
+      "description": "A single operation in a space's member-list oplog.",
+      "required": ["rev", "action", "did"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "idx": {
-          "type": "integer"
-        },
+        "rev": { "type": "string" },
         "action": {
           "type": "string",
           "knownValues": ["add", "remove"]
         },
-        "did": {
-          "type": "string",
-          "format": "did"
-        }
+        "did": { "type": "string", "format": "did" }
       }
     }
   }
