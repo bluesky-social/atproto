@@ -80,10 +80,8 @@ describe('spaces', () => {
     )
     const credRes = await pds1Client.call(
       com.atproto.space.getSpaceCredential,
-      {
-        space,
-        grant: grantRes.grant,
-      },
+      { space },
+      { headers: { authorization: `Bearer ${grantRes.grant}` } },
     )
     return { authorization: `Bearer ${credRes.credential}` }
   }
@@ -222,6 +220,7 @@ describe('spaces', () => {
       com.atproto.space.createRecord,
       {
         space: spaceUri,
+        repo: danDid,
         collection: 'app.bsky.feed.post',
         record: {
           $type: 'app.bsky.feed.post',
@@ -236,7 +235,7 @@ describe('spaces', () => {
     const rkey = created.uri.split('/').pop()!
     const got = await pds1Client.call(
       com.atproto.space.getRecord,
-      { space: spaceUri, collection: 'app.bsky.feed.post', rkey },
+      { space: spaceUri, repo: danDid, collection: 'app.bsky.feed.post', rkey },
       { headers: danHeaders },
     )
     expect(got.value).toMatchObject({ text: 'hello from dan' })
@@ -265,6 +264,7 @@ describe('spaces', () => {
       com.atproto.space.createRecord,
       {
         space: spaceUri,
+        repo: danDid,
         collection: 'app.bsky.feed.post',
         record: {
           $type: 'app.bsky.feed.post',
@@ -278,7 +278,7 @@ describe('spaces', () => {
 
     await pds1Client.call(
       com.atproto.space.deleteRecord,
-      { space: spaceUri, collection: 'app.bsky.feed.post', rkey },
+      { space: spaceUri, repo: danDid, collection: 'app.bsky.feed.post', rkey },
       { headers: danHeaders },
     )
 
@@ -312,7 +312,7 @@ describe('spaces', () => {
 
     await pds1Client.call(
       com.atproto.space.applyWrites,
-      { space: spaceUri, writes },
+      { space: spaceUri, repo: danDid, writes },
       { headers: danHeaders },
     )
 
@@ -339,6 +339,7 @@ describe('spaces', () => {
       com.atproto.space.createRecord,
       {
         space: spaceUri,
+        repo: bobDid,
         collection: 'app.bsky.feed.post',
         record: {
           $type: 'app.bsky.feed.post',
@@ -366,6 +367,7 @@ describe('spaces', () => {
       com.atproto.space.createRecord,
       {
         space: spaceUri,
+        repo: bobDid,
         collection: 'app.bsky.feed.post',
         record: {
           $type: 'app.bsky.feed.post',
@@ -413,6 +415,7 @@ describe('spaces', () => {
         com.atproto.space.createRecord,
         {
           space: spaceUri,
+          repo: danDid,
           collection,
           record:
             collection === 'app.bsky.feed.post'
@@ -437,7 +440,7 @@ describe('spaces', () => {
     // Two pages of one record each; the cursor must span collections.
     const first = await pds1Client.call(
       com.atproto.space.listRecords,
-      { space: spaceUri, limit: 1 },
+      { space: spaceUri, repo: danDid, limit: 1 },
       { headers: danHeaders },
     )
     expect(first.records.length).toBe(1)
@@ -445,7 +448,7 @@ describe('spaces', () => {
 
     const second = await pds1Client.call(
       com.atproto.space.listRecords,
-      { space: spaceUri, limit: 1, cursor: first.cursor },
+      { space: spaceUri, repo: danDid, limit: 1, cursor: first.cursor },
       { headers: danHeaders },
     )
     expect(second.records.length).toBe(1)
@@ -453,7 +456,7 @@ describe('spaces', () => {
 
     const third = await pds1Client.call(
       com.atproto.space.listRecords,
-      { space: spaceUri, limit: 1, cursor: second.cursor },
+      { space: spaceUri, repo: danDid, limit: 1, cursor: second.cursor },
       { headers: danHeaders },
     )
     expect(third.records).toEqual([])
@@ -495,7 +498,7 @@ describe('spaces', () => {
 
     const ok = await pds1Client.call(
       com.atproto.space.getRepoState,
-      { space: targetSpace, did: aliceDid },
+      { space: targetSpace, repo: aliceDid },
       { headers: credHeaders },
     )
     expect(ok).toBeDefined()
@@ -503,7 +506,7 @@ describe('spaces', () => {
     await expect(
       pds1Client.call(
         com.atproto.space.getRepoOplog,
-        { space: otherSpace, did: aliceDid },
+        { space: otherSpace, repo: aliceDid },
         { headers: credHeaders },
       ),
     ).rejects.toThrow()
@@ -523,6 +526,7 @@ describe('spaces', () => {
         com.atproto.space.createRecord,
         {
           space: spaceUri,
+          repo: bobDid,
           collection: 'app.bsky.feed.post',
           record: {
             $type: 'app.bsky.feed.post',
