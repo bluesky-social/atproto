@@ -120,8 +120,8 @@ exports[`verification list returns paginated list of verifications 1`] = `
       "verifications": [
         {
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "displayName": "bobby",
-          "handle": "bob.test",
+          "displayName": "ali",
+          "handle": "alice.test",
           "isValid": true,
           "issuer": "user(0)",
           "uri": "record(0)",

@@ -277,6 +277,30 @@ export class Hydrator {
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
+    // Hydrate verification issuer actors so the verification view can expose
+    // the issuer's current handle and displayName. Skipped when no hydrated
+    // actor has any verifications, which is the common case.
+    const issuerDids: DidString[] = []
+    const issuerDidSet = new Set<DidString>()
+    for (const actor of actors.values()) {
+      if (!actor) continue
+      for (const verification of actor.verifications) {
+        const issuer = verification.issuer
+        if (actors.has(issuer) || issuerDidSet.has(issuer)) continue
+        issuerDidSet.add(issuer)
+        issuerDids.push(issuer)
+      }
+    }
+    if (issuerDids.length > 0) {
+      const issuerActors = await this.actor.getActors(issuerDids, {
+        includeTakedowns,
+      })
+      // Merge into actors without overwriting existing entries (the original
+      // dids may have been fetched with skipCacheForDids, etc.).
+      for (const [did, actor] of issuerActors) {
+        if (!actors.has(did)) actors.set(did, actor)
+      }
+    }
     if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }

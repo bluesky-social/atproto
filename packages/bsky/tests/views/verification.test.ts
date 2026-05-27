@@ -78,8 +78,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
-              displayName: 'display-verifier1',
-              handle: 'verifier1.test',
+              displayName: 'display-verifier2',
+              handle: 'verifier2.test',
               isValid: true,
               issuer: verifier2,
               uri: expect.any(String),
@@ -117,16 +117,16 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
-              displayName: 'display-bob',
-              handle: 'bob.test',
+              displayName: 'display-verifier1',
+              handle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
             },
             {
               createdAt: expect.any(String),
-              displayName: 'display-bob',
-              handle: 'bob.test',
+              displayName: 'display-verifier2',
+              handle: 'verifier2.test',
               isValid: true,
               issuer: verifier2,
               uri: expect.any(String),
@@ -147,16 +147,16 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
-              displayName: 'display-carol',
-              handle: 'carol.test',
+              displayName: 'display-verifier1',
+              handle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
             },
             {
               createdAt: expect.any(String),
-              displayName: 'display-carol',
-              handle: 'carol.old.handle',
+              displayName: 'display-verifier2',
+              handle: 'verifier2.test',
               isValid: false,
               issuer: verifier2,
               uri: expect.any(String),
@@ -177,8 +177,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
-              displayName: 'display-dan',
-              handle: 'dan.test',
+              displayName: 'display-verifier1',
+              handle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
@@ -205,8 +205,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
-              displayName: 'frank-old-name',
-              handle: 'frank.test',
+              displayName: 'display-verifier2',
+              handle: 'verifier2.test',
               isValid: false,
               issuer: verifier2,
               uri: expect.any(String),
@@ -233,8 +233,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
-              displayName: 'display-impersonator',
-              handle: 'impersonator.test',
+              displayName: 'display-verifier1',
+              handle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
