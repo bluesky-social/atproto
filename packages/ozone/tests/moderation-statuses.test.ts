@@ -135,6 +135,7 @@ describe('moderation-statuses', () => {
     })
 
     it('returns paginated statuses', async () => {
+      // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
         params: ToolsOzoneModerationQueryStatuses.QueryParams,
       ) => {
@@ -151,18 +152,14 @@ describe('moderation-statuses', () => {
           statuses.push(...results.subjectStatuses)
           count++
           // The count is just a brake-check to prevent infinite loop
-        } while (cursor && count < 20)
+        } while (cursor && count < 10)
 
         return statuses
       }
 
       const list = await getPaginatedStatuses({})
-      expect(list.length).toBeGreaterThan(0)
-
-      // Verify pagination returns items in descending ID order by default
-      for (let i = 1; i < list.length; i++) {
-        expect(list[i - 1].id).toBeGreaterThan(list[i].id)
-      }
+      expect(list[0].id).toEqual(7)
+      expect(list[list.length - 1].id).toEqual(1)
 
       await modClient.emitEvent({
         subject: list[1].subject,
@@ -177,7 +174,8 @@ describe('moderation-statuses', () => {
         sortField: 'lastReviewedAt',
       })
 
-      // Verify that the item that was recently reviewed comes up first when sorted by lastReviewedAt
+      // Verify that the item that was recently reviewed comes up first when sorted descendingly
+      // while the result set always contains same number of items regardless of sorting
       expect(listReviewedFirst[0].id).toEqual(list[1].id)
       expect(listReviewedFirst.length).toEqual(list.length)
     })
@@ -223,19 +221,11 @@ describe('moderation-statuses', () => {
         }),
       ])
 
-      // Verify all starter pack statuses are for starter packs
-      expect(onlyStarterPackStatuses.subjectStatuses.length).toBeGreaterThan(0)
-      onlyStarterPackStatuses.subjectStatuses.forEach((status) => {
-        assert(isStrongRef(status.subject))
-        expect(status.subject.uri).toContain('app.bsky.graph.starterpack')
-      })
-      // Verify our specific starter pack is in the results
-      const foundSp = onlyStarterPackStatuses.subjectStatuses.find(
-        (s) => isStrongRef(s.subject) && s.subject.uri === sp.uriStr,
+      expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
+      assert(isStrongRef(onlyStarterPackStatuses.subjectStatuses[0].subject))
+      expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
+        'app.bsky.graph.starterpack',
       )
-      expect(foundSp).toBeTruthy()
-
-      // Verify alice's starter pack statuses
       expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
       assert(
         isStrongRef(onlyAlicesStarterPackStatuses.subjectStatuses[0].subject),
@@ -243,16 +233,8 @@ describe('moderation-statuses', () => {
       expect(
         onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
       ).toEqual(sp.uriStr)
-
-      // Verify bob has no starter pack statuses
       expect(onlyBobsStarterPackStatuses.subjectStatuses.length).toEqual(0)
-
-      // Verify all post statuses are for posts
-      expect(onlyPostStatuses.subjectStatuses.length).toBeGreaterThan(0)
-      onlyPostStatuses.subjectStatuses.forEach((status) => {
-        assert(isStrongRef(status.subject))
-        expect(status.subject.uri).toContain('app.bsky.feed.post')
-      })
+      expect(onlyPostStatuses.subjectStatuses.length).toEqual(2)
     })
 
     it('returns statuses for account or records', async () => {

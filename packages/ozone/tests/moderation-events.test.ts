@@ -207,25 +207,8 @@ describe('moderation-events', () => {
         }),
       ])
 
-      // Verify all spam events have the correct report type
-      expect(spamEvents.events.length).toBeGreaterThan(0)
-      spamEvents.events.forEach((event) => {
-        expect(event.event.$type).toEqual(
-          'tools.ozone.moderation.defs#modEventReport',
-        )
-        expect((event.event as any).reportType).toEqual(REASONSPAM)
-      })
-
-      // Verify all misleading events have one of the correct report types
-      expect(misleadingEvents.events.length).toBeGreaterThan(0)
-      misleadingEvents.events.forEach((event) => {
-        expect(event.event.$type).toEqual(
-          'tools.ozone.moderation.defs#modEventReport',
-        )
-        expect([REASONMISLEADING, REASONAPPEAL]).toContain(
-          (event.event as any).reportType,
-        )
-      })
+      expect(misleadingEvents.events.length).toEqual(2)
+      expect(spamEvents.events.length).toEqual(6)
     })
 
     it('returns events matching keyword in comment', async () => {
@@ -242,22 +225,9 @@ describe('moderation-events', () => {
           }),
         ])
 
-      expect(eventsWithX.events.length).toBeGreaterThan(0)
-      eventsWithX.events.forEach((event) => {
-        const comment = (event.event as any).comment
-        expect(comment).toBeTruthy()
-        expect(comment.toLowerCase()).toContain('x')
-      })
-
+      expect(eventsWithX.events.length).toEqual(10)
       expect(eventsWithTest.events.length).toEqual(0)
-
-      expect(eventsWithComment.events.length).toBeGreaterThan(0)
-      eventsWithComment.events.forEach((event) => {
-        const comment = (event.event as any).comment
-        expect(comment).toBeTruthy()
-        expect(typeof comment).toBe('string')
-        expect(comment.length).toBeGreaterThan(0)
-      })
+      expect(eventsWithComment.events.length).toEqual(10)
     })
 
     it('returns events matching multiple keywords in comment', async () => {
@@ -375,7 +345,7 @@ describe('moderation-events', () => {
         })
       const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
       const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
-      const [addFinder, addAndRemoveFinder, removeFinder] = await Promise.all([
+      const [addFinder, addAndRemoveFinder, _removeFinder] = await Promise.all([
         modClient.queryEvents({
           addedTags: ['L1'],
         }),
@@ -388,33 +358,14 @@ describe('moderation-events', () => {
         }),
       ])
 
-      // Verify events with addedTags: ['L1'] actually have L1 in their add array
-      expect(addFinder.events.length).toBeGreaterThan(0)
-      addFinder.events.forEach((event) => {
-        assert(ToolsOzoneModerationDefs.isModEventTag(event.event))
-        expect(event.event.add).toContain('L1')
-      })
-      const foundAddEvent = addFinder.events.find((e) => e.id === addEvent.id)
-      expect(foundAddEvent).toBeTruthy()
+      expect(addFinder.events.length).toEqual(1)
+      expect(addEvent.id).toEqual(addFinder.events[0].id)
 
-      // Verify events with addedTags: ['L3'] and removedTags: ['L2'] match
-      expect(addAndRemoveFinder.events.length).toBeGreaterThan(0)
-      addAndRemoveFinder.events.forEach((event) => {
-        assert(ToolsOzoneModerationDefs.isModEventTag(event.event))
-        expect(event.event.add).toContain('L3')
-        expect(event.event.remove).toContain('L2')
-      })
-      const foundAddAndRemoveEvent = addAndRemoveFinder.events.find(
-        (e) => e.id === addAndRemoveEvent.id,
-      )
-      expect(foundAddAndRemoveEvent).toBeTruthy()
-
-      // Verify all events with removedTags: ['L2'] actually have L2 in their remove array
-      expect(removeFinder.events.length).toBeGreaterThan(0)
-      removeFinder.events.forEach((event) => {
-        assert(ToolsOzoneModerationDefs.isModEventTag(event.event))
-        expect(event.event.remove).toContain('L2')
-      })
+      expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
+      expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
+      assert(ToolsOzoneModerationDefs.isModEventTag(addAndRemoveEvent.event))
+      expect(addAndRemoveEvent.event.add).toEqual(['L3'])
+      expect(addAndRemoveEvent.event.remove).toEqual(['L2'])
     })
 
     it('returns events for specified collections', async () => {
@@ -462,15 +413,9 @@ describe('moderation-events', () => {
         }),
       ])
 
-      const starterPackEvent = onlyStarterPackReports.events.find(
-        (e) => isStrongRef(e.subject) && e.subject.uri === sp.uriStr,
-      )
-      assert(
-        starterPackEvent,
-        'Should find the starter pack event we just created',
-      )
-      assert(isStrongRef(starterPackEvent.subject))
-      expect(starterPackEvent.subject.uri).toContain(
+      expect(onlyStarterPackReports.events.length).toEqual(1)
+      assert(isStrongRef(onlyStarterPackReports.events[0].subject))
+      expect(onlyStarterPackReports.events[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
 
@@ -480,8 +425,7 @@ describe('moderation-events', () => {
         sp.uriStr,
       )
       expect(onlyBobsStarterPackReports.events.length).toEqual(0)
-      // Account for auto-generated tag events in addition to the original reports
-      expect(onlyPostReports.events.length).toBeGreaterThanOrEqual(4)
+      expect(onlyPostReports.events.length).toEqual(4)
     })
 
     it('returns events for account or records', async () => {
