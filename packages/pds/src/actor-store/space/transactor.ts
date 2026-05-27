@@ -27,6 +27,7 @@ export class SpaceTransactor extends SpaceReader {
         isOwner: isOwner ? 1 : 0,
         isMember: 0,
         createdAt: timestamp,
+        deletedAt: null,
       })
       .execute()
     await this.db.db
@@ -41,11 +42,10 @@ export class SpaceTransactor extends SpaceReader {
     }
   }
 
-  async addMember(space: string, did: string, now?: string): Promise<void> {
-    const timestamp = now ?? new Date().toISOString()
+  async addMember(space: string, did: string): Promise<void> {
     await this.db.db
       .insertInto('space_member')
-      .values({ space, did, memberRev: '', addedAt: timestamp })
+      .values({ space, did, memberRev: '' })
       .execute()
   }
 
@@ -57,23 +57,28 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async deleteSpace(uri: string): Promise<void> {
-    // Clean up all related tables
+  async markSpaceDeleted(uri: string, now?: string): Promise<void> {
+    const timestamp = now ?? new Date().toISOString()
     await this.db.db
-      .deleteFrom('space_record')
-      .where('space', '=', uri)
+      .updateTable('space')
+      .set({ deletedAt: timestamp })
+      .where('uri', '=', uri)
       .execute()
+  }
+
+  /**
+   * Owner-side cleanup of space-scoped data after deletion. Only purges data
+   * that belongs to the owner (member list + state, oplog, credential
+   * recipients). Does NOT touch space_record / space_record_oplog — those are
+   * member-scoped and only exist on members' PDSes.
+   */
+  async purgeOwnerSpaceData(uri: string): Promise<void> {
     await this.db.db
       .deleteFrom('space_member')
       .where('space', '=', uri)
       .execute()
-    await this.db.db.deleteFrom('space_repo').where('space', '=', uri).execute()
     await this.db.db
       .deleteFrom('space_member_state')
-      .where('space', '=', uri)
-      .execute()
-    await this.db.db
-      .deleteFrom('space_record_oplog')
       .where('space', '=', uri)
       .execute()
     await this.db.db
@@ -84,7 +89,6 @@ export class SpaceTransactor extends SpaceReader {
       .deleteFrom('space_credential_recipient')
       .where('space', '=', uri)
       .execute()
-    await this.db.db.deleteFrom('space').where('uri', '=', uri).execute()
   }
 
   async applyRepoCommit(
@@ -186,14 +190,13 @@ export class SpaceTransactor extends SpaceReader {
     commit: MemberCommitData,
   ): Promise<string> {
     const rev = TID.nextStr()
-    const timestamp = new Date().toISOString()
     let idx = 0
 
     for (const op of commit.ops) {
       if (op.action === MemberOpAction.Add) {
         await this.db.db
           .insertInto('space_member')
-          .values({ space, did: op.did, memberRev: rev, addedAt: timestamp })
+          .values({ space, did: op.did, memberRev: rev })
           .execute()
       } else if (op.action === MemberOpAction.Remove) {
         await this.db.db

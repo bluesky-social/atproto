@@ -1,6 +1,4 @@
-import { getVerificationMaterial } from '@atproto/common'
-import { getDidKeyFromMultibase } from '@atproto/identity'
-import { createSpaceCredential, verifyMemberGrant } from '@atproto/space'
+import { createSpaceCredential } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
@@ -8,103 +6,63 @@ import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
-    handler: async ({ input }) => {
-      const { space, grant, serviceEndpoint } = input.body
+    auth: ctx.authVerifier.memberGrantAuth,
+    handler: async ({ input, auth }) => {
+      const { space, notifyEndpoint } = input.body
+      const { memberDid, aud, clientId, space: grantSpace } = auth.credentials
 
-      // Parse the grant to get the member DID (iss)
-      const parts = grant.split('.')
-      if (parts.length !== 3) {
-        throw new InvalidRequestError('Invalid grant format', 'InvalidGrant')
-      }
-      let grantPayload: { iss?: string }
-      try {
-        grantPayload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
-      } catch {
-        throw new InvalidRequestError('Invalid grant format', 'InvalidGrant')
-      }
-      const memberDid = grantPayload.iss
-      if (!memberDid) {
-        throw new InvalidRequestError('Missing issuer in grant', 'InvalidGrant')
-      }
-
-      // Resolve member's DID doc to get signing key
-      const memberDidDoc = await ctx.idResolver.did.resolve(memberDid)
-      if (!memberDidDoc) {
-        throw new InvalidRequestError(
-          'Could not resolve member DID',
-          'InvalidGrant',
-        )
-      }
-      const parsedKey = getVerificationMaterial(memberDidDoc, 'atproto')
-      if (!parsedKey) {
-        throw new InvalidRequestError(
-          'Missing key in member DID doc',
-          'InvalidGrant',
-        )
-      }
-      const didKey = getDidKeyFromMultibase(parsedKey)
-      if (!didKey) {
-        throw new InvalidRequestError(
-          'Bad key in member DID doc',
-          'InvalidGrant',
-        )
-      }
-
-      // Verify the grant JWT
-      let verified
-      try {
-        verified = await verifyMemberGrant(grant, didKey)
-      } catch (err) {
-        throw new InvalidRequestError(
-          `Invalid grant: ${err instanceof Error ? err.message : String(err)}`,
-          'InvalidGrant',
-        )
-      }
-
-      // Verify grant.aud matches space owner
-      const spaceUri = new SpaceUri(space)
-      const ownerDid = spaceUri.spaceDid
-      if (verified.aud !== ownerDid) {
-        throw new InvalidRequestError(
-          'Grant audience does not match space owner',
-          'InvalidGrant',
-        )
-      }
-
-      // Verify grant.space matches requested space
-      if (verified.space !== space) {
+      if (grantSpace !== space) {
         throw new InvalidRequestError(
           'Grant space does not match requested space',
           'InvalidGrant',
         )
       }
 
-      // Check membership via owner's actor store
-      const isMember = await ctx.actorStore.read(ownerDid, (store) =>
-        store.space.isMember(space, memberDid),
+      const ownerDid = new SpaceUri(space).spaceDid
+      if (aud !== ownerDid) {
+        throw new InvalidRequestError(
+          'Grant audience does not match space owner',
+          'InvalidGrant',
+        )
+      }
+
+      const { spaceRow, isMember } = await ctx.actorStore.read(
+        ownerDid,
+        async (store) => ({
+          spaceRow: await store.space.getSpace(space),
+          isMember: await store.space.isMember(space, memberDid),
+        }),
       )
+      if (!spaceRow) {
+        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+      }
+      if (spaceRow.deletedAt) {
+        throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
+      }
       if (!isMember) {
         throw new InvalidRequestError('Member not found in space', 'NotAMember')
       }
 
-      // Issue space credential
       const keypair = await ctx.actorStore.keypair(ownerDid)
       const credential = await createSpaceCredential(
         {
           iss: ownerDid,
           space,
-          clientId: verified.clientId,
+          clientId,
         },
         keypair,
       )
 
-      // Record credential recipient if serviceEndpoint provided
-      if (serviceEndpoint) {
+      // Register the requesting service to receive notifyWrite events.
+      // FIXME: recipient table is keyed (space, serviceDid). Using memberDid
+      // here preserves prior behavior but is wrong when one service syncs for
+      // many members; revisit when reworking the fan-out layer.
+      if (notifyEndpoint) {
         await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
           await actorTxn.space.recordCredentialRecipient(
             space,
             memberDid,
-            serviceEndpoint,
+            notifyEndpoint,
           )
         })
       }

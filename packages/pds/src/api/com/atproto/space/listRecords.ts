@@ -13,25 +13,17 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, collection, limit, cursor, reverse, repo } = params
+      const { space, repo, collection, limit, cursor, reverse } = params
 
-      let repoDid: string
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
           throw new InvalidRequestError('Credential space mismatch')
         }
-        if (!repo) {
-          throw new InvalidRequestError(
-            'repo is required for space credential auth',
-          )
-        }
-        repoDid = repo
       } else {
         assertSpaceScope(auth, space, { action: 'read' })
-        repoDid = repo ?? auth.credentials.did
       }
 
-      const records = await ctx.actorStore.read(repoDid, (store) =>
+      const records = await ctx.actorStore.read(repo, (store) =>
         store.space.listRecords(space, {
           limit: limit ?? 50,
           cursor,

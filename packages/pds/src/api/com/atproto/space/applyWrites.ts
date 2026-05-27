@@ -1,6 +1,11 @@
 import { TID } from '@atproto/common'
 import { RecordWriteOp, SpaceRepo, WriteOpAction } from '@atproto/space'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { SpaceUriString } from '@atproto/syntax'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -21,7 +26,10 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
-      const { space, writes, swapCommit } = input.body
+      const { space, repo, writes } = input.body
+      if (repo !== did) {
+        throw new ForbiddenError('repo must match authenticated user')
+      }
 
       const ops: RecordWriteOp[] = writes.map((w) => {
         if (com.atproto.space.applyWrites.create.isTypeOf(w)) {
@@ -59,16 +67,8 @@ export default function (server: Server, ctx: AppContext) {
         did,
         async (actorTxn) => {
           const storage = new SqlRepoStorage(actorTxn.space, space)
-          const repo = await SpaceRepo.loadOrCreate(storage, did)
-          const commit = await repo.formatCommit(ops)
-
-          if (swapCommit) {
-            const state = await actorTxn.space.getRepoState(space)
-            if (state?.rev !== swapCommit) {
-              throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
-            }
-          }
-
+          const repoStore = await SpaceRepo.loadOrCreate(storage, did)
+          const commit = await repoStore.formatCommit(ops)
           const rev = await actorTxn.space.applyRepoCommit(space, commit)
           return { results: commit.writes, rev }
         },
@@ -89,7 +89,8 @@ export default function (server: Server, ctx: AppContext) {
                   ? com.atproto.space.applyWrites.createResult
                   : com.atproto.space.applyWrites.updateResult
               return resultType.build({
-                uri: `${space}/${did}/${w.collection}/${w.rkey}`,
+                uri:
+                  `${space}/${did}/${w.collection}/${w.rkey}` as SpaceUriString,
                 cid: w.cid.toString(),
               })
             }

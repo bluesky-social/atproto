@@ -1,5 +1,5 @@
 import { SpaceRepo, WriteOpAction } from '@atproto/space'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -14,26 +14,21 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
-      const { space, collection, rkey, swapCommit } = input.body
+      const { space, repo, collection, rkey } = input.body
+      if (repo !== did) {
+        throw new ForbiddenError('repo must match authenticated user')
+      }
 
       assertSpaceScope(auth, space, { action: 'delete', collection })
 
       const rev = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new SqlRepoStorage(actorTxn.space, space)
-        const repo = await SpaceRepo.loadOrCreate(storage, did)
-        const commit = await repo.formatCommit({
+        const repoStore = await SpaceRepo.loadOrCreate(storage, did)
+        const commit = await repoStore.formatCommit({
           action: WriteOpAction.Delete,
           collection,
           rkey,
         })
-
-        if (swapCommit) {
-          const state = await actorTxn.space.getRepoState(space)
-          if (state?.rev !== swapCommit) {
-            throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
-          }
-        }
-
         return actorTxn.space.applyRepoCommit(space, commit)
       })
 

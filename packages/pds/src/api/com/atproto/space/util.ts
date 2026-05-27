@@ -103,7 +103,7 @@ export async function fireNotifyWrite(
       headers,
       body: {
         space: space as SpaceUriString,
-        did: writerDid as DidString,
+        repo: writerDid as DidString,
         rev,
       },
     }).catch(() => {

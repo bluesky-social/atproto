@@ -38,17 +38,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["repoHash", "rev"],
-          "properties": {
-            "repoHash": {
-              "type": "bytes",
-              "description": "sha256 digest of the LtHash state of the writer's repo after this delete (32 bytes)."
-            },
-            "rev": {
-              "type": "string",
-              "description": "Repo revision (TID) of the resulting commit."
-            }
-          }
+          "properties": {}
         }
       },
       "errors": [

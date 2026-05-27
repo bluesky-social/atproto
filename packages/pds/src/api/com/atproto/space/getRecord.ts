@@ -1,3 +1,4 @@
+import { SpaceUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -11,28 +12,20 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, collection, rkey, cid, repo } = params
+      const { space, repo, collection, rkey } = params
 
-      let repoDid: string
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
           throw new InvalidRequestError('Credential space mismatch')
         }
-        if (!repo) {
-          throw new InvalidRequestError(
-            'repo is required for space credential auth',
-          )
-        }
-        repoDid = repo
       } else {
         // OAuth/access auth must carry a `space:?action=read` (or default)
         // scope on the (type, did, skey) of the requested space.
         assertSpaceScope(auth, space, { action: 'read' })
-        repoDid = repo ?? auth.credentials.did
       }
 
-      const record = await ctx.actorStore.read(repoDid, (store) =>
-        store.space.getRecord(space, collection, rkey, cid),
+      const record = await ctx.actorStore.read(repo, (store) =>
+        store.space.getRecord(space, collection, rkey),
       )
       if (!record) {
         throw new InvalidRequestError(
@@ -44,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${repoDid}/${collection}/${rkey}`,
+          uri: `${space}/${repo}/${collection}/${rkey}` as SpaceUriString,
           cid: record.cid,
           value: record.value,
         },

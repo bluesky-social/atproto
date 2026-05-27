@@ -5,6 +5,8 @@ import applyWrites from './applyWrites.js'
 import createRecord from './createRecord.js'
 import createSpace from './createSpace.js'
 import deleteRecord from './deleteRecord.js'
+import deleteSpace from './deleteSpace.js'
+import getBlob from './getBlob.js'
 import getMemberGrant from './getMemberGrant.js'
 import getMemberOplog from './getMemberOplog.js'
 import getMemberState from './getMemberState.js'
@@ -16,10 +18,10 @@ import getSpaceCredential from './getSpaceCredential.js'
 import listRecords from './listRecords.js'
 import listSpaces from './listSpaces.js'
 import notifyMembership from './notifyMembership.js'
+import notifySpaceDeleted from './notifySpaceDeleted.js'
 import notifyWrite from './notifyWrite.js'
 import putRecord from './putRecord.js'
 import removeMember from './removeMember.js'
-import uploadBlob from './uploadBlob.js'
 
 export default function (server: Server, ctx: AppContext) {
   addMember(server, ctx)
@@ -27,6 +29,8 @@ export default function (server: Server, ctx: AppContext) {
   createRecord(server, ctx)
   createSpace(server, ctx)
   deleteRecord(server, ctx)
+  deleteSpace(server, ctx)
+  getBlob(server, ctx)
   getMembers(server, ctx)
   getMemberGrant(server, ctx)
   getMemberOplog(server, ctx)
@@ -38,8 +42,8 @@ export default function (server: Server, ctx: AppContext) {
   listRecords(server, ctx)
   listSpaces(server, ctx)
   notifyMembership(server, ctx)
+  notifySpaceDeleted(server, ctx)
   notifyWrite(server, ctx)
   putRecord(server, ctx)
   removeMember(server, ctx)
-  uploadBlob(server, ctx)
 }

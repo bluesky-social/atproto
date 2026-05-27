@@ -8,13 +8,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('setHash', 'blob')
     .addColumn('rev', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('deletedAt', 'varchar')
     .execute()
 
   await db.schema
     .createTable('space_member')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('addedAt', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('space_member_pkey', ['space', 'did'])
     .execute()
 

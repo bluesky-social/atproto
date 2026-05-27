@@ -26,6 +26,7 @@ export class SpaceReader {
     uri: string
     isOwner: boolean
     isMember: boolean
+    deletedAt: string | null
   } | null> {
     const row = await this.db.db
       .selectFrom('space')
@@ -37,6 +38,7 @@ export class SpaceReader {
       uri: row.uri,
       isOwner: row.isOwner === 1,
       isMember: row.isMember === 1,
+      deletedAt: row.deletedAt,
     }
   }
 
@@ -163,13 +165,18 @@ export class SpaceReader {
 
   async listMembers(
     space: string,
-  ): Promise<{ did: string; memberRev: string; addedAt: string }[]> {
-    const rows = await this.db.db
+    opts: { limit: number; cursor?: string },
+  ): Promise<{ did: string; memberRev: string }[]> {
+    let builder = this.db.db
       .selectFrom('space_member')
-      .select(['did', 'memberRev', 'addedAt'])
+      .select(['did', 'memberRev'])
       .where('space', '=', space)
-      .orderBy('addedAt', 'asc')
-      .execute()
+      .orderBy('did', 'asc')
+      .limit(opts.limit)
+    if (opts.cursor !== undefined) {
+      builder = builder.where('did', '>', opts.cursor)
+    }
+    const rows = await builder.execute()
     return rows
   }
 

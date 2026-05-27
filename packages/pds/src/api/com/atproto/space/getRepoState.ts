@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, did } = params
+      const { space, repo } = params
 
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
@@ -21,12 +21,12 @@ export default function (server: Server, ctx: AppContext) {
         assertSpaceScope(auth, space, { action: 'read' })
       }
 
-      const commit = await ctx.actorStore.read(did, async (store) => {
+      const commit = await ctx.actorStore.read(repo, async (store) => {
         const state = await store.space.getRepoState(space)
         const keypair = await store.keypair()
         return buildSignedCommit({
           spaceUri: space,
-          userDid: did,
+          userDid: repo,
           scope: 'records',
           state,
           keypair,

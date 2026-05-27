@@ -68,3 +68,13 @@ export type SpaceCredentialOutput = {
     clientId: string
   }
 }
+
+export type MemberGrantOutput = {
+  credentials: {
+    type: 'member_grant'
+    memberDid: string
+    aud: string
+    space: string
+    clientId: string
+  }
+}

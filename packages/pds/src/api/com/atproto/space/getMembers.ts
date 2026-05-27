@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space } = params
+      const { space, limit, cursor } = params
 
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
@@ -25,15 +25,18 @@ export default function (server: Server, ctx: AppContext) {
 
       const ownerDid = new SpaceUri(space).spaceDid
       const members = await ctx.actorStore.read(ownerDid, (store) =>
-        store.space.listMembers(space),
+        store.space.listMembers(space, { limit: limit ?? 100, cursor }),
       )
+
+      const last = members.at(-1)
+      const nextCursor = last?.did
 
       return {
         encoding: 'application/json' as const,
         body: {
+          cursor: nextCursor,
           members: members.map((m) => ({
             did: m.did as l.DidString,
-            addedAt: m.addedAt as l.DatetimeString,
           })),
         },
       }

@@ -8,8 +8,21 @@ export class SqlMembersStorage implements SpaceMembersStorage {
   ) {}
 
   async getMembers(): Promise<string[]> {
-    const rows = await this.txn.listMembers(this.space)
-    return rows.map((r) => r.did)
+    const dids: string[] = []
+    let cursor: string | undefined
+    // Pull the full list in batches; this storage interface needs every member
+    // (e.g. for setHash recomputation) and the reader paginates.
+    while (true) {
+      const rows = await this.txn.listMembers(this.space, {
+        limit: 1000,
+        cursor,
+      })
+      if (rows.length === 0) break
+      for (const r of rows) dids.push(r.did)
+      if (rows.length < 1000) break
+      cursor = rows[rows.length - 1].did
+    }
+    return dids
   }
 
   async isMember(did: string): Promise<boolean> {

@@ -47,7 +47,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "cid", "repoHash", "rev"],
+          "required": ["uri", "cid"],
           "properties": {
             "uri": {
               "type": "string",
@@ -57,14 +57,6 @@
             "cid": {
               "type": "string",
               "format": "cid"
-            },
-            "repoHash": {
-              "type": "bytes",
-              "description": "sha256 digest of the LtHash state of the writer's repo after this write (32 bytes)."
-            },
-            "rev": {
-              "type": "string",
-              "description": "Repo revision (TID) of the resulting commit."
             },
             "validationStatus": {
               "type": "string",

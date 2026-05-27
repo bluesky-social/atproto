@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyWrite, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input, auth }) => {
-      const { space, did, rev } = input.body
+      const { space, repo, rev } = input.body
 
       const spaceUri = new SpaceUri(space)
       const ownerDid = spaceUri.spaceDid
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       // The JWT is signed by the writer's keypair, so iss is the authoritative
       // identity of the caller. Require it to match the claimed writer so a
       // PDS can't deliver a notification on someone else's behalf.
-      if (auth.credentials.iss !== did) {
+      if (auth.credentials.iss !== repo) {
         throw new ForbiddenError(
           'notifyWrite iss does not match claimed writer',
         )
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         ownerDid,
         async (store) => {
           return [
-            await store.space.isMember(space, did),
+            await store.space.isMember(space, repo),
             await store.space.getCredentialRecipients(space),
           ] as const
         },
@@ -57,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
         })
         xrpc(recipient.serviceEndpoint, com.atproto.space.notifyWrite, {
           headers,
-          body: { space, did, rev },
+          body: { space, repo, rev },
         }).catch(() => {
           // Best effort — notification delivery is not guaranteed
         })

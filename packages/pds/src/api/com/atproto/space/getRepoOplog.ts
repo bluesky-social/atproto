@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, did, since, limit } = params
+      const { space, repo, since, limit } = params
 
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         assertSpaceScope(auth, space, { action: 'read' })
       }
 
-      const result = await ctx.actorStore.read(did, async (store) => {
+      const result = await ctx.actorStore.read(repo, async (store) => {
         const oplog = await store.space.getRepoOplog(space, { since, limit })
         // Only sign a commit when this batch drains the oplog to head —
         // otherwise the rev we'd bind into the commit may be ahead of the
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         const commit = caughtUp
           ? await buildSignedCommit({
               spaceUri: space,
-              userDid: did,
+              userDid: repo,
               scope: 'records',
               state: { setHash: oplog.setHash, rev: oplog.rev },
               keypair: await store.keypair(),
@@ -46,16 +46,10 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           ops: result.oplog.ops.map((op) => ({
             rev: op.rev,
-            idx: op.idx,
-            action: op.action as
-              | 'create'
-              | 'update'
-              | 'delete'
-              | l.UnknownString,
             collection: op.collection as l.NsidString,
             rkey: op.rkey as l.RecordKeyString,
-            cid: op.cid ? (op.cid as l.CidString) : undefined,
-            prev: op.prev ? (op.prev as l.CidString) : undefined,
+            cid: op.cid ? (op.cid as l.CidString) : null,
+            prev: op.prev ? (op.prev as l.CidString) : null,
           })),
           commit: result.commit,
         },

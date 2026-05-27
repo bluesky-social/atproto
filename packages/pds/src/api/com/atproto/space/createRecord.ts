@@ -1,7 +1,8 @@
 import { TID } from '@atproto/common'
 import { cidForLex } from '@atproto/lex-cbor'
 import { SpaceRepo, WriteOpAction } from '@atproto/space'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { SpaceUriString } from '@atproto/syntax'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -16,28 +17,23 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
-      const { space, collection, record, swapCommit } = input.body
+      const { space, repo, collection, record } = input.body
+      if (repo !== did) {
+        throw new ForbiddenError('repo must match authenticated user')
+      }
       const rkey = input.body.rkey ?? TID.nextStr()
 
       assertSpaceScope(auth, space, { action: 'create', collection })
 
       const result = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new SqlRepoStorage(actorTxn.space, space)
-        const repo = await SpaceRepo.loadOrCreate(storage, did)
-        const commit = await repo.formatCommit({
+        const repoStore = await SpaceRepo.loadOrCreate(storage, did)
+        const commit = await repoStore.formatCommit({
           action: WriteOpAction.Create,
           collection,
           rkey,
           record,
         })
-
-        if (swapCommit) {
-          const state = await actorTxn.space.getRepoState(space)
-          if (state?.rev !== swapCommit) {
-            throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
-          }
-        }
-
         const rev = await actorTxn.space.applyRepoCommit(space, commit)
         const cid = await cidForLex(record)
         return { cid: cid.toString(), rkey, rev }
@@ -48,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${did}/${collection}/${result.rkey}`,
+          uri: `${space}/${did}/${collection}/${result.rkey}` as SpaceUriString,
           cid: result.cid,
         },
       }

@@ -15,7 +15,7 @@ import {
   ScopePermissions,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
-import { verifySpaceCredential } from '@atproto/space'
+import { verifyMemberGrant, verifySpaceCredential } from '@atproto/space'
 import {
   AuthRequiredError,
   Awaitable,
@@ -33,6 +33,7 @@ import { ActorAccount } from './account-manager/helpers/account.js'
 import {
   AccessOutput,
   AdminTokenOutput,
+  MemberGrantOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
@@ -411,6 +412,63 @@ export class AuthVerifier {
         )
       }
     }
+
+  public memberGrantAuth: MethodAuthVerifier<MemberGrantOutput> = async (
+    ctx,
+  ) => {
+    setAuthHeaders(ctx.res)
+    const jwtStr = bearerTokenFromReq(ctx.req)
+    if (!jwtStr) {
+      throw new AuthRequiredError(
+        'missing member grant',
+        'MissingCredential',
+      )
+    }
+    try {
+      const parts = jwtStr.split('.')
+      if (parts.length !== 3) {
+        throw new AuthRequiredError('invalid member grant format')
+      }
+      const payloadJson = Buffer.from(parts[1], 'base64url').toString()
+      const payload = JSON.parse(payloadJson)
+      const iss = payload.iss
+      if (!iss) {
+        throw new AuthRequiredError('missing issuer in member grant')
+      }
+
+      // The grant is signed by the member's atproto signing key — resolve
+      // their DID document to verify.
+      const didDoc = await this.idResolver.did.resolve(iss)
+      if (!didDoc) {
+        throw new AuthRequiredError('could not resolve member DID')
+      }
+      const parsedKey = getVerificationMaterial(didDoc, 'atproto')
+      if (!parsedKey) {
+        throw new AuthRequiredError('missing or bad key in member did doc')
+      }
+      const didKey = getDidKeyFromMultibase(parsedKey)
+      if (!didKey) {
+        throw new AuthRequiredError('missing or bad key in member did doc')
+      }
+
+      const verified = await verifyMemberGrant(jwtStr, didKey)
+      return {
+        credentials: {
+          type: 'member_grant' as const,
+          memberDid: verified.iss,
+          aud: verified.aud,
+          space: verified.space,
+          clientId: verified.clientId,
+        },
+      }
+    } catch (err) {
+      if (err instanceof AuthRequiredError) throw err
+      throw new AuthRequiredError(
+        `Invalid member grant: ${err instanceof Error ? err.message : String(err)}`,
+        'InvalidGrant',
+      )
+    }
+  }
 
   public userServiceAuthOptional: MethodAuthVerifier<
     UserServiceAuthOutput | UnauthenticatedOutput
