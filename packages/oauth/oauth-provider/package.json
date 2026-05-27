@@ -48,7 +48,7 @@
     "@hapi/accept": "^6.0.3",
     "@hapi/address": "^5.1.1",
     "@hapi/bourne": "^3.0.0",
-    "@hapi/content": "^6.0.0",
+    "@hapi/content": "^6.0.2",
     "cookie": "^0.7.0",
     "disposable-email-domains-js": "^1.5.0",
     "forwarded": "^0.2.0",
