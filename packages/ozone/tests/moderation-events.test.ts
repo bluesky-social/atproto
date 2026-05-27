@@ -207,8 +207,25 @@ describe('moderation-events', () => {
         }),
       ])
 
-      expect(misleadingEvents.events.length).toEqual(2)
+      // Verify all spam events have the correct report type
       expect(spamEvents.events.length).toEqual(6)
+      spamEvents.events.forEach((event) => {
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect((event.event as any).reportType).toEqual(REASONSPAM)
+      })
+
+      // Verify all misleading events have one of the correct report types
+      expect(misleadingEvents.events.length).toEqual(2)
+      misleadingEvents.events.forEach((event) => {
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect([REASONMISLEADING, REASONAPPEAL]).toContain(
+          (event.event as any).reportType,
+        )
+      })
     })
 
     it('returns events matching keyword in comment', async () => {
