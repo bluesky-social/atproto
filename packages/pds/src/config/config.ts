@@ -415,6 +415,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     },
     wsocial: {
       defaultSubscribeLists: env.wsocialDefaultSubscribeLists || [],
+      defaultSubscribeFeeds: env.wsocialDefaultSubscribeFeeds || [],
       defaultThreadPref: parseThreadPref(env.wsocialDefaultThreadPref),
       widInventoryTtlDays: env.widInventoryTtlDays ?? 30,
     },
@@ -638,6 +639,7 @@ export type EmailBrandingConfig = {
 
 export type WSocialConfig = {
   defaultSubscribeLists: string[] // AT-URIs of lists to auto-subscribe human/test accounts on creation
+  defaultSubscribeFeeds: string[] // AT-URIs of `app.bsky.feed.generator` feeds to auto-subscribe new accounts to (pinned, in order) — typically the W Social Users feed
   widInventoryTtlDays: number // How long (days from created_at) a WID inventory entry is considered live
   defaultThreadPref: {
     enabled: boolean

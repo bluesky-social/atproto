@@ -201,6 +201,16 @@ export function readEnv() {
     wsocialDefaultSubscribeLists: envList(
       'PDS_WSOCIAL_DEFAULT_SUBSCRIBE_LISTS',
     ),
+    // Comma-separated `app.bsky.feed.generator` AT-URIs that every newly
+    // created account is auto-subscribed to (pinned, in order). Used by
+    // `applyNewAccountDefaults` -> `subscribeToFeeds`. Empty = no default
+    // feed subscriptions (the home tabs fall back to whatever else the
+    // account ends up with). Typical value: the at-URI of the W Social
+    // Users feed published by `w-social-feed-generator` (`publish_feed.py`
+    // prints it on each `put`).
+    wsocialDefaultSubscribeFeeds: envList(
+      'PDS_WSOCIAL_DEFAULT_SUBSCRIBE_FEEDS',
+    ),
     wsocialDefaultThreadPref: envStr('PDS_WSOCIAL_DEFAULT_THREAD_PREF'),
     // WID inventory TTL (days from creation). Defaults to 30 at config layer.
     widInventoryTtlDays: envInt('PDS_WID_INVENTORY_TTL_DAYS'),
