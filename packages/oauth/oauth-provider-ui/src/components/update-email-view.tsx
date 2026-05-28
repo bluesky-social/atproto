@@ -8,6 +8,7 @@ import { VerifyEmailView } from './verify-email-view.tsx'
 
 export type UpdateEmailViewProps = {
   email: string
+  initialState?: UpdateEmailViewState.Idle | UpdateEmailViewState.Verify
   emailVerified?: boolean
   requestPending?: boolean
   confirmPending?: boolean
@@ -32,7 +33,7 @@ export type UpdateEmailViewProps = {
   }) => void | PromiseLike<void>
 }
 
-enum ViewState {
+export enum UpdateEmailViewState {
   Idle,
   Verify,
   VerifyNew,
@@ -42,6 +43,7 @@ enum ViewState {
 export function UpdateEmailView({
   email,
   emailVerified,
+  initialState = UpdateEmailViewState.Idle,
   requestPending,
   confirmPending,
   verifyRequestPending,
@@ -51,34 +53,39 @@ export function UpdateEmailView({
   onVerifyRequest,
   onVerifyConfirm,
 }: UpdateEmailViewProps) {
-  const [viewStateRaw, setViewState] = useState<ViewState>(ViewState.Idle)
+  const [viewStateRaw, setViewState] =
+    useState<UpdateEmailViewState>(initialState)
 
   // Fool-proofing: if the email is already verified, we shouldn't be in a
   // "Verify" state.
   const viewState =
     emailVerified &&
-    (viewStateRaw === ViewState.Verify || viewStateRaw === ViewState.VerifyNew)
-      ? ViewState.Idle
+    (viewStateRaw === UpdateEmailViewState.Verify ||
+      viewStateRaw === UpdateEmailViewState.VerifyNew)
+      ? UpdateEmailViewState.Idle
       : viewStateRaw
 
-  if (viewState === ViewState.Verify || viewState === ViewState.VerifyNew) {
+  if (
+    viewState === UpdateEmailViewState.Verify ||
+    viewState === UpdateEmailViewState.VerifyNew
+  ) {
     return (
       <VerifyEmailView
         email={email}
         requestPending={verifyRequestPending}
         confirmPending={verifyConfirmPending}
         onCancel={() => {
-          setViewState(ViewState.Idle)
+          setViewState(UpdateEmailViewState.Idle)
         }}
         onRequest={async () => {
           await onVerifyRequest({ email })
         }}
         onConfirm={async ({ token }) => {
           await onVerifyConfirm({ email, token })
-          setViewState(ViewState.Idle)
+          setViewState(UpdateEmailViewState.Idle)
         }}
       >
-        {viewState === ViewState.VerifyNew && (
+        {viewState === UpdateEmailViewState.VerifyNew && (
           <p>
             <Trans context="Email">
               Your email has been updated to <strong>{email}</strong>. A
@@ -91,18 +98,18 @@ export function UpdateEmailView({
     )
   }
 
-  if (viewState === ViewState.Update) {
+  if (viewState === UpdateEmailViewState.Update) {
     return (
       <div className="space-y-4">
         <ResetEmailConfirmForm
           disabled={confirmPending}
           cancelLabel={<Trans>Cancel</Trans>}
           onCancel={() => {
-            setViewState(ViewState.Idle)
+            setViewState(UpdateEmailViewState.Idle)
           }}
-          onSubmit={async (data, signal) => {
+          onSubmit={async (data) => {
             await onConfirm(data)
-            if (!signal.aborted) setViewState(ViewState.VerifyNew)
+            setViewState(UpdateEmailViewState.VerifyNew)
           }}
         >
           <p>
@@ -133,7 +140,7 @@ export function UpdateEmailView({
               color="primary"
               type="submit"
               onClick={() => {
-                setViewState(ViewState.Verify)
+                setViewState(UpdateEmailViewState.Verify)
               }}
             >
               <Trans context="Email">Verify</Trans>
@@ -142,9 +149,9 @@ export function UpdateEmailView({
           <Button
             color="primary"
             type={emailVerified ? 'button' : 'submit'}
-            transparent={emailVerified}
+            transparent={!emailVerified}
             onClick={() => {
-              setViewState(ViewState.Update)
+              setViewState(UpdateEmailViewState.Update)
             }}
           >
             <Trans context="Email">Update</Trans>

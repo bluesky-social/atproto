@@ -25,11 +25,6 @@ msgstr "{deltaHours} hours ago"
 msgid "{deltaMinutes} minutes ago"
 msgstr "{deltaMinutes} minutes ago"
 
-#. placeholder {0}: account.email
-#: src/pages/account/(authenticated)/route.tsx:198
-msgid "<0>{0}</0> has not been verified yet."
-msgstr "<0>{0}</0> has not been verified yet."
-
 #: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT Protocol</0> — Technical documentation for developers"
@@ -58,6 +53,11 @@ msgstr "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is 
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:56
+#: src/components/forms/input-handle-custom-instructions.tsx:71
+msgid "<your-domain>"
+msgstr "<your-domain>"
+
 #: src/hooks/use-date-ago.ts:24
 msgid "1 hour ago"
 msgstr "1 hour ago"
@@ -66,7 +66,7 @@ msgstr "1 hour ago"
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
-#: src/components/sign-in-form.tsx:248
+#: src/components/sign-in-form.tsx:233
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -74,7 +74,7 @@ msgstr "2FA Confirmation"
 msgid "A local app"
 msgstr "A local app"
 
-#: src/hooks/use-error-message.ts:22
+#: src/lib/api-error-parser.ts:40
 msgid "A second authentication factor is required"
 msgstr "A second authentication factor is required"
 
@@ -82,11 +82,10 @@ msgstr "A second authentication factor is required"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "A service controlled by <0>{domain}</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:112
+#: src/pages/account/(authenticated)/route.tsx:95
 msgid "About"
 msgstr "About"
 
-#: src/pages/account/(authenticated)/route.tsx:63
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Account"
@@ -111,6 +110,14 @@ msgstr "Account overview"
 msgid "Account selector"
 msgstr "Account selector"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:52
+msgid "Add the following record to your domain's DNS configuration."
+msgstr "Add the following record to your domain's DNS configuration."
+
+#: src/components/forms/input-handle-custom.tsx:51
+msgid "alice.com"
+msgstr "alice.com"
+
 #: src/components/reset-password-view.tsx:66
 msgid "Already have a code?"
 msgstr "Already have a code?"
@@ -119,11 +126,11 @@ msgstr "Already have a code?"
 msgid "An application on your device"
 msgstr "An application on your device"
 
-#: src/components/error-view.tsx:20
+#: src/components/error-view.tsx:21
 msgid "An error occurred"
 msgstr "An error occurred"
 
-#: src/hooks/use-error-message.ts:75
+#: src/components/utils/error-card.tsx:49
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
@@ -143,7 +150,7 @@ msgstr "Any method"
 msgid "Any service"
 msgstr "Any service"
 
-#: src/pages/account/(authenticated)/route.tsx:76
+#: src/pages/account/(authenticated)/route.tsx:67
 msgid "Apps"
 msgstr "Apps"
 
@@ -175,15 +182,15 @@ msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
 
 #: src/components/sign-in-picker.tsx:54
-#: src/components/sign-in-form.tsx:138
+#: src/components/sign-in-form.tsx:123
 #: src/components/reset-password-view.tsx:60
 #: src/components/reset-password-view.tsx:94
 #: src/components/consent-form.tsx:81
-#: src/components/forms/wizard-card.tsx:93
+#: src/components/forms/wizard-card.tsx:90
 msgid "Back"
 msgstr "Back"
 
-#: src/components/forms/input-handle-domain.tsx:86
+#: src/components/forms/input-handle-provided.tsx:87
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
@@ -219,9 +226,9 @@ msgid "Call"
 msgstr "Call"
 
 #: src/contexts/authentication.tsx:174
-#: src/components/update-email-view.tsx:99
+#: src/components/update-email-view.tsx:106
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card-async.tsx:42
+#: src/components/forms/form-card-async.tsx:48
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -233,15 +240,15 @@ msgstr "Cannot remove current device"
 msgid "Change your <0>@handle</0>"
 msgstr "Change your <0>@handle</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:98
+#: src/pages/account/(authenticated)/route.tsx:89
 msgid "Change your account email address"
 msgstr "Change your account email address"
 
-#: src/pages/account/(authenticated)/route.tsx:84
+#: src/pages/account/(authenticated)/route.tsx:75
 msgid "Change your account password"
 msgstr "Change your account password"
 
-#: src/pages/account/(authenticated)/route.tsx:91
+#: src/pages/account/(authenticated)/route.tsx:82
 msgid "Change your account username"
 msgstr "Change your account username"
 
@@ -250,7 +257,7 @@ msgid "Chat"
 msgstr "Chat"
 
 #. placeholder {0}: secondFactor.hint
-#: src/components/sign-in-form.tsx:261
+#: src/components/sign-in-form.tsx:246
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -263,7 +270,7 @@ msgstr "Check your inbox for the verification code."
 msgid "Check your inbox."
 msgstr "Check your inbox."
 
-#: src/components/sign-up-view.tsx:81
+#: src/components/sign-up-view.tsx:74
 msgid "Choose a username"
 msgstr "Choose a username"
 
@@ -275,11 +282,12 @@ msgstr "Close account selector"
 msgid "Close details"
 msgstr "Close details"
 
-#: src/components/utils/error-details.tsx:76
+#: src/components/utils/error-details.tsx:42
+msgctxt "Error"
 msgid "Code"
 msgstr "Code"
 
-#: src/components/sign-in-form.tsx:145
+#: src/components/sign-in-form.tsx:130
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirm"
@@ -288,7 +296,7 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/components/sign-in-form.tsx:252
+#: src/components/sign-in-form.tsx:237
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
@@ -300,6 +308,14 @@ msgstr "Continue"
 #: src/cookie-error-page.tsx:54
 msgid "Cookie Error"
 msgstr "Cookie Error"
+
+#: src/components/forms/button-copy.tsx:96
+msgid "Copied"
+msgstr "Copied"
+
+#: src/components/forms/button-copy.tsx:30
+msgid "Copy to clipboard"
+msgstr "Copy to clipboard"
 
 #: src/components/utils/scope-description.tsx:664
 msgid "Create"
@@ -313,9 +329,17 @@ msgstr "Create a new account"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Create, update, and delete any public data linked to your account"
 
+#: src/components/update-handle-form.tsx:96
+msgid "Custom domain name"
+msgstr "Custom domain name"
+
 #: src/components/utils/scope-description.tsx:663
 msgid "Data"
 msgstr "Data"
+
+#: src/components/update-handle-form.tsx:86
+msgid "Default domain name"
+msgstr "Default domain name"
 
 #: src/components/utils/scope-description.tsx:666
 msgid "Delete"
@@ -330,18 +354,31 @@ msgstr "Deny access"
 msgid "Details"
 msgstr "Details"
 
-#: src/pages/account/(authenticated)/route.tsx:69
+#: src/pages/account/(authenticated)/route.tsx:60
 msgid "Devices"
 msgstr "Devices"
 
-#: src/pages/account/(authenticated)/route.tsx:97
-#: src/components/sign-up-account-form.tsx:114
+#: src/components/forms/input-handle-custom-instructions.tsx:50
+msgid "DNS"
+msgstr "DNS"
+
+#: src/components/update-handle-form.tsx:98
+msgid "e.g. <0>alice.com</0>"
+msgstr "e.g. <0>alice.com</0>"
+
+#. placeholder {0}: domains[0]
+#: src/components/update-handle-form.tsx:88
+msgid "e.g. <0>alice{0}</0>"
+msgstr "e.g. <0>alice{0}</0>"
+
+#: src/pages/account/(authenticated)/route.tsx:88
+#: src/components/sign-up-account-form.tsx:113
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "Email"
 
-#: src/components/reset-password-request-form.tsx:52
-#: src/components/reset-password-request-form.tsx:56
+#: src/components/reset-password-request-form.tsx:43
+#: src/components/reset-password-request-form.tsx:47
 #: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
 msgstr "Email address"
@@ -354,11 +391,15 @@ msgstr "Email change request sent"
 msgid "Email change successful"
 msgstr "Email change successful"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:173
+msgid "Email these instructions"
+msgstr "Email these instructions"
+
 #: src/data/email.ts:118
 msgid "Email verified"
 msgstr "Email verified"
 
-#: src/components/forms/input-new-password.tsx:44
+#: src/components/forms/input-new-password.tsx:32
 msgid "Enter a password"
 msgstr "Enter a password"
 
@@ -370,11 +411,11 @@ msgstr "Enter the code you received to reset your password."
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 
-#: src/components/reset-password-request-form.tsx:55
+#: src/components/reset-password-request-form.tsx:46
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
-#: src/components/forms/input-new-password.tsx:45
+#: src/components/forms/input-new-password.tsx:33
 msgid "Enter your new password"
 msgstr "Enter your new password"
 
@@ -387,7 +428,7 @@ msgstr "Enter your password"
 msgid "Enter your username and password"
 msgstr "Enter your username and password"
 
-#: src/components/sign-up-account-form.tsx:102
+#: src/components/sign-up-account-form.tsx:101
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
@@ -432,7 +473,7 @@ msgstr "Failed to revoke access"
 msgid "Failed to send verification email"
 msgstr "Failed to send verification email"
 
-#: src/data/handle.ts:40
+#: src/data/handle.ts:42
 msgid "Failed to update username"
 msgstr "Failed to update username"
 
@@ -440,11 +481,15 @@ msgstr "Failed to update username"
 msgid "Failed to verify email"
 msgstr "Failed to verify email"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:74
+msgid "File contents"
+msgstr "File contents"
+
 #: src/components/reset-password-view.tsx:43
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/sign-in-form.tsx:214
+#: src/components/sign-in-form.tsx:199
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -456,15 +501,49 @@ msgstr "Grant access to your <0/> account"
 msgid "Having trouble? <0>Contact support</0>"
 msgstr "Having trouble? <0>Contact support</0>"
 
+#. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
+#: src/components/forms/input-handle-custom-instructions.tsx:98
+msgid ""
+"Hello,\n"
+"\n"
+"To associate the domain \"{domain}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"\n"
+"{0}\n"
+"\n"
+"The change can be verified by visiting the following URL: {troubleshootHref}\n"
+"A detailed tutorial can be found here: {tutorialHref}\n"
+"\n"
+"Thank you."
+msgstr ""
+"Hello,\n"
+"\n"
+"To associate the domain \"{domain}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"\n"
+"{0}\n"
+"\n"
+"The change can be verified by visiting the following URL: {troubleshootHref}\n"
+"A detailed tutorial can be found here: {tutorialHref}\n"
+"\n"
+"Thank you."
+
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Hide"
 msgstr "Hide"
 
+#: src/pages/account/(authenticated)/route.tsx:54
 #: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "Home"
 
-#: src/components/sign-in-form.tsx:152
+#: src/components/forms/input-handle-custom-instructions.tsx:55
+msgid "Host"
+msgstr "Host"
+
+#: src/components/forms/input-handle-custom-instructions.tsx:65
+msgid "HTTP"
+msgstr "HTTP"
+
+#: src/components/sign-in-form.tsx:137
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -472,16 +551,28 @@ msgstr "Identifier"
 msgid "Identity"
 msgstr "Identity"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:51
+msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
+msgstr "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
+
+#: src/components/forms/input-handle-custom-instructions.tsx:66
+msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
+msgstr "If you have access to your domain's web hosting configuration (e.g. via FTP)"
+
+#: src/components/forms/input-handle-custom-instructions.tsx:118
+msgid "Instructions"
+msgstr "Instructions"
+
 #: src/locales/locale-selector.tsx:47
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/forms/input-handle-domain.tsx:228
+#: src/components/forms/input-handle-provided.tsx:228
 msgid "Invalid"
 msgstr "Invalid"
 
-#: src/components/sign-up-account-form.tsx:96
-#: src/components/sign-up-account-form.tsx:101
+#: src/components/sign-up-account-form.tsx:95
+#: src/components/sign-up-account-form.tsx:100
 msgid "Invite code"
 msgstr "Invite code"
 
@@ -508,6 +599,10 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Last seen {lastUsedAgo}"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:160
+msgid "Learn more"
+msgstr "Learn more"
+
 #: src/components/reset-password-view.tsx:44
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
@@ -532,11 +627,15 @@ msgstr "Looks like you aren't logged in on any other devices."
 msgid "loopback"
 msgstr "loopback"
 
+#: src/components/forms/input-handle-custom-instructions.tsx:67
+msgid "Make a text file with the contents below available at the following URL."
+msgstr "Make a text file with the contents below available at the following URL."
+
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
 msgstr "Make visible"
 
-#: src/pages/account/(authenticated)/route.tsx:77
+#: src/pages/account/(authenticated)/route.tsx:68
 msgid "Manage applications that have access to your account"
 msgstr "Manage applications that have access to your account"
 
@@ -544,7 +643,7 @@ msgstr "Manage applications that have access to your account"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Manage your <0>full identity</0> including your <1>@handle</1>"
 
-#: src/pages/account/(authenticated)/route.tsx:70
+#: src/pages/account/(authenticated)/route.tsx:61
 msgid "Manage your active sessions"
 msgstr "Manage your active sessions"
 
@@ -556,7 +655,8 @@ msgstr "Manage your profile, posts, likes and follows"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Manage your profile, posts, likes and follows as well as read your private preferences"
 
-#: src/components/utils/error-details.tsx:87
+#: src/components/utils/error-details.tsx:48
+msgctxt "Error"
 msgid "Message"
 msgstr "Message"
 
@@ -568,30 +668,30 @@ msgstr "Missing"
 msgid "Moderate"
 msgstr "Moderate"
 
-#: src/pages/account/(authenticated)/route.tsx:181
+#: src/pages/account/(authenticated)/route.tsx:159
 msgid "My Atmosphere Account"
 msgstr "My Atmosphere Account"
 
-#: src/components/utils/error-details.tsx:67
+#: src/components/utils/error-details.tsx:37
+msgctxt "Error"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/reset-email-confirm-form.tsx:70
+#: src/components/reset-email-confirm-form.tsx:64
 msgid "New email address"
 msgstr "New email address"
 
-#: src/components/reset-password-confirm-form.tsx:59
+#: src/components/reset-password-confirm-form.tsx:56
 msgid "New password"
 msgstr "New password"
 
 #: src/components/reset-password-view.tsx:55
 #: src/components/reset-password-view.tsx:89
-#: src/components/forms/wizard-card.tsx:96
+#: src/components/forms/wizard-card.tsx:93
 msgid "Next"
 msgstr "Next"
 
-#: src/pages/account/(authenticated)/email/page.tsx:24
-#: src/pages/account/(authenticated)/email/verify/page.tsx:18
+#: src/pages/account/(authenticated)/email/page.tsx:31
 msgctxt "EmailChange"
 msgid "No email associated with this account."
 msgstr "No email associated with this account."
@@ -605,14 +705,14 @@ msgstr "No email associated with this account. Password reset is unavailable."
 msgid "Okay"
 msgstr "Okay"
 
-#: src/components/forms/input-handle-domain.tsx:91
+#: src/components/forms/input-handle-provided.tsx:92
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
-#: src/pages/account/(authenticated)/route.tsx:83
-#: src/components/sign-up-account-form.tsx:128
-#: src/components/sign-in-form.tsx:194
-#: src/components/forms/input-password.tsx:53
+#: src/pages/account/(authenticated)/route.tsx:74
+#: src/components/sign-up-account-form.tsx:127
+#: src/components/sign-in-form.tsx:179
+#: src/components/forms/input-password.tsx:43
 msgid "Password"
 msgstr "Password"
 
@@ -640,9 +740,14 @@ msgstr "Password Updated"
 msgid "Password updated!"
 msgstr "Password updated!"
 
-#: src/components/forms/input-new-password.tsx:46
+#: src/components/forms/input-new-password.tsx:34
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
+
+#: src/components/utils/error-details.tsx:54
+msgctxt "Error"
+msgid "Payload"
+msgstr "Payload"
 
 #: src/components/utils/scope-description.tsx:459
 msgid "Perform actions on your behalf"
@@ -661,7 +766,7 @@ msgstr "Please authenticate to continue"
 msgid "Please check the email address and try again."
 msgstr "Please check the email address and try again."
 
-#: src/data/handle.ts:41
+#: src/data/handle.ts:45
 msgid "Please check the username and try again."
 msgstr "Please check the username and try again."
 
@@ -704,8 +809,8 @@ msgstr "Read and update your account's email address"
 msgid "Read your account's email address"
 msgstr "Read your account's email address"
 
-#: src/components/sign-in-form.tsx:235
-#: src/components/sign-in-form.tsx:240
+#: src/components/sign-in-form.tsx:220
+#: src/components/sign-in-form.tsx:225
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -714,8 +819,8 @@ msgstr "Remember this account on this device"
 msgid "Repository"
 msgstr "Repository"
 
-#: src/components/reset-password-confirm-form.tsx:45
-#: src/components/reset-email-confirm-form.tsx:55
+#: src/components/reset-password-confirm-form.tsx:42
+#: src/components/reset-email-confirm-form.tsx:49
 msgid "Reset code"
 msgstr "Reset code"
 
@@ -723,13 +828,13 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/components/sign-in-form.tsx:212
+#: src/components/sign-in-form.tsx:197
 msgid "Reset your password"
 msgstr "Reset your password"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:30
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:44
+#: src/components/utils/error-card.tsx:64
 msgid "Retry"
 msgstr "Retry"
 
@@ -746,7 +851,7 @@ msgstr "Revoke access"
 msgid "Select another account"
 msgstr "Select another account"
 
-#: src/components/forms/input-handle-domain.tsx:128
+#: src/components/forms/input-handle-provided.tsx:128
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -764,7 +869,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/components/sign-in-form.tsx:147
+#: src/components/sign-in-form.tsx:132
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
@@ -788,17 +893,18 @@ msgstr "Sign out"
 msgid "Sign out"
 msgstr "Sign out"
 
-#: src/components/sign-up-view.tsx:66
-#: src/components/sign-up-view.tsx:70
+#: src/components/sign-up-view.tsx:59
+#: src/components/sign-up-view.tsx:63
 #: src/components/sign-in-picker.tsx:48
 msgid "Sign up"
 msgstr "Sign up"
 
-#: src/components/utils/error-details.tsx:96
+#: src/components/utils/error-details.tsx:62
+msgctxt "Error"
 msgid "Stack"
 msgstr "Stack"
 
-#: src/components/forms/wizard-card.tsx:106
+#: src/components/forms/wizard-card.tsx:103
 msgid "Step {currentPosition} of {count}"
 msgstr "Step {currentPosition} of {count}"
 
@@ -806,7 +912,7 @@ msgstr "Step {currentPosition} of {count}"
 msgid "Strong"
 msgstr "Strong"
 
-#: src/components/forms/form-card-async.tsx:39
+#: src/components/forms/form-card-async.tsx:45
 msgid "Submit"
 msgstr "Submit"
 
@@ -836,7 +942,7 @@ msgstr "Temporarily activate or deactivate your account"
 msgid "Terms of Service"
 msgstr "Terms of Service"
 
-#: src/hooks/use-error-message.ts:47
+#: src/lib/api-error-parser.ts:66
 msgid "That handle cannot be used"
 msgstr "That handle cannot be used"
 
@@ -852,27 +958,31 @@ msgstr "The application requests the permissions necessary to perform the follow
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 
-#: src/hooks/use-error-message.ts:64
+#: src/lib/api-error-parser.ts:83
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "The data you submitted is invalid. Please check the form and try again."
 
-#: src/hooks/use-error-message.ts:38
+#: src/lib/api-error-parser.ts:56
 msgid "The domain name is not allowed"
 msgstr "The domain name is not allowed"
 
-#: src/hooks/use-error-message.ts:40
+#: src/lib/api-error-parser.ts:58
 msgid "The handle contains inappropriate language"
 msgstr "The handle contains inappropriate language"
 
-#: src/hooks/use-error-message.ts:45
+#: src/lib/api-error-parser.ts:64
+msgid "The handle could not be resolved"
+msgstr "The handle could not be resolved"
+
+#: src/lib/api-error-parser.ts:62
 msgid "The handle is already in use"
 msgstr "The handle is already in use"
 
-#: src/hooks/use-error-message.ts:36
+#: src/lib/api-error-parser.ts:54
 msgid "The handle is invalid"
 msgstr "The handle is invalid"
 
-#: src/hooks/use-error-message.ts:30
+#: src/lib/api-error-parser.ts:48
 msgid "The invite code is not valid"
 msgstr "The invite code is not valid"
 
@@ -884,33 +994,33 @@ msgstr "These apps have access to your account. An app may appear multiple times
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "This application is requesting the following permissions (scopes) to access your account:"
 
-#: src/hooks/use-error-message.ts:68
+#: src/lib/api-error-parser.ts:87
 msgid "This authorization request has been denied. Please try again."
 msgstr "This authorization request has been denied. Please try again."
 
-#: src/components/update-email-view.tsx:163
+#: src/components/update-email-view.tsx:170
 msgctxt "Email"
 msgid "This email address has been verified."
 msgstr "This email address has been verified."
 
-#: src/components/update-email-view.tsx:165
+#: src/components/update-email-view.tsx:172
 msgctxt "Email"
 msgid "This email address has not been verified. Please verify your email to access all features of your account."
 msgstr "This email address has not been verified. Please verify your email to access all features of your account."
 
-#: src/hooks/use-error-message.ts:52
+#: src/lib/api-error-parser.ts:71
 msgid "This email is already used"
 msgstr "This email is already used"
 
-#: src/hooks/use-error-message.ts:43
+#: src/lib/api-error-parser.ts:60
 msgid "This handle is reserved"
 msgstr "This handle is reserved"
 
-#: src/hooks/use-error-message.ts:60
+#: src/lib/api-error-parser.ts:79
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
-#: src/components/update-email-view.tsx:109
+#: src/components/update-email-view.tsx:116
 msgctxt "Email"
 msgid "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 msgstr "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
@@ -919,6 +1029,10 @@ msgstr "To change your email, we'll send a confirmation code to <0>{email}</0>. 
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
+
+#: src/components/forms/input-handle-custom-instructions.tsx:124
+msgid "To use a custom domain as your username, you first need to prove that you control it. Pick a verification method below and follow the instructions."
+msgstr "To use a custom domain as your username, you first need to prove that you control it. Pick a verification method below and follow the instructions."
 
 #: src/components/verify-email-view.tsx:45
 msgctxt "Email"
@@ -930,7 +1044,19 @@ msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Towards"
 
-#: src/components/forms/input-handle-domain.tsx:98
+#: src/components/forms/input-handle-custom-instructions.tsx:166
+msgid "Troubleshoot"
+msgstr "Troubleshoot"
+
+#: src/components/forms/input-handle-custom-instructions.tsx:59
+msgid "Type"
+msgstr "Type"
+
+#: src/components/forms/input-handle-custom.tsx:50
+msgid "Type your domain"
+msgstr "Type your domain"
+
+#: src/components/forms/input-handle-provided.tsx:99
 msgid "Type your username"
 msgstr "Type your username"
 
@@ -938,7 +1064,7 @@ msgstr "Type your username"
 msgid "Unauthorized"
 msgstr "Unauthorized"
 
-#: src/hooks/use-error-message.ts:72
+#: src/lib/api-error-parser.ts:91
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
@@ -947,7 +1073,12 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
 
-#: src/components/update-email-view.tsx:150
+#: src/components/update-handle-view.tsx:58
+msgctxt "Handle"
+msgid "Update"
+msgstr "Update"
+
+#: src/components/update-email-view.tsx:157
 msgctxt "Email"
 msgid "Update"
 msgstr "Update"
@@ -956,31 +1087,40 @@ msgstr "Update"
 msgid "Update"
 msgstr "Update"
 
-#: src/components/update-handle-view.tsx:77
-msgid "Update username"
-msgstr "Update username"
-
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
 msgstr "Upload files"
 
-#: src/pages/account/(authenticated)/route.tsx:90
+#: src/components/forms/input-handle-custom-instructions.tsx:70
+msgid "URL"
+msgstr "URL"
+
+#: src/pages/account/(authenticated)/route.tsx:81
+#: src/components/forms/input-handle-custom.tsx:46
 msgid "Username"
 msgstr "Username"
 
-#: src/components/sign-in-form.tsx:157
+#: src/components/sign-in-form.tsx:142
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/data/handle.ts:32
+#: src/components/update-handle-form.tsx:76
+msgid "Username type"
+msgstr "Username type"
+
+#: src/data/handle.ts:34
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/forms/input-handle-domain.tsx:223
+#: src/components/forms/input-handle-provided.tsx:223
 msgid "Valid"
 msgstr "Valid"
 
-#: src/components/verify-email-confirm-form.tsx:52
+#: src/components/forms/input-handle-custom-instructions.tsx:60
+msgid "Value"
+msgstr "Value"
+
+#: src/components/verify-email-confirm-form.tsx:43
 msgid "Verification code"
 msgstr "Verification code"
 
@@ -988,30 +1128,26 @@ msgstr "Verification code"
 msgid "Verification email sent"
 msgstr "Verification email sent"
 
-#: src/components/update-email-view.tsx:139
+#: src/components/forms/input-handle-custom-instructions.tsx:130
+msgid "Verification method"
+msgstr "Verification method"
+
+#: src/components/update-email-view.tsx:146
 msgctxt "Email"
 msgid "Verify"
 msgstr "Verify"
 
-#: src/pages/account/(authenticated)/route.tsx:105
-msgid "Verify email address"
-msgstr "Verify email address"
-
-#: src/pages/account/(authenticated)/route.tsx:193
+#: src/pages/account/(authenticated)/page.tsx:26
 msgid "Verify now"
 msgstr "Verify now"
 
-#: src/components/sign-in-form.tsx:226
+#: src/components/sign-in-form.tsx:211
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 
-#: src/components/sign-up-view.tsx:122
+#: src/components/sign-up-view.tsx:117
 msgid "Verify you are human"
 msgstr "Verify you are human"
-
-#: src/pages/account/(authenticated)/route.tsx:106
-msgid "Verify your email address"
-msgstr "Verify your email address"
 
 #: src/components/consent-form.tsx:117
 msgid "wants to access your <0/> account"
@@ -1021,11 +1157,11 @@ msgstr "wants to access your <0/> account"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
-#: src/components/sign-in-form.tsx:225
+#: src/components/sign-in-form.tsx:210
 msgid "Warning"
 msgstr "Warning"
 
-#: src/components/sign-up-view.tsx:67
+#: src/components/sign-up-view.tsx:60
 msgid "We're so excited to have you join us!"
 msgstr "We're so excited to have you join us!"
 
@@ -1037,15 +1173,15 @@ msgstr "Weak"
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/pages/account/(authenticated)/page.tsx:30
+#: src/pages/account/(authenticated)/page.tsx:57
 msgid "What does this mean?"
 msgstr "What does this mean?"
 
-#: src/pages/account/(authenticated)/route.tsx:114
+#: src/pages/account/(authenticated)/route.tsx:97
 msgid "What is an Atmosphere Account?"
 msgstr "What is an Atmosphere Account?"
 
-#: src/hooks/use-error-message.ts:26
+#: src/lib/api-error-parser.ts:44
 msgid "Wrong identifier or password"
 msgstr "Wrong identifier or password"
 
@@ -1057,7 +1193,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/sign-up-handle-form.tsx:79
+#: src/components/sign-up-handle-form.tsx:78
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
@@ -1074,7 +1210,7 @@ msgstr "You can now sign in with your new password."
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 
-#: src/components/sign-up-view.tsx:103
+#: src/components/sign-up-view.tsx:98
 msgid "Your account"
 msgstr "Your account"
 
@@ -1082,7 +1218,7 @@ msgstr "Your account"
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
-#: src/pages/account/(authenticated)/page.tsx:23
+#: src/pages/account/(authenticated)/page.tsx:50
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Your Atmosphere account is hosted by <0/>."
 
@@ -1090,18 +1226,23 @@ msgstr "Your Atmosphere account is hosted by <0/>."
 msgid "Your email address has been verified."
 msgstr "Your email address has been verified."
 
-#: src/components/update-email-view.tsx:156
+#: src/components/update-email-view.tsx:163
 msgctxt "Email"
 msgid "Your email address is <0>{email}</0>."
 msgstr "Your email address is <0>{email}</0>."
 
-#: src/components/update-email-view.tsx:83
+#. placeholder {0}: account.email
+#: src/pages/account/(authenticated)/page.tsx:31
+msgid "Your email address, <0>{0}</0>, has not been verified yet."
+msgstr "Your email address, <0>{0}</0>, has not been verified yet."
+
+#: src/components/update-email-view.tsx:90
 msgctxt "Email"
 msgid "Your email has been updated to <0>{email}</0>. A verification code has been sent to the new address. Enter the code below to confirm that you own this address."
 msgstr "Your email has been updated to <0>{email}</0>. A verification code has been sent to the new address. Enter the code below to confirm that you own this address."
 
 #. placeholder {0}: preview ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/forms/input-handle-domain.tsx:161
+#: src/components/forms/input-handle-provided.tsx:161
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
@@ -1117,11 +1258,11 @@ msgstr "Your repository contains all the data publicly available on the AT Proto
 msgid "Your session has expired. Please sign in again."
 msgstr "Your session has expired. Please sign in again."
 
-#: src/data/handle.ts:33
+#: src/data/handle.ts:35
 msgid "Your username has been updated."
 msgstr "Your username has been updated."
 
-#: src/components/update-handle-view.tsx:82
-msgctxt "HandleChange"
+#: src/components/update-handle-view.tsx:63
+msgctxt "Handle"
 msgid "Your username is <0>@{currentHandle}</0>."
 msgstr "Your username is <0>@{currentHandle}</0>."

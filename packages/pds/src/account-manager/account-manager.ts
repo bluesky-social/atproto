@@ -175,15 +175,20 @@ export class AccountManager {
         allowAnyValid,
       )
     } else {
+      // When creating an account (no did yet), we require the handle to be a
+      // local service domain. Updating to a custom handle will be possible once
+      // the account was created.
       if (did == null) {
         throw new InvalidRequestError(
           'Not a supported handle domain',
           'UnsupportedDomain',
         )
       }
+
       // verify resolution of a non-service domain
       const resolvedDid = await this.idResolver.handle.resolve(normalized)
       if (resolvedDid !== did) {
+        // @TODO This should use a distinct error code
         throw new InvalidRequestError('External handle did not resolve to DID')
       }
     }

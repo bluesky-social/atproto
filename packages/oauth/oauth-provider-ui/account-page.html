@@ -373,6 +373,18 @@
                   { status: 400 },
                 )
               }
+
+              if (handle.endsWith('resolve.error')) {
+                return Response.json(
+                  {
+                    error: 'handle_unavailable',
+                    reason: 'resolution',
+                    error_description: 'External handle did not resolve to DID',
+                  },
+                  { status: 400 },
+                )
+              }
+
               for (const [otherSub, otherAccount] of accounts) {
                 if (
                   otherSub !== sub &&
@@ -382,7 +394,7 @@
                     {
                       error: 'handle_unavailable',
                       reason: 'taken',
-                      error_description: 'Handle already taken',
+                      error_description: `Handle already taken: ${handle}`,
                     },
                     { status: 400 },
                   )

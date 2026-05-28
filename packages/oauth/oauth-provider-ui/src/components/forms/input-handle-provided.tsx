@@ -13,7 +13,7 @@ import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
 
-export type InputHandleDomainProps = Override<
+export type InputHandleProvidedProps = Override<
   Omit<
     InputTextProps,
     | 'type'
@@ -36,7 +36,7 @@ export type InputHandleDomainProps = Override<
   }
 >
 
-export function InputHandleDomain({
+export function InputHandleProvided({
   domains: availableDomains,
   handle: handleInit,
   onHandle,
@@ -50,14 +50,15 @@ export function InputHandleDomain({
   ref,
   title,
   ...props
-}: InputHandleDomainProps) {
+}: InputHandleProvidedProps) {
   const { t } = useLingui()
   const domains = availableDomains.filter(isValidDomain)
 
   const inputRef = useRef<HTMLInputElement>(null)
 
   const [domainIdx, setDomainIdx] = useState(() => {
-    const idx = domains.findIndex((d) => handleInit?.endsWith(d))
+    if (!handleInit) return 0
+    const idx = domains.findIndex((d) => handleInit.endsWith(d))
     return idx === -1 ? 0 : idx
   })
   const [segment, setSegment] = useState(() => handleInit?.split('.')[0] || '')
@@ -98,7 +99,6 @@ export function InputHandleDomain({
         title={title ?? t`Type your username`}
         type="text"
         pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
-        defaultValue={segment}
         minLength={minLength}
         maxLength={maxLength}
         autoCapitalize={autoCapitalize}

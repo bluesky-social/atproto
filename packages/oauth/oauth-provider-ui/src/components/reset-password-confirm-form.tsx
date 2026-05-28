@@ -12,13 +12,10 @@ import { Override } from '#/lib/util.ts'
 export type ResetPasswordConfirmFormProps = Override<
   FormCardAsyncProps,
   {
-    onSubmit: (
-      data: {
-        token: string
-        password: string
-      },
-      signal: AbortSignal,
-    ) => void | PromiseLike<void>
+    onSubmit: (data: {
+      token: string
+      password: string
+    }) => void | PromiseLike<void>
   }
 >
 
@@ -37,10 +34,10 @@ export function ResetPasswordConfirmForm({
   return (
     <FormCardAsync
       {...props}
-      onSubmit={async (signal) => {
-        if (token && password) return onSubmit({ token, password }, signal)
+      invalid={!token || !password || invalid}
+      onSubmit={async () => {
+        if (token && password) await onSubmit({ token, password })
       }}
-      invalid={invalid || !token || !password}
     >
       <FormField label={<Trans>Reset code</Trans>}>
         <InputToken

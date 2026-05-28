@@ -1,25 +1,17 @@
-import {
-  ForwardedRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type AsyncActionController = {
   reset: () => void
 }
 
 export type UseAsyncActionOptions = {
-  ref?: ForwardedRef<AsyncActionController>
   onLoading?: (loading: boolean) => void
   onError?: (error: Error | undefined) => void
 }
 
 export function useAsyncAction(
-  fn: (signal: AbortSignal) => void | PromiseLike<void>,
-  { ref, onLoading, onError }: UseAsyncActionOptions = {},
+  fn: () => void | PromiseLike<void>,
+  { onLoading, onError }: UseAsyncActionOptions = {},
 ) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | undefined>()
@@ -55,14 +47,6 @@ export function useAsyncAction(
     }
   }, [doSetError, doSetLoading])
 
-  useImperativeHandle(
-    ref,
-    (): AsyncActionController => ({
-      reset: () => resetRef.current?.(),
-    }),
-    [],
-  )
-
   // Cancel pending action when unmounted
   useEffect(() => {
     return () => {
@@ -84,7 +68,7 @@ export function useAsyncAction(
     controllerRef.current = controller
 
     try {
-      await fn(signal)
+      await fn()
     } catch (err) {
       if (controller === controllerRef.current) {
         doSetError(err instanceof Error ? err : new Error(String(err)))
@@ -103,10 +87,15 @@ export function useAsyncAction(
     }
   }, [fn, doSetLoading, doSetError])
 
+  const reset = useCallback(() => {
+    resetRef.current?.()
+  }, [])
+
   return {
     loading,
     error,
     run,
+    reset,
   }
 }
 

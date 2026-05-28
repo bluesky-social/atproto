@@ -1531,6 +1531,9 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:^
         version: link:../oauth-types
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../../syntax
       '@hcaptcha/react-hcaptcha':
         specifier: ^1.11.2
         version: 1.11.2(react-dom@19.0.0)(react@19.0.0)

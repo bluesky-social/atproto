@@ -6,7 +6,7 @@ import { Override } from '#/lib/util.ts'
 
 export type DoneFn = (...a: any) => unknown
 
-export type WizardRenderProps<TDone extends DoneFn> = {
+export type WizardRenderProps = {
   /**
    * Indicates wether the render function being invoked corresponds to the step
    * currently active. The steps titles could, for example, be rendered in a
@@ -22,21 +22,18 @@ export type WizardRenderProps<TDone extends DoneFn> = {
   prev?: () => void
   prevLabel: ReactNode
 
-  // On the last step, the "next()" function will actually be the done function
-  next: (() => void) | TDone
+  next: () => void
   nextLabel: ReactNode
 }
 
-export type WizardRenderFn<TDone extends DoneFn> = (
-  data: WizardRenderProps<TDone>,
-) => ReactNode
+export type WizardRenderFn = (data: WizardRenderProps) => ReactNode
 
-export type WizardStep<TDone extends DoneFn> = Step & {
-  titleRender?: WizardRenderFn<TDone>
-  contentRender: WizardRenderFn<TDone>
+export type WizardStep = Step & {
+  titleRender?: WizardRenderFn
+  contentRender: WizardRenderFn
 }
 
-export type WizardCardProps<TDone extends DoneFn> = Override<
+export type WizardCardProps = Override<
   Omit<JSX.IntrinsicElements['div'], 'children'>,
   {
     prevLabel?: ReactNode
@@ -45,14 +42,14 @@ export type WizardCardProps<TDone extends DoneFn> = Override<
     onBack?: () => void
     backLabel?: ReactNode
 
-    onDone: TDone
+    onDone: () => void
     doneLabel?: ReactNode
 
-    steps: readonly (WizardStep<TDone> | DisabledStep)[]
+    steps: readonly (WizardStep | DisabledStep)[]
   }
 >
 
-export function WizardCard<TDone extends DoneFn>({
+export function WizardCard({
   prevLabel,
   nextLabel,
 
@@ -66,7 +63,7 @@ export function WizardCard<TDone extends DoneFn>({
   className,
 
   ...props
-}: WizardCardProps<TDone>) {
+}: WizardCardProps) {
   const {
     atFirst,
     atLast,
@@ -85,7 +82,7 @@ export function WizardCard<TDone extends DoneFn>({
     if (!toNext()) toRequired()
   }, [toNext, toRequired])
 
-  const data: WizardRenderProps<TDone> = {
+  const data: WizardRenderProps = {
     // The current UI only displays the current title & content.
     current: true,
     invalid: current ? current.invalid : false,

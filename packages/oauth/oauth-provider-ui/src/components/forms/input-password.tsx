@@ -1,14 +1,15 @@
 import { useLingui } from '@lingui/react/macro'
 import { KeyIcon } from '@phosphor-icons/react'
-import { ChangeEvent, useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputPasswordProps = Override<
-  Omit<InputTextProps, 'type' | 'children'>,
+  Omit<InputTextProps, 'type' | 'children' | 'defaultValue' | 'value'>,
   {
+    value?: string
     autoHide?: boolean
   }
 >
@@ -22,8 +23,7 @@ export function InputPassword({
   append,
   autoComplete = 'current-password',
   icon = <KeyIcon className="w-5" weight="bold" />,
-  value,
-  defaultValue = value,
+  value: valueInit = '',
   ref,
   title,
   dir = 'auto',
@@ -35,17 +35,7 @@ export function InputPassword({
   const { t } = useLingui()
   const inputRef = useRef<HTMLInputElement>(null)
   const [visible, setVisible] = useState<boolean>(false)
-  const [password, setPassword] = useState<string>(
-    typeof defaultValue === 'string' ? defaultValue : '',
-  )
-
-  const doChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      onChange?.(event)
-      setPassword(event.target.value)
-    },
-    [onChange],
-  )
+  const [value, setValue] = useState<string>(valueInit)
 
   return (
     <InputText
@@ -65,8 +55,11 @@ export function InputPassword({
             }
           : onBlur
       }
-      value={password}
-      onChange={doChange}
+      value={value}
+      onChange={(event) => {
+        onChange?.(event)
+        setValue(event.target.value)
+      }}
       type={visible ? 'text' : 'password'}
       autoComplete={autoComplete}
       append={

@@ -14,10 +14,7 @@ export type SignInViewProps = {
   setSession: (session: Session | null) => void
   forcedIdentifier?: string
 
-  onSignIn: (
-    credentials: SignInFormOutput,
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
+  onSignIn: (credentials: SignInFormOutput) => void | PromiseLike<void>
   onSignUp?: () => void
   onForgotPassword?: (emailHint?: string) => void
   onBack?: () => void

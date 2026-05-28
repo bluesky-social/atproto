@@ -12,6 +12,7 @@ export function Page() {
 
   return (
     <UpdateHandleView
+      did={sub}
       currentHandle={currentHandle}
       domains={availableUserDomains}
       pending={updateHandle.isPending}

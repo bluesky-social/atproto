@@ -16,16 +16,12 @@ import { HelpCard } from './utils/help-card.tsx'
 export type SignUpViewProps = {
   onBack?: () => void
   backLabel?: ReactNode
-  onValidateNewHandle: (
-    data: { handle: string },
-    signal?: AbortSignal,
-  ) => void | PromiseLike<void>
+  onValidateNewHandle: (data: { handle: string }) => void | PromiseLike<void>
   onDone: (
     data: SignUpAccountFormOutput & {
       handle: string
       hcaptchaToken?: string
     },
-    signal?: AbortSignal,
   ) => void | PromiseLike<void>
 }
 
@@ -52,14 +48,11 @@ export function SignUpView({
    */
   const hcaptchaToken = hcaptchaSiteKey == null ? undefined : hcaptcha || false
 
-  const doDone = useCallback(
-    (signal: AbortSignal) => {
-      if (credentials && handle && hcaptchaToken !== false) {
-        return onDone({ ...credentials, handle, hcaptchaToken }, signal)
-      }
-    },
-    [credentials, handle, hcaptchaToken, onDone],
-  )
+  const doDone = useCallback(() => {
+    if (credentials && handle && hcaptchaToken !== false) {
+      return onDone({ ...credentials, handle, hcaptchaToken })
+    }
+  }, [credentials, handle, hcaptchaToken, onDone])
 
   return (
     <LayoutTitle
@@ -89,9 +82,11 @@ export function SignUpView({
                 prevLabel={prevLabel}
                 onPrev={prev}
                 nextLabel={nextLabel}
-                onNext={async (signal) => {
-                  if (handle) await onValidateNewHandle({ handle }, signal)
-                  if (!signal.aborted) return next(signal)
+                onNext={async () => {
+                  if (handle) {
+                    await onValidateNewHandle({ handle })
+                    await next()
+                  }
                 }}
               >
                 <SignUpDisclaimer links={links} />

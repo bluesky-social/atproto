@@ -423,13 +423,7 @@ export class OAuthStore
         throw new HandleUnavailableError('taken')
       }
     } catch (err) {
-      if (err instanceof XrpcInvalidRequestError) {
-        throw err.customErrorName === 'HandleNotAvailable'
-          ? new HandleUnavailableError('taken', err.message)
-          : new HandleUnavailableError('syntax', err.message)
-      }
-
-      throw err
+      throw toHandleUnavailableError(err)
     }
   }
 
@@ -692,22 +686,7 @@ export class OAuthStore
 
       return this.buildAccount(account)
     } catch (err) {
-      if (err instanceof XrpcInvalidRequestError) {
-        if (err.customErrorName === 'HandleNotAvailable') {
-          throw new HandleUnavailableError('taken', err.message)
-        }
-
-        if (
-          err.customErrorName === 'InvalidHandle' ||
-          err.customErrorName === 'UnsupportedDomain'
-        ) {
-          throw new HandleUnavailableError('syntax', err.message)
-        }
-
-        throw new InvalidRequestError(err.message, err)
-      }
-
-      throw err
+      throw toHandleUnavailableError(err)
     }
   }
 
@@ -757,4 +736,33 @@ export class OAuthStore
 
     return account
   }
+}
+
+function toHandleUnavailableError(err: unknown): unknown {
+  if (err instanceof XrpcInvalidRequestError) {
+    if (err.message === 'External handle did not resolve to DID') {
+      return new HandleUnavailableError('resolution', err.message, err)
+    }
+
+    if (err.customErrorName === 'HandleNotAvailable') {
+      return new HandleUnavailableError('reserved', err.message, err)
+    }
+
+    if (err.customErrorName === 'UnsupportedDomain') {
+      return new HandleUnavailableError('domain', err.message, err)
+    }
+
+    if (err.customErrorName === 'InvalidHandle') {
+      if (err.message === 'Inappropriate language in handle') {
+        return new HandleUnavailableError('slur', err.message, err)
+      }
+
+      return new HandleUnavailableError('syntax', err.message, err)
+    }
+
+    // Unexpected case
+    return new InvalidRequestError(err.message, err)
+  }
+
+  return err
 }

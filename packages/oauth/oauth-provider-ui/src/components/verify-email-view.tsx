@@ -8,10 +8,7 @@ export type VerifyEmailViewProps = {
   requestPending?: boolean
   confirmPending?: boolean
   onRequest: () => void | PromiseLike<void>
-  onConfirm: (
-    data: { token: string },
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
+  onConfirm: (data: { token: string }) => void | PromiseLike<void>
   /**
    * When set, renders a "Cancel" action on the Request and Confirm steps.
    * Used by callers that embed this view as an optional step in a larger flow
@@ -61,9 +58,7 @@ export function VerifyEmailView({
         disabled={confirmPending}
         onCancel={onCancel}
         cancelLabel={cancelLabel}
-        onSubmit={async (data, signal) => {
-          await onConfirm(data, signal)
-        }}
+        onSubmit={onConfirm}
       />
     </div>
   )

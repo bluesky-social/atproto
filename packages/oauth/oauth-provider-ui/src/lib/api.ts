@@ -1,11 +1,13 @@
-import type {
-  ApiEndpoints,
-  ConfirmResetPasswordInput,
-  InitiatePasswordResetInput,
-  SignInInput,
-  SignUpInput,
-  UpdateHandleInput,
-  VerifyHandleAvailabilityInput,
+import {
+  type ApiEndpoints,
+  type ConfirmResetPasswordInput,
+  type HandleUnavailableReason,
+  type InitiatePasswordResetInput,
+  type SignInInput,
+  type SignUpInput,
+  type UpdateHandleInput,
+  type VerifyHandleAvailabilityInput,
+  isHandleUnavailableReason,
 } from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
 import {
@@ -225,7 +227,7 @@ export class EmailTakenError<
 
 export type HandleUnavailablePayload =
   JsonErrorPayload<'handle_unavailable'> & {
-    reason: 'syntax' | 'domain' | 'slur' | 'taken'
+    reason: HandleUnavailableReason
   }
 export class HandleUnavailableError<
   P extends HandleUnavailablePayload = HandleUnavailablePayload,
@@ -246,10 +248,7 @@ export class HandleUnavailableError<
       super.is(json) &&
       json.error === 'handle_unavailable' &&
       'reason' in json &&
-      (json.reason === 'syntax' ||
-        json.reason === 'domain' ||
-        json.reason === 'slur' ||
-        json.reason === 'taken')
+      isHandleUnavailableReason(json.reason)
     )
   }
 }

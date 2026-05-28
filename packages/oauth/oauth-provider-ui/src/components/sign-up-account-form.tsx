@@ -2,7 +2,6 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { NumpadIcon } from '@phosphor-icons/react'
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AsyncActionController,
   FormCardAsync,
   FormCardAsyncProps,
 } from '#/components/forms/form-card-async.tsx'
@@ -30,7 +29,7 @@ export type SignUpAccountFormProps = Override<
     credentials?: SignUpAccountFormOutput
     onCredentials?: (credentials?: SignUpAccountFormOutput) => void
 
-    onNext: (signal: AbortSignal) => void | PromiseLike<void>
+    onNext: () => void | PromiseLike<void>
     nextLabel?: ReactNode
 
     onPrev?: () => void
@@ -62,7 +61,7 @@ export function SignUpAccountForm({
   const [password, setPassword] = useState(creds?.password)
   const [inviteCode, setInviteCode] = useState(creds?.inviteCode)
 
-  const formRef = useRef<AsyncActionController>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const resetForm = () => formRef.current?.reset()
 
   const credentials = useMemo(

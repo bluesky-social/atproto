@@ -1,11 +1,10 @@
 import { Trans } from '@lingui/react/macro'
 import { ReactNode, useEffect, useRef } from 'react'
 import {
-  AsyncActionController,
   FormCardAsync,
   FormCardAsyncProps,
 } from '#/components/forms/form-card-async.tsx'
-import { InputHandleDomain } from '#/components/forms/input-handle-domain.tsx'
+import { InputHandleProvided } from '#/components/forms/input-handle-provided'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
@@ -18,7 +17,7 @@ export type SignUpHandleFormProps = Override<
   {
     domains: string[]
 
-    onNext: (signal: AbortSignal) => void | PromiseLike<void>
+    onNext: () => void | PromiseLike<void>
     nextLabel?: ReactNode
 
     onPrev?: () => void
@@ -47,7 +46,7 @@ export function SignUpHandleForm({
   ref,
   ...props
 }: SignUpHandleFormProps) {
-  const formRef = useRef<AsyncActionController>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     // Whenever the user changes the handle, abort any pending form action
@@ -65,7 +64,7 @@ export function SignUpHandleForm({
       invalid={invalid || !handleInit}
       append={children}
     >
-      <InputHandleDomain
+      <InputHandleProvided
         handle={handleInit}
         onHandle={onHandle}
         domains={domains}

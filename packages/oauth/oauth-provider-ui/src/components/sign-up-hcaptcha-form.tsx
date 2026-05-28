@@ -23,7 +23,7 @@ export type SignUpHcaptchaFormProps = Override<
     onPrev?: () => void
 
     nextLabel?: ReactNode
-    onNext: (signal: AbortSignal) => void | PromiseLike<void>
+    onNext: () => void | PromiseLike<void>
 
     ref?: ForwardedRef<HCaptcha>
   }
@@ -68,14 +68,11 @@ export function SignUpHcaptchaForm({
     [onToken],
   )
 
-  const doSubmit = useCallback(
-    (signal: AbortSignal) => {
-      if (token) return onNext(signal)
-      else if (captchaRef.current) captchaRef.current.execute()
-      else throw new Error('Unable to load hCaptcha')
-    },
-    [token, onNext],
-  )
+  const doSubmit = useCallback(() => {
+    if (token) return onNext()
+    else if (captchaRef.current) captchaRef.current.execute()
+    else throw new Error('Unable to load hCaptcha')
+  }, [token, onNext])
 
   return (
     <FormCardAsync
