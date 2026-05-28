@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
 import { useState } from 'react'
-import { ButtonRequestReset } from '#/components/forms/button-request-reset'
+import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
 import { ResetEmailConfirmForm } from '#/components/reset-email-confirm-form.tsx'
 import { Button } from './forms/button.tsx'
 import { FormCard } from './forms/form-card.tsx'
@@ -120,7 +120,7 @@ export function UpdateEmailView({
             </Trans>
           </p>
 
-          <ButtonRequestReset
+          <ButtonRequestCode
             action={onRequest}
             loading={requestPending}
             disabled={confirmPending}

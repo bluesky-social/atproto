@@ -118,7 +118,7 @@ msgstr "Ajoutez le champ suivant à la configuration DNS de votre domaine."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/reset-password-view.tsx:66
+#: src/components/reset-password-view.tsx:60
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
@@ -183,8 +183,8 @@ msgstr "Autorisé le {0}"
 
 #: src/components/sign-in-picker.tsx:54
 #: src/components/sign-in-form.tsx:123
-#: src/components/reset-password-view.tsx:60
-#: src/components/reset-password-view.tsx:94
+#: src/components/reset-password-view.tsx:54
+#: src/components/reset-password-view.tsx:88
 #: src/components/consent-form.tsx:81
 #: src/components/forms/wizard-card.tsx:90
 msgid "Back"
@@ -274,6 +274,10 @@ msgstr "Vérifiez votre boîte de réception."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
+#: src/components/update-handle-button.tsx:67
+msgid "Close"
+msgstr ""
+
 #: src/components/utils/account-selector.tsx:65
 msgid "Close account selector"
 msgstr "Fermer le sélecteur de compte"
@@ -292,7 +296,7 @@ msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirmer"
 
-#: src/components/sign-in-view.tsx:58
+#: src/components/sign-in-view.tsx:55
 msgid "Confirm your password to continue"
 msgstr "Confirmez votre mot de passe pour continuer"
 
@@ -403,11 +407,11 @@ msgstr "Adresse email vérifiée"
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
-#: src/components/reset-password-view.tsx:78
+#: src/components/reset-password-view.tsx:72
 msgid "Enter the code you received to reset your password."
 msgstr "Saisissez le code que vous avez reçu pour réinitialiser votre mot de passe."
 
-#: src/components/reset-password-view.tsx:47
+#: src/components/reset-password-view.tsx:41
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
 
@@ -419,12 +423,12 @@ msgstr "Saisissez votre adresse email"
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
-#: src/components/sign-in-view.tsx:78
+#: src/components/sign-in-view.tsx:75
 msgid "Enter your password"
 msgstr "Saisissez votre mot de passe"
 
-#: src/components/sign-in-view.tsx:97
-#: src/components/sign-in-view.tsx:115
+#: src/components/sign-in-view.tsx:94
+#: src/components/sign-in-view.tsx:112
 msgid "Enter your username and password"
 msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 
@@ -485,7 +489,7 @@ msgstr "Échec de la vérification de l'adresse email"
 msgid "File contents"
 msgstr "Contenu du fichier"
 
-#: src/components/reset-password-view.tsx:43
+#: src/components/reset-password-view.tsx:37
 msgid "Forgot Password"
 msgstr "Mot de passe oublié"
 
@@ -603,7 +607,7 @@ msgstr "Dernière connexion {lastUsedAgo}"
 msgid "Learn more"
 msgstr "En savoir plus"
 
-#: src/components/reset-password-view.tsx:44
+#: src/components/reset-password-view.tsx:38
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
@@ -685,8 +689,8 @@ msgstr "Nouvelle adresse email"
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: src/components/reset-password-view.tsx:55
-#: src/components/reset-password-view.tsx:89
+#: src/components/reset-password-view.tsx:49
+#: src/components/reset-password-view.tsx:83
 #: src/components/forms/wizard-card.tsx:93
 msgid "Next"
 msgstr "Suivant"
@@ -701,7 +705,7 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "Aucune adresse email associée à ce compte. La réinitialisation du mot de passe n'est pas disponible."
 
-#: src/components/reset-password-view.tsx:116
+#: src/components/reset-password-view.tsx:110
 msgid "Okay"
 msgstr "OK"
 
@@ -732,11 +736,11 @@ msgstr "Complexité du mot de passe"
 msgid "Password strength indicator"
 msgstr "Indicateur de complexité du mot de passe"
 
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:98
 msgid "Password Updated"
 msgstr "Mot de passe mis à jour"
 
-#: src/components/reset-password-view.tsx:109
+#: src/components/reset-password-view.tsx:103
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
@@ -824,7 +828,7 @@ msgstr "Données publiques"
 msgid "Reset code"
 msgstr "Code de réinitialisation"
 
-#: src/components/reset-password-view.tsx:76
+#: src/components/reset-password-view.tsx:70
 msgid "Reset Password"
 msgstr "Réinitialiser le mot de passe"
 
@@ -855,7 +859,7 @@ msgstr "Sélectionner un autre compte"
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
-#: src/components/sign-in-view.tsx:131
+#: src/components/sign-in-view.tsx:128
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
@@ -864,7 +868,7 @@ msgctxt "PasswordReset"
 msgid "Send reset code"
 msgstr "Envoyer le code"
 
-#: src/components/sign-in-view.tsx:45
+#: src/components/sign-in-view.tsx:42
 msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Connexion"
@@ -1025,7 +1029,7 @@ msgctxt "Email"
 msgid "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 msgstr "Pour modifier votre adresse email, nous enverrons un code de confirmation à <0>{email}</0>. Saisissez le code ci-dessous ainsi que votre nouvelle adresse email."
 
-#: src/pages/account/(authenticated)/password/page.tsx:33
+#: src/components/update-password-view.tsx:29
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr "Pour réinitialiser votre mot de passe, nous enverrons un code de vérification à <0>{email}</0>. Saisissez le code ci-dessous pour définir un nouveau mot de passe."
@@ -1034,7 +1038,7 @@ msgstr "Pour réinitialiser votre mot de passe, nous enverrons un code de vérif
 msgid "To use a custom domain as your username, you first need to prove that you control it. Pick a verification method below and follow the instructions."
 msgstr "Pour utiliser un nom de domaine personnalisé comme nom d'utilisateur, vous devez d'abord prouver que vous le contrôlez. Choisissez une méthode de vérification ci-dessous et suivez les instructions."
 
-#: src/components/verify-email-view.tsx:45
+#: src/components/verify-email-view.tsx:42
 msgctxt "Email"
 msgid "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
 msgstr "Pour vérifier votre adresse email, nous enverrons un code de vérification à <0>{email}</0>. Saisissez le code ci-dessous pour confirmer que vous possédez cette adresse."
@@ -1073,7 +1077,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilisateur inconnu"
 
-#: src/components/update-handle-view.tsx:58
+#: src/components/update-handle-button.tsx:38
 msgctxt "Handle"
 msgid "Update"
 msgstr "Modifier"
@@ -1086,6 +1090,15 @@ msgstr "Modifier"
 #: src/components/utils/scope-description.tsx:665
 msgid "Update"
 msgstr "Modifier"
+
+#: src/components/update-handle-button.tsx:47
+msgid "Update username"
+msgstr ""
+
+#: src/components/update-handle-button.tsx:52
+msgctxt "Handle"
+msgid "Update username"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
@@ -1202,11 +1215,11 @@ msgid "You can now sign in with your new email."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email."
 
 #: src/data/password.ts:52
-#: src/components/reset-password-view.tsx:112
+#: src/components/reset-password-view.tsx:106
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 
-#: src/components/reset-password-view.tsx:82
+#: src/components/reset-password-view.tsx:76
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
@@ -1246,7 +1259,7 @@ msgstr "Votre adresse email a été mise à jour : <0>{email}</0>. Un code de v�
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
-#: src/components/reset-password-view.tsx:105
+#: src/components/reset-password-view.tsx:99
 msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
 
@@ -1262,7 +1275,7 @@ msgstr "Votre session a expiré. Veuillez vous reconnecter."
 msgid "Your username has been updated."
 msgstr "Votre nom d'utilisateur a été mis à jour."
 
-#: src/components/update-handle-view.tsx:63
+#: src/pages/account/(authenticated)/handle/page.tsx:16
 msgctxt "Handle"
 msgid "Your username is <0>@{currentHandle}</0>."
 msgstr "Votre nom d'utilisateur est <0>@{currentHandle}</0>."

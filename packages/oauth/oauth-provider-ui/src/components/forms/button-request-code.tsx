@@ -5,12 +5,12 @@ import {
   ButtonCooldownProps,
 } from '#/components/forms/button-cooldown.tsx'
 
-export type ButtonRequestResetProps = ButtonCooldownProps
+export type ButtonRequestCodeProps = ButtonCooldownProps
 
-export function ButtonRequestReset({
-  children = <Trans context="PasswordReset">Send reset code</Trans>,
+export function ButtonRequestCode({
+  children = <Trans>Send verification code</Trans>,
   ...props
-}: ButtonRequestResetProps) {
+}: ButtonRequestCodeProps) {
   return (
     <ButtonCooldown {...props}>
       <PaperPlaneTiltIcon aria-hidden className="mr-2" weight="bold" />

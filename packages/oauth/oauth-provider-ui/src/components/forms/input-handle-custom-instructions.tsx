@@ -1,10 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { useMemo, useState } from 'react'
+import { JSX, useMemo, useState } from 'react'
 import { Override } from '#/lib/util.ts'
 import { CodeSnippet } from '../utils/code-snippet.tsx'
 import { LinkExternal } from '../utils/link-external.tsx'
-import { FormField, FormFieldProps } from './form-field.tsx'
+import { FormField } from './form-field.tsx'
 import { InputRadioGroup } from './input-radio-group.tsx'
 
 enum VerificationMethod {
@@ -13,7 +13,7 @@ enum VerificationMethod {
 }
 
 export type InputHandleCustomInstructionsProps = Override<
-  Omit<FormFieldProps, 'label' | 'children'>,
+  Omit<JSX.IntrinsicElements['div'], 'children'>,
   {
     domain?: string
     did: string
@@ -36,7 +36,7 @@ export function InputHandleCustomInstructions({
   domain,
   did,
 
-  // FormFieldProps
+  // div
   className,
   ...props
 }: InputHandleCustomInstructionsProps) {
@@ -114,66 +114,53 @@ Thank you.`
   }, [domain, tutorialHref, troubleshootHref, instructionsMethods])
 
   return (
-    <FormField
-      label={<Trans>Instructions</Trans>}
-      className={clsx(className, 'text-sm')}
-      {...props}
-    >
-      <div className="border-contrast-25 dark:border-contrast-50 flex flex-col gap-2 rounded-md border border-2 p-3 text-sm">
-        <p>
-          <Trans>
-            To use a custom domain as your username, you first need to prove
-            that you control it. Pick a verification method below and follow the
-            instructions.
-          </Trans>
-        </p>
-        <FormField label={t`Verification method`}>
-          <InputRadioGroup
-            value={currentInstructions.method}
-            onChange={setMethod}
-            options={instructionsMethods.map(
-              ({ method, label, description }) => ({
-                value: method,
-                label,
-                description,
-              }),
-            )}
-          />
-        </FormField>
+    <div className={clsx(className, 'text-sm')} {...props}>
+      <FormField label={t`Verification method`}>
+        <InputRadioGroup
+          value={currentInstructions.method}
+          onChange={setMethod}
+          options={instructionsMethods.map(
+            ({ method, label, description }) => ({
+              value: method,
+              label,
+              description,
+            }),
+          )}
+        />
+      </FormField>
 
-        <p key="message">{currentInstructions.message}</p>
+      <p className="my-2">{currentInstructions.message}</p>
 
-        {currentInstructions.values.map(({ label, value, copyable }, index) => (
-          <CodeSnippet
-            key={index}
-            label={label}
-            value={value}
-            copyable={copyable}
-          />
-        ))}
+      {currentInstructions.values.map(({ label, value, copyable }, index) => (
+        <CodeSnippet
+          key={index}
+          label={label}
+          value={value}
+          copyable={copyable}
+        />
+      ))}
 
-        <p key="links" className="flex flex-row flex-wrap gap-3">
-          <LinkExternal
-            href={tutorialHref}
-            className="text-blue-600 hover:underline"
-          >
-            <Trans>Learn more</Trans>
-          </LinkExternal>
-          <LinkExternal
-            href={troubleshootHref}
-            className="text-blue-600 hover:underline"
-          >
-            <Trans>Troubleshoot</Trans>
-          </LinkExternal>
-          <LinkExternal
-            href={mailtoHref}
-            noUtm
-            className="text-blue-600 hover:underline"
-          >
-            <Trans>Email these instructions</Trans>
-          </LinkExternal>
-        </p>
-      </div>
-    </FormField>
+      <p className="my-2 flex flex-row flex-wrap gap-3">
+        <LinkExternal
+          href={tutorialHref}
+          className="text-blue-600 hover:underline"
+        >
+          <Trans>Help</Trans>
+        </LinkExternal>
+        <LinkExternal
+          href={troubleshootHref}
+          className="text-blue-600 hover:underline"
+        >
+          <Trans>Troubleshoot</Trans>
+        </LinkExternal>
+        <LinkExternal
+          href={mailtoHref}
+          noUtm
+          className="text-blue-600 hover:underline"
+        >
+          <Trans>Email these instructions</Trans>
+        </LinkExternal>
+      </p>
+    </div>
   )
 }

@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
 import { ReactNode } from '@tanstack/react-router'
-import { ButtonRequestReset } from '#/components/forms/button-request-reset'
+import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
 import { VerifyEmailConfirmForm } from './verify-email-confirm-form.tsx'
 
 export type VerifyEmailViewProps = {
@@ -47,7 +47,7 @@ export function VerifyEmailView({
         </p>
       )}
 
-      <ButtonRequestReset
+      <ButtonRequestCode
         action={onRequest}
         loading={requestPending}
         disabled={confirmPending}

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { isValidHandle, isValidTld, normalizeHandle } from '@atproto/syntax'
 import { Override } from '#/lib/util.ts'
 import { FormField } from './form-field.tsx'
-import { InputHandleCustomInstructions } from './input-handle-custom-instructions.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputHandleCustomProps = Override<
@@ -39,11 +38,10 @@ export function InputHandleCustom({
 }: InputHandleCustomProps) {
   const { t } = useLingui()
   const [value, setValue] = useState(domainInput)
-  const [domain, setDomain] = useState<string | undefined>(domainInput)
 
   return (
     <div className="flex flex-col space-y-4">
-      <FormField label={<Trans>Username</Trans>}>
+      <FormField label={<Trans>Enter the domain you want to use</Trans>}>
         <InputText
           {...props}
           type="text"
@@ -57,14 +55,10 @@ export function InputHandleCustom({
           value={value}
           onChange={(event) => {
             setValue(event.target.value)
-            const domain = parseDomain(event.target.value)
-            setDomain(domain)
-            onDomain?.(domain)
+            onDomain?.(parseDomain(event.target.value))
           }}
         />
       </FormField>
-
-      <InputHandleCustomInstructions domain={domain} did={did} />
     </div>
   )
 }

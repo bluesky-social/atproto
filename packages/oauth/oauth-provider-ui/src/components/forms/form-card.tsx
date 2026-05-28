@@ -65,7 +65,7 @@ export function FormCard({
         {(actions || cancel) && (
           <div
             key="buttons"
-            className="flex flex-row-reverse flex-wrap items-center justify-end space-x-2 space-x-reverse"
+            className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
           >
             {actions}
             <div className="flex-auto" />

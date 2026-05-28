@@ -62,6 +62,8 @@ export function WizardCard({
   steps,
   className,
 
+  // div
+  key,
   ...props
 }: WizardCardProps) {
   const {
@@ -85,7 +87,7 @@ export function WizardCard({
   const data: WizardRenderProps = {
     // The current UI only displays the current title & content.
     current: true,
-    invalid: current ? current.invalid : false,
+    invalid: current ? current.invalid ?? false : false,
 
     prevLabel: (atFirst && backLabel) || prevLabel || <Trans>Back</Trans>,
     prev: atFirst ? onBack : toPrev,
@@ -98,7 +100,13 @@ export function WizardCard({
   const stepContent = current?.contentRender?.(data)
 
   return (
-    <div className={clsx(className, 'flex flex-col')} {...props}>
+    <div
+      className={clsx(className, 'flex flex-col')}
+      // Force re-render of the title & content when the step changes, to avoid
+      // keeping stale internal state
+      key={`${key}-${currentPosition}`}
+      {...props}
+    >
       <p className="text-contrast-500">
         <Trans>
           Step {currentPosition} of {count}

@@ -118,7 +118,7 @@ msgstr ""
 msgid "alice.com"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:66
+#: src/components/reset-password-view.tsx:60
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
@@ -183,8 +183,8 @@ msgstr ""
 
 #: src/components/sign-in-picker.tsx:54
 #: src/components/sign-in-form.tsx:123
-#: src/components/reset-password-view.tsx:60
-#: src/components/reset-password-view.tsx:94
+#: src/components/reset-password-view.tsx:54
+#: src/components/reset-password-view.tsx:88
 #: src/components/consent-form.tsx:81
 #: src/components/forms/wizard-card.tsx:90
 msgid "Back"
@@ -274,6 +274,10 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
+#: src/components/update-handle-button.tsx:67
+msgid "Close"
+msgstr ""
+
 #: src/components/utils/account-selector.tsx:65
 msgid "Close account selector"
 msgstr ""
@@ -292,7 +296,7 @@ msgctxt "verb"
 msgid "Confirm"
 msgstr "確認"
 
-#: src/components/sign-in-view.tsx:58
+#: src/components/sign-in-view.tsx:55
 msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
@@ -403,11 +407,11 @@ msgstr ""
 msgid "Enter a password"
 msgstr "パスワードを入力"
 
-#: src/components/reset-password-view.tsx:78
+#: src/components/reset-password-view.tsx:72
 msgid "Enter the code you received to reset your password."
 msgstr "パスワードをリセットするために受け取ったコードを入力してください。"
 
-#: src/components/reset-password-view.tsx:47
+#: src/components/reset-password-view.tsx:41
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "アカウントの作成に使用したメールアドレスを入力します。新しいパスワードを設定できるように、「リセットコード」をお送りします。"
 
@@ -419,12 +423,12 @@ msgstr "メールアドレスを入力してください"
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
 
-#: src/components/sign-in-view.tsx:78
+#: src/components/sign-in-view.tsx:75
 msgid "Enter your password"
 msgstr "パスワードを入力"
 
-#: src/components/sign-in-view.tsx:97
-#: src/components/sign-in-view.tsx:115
+#: src/components/sign-in-view.tsx:94
+#: src/components/sign-in-view.tsx:112
 msgid "Enter your username and password"
 msgstr "ユーザー名とパスワードを入力してください"
 
@@ -485,7 +489,7 @@ msgstr ""
 msgid "File contents"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:43
+#: src/components/reset-password-view.tsx:37
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
@@ -593,7 +597,7 @@ msgstr ""
 msgid "Learn more"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:44
+#: src/components/reset-password-view.tsx:38
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
@@ -675,8 +679,8 @@ msgstr ""
 msgid "New password"
 msgstr "新しいパスワード"
 
-#: src/components/reset-password-view.tsx:55
-#: src/components/reset-password-view.tsx:89
+#: src/components/reset-password-view.tsx:49
+#: src/components/reset-password-view.tsx:83
 #: src/components/forms/wizard-card.tsx:93
 msgid "Next"
 msgstr "次へ"
@@ -691,7 +695,7 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr ""
 
-#: src/components/reset-password-view.tsx:116
+#: src/components/reset-password-view.tsx:110
 msgid "Okay"
 msgstr "OK"
 
@@ -722,11 +726,11 @@ msgstr "パスワード強度"
 msgid "Password strength indicator"
 msgstr "パスワード強度表示"
 
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:98
 msgid "Password Updated"
 msgstr "パスワードが更新されました"
 
-#: src/components/reset-password-view.tsx:109
+#: src/components/reset-password-view.tsx:103
 msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
@@ -814,7 +818,7 @@ msgstr "リポジトリ"
 msgid "Reset code"
 msgstr "リセットコード"
 
-#: src/components/reset-password-view.tsx:76
+#: src/components/reset-password-view.tsx:70
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
@@ -845,7 +849,7 @@ msgstr ""
 msgid "Select domain"
 msgstr "ドメインを選択"
 
-#: src/components/sign-in-view.tsx:131
+#: src/components/sign-in-view.tsx:128
 msgid "Select from an existing account"
 msgstr "既存のアカウントから選択"
 
@@ -854,7 +858,7 @@ msgctxt "PasswordReset"
 msgid "Send reset code"
 msgstr ""
 
-#: src/components/sign-in-view.tsx:45
+#: src/components/sign-in-view.tsx:42
 msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr ""
@@ -1015,7 +1019,7 @@ msgctxt "Email"
 msgid "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 msgstr ""
 
-#: src/pages/account/(authenticated)/password/page.tsx:33
+#: src/components/update-password-view.tsx:29
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr ""
@@ -1024,7 +1028,7 @@ msgstr ""
 msgid "To use a custom domain as your username, you first need to prove that you control it. Pick a verification method below and follow the instructions."
 msgstr ""
 
-#: src/components/verify-email-view.tsx:45
+#: src/components/verify-email-view.tsx:42
 msgctxt "Email"
 msgid "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
 msgstr ""
@@ -1063,7 +1067,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr ""
 
-#: src/components/update-handle-view.tsx:58
+#: src/components/update-handle-button.tsx:38
 msgctxt "Handle"
 msgid "Update"
 msgstr ""
@@ -1076,6 +1080,15 @@ msgstr ""
 #: src/components/utils/scope-description.tsx:665
 msgid "Update"
 msgstr "更新"
+
+#: src/components/update-handle-button.tsx:47
+msgid "Update username"
+msgstr ""
+
+#: src/components/update-handle-button.tsx:52
+msgctxt "Handle"
+msgid "Update username"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
@@ -1192,11 +1205,11 @@ msgid "You can now sign in with your new email."
 msgstr ""
 
 #: src/data/password.ts:52
-#: src/components/reset-password-view.tsx:112
+#: src/components/reset-password-view.tsx:106
 msgid "You can now sign in with your new password."
 msgstr "新しいパスワードでサインインできるようになりました。"
 
-#: src/components/reset-password-view.tsx:82
+#: src/components/reset-password-view.tsx:76
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
 
@@ -1236,7 +1249,7 @@ msgstr ""
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
-#: src/components/reset-password-view.tsx:105
+#: src/components/reset-password-view.tsx:99
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
 
@@ -1252,7 +1265,7 @@ msgstr ""
 msgid "Your username has been updated."
 msgstr ""
 
-#: src/components/update-handle-view.tsx:63
+#: src/pages/account/(authenticated)/handle/page.tsx:16
 msgctxt "Handle"
 msgid "Your username is <0>@{currentHandle}</0>."
 msgstr ""

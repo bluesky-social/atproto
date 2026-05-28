@@ -118,7 +118,7 @@ msgstr "Add the following record to your domain's DNS configuration."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/reset-password-view.tsx:66
+#: src/components/reset-password-view.tsx:60
 msgid "Already have a code?"
 msgstr "Already have a code?"
 
@@ -183,8 +183,8 @@ msgstr "Authorized on {0}"
 
 #: src/components/sign-in-picker.tsx:54
 #: src/components/sign-in-form.tsx:123
-#: src/components/reset-password-view.tsx:60
-#: src/components/reset-password-view.tsx:94
+#: src/components/reset-password-view.tsx:54
+#: src/components/reset-password-view.tsx:88
 #: src/components/consent-form.tsx:81
 #: src/components/forms/wizard-card.tsx:90
 msgid "Back"
@@ -274,6 +274,10 @@ msgstr "Check your inbox."
 msgid "Choose a username"
 msgstr "Choose a username"
 
+#: src/components/update-handle-button.tsx:67
+msgid "Close"
+msgstr "Close"
+
 #: src/components/utils/account-selector.tsx:65
 msgid "Close account selector"
 msgstr "Close account selector"
@@ -292,7 +296,7 @@ msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirm"
 
-#: src/components/sign-in-view.tsx:58
+#: src/components/sign-in-view.tsx:55
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
@@ -403,11 +407,11 @@ msgstr "Email verified"
 msgid "Enter a password"
 msgstr "Enter a password"
 
-#: src/components/reset-password-view.tsx:78
+#: src/components/reset-password-view.tsx:72
 msgid "Enter the code you received to reset your password."
 msgstr "Enter the code you received to reset your password."
 
-#: src/components/reset-password-view.tsx:47
+#: src/components/reset-password-view.tsx:41
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 
@@ -419,12 +423,12 @@ msgstr "Enter your email address"
 msgid "Enter your new password"
 msgstr "Enter your new password"
 
-#: src/components/sign-in-view.tsx:78
+#: src/components/sign-in-view.tsx:75
 msgid "Enter your password"
 msgstr "Enter your password"
 
-#: src/components/sign-in-view.tsx:97
-#: src/components/sign-in-view.tsx:115
+#: src/components/sign-in-view.tsx:94
+#: src/components/sign-in-view.tsx:112
 msgid "Enter your username and password"
 msgstr "Enter your username and password"
 
@@ -485,7 +489,7 @@ msgstr "Failed to verify email"
 msgid "File contents"
 msgstr "File contents"
 
-#: src/components/reset-password-view.tsx:43
+#: src/components/reset-password-view.tsx:37
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
@@ -603,7 +607,7 @@ msgstr "Last seen {lastUsedAgo}"
 msgid "Learn more"
 msgstr "Learn more"
 
-#: src/components/reset-password-view.tsx:44
+#: src/components/reset-password-view.tsx:38
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
@@ -685,8 +689,8 @@ msgstr "New email address"
 msgid "New password"
 msgstr "New password"
 
-#: src/components/reset-password-view.tsx:55
-#: src/components/reset-password-view.tsx:89
+#: src/components/reset-password-view.tsx:49
+#: src/components/reset-password-view.tsx:83
 #: src/components/forms/wizard-card.tsx:93
 msgid "Next"
 msgstr "Next"
@@ -701,7 +705,7 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "No email associated with this account. Password reset is unavailable."
 
-#: src/components/reset-password-view.tsx:116
+#: src/components/reset-password-view.tsx:110
 msgid "Okay"
 msgstr "Okay"
 
@@ -732,11 +736,11 @@ msgstr "Password strength"
 msgid "Password strength indicator"
 msgstr "Password strength indicator"
 
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:98
 msgid "Password Updated"
 msgstr "Password Updated"
 
-#: src/components/reset-password-view.tsx:109
+#: src/components/reset-password-view.tsx:103
 msgid "Password updated!"
 msgstr "Password updated!"
 
@@ -824,7 +828,7 @@ msgstr "Repository"
 msgid "Reset code"
 msgstr "Reset code"
 
-#: src/components/reset-password-view.tsx:76
+#: src/components/reset-password-view.tsx:70
 msgid "Reset Password"
 msgstr "Reset Password"
 
@@ -855,7 +859,7 @@ msgstr "Select another account"
 msgid "Select domain"
 msgstr "Select domain"
 
-#: src/components/sign-in-view.tsx:131
+#: src/components/sign-in-view.tsx:128
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
@@ -864,7 +868,7 @@ msgctxt "PasswordReset"
 msgid "Send reset code"
 msgstr "Send reset code"
 
-#: src/components/sign-in-view.tsx:45
+#: src/components/sign-in-view.tsx:42
 msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Sign in"
@@ -1025,7 +1029,7 @@ msgctxt "Email"
 msgid "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 msgstr "To change your email, we'll send a confirmation code to <0>{email}</0>. Enter the code below along with your new email address."
 
-#: src/pages/account/(authenticated)/password/page.tsx:33
+#: src/components/update-password-view.tsx:29
 msgctxt "PasswordReset"
 msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
 msgstr "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
@@ -1034,7 +1038,7 @@ msgstr "To reset your password, we'll send a verification code to <0>{email}</0>
 msgid "To use a custom domain as your username, you first need to prove that you control it. Pick a verification method below and follow the instructions."
 msgstr "To use a custom domain as your username, you first need to prove that you control it. Pick a verification method below and follow the instructions."
 
-#: src/components/verify-email-view.tsx:45
+#: src/components/verify-email-view.tsx:42
 msgctxt "Email"
 msgid "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
 msgstr "To verify your email, we'll send a verification code to <0>{email}</0>. Enter the code below to confirm that you own this address."
@@ -1073,7 +1077,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
 
-#: src/components/update-handle-view.tsx:58
+#: src/components/update-handle-button.tsx:38
 msgctxt "Handle"
 msgid "Update"
 msgstr "Update"
@@ -1086,6 +1090,15 @@ msgstr "Update"
 #: src/components/utils/scope-description.tsx:665
 msgid "Update"
 msgstr "Update"
+
+#: src/components/update-handle-button.tsx:47
+msgid "Update username"
+msgstr "Update username"
+
+#: src/components/update-handle-button.tsx:52
+msgctxt "Handle"
+msgid "Update username"
+msgstr "Update username"
 
 #: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
@@ -1202,11 +1215,11 @@ msgid "You can now sign in with your new email."
 msgstr "You can now sign in with your new email."
 
 #: src/data/password.ts:52
-#: src/components/reset-password-view.tsx:112
+#: src/components/reset-password-view.tsx:106
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
-#: src/components/reset-password-view.tsx:82
+#: src/components/reset-password-view.tsx:76
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 
@@ -1246,7 +1259,7 @@ msgstr "Your email has been updated to <0>{email}</0>. A verification code has b
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
-#: src/components/reset-password-view.tsx:105
+#: src/components/reset-password-view.tsx:99
 msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
 
@@ -1262,7 +1275,7 @@ msgstr "Your session has expired. Please sign in again."
 msgid "Your username has been updated."
 msgstr "Your username has been updated."
 
-#: src/components/update-handle-view.tsx:63
+#: src/pages/account/(authenticated)/handle/page.tsx:16
 msgctxt "Handle"
 msgid "Your username is <0>@{currentHandle}</0>."
 msgstr "Your username is <0>@{currentHandle}</0>."
