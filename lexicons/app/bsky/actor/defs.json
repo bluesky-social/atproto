@@ -269,11 +269,11 @@
           "description": "The user who issued this verification.",
           "format": "did"
         },
-        "displayName": {
+        "issuerDisplayName": {
           "type": "string",
           "description": "The display name of the issuer."
         },
-        "handle": {
+        "issuerHandle": {
           "type": "string",
           "description": "The handle of the issuer.",
           "format": "handle"

@@ -549,8 +549,8 @@ export class Views {
 
         return {
           issuer,
-          displayName: issuerActor?.profile?.displayName,
-          handle: issuerActor?.handle,
+          issuerDisplayName: issuerActor?.profile?.displayName,
+          issuerHandle: issuerActor?.handle,
           uri,
           isValid,
           createdAt,
