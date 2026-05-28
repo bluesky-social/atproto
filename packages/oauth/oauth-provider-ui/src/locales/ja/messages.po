@@ -119,8 +119,8 @@ msgstr ""
 msgid "alice.com"
 msgstr ""
 
-#: src/components/verify-email-dialog.tsx:73
-#: src/components/update-password-dialog.tsx:74
+#: src/components/verify-email-dialog.tsx:71
+#: src/components/update-password-dialog.tsx:72
 #: src/components/reset-password-view.tsx:60
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
@@ -240,10 +240,6 @@ msgstr "キャンセル"
 msgid "Cannot remove current device"
 msgstr ""
 
-#: src/components/update-password-dialog.tsx:80
-msgid "Change password"
-msgstr ""
-
 #: src/components/utils/scope-description.tsx:418
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@handle</0> を変更"
@@ -274,7 +270,7 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/components/update-email-dialog.tsx:113
+#: src/components/update-email-dialog.tsx:112
 msgctxt "Email"
 msgid "Click here to resend."
 msgstr ""
@@ -363,7 +359,7 @@ msgstr ""
 msgid "DNS"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:104
+#: src/components/update-email-dialog.tsx:103
 msgctxt "Email"
 msgid "Don't see an email?"
 msgstr ""
@@ -685,7 +681,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:73
+#: src/components/update-email-dialog.tsx:72
 #: src/components/reset-email-confirm-form.tsx:64
 msgid "New email address"
 msgstr ""
@@ -778,15 +774,15 @@ msgstr ""
 msgid "Please check your verification code and try again."
 msgstr ""
 
-#: src/components/update-password-dialog.tsx:87
+#: src/components/update-password-dialog.tsx:84
 msgid "Please enter the code you received and the new password you would like to use."
 msgstr ""
 
-#: src/components/verify-email-dialog.tsx:86
+#: src/components/verify-email-dialog.tsx:83
 msgid "Please enter the code you received to verify your email address."
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:92
+#: src/components/update-email-dialog.tsx:91
 msgctxt "Email"
 msgid "Please enter the security code we sent to your <0>previous</0> email address."
 msgstr ""
@@ -831,11 +827,6 @@ msgstr "このアカウントをこのデバイスに記憶する"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/verify-email-dialog.tsx:66
-#: src/components/update-password-dialog.tsx:67
-msgid "Request code"
-msgstr ""
-
 #: src/components/reset-password-confirm-form.tsx:45
 #: src/components/reset-email-confirm-form.tsx:49
 msgid "Reset code"
@@ -864,11 +855,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:99
+#: src/components/update-email-dialog.tsx:98
 msgid "Security code"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:89
+#: src/components/update-email-dialog.tsx:88
 msgctxt "Email"
 msgid "Security step required"
 msgstr ""
@@ -1077,11 +1068,6 @@ msgstr ""
 msgid "Update"
 msgstr "更新"
 
-#: src/components/update-email-dialog.tsx:58
-msgctxt "Email"
-msgid "Update email"
-msgstr ""
-
 #: src/components/update-handle-dialog.tsx:29
 msgid "Update username"
 msgstr ""
@@ -1140,10 +1126,6 @@ msgstr ""
 
 #: src/components/update-handle-form.tsx:77
 msgid "Verify and Save"
-msgstr ""
-
-#: src/components/verify-email-dialog.tsx:79
-msgid "Verify email"
 msgstr ""
 
 #: src/components/sign-in-form.tsx:211

@@ -55,7 +55,6 @@ export function UpdateEmailDialog({
       <FormCardAsync
         disabled={requestPending}
         invalid={!newEmail}
-        submitLabel={<Trans context="Email">Update email</Trans>}
         onSubmit={
           step === Step.EmailEntry
             ? async () => {

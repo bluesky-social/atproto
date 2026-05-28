@@ -119,8 +119,8 @@ msgstr "Ajoutez le champ suivant à la configuration DNS de votre domaine."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/verify-email-dialog.tsx:73
-#: src/components/update-password-dialog.tsx:74
+#: src/components/verify-email-dialog.tsx:71
+#: src/components/update-password-dialog.tsx:72
 #: src/components/reset-password-view.tsx:60
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
@@ -240,10 +240,6 @@ msgstr "Annuler"
 msgid "Cannot remove current device"
 msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 
-#: src/components/update-password-dialog.tsx:80
-msgid "Change password"
-msgstr "Changer le mot de passe"
-
 #: src/components/utils/scope-description.tsx:418
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
@@ -274,7 +270,7 @@ msgstr "Vérifiez votre boîte de réception."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/components/update-email-dialog.tsx:113
+#: src/components/update-email-dialog.tsx:112
 msgctxt "Email"
 msgid "Click here to resend."
 msgstr "Cliquez ici pour renvoyer."
@@ -363,7 +359,7 @@ msgstr "Appareils"
 msgid "DNS"
 msgstr "DNS"
 
-#: src/components/update-email-dialog.tsx:104
+#: src/components/update-email-dialog.tsx:103
 msgctxt "Email"
 msgid "Don't see an email?"
 msgstr "Pas reçu d'email ?"
@@ -695,7 +691,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/update-email-dialog.tsx:73
+#: src/components/update-email-dialog.tsx:72
 #: src/components/reset-email-confirm-form.tsx:64
 msgid "New email address"
 msgstr "Nouvelle adresse email"
@@ -788,15 +784,15 @@ msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
 msgid "Please check your verification code and try again."
 msgstr "Veuillez vérifier votre code de vérification et réessayer."
 
-#: src/components/update-password-dialog.tsx:87
+#: src/components/update-password-dialog.tsx:84
 msgid "Please enter the code you received and the new password you would like to use."
 msgstr "Veuillez saisir le code que vous avez reçu et le nouveau mot de passe que vous souhaitez utiliser."
 
-#: src/components/verify-email-dialog.tsx:86
+#: src/components/verify-email-dialog.tsx:83
 msgid "Please enter the code you received to verify your email address."
 msgstr "Veuillez saisir le code que vous avez reçu pour vérifier votre adresse email."
 
-#: src/components/update-email-dialog.tsx:92
+#: src/components/update-email-dialog.tsx:91
 msgctxt "Email"
 msgid "Please enter the security code we sent to your <0>previous</0> email address."
 msgstr "Veuillez saisir le code de sécurité que nous avons envoyé à votre adresse email <0>précédente</0>."
@@ -841,11 +837,6 @@ msgstr "Se souvenir de ce compte sur cet appareil"
 msgid "Repository"
 msgstr "Données publiques"
 
-#: src/components/verify-email-dialog.tsx:66
-#: src/components/update-password-dialog.tsx:67
-msgid "Request code"
-msgstr "Demander un code"
-
 #: src/components/reset-password-confirm-form.tsx:45
 #: src/components/reset-email-confirm-form.tsx:49
 msgid "Reset code"
@@ -874,11 +865,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Révoquer l'accès"
 
-#: src/components/update-email-dialog.tsx:99
+#: src/components/update-email-dialog.tsx:98
 msgid "Security code"
 msgstr "Code de sécurité"
 
-#: src/components/update-email-dialog.tsx:89
+#: src/components/update-email-dialog.tsx:88
 msgctxt "Email"
 msgid "Security step required"
 msgstr "Étape de sécurité requise"
@@ -1087,11 +1078,6 @@ msgstr "Agent utilisateur inconnu"
 msgid "Update"
 msgstr "Modifier"
 
-#: src/components/update-email-dialog.tsx:58
-msgctxt "Email"
-msgid "Update email"
-msgstr "Modifier l'email"
-
 #: src/components/update-handle-dialog.tsx:29
 msgid "Update username"
 msgstr "Modifier le nom d'utilisateur"
@@ -1152,10 +1138,6 @@ msgstr "Méthode de vérification"
 msgid "Verify and Save"
 msgstr "Vérifier et enregistrer"
 
-#: src/components/verify-email-dialog.tsx:79
-msgid "Verify email"
-msgstr "Vérifier l'email"
-
 #: src/components/sign-in-form.tsx:211
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
@@ -1167,7 +1149,7 @@ msgstr "Vérifiez que vous êtes humain"
 #: src/pages/account/(authenticated)/manage/page.tsx:64
 #: src/components/verify-email-dialog.tsx:43
 msgid "Verify your email"
-msgstr "Vérifiez votre adresse email"
+msgstr "Vérifier votre adresse email"
 
 #: src/components/consent-form.tsx:117
 msgid "wants to access your <0/> account"

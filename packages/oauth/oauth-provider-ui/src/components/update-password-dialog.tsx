@@ -63,9 +63,7 @@ export function UpdatePasswordDialog({
             disabled={confirmPending}
             color="primary"
             className="w-full"
-          >
-            <Trans>Request code</Trans>
-          </ButtonRequestCode>
+          />
 
           <Button
             onClick={() => setState(UpdatePasswordDialogState.Confirm)}
@@ -77,7 +75,6 @@ export function UpdatePasswordDialog({
       ) : (
         <ResetPasswordConfirmForm
           disabled={confirmPending}
-          submitLabel={<Trans>Change password</Trans>}
           onSubmit={async (data) => {
             await onConfirm(data)
             setOpen(false)

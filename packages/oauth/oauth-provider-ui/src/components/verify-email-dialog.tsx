@@ -62,9 +62,7 @@ export function VerifyEmailDialog({
             disabled={confirmPending}
             color="primary"
             className="w-full"
-          >
-            <Trans>Request code</Trans>
-          </ButtonRequestCode>
+          />
 
           <Button
             onClick={() => setState(VerifyEmailDialogState.Confirm)}
@@ -76,7 +74,6 @@ export function VerifyEmailDialog({
       ) : (
         <VerifyEmailConfirmForm
           disabled={confirmPending}
-          submitLabel={<Trans>Verify email</Trans>}
           onSubmit={async (data) => {
             await onConfirm(data)
             setOpen(false)
