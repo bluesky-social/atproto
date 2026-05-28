@@ -267,7 +267,7 @@ describe('account manager', () => {
 
     input.press('Enter')
 
-    await page.ensureTextVisibility('@bob-renamed.test', 'span')
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
   })
 
   it('remembered the previous sign-in', async () => {
@@ -277,6 +277,6 @@ describe('account manager', () => {
 
     await page.assertTitle('Mon compte Atmosphère')
 
-    await page.ensureTextVisibility('@bob-renamed.test', 'span')
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
   })
 })
