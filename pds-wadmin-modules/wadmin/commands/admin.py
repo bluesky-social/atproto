@@ -9,7 +9,7 @@ from typing import Optional
 from ..api import PDSClient
 from ..config import Config
 from ..utils import console, print_success, print_error
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 @click.group()
@@ -42,13 +42,13 @@ def build_info(ctx):
     # Parse timestamps for display
     try:
         build_time = datetime.fromisoformat(info['buildTime'].replace('Z', '+00:00'))
-        build_time_str = build_time.strftime('%Y-%m-%d %H:%M:%S UTC')
+        build_time_str = build_time.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
     except:
         build_time_str = info['buildTime']
 
     try:
         started_at = datetime.fromisoformat(info['startedAt'].replace('Z', '+00:00'))
-        started_at_str = started_at.strftime('%Y-%m-%d %H:%M:%S UTC')
+        started_at_str = started_at.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
     except:
         started_at_str = info['startedAt']
 

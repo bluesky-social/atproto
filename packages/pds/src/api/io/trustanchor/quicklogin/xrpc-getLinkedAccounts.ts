@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { authLogger } from '../../../../logger'
 import { getHandleForDid } from './helpers'
 
 export default function (server: Server, ctx: AppContext) {
@@ -62,6 +63,10 @@ export default function (server: Server, ctx: AppContext) {
       // Fall through to the no-JID path, which returns only the caller's own session.
       const callerIsLinked = linkedDids.some((row) => row.did === callerDid)
       if (!callerIsLinked) {
+        authLogger.warn(
+          { callerDid, loginJid },
+          'getLinkedAccounts: caller DID not linked to JID, falling back to single-account',
+        )
         const callerHandle = await getHandleForDid(ctx, callerDid)
         const callerTokens = await ctx.accountManager.createSession(
           callerDid,
@@ -97,6 +102,10 @@ export default function (server: Server, ctx: AppContext) {
 
       // Issue sessions for all linked accounts, embedding the same loginJid
       // so that switching accounts preserves the WID context across refreshes.
+      authLogger.info(
+        { callerDid, loginJid, numAccounts: orderedDids.length },
+        'getLinkedAccounts: issuing sessions',
+      )
       const accounts: {
         did: string
         handle: string
