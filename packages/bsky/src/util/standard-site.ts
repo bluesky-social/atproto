@@ -158,13 +158,17 @@ export const validateStandardSiteForUrl = (
     const joined = canonicalizeHttpUrl(
       joinPath(publication.info.record.url, document.info.record.path ?? ''),
     )
-    return joined !== null && canonicalUrlMatchesAssumed(joined, canonicalAssumed)
+    return (
+      joined !== null && canonicalUrlMatchesAssumed(joined, canonicalAssumed)
+    )
   }
   if (document) {
     const joined = canonicalizeHttpUrl(
       joinPath(document.info.record.site, document.info.record.path ?? ''),
     )
-    return joined !== null && canonicalUrlMatchesAssumed(joined, canonicalAssumed)
+    return (
+      joined !== null && canonicalUrlMatchesAssumed(joined, canonicalAssumed)
+    )
   }
   if (publication) {
     // Publication-only matches are exact: `assumedUrl` represents the
