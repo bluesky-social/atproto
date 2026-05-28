@@ -55,7 +55,8 @@
                   "chat.bsky.convo.defs#logApproveJoinRequest",
                   "chat.bsky.convo.defs#logRejectJoinRequest",
                   "chat.bsky.convo.defs#logOutgoingJoinRequest",
-                  "chat.bsky.convo.defs#logWithdrawJoinRequest"
+                  "chat.bsky.convo.defs#logWithdrawJoinRequest",
+                  "chat.bsky.convo.defs#logReadJoinRequests"
                 ]
               }
             }

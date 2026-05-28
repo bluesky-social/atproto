@@ -817,6 +817,15 @@
         "rev": { "type": "string" },
         "convoId": { "type": "string" }
       }
+    },
+    "logReadJoinRequests": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the group owner marked join requests as read.",
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
     }
   }
 }
