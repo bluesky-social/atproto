@@ -535,16 +535,22 @@ export class Views {
       ({ issuer, uri, displayName, handle, createdAt }): VerificationView => {
         // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
         // only in the overall profile verification validity.
+        // The verification record's `displayName`/`handle` are the *subject's* snapshot at
+        // verification time; we compare them to the subject's current values to determine validity.
         const isValid =
           !!displayName &&
           displayName === actor.profile?.displayName &&
           !!handle &&
           handle === actor.handle
 
+        // Expose the *issuer's* current handle/displayName, sourced from the
+        // issuer's hydrated actor record (see `Hydrator.hydrateProfiles`).
+        const issuerActor = state.actors?.get(issuer)
+
         return {
           issuer,
-          displayName,
-          handle,
+          issuerDisplayName: issuerActor?.profile?.displayName,
+          issuerHandle: issuerActor?.handle,
           uri,
           isValid,
           createdAt,
