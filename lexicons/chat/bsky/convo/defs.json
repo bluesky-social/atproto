@@ -47,7 +47,7 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record"]
+          "refs": ["app.bsky.embed.record", "chat.bsky.embed.joinLink"]
         }
       }
     },
@@ -69,7 +69,7 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record#view"]
+          "refs": ["app.bsky.embed.record#view", "chat.bsky.embed.joinLink#view"]
         },
         "reactions": {
           "type": "array",
@@ -365,6 +365,10 @@
         "joinRequestCount": {
           "type": "integer",
           "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
+        },
+        "unreadJoinRequestCount": {
+          "type": "integer",
+          "description": "The number of unread join requests for the group conversation. Only present for the owner."
         },
         "joinLink": {
           "type": "ref",
@@ -798,6 +802,15 @@
     },
     "logOutgoingJoinRequest": {
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made by the viewer.",
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
+    },
+    "logWithdrawJoinRequest": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the viewer withdrew their own join request.",
       "type": "object",
       "required": ["rev", "convoId"],
       "properties": {
