@@ -69,7 +69,10 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record#view", "chat.bsky.embed.joinLink#view"]
+          "refs": [
+            "app.bsky.embed.record#view",
+            "chat.bsky.embed.joinLink#view"
+          ]
         },
         "reactions": {
           "type": "array",
