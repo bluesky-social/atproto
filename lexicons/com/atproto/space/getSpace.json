@@ -1,0 +1,61 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getSpace",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get details for a space, including its configuration. Must be called on the space owner's PDS. Requires auth, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-uri",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "isPublic"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "space-uri",
+              "description": "URI of the space."
+            },
+            "isOwner": {
+              "type": "boolean",
+              "description": "Whether the authenticated user is the owner of the space."
+            },
+            "isPublic": {
+              "type": "boolean",
+              "description": "If true, the credential mint is open to anyone and the member list is bypassed for read/sync access."
+            },
+            "managingApp": {
+              "type": "string",
+              "description": "Service identifier (e.g. did:web:example.com#forum) of the application that manages this space. Used to route application-level requests (join requests, invite flows, etc.). Omitted when not configured or not implemented by the host."
+            },
+            "appAccessMode": {
+              "type": "string",
+              "knownValues": ["allow", "deny"],
+              "description": "Default app-level access policy. 'allow' means any app may sync (with optional denylist via appExceptions), 'deny' means only apps in appExceptions may sync. Omitted when not implemented by the host."
+            },
+            "appExceptions": {
+              "type": "array",
+              "description": "Apps that break from the default appAccessMode. Functions as denylist when appAccessMode is 'allow', allowlist when appAccessMode is 'deny'. Omitted when not implemented by the host.",
+              "items": {
+                "type": "string",
+                "description": "OAuth client ID."
+              }
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    }
+  }
+}

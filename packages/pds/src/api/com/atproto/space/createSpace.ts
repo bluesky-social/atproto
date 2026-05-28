@@ -16,7 +16,8 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
-      const { type } = input.body
+      const { type, managingApp, isPublic, appAccessMode, appExceptions } =
+        input.body
       const skey = input.body.skey ?? TID.nextStr()
       const spaceUri = SpaceUri.make(input.body.did, type, skey)
       const space = spaceUri.toString()
@@ -33,7 +34,12 @@ export default function (server: Server, ctx: AppContext) {
             'SpaceAlreadyExists',
           )
         }
-        await actorTxn.space.createSpace(space, isOwner)
+        await actorTxn.space.createSpace(space, isOwner, {
+          managingApp,
+          isPublic,
+          appAccessMode,
+          appExceptions,
+        })
 
         if (isOwner) {
           const storage = new SqlMembersStorage(actorTxn.space, space)

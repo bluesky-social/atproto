@@ -19,6 +19,12 @@ const parseListCursor = (
 export const formatListCursor = (collection: string, rkey: string): string =>
   `${collection}/${rkey}`
 
+const parseAppExceptions = (raw: string): string[] => {
+  const parsed = JSON.parse(raw)
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter((v): v is string => typeof v === 'string')
+}
+
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
@@ -26,6 +32,10 @@ export class SpaceReader {
     uri: string
     isOwner: boolean
     isMember: boolean
+    managingApp: string | null
+    isPublic: boolean
+    appAccessMode: string
+    appExceptions: string[]
     deletedAt: string | null
   } | null> {
     const row = await this.db.db
@@ -38,6 +48,10 @@ export class SpaceReader {
       uri: row.uri,
       isOwner: row.isOwner === 1,
       isMember: row.isMember === 1,
+      managingApp: row.managingApp,
+      isPublic: row.isPublic === 1,
+      appAccessMode: row.appAccessMode,
+      appExceptions: parseAppExceptions(row.appExceptions),
       deletedAt: row.deletedAt,
     }
   }

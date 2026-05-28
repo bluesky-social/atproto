@@ -1,6 +1,6 @@
 import { createMemberGrant } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope } from './util.js'
@@ -16,27 +16,14 @@ export default function (server: Server, ctx: AppContext) {
       const memberDid = auth.credentials.did
       const { space } = params
 
+      // The grant is a "user X via app Y is asking the owner" envelope. The
+      // owner's PDS decides whether to honor it (via member list, isPublic,
+      // appAccessMode, etc.); the caller's PDS only attests to identity +
+      // app, gated by the OAuth scope. Local isMember is a cached hint set by
+      // notifyMembership and isn't authoritative.
       assertSpaceScope(auth, space, { action: 'read' })
 
-      // Verify the space exists in member's actor store and they're a member
-      const spaceRow = await ctx.actorStore.read(memberDid, (store) =>
-        store.space.getSpace(space),
-      )
-      if (!spaceRow) {
-        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
-      if (!spaceRow.isMember) {
-        throw new InvalidRequestError(
-          'Not a member of this space',
-          'NotAMember',
-        )
-      }
-
-      // Parse space URI to extract owner DID
-      const spaceUri = new SpaceUri(space)
-      const ownerDid = spaceUri.spaceDid
-
-      // Get member's keypair
+      const ownerDid = new SpaceUri(space).spaceDid
       const keypair = await ctx.actorStore.keypair(memberDid)
 
       // @TODO: extract clientId from OAuth credentials

@@ -39,8 +39,25 @@ export default function (server: Server, ctx: AppContext) {
       if (spaceRow.deletedAt) {
         throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
       }
-      if (!isMember) {
+      // Read perimeter. Public spaces skip the member-list check; private
+      // spaces require the grant subject to be a member.
+      // TODO: support truly anonymous mint for public spaces (no member grant
+      // at all) — requires a different auth flow for client identification.
+      if (!spaceRow.isPublic && !isMember) {
         throw new InvalidRequestError('Member not found in space', 'NotAMember')
+      }
+      // App perimeter. allow-mode refuses clientIds in appExceptions;
+      // deny-mode refuses clientIds NOT in appExceptions.
+      const appExceptionMatch = spaceRow.appExceptions.includes(clientId)
+      const appAllowed =
+        spaceRow.appAccessMode === 'deny'
+          ? appExceptionMatch
+          : !appExceptionMatch
+      if (!appAllowed) {
+        throw new InvalidRequestError(
+          'Application not permitted to sync this space',
+          'AppNotPermitted',
+        )
       }
 
       const keypair = await ctx.actorStore.keypair(ownerDid)

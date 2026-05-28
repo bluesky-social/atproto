@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a member grant token for a space. The grant can be exchanged with the space owner for a space credential. Requires OAuth auth from a member.",
+      "description": "Get a member grant token for a space. The grant is a signed token identifying the user and app to the space owner; it can be exchanged with the space owner for a space credential. The owner's PDS decides whether to honor the grant (membership, public access, app policy). Requires OAuth auth.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -28,11 +28,7 @@
             }
           }
         }
-      },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotAMember" }
-      ]
+      }
     }
   }
 }

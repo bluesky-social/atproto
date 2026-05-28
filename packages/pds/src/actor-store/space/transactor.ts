@@ -17,6 +17,12 @@ export class SpaceTransactor extends SpaceReader {
   async createSpace(
     uri: string,
     isOwner: boolean,
+    config: {
+      managingApp?: string
+      isPublic?: boolean
+      appAccessMode?: string
+      appExceptions?: string[]
+    } = {},
     now?: string,
   ): Promise<void> {
     const timestamp = now ?? new Date().toISOString()
@@ -26,6 +32,10 @@ export class SpaceTransactor extends SpaceReader {
         uri,
         isOwner: isOwner ? 1 : 0,
         isMember: 0,
+        managingApp: config.managingApp ?? null,
+        isPublic: config.isPublic ? 1 : 0,
+        appAccessMode: config.appAccessMode ?? 'allow',
+        appExceptions: JSON.stringify(config.appExceptions ?? []),
         createdAt: timestamp,
         deletedAt: null,
       })
@@ -54,6 +64,36 @@ export class SpaceTransactor extends SpaceReader {
       .deleteFrom('space_member')
       .where('space', '=', space)
       .where('did', '=', did)
+      .execute()
+  }
+
+  async updateSpaceConfig(
+    uri: string,
+    patch: {
+      managingApp?: string | null
+      isPublic?: boolean
+      appAccessMode?: string
+      appExceptions?: string[]
+    },
+  ): Promise<void> {
+    const set: Record<string, unknown> = {}
+    if (patch.managingApp !== undefined) {
+      set.managingApp = patch.managingApp
+    }
+    if (patch.isPublic !== undefined) {
+      set.isPublic = patch.isPublic ? 1 : 0
+    }
+    if (patch.appAccessMode !== undefined) {
+      set.appAccessMode = patch.appAccessMode
+    }
+    if (patch.appExceptions !== undefined) {
+      set.appExceptions = JSON.stringify(patch.appExceptions)
+    }
+    if (Object.keys(set).length === 0) return
+    await this.db.db
+      .updateTable('space')
+      .set(set)
+      .where('uri', '=', uri)
       .execute()
   }
 

@@ -14,6 +14,7 @@ import getMembers from './getMembers.js'
 import getRecord from './getRecord.js'
 import getRepoOplog from './getRepoOplog.js'
 import getRepoState from './getRepoState.js'
+import getSpace from './getSpace.js'
 import getSpaceCredential from './getSpaceCredential.js'
 import listRecords from './listRecords.js'
 import listSpaces from './listSpaces.js'
@@ -22,6 +23,7 @@ import notifySpaceDeleted from './notifySpaceDeleted.js'
 import notifyWrite from './notifyWrite.js'
 import putRecord from './putRecord.js'
 import removeMember from './removeMember.js'
+import updateSpaceConfig from './updateSpaceConfig.js'
 
 export default function (server: Server, ctx: AppContext) {
   addMember(server, ctx)
@@ -38,6 +40,7 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   getRepoOplog(server, ctx)
   getRepoState(server, ctx)
+  getSpace(server, ctx)
   getSpaceCredential(server, ctx)
   listRecords(server, ctx)
   listSpaces(server, ctx)
@@ -46,4 +49,5 @@ export default function (server: Server, ctx: AppContext) {
   notifyWrite(server, ctx)
   putRecord(server, ctx)
   removeMember(server, ctx)
+  updateSpaceConfig(server, ctx)
 }

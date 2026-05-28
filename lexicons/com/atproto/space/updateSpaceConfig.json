@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.updateSpaceConfig",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update the configuration of a space. The authenticated user must be the space owner. Omitted fields are left unchanged. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-uri",
+              "description": "Reference to the space to update."
+            },
+            "managingApp": {
+              "type": "string",
+              "description": "Service identifier (e.g. did:web:example.com#forum) of the application that manages this space. Pass an empty string to clear."
+            },
+            "isPublic": {
+              "type": "boolean",
+              "description": "If true, the credential mint is open to anyone and the member list is bypassed for read/sync access."
+            },
+            "appAccessMode": {
+              "type": "string",
+              "knownValues": ["allow", "deny"],
+              "description": "Default app-level access policy."
+            },
+            "appExceptions": {
+              "type": "array",
+              "description": "Apps that break from the default appAccessMode. Sent as a full replacement, not a delta.",
+              "items": {
+                "type": "string",
+                "description": "OAuth client ID."
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        { "name": "SpaceNotFound" },
+        { "name": "NotSpaceOwner" }
+      ]
+    }
+  }
+}
