@@ -1,4 +1,5 @@
 import { Trans } from '@lingui/react/macro'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { ReactNode, useEffect, useRef } from 'react'
 import {
   FormCardAsync,
@@ -6,7 +7,6 @@ import {
 } from '#/components/forms/form-card-async.tsx'
 import { InputHandleProvided } from '#/components/forms/input-handle-provided'
 import { Admonition } from '#/components/utils/admonition.tsx'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
 export type SignUpHandleFormProps = Override<
@@ -56,7 +56,7 @@ export function SignUpHandleForm({
   return (
     <FormCardAsync
       {...props}
-      ref={mergeRefs([ref, formRef])}
+      ref={composeRefs(ref, formRef)}
       onCancel={onPrev}
       cancelLabel={prevLabel}
       onSubmit={onNext}

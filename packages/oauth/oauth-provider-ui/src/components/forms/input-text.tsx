@@ -1,6 +1,6 @@
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
 import { JSX, ReactNode, useContext, useRef } from 'react'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { FieldsetContext } from './form-field.tsx'
 import { InputContainer } from './input-container.tsx'
@@ -68,7 +68,7 @@ export function InputText({
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy ?? ctx.labelId}
-        ref={mergeRefs([ref, inputRef])}
+        ref={composeRefs(ref, inputRef)}
         className={clsx(
           'outline-hidden w-full text-ellipsis bg-transparent bg-clip-padding text-base text-inherit dark:placeholder-gray-400',
           // Disabled state is handled by the parent Fieldset, or parent form element.

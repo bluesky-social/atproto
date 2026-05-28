@@ -75,7 +75,7 @@ export function InputRadioGroup<T>({
             htmlFor={inputId}
             className={clsx(
               'flex flex-1 items-start gap-2',
-              'rounded-lg px-3 py-2 text-sm',
+              'rounded-lg px-3 py-2',
               'border-contrast-25 dark:border-contrast-50 border border-2',
               'transition duration-200 ease-in-out',
               'has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-offset-1 has-[:focus-visible]:ring-offset-white dark:has-[:focus-visible]:ring-offset-black',
@@ -106,7 +106,7 @@ export function InputRadioGroup<T>({
               {descriptionText && (
                 <span
                   id={descriptionId}
-                  className="text-text-light text-xs leading-snug"
+                  className="text-text-light leading-snug"
                 >
                   {descriptionText}
                 </span>

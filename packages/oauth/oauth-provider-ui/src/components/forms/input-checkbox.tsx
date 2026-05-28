@@ -1,7 +1,7 @@
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
 import { JSX, ReactNode, useContext, useRef } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { Checkbox } from './checkbox.tsx'
 import { FieldsetContext } from './form-field.tsx'
@@ -52,7 +52,7 @@ export function InputCheckbox({
                 undefined
               : ariaLabelledBy ?? ctx.labelId
           }
-          ref={mergeRefs([ref, inputRef])}
+          ref={composeRefs(ref, inputRef)}
           id={inputId}
         />
       }

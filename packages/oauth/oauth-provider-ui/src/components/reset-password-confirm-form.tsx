@@ -24,6 +24,7 @@ export function ResetPasswordConfirmForm({
 
   // FormCardAsyncProps
   invalid,
+  children,
   ...props
 }: ResetPasswordConfirmFormProps) {
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -39,6 +40,8 @@ export function ResetPasswordConfirmForm({
         if (token && password) await onSubmit({ token, password })
       }}
     >
+      {children}
+
       <FormField label={<Trans>Reset code</Trans>}>
         <InputToken
           name="code"

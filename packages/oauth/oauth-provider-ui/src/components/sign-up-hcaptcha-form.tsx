@@ -1,11 +1,11 @@
 import HCaptcha from '@hcaptcha/react-hcaptcha'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { ForwardedRef, ReactNode, useCallback, useRef, useState } from 'react'
 import {
   FormCardAsync,
   FormCardAsyncProps,
 } from '#/components/forms/form-card-async.tsx'
 import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
 export type SignUpHcaptchaFormProps = Override<
@@ -89,7 +89,7 @@ export function SignUpHcaptchaForm({
         sitekey={siteKey}
         onLoad={onLoad}
         onVerify={onVerify}
-        ref={mergeRefs([ref, captchaRef])}
+        ref={composeRefs(ref, captchaRef)}
       />
     </FormCardAsync>
   )

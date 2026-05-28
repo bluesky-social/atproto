@@ -1,5 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { ReactNode, useCallback, useRef, useState } from 'react'
 import { Button } from '#/components/forms/button.tsx'
 import {
@@ -17,7 +18,6 @@ import {
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
 import { isValidDomain } from '#/lib/handle.ts'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
 export type SignInFormOutput = {
@@ -117,7 +117,7 @@ export function SignInForm({
   return (
     <FormCardAsync
       {...props}
-      ref={mergeRefs([ref, formRef])}
+      ref={composeRefs(ref, formRef)}
       onLoading={setLoading}
       onCancel={onBack}
       cancelLabel={backLabel ?? t`Back`}

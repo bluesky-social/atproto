@@ -1,4 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { useRef, useState } from 'react'
 import {
   FormCardAsync,
@@ -6,7 +7,6 @@ import {
 } from '#/components/forms/form-card-async.tsx'
 import { FormField } from '#/components/forms/form-field'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
 export type ResetPasswordRequestFormProps = Override<
@@ -34,7 +34,7 @@ export function ResetPasswordRequestForm({
   return (
     <FormCardAsync
       {...props}
-      ref={mergeRefs([ref, formRef])}
+      ref={composeRefs(ref, formRef)}
       invalid={!email || invalid}
       onSubmit={async () => {
         if (email) await onSubmit({ email })

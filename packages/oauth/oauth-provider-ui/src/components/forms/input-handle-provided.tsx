@@ -1,5 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon, CheckIcon, XIcon } from '@phosphor-icons/react'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
 import { JSX, useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -9,7 +10,6 @@ import {
   ValidDomain,
   isValidDomain,
 } from '#/lib/handle.ts'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
 
@@ -95,7 +95,7 @@ export function InputHandleProvided({
 
       <InputText
         {...props}
-        ref={mergeRefs([ref, inputRef])}
+        ref={composeRefs(ref, inputRef)}
         title={title ?? t`Type your username`}
         type="text"
         pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"

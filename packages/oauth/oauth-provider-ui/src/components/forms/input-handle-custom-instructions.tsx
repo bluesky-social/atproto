@@ -1,5 +1,4 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { clsx } from 'clsx'
 import { JSX, useMemo, useState } from 'react'
 import { Override } from '#/lib/util.ts'
 import { CodeSnippet } from '../utils/code-snippet.tsx'
@@ -37,7 +36,6 @@ export function InputHandleCustomInstructions({
   did,
 
   // div
-  className,
   ...props
 }: InputHandleCustomInstructionsProps) {
   const { t } = useLingui()
@@ -114,9 +112,10 @@ Thank you.`
   }, [domain, tutorialHref, troubleshootHref, instructionsMethods])
 
   return (
-    <div className={clsx(className, 'text-sm')} {...props}>
+    <div {...props}>
       <FormField label={t`Verification method`}>
         <InputRadioGroup
+          maxColumns={1}
           value={currentInstructions.method}
           onChange={setMethod}
           options={instructionsMethods.map(

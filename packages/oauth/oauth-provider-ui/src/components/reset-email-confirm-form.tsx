@@ -1,4 +1,5 @@
 import { Trans } from '@lingui/react/macro'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { useRef, useState } from 'react'
 import {
   FormCardAsync,
@@ -6,7 +7,6 @@ import {
 } from '#/components/forms/form-card-async.tsx'
 import { FormField } from '#/components/forms/form-field'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { InputEmailAddress } from './forms/input-email-address.tsx'
 
@@ -38,7 +38,7 @@ export function ResetEmailConfirmForm({
   return (
     <FormCardAsync
       {...props}
-      ref={mergeRefs([ref, formRef])}
+      ref={composeRefs(ref, formRef)}
       invalid={!token || !email || invalid}
       onSubmit={() => {
         if (token && email) return onSubmit({ token, email })

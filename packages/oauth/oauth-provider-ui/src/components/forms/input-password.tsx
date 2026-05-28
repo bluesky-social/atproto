@@ -1,7 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
 import { KeyIcon } from '@phosphor-icons/react'
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { useRef, useState } from 'react'
-import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
@@ -41,7 +41,7 @@ export function InputPassword({
     <InputText
       {...props}
       title={title ?? t`Password`}
-      ref={mergeRefs([ref, inputRef])}
+      ref={composeRefs(ref, inputRef)}
       dir={dir}
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}
