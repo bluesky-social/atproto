@@ -804,7 +804,7 @@
       }
     },
     "logOutgoingJoinRequest": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made by the viewer.",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made by the requester. Only requester actor gets this.",
       "type": "object",
       "required": ["rev", "convoId"],
       "properties": {
@@ -827,7 +827,7 @@
       }
     },
     "logWithdrawOutgoingJoinRequest": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the viewer withdrew their own join request.",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the viewer withdrew their own join request. Only requester actor gets this.",
       "type": "object",
       "required": ["rev", "convoId"],
       "properties": {
@@ -836,7 +836,7 @@
       }
     },
     "logReadJoinRequests": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the group owner marked join requests as read.",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the group owner marked join requests as read. Only the owner gets this.",
       "type": "object",
       "required": ["rev", "convoId"],
       "properties": {
