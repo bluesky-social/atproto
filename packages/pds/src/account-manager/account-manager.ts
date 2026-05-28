@@ -13,6 +13,7 @@ import {
   isServiceDomain,
 } from '../handle/index'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import { authLogger } from '../logger'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
@@ -366,7 +367,10 @@ export class AccountManager {
 
   async rotateRefreshToken(id: string) {
     const token = await auth.getRefreshToken(this.db, id)
-    if (!token) return null
+    if (!token) {
+      authLogger.warn({ tokenId: id }, 'rotateRefreshToken: token not found')
+      return null
+    }
 
     const now = new Date()
 
@@ -384,6 +388,15 @@ export class AccountManager {
       graceExpiresAt < prevExpiresAt ? graceExpiresAt : prevExpiresAt
 
     if (expiresAt <= now) {
+      authLogger.warn(
+        {
+          did: token.did,
+          tokenId: id,
+          prevExpiresAt: prevExpiresAt.toISOString(),
+          now: now.toISOString(),
+        },
+        'rotateRefreshToken: token grace period expired',
+      )
       return null
     }
 
@@ -409,7 +422,12 @@ export class AccountManager {
             expiresAt: expiresAt.toISOString(),
             nextId,
           }),
-          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPassword, token.loginJid),
+          auth.storeRefreshToken(
+            dbTxn,
+            refreshPayload,
+            token.appPassword,
+            token.loginJid,
+          ),
         ]),
       )
     } catch (err) {
