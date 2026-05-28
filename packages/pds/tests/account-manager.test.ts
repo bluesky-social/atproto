@@ -103,14 +103,9 @@ describe('account manager', () => {
 
     await page.ensureTextVisibility('bob.test', 'span')
 
-    await page.ensureTextVisibility('alice.test', 'span', 500).then(
-      () => {
-        throw new Error('Should not be visible')
-      },
-      (err) => {
-        expect(err).toBeInstanceOf(Error)
-      },
-    )
+    await expect(async () => {
+      await page.ensureTextVisibility('alice.test', 'span', 500)
+    }).rejects.toThrow('Waiting for selector')
   })
 
   it('allows changing the password', async () => {
