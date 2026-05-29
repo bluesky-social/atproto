@@ -392,7 +392,7 @@ msgstr "Email"
 #: src/pages/account/(authenticated)/manage/page.tsx:107
 #: src/components/reset-password-request-form.tsx:43
 #: src/components/reset-password-request-form.tsx:47
-#: src/components/forms/input-email-address.tsx:41
+#: src/components/forms/input-email-address.tsx:40
 msgid "Email address"
 msgstr "Adresse email"
 
@@ -416,7 +416,7 @@ msgstr "Envoyer ces instructions par email"
 msgid "Email verified"
 msgstr "Adresse email vérifiée"
 
-#: src/components/forms/input-new-password.tsx:32
+#: src/components/forms/input-new-password.tsx:34
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
@@ -436,7 +436,7 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
-#: src/components/forms/input-new-password.tsx:33
+#: src/components/forms/input-new-password.tsx:35
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
@@ -738,7 +738,7 @@ msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 #: src/pages/account/(authenticated)/manage/page.tsx:134
 #: src/components/sign-up-account-form.tsx:126
 #: src/components/sign-in-form.tsx:179
-#: src/components/forms/input-password.tsx:44
+#: src/components/forms/input-password.tsx:43
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -766,7 +766,7 @@ msgstr "Mot de passe mis à jour"
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
-#: src/components/forms/input-new-password.tsx:34
+#: src/components/forms/input-new-password.tsx:36
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
