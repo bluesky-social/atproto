@@ -11,7 +11,7 @@ import { ErrorDetails } from './error-details.tsx'
 export type { ErrorParser, ParsedError }
 
 export type ErrorCardProps = Override<
-  Omit<AdmonitionProps, 'append' | 'action'>,
+  Omit<AdmonitionProps, 'role' | 'append' | 'action'>,
   {
     error: unknown
     reset?: () => void
@@ -25,7 +25,6 @@ export function ErrorCard({
   parser,
 
   // Admonition
-  role = 'alert',
   children,
   onClick,
   ...props
@@ -52,7 +51,7 @@ export function ErrorCard({
   return (
     <Admonition
       {...props}
-      role={role}
+      role="alert"
       onClick={composeEventHandlers(onClick, () => {
         setClickCount((c) => c + 1)
       })}
