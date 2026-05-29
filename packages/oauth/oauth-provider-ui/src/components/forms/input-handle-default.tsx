@@ -11,6 +11,7 @@ import {
   isValidDomain,
 } from '#/lib/handle.ts'
 import { Override } from '#/lib/util.ts'
+import { Handle } from '../utils/handle.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputHandleProvidedProps = Override<
@@ -77,8 +78,6 @@ export function InputHandleDefault({
   useEffect(() => {
     onHandle?.(handle)
   }, [onHandle, handle])
-
-  const preview = handle ? `@${handle}` : undefined
 
   return (
     <>
@@ -160,8 +159,8 @@ export function InputHandleDefault({
       >
         <Trans>
           Your full username will be:{' '}
-          {preview ? (
-            <strong className="text-text-default">{preview}</strong>
+          {handle ? (
+            <Handle className="text-text-default" handle={handle} />
           ) : (
             <span aria-hidden className="bg-text-light w-24 rounded-md p-2" />
           )}

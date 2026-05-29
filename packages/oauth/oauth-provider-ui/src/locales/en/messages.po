@@ -199,7 +199,7 @@ msgstr "Authorized on {0}"
 msgid "Back"
 msgstr "Back"
 
-#: src/components/forms/input-handle-default.tsx:87
+#: src/components/forms/input-handle-default.tsx:86
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
@@ -592,7 +592,7 @@ msgstr "If you have your own domain, you can use that as your handle. This lets 
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/forms/input-handle-default.tsx:227
+#: src/components/forms/input-handle-default.tsx:226
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -731,7 +731,7 @@ msgstr "Next"
 msgid "Okay"
 msgstr "Okay"
 
-#: src/components/forms/input-handle-default.tsx:92
+#: src/components/forms/input-handle-default.tsx:91
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
@@ -889,7 +889,7 @@ msgstr "Security step required"
 msgid "Select another account"
 msgstr "Select another account"
 
-#: src/components/forms/input-handle-default.tsx:128
+#: src/components/forms/input-handle-default.tsx:127
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -1072,7 +1072,7 @@ msgstr "Type"
 msgid "Type your domain"
 msgstr "Type your domain"
 
-#: src/components/forms/input-handle-default.tsx:99
+#: src/components/forms/input-handle-default.tsx:98
 msgid "Type your username"
 msgstr "Type your username"
 
@@ -1136,7 +1136,7 @@ msgstr "Username or email address"
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/forms/input-handle-default.tsx:222
+#: src/components/forms/input-handle-default.tsx:221
 msgid "Valid"
 msgstr "Valid"
 
@@ -1264,8 +1264,8 @@ msgstr "Your email address has been verified."
 msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
-#. placeholder {0}: preview ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/forms/input-handle-default.tsx:161
+#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
+#: src/components/forms/input-handle-default.tsx:160
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 

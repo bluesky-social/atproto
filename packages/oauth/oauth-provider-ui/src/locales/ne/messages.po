@@ -199,7 +199,7 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:87
+#: src/components/forms/input-handle-default.tsx:86
 msgid "Between {minLength} and {maxLength} characters"
 msgstr ""
 
@@ -582,7 +582,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:227
+#: src/components/forms/input-handle-default.tsx:226
 msgid "Invalid"
 msgstr ""
 
@@ -721,7 +721,7 @@ msgstr ""
 msgid "Okay"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:92
+#: src/components/forms/input-handle-default.tsx:91
 msgid "Only letters, numbers, and hyphens"
 msgstr ""
 
@@ -879,7 +879,7 @@ msgstr ""
 msgid "Select another account"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:128
+#: src/components/forms/input-handle-default.tsx:127
 msgid "Select domain"
 msgstr ""
 
@@ -1062,7 +1062,7 @@ msgstr ""
 msgid "Type your domain"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:99
+#: src/components/forms/input-handle-default.tsx:98
 msgid "Type your username"
 msgstr ""
 
@@ -1126,7 +1126,7 @@ msgstr ""
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:222
+#: src/components/forms/input-handle-default.tsx:221
 msgid "Valid"
 msgstr ""
 
@@ -1254,8 +1254,8 @@ msgstr ""
 msgid "Your email address needs to be verified."
 msgstr ""
 
-#. placeholder {0}: preview ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/forms/input-handle-default.tsx:161
+#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
+#: src/components/forms/input-handle-default.tsx:160
 msgid "Your full username will be: {0}"
 msgstr ""
 
