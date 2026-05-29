@@ -137,7 +137,7 @@ msgstr "Une application sur votre appareil"
 msgid "An error occurred"
 msgstr "Une erreur s'est produite"
 
-#: src/components/utils/error-card.tsx:81
+#: src/components/utils/error-card.tsx:80
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
@@ -864,7 +864,7 @@ msgstr "Réinitialisez votre mot de passe"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:30
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:76
+#: src/components/utils/error-card.tsx:75
 msgid "Retry"
 msgstr "Réessayer"
 

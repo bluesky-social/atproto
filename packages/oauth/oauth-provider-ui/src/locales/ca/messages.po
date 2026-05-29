@@ -137,7 +137,7 @@ msgstr ""
 msgid "An error occurred"
 msgstr ""
 
-#: src/components/utils/error-card.tsx:81
+#: src/components/utils/error-card.tsx:80
 msgid "An unknown error occurred"
 msgstr ""
 
@@ -854,7 +854,7 @@ msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx:30
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:76
+#: src/components/utils/error-card.tsx:75
 msgid "Retry"
 msgstr ""
 
