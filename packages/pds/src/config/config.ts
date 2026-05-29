@@ -69,6 +69,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
+    proxyToDisabled: env.proxyToDisabled ?? false,
   }
 
   const dbLoc = (name: string) => {
@@ -230,6 +231,19 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     }
   }
 
+  let wsocialAppViewCfg: ServerConfig['wsocialAppView'] = null
+  if (env.wsocialAppViewUrl) {
+    assert(
+      env.wsocialAppViewDid,
+      'if wsocial appview service url is configured, must configure its did as well.',
+    )
+    wsocialAppViewCfg = {
+      url: env.wsocialAppViewUrl,
+      did: env.wsocialAppViewDid,
+      cdnUrlPattern: env.wsocialAppViewCdnUrlPattern,
+    }
+  }
+
   let modServiceCfg: ServerConfig['modService'] = null
   if (env.modServiceUrl) {
     assert(
@@ -382,6 +396,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmail: moderationEmailCfg,
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
+    wsocialAppView: wsocialAppViewCfg,
     modService: modServiceCfg,
     reportService: reportServiceCfg,
     redis: redisCfg,
@@ -437,6 +452,7 @@ export type ServerConfig = {
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
   bskyAppView: BksyAppViewConfig | null
+  wsocialAppView: BksyAppViewConfig | null
   modService: ModServiceConfig | null
   reportService: ReportServiceConfig | null
   redis: RedisScratchConfig | null
@@ -469,6 +485,7 @@ export type ServiceConfig = {
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
+  proxyToDisabled: boolean
 }
 
 export type DatabaseConfig = {

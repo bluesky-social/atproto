@@ -216,8 +216,10 @@ export function computeProxyTo(
   req: Request,
   lxm: string,
 ): string {
-  const proxyToHeader = req.header('atproto-proxy')
-  if (proxyToHeader) return proxyToHeader
+  if (!ctx.cfg.service.proxyToDisabled) {
+    const proxyToHeader = req.header('atproto-proxy')
+    if (proxyToHeader) return proxyToHeader
+  }
 
   const service = defaultService(ctx, lxm)
   if (service.serviceInfo) {
@@ -234,8 +236,11 @@ export async function parseProxyInfo(
 ): Promise<{ url: string; did: string }> {
   // /!\ Hot path
 
-  const proxyToHeader = req.header('atproto-proxy')
-  if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
+  if (!ctx.cfg.service.proxyToDisabled) {
+    const proxyToHeader = req.header('atproto-proxy')
+    if (proxyToHeader && !ctx.cfg.service.proxyToDisabled)
+      return parseProxyHeader(ctx, proxyToHeader)
+  }
 
   const { serviceInfo } = defaultService(ctx, lxm)
   if (serviceInfo) return serviceInfo
@@ -278,6 +283,13 @@ export const parseProxyHeader = async (
     proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
   ) {
     return { did, url: ctx.cfg.bskyAppView.url }
+  }
+
+  if (
+    ctx.cfg.wsocialAppView &&
+    proxyTo === `${ctx.cfg.wsocialAppView.did}#wsocial_appview`
+  ) {
+    return { did, url: ctx.cfg.wsocialAppView.url }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -590,6 +602,17 @@ export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoServerUpdateEmail,
 ])
 
+/*
+ * Methods that should go through the w-social App View
+ */
+export const WSOCIAL_METHODS = new Set<string>([
+  ids.AppBskyFeedGetPostThread,
+  ids.AppBskyFeedGetPosts,
+  ids.AppBskyFeedGetTimeline,
+  ids.AppBskyActorGetProfile,
+  ids.AppBskyActorGetProfiles,
+])
+
 const defaultService = (
   ctx: AppContext,
   nsid: string,
@@ -634,11 +657,18 @@ const defaultService = (
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.reportService,
       }
-    default:
-      return {
-        serviceId: 'bsky_appview',
-        serviceInfo: ctx.cfg.bskyAppView,
-      }
+  }
+
+  if (WSOCIAL_METHODS.has(nsid) && ctx.cfg.wsocialAppView) {
+    return {
+      serviceId: 'wsocial_appview',
+      serviceInfo: ctx.cfg.wsocialAppView,
+    }
+  }
+
+  return {
+    serviceId: 'bsky_appview',
+    serviceInfo: ctx.cfg.bskyAppView,
   }
 }
 

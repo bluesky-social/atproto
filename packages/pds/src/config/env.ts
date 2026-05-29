@@ -19,6 +19,7 @@ export function readEnv() {
     maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+    proxyToDisabled: envBool('PDS_PROXY_TO_DISABLED'),
 
     // hCaptcha
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),
@@ -106,6 +107,9 @@ export function readEnv() {
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
+    wsocialAppViewUrl: envStr('PDS_WSOCIAL_APP_VIEW_URL'),
+    wsocialAppViewDid: envStr('PDS_WSOCIAL_APP_VIEW_DID'),
+    wsocialAppViewCdnUrlPattern: envStr('PDS_WSOCIAL_APP_VIEW_CDN_URL_PATTERN'),
 
     // mod service
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),
