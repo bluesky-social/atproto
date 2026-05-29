@@ -41,9 +41,9 @@ const PADDING_SIZES = {
     lg: 'px-8 py-3',
   },
   padded: {
-    sm: 'p-1 px-2',
-    md: 'p-2',
-    lg: 'p-3',
+    sm: 'py-1 px-2',
+    md: 'py-2 px-3',
+    lg: 'py-3 px-4',
   },
   circle: {
     sm: 'size-6',

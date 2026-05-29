@@ -5,6 +5,7 @@ import {
   EnvelopeIcon,
   Icon,
   LockIcon,
+  ShieldWarningIcon,
 } from '@phosphor-icons/react'
 import { ReactNode } from 'react'
 import { Button, ButtonProps } from '#/components/forms/button'
@@ -35,6 +36,7 @@ export function Page() {
       <VerifyEmailRow />
       <UpdateEmailRow />
       <UpdatePasswordRow />
+      <hr className="border-none" aria-hidden />
       <UpdateHandleRow />
     </div>
   )
@@ -52,6 +54,7 @@ function VerifyEmailRow() {
   return (
     <Admonition
       role="info"
+      icon={ShieldWarningIcon}
       action={
         <VerifyEmailDialog
           email={email}
@@ -75,7 +78,7 @@ function VerifyEmailRow() {
   )
 }
 
-function UpdateEmailRow() {
+function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const { sub, email } = account
 
@@ -100,14 +103,14 @@ function UpdateEmailRow() {
         await verifyConfirm.mutateAsync({ sub, email, token })
       }}
     >
-      <Row icon={EnvelopeIcon} value={email}>
+      <Row {...props} icon={EnvelopeIcon} value={email}>
         <Trans>Email address</Trans>
       </Row>
     </UpdateEmailDialog>
   )
 }
 
-function UpdatePasswordRow() {
+function UpdatePasswordRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const { email } = account
 
@@ -127,14 +130,14 @@ function UpdatePasswordRow() {
         await resetPasswordConfirm.mutateAsync({ token, password })
       }}
     >
-      <Row icon={LockIcon}>
+      <Row {...props} icon={LockIcon}>
         <Trans>Password</Trans>
       </Row>
     </UpdatePasswordDialog>
   )
 }
 
-function UpdateHandleRow() {
+function UpdateHandleRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const { availableUserDomains = [] } = useCustomizationData()
   const { sub, preferred_username: handle } = account
@@ -150,7 +153,7 @@ function UpdateHandleRow() {
         await updateHandle.mutateAsync({ sub, handle })
       }}
     >
-      <Row icon={AtIcon} value={<Handle handle={handle} />}>
+      <Row {...props} icon={AtIcon} value={<Handle handle={handle} />}>
         <Trans>Username</Trans>
       </Row>
     </UpdateHandleDialog>
@@ -175,7 +178,7 @@ function Row({
   ...props
 }: RowProps) {
   return (
-    <Button {...props} className={`${className} gap-2`}>
+    <Button shape="padded" {...props} className={`gap-2 ${className}`}>
       <Icon aria-hidden className="size-5 shrink-0 grow-0" />
       <span className="grow-1 truncate text-left font-medium">{children}</span>
       {value != null && (

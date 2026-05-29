@@ -2,7 +2,7 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
 import type { ActiveAccountSession } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
-import { Action, Admonition } from '#/components/utils/admonition.tsx'
+import { AdmonitionAction, Admonition } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
@@ -26,9 +26,9 @@ export function Page() {
       <Admonition
         role="status"
         action={
-          <Action onClick={() => refetch()}>
+          <AdmonitionAction onClick={() => refetch()}>
             <Trans>Retry</Trans>
-          </Action>
+          </AdmonitionAction>
         }
       >
         <Trans>Failed to load connected apps</Trans>

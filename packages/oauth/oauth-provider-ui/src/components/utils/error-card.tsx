@@ -3,7 +3,7 @@ import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { useEffect, useMemo, useState } from 'react'
 import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
-import { Action, Admonition } from './admonition.tsx'
+import { AdmonitionAction, Admonition } from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
 
 export type { ErrorParser, ParsedError }
@@ -52,9 +52,9 @@ export function ErrorCard({ error, reset, parser, className }: ErrorCardProps) {
       }
       action={
         reset != null && (
-          <Action onClick={() => reset()}>
+          <AdmonitionAction onClick={() => reset()}>
             <Trans>Retry</Trans>
-          </Action>
+          </AdmonitionAction>
         )
       }
     >

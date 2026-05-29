@@ -375,12 +375,12 @@ msgstr "DNS"
 msgid "Don't see an email?"
 msgstr "Don't see an email?"
 
-#: src/components/update-handle-dialog.tsx:138
+#: src/components/update-handle-dialog.tsx:132
 msgid "e.g. <0>alice.com</0>"
 msgstr "e.g. <0>alice.com</0>"
 
 #. placeholder {0}: domains[0]
-#: src/components/update-handle-dialog.tsx:123
+#: src/components/update-handle-dialog.tsx:121
 msgid "e.g. <0>alice{0}</0>"
 msgstr "e.g. <0>alice{0}</0>"
 
@@ -389,7 +389,7 @@ msgstr "e.g. <0>alice{0}</0>"
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:104
+#: src/pages/account/(authenticated)/manage/page.tsx:107
 #: src/components/reset-password-request-form.tsx:43
 #: src/components/reset-password-request-form.tsx:47
 #: src/components/forms/input-email-address.tsx:51
@@ -735,7 +735,7 @@ msgstr "Okay"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:131
+#: src/pages/account/(authenticated)/manage/page.tsx:134
 #: src/components/sign-up-account-form.tsx:126
 #: src/components/sign-in-form.tsx:179
 #: src/components/forms/input-password.tsx:43
@@ -1116,15 +1116,15 @@ msgstr "Upload files"
 msgid "URL"
 msgstr "URL"
 
-#: src/components/update-handle-dialog.tsx:121
+#: src/components/update-handle-dialog.tsx:119
 msgid "Use a default username"
 msgstr "Use a default username"
 
-#: src/components/update-handle-dialog.tsx:136
+#: src/components/update-handle-dialog.tsx:130
 msgid "Use a domain name I own"
 msgstr "Use a domain name I own"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:154
+#: src/pages/account/(authenticated)/manage/page.tsx:157
 msgid "Username"
 msgstr "Username"
 
@@ -1161,7 +1161,7 @@ msgstr "Verification method"
 msgid "Verify and Save"
 msgstr "Verify and Save"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:68
+#: src/pages/account/(authenticated)/manage/page.tsx:71
 #: src/components/update-email-dialog.tsx:103
 msgctxt "verify email"
 msgid "Verify now"
@@ -1260,7 +1260,7 @@ msgstr "Your email address has been successfully updated and needs to be verifie
 msgid "Your email address has been verified."
 msgstr "Your email address has been verified."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:73
+#: src/pages/account/(authenticated)/manage/page.tsx:76
 msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
