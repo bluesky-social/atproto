@@ -1,6 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
-import { ChangeEvent, useCallback, useState } from 'react'
+import { composeRefs } from '@radix-ui/react-compose-refs'
+import { ChangeEvent, useCallback, useRef, useState } from 'react'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
 
@@ -20,16 +21,17 @@ export function InputEmailAddress({
   autoCorrect = 'off',
   dir = 'auto',
   icon = <AtIcon aria-hidden weight="bold" className="w-5" />,
-  onBlur,
   onChange,
   pattern = '^[^@]+@[^@]+\\.[^@]+$',
   spellCheck = 'false',
   value,
   defaultValue = value,
   title,
+  ref,
   ...props
 }: InputEmailAddressProps) {
   const { t } = useLingui()
+  const inputRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState<string>(
     typeof defaultValue === 'string' ? defaultValue : '',
   )
@@ -49,6 +51,7 @@ export function InputEmailAddress({
     <InputText
       {...props}
       title={title ?? t`Email address`}
+      ref={composeRefs(ref, inputRef)}
       type="email"
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}
@@ -59,7 +62,6 @@ export function InputEmailAddress({
       autoComplete={autoComplete}
       value={email}
       onChange={doChange}
-      onBlur={onBlur}
     />
   )
 }

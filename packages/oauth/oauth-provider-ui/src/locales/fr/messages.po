@@ -392,7 +392,7 @@ msgstr "Email"
 #: src/pages/account/(authenticated)/manage/page.tsx:107
 #: src/components/reset-password-request-form.tsx:43
 #: src/components/reset-password-request-form.tsx:47
-#: src/components/forms/input-email-address.tsx:51
+#: src/components/forms/input-email-address.tsx:53
 msgid "Email address"
 msgstr "Adresse email"
 

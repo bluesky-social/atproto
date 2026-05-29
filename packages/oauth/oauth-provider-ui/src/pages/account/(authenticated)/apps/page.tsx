@@ -1,7 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { ActiveOAuthSession } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
-import { AdmonitionAction, Admonition } from '#/components/utils/admonition.tsx'
+import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'

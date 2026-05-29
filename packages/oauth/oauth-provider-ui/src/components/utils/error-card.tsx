@@ -3,7 +3,7 @@ import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { useEffect, useMemo, useState } from 'react'
 import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
-import { AdmonitionAction, Admonition } from './admonition.tsx'
+import { Admonition, AdmonitionAction } from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
 
 export type { ErrorParser, ParsedError }
