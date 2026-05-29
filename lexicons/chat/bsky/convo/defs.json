@@ -344,47 +344,47 @@
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
       "required": [
-        "name",
+        "createdAt",
         "lockStatus",
         "memberCount",
         "memberLimit",
-        "createdAt"
+        "name"
       ],
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "joinLink": {
+          "type": "ref",
+          "ref": "chat.bsky.group.defs#joinLinkView"
+        },
+        "joinRequestCount": {
+          "type": "integer",
+          "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
+        },
+        "lockStatus": {
+          "description": "The lock status of the conversation.",
+          "type": "ref",
+          "ref": "#convoLockStatus"
+        },
+        "memberCount": {
+          "type": "integer",
+          "description": "The total number of members in the group conversation."
+        },
+        "memberLimit": {
+          "type": "integer",
+          "description": "The maximum number of members allowed in the group conversation."
+        },
         "name": {
           "type": "string",
           "description": "The display name of the group conversation.",
           "maxGraphemes": 128,
           "maxLength": 1280
         },
-        "memberCount": {
-          "type": "integer",
-          "description": "The total number of members in the group conversation."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "datetime"
-        },
-        "joinRequestCount": {
-          "type": "integer",
-          "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
-        },
         "unreadJoinRequestCount": {
           "type": "integer",
           "description": "The number of unread join requests for the group conversation. Only present for the owner."
-        },
-        "joinLink": {
-          "type": "ref",
-          "ref": "chat.bsky.group.defs#joinLinkView"
-        },
-        "memberLimit": {
-          "type": "integer",
-          "description": "The maximum number of members allowed in the group conversation."
-        },
-        "lockStatus": {
-          "description": "The lock status of the conversation.",
-          "type": "ref",
-          "ref": "#convoLockStatus"
         }
       }
     },
