@@ -1,25 +1,40 @@
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
+import { composeEventHandlers } from '@radix-ui/primitive'
 import { useEffect, useMemo, useState } from 'react'
 import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
-import { Admonition, AdmonitionAction } from './admonition.tsx'
+import { Override } from '#/lib/util.ts'
+import { Admonition, AdmonitionAction, AdmonitionProps } from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
 
 export type { ErrorParser, ParsedError }
 
-export type ErrorCardProps = {
-  className?: string
-  error: unknown
-  reset?: () => void
-  parser?: ErrorParser
-}
+export type ErrorCardProps = Override<
+  Omit<AdmonitionProps, 'append' | 'action'>,
+  {
+    error: unknown
+    reset?: () => void
+    parser?: ErrorParser
+  }
+>
 
-export function ErrorCard({ error, reset, parser, className }: ErrorCardProps) {
+export function ErrorCard({
+  error,
+  reset,
+  parser,
+
+  // Admonition
+  role = 'alert',
+  children,
+  onClick,
+  ...props
+}: ErrorCardProps) {
   const { _ } = useLingui()
-  const [inputCount, setInputCount] = useState(0)
-  // Every 5th input will toggle showing the details
-  const showDetails = inputCount > 8
+  const [clickCount, setClickCount] = useState(0)
+
+  // Every 5th click; toggle showing the details
+  const showDetails = ((clickCount / 5) | 0) % 2 === 1
 
   const parsed = useMemo<ParsedError>(
     () => parser?.(error) ?? parseError(error),
@@ -30,25 +45,30 @@ export function ErrorCard({ error, reset, parser, className }: ErrorCardProps) {
     // For debugging purposes
     console.warn('Displayed error:', parsed)
 
-    // Reset the input count when the error changes
-    setInputCount(0)
+    // Reset the click count when the error changes
+    setClickCount(0)
   }, [parsed])
 
   return (
     <Admonition
-      role="alert"
-      className={className}
-      onClick={() => setInputCount((c) => c + 1)}
+      {...props}
+      role={role}
+      onClick={composeEventHandlers(onClick, () => {
+        setClickCount((c) => c + 1)
+      })}
       append={
-        showDetails && (
-          <ErrorDetails
-            name={parsed.name}
-            code={parsed.code}
-            message={parsed.message}
-            payload={parsed.payload}
-            stack={parsed.stack}
-          />
-        )
+        <>
+          {children}
+          {showDetails && (
+            <ErrorDetails
+              name={parsed.name}
+              code={parsed.code}
+              message={parsed.message}
+              payload={parsed.payload}
+              stack={parsed.stack}
+            />
+          )}
+        </>
       }
       action={
         reset != null && (
