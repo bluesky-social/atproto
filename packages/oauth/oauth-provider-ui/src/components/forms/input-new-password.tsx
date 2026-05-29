@@ -42,15 +42,12 @@ export function InputNewPassword({
         onPassword?.(event.target.validity.valid ? value : undefined)
       })}
       autoComplete={autoComplete}
-      bellow={
-        <>
-          <PasswordStrengthMeter password={value} />
-          <PasswordStrengthLabel
-            className="grow-1 text-text-light min-w-max text-xs"
-            password={value}
-          />
-        </>
-      }
-    />
+    >
+      <PasswordStrengthMeter password={value} />
+      <PasswordStrengthLabel
+        className="grow-1 text-text-light min-w-max text-xs"
+        password={value}
+      />
+    </InputPassword>
   )
 }

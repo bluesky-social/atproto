@@ -157,17 +157,16 @@ export function InputHandleDefault({
             </select>
           )
         }
-        bellow={
-          <Trans>
-            Your full username will be:{' '}
-            {preview ? (
-              <strong className="text-text-default">{preview}</strong>
-            ) : (
-              <span aria-hidden className="bg-text-light w-24 rounded-md p-2" />
-            )}
-          </Trans>
-        }
-      />
+      >
+        <Trans>
+          Your full username will be:{' '}
+          {preview ? (
+            <strong className="text-text-default">{preview}</strong>
+          ) : (
+            <span aria-hidden className="bg-text-light w-24 rounded-md p-2" />
+          )}
+        </Trans>
+      </InputText>
     </>
   )
 }

@@ -582,7 +582,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr "言語選択"
 
-#: src/components/forms/input-handle-default.tsx:228
+#: src/components/forms/input-handle-default.tsx:227
 msgid "Invalid"
 msgstr "無効"
 
@@ -1126,7 +1126,7 @@ msgstr "ユーザー名またはメールアドレス"
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:223
+#: src/components/forms/input-handle-default.tsx:222
 msgid "Valid"
 msgstr "有効"
 

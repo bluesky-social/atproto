@@ -592,7 +592,7 @@ msgstr "If you have your own domain, you can use that as your handle. This lets 
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/forms/input-handle-default.tsx:228
+#: src/components/forms/input-handle-default.tsx:227
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -1136,7 +1136,7 @@ msgstr "Username or email address"
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/forms/input-handle-default.tsx:223
+#: src/components/forms/input-handle-default.tsx:222
 msgid "Valid"
 msgstr "Valid"
 
