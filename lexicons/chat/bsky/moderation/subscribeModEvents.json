@@ -27,7 +27,8 @@
             "#eventGroupChatJoinRequestRejected",
             "#eventChatAccepted",
             "#eventGroupChatMemberLeft",
-            "#eventGroupChatUpdated"
+            "#eventGroupChatUpdated",
+            "#eventRateLimitExceeded"
           ]
         }
       },
@@ -534,6 +535,24 @@
             "join_link_settings_changed"
           ]
         }
+      }
+    },
+    "eventRateLimitExceeded": {
+      "type": "object",
+      "description": "Fired when a user exceeds a rate limit.",
+      "required": ["actorDid", "createdAt", "endpoint", "rev"],
+      "properties": {
+        "actorDid": {
+          "description": "The DID of the user who hit the rate limit.",
+          "type": "string",
+          "format": "did"
+        },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "endpoint": {
+          "description": "The NSID of the endpoint that was rate limited.",
+          "type": "string"
+        },
+        "rev": { "type": "string" }
       }
     }
   }
