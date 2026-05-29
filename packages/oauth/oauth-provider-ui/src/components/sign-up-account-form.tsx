@@ -115,7 +115,7 @@ export function SignUpAccountForm({
           name="email"
           enterKeyHint="next"
           required
-          defaultValue={email}
+          value={email}
           onEmail={(email) => {
             setEmail(email)
             formRef.current?.reset()
@@ -128,7 +128,7 @@ export function SignUpAccountForm({
           name="password"
           enterKeyHint="next"
           required
-          password={password}
+          value={password}
           onPassword={(value) => {
             setPassword(value)
             formRef.current?.reset()

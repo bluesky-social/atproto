@@ -62,7 +62,7 @@ export function ResetPasswordConfirmForm({
           name="password"
           enterKeyHint="done"
           required
-          password={password}
+          value={password}
           onPassword={setPassword}
         />
       </FormField>

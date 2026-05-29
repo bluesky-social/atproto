@@ -1,4 +1,5 @@
 import { useLingui } from '@lingui/react/macro'
+import { composeEventHandlers } from '@radix-ui/primitive'
 import { useState } from 'react'
 import { MIN_PASSWORD_LENGTH } from '#/lib/password.ts'
 import { Override } from '#/lib/util.ts'
@@ -7,24 +8,25 @@ import { PasswordStrengthMeter } from '../utils/password-strength-meter.tsx'
 import { InputPassword, InputPasswordProps } from './input-password.tsx'
 
 export type InputNewPasswordProps = Override<
-  Omit<InputPasswordProps, 'value' | 'defaultValue' | 'onChange'>,
+  Omit<InputPasswordProps, 'defaultValue'>,
   {
-    password?: string
+    value?: string
     onPassword?: (password: undefined | string) => void
   }
 >
 
 export function InputNewPassword({
-  password: passwordInit = '',
+  value: valueInit = '',
   onPassword,
 
   // InputPasswordProps
   autoComplete = 'new-password',
   minLength = MIN_PASSWORD_LENGTH,
+  onChange,
   ...props
 }: InputNewPasswordProps) {
   const { t } = useLingui()
-  const [value, setValue] = useState<string>(passwordInit)
+  const [value, setValue] = useState<string>(valueInit)
 
   return (
     <InputPassword
@@ -34,11 +36,11 @@ export function InputNewPassword({
       title={t`Password with at least ${MIN_PASSWORD_LENGTH} characters`}
       minLength={minLength}
       value={value}
-      onChange={(event) => {
+      onChange={composeEventHandlers(onChange, (event) => {
         const { value } = event.target
         setValue(value)
         onPassword?.(event.target.validity.valid ? value : undefined)
-      }}
+      })}
       autoComplete={autoComplete}
       bellow={
         <>
