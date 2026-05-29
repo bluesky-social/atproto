@@ -14,7 +14,7 @@ enum VerificationMethod {
 export type InputHandleCustomInstructionsProps = Override<
   Omit<JSX.IntrinsicElements['div'], 'children'>,
   {
-    domain?: string
+    handle?: string
     did: string
   }
 >
@@ -32,7 +32,7 @@ type InstructionsMethod = {
 }
 
 export function InputHandleCustomInstructions({
-  domain,
+  handle,
   did,
 
   // div
@@ -51,8 +51,8 @@ export function InputHandleCustomInstructions({
         values: [
           {
             label: t`Host`,
-            value: `_atproto.${domain ?? t`<your-domain>`}`,
-            copyable: domain != null,
+            value: `_atproto.${handle ?? t`<your-domain>`}`,
+            copyable: handle != null,
           },
           { label: t`Type`, value: 'TXT' },
           { label: t`Value`, value: `did=${did}` },
@@ -66,14 +66,14 @@ export function InputHandleCustomInstructions({
         values: [
           {
             label: t`URL`,
-            value: `https://${domain ?? t`<your-domain>`}/.well-known/atproto-did`,
-            copyable: domain != null,
+            value: `https://${handle ?? t`<your-domain>`}/.well-known/atproto-did`,
+            copyable: handle != null,
           },
           { label: t`File contents`, value: did },
         ],
       },
     ],
-    [domain, did],
+    [handle, did],
   )
 
   const currentInstructions: InstructionsMethod =
@@ -84,18 +84,18 @@ export function InputHandleCustomInstructions({
     'https://bsky.social/about/blog/4-28-2023-domain-handle-tutorial'
 
   const troubleshootHref = useMemo(() => {
-    if (!domain) return undefined
+    if (!handle) return undefined
     const url = new URL('https://bsky-debug.app/handle')
-    url.searchParams.set('handle', domain)
+    url.searchParams.set('handle', handle)
     return url.toString()
-  }, [domain])
+  }, [handle])
 
   const mailtoHref = useMemo(() => {
-    if (!domain) return undefined
+    if (!handle) return undefined
 
     const instructionsText = t`Hello,
 
-To associate the domain "${domain}" with my AT Protocol identity (${did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.
+To associate the domain "${handle}" with my AT Protocol identity (${did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.
 
 ${instructionsMethods
   .map(({ label, message, values }) => {
@@ -109,7 +109,7 @@ A detailed tutorial can be found here: ${tutorialHref}
 Thank you.`
 
     return `mailto:?body=${encodeURIComponent(instructionsText)}`
-  }, [domain, tutorialHref, troubleshootHref, instructionsMethods])
+  }, [handle, tutorialHref, troubleshootHref, instructionsMethods])
 
   return (
     <div {...props}>

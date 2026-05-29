@@ -319,7 +319,10 @@
                   { status: 400 },
                 )
               }
-              return Response.json({ tokenRequired: true })
+
+              const tokenRequired = accounts.get(sub)?.email_verified === true
+
+              return Response.json({ tokenRequired })
             }
             case `POST ${API_ENDPOINT_PREFIX}/update-email-confirm`: {
               const { sub, token, email } = JSON.parse(init.body)
@@ -333,7 +336,10 @@
                   { status: 400 },
                 )
               }
-              if (token !== 'AAAAA-AAAAA') {
+
+              const tokenRequired = accounts.get(sub)?.email_verified === true
+
+              if (tokenRequired && token !== 'AAAAA-AAAAA') {
                 return Response.json(
                   {
                     error: 'invalid_request',

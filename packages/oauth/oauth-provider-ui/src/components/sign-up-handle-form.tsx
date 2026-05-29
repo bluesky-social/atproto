@@ -5,7 +5,7 @@ import {
   FormCardAsync,
   FormCardAsyncProps,
 } from '#/components/forms/form-card-async.tsx'
-import { InputHandleProvided } from '#/components/forms/input-handle-provided'
+import { InputHandleDefault } from '#/components/forms/input-handle-default'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { Override } from '#/lib/util.ts'
 
@@ -64,7 +64,7 @@ export function SignUpHandleForm({
       invalid={invalid || !handleInit}
       append={children}
     >
-      <InputHandleProvided
+      <InputHandleDefault
         handle={handleInit}
         onHandle={onHandle}
         domains={domains}

@@ -1,7 +1,7 @@
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
 import { Action, Admonition } from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
@@ -10,23 +10,16 @@ export type { ErrorParser, ParsedError }
 
 export type ErrorCardProps = {
   className?: string
-  children?: ReactNode
   error: unknown
   reset?: () => void
   parser?: ErrorParser
 }
 
-export function ErrorCard({
-  error,
-  reset,
-  parser,
-  className,
-  children,
-}: ErrorCardProps) {
+export function ErrorCard({ error, reset, parser, className }: ErrorCardProps) {
   const { _ } = useLingui()
   const [inputCount, setInputCount] = useState(0)
   // Every 5th input will toggle showing the details
-  const showDetails = ((inputCount / 5) | 0) % 2 === 1
+  const showDetails = inputCount > 8
 
   const parsed = useMemo<ParsedError>(
     () => parser?.(error) ?? parseError(error),
@@ -46,7 +39,6 @@ export function ErrorCard({
       role="alert"
       className={className}
       onClick={() => setInputCount((c) => c + 1)}
-      title={_(parsed.description ?? msg`An unknown error occurred`)}
       append={
         showDetails && (
           <ErrorDetails
@@ -66,7 +58,7 @@ export function ErrorCard({
         )
       }
     >
-      {children}
+      {_(parsed.description ?? msg`An unknown error occurred`)}
     </Admonition>
   )
 }

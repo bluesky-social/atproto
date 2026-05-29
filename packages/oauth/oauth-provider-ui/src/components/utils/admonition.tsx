@@ -39,7 +39,7 @@ const icons: Record<Variant, Icon> = {
   error: ProhibitIcon,
 }
 
-const cardColors: Record<Variant, string> = {
+const cardColors: Record<Variant, string | string[]> = {
   // @ts-expect-error
   __proto__: null,
 
@@ -101,10 +101,12 @@ export function Card({
       className={clsx(
         'flex items-start space-x-2',
         'rounded-md py-3 pl-3 pr-4',
-        'border-contrast-25 dark:border-contrast-50 border',
-        'shadow-contrast-500/20 dark:shadow-contrast-0/50 shadow-md',
+
+        // Coloring
         'text-gray-900 dark:text-gray-100',
+        'border',
         cardColors[variant],
+
         className,
       )}
       role={role}
@@ -149,7 +151,7 @@ export function Text({ children }: { children: ReactNode }) {
 }
 
 export function Actions({ children }: { children: ReactNode }) {
-  return <div className="-my-1 ml-auto flex-shrink-0">{children}</div>
+  return <div className="-my-0.5 ml-auto flex-shrink-0">{children}</div>
 }
 
 export function Action({

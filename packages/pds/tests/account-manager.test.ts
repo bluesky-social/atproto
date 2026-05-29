@@ -145,7 +145,7 @@ describe('account manager', () => {
     await page.ensureNotification('Réinitialisation du mot de passe réussie')
   })
 
-  it('allows validating the email address', async () => {
+  it('allows verifying the email address', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
     await page.goto(new URL('/account', network.pds.url))
@@ -154,7 +154,9 @@ describe('account manager', () => {
 
     await page.clickOnText('Compte utilisateur', 'a')
 
-    await page.clickOnText('Vérifier votre adresse email')
+    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
+
+    await page.clickOnText('Vérifier')
 
     using sendConfirmEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
@@ -199,7 +201,7 @@ describe('account manager', () => {
 
     await page.waitForNetworkIdle()
 
-    await page.ensureTextVisibility('@bob-renamed.test', 'span')
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
   })
 
   it('allows changing the email address', async () => {
@@ -211,7 +213,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Compte utilisateur', 'a')
 
-    await page.clickOnText('Email')
+    await page.clickOnText('Adresse email')
 
     using sendUpdateEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
@@ -238,9 +240,10 @@ describe('account manager', () => {
     const codeInput = await page.typeInInput('code', updateParams.token)
     codeInput.press('Enter')
 
-    await page.waitForNetworkIdle()
-
     await page.ensureNotification("Modification de l'adresse email réussie")
+
+    // The email needs to be verified again
+    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
   })
 
   it('allows signing out & signing back in', async () => {
@@ -265,13 +268,38 @@ describe('account manager', () => {
     await page.ensureTextVisibility('bob-renamed.test', 'span')
   })
 
-  it('remembered the previous sign-in', async () => {
+  it('does not ask for a token when changing a non-verified email', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
     await page.goto(new URL('/account', network.pds.url))
 
     await page.assertTitle('Mon compte Atmosphère')
 
-    await page.ensureTextVisibility('bob-renamed.test', 'span')
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText('Adresse email')
+
+    using sendUpdateEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    const emailInput = await page.typeInInput(
+      'email',
+      'bob-new-email@example.com',
+    )
+    emailInput.press('Enter')
+
+    await page.waitForNetworkIdle()
+
+    expect(sendUpdateEmailMock).not.toHaveBeenCalled()
+
+    await page.clickOnText('Plus tard')
+
+    await page.ensureNotification("Modification de l'adresse email réussie")
+
+    // The email needs to be verified again
+    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
   })
 })

@@ -38,8 +38,6 @@ export function VerifyEmailConfirmForm({
         if (token) await onSubmit({ token })
       }}
     >
-      {children}
-
       <FormField label={<Trans>Verification code</Trans>}>
         <InputToken
           name="code"
@@ -52,6 +50,8 @@ export function VerifyEmailConfirmForm({
           }}
         />
       </FormField>
+
+      {children}
     </FormCardAsync>
   )
 }

@@ -36,7 +36,7 @@ export type InputHandleProvidedProps = Override<
   }
 >
 
-export function InputHandleProvided({
+export function InputHandleDefault({
   domains: availableDomains,
   handle: handleInit,
   onHandle,

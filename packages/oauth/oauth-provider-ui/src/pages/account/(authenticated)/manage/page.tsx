@@ -4,14 +4,15 @@ import {
   CaretRightIcon,
   EnvelopeIcon,
   Icon,
-  KeyIcon,
-  ShieldCheckIcon,
+  LockIcon,
 } from '@phosphor-icons/react'
 import { ReactNode } from 'react'
 import { Button, ButtonProps } from '#/components/forms/button'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
+import { Admonition } from '#/components/utils/admonition'
+import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
@@ -20,18 +21,18 @@ import {
   useUpdateEmailRequest,
   useVerifyEmailConfirm,
   useVerifyEmailRequest,
-} from '#/data/email'
+} from '#/data/email.ts'
 import { useUpdateHandle } from '#/data/handle.ts'
 import {
   useResetPasswordConfirm,
   useResetPasswordRequest,
 } from '#/data/password.ts'
-import { Override } from '#/lib/util'
+import { Override } from '#/lib/util.ts'
 
 export function Page() {
   return (
     <div className="flex flex-col gap-2">
-      <VerifyEmailRow bordered color="info" />
+      <VerifyEmailRow />
       <UpdateEmailRow />
       <UpdatePasswordRow />
       <UpdateHandleRow />
@@ -39,7 +40,7 @@ export function Page() {
   )
 }
 
-function VerifyEmailRow(props: ButtonProps) {
+function VerifyEmailRow() {
   const { account } = useAuthenticatedSession()
   const { sub, email, email_verified } = account
 
@@ -49,30 +50,38 @@ function VerifyEmailRow(props: ButtonProps) {
   if (!email || email_verified) return null
 
   return (
-    <VerifyEmailDialog
-      email={email}
-      requestPending={verifyRequest.isPending}
-      confirmPending={verifyConfirm.isPending}
-      onRequest={async () => {
-        await verifyRequest.mutateAsync({ sub })
-      }}
-      onConfirm={async ({ token }) => {
-        await verifyConfirm.mutateAsync({ sub, token, email })
-      }}
+    <Admonition
+      role="info"
+      action={
+        <VerifyEmailDialog
+          email={email}
+          requestPending={verifyRequest.isPending}
+          confirmPending={verifyConfirm.isPending}
+          onRequest={async () => {
+            await verifyRequest.mutateAsync({ sub })
+          }}
+          onConfirm={async ({ token }) => {
+            await verifyConfirm.mutateAsync({ sub, token, email })
+          }}
+        >
+          <Button size="sm" color="info">
+            <Trans context="verify email">Verify now</Trans>
+          </Button>
+        </VerifyEmailDialog>
+      }
     >
-      <Row icon={ShieldCheckIcon} {...props}>
-        <Trans>Verify your email</Trans>
-      </Row>
-    </VerifyEmailDialog>
+      <Trans>Your email address needs to be verified.</Trans>
+    </Admonition>
   )
 }
 
-function UpdateEmailRow(props: ButtonProps) {
+function UpdateEmailRow() {
   const { account } = useAuthenticatedSession()
   const { sub, email } = account
 
   const updateRequest = useUpdateEmailRequest()
   const updateConfirm = useUpdateEmailConfirm()
+  const verifyConfirm = useVerifyEmailConfirm()
 
   if (!email) return null
 
@@ -82,20 +91,23 @@ function UpdateEmailRow(props: ButtonProps) {
       requestPending={updateRequest.isPending}
       confirmPending={updateConfirm.isPending}
       onRequest={async () => {
-        await updateRequest.mutateAsync({ sub })
+        return updateRequest.mutateAsync({ sub })
       }}
       onConfirm={async ({ email, token }) => {
-        await updateConfirm.mutateAsync({ sub, token, email })
+        await updateConfirm.mutateAsync({ sub, email, token })
+      }}
+      onVerify={async ({ email, token }) => {
+        await verifyConfirm.mutateAsync({ sub, email, token })
       }}
     >
-      <Row icon={EnvelopeIcon} value={email} {...props}>
-        <Trans>Email</Trans>
+      <Row icon={EnvelopeIcon} value={email}>
+        <Trans>Email address</Trans>
       </Row>
     </UpdateEmailDialog>
   )
 }
 
-function UpdatePasswordRow(props: ButtonProps) {
+function UpdatePasswordRow() {
   const { account } = useAuthenticatedSession()
   const { email } = account
 
@@ -115,14 +127,14 @@ function UpdatePasswordRow(props: ButtonProps) {
         await resetPasswordConfirm.mutateAsync({ token, password })
       }}
     >
-      <Row icon={KeyIcon} {...props}>
+      <Row icon={LockIcon}>
         <Trans>Password</Trans>
       </Row>
     </UpdatePasswordDialog>
   )
 }
 
-function UpdateHandleRow(props: ButtonProps) {
+function UpdateHandleRow() {
   const { account } = useAuthenticatedSession()
   const { availableUserDomains = [] } = useCustomizationData()
   const { sub, preferred_username: handle } = account
@@ -138,7 +150,7 @@ function UpdateHandleRow(props: ButtonProps) {
         await updateHandle.mutateAsync({ sub, handle })
       }}
     >
-      <Row icon={AtIcon} value={handle ? `@${handle}` : undefined} {...props}>
+      <Row icon={AtIcon} value={<Handle handle={handle} />}>
         <Trans>Username</Trans>
       </Row>
     </UpdateHandleDialog>
@@ -159,16 +171,17 @@ function Row({
 
   // ButtonProps
   children,
+  className = '',
   ...props
 }: RowProps) {
   return (
-    <Button {...props}>
+    <Button {...props} className={`${className} gap-2`}>
       <Icon aria-hidden className="size-5 shrink-0 grow-0" />
-      <span className="grow-1 truncate pl-4 text-left font-medium">
-        {children}
-      </span>
+      <span className="grow-1 truncate text-left font-medium">{children}</span>
       {value != null && (
-        <span className="min-w-0 flex-1 truncate text-right">{value}</span>
+        <span className="hidden min-w-0 flex-1 truncate text-right text-sm sm:inline">
+          {value}
+        </span>
       )}
       <CaretRightIcon aria-hidden className="size-4 shrink-0" />
     </Button>

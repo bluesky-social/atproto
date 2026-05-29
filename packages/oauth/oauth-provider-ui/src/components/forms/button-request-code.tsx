@@ -12,9 +12,8 @@ export function ButtonRequestCode({
   ...props
 }: ButtonRequestCodeProps) {
   return (
-    <ButtonCooldown {...props}>
-      <PaperPlaneTiltIcon aria-hidden className="mr-2" weight="bold" />
-      <span className="flex-1 truncate">{children}</span>
+    <ButtonCooldown idleIcon={PaperPlaneTiltIcon} {...props}>
+      <span className="truncate">{children}</span>
     </ButtonCooldown>
   )
 }

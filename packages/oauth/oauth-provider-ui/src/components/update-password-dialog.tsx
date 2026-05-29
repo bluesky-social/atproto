@@ -42,18 +42,17 @@ export function UpdatePasswordDialog({
     <DialogSimple
       trigger={children}
       title={t`Change your password`}
+      description={
+        <Trans>
+          To change your password, you'll need to enter a security code sent to
+          your email.
+        </Trans>
+      }
       open={open}
       onOpenChange={setOpen}
     >
       {state === UpdatePasswordDialogState.Request ? (
         <div className="align-stretch flex flex-col gap-4">
-          <p>
-            <Trans>
-              If you want to change your password, we will send you a code to
-              verify that this is your account.
-            </Trans>
-          </p>
-
           <ButtonRequestCode
             action={async () => {
               await onRequest()
@@ -79,14 +78,7 @@ export function UpdatePasswordDialog({
             await onConfirm(data)
             setOpen(false)
           }}
-        >
-          <p>
-            <Trans>
-              Please enter the code you received and the new password you would
-              like to use.
-            </Trans>
-          </p>
-        </ResetPasswordConfirmForm>
+        />
       )}
     </DialogSimple>
   )

@@ -1,9 +1,8 @@
-import { Trans, useLingui } from '@lingui/react/macro'
+import { useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { isValidHandle, isValidTld, normalizeHandle } from '@atproto/syntax'
 import { Override } from '#/lib/util.ts'
-import { FormField } from './form-field.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputHandleCustomProps = Override<
@@ -12,18 +11,18 @@ export type InputHandleCustomProps = Override<
     'type' | 'value' | 'defaultValue' | 'onChange' | 'append' | 'bellow'
   >,
   {
-    /** Initial domain value. */
-    domain?: string
-    /** Called whenever the domain becomes valid or invalid. */
-    onDomain?: (domain: string | undefined) => void
+    /** Initial handle value. */
+    handle?: string
+    /** Called whenever the handle becomes valid or invalid. */
+    onHandle?: (handle: string | undefined) => void
     /** The current user's DID, shown in the verification instructions. */
     did: string
   }
 >
 
 export function InputHandleCustom({
-  domain: domainInput,
-  onDomain,
+  handle: handleInit,
+  onHandle,
   did,
 
   // InputTextProps
@@ -37,33 +36,29 @@ export function InputHandleCustom({
   ...props
 }: InputHandleCustomProps) {
   const { t } = useLingui()
-  const [value, setValue] = useState(domainInput)
+  const [value, setValue] = useState(handleInit)
 
   return (
-    <div className="flex flex-col space-y-4">
-      <FormField label={<Trans>Enter the domain you want to use</Trans>}>
-        <InputText
-          {...props}
-          type="text"
-          title={title ?? t`Type your domain`}
-          placeholder={placeholder ?? t`alice.com`}
-          autoCapitalize={autoCapitalize}
-          autoComplete={autoComplete}
-          autoCorrect={autoCorrect}
-          dir={dir}
-          icon={icon}
-          value={value}
-          onChange={(event) => {
-            setValue(event.target.value)
-            onDomain?.(parseDomain(event.target.value))
-          }}
-        />
-      </FormField>
-    </div>
+    <InputText
+      {...props}
+      type="text"
+      title={title ?? t`Type your domain`}
+      placeholder={placeholder ?? t`alice.com`}
+      autoCapitalize={autoCapitalize}
+      autoComplete={autoComplete}
+      autoCorrect={autoCorrect}
+      dir={dir}
+      icon={icon}
+      value={value}
+      onChange={(event) => {
+        setValue(event.target.value)
+        onHandle?.(parseHandle(event.target.value))
+      }}
+    />
   )
 }
 
-function parseDomain(value: string): string | undefined {
+function parseHandle(value: string): string | undefined {
   const trimmed = normalizeHandle(value.trim())
   const valid =
     trimmed.length > 0 && isValidHandle(trimmed) && isValidTld(trimmed)

@@ -302,8 +302,8 @@ export function createApiMiddleware<
       schema: z
         .object({
           sub: subSchema,
-          token: emailOtpSchema,
           email: emailSchema,
+          token: emailOtpSchema.optional(),
           locale: localeSchema.optional(),
         })
         .strict(),

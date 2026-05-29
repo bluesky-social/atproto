@@ -41,18 +41,17 @@ export function VerifyEmailDialog({
     <DialogSimple
       trigger={children}
       title={t`Verify your email`}
+      description={
+        <Trans>
+          To verify your email, you'll need to enter a security code sent to{' '}
+          <strong>{email}</strong>.
+        </Trans>
+      }
       open={open}
       onOpenChange={setOpen}
     >
       {state === VerifyEmailDialogState.Request ? (
         <div className="align-stretch flex flex-col gap-4">
-          <p>
-            <Trans>
-              To verify your email, we'll send a verification code to{' '}
-              <strong>{email}</strong>.
-            </Trans>
-          </p>
-
           <ButtonRequestCode
             action={async () => {
               await onRequest()
@@ -78,13 +77,7 @@ export function VerifyEmailDialog({
             await onConfirm(data)
             setOpen(false)
           }}
-        >
-          <p>
-            <Trans>
-              Please enter the code you received to verify your email address.
-            </Trans>
-          </p>
-        </VerifyEmailConfirmForm>
+        />
       )}
     </DialogSimple>
   )

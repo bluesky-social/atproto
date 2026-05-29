@@ -90,12 +90,14 @@ export function FormCardAsync({
         }
       }}
       disabled={disabled || loading}
-      append={[
-        append,
-        error != null && !hideError
-          ? errorRender({ error, parser: errorParser })
-          : undefined,
-      ]}
+      append={
+        <>
+          {append}
+          {error != null && !hideError
+            ? errorRender({ error, parser: errorParser })
+            : null}
+        </>
+      }
       cancel={onCancel && <Button onClick={onCancel}>{cancelLabel}</Button>}
       actions={
         <>
