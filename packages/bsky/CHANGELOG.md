@@ -1,5 +1,18 @@
 # @atproto/bsky
 
+## 0.0.236
+
+### Patch Changes
+
+- [#5016](https://github.com/bluesky-social/atproto/pull/5016) [`cf6a8a5`](https://github.com/bluesky-social/atproto/commit/cf6a8a50a990d8759d076778f0f90800005b48c0) Thanks [@blackmichael](https://github.com/blackmichael)! - Fix `verificationView`'s `displayName` and `handle` to reflect the verification issuer rather than the subject, and rename them to `issuerDisplayName` and `issuerHandle`. These fields were introduced in #5015 to expose the issuer's identity, but were inadvertently being populated with the subject's snapshot stored on the verification record.
+
+- [#5015](https://github.com/bluesky-social/atproto/pull/5015) [`0ac21bb`](https://github.com/bluesky-social/atproto/commit/0ac21bbf6db0bcb745adecf064eded1452be02de) Thanks [@blackmichael](https://github.com/blackmichael)! - add displayName, handle to verification view
+
+- [#5020](https://github.com/bluesky-social/atproto/pull/5020) [`3cb2a41`](https://github.com/bluesky-social/atproto/commit/3cb2a41157a2bd7783f3fc1a06c4c811d9c541e6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Loosen validation for known Standard Site publishers in order to support quote URLs
+
+- Updated dependencies [[`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff), [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d), [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341), [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3)]:
+  - @atproto/api@0.20.7
+
 ## 0.0.235
 
 ### Patch Changes
