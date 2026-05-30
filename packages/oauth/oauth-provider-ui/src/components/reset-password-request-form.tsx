@@ -1,59 +1,42 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { composeRefs } from '@radix-ui/react-compose-refs'
-import { useRef, useState } from 'react'
-import {
-  FormCardAsync,
-  FormCardAsyncProps,
-} from '#/components/forms/form-card-async.tsx'
 import { FormField } from '#/components/forms/form-field'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
-import { Override } from '#/lib/util.ts'
+import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
 
-export type ResetPasswordRequestFormProps = Override<
-  Omit<FormCardAsyncProps, 'children'>,
-  {
+export type ResetPasswordRequestData = { email: string }
+
+export type ResetPasswordRequestFormProps =
+  WrappedSmartFormProps<ResetPasswordRequestData> & {
     emailDefault?: string
-    onSubmit: (data: { email: string }) => void | PromiseLike<void>
   }
->
 
 export function ResetPasswordRequestForm({
   emailDefault,
-  onSubmit,
 
-  // FormCardAsyncProps
-  invalid,
-  ref,
+  // AsyncFormProps
   ...props
 }: ResetPasswordRequestFormProps) {
   const { t } = useLingui()
-  const [email, setEmail] = useState(emailDefault)
-
-  const formRef = useRef<HTMLFormElement>(null)
 
   return (
-    <FormCardAsync
+    <SmartForm
       {...props}
-      ref={composeRefs(ref, formRef)}
-      invalid={!email || invalid}
-      onSubmit={async () => {
-        if (email) await onSubmit({ email })
+      validate={({ email }) => {
+        if (email) return { email }
       }}
-    >
-      <FormField label={<Trans>Email address</Trans>}>
-        <InputEmailAddress
-          name="email"
-          placeholder={t`Enter your email address`}
-          title={t`Email address`}
-          required
-          autoFocus={true}
-          value={email}
-          onEmail={(email) => {
-            formRef.current?.reset()
-            setEmail(email)
-          }}
-        />
-      </FormField>
-    </FormCardAsync>
+      fields={({ values, setterFor }) => (
+        <FormField label={<Trans>Email address</Trans>}>
+          <InputEmailAddress
+            name="email"
+            placeholder={t`Enter your email address`}
+            title={t`Email address`}
+            required
+            autoFocus={true}
+            defaultValue={values.email}
+            onEmail={setterFor('email')}
+          />
+        </FormField>
+      )}
+    />
   )
 }

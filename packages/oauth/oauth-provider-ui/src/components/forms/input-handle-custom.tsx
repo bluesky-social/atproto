@@ -1,31 +1,31 @@
 import { useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
-import { isValidHandle, isValidTld, normalizeHandle } from '@atproto/syntax'
+import { composeEventHandlers } from '@radix-ui/primitive'
+import {
+  HandleString,
+  isValidHandle,
+  isValidTld,
+  normalizeHandle,
+} from '@atproto/syntax'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputHandleCustomProps = Override<
-  Omit<
-    InputTextProps,
-    'type' | 'value' | 'defaultValue' | 'onChange' | 'append' | 'bellow'
-  >,
+  Omit<InputTextProps, 'type' | 'append' | 'bellow'>,
   {
-    /** Initial handle value. */
-    handle?: string
     /** Called whenever the handle becomes valid or invalid. */
-    onHandle?: (handle: string | undefined) => void
+    onHandle?: (handle: HandleString | undefined) => void
     /** The current user's DID, shown in the verification instructions. */
     did: string
   }
 >
 
 export function InputHandleCustom({
-  handle: handleInit,
   onHandle,
   did,
 
   // InputTextProps
+  onChange,
   autoCapitalize = 'none',
   autoComplete = 'off',
   autoCorrect = 'off',
@@ -36,7 +36,6 @@ export function InputHandleCustom({
   ...props
 }: InputHandleCustomProps) {
   const { t } = useLingui()
-  const [value, setValue] = useState(handleInit)
 
   return (
     <InputText
@@ -49,18 +48,16 @@ export function InputHandleCustom({
       autoCorrect={autoCorrect}
       dir={dir}
       icon={icon}
-      value={value}
-      onChange={(event) => {
-        setValue(event.target.value)
+      onChange={composeEventHandlers(onChange, (event) => {
         onHandle?.(parseHandle(event.target.value))
-      }}
+      })}
     />
   )
 }
 
-function parseHandle(value: string): string | undefined {
+function parseHandle(value: string): HandleString | undefined {
   const trimmed = normalizeHandle(value.trim())
-  const valid =
-    trimmed.length > 0 && isValidHandle(trimmed) && isValidTld(trimmed)
-  return valid ? trimmed : undefined
+  if (trimmed.length && isValidHandle(trimmed) && isValidTld(trimmed)) {
+    return trimmed
+  }
 }

@@ -74,7 +74,7 @@ export function UpdatePasswordDialog({
       ) : (
         <ResetPasswordConfirmForm
           disabled={confirmPending}
-          onSubmit={async (data) => {
+          handler={async (data) => {
             await onConfirm(data)
             setOpen(false)
           }}

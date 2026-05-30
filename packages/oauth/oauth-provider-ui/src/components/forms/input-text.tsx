@@ -1,9 +1,9 @@
 import { composeEventHandlers } from '@radix-ui/primitive'
 import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useContext, useRef } from 'react'
+import { JSX, ReactNode, useRef } from 'react'
 import { Override } from '#/lib/util.ts'
-import { FieldsetContext } from './form-field.tsx'
+import { useFieldsetContext } from './fieldset-context.tsx'
 import { InputContainer } from './input-container.tsx'
 
 export type InputTextProps = Override<
@@ -32,7 +32,7 @@ export function InputText({
   placeholder = ariaLabel,
   ...props
 }: InputTextProps) {
-  const ctx = useContext(FieldsetContext)
+  const ctx = useFieldsetContext()
   const isDisabled = disabled ?? ctx.disabled
 
   const inputRef = useRef<HTMLInputElement>(null)

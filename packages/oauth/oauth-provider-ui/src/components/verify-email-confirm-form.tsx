@@ -1,57 +1,32 @@
 import { Trans } from '@lingui/react/macro'
-import { composeRefs } from '@radix-ui/react-compose-refs'
-import { useRef, useState } from 'react'
-import {
-  FormCardAsync,
-  FormCardAsyncProps,
-} from '#/components/forms/form-card-async.tsx'
 import { FormField } from '#/components/forms/form-field'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { Override } from '#/lib/util.ts'
+import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
 
-export type VerifyEmailConfirmFormProps = Override<
-  FormCardAsyncProps,
-  {
-    onSubmit: (data: { token: string }) => void | PromiseLike<void>
-  }
->
+export type VerifyEmailConfirmData = { token: string }
 
-export function VerifyEmailConfirmForm({
-  onSubmit,
+export type VerifyEmailConfirmFormProps =
+  WrappedSmartFormProps<VerifyEmailConfirmData>
 
-  // FormCardAsyncProps
-  invalid,
-  ref,
-  children,
-  ...props
-}: VerifyEmailConfirmFormProps) {
-  const [token, setToken] = useState<string | null>(null)
-
-  const formRef = useRef<HTMLFormElement>(null)
-
+export function VerifyEmailConfirmForm(props: VerifyEmailConfirmFormProps) {
   return (
-    <FormCardAsync
+    <SmartForm
       {...props}
-      ref={composeRefs(ref, formRef)}
-      invalid={!token || invalid}
-      onSubmit={async () => {
-        if (token) await onSubmit({ token })
+      validate={({ token }) => {
+        if (token) return { token }
       }}
-    >
-      <FormField label={<Trans>Verification code</Trans>}>
-        <InputToken
-          name="code"
-          enterKeyHint="done"
-          required
-          autoFocus={true}
-          onToken={(value) => {
-            formRef.current?.reset()
-            setToken(value)
-          }}
-        />
-      </FormField>
-
-      {children}
-    </FormCardAsync>
+      fields={({ set, values }) => (
+        <FormField label={<Trans>Verification code</Trans>}>
+          <InputToken
+            name="code"
+            enterKeyHint="done"
+            required
+            autoFocus={true}
+            defaultValue={values.token}
+            onToken={(value) => set('token', value ?? undefined)}
+          />
+        </FormField>
+      )}
+    />
   )
 }

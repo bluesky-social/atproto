@@ -38,7 +38,6 @@ export type WizardCardProps = Override<
   {
     prevLabel?: ReactNode
     nextLabel?: ReactNode
-    hideSteps?: boolean
 
     onBack?: () => void
     backLabel?: ReactNode
@@ -53,8 +52,6 @@ export type WizardCardProps = Override<
 export function WizardCard({
   prevLabel,
   nextLabel,
-
-  hideSteps = false,
 
   onBack,
   backLabel,
@@ -110,13 +107,11 @@ export function WizardCard({
       key={`${key}-${currentPosition}`}
       {...props}
     >
-      {!hideSteps && (
-        <p className="text-contrast-500">
-          <Trans>
-            Step {currentPosition} of {count}
-          </Trans>
-        </p>
-      )}
+      <p className="text-contrast-500">
+        <Trans>
+          Step {currentPosition} of {count}
+        </Trans>
+      </p>
 
       {stepTitle && <h2 className="mb-4 text-xl font-medium">{stepTitle}</h2>}
 

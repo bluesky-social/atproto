@@ -1,71 +1,57 @@
 import { Trans } from '@lingui/react/macro'
-import { useRef, useState } from 'react'
-import {
-  FormCardAsync,
-  FormCardAsyncProps,
-} from '#/components/forms/form-card-async.tsx'
+import { useRef } from 'react'
 import { FormField } from '#/components/forms/form-field'
 import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { Override } from '#/lib/util.ts'
+import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
 
-export type ResetPasswordConfirmFormProps = Override<
-  FormCardAsyncProps,
-  {
-    onSubmit: (data: {
-      token: string
-      password: string
-    }) => void | PromiseLike<void>
-  }
->
+export type ResetPasswordConfirmData = {
+  token: string
+  password: string
+}
 
-export function ResetPasswordConfirmForm({
-  onSubmit,
+export type ResetPasswordConfirmFormProps =
+  WrappedSmartFormProps<ResetPasswordConfirmData>
 
-  // FormCardAsyncProps
-  invalid,
-  children,
-  ...props
-}: ResetPasswordConfirmFormProps) {
-  const passwordRef = useRef<HTMLInputElement>(null)
-
-  const [token, setToken] = useState<string | null>(null)
-  const [password, setPassword] = useState<string | undefined>(undefined)
-
+export function ResetPasswordConfirmForm(props: ResetPasswordConfirmFormProps) {
   return (
-    <FormCardAsync
+    <SmartForm
       {...props}
-      invalid={!token || !password || invalid}
-      onSubmit={async () => {
-        if (token && password) await onSubmit({ token, password })
+      validate={({ token, password }) => {
+        if (token && password) return { token, password }
       }}
-    >
-      {children}
+      fields={({ values, set, setterFor }) => {
+        const passwordRef = useRef<HTMLInputElement>(null)
+        return (
+          <>
+            <FormField label={<Trans>Reset code</Trans>}>
+              <InputToken
+                name="code"
+                enterKeyHint="next"
+                required
+                autoFocus={true}
+                defaultValue={values.token}
+                onToken={(value) => {
+                  set('token', value ?? undefined)
+                  // Auto-focus next field when token is complete
+                  if (value) passwordRef.current?.focus()
+                }}
+              />
+            </FormField>
 
-      <FormField label={<Trans>Reset code</Trans>}>
-        <InputToken
-          name="code"
-          enterKeyHint="next"
-          required
-          autoFocus={true}
-          onToken={(token) => {
-            setToken(token)
-            // Auto-focus next field when token is complete
-            if (token) passwordRef.current?.focus()
-          }}
-        />
-      </FormField>
-
-      <FormField label={<Trans>New password</Trans>}>
-        <InputNewPassword
-          ref={passwordRef}
-          name="password"
-          enterKeyHint="done"
-          required
-          value={password}
-          onPassword={setPassword}
-        />
-      </FormField>
-    </FormCardAsync>
+            <FormField label={<Trans>New password</Trans>}>
+              <InputNewPassword
+                ref={passwordRef}
+                name="password"
+                enterKeyHint="done"
+                required
+                defaultValue={values.password}
+                onPassword={setterFor('password')}
+              />
+            </FormField>
+          </>
+        )
+      }}
+    />
   )
 }

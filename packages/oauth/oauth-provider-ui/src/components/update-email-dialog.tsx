@@ -1,10 +1,10 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useEffect, useState } from 'react'
-import { FormCardAsync } from '#/components/forms/form-card-async.tsx'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { FormField } from '#/components/forms/form-field'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { DialogSimple } from './dialog-simple'
+import { AsyncForm } from './forms/async-form'
 import { ButtonRequestCode } from './forms/button-request-code'
 import { Admonition } from './utils/admonition'
 
@@ -35,13 +35,13 @@ export function UpdateEmailDialog({
 }: UpdateEmailDialogProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>(Step.Init)
-  const [emailNext, setEmailNext] = useState<string | undefined>(undefined)
+  const [email, setEmail] = useState<string | undefined>(undefined)
   const [confirmToken, setConfirmToken] = useState<string | null>(null)
   const [verifyToken, setVerifyToken] = useState<string | null>(null)
 
   useEffect(() => {
     setStep(Step.Init)
-    setEmailNext(undefined)
+    setEmail(undefined)
   }, [open])
 
   useEffect(() => {
@@ -49,38 +49,28 @@ export function UpdateEmailDialog({
     setVerifyToken(null)
   }, [step])
 
-  const sendRequest = async () => {
-    // Fool proofing and type safety
-    if (!emailNext) return setStep(Step.Init)
-
+  const sendRequest = async (data: { email: string; token?: string }) => {
     const { tokenRequired } = await onRequest()
     if (tokenRequired) setStep(Step.Token)
     else {
-      await onConfirm({ email: emailNext, token: undefined })
+      await onConfirm(data)
 
       if (onVerify) setStep(Step.Verify)
       else setOpen(false)
     }
   }
 
-  const sendConfirm = async () => {
-    // Fool proofing and type safety
-    if (!emailNext || !confirmToken) return setStep(Step.Init)
+  const initData = useMemo(() => {
+    if (email) return { email, token: undefined }
+  }, [email])
 
-    await onConfirm({ email: emailNext, token: confirmToken })
+  const confirmData = useMemo(() => {
+    if (email && confirmToken) return { email, token: confirmToken }
+  }, [email, confirmToken])
 
-    if (onVerify) setStep(Step.Verify)
-    else setOpen(false)
-  }
-
-  const sendVerify = async () => {
-    // Fool proofing and type safety
-    if (!emailNext || !verifyToken) return setStep(Step.Init)
-
-    await onVerify?.({ email: emailNext, token: verifyToken })
-
-    setOpen(false)
-  }
+  const verifyData = useMemo(() => {
+    if (email && verifyToken) return { email, token: verifyToken }
+  }, [email, verifyToken])
 
   if (step === Step.Verify && onVerify) {
     return (
@@ -93,31 +83,35 @@ export function UpdateEmailDialog({
           <Trans>
             Your email address has been successfully updated and needs to be
             verified. Please enter the verification code that was sent to{' '}
-            <strong>{emailNext}</strong>.
+            <strong>{email}</strong>.
           </Trans>
         }
       >
-        <FormCardAsync
+        <AsyncForm
           onCancel={() => setOpen(false)}
           cancelLabel={<Trans context="verify email">Later</Trans>}
-          onSubmit={sendVerify}
           submitLabel={<Trans context="verify email">Verify now</Trans>}
-          invalid={!emailNext || !verifyToken}
+          submitData={verifyData}
+          submitHandler={async (data) => {
+            await onVerify(data)
+            setOpen(false)
+          }}
         >
           <FormField label={<Trans>Verification code</Trans>}>
             <InputToken
               name="code"
               required
               autoFocus
+              defaultValue={verifyToken ?? undefined}
               onToken={setVerifyToken}
             />
           </FormField>
-        </FormCardAsync>
+        </AsyncForm>
       </DialogSimple>
     )
   }
 
-  if (step === Step.Token) {
+  if (step === Step.Token && initData) {
     return (
       <DialogSimple
         trigger={children}
@@ -130,18 +124,23 @@ export function UpdateEmailDialog({
           </Trans>
         }
       >
-        <FormCardAsync
-          disabled={requestPending}
-          invalid={!emailNext || !confirmToken}
-          onSubmit={sendConfirm}
+        <AsyncForm
+          loading={requestPending}
+          submitData={confirmData}
+          submitHandler={async (data) => {
+            await onConfirm(data)
+
+            if (onVerify) setStep(Step.Verify)
+            else setOpen(false)
+          }}
         >
           <FormField label={<Trans>New email address</Trans>}>
             <InputEmailAddress
               name="email"
               required
               autoFocus
-              value={emailNext}
-              onEmail={setEmailNext}
+              defaultValue={email}
+              onEmail={setEmail}
             />
           </FormField>
 
@@ -164,6 +163,7 @@ export function UpdateEmailDialog({
               name="code"
               required
               autoFocus
+              defaultValue={confirmToken ?? undefined}
               onToken={setConfirmToken}
             />
           </FormField>
@@ -173,7 +173,7 @@ export function UpdateEmailDialog({
             <ButtonRequestCode
               disabled={confirmPending}
               loading={requestPending}
-              action={sendRequest}
+              action={() => sendRequest(initData)}
               transparent
               size="sm"
               shape="padded"
@@ -182,7 +182,7 @@ export function UpdateEmailDialog({
               <Trans>Click here to resend.</Trans>
             </ButtonRequestCode>
           </p>
-        </FormCardAsync>
+        </AsyncForm>
       </DialogSimple>
     )
   }
@@ -199,10 +199,10 @@ export function UpdateEmailDialog({
         </Trans>
       }
     >
-      <FormCardAsync
+      <AsyncForm
         disabled={requestPending}
-        invalid={!emailNext}
-        onSubmit={sendRequest}
+        submitData={initData}
+        submitHandler={async (data) => sendRequest(data)}
       >
         <Admonition role="warning" className="text-sm">
           <Trans>
@@ -216,11 +216,11 @@ export function UpdateEmailDialog({
             name="email"
             required
             autoFocus
-            value={emailNext}
-            onEmail={setEmailNext}
+            defaultValue={email}
+            onEmail={setEmail}
           />
         </FormField>
-      </FormCardAsync>
+      </AsyncForm>
     </DialogSimple>
   )
 }
