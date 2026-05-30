@@ -3,6 +3,7 @@ import { AtIcon, CheckIcon, XIcon } from '@phosphor-icons/react'
 import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
 import { JSX, useCallback, useEffect, useRef, useState } from 'react'
+import { HandleString, isValidHandle } from '@atproto/syntax'
 import {
   MAX_FULL_LENGTH,
   MAX_LENGTH,
@@ -29,9 +30,9 @@ export type InputHandleProvidedProps = Override<
   >,
   {
     /** Initial handle, used to seed the segment + selected domain. */
-    handle?: string
+    handle?: HandleString
     /** Called whenever the current handle becomes valid or invalid. */
-    onHandle?: (handle: string | undefined) => void
+    onHandle?: (handle: HandleString | undefined) => void
     /** List of available domains for the handle */
     domains: string[]
   }
@@ -74,7 +75,10 @@ export function InputHandleDefault({
   const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
 
   const validity = validateSegment(segment)
-  const handle = domain && validity.valid ? `${segment}${domain}` : undefined
+  const handle =
+    domain && validity.valid && isValidHandle(`${segment}${domain}`)
+      ? (`${segment}${domain}` as HandleString)
+      : undefined
   useEffect(() => {
     onHandle?.(handle)
   }, [onHandle, handle])

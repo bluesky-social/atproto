@@ -4,7 +4,7 @@ import { ReactNode, useCallback, useEffect, useState } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
-import { SignInForm, SignInFormOutput } from './sign-in-form.tsx'
+import { SignInData, SignInForm } from './sign-in-form.tsx'
 import { SignInPicker } from './sign-in-picker.tsx'
 
 export type SignInViewProps = {
@@ -14,7 +14,7 @@ export type SignInViewProps = {
   setSession: (session: Session | null) => void
   forcedIdentifier?: string
 
-  onSignIn: (credentials: SignInFormOutput) => void | PromiseLike<void>
+  onSignIn: (credentials: SignInData) => void | PromiseLike<void>
   onSignUp?: () => void
   onForgotPassword?: (emailHint?: string) => void
   onBack?: () => void
@@ -57,7 +57,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSubmit={onSignIn}
+          onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={clearSession}
           usernameDefault={
@@ -76,7 +76,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSubmit={onSignIn}
+          onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
@@ -96,7 +96,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSubmit={onSignIn}
+          onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
@@ -114,7 +114,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
-          onSubmit={onSignIn}
+          onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={() => setShowSignInForm(false)}
         />

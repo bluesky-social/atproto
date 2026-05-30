@@ -110,7 +110,7 @@ function App() {
           permissionSets={authorizeData.permissionSets}
           account={session.account}
           scope={authorizeData.scope}
-          onConsent={(scope) =>
+          onConsent={({ scope }) =>
             doConsentAndRedirect(session.account.sub, scope)
           }
           onReject={doRejectAndRedirect}

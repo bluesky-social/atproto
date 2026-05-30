@@ -2,7 +2,7 @@ import { useLingui } from '@lingui/react/macro'
 import { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { Override } from '#/lib/util.ts'
-import { Handle } from './handle'
+import { Handle } from './handle.tsx'
 
 export type AccountIdentifierProps = Override<
   Omit<JSX.IntrinsicElements['span'], 'children'>,

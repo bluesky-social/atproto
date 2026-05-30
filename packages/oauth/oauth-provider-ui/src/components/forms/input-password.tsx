@@ -8,14 +8,19 @@ import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputPasswordProps = Override<
-  Omit<InputTextProps, 'type'>,
+  Omit<InputTextProps, 'type'> & {
+    value?: string
+    defaultValue?: string
+  },
   {
+    onPassword?: (password: undefined | string) => void
     autoHide?: boolean
   }
 >
 
 export function InputPassword({
   autoHide = true,
+  onPassword,
 
   // InputTextProps
   onBlur,
@@ -23,7 +28,6 @@ export function InputPassword({
   append,
   autoComplete = 'current-password',
   icon = <KeyIcon className="w-5" weight="bold" />,
-  value: valueInit = '',
   ref,
   title,
   dir = 'auto',
@@ -35,7 +39,6 @@ export function InputPassword({
   const { t } = useLingui()
   const inputRef = useRef<HTMLInputElement>(null)
   const [visible, setVisible] = useState<boolean>(false)
-  const [value, setValue] = useState(valueInit)
 
   return (
     <InputText
@@ -50,9 +53,8 @@ export function InputPassword({
       onBlur={composeEventHandlers(onBlur, () => {
         if (autoHide) setVisible(false)
       })}
-      value={value}
-      onChange={composeEventHandlers(onChange, (event) => {
-        setValue(event.target.value)
+      onChange={composeEventHandlers(onChange, ({ target }) => {
+        onPassword?.(target.validity.valid ? target.value : undefined)
       })}
       type={visible ? 'text' : 'password'}
       autoComplete={autoComplete}

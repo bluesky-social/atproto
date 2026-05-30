@@ -1,85 +1,49 @@
 import { Trans } from '@lingui/react/macro'
-import { composeRefs } from '@radix-ui/react-compose-refs'
-import { ReactNode, useEffect, useRef } from 'react'
-import {
-  FormCardAsync,
-  FormCardAsyncProps,
-} from '#/components/forms/form-card-async.tsx'
+import { HandleString } from '@atproto/syntax'
 import { InputHandleDefault } from '#/components/forms/input-handle-default'
+import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
 import { Admonition } from '#/components/utils/admonition.tsx'
-import { Override } from '#/lib/util.ts'
 
-export type SignUpHandleFormProps = Override<
-  Omit<
-    FormCardAsyncProps,
-    'append' | 'onCancel' | 'cancelLabel' | 'onSubmit' | 'submitLabel'
-  >,
-  {
-    domains: string[]
+export type SignUpHandleData = {
+  handle: HandleString
+}
 
-    onNext: () => void | PromiseLike<void>
-    nextLabel?: ReactNode
-
-    onPrev?: () => void
-    prevLabel?: ReactNode
-
-    handle?: string
-    onHandle?: (handle: string | undefined) => void
-  }
->
+export type SignUpHandleFormProps = WrappedSmartFormProps<SignUpHandleData> & {
+  domains: string[]
+}
 
 export function SignUpHandleForm({
   domains,
 
-  onNext,
-  nextLabel,
-
-  onPrev,
-  prevLabel,
-
-  handle: handleInit,
-  onHandle,
-
-  // FormCardProps
-  invalid,
-  children,
-  ref,
+  // FormProp
   ...props
 }: SignUpHandleFormProps) {
-  const formRef = useRef<HTMLFormElement>(null)
-
-  useEffect(() => {
-    // Whenever the user changes the handle, abort any pending form action
-    formRef.current?.reset()
-  }, [handleInit])
-
   return (
-    <FormCardAsync
+    <SmartForm
       {...props}
-      ref={composeRefs(ref, formRef)}
-      onCancel={onPrev}
-      cancelLabel={prevLabel}
-      onSubmit={onNext}
-      submitLabel={nextLabel}
-      invalid={invalid || !handleInit}
-      append={children}
-    >
-      <InputHandleDefault
-        handle={handleInit}
-        onHandle={onHandle}
-        domains={domains}
-        name="handle"
-        required
-        autoFocus
-        enterKeyHint="done"
-      />
+      validate={({ handle }) => {
+        if (handle) return { handle }
+      }}
+      fields={({ values, setterFor }) => (
+        <>
+          <InputHandleDefault
+            handle={values.handle}
+            onHandle={setterFor('handle')}
+            domains={domains}
+            name="handle"
+            required
+            autoFocus
+            enterKeyHint="done"
+          />
 
-      <Admonition role="note">
-        <Trans>
-          You can change this username to any domain name you control after your
-          account is set up.
-        </Trans>
-      </Admonition>
-    </FormCardAsync>
+          <Admonition role="note">
+            <Trans>
+              You can change this username to any domain name you control after
+              your account is set up.
+            </Trans>
+          </Admonition>
+        </>
+      )}
+    />
   )
 }

@@ -2,7 +2,7 @@ import { MessageDescriptor } from '@lingui/core'
 import { toJsonSafe } from './util'
 
 export type ParsedError = {
-  name: string
+  name?: string
   code?: string
   message?: string
   payload?: string
@@ -25,8 +25,13 @@ export function parseError(error: unknown): ParsedError {
     }
   }
 
+  if (typeof error === 'string') {
+    return {
+      message: error,
+    }
+  }
+
   return {
-    name: 'UnknownError',
     payload: toJsonSafe(error),
   }
 }

@@ -47,12 +47,11 @@ export function ResetPasswordView({
         <ResetPasswordRequestForm
           emailDefault={emailDefault}
           submitLabel={<Trans>Next</Trans>}
-          onSubmit={async (data) => {
+          handler={async (data) => {
             await onResetPasswordRequest(data)
             setView(View.ConfirmReset)
           }}
-          cancelLabel={<Trans>Back</Trans>}
-          onCancel={onBack}
+          onBack={onBack}
         />
         <hr className="my-5 border-gray-300 dark:border-gray-700" />
         <center>
@@ -81,12 +80,11 @@ export function ResetPasswordView({
 
         <ResetPasswordConfirmForm
           submitLabel={<Trans>Next</Trans>}
-          onSubmit={async (data) => {
+          handler={async (data) => {
             await onResetPasswordConfirm(data)
             setView(View.PasswordUpdated)
           }}
-          cancelLabel={<Trans>Back</Trans>}
-          onCancel={() => setView(View.RequestReset)}
+          onBack={() => setView(View.RequestReset)}
         />
       </LayoutTitle>
     )

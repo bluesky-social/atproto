@@ -99,8 +99,9 @@
             email: 'matthieu@foobar.com',
             email_verified: false,
             name: 'Matthieu',
-            preferred_username: 'matthieu.bsky.test',
+            preferred_username: 'matthieu.bsky.social',
             picture: /** @type {sting|undefined} */ (undefined),
+            otpRequired: true,
           },
         ].map((a) => [a.sub, a]),
       )
@@ -196,6 +197,9 @@
               : undefined
 
         if (url) {
+          // Simulate network delay
+          await new Promise((resolve) => setTimeout(resolve, 500))
+
           console.log(`Fetching: ${method} ${url.pathname}${url.search}`)
           switch (`${method} ${url.pathname}`) {
             case `POST ${API_ENDPOINT_PREFIX}/sign-up`: {
@@ -215,13 +219,26 @@
             }
 
             case `POST ${API_ENDPOINT_PREFIX}/sign-in`: {
-              const { username, remember } = JSON.parse(init.body)
+              const { username, remember, emailOtp } = JSON.parse(init.body)
               for (const [sub, account] of accounts) {
                 if (
                   account.email === username ||
-                  account.preferred_username === username ||
-                  username === 'a'
+                  account.preferred_username === username
                 ) {
+                  if (account.otpRequired && emailOtp !== 'AAAAA-AAAAA') {
+                    return Response.json(
+                      {
+                        error: 'second_authentication_factor_required',
+                        error_description: emailOtp
+                          ? 'Invalid OTP code'
+                          : 'OTP code required',
+                        type: 'emailOtp',
+                        hint: account.email,
+                      },
+                      { status: 400 },
+                    )
+                  }
+
                   accountDeviceSessions.set(
                     currentDeviceId,
                     (
@@ -458,7 +475,8 @@
       window.__customizationData = {
         availableUserDomains: ['.bsky.social', '.bsky.team'],
         inviteCodeRequired: false,
-        hcaptchaSiteKey: undefined,
+        // hcaptchaSiteKey: undefined,
+        hcaptchaSiteKey: '10000000-ffff-ffff-ffff-000000000001',
         name: 'Bluesky',
         links: [
           {

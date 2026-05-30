@@ -1,5 +1,6 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useCallback, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
+import { HandleString } from '@atproto/syntax'
 import { DialogSimple } from './dialog-simple.tsx'
 import { Button } from './forms/button.tsx'
 import { UpdateHandleCustomForm } from './update-handle-custom-form.tsx'
@@ -10,10 +11,13 @@ export type UpdateHandleDialogProps = {
   children: Exclude<ReactNode, false | null | undefined>
 
   domains: string[]
-  currentHandle?: string
+  currentHandle?: HandleString
   /** The current user's DID, used in own-domain verification instructions. */
   did: string
-  onSubmit: (data: { handle: string }) => void | PromiseLike<void>
+  handler: (
+    data: { handle: string },
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
 }
 
 enum HandleType {
@@ -22,7 +26,7 @@ enum HandleType {
 }
 
 export function UpdateHandleDialog({
-  onSubmit,
+  handler,
   children,
   domains,
   currentHandle,
@@ -30,14 +34,6 @@ export function UpdateHandleDialog({
 }: UpdateHandleDialogProps) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<HandleType | null>(null)
-
-  const submitAndClose = useCallback(
-    async (...args: Parameters<typeof onSubmit>) => {
-      await onSubmit(...args)
-      setOpen(false)
-    },
-    [onSubmit],
-  )
 
   useEffect(() => {
     if (!open) setView(null)
@@ -54,10 +50,12 @@ export function UpdateHandleDialog({
       >
         <UpdateHandleDefaultForm
           domains={domains}
-          currentHandle={currentHandle}
-          cancelLabel={<Trans>Back</Trans>}
-          onCancel={() => setView(null)}
-          onSubmit={submitAndClose}
+          onBack={() => setView(null)}
+          values={{ handle: currentHandle }}
+          handler={async (data, signal) => {
+            await handler(data, signal)
+            setOpen(false)
+          }}
         />
       </DialogSimple>
     )
@@ -78,13 +76,14 @@ export function UpdateHandleDialog({
         }
       >
         <UpdateHandleCustomForm
-          domains={domains}
-          currentHandle={currentHandle}
           did={did}
-          cancelLabel={<Trans>Back</Trans>}
-          onCancel={() => setView(null)}
+          onBack={() => setView(null)}
           submitLabel={<Trans>Verify and Save</Trans>}
-          onSubmit={submitAndClose}
+          values={{ handle: currentHandle }}
+          handler={async (data, signal) => {
+            await handler(data, signal)
+            setOpen(false)
+          }}
         />
       </DialogSimple>
     )

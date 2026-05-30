@@ -1,24 +1,26 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useCallback, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { WizardCard } from './forms/wizard-card.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
 import {
-  SignUpAccountForm,
-  SignUpAccountFormOutput,
-} from './sign-up-account-form.tsx'
+  SignUpCredentialsData,
+  SignUpCredentialsForm,
+} from './sign-up-credentials-form.tsx'
 import { SignUpDisclaimer } from './sign-up-disclaimer.tsx'
-import { SignUpHandleForm } from './sign-up-handle-form.tsx'
-import { SignUpHcaptchaForm } from './sign-up-hcaptcha-form.tsx'
+import { SignUpHandleData, SignUpHandleForm } from './sign-up-handle-form.tsx'
+import {
+  SignUpHcaptchaData,
+  SignUpHcaptchaForm,
+} from './sign-up-hcaptcha-form.tsx'
 import { HelpCard } from './utils/help-card.tsx'
 
 export type SignUpViewProps = {
   onBack?: () => void
-  backLabel?: ReactNode
-  onValidateNewHandle: (data: { handle: string }) => void | PromiseLike<void>
+  onValidateNewHandle: (data: SignUpHandleData) => void | PromiseLike<void>
   onDone: (
-    data: SignUpAccountFormOutput & {
+    data: SignUpCredentialsData & {
       handle: string
       hcaptchaToken?: string
     },
@@ -27,7 +29,6 @@ export type SignUpViewProps = {
 
 export function SignUpView({
   onBack,
-  backLabel,
   onValidateNewHandle,
   onDone,
 }: SignUpViewProps) {
@@ -37,22 +38,32 @@ export function SignUpView({
     inviteCodeRequired = true,
     links,
   } = useCustomizationData()
-  const [credentials, setCredentials] = useState<
-    undefined | SignUpAccountFormOutput
-  >(undefined)
-  const [handle, setHandle] = useState<undefined | string>(undefined)
-  const [hcaptcha, setHcaptcha] = useState<undefined | string>(undefined)
 
-  /**
-   * "false" indicates that the hcaptcha token is invalid (required but not provided)
-   */
-  const hcaptchaToken = hcaptchaSiteKey == null ? undefined : hcaptcha || false
+  // Keep a copy of all every step's form values in case the user changes a step
+  // and goes back to the previous step, allowing to keep the un-submitted
+  // values in the form inputs.
+  const [pending, setPending] = useState<
+    Partial<SignUpCredentialsData & SignUpHandleData & SignUpHcaptchaData>
+  >({})
 
-  const doDone = useCallback(() => {
-    if (credentials && handle && hcaptchaToken !== false) {
-      return onDone({ ...credentials, handle, hcaptchaToken })
+  // Each step's data
+  const [data, setData] = useState<{
+    credentials?: SignUpCredentialsData
+    handle?: SignUpHandleData
+    hcaptcha?: SignUpHcaptchaData
+  }>({})
+
+  const doneValue = useMemo(() => {
+    if (!data.credentials || !data.handle) return null
+    if (hcaptchaSiteKey != null && !data.hcaptcha) return null
+
+    return {
+      ...data.credentials,
+      ...data.handle,
+      hcaptchaToken:
+        hcaptchaSiteKey == null ? undefined : data.hcaptcha?.verify.token,
     }
-  }, [credentials, handle, hcaptchaToken, onDone])
+  }, [data, hcaptchaSiteKey])
 
   return (
     <LayoutTitle
@@ -62,31 +73,30 @@ export function SignUpView({
       <WizardCard
         doneLabel={<Trans>Sign up</Trans>}
         onBack={onBack}
-        backLabel={backLabel}
-        onDone={doDone}
+        onDone={() => {
+          if (doneValue) void onDone(doneValue)
+        }}
         steps={[
           // We use the handle input first since the "onValidateNewHandle" check
           // will make it less likely that the actual signup call will fail, and
           // will result in a better user experience, especially if there is an
           // issue with the email address (e.g. already in use).
           {
-            invalid: !handle,
+            invalid: !data.handle,
             titleRender: () => <Trans>Choose a username</Trans>,
-            contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
+            contentRender: ({ prev, prevLabel, next, nextLabel }) => (
               <SignUpHandleForm
                 className="grow"
-                invalid={invalid}
                 domains={availableUserDomains}
-                handle={handle}
-                onHandle={setHandle}
-                prevLabel={prevLabel}
-                onPrev={prev}
-                nextLabel={nextLabel}
-                onNext={async () => {
-                  if (handle) {
-                    await onValidateNewHandle({ handle })
-                    await next()
-                  }
+                onBack={prev}
+                backLabel={prevLabel}
+                submitLabel={nextLabel}
+                values={pending}
+                onValues={(val) => setPending((old) => ({ ...old, ...val }))}
+                handler={async (data) => {
+                  await onValidateNewHandle(data)
+                  setData((prev) => ({ ...prev, handle: data }))
+                  next()
                 }}
               >
                 <SignUpDisclaimer links={links} />
@@ -94,38 +104,42 @@ export function SignUpView({
             ),
           },
           {
-            invalid: !credentials,
+            invalid: !data.credentials,
             titleRender: () => <Trans>Your account</Trans>,
-            contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
-              <SignUpAccountForm
+            contentRender: ({ prev, prevLabel, next, nextLabel }) => (
+              <SignUpCredentialsForm
                 className="grow"
-                invalid={invalid}
-                prevLabel={prevLabel}
-                onPrev={prev}
-                nextLabel={nextLabel}
-                onNext={next}
+                onBack={prev}
+                backLabel={prevLabel}
+                submitLabel={nextLabel}
+                values={pending}
+                onValues={(val) => setPending((old) => ({ ...old, ...val }))}
+                handler={async (data) => {
+                  setData((prev) => ({ ...prev, credentials: data }))
+                  next()
+                }}
                 inviteCodeRequired={inviteCodeRequired}
-                credentials={credentials}
-                onCredentials={setCredentials}
               >
                 <SignUpDisclaimer links={links} />
-              </SignUpAccountForm>
+              </SignUpCredentialsForm>
             ),
           },
           hcaptchaSiteKey != null && {
-            invalid: hcaptchaToken === false,
+            invalid: !data.hcaptcha,
             titleRender: () => <Trans>Verify you are human</Trans>,
-            contentRender: ({ prev, prevLabel, next, nextLabel, invalid }) => (
+            contentRender: ({ prev, prevLabel, next, nextLabel }) => (
               <SignUpHcaptchaForm
                 className="grow"
-                invalid={invalid}
                 siteKey={hcaptchaSiteKey}
-                token={hcaptcha}
-                onToken={setHcaptcha}
-                prevLabel={prevLabel}
-                onPrev={prev}
-                nextLabel={nextLabel}
-                onNext={next}
+                onBack={prev}
+                backLabel={prevLabel}
+                submitLabel={nextLabel}
+                values={pending}
+                onValues={(val) => setPending((old) => ({ ...old, ...val }))}
+                handler={async (data) => {
+                  setData((prev) => ({ ...prev, hcaptcha: data }))
+                  next()
+                }}
               >
                 <SignUpDisclaimer links={links} />
               </SignUpHcaptchaForm>

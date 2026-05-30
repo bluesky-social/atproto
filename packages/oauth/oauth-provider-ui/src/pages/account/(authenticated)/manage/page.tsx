@@ -8,6 +8,7 @@ import {
   ShieldWarningIcon,
 } from '@phosphor-icons/react'
 import { ReactNode } from 'react'
+import { isValidHandle } from '@atproto/syntax'
 import { Button, ButtonProps } from '#/components/forms/button'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
@@ -140,7 +141,11 @@ function UpdatePasswordRow(props: Omit<RowProps, 'icon' | 'value'>) {
 function UpdateHandleRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const { availableUserDomains = [] } = useCustomizationData()
-  const { sub, preferred_username: handle } = account
+  const { sub, preferred_username } = account
+  const handle =
+    preferred_username && isValidHandle(preferred_username)
+      ? preferred_username
+      : undefined
 
   const updateHandle = useUpdateHandle()
 
@@ -149,7 +154,7 @@ function UpdateHandleRow(props: Omit<RowProps, 'icon' | 'value'>) {
       did={sub}
       currentHandle={handle}
       domains={availableUserDomains}
-      onSubmit={async ({ handle }) => {
+      handler={async ({ handle }) => {
         await updateHandle.mutateAsync({ sub, handle })
       }}
     >

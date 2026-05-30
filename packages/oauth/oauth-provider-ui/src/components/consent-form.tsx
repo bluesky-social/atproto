@@ -4,8 +4,8 @@ import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import type { PermissionSets } from '#/hydration-data.d.ts'
+import { AsyncForm } from './forms/async-form.tsx'
 import { Button } from './forms/button.tsx'
-import { FormCard } from './forms/form-card.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 import { ClientImage } from './utils/client-image.tsx'
 import { ClientName } from './utils/client-name.tsx'
@@ -22,7 +22,7 @@ export type ConsentFormProps = {
   account: Account
   scope?: string
 
-  onConsent: (scope?: string) => void
+  onConsent: (data: { scope?: string }) => void | PromiseLike<void>
   consentLabel?: ReactNode
 
   onReject: () => void
@@ -71,24 +71,18 @@ export function ConsentForm({
   const canUnsetEmail = !scope?.split(' ').some(isTransitionScope)
 
   return (
-    <FormCard
-      onSubmit={(event) => {
-        event.preventDefault()
-        const acceptedScope =
-          canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope
-        onConsent(acceptedScope)
+    <AsyncForm
+      onBack={onBack}
+      submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
+      submitData={{
+        scope:
+          canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope,
       }}
-      cancel={onBack && <Button onClick={onBack}>{<Trans>Back</Trans>}</Button>}
+      submitHandler={onConsent}
       actions={
-        <>
-          <Button type="submit" color="primary">
-            {<Trans context="OAuthConsent">Authorize</Trans>}
-          </Button>
-
-          <Button onClick={onReject}>
-            {<Trans context="OAuthConsent">Deny access</Trans>}
-          </Button>
-        </>
+        <Button onClick={onReject}>
+          <Trans context="OAuthConsent">Deny access</Trans>
+        </Button>
       }
     >
       <DescriptionCard
@@ -149,8 +143,11 @@ export function ConsentForm({
 
       <p>
         <Trans>
-          By clicking <b>{<Trans context="OAuthConsent">Authorize</Trans>}</b>,
-          you will grant this application access to your account in accordance
+          By clicking{' '}
+          <b>
+            <Trans context="OAuthConsent">Authorize</Trans>
+          </b>
+          , you will grant this application access to your account in accordance
           with its{' '}
           <a
             role="link"
@@ -178,6 +175,6 @@ export function ConsentForm({
           .
         </Trans>
       </p>
-    </FormCard>
+    </AsyncForm>
   )
 }

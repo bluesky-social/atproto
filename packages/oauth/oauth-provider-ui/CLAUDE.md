@@ -15,19 +15,49 @@ The hooks-driven IDE diagnostics surface prettier-tailwind class-ordering violat
 
 ## Component naming & composition
 
+Everything under [src/components/](src/components/) is expected to be **pure** — driven by props, free of business logic and app-specific endpoints. No `useQuery`/`useMutation` against API clients, no `useSessionContext`/`useAuthenticationContext` reads, no direct calls into `#/lib/api.ts`. State is allowed (open flags, multi-step wizards, controlled inputs) as long as it's UI state, not domain state.
+
+The boundary works as a layered stack:
+
+1. **Low-level pure components** — `forms/*`, `utils/*`, `layouts/*`. Inputs, buttons, dialogs primitives, layout shells.
+2. **High-level pure components** — `*-form.tsx`, `*-dialog.tsx`, `*-view.tsx`. Compose the low-level pieces into a feature surface and expose callbacks (`onSignIn`, `onConsent`, `onUpdateEmail`, …) for the parent to wire up.
+3. **Pages** — entry points under [src/](src/) (e.g. [authorization-page.tsx](src/authorization-page.tsx), [account-page.tsx](src/account-page.tsx)) and the route components under [src/pages/](src/pages/). These are the _only_ layer that pulls in contexts (`useSessionContext`, `useAuthenticationContext`, …), TanStack Query, the API client, and routing. They translate domain state into props and callbacks for the components in step 2.
+
+For example, [authorization-page.tsx](src/authorization-page.tsx) reads `useSessionContext()` and threads `session.account`, `doConsent`, `doReject` into a pure `<ConsentView>`; the `ConsentView` itself never knows the session context exists. Same shape for the router-driven pages in [account-page.tsx](src/account-page.tsx) — each route component pulls business logic from contexts and renders pure components.
+
+When unsure where to add a piece of code: if it imports from `#/contexts/*`, an API client, or a router hook, it belongs in `src/pages/` or one of the top-level `*-page.tsx` files — not in `src/components/`.
+
 - `*-form.tsx` — pure form. Owns input state, emits a structured value via `onSubmit`, takes pending flags & cancel callbacks. No data fetching.
 - `*-dialog.tsx` — Radix `Dialog` wrapper that takes a trigger child via `asChild`. Owns `open` state, optionally orchestrates multi-step flows. No data fetching.
+- `*-view.tsx` — page-level composition of forms/dialogs/layout. Still pure: receives the data it needs as props and emits callbacks.
 
 ## i18n (Lingui)
 
 - `.po` files under `src/locales/*` are generated and reference source line numbers; deleting/renaming a component invalidates those references but extraction will refresh them — don't hand-edit.
+- After any edit to a `.tsx` file in this package, run `pnpm i18n` from the package directory. This re-extracts the message catalogs and rebuilds them — both source-line references and any newly-introduced `<Trans>` / ``t`...` `` strings get picked up.
+- After `pnpm i18n`, fill in the **French** translations (only) for any newly-extracted entries in [src/locales/fr/messages.po](src/locales/fr/messages.po) — leave every other locale's `.po` file untouched (those are translated externally). Then re-run `pnpm i18n` so [src/locales/fr/messages.ts](src/locales/fr/messages.ts) reflects the new strings.
 
 ## Forms
 
-- Use `FormCardAsync` (in `components/forms/form-card-async.tsx`) for any submitted form. It owns loading/error state via `useAsyncAction`, exposes `submitLabel`, `onCancel`, `cancelLabel`, `invalid`, `disabled`, `append`. Don't reimplement.
-- Validation: track field state in the form component, set `invalid` based on field validity. The submit button disables itself when `invalid` or `disabled` is set.
-- `InputEmailAddress`, `InputToken`, `InputNewPassword`, `InputHandleProvided`, `InputHandleCustom` already exist — don't write new email/code/password inputs.
-- `ButtonRequestCode` (and `ButtonCooldown` underneath) implements rate-limited resend buttons with a cooldown popover. Use it for any "resend code" action.
+Three layers of primitives live under [src/components/forms/](src/components/forms/). Pick the highest-level one that fits — don't reach for `FormCard` directly when `SmartForm` would do.
+
+- **`FormCard`** — the lowest-level primitive. Renders a `<form>` with the standard submit / cancel / back button row, error rendering, and a `disabled`/`loading`/`submittable` context. It does NOT track any state — the caller owns inputs, validity, and submit handling. In practice it is only consumed by `AsyncForm` and `SmartForm`; feature components import `FormCardProps` for prop forwarding (e.g. [sign-in-form.tsx](src/components/sign-in-form.tsx)) but should not render `<FormCard>` directly.
+
+- **`AsyncForm<T>`** — `FormCard` + a single async submit. Caller passes `submitData: T | undefined` (the already-computed payload) and `submitHandler: (data, signal) => Promise`; the wrapper plugs `useAsyncAction` into `loading`/`error`, gates `submittable` on `submitData != null`, and resets async state on form reset. Use this when the parent already owns the form's input state and just needs the submit lifecycle. Examples: [consent-form.tsx](src/components/consent-form.tsx) (data is derived from one boolean + the existing scope) and [update-email-dialog.tsx](src/components/update-email-dialog.tsx) (each step holds its own `useState`).
+
+- **`SmartForm<TData, TValues>`** — `FormCard` + full controlled state. Caller provides `values` (initial), `validate(values) → TData | undefined` (also gates submit — returning `undefined` disables the submit button), and `handler(data, signal)`. The `fields` render-prop receives `{ values, set, setterFor, loading, error, data }` for wiring inputs. Pass a `ref` to expose the same handler imperatively when a parent needs to mutate fields (e.g. clearing the OTP field on credential change in [sign-in-form.tsx](src/components/sign-in-form.tsx)). This is the default for new forms — most `*-form.tsx` components are thin `SmartForm` wrappers (see [reset-password-request-form.tsx](src/components/reset-password-request-form.tsx) for the minimal shape).
+
+When authoring a `SmartForm`-based component, type its props as `WrappedSmartFormProps<TData>` (also exported from `smart-form.tsx`) — that omits `fields` and `validate` so callers only pass the outer `FormCard` props plus any feature-specific extras.
+
+## Input components (`input-*.tsx`)
+
+Low-level input wrappers (`InputText`, `InputEmailAddress`, `InputPassword`, `InputToken`, `InputHandleCustom`, `InputCheckbox`, …) are thin layers over a native `<input>`. They MUST NOT force the input into controlled or uncontrolled mode — pass both `value` and `defaultValue` straight through to the underlying `<input>` (typically by spreading `...props` into `InputText`) and let the parent pick.
+
+Adding internal `useState` to mirror `value`/`defaultValue` so the wrapper can re-render is the anti-pattern. If you need a derived UI element that depends on the live value (e.g. a strength meter, a character counter), it is fine to keep a _separate_ internal state seeded from `props.defaultValue ?? props.value` and updated via the `onChange` handler — but the `<input>` itself still reads `value`/`defaultValue` from the parent's props, not from that internal state. See [input-new-password.tsx](src/components/forms/input-new-password.tsx) for the canonical shape (the local `current` drives the strength meter; the input remains controllable by the parent).
+
+Higher-level semantic callbacks (`onEmail`, `onPassword`, `onToken`, `onHandle`, …) are encouraged on top of `onChange`. Implement them by composing with the user-supplied `onChange` (use `composeEventHandlers` from `@radix-ui/primitive`) and emitting the parsed/validated value — `undefined`/`null` when the input is not yet valid. This is typically used with uncontrolled mode (with the initial value being passed as `defaultValue`). See [input-email-address.tsx](src/components/forms/input-email-address.tsx) and [input-token.tsx](src/components/forms/input-token.tsx) for the pattern.
+
+Exception: components that compose a single logical value out of multiple native inputs (e.g. [input-handle-default.tsx](src/components/forms/input-handle-default.tsx) splits the handle into a text segment + a domain `<select>`) can't pass `value`/`defaultValue` straight through and may legitimately own internal state. They expose only the high-level pair (`handle` + `onHandle`) instead.
 
 ## Utility types
 
