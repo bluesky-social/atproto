@@ -5,6 +5,7 @@ import { CID } from 'multiformats/cid'
 import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { s3Logger as log } from './logger.js'
 
 export type S3Config = {
   bucket: string
@@ -69,7 +70,11 @@ export class S3BlobStore implements BlobStore {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
-  private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
+  private async uploadBytes(
+    path: string,
+    bytes: Uint8Array | stream.Readable,
+    op: string,
+  ) {
     // @NOTE we use Upload rather than client.putObject because stream length is
     // not known in advance. See also aws/aws-sdk-js-v3#2348.
     //
@@ -93,9 +98,22 @@ export class S3BlobStore implements BlobStore {
       abortController,
     })
 
+    // Size is not known when bytes is a strea, but we log it when possible
+    const size = bytes instanceof Uint8Array ? bytes.byteLength : undefined
+    const start = Date.now()
+
     try {
       await upload.done()
+      log.debug(
+        { op, did: this.did, path, size, durationMs: Date.now() - start },
+        's3 blob upload succeeded',
+      )
     } catch (err) {
+      log.error(
+        { err, op, did: this.did, path, size, durationMs: Date.now() - start },
+        's3 blob upload failed',
+      )
+
       // Translate aws-sdk's abort error to something more specific
       if (err instanceof Error && err.name === 'AbortError') {
         throw new Error('Blob upload timed out', { cause: err })
@@ -107,7 +125,7 @@ export class S3BlobStore implements BlobStore {
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
-    await this.uploadBytes(this.getTmpPath(key), bytes)
+    await this.uploadBytes(this.getTmpPath(key), bytes, 'putTemp')
     return key
   }
 
@@ -140,7 +158,7 @@ export class S3BlobStore implements BlobStore {
     cid: CID,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
-    await this.uploadBytes(this.getStoredPath(cid), bytes)
+    await this.uploadBytes(this.getStoredPath(cid), bytes, 'putPermanent')
   }
 
   async quarantine(cid: CID): Promise<void> {
@@ -233,6 +251,7 @@ export class S3BlobStore implements BlobStore {
   }
 
   private async move(keys: { from: string; to: string }) {
+    const start = Date.now()
     try {
       await this.client.copyObject({
         Bucket: this.bucket,
@@ -240,6 +259,18 @@ export class S3BlobStore implements BlobStore {
         Key: keys.to,
       })
     } catch (cause) {
+      log.error(
+        {
+          err: cause,
+          op: 'move',
+          did: this.did,
+          from: keys.from,
+          to: keys.to,
+          durationMs: Date.now() - start,
+        },
+        's3 blob move failed',
+      )
+
       if (cause instanceof NoSuchKey) {
         // Already deleted, possibly by a concurrently running process
         throw new BlobNotFoundError(undefined, { cause })
@@ -261,6 +292,17 @@ export class S3BlobStore implements BlobStore {
 
       throw err
     }
+
+    log.debug(
+      {
+        op: 'move',
+        did: this.did,
+        from: keys.from,
+        to: keys.to,
+        durationMs: Date.now() - start,
+      },
+      's3 blob move succeeded',
+    )
   }
 }
 
