@@ -7,7 +7,7 @@ import express from 'express'
 import { Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough'
+import { parseProxyHeader } from '../../src/pipethrough.js'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -32,7 +32,7 @@ describe('proxy header', () => {
 
     alice = sc.dids.alice
     await network.processAll()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await proxyServer.close()
@@ -77,6 +77,7 @@ describe('proxy header', () => {
     ).resolves.toEqual({
       did: proxyServer.did,
       url: proxyServer.url,
+      serviceId: 'atproto_test',
     })
   })
 

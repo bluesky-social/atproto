@@ -3,8 +3,8 @@ import { Cid, parseCid } from '@atproto/lex-data'
 import { BlobStore, Repo, WriteOpAction, formatDataKey } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../../background'
-import { createWriteToOp, writeToOp } from '../../repo'
+import { BackgroundQueue } from '../../background.js'
+import { createWriteToOp, writeToOp } from '../../repo/index.js'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
@@ -12,12 +12,12 @@ import {
   CommitOp,
   PreparedCreate,
   PreparedWrite,
-} from '../../repo/types'
-import { BlobTransactor } from '../blob/transactor'
-import { ActorDb } from '../db'
-import { RecordTransactor } from '../record/transactor'
-import { RepoReader } from './reader'
-import { SqlRepoTransactor } from './sql-repo-transactor'
+} from '../../repo/types.js'
+import { BlobTransactor } from '../blob/transactor.js'
+import { ActorDb } from '../db/index.js'
+import { RecordTransactor } from '../record/transactor.js'
+import { RepoReader } from './reader.js'
+import { SqlRepoTransactor } from './sql-repo-transactor.js'
 
 export class RepoTransactor extends RepoReader {
   blob: BlobTransactor

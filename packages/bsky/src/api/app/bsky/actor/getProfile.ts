@@ -1,27 +1,29 @@
 import { DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
-import { createPipeline, noRules } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+import { createPipeline, noRules } from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.add(app.bsky.actor.getProfile, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)

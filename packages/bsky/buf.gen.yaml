@@ -8,5 +8,5 @@ plugins:
   - plugin: connect-es
     opt:
       - target=ts
-      - import_extension=
+      - import_extension=.js
     out: src/proto

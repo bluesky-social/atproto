@@ -5,7 +5,6 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,
-    "emitDeclarationOnly": true,
     "rootDir": "./src",
     "outDir": "./dist"
   }

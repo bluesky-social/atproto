@@ -1,5 +1,100 @@
 # @atproto/ozone
 
+## 0.2.0
+
+### Minor Changes
+
+- [#4941](https://github.com/bluesky-social/atproto/pull/4941) [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow conversations to be reported in ozone
+
+  This change extends ozone's moderation system to handle conversation reporting alongside existing reporting subject types.
+
+### Patch Changes
+
+- Updated dependencies [[`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff), [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d), [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341), [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3)]:
+  - @atproto/api@0.20.7
+
+## 0.1.176
+
+### Patch Changes
+
+- [#4968](https://github.com/bluesky-social/atproto/pull/4968) [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Run "lexgen" during CI instead of keeping the generated code in Git
+
+- Updated dependencies [[`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b)]:
+  - @atproto/api@0.20.1
+  - @atproto/common@0.6.1
+
+## 0.1.175
+
+### Patch Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+- Updated dependencies [[`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common@0.6.0
+  - @atproto/api@0.20.0
+  - @atproto/crypto@0.5.0
+  - @atproto/identity@0.5.0
+  - @atproto/lexicon@0.7.0
+  - @atproto/syntax@0.6.0
+  - @atproto/ws-client@0.1.0
+  - @atproto/xrpc@0.8.0
+  - @atproto/xrpc-server@0.11.0
+
+## 0.1.174
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+- Updated dependencies [[`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3)]:
+  - @atproto/api@0.19.16
+
+## 0.1.173
+
+### Patch Changes
+
+- [#4894](https://github.com/bluesky-social/atproto/pull/4894) [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1) Thanks [@foysalit](https://github.com/foysalit)! - Add expiring tags in ozone
+
+- Updated dependencies [[`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1)]:
+  - @atproto/api@0.19.14
+
+## 0.1.172
+
+### Patch Changes
+
+- [#4866](https://github.com/bluesky-social/atproto/pull/4866) [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add description fields
+
+- Updated dependencies [[`3cb1569`](https://github.com/bluesky-social/atproto/commit/3cb156907a15f3f22a1be734f82b3b0c855b4da0), [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284), [`dacb0e8`](https://github.com/bluesky-social/atproto/commit/dacb0e80053e00821408e64e91994fe7d1565f45)]:
+  - @atproto/api@0.19.10
+
+## 0.1.171
+
+### Patch Changes
+
+- [#4854](https://github.com/bluesky-social/atproto/pull/4854) [`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - group chat lexicons
+
+- Updated dependencies [[`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d)]:
+  - @atproto/api@0.19.9
+
+## 0.1.170
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- Updated dependencies [[`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950), [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17), [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950)]:
+  - @atproto/api@0.19.7
+  - @atproto/common@0.5.16
+  - @atproto/xrpc-server@0.10.19
+
 ## 0.1.169
 
 ### Patch Changes

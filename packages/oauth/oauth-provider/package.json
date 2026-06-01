@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider",
-  "version": "0.15.15",
+  "version": "0.18.1",
   "license": "MIT",
   "description": "Generic OAuth2 and OpenID Connect provider for Node.js. Currently only supports features needed for Atproto.",
   "keywords": [
@@ -18,9 +18,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-provider"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -28,7 +26,7 @@
     }
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch": "workspace:^",
@@ -44,7 +42,6 @@
     "@atproto/lex-resolver": "workspace:^",
     "@atproto/oauth-types": "workspace:^",
     "@atproto/oauth-provider-api": "workspace:*",
-    "@atproto/oauth-provider-frontend": "workspace:*",
     "@atproto/oauth-provider-ui": "workspace:*",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/syntax": "workspace:^",

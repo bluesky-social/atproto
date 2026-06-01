@@ -21,10 +21,10 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { isAccessPrivileged } from './auth-scope'
-import { AppContext } from './context'
+import { isAccessPrivileged } from './auth-scope.js'
+import { AppContext } from './context.js'
 import { chat, com, tools } from './lexicons/index.js'
-import { httpLogger } from './logger'
+import { httpLogger } from './logger.js'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
@@ -56,9 +56,23 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+      const {
+        url: origin,
+        did,
+        serviceId,
+      } = await parseProxyInfo(ctx, req, lxm)
+      // Phase 1 of service auth updates: the scope check sees the combined
+      // did#serviceId form (so OAuth callers' rpc:?aud=did#service scopes
+      // match), while the outbound service-auth JWT keeps bare-DID aud
+      // regardless of session type.
+      const scopeAud = `${did}#${serviceId}`
+      const tokenAud = did
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+      const authResult = await performAuth({
+        req,
+        res,
+        params: { lxm, aud: scopeAud },
+      })
 
       const { credentials } = excludeErrorResult(authResult)
 
@@ -80,7 +94,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, tokenAud, lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -91,7 +105,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         headers,
       }
 
-      await pipethroughStream(ctx, dispatchOptions, (upstream) => {
+      await pipethroughStream(ctx, req, dispatchOptions, (upstream) => {
         res.status(upstream.statusCode)
 
         for (const [name, val] of responseHeaders(upstream.headers)) {
@@ -188,7 +202,7 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const { headers, body } = await pipethroughRequest(ctx, dispatchOptions)
+  const { headers, body } = await pipethroughRequest(ctx, req, dispatchOptions)
 
   return {
     encoding: safeString(headers['content-type']) ?? 'application/json',
@@ -216,18 +230,25 @@ export function computeProxyTo(
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
+// Bare-DID portion of `proxyTo`, suitable as a service-auth JWT audience
+// (Phase 1 of service auth updates).
+export function bareDidFromProxyTo(proxyTo: string): string {
+  const hashIndex = proxyTo.indexOf('#')
+  return hashIndex === -1 ? proxyTo : proxyTo.slice(0, hashIndex)
+}
+
 export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): Promise<{ url: string; did: string }> {
+): Promise<{ url: string; did: string; serviceId: string }> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const { serviceInfo } = defaultService(ctx, lxm)
-  if (serviceInfo) return serviceInfo
+  const { serviceId, serviceInfo } = defaultService(ctx, lxm)
+  if (serviceInfo) return { ...serviceInfo, serviceId }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -236,7 +257,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; url: string }> => {
+): Promise<{ did: string; url: string; serviceId: string }> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -260,13 +281,14 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
 
   // Special case a configured appview, while still proxying correctly any other appview
   if (
     ctx.cfg.bskyAppView &&
     proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
   ) {
-    return { did, url: ctx.cfg.bskyAppView.url }
+    return { did, url: ctx.cfg.bskyAppView.url, serviceId }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -274,13 +296,12 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did')
   }
 
-  const serviceId = proxyTo.slice(hashIndex)
-  const url = getServiceEndpoint(didDoc, { id: serviceId })
+  const url = getServiceEndpoint(didDoc, { id: `#${serviceId}` })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url }
+  return { did, url, serviceId }
 }
 
 /**
@@ -291,6 +312,7 @@ export const parseProxyHeader = async (
  */
 async function pipethroughStream(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
@@ -327,7 +349,7 @@ async function pipethroughStream(
       // or writable stream errors. In the latter case, the promise will already
       // be resolved, and reject()ing it there after will have no effect. Those
       // error would still be logged by the successStreamFactory() function.
-      .catch(handleUpstreamRequestError)
+      .catch(handleUpstreamRequestError.bind(req))
       .catch(reject)
   })
 }
@@ -338,6 +360,7 @@ async function pipethroughStream(
  */
 async function pipethroughRequest(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
 ) {
   // HandlerPipeThroughStream requires a readable stream to be returned, so we
@@ -345,7 +368,7 @@ async function pipethroughRequest(
 
   const upstream = await ctx.proxyAgent
     .request(dispatchOptions)
-    .catch(handleUpstreamRequestError)
+    .catch(handleUpstreamRequestError.bind(req))
 
   if (upstream.statusCode >= 400) {
     const parsed = await tryParsingError(upstream.headers, upstream.body)
@@ -359,13 +382,21 @@ async function pipethroughRequest(
 }
 
 function handleUpstreamRequestError(
+  this: Request,
   err: unknown,
   message = 'Upstream service unreachable',
 ): never {
-  httpLogger.error({ err }, message)
+  const logger = isPinoHttpRequest(this) ? this.log : httpLogger
+  logger.error({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
     cause: err,
   })
+}
+
+function isPinoHttpRequest(req: Request): req is Request & {
+  log: { error: (obj: unknown, msg: string) => void }
+} {
+  return typeof (req as { log?: any }).log?.error === 'function'
 }
 
 // Request parsing/forwarding

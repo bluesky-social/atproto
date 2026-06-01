@@ -13,7 +13,6 @@ build({
   include: ['com.atproto.sync.getRecord'],
   lib: '@atproto/lex-schema',
   pretty: true,
-  pureAnnotations: true,
   indexFile: true,
 }).catch((err) => {
   console.error('Error building lexicon schemas:', err)

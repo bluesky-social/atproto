@@ -12,7 +12,7 @@ import {
 import { randomStr } from '@atproto/crypto'
 import { Cid } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { blobStoreLogger as log } from './logger'
+import { blobStoreLogger as log } from './logger.js'
 
 export class DiskBlobStore implements BlobStore {
   constructor(

@@ -1,12 +1,12 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
+  HydrateCtxWithViewer,
   Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -14,9 +14,9 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getStarterPacksWithMembership = createPipeline(
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
       const result = await getStarterPacksWithMembership(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        { ...params, hydrateCtx },
         ctx,
       )
 
@@ -126,7 +126,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getStarterPacksWithMembership.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

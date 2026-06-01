@@ -1,5 +1,51 @@
 # @atproto/oauth-provider-ui
 
+## 0.7.1
+
+### Patch Changes
+
+- [#5008](https://github.com/bluesky-social/atproto/pull/5008) [`30ccc25`](https://github.com/bluesky-social/atproto/commit/30ccc25adfa8ef3b5393c65ab8af9b827e1e2c80) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Increase maximum handle length in OAuth flow
+
+## 0.7.0
+
+### Minor Changes
+
+- [#4883](https://github.com/bluesky-social/atproto/pull/4883) [`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for email verification and management in the account management interface
+
+## 0.6.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+## 0.5.2
+
+### Patch Changes
+
+- [#4880](https://github.com/bluesky-social/atproto/pull/4880) [`5d3e248`](https://github.com/bluesky-social/atproto/commit/5d3e248c262f45e3ca471d8d2381830a4cd896ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `/.well-known/change-password` page
+
+## 0.5.1
+
+### Patch Changes
+
+- [#4873](https://github.com/bluesky-social/atproto/pull/4873) [`84eb5ed`](https://github.com/bluesky-social/atproto/commit/84eb5ed95d145870a85ea380df3edf6c591c6310) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix reset password flow
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4820](https://github.com/bluesky-social/atproto/pull/4820) [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Unify account management and authorization pages into a signle package
+
+### Patch Changes
+
+- [#4820](https://github.com/bluesky-social/atproto/pull/4820) [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Account management interface improvements
+
 ## 0.4.3
 
 ### Patch Changes

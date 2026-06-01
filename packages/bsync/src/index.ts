@@ -1,20 +1,24 @@
 import events from 'node:events'
 import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { ServerConfig } from './config'
-import { AppContext, AppContextOptions } from './context'
-import { createMuteOpChannel } from './db/schema/mute_op'
-import { createNotifOpChannel } from './db/schema/notif_op'
-import { createOperationChannel } from './db/schema/operation'
-import { dbLogger, loggerMiddleware } from './logger'
-import routes from './routes'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
+// eslint-disable-next-line import/no-named-as-default-member
+const { createHttpTerminator } = httpTerminator
+type HttpTerminator = ReturnType<typeof createHttpTerminator>
+import { ServerConfig } from './config.js'
+import { AppContext, AppContextOptions } from './context.js'
+import { createMuteOpChannel } from './db/schema/mute_op.js'
+import { createNotifOpChannel } from './db/schema/notif_op.js'
+import { createOperationChannel } from './db/schema/operation.js'
+import { dbLogger, loggerMiddleware } from './logger.js'
+import routes from './routes/index.js'
 
-export * from './config'
-export * from './client'
-export { Database } from './db'
-export { AppContext } from './context'
-export { httpLogger } from './logger'
+export * from './config.js'
+export * from './client.js'
+export { Database } from './db/index.js'
+export { AppContext } from './context.js'
+export { httpLogger } from './logger.js'
 
 export class BsyncService {
   public ctx: AppContext

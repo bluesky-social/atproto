@@ -498,6 +498,7 @@ message ActorInfo {
   optional AgeAssuranceStatus age_assurance_status = 19;
   reserved 20; // DO NOT REMOVE - see dataplane repo
   Record germ_record = 21;
+  string allow_group_chat_invites_from = 22;
 }
 
 message AgeAssuranceStatus {
@@ -1381,6 +1382,42 @@ message StashRef {
   string key = 3;
 }
 
+// Standard.site records
+message GetSiteStandardRecordsByURIRequest {
+  // Mixed list of site.standard.document and site.standard.publication AT-URIs.
+  // URIs of other collections (or unparseable strings) are silently skipped.
+  repeated string uris = 1;
+}
+message GetSiteStandardRecordsByURIResponse {
+  // Latest indexed version of each requested document.
+  repeated SiteStandardRecord documents = 1;
+  // Latest indexed version of each requested publication AND each publication
+  // resolved from a document's `site` field. Each publication appears at most
+  // once across the two sources.
+  repeated SiteStandardRecord publications = 2;
+}
+message GetSiteStandardRecordsByRefRequest {
+  // Mixed list of site.standard.document and site.standard.publication refs
+  // (uri + cid). Refs whose URI is not a SiteStandard collection (or doesn't
+  // parse) are silently skipped.
+  repeated RecordRef refs = 1;
+}
+message GetSiteStandardRecordsByRefResponse {
+  // Document version exactly matching each requested doc ref.
+  repeated SiteStandardRecord documents = 1;
+  // Publication version exactly matching each requested pub ref. This RPC
+  // does NOT auto-resolve publications referenced by documents — callers who
+  // want a paired publication should pass its ref explicitly.
+  repeated SiteStandardRecord publications = 2;
+}
+
+// SiteStandardRecord pairs a record with its addressing ref so callers can
+// build a uri- or (uri,cid)-keyed lookup without server-side encoding.
+message SiteStandardRecord {
+  RecordRef ref = 1;
+  Record record = 2;
+}
+
 service Service {
   //
   // Read Path
@@ -1572,6 +1609,10 @@ service Service {
   rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
+
+  // Standard.site records
+  rpc GetSiteStandardRecordsByURI(GetSiteStandardRecordsByURIRequest) returns (GetSiteStandardRecordsByURIResponse);
+  rpc GetSiteStandardRecordsByRef(GetSiteStandardRecordsByRefRequest) returns (GetSiteStandardRecordsByRefResponse);
 }
 
 

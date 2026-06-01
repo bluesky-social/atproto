@@ -1,0 +1,46 @@
+diff --git a/dist/cjs/index.d.ts b/dist/cjs/index.d.ts
+index 712dae586cc1663c318eed244c307ea0376fa37a..35f187883e69f995a6d5571959046349bfdd40dd 100644
+--- a/dist/cjs/index.d.ts
++++ b/dist/cjs/index.d.ts
+@@ -172,3 +172,9 @@ export { InsertObject } from './parser/insert-values-parser.js';
+ export { MutationObject } from './parser/update-set-parser.js';
+ export { OrderByExpression, OrderByDirectionExpression, } from './parser/order-by-parser.js';
+ export { SetOperationExpression } from './parser/set-operation-parser.js';
++export { QueryCreatorWithCommonTableExpression } from './parser/with-parser.js';
++export { QueryBuilderWithSelection } from './parser/select-parser.js';
++export { Nullable } from './util/type-utils.js';
++export { QueryCreatorWithCommonTableExpression } from './parser/with-parser.js';
++export { QueryBuilderWithSelection } from './parser/select-parser.js';
++export { Nullable } from './util/type-utils.js';
+diff --git a/dist/esm/index.d.ts b/dist/esm/index.d.ts
+index 712dae586cc1663c318eed244c307ea0376fa37a..35f187883e69f995a6d5571959046349bfdd40dd 100644
+--- a/dist/esm/index.d.ts
++++ b/dist/esm/index.d.ts
+@@ -172,3 +172,9 @@ export { InsertObject } from './parser/insert-values-parser.js';
+ export { MutationObject } from './parser/update-set-parser.js';
+ export { OrderByExpression, OrderByDirectionExpression, } from './parser/order-by-parser.js';
+ export { SetOperationExpression } from './parser/set-operation-parser.js';
++export { QueryCreatorWithCommonTableExpression } from './parser/with-parser.js';
++export { QueryBuilderWithSelection } from './parser/select-parser.js';
++export { Nullable } from './util/type-utils.js';
++export { QueryCreatorWithCommonTableExpression } from './parser/with-parser.js';
++export { QueryBuilderWithSelection } from './parser/select-parser.js';
++export { Nullable } from './util/type-utils.js';
+diff --git a/package.json b/package.json
+index 407f0d5d244714796781eb2b9937b7bd65419f81..575cf1327328e71b4e196e7905bfcbf3f156b267 100644
+--- a/package.json
++++ b/package.json
+@@ -13,9 +13,12 @@
+   "module": "dist/esm/index.js",
+   "exports": {
+     ".": {
++      "types": "./dist/esm/index.d.ts",
+       "import": "./dist/esm/index.js",
+       "require": "./dist/cjs/index.js"
+-    }
++    },
++    "./dist/esm/*": "./dist/esm/*",
++    "./dist/cjs/*": "./dist/cjs/*"
+   },
+   "scripts": {
+     "clean": "rm -rf dist && rm -rf test/node/dist && rm -rf test/browser/bundle.js",

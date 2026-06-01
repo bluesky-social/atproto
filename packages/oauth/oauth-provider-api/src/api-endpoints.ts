@@ -1,6 +1,11 @@
 import type { SignedJwt } from '@atproto/jwk'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { Account, DeviceMetadata, ISODateString } from './types.js'
+import type {
+  Account,
+  DeviceMetadata,
+  ISODateString,
+  Session,
+} from './types.js'
 
 // These are the endpoints implemented by the OAuth provider, for its UI to
 // call.
@@ -41,7 +46,7 @@ export type ApiEndpoints = {
    */
   '/device-sessions': {
     method: 'GET'
-    output: ActiveDeviceSession[]
+    output: Session[]
   }
   /**
    * Lists all the active OAuth sessions (access/refresh tokens) that where
@@ -59,8 +64,8 @@ export type ApiEndpoints = {
    */
   '/oauth-sessions': {
     method: 'GET'
-    params: { sub: string }
-    output: ActiveOAuthSession[]
+    params: OAuthSessionsInput
+    output: OAuthSessionsOutput
   }
   '/revoke-oauth-session': {
     method: 'POST'
@@ -73,12 +78,32 @@ export type ApiEndpoints = {
    */
   '/account-sessions': {
     method: 'GET'
-    params: { sub: string }
-    output: ActiveAccountSession[]
+    params: AccountSessionsInput
+    output: AccountSessionsOutput
   }
   '/revoke-account-session': {
     method: 'POST'
     input: RevokeAccountSessionInput
+    output: { success: true }
+  }
+  '/update-email-request': {
+    method: 'POST'
+    input: InitiateEmailUpdateInput
+    output: InitiateEmailUpdateOutput
+  }
+  '/update-email-confirm': {
+    method: 'POST'
+    input: ConfirmEmailUpdateInput
+    output: { success: true }
+  }
+  '/verify-email-request': {
+    method: 'POST'
+    input: InitiateEmailVerificationInput
+    output: { success: true }
+  }
+  '/verify-email-confirm': {
+    method: 'POST'
+    input: ConfirmEmailVerificationInput
     output: { success: true }
   }
   '/consent': {
@@ -146,6 +171,33 @@ export type ConfirmResetPasswordInput = {
   password: string
 }
 
+export type InitiateEmailUpdateInput = {
+  sub: string
+  locale?: string
+}
+
+export type InitiateEmailUpdateOutput = {
+  tokenRequired: boolean
+}
+
+export type ConfirmEmailUpdateInput = {
+  sub: string
+  token?: string
+  email: string
+  locale?: string
+}
+
+export type InitiateEmailVerificationInput = {
+  sub: string
+  locale?: string
+}
+
+export type ConfirmEmailVerificationInput = {
+  sub: string
+  token: string
+  email: string
+}
+
 export type VerifyHandleAvailabilityInput = {
   handle: string
 }
@@ -154,6 +206,18 @@ export type RevokeAccountSessionInput = {
   sub: string
   deviceId: string
 }
+
+export type OAuthSessionsInput = {
+  sub: string
+}
+
+export type OAuthSessionsOutput = ActiveOAuthSession[]
+
+export type AccountSessionsInput = {
+  sub: string
+}
+
+export type AccountSessionsOutput = ActiveAccountSession[]
 
 export type RevokeOAuthSessionInput = {
   sub: string

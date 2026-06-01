@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+import { AppContext } from '../../../../context.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -11,9 +11,9 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 const CURATELIST = app.bsky.graph.defs.curatelist.value
 const MODLIST = app.bsky.graph.defs.modlist.value
@@ -29,11 +29,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const labelers = ctx.reqLabelers(req)
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
       const result = await getLists({ ...params, hydrateCtx }, ctx)
 

@@ -1,4 +1,8 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type {
+  IncomingHttpHeaders,
+  IncomingMessage,
+  ServerResponse,
+} from 'node:http'
 import { SubCtx, subCtx } from './context.js'
 import { MethodMatcherInput } from './method.js'
 import { combineMiddlewares } from './middleware.js'
@@ -8,7 +12,7 @@ import { Middleware } from './types.js'
 
 export type RouterCtx<T extends object | void = void> = SubCtx<
   T,
-  { url: Readonly<URL> }
+  { url: Readonly<URL>; headers: IncomingHttpHeaders }
 >
 
 export type RouterMiddleware<
@@ -93,7 +97,7 @@ export class Router<
 
       // Any error thrown here will be uncaught/unhandled (a middleware should
       // never throw)
-      const context = subCtx(this, { url })
+      const context = subCtx(this, { url, headers: req.headers })
       middleware.call(context, req, res, next)
     }
   }

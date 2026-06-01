@@ -1,26 +1,26 @@
 import { Insertable, Selectable, sql } from 'kysely'
-import { $Typed, Cid, lexParse } from '@atproto/lex'
+import { $Typed, Cid, getBlobCidString, lexParse } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import { app } from '../../../../lexicons'
+import { app } from '../../../../lexicons/index.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   uriToDid,
-} from '../../../../util/uris'
-import { RecordWithMedia } from '../../../../views/types'
-import { parsePostgate } from '../../../../views/util'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { Notification } from '../../db/tables/notification'
-import { countAll, excluded } from '../../db/util'
+} from '../../../../util/uris.js'
+import { RecordWithMedia } from '../../../../views/types.js'
+import { parsePostgate } from '../../../../views/util.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { Notification } from '../../db/tables/notification.js'
+import { countAll, excluded } from '../../db/util.js'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
-} from '../../util'
-import { RecordProcessor } from '../processor'
+} from '../../util.js'
+import { RecordProcessor } from '../processor.js'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -152,7 +152,7 @@ const insertFn = async (
       const imagesEmbed = images.map((img, i) => ({
         postUri: uri.toString(),
         position: i,
-        imageCid: img.image.ref.toString(),
+        imageCid: getBlobCidString(img.image),
         alt: img.alt,
       }))
       embeds.push(imagesEmbed)
@@ -164,7 +164,7 @@ const insertFn = async (
         uri: external.uri,
         title: external.title,
         description: external.description,
-        thumbCid: external.thumb?.ref.toString() || null,
+        thumbCid: getBlobCidString(external.thumb) || null,
       }
       embeds.push(externalEmbed)
       await db.insertInto('post_embed_external').values(externalEmbed).execute()
@@ -231,7 +231,7 @@ const insertFn = async (
       const { video } = postEmbed
       const videoEmbed = {
         postUri: uri.toString(),
-        videoCid: video.ref.toString(),
+        videoCid: getBlobCidString(video),
         // @NOTE: alt is required for image but not for video on the lexicon.
         alt: postEmbed.alt ?? null,
       }

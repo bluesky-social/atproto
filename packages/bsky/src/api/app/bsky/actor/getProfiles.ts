@@ -1,16 +1,16 @@
 import { mapDefined } from '@atproto/common'
 import { DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
-import { createPipeline, noRules } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+import { createPipeline, noRules } from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
@@ -30,12 +30,14 @@ export default function (server: Server, ctx: AppContext) {
       paramsParseLoose: true,
     },
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         viewer,
         labelers,
         includeTakedowns,
+        skipViewerBlocks,
       })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)

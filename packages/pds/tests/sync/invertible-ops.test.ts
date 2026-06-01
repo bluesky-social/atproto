@@ -65,9 +65,7 @@ describe('invertible ops', () => {
       const { prevData } = evt
       if (!prevData) continue
 
-      const { blocks, root } = await repo.readCarWithRoot(
-        evt.blocks as Uint8Array,
-      )
+      const { blocks, root } = await repo.readCarWithRoot(evt.blocks)
       const storage = new repo.MemoryBlockstore(blocks)
       const slice = await repo.Repo.load(storage, root)
 

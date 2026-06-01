@@ -160,6 +160,10 @@
         "allowIncoming": {
           "type": "string",
           "knownValues": ["all", "none", "following"]
+        },
+        "allowGroupInvites": {
+          "type": "string",
+          "knownValues": ["all", "none", "following"]
         }
       }
     },
@@ -264,6 +268,15 @@
           "type": "string",
           "description": "The user who issued this verification.",
           "format": "did"
+        },
+        "issuerDisplayName": {
+          "type": "string",
+          "description": "The display name of the issuer."
+        },
+        "issuerHandle": {
+          "type": "string",
+          "description": "The handle of the issuer.",
+          "format": "handle"
         },
         "uri": {
           "type": "string",
@@ -684,6 +697,10 @@
           "type": "union",
           "description": "An optional embed associated with the status.",
           "refs": ["app.bsky.embed.external#view"]
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
         "expiresAt": {
           "type": "string",

@@ -1,5 +1,5 @@
 import { GeneratedAlways } from 'kysely'
-import { Method } from '../../proto/bsync_pb'
+import { Method } from '../../proto/bsync_pb.js'
 
 export type OperationMethod = Method.CREATE | Method.UPDATE | Method.DELETE
 
@@ -9,7 +9,7 @@ export interface Operation {
   namespace: string
   key: string
   method: OperationMethod
-  payload: Uint8Array
+  payload: Uint8Array<ArrayBuffer>
   createdAt: GeneratedAlways<Date>
 }
 

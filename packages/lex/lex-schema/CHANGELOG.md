@@ -1,5 +1,66 @@
 # @atproto/lex-schema
 
+## 0.1.2
+
+### Patch Changes
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `$token` accessor for `token` lexicon values schemas
+
+## 0.1.1
+
+### Patch Changes
+
+- [#4955](https://github.com/bluesky-social/atproto/pull/4955) [`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes a bug that would reject valid `datetime` atproto strings in non-strict validation
+
+- [#4955](https://github.com/bluesky-social/atproto/pull/4955) [`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use datetime validation utility from `@atproto/syntax`
+
+- Updated dependencies [[`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8)]:
+  - @atproto/syntax@0.6.1
+
+## 0.1.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/lex-data@0.1.0
+  - @atproto/syntax@0.6.0
+
+## 0.0.20
+
+### Patch Changes
+
+- [#4925](https://github.com/bluesky-social/atproto/pull/4925) [`2fd8d62`](https://github.com/bluesky-social/atproto/commit/2fd8d62708dc23de6ed21cbcccfebab68b19f588) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Increase string preview validation error
+
+## 0.0.19
+
+### Patch Changes
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `AtUriString` utilities from `@atproto/syntax`
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+
+## 0.0.18
+
+### Patch Changes
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client.
+
+  BREAKING: The `allowLegacy` option has been removed from the blob schema builder, and legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, and in non-strict mode they are accepted. Consumers should stop passing `allowLegacy` and rely on strictness configuration instead. Likewise, CLI consumers should stop using the removed `--allowLegacyBlobs` flag and use the default strict/non-strict behavior.
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex-data@0.0.15
+
 ## 0.0.17
 
 ### Patch Changes

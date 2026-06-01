@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'

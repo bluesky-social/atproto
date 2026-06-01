@@ -6,22 +6,25 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getReviewState } from '../api/util'
-import { BackgroundQueue } from '../background'
-import { OzoneConfig } from '../config'
-import { EventPusher } from '../daemon'
-import { Database } from '../db'
-import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
-import { BlobPushEvent } from '../db/schema/blob_push_event'
-import { LabelChannel } from '../db/schema/label'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { jsonb } from '../db/types'
-import { ImageInvalidator } from '../image-invalidator'
-import { ids } from '../lexicon/lexicons'
-import { RepoBlobRef, RepoRef } from '../lexicon/types/com/atproto/admin/defs'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
-import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs'
-import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
+import { getReviewState } from '../api/util.js'
+import { BackgroundQueue } from '../background.js'
+import { OzoneConfig } from '../config/index.js'
+import { EventPusher } from '../daemon/index.js'
+import { Database } from '../db/index.js'
+import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination.js'
+import { BlobPushEvent } from '../db/schema/blob_push_event.js'
+import { LabelChannel } from '../db/schema/label.js'
+import { ModerationEvent } from '../db/schema/moderation_event.js'
+import { jsonb } from '../db/types.js'
+import { ImageInvalidator } from '../image-invalidator.js'
+import { ids } from '../lexicon/lexicons.js'
+import {
+  RepoBlobRef,
+  RepoRef,
+} from '../lexicon/types/com/atproto/admin/defs.js'
+import { Label } from '../lexicon/types/com/atproto/label/defs.js'
+import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
+import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef.js'
 import {
   REVIEWESCALATED,
   REVIEWOPEN,
@@ -42,39 +45,41 @@ import {
   isModEventTakedown,
   isRecordEvent,
   isScheduleTakedownEvent,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses'
-import { httpLogger as log } from '../logger'
-import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses.js'
+import { httpLogger as log } from '../logger.js'
+import { LABELER_HEADER_NAME, ParsedLabelers } from '../util.js'
+import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
-} from './status'
-import { StrikeService, StrikeServiceCreator } from './strike'
+} from './status.js'
+import { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
   ModSubject,
   RecordSubject,
   RepoSubject,
   subjectFromStatusRow,
-} from './subject'
+} from './subject.js'
 import {
   ModEventType,
   ModerationEventRow,
+  ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
   ReporterStats,
   ReporterStatsResult,
   ReversibleModerationEvent,
-} from './types'
+} from './types.js'
 import {
   dateFromDbDatetime,
   formatLabel,
   formatLabelRow,
   getPdsAgentForRepo,
   signLabel,
-} from './util'
-import { AuthHeaders, ModerationViews } from './views'
+} from './util.js'
+import { AuthHeaders, ModerationViews } from './views.js'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -230,21 +235,34 @@ export class ModerationService {
 
     if (subject) {
       const isSubjectAtUri = subject.startsWith('at://')
+      const subjectAtUri = isSubjectAtUri ? new AtUri(subject) : null
       const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
       const subjectUri = isSubjectAtUri ? subject : null
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // if requester wants to include all user records, let's ignore matching on subjectUri
+      // subjectUri or subjectConvoId
       if (!includeAllUserRecords) {
-        builder = builder
-          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
-          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+        if (subjectAtUri?.collection === 'chat.bsky.convo') {
+          builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
+        } else if (subjectUri) {
+          builder = builder.where('subjectUri', '=', subjectUri)
+        } else {
+          // Account-level: subjectUri IS NULL also matches conversation events,
+          // so explicitly exclude them.
+          builder = builder
+            .where('subjectUri', 'is', null)
+            .where('subjectConvoId', 'is', null)
+        }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('subjectUri', 'is', null)
+      builder = builder
+        .where('subjectUri', 'is', null)
+        .where('subjectConvoId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
+    } else if (subjectType === 'conversation') {
+      builder = builder.where('subjectConvoId', 'is not', null)
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
@@ -375,6 +393,29 @@ export class ModerationService {
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
   }
 
+  async getEventsByIds(ids: number[]): Promise<ModerationEventRowWithHandle[]> {
+    if (!ids.length) return []
+
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute()
+
+    if (!result.length) return []
+
+    const infos = await this.views.getAccoutInfosByDid([
+      ...result.map((row) => row.subjectDid),
+      ...result.map((row) => row.createdBy),
+    ])
+
+    return result.map((r) => ({
+      ...r,
+      creatorHandle: infos.get(r.createdBy)?.handle,
+      subjectHandle: infos.get(r.subjectDid)?.handle,
+    }))
+  }
+
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
@@ -405,7 +446,9 @@ export class ModerationService {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
-      .where('recordPath', '!=', '')
+      .where((qb) =>
+        qb.where('recordPath', '!=', '').orWhere('convoId', '!=', ''),
+      )
       .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
       .selectAll()
       .execute()
@@ -590,6 +633,13 @@ export class ModerationService {
       if (isReportingMuted) {
         meta.isReporterMuted = true
       }
+      // Also capture whether the subject was muted at event-creation time, so
+      // the queue-router daemon can populate report.isMuted later without
+      // racing against subsequent mute/unmute changes.
+      const isSubjectMuted = await this.isSubjectMuted(subject.did)
+      if (isSubjectMuted) {
+        meta.isSubjectMuted = true
+      }
     }
 
     const subjectInfo = subject.info()
@@ -651,6 +701,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        subjectConvoId: subjectInfo.subjectConvoId,
         modTool: modTool ? jsonb(modTool) : null,
         externalId: externalId ?? null,
         severityLevel,
@@ -665,6 +716,33 @@ export class ModerationService {
       modEvent,
       subject.blobCids,
     )
+
+    // Manage expiring tag rows for temporary tags
+    if (isModEventTag(event)) {
+      if (event.durationInHours && event.add.length > 0) {
+        const expiresAt = addHoursToDate(
+          event.durationInHours,
+          createdAt,
+        ).toISOString()
+        await insertExpiringTags(this.db, {
+          eventId: modEvent.id,
+          did: subjectInfo.subjectDid,
+          recordPath: subjectInfo.subjectUri ?? '',
+          convoId: subjectInfo.subjectConvoId ?? '',
+          tags: event.add,
+          expiresAt,
+          createdBy,
+        })
+      }
+      if (event.remove.length > 0) {
+        await removeExpiringTags(this.db, {
+          did: subjectInfo.subjectDid,
+          recordPath: subjectInfo.subjectUri ?? '',
+          convoId: subjectInfo.subjectConvoId ?? '',
+          tags: event.remove,
+        })
+      }
+    }
 
     if (isAgeAssurancePurgeEvent(event)) {
       await this.purgeAgeAssuranceEvents(subjectInfo.subjectDid)
@@ -755,6 +833,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('suspendUntil', '>', new Date().toISOString())
       .select('did')
       .limit(1)
@@ -1009,7 +1088,7 @@ export class ModerationService {
       modTool,
     } = info
 
-    const result = await this.logEvent({
+    return await this.logEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: reasonType,
@@ -1020,8 +1099,6 @@ export class ModerationService {
       createdAt,
       modTool,
     })
-
-    return result
   }
 
   async getSubjectStatuses({
@@ -1077,20 +1154,34 @@ export class ModerationService {
       )
 
       if (!includeAllUserRecords) {
-        builder = builder.where((qb) =>
-          subjectInfo.recordPath
-            ? qb.where(
-                'moderation_subject_status.recordPath',
-                '=',
-                subjectInfo.recordPath,
-              )
-            : qb.where('moderation_subject_status.recordPath', '=', ''),
-        )
+        if (subjectInfo.convoId) {
+          builder = builder.where(
+            'moderation_subject_status.convoId',
+            '=',
+            subjectInfo.convoId,
+          )
+        } else if (subjectInfo.recordPath) {
+          builder = builder.where(
+            'moderation_subject_status.recordPath',
+            '=',
+            subjectInfo.recordPath,
+          )
+        } else {
+          // Account-level: recordPath = '' also matches conversation statuses,
+          // so explicitly exclude them.
+          builder = builder
+            .where('moderation_subject_status.recordPath', '=', '')
+            .where('moderation_subject_status.convoId', '=', '')
+        }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('moderation_subject_status.recordPath', '=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '=', '')
+        .where('moderation_subject_status.convoId', '=', '')
     } else if (subjectType === 'record') {
       builder = builder.where('moderation_subject_status.recordPath', '!=', '')
+    } else if (subjectType === 'conversation') {
+      builder = builder.where('moderation_subject_status.convoId', '!=', '')
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -1380,6 +1471,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
       .where('recordPath', '=', subject.recordPath ?? '')
+      .where('convoId', '=', subject.convoId ?? '')
       .selectAll()
       .executeTakeFirst()
     return result ?? null
@@ -1392,7 +1484,22 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('muteReportingUntil', '>', new Date().toISOString())
+      .select(sql`true`.as('status'))
+      .executeTakeFirst()
+
+    return !!result
+  }
+
+  // Check if a subject (the account being reported) has an active mute
+  async isSubjectMuted(did: string) {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('convoId', '=', '')
+      .where('muteUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
 

@@ -1,8 +1,11 @@
 import { mapDefined } from '@atproto/common'
 import { DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -10,9 +13,9 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listActivitySubscriptions = createPipeline(
@@ -32,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const result = await listActivitySubscriptions(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        { ...params, hydrateCtx },
         ctx,
       )
 
@@ -103,7 +106,7 @@ type Context = {
 }
 
 type Params = app.bsky.notification.listActivitySubscriptions.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

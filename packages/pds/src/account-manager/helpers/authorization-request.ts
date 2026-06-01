@@ -7,8 +7,8 @@ import {
   RequestId,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
-import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
-import { AccountDb, AuthorizationRequest } from '../db'
+import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
+import { AccountDb, AuthorizationRequest } from '../db/index.js'
 
 export const rowToRequestData = (
   row: Selectable<AuthorizationRequest>,

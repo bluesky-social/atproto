@@ -7,11 +7,19 @@ import {
   currentDatetimeString,
   isDidIdentifier,
 } from '@atproto/lex'
-import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
+import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
 import { com } from '../../lexicons/index.js'
-import { AccountDb, ActorEntry } from '../db'
+import { AccountDb, ActorEntry } from '../db/index.js'
 
-export class UserAlreadyExistsError extends Error {}
+export class UserAlreadyExistsError extends Error {
+  name = 'UserAlreadyExistsError'
+  constructor(options?: ErrorOptions) {
+    super(
+      'This email address is already in use, please use a different email.',
+      options,
+    )
+  }
+}
 
 export type ActorAccount = ActorEntry & {
   email: string | null

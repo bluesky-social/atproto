@@ -1,9 +1,9 @@
 import { Router, raw } from 'express'
-import { AppContext } from '../../context'
-import { webhookAuth } from '../kws/webhook'
-import { handler as ageVerifiedRedirect } from './redirects/kws-age-verified'
-import { AppContextWithAA } from './types'
-import { handler as ageVerifiedWebhook } from './webhooks/kws-age-verified'
+import { AppContext } from '../../context.js'
+import { webhookAuth } from '../kws/webhook.js'
+import { handler as ageVerifiedRedirect } from './redirects/kws-age-verified.js'
+import { AppContextWithAA } from './types.js'
+import { handler as ageVerifiedWebhook } from './webhooks/kws-age-verified.js'
 
 export const createRouter = (ctx: AppContext): Router => {
   assertAppContextWithAgeAssuranceClient(ctx)

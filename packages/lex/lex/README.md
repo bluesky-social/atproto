@@ -1,7 +1,3 @@
-> [!IMPORTANT]
->
-> This package is currently in **preview**. The API and features are subject to change before the stable release. See the [Changelog](./CHANGELOG.md) for version history.
-
 Type-safe Lexicon tooling for AT Protocol data.
 
 - Fetch and manage Lexicon schemas, generate TypeScript validators
@@ -54,6 +50,16 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
   - [Type definitions](#type-definitions)
   - [Building data](#building-data)
   - [Validation Helpers](#validation-helpers)
+    - [Record / typed-object helpers](#record--typed-object-helpers)
+      - [`$type` - Type Identifier](#type---type-identifier)
+      - [`$build(data)` - Build with Defaults](#builddata---build-with-defaults)
+      - [`$isTypeOf(data)` - Type Discriminator](#istypeofdata---type-discriminator)
+    - [Universal validation helpers](#universal-validation-helpers)
+      - [`$matches(data)` - Type Guard](#matchesdata---type-guard)
+      - [`$assert(data)` - Type-Narrowing Assertion](#assertdata---type-narrowing-assertion)
+      - [`$parse(data)` - Parse and Validate](#parsedata---parse-and-validate)
+      - [`$validate(data)` - Validate a value against the schema](#validatedata---validate-a-value-against-the-schema)
+      - [`$safeParse(data, options?)` - Parse a value against a schema and get the resulting value](#safeparsedata-options---parse-a-value-against-a-schema-and-get-the-resulting-value)
 - [Data Model](#data-model)
   - [Types](#types)
   - [JSON Encoding](#json-encoding)
@@ -61,21 +67,58 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 - [Making simple XRPC Requests](#making-simple-xrpc-requests)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
+    - [Unauthenticated Client](#unauthenticated-client)
+    - [Authenticated Client with OAuth](#authenticated-client-with-oauth)
+    - [Authenticated Client with Password](#authenticated-client-with-password)
+    - [Client with Service Proxy (authenticated only)](#client-with-service-proxy-authenticated-only)
+    - [Validation and Strictness Options](#validation-and-strictness-options)
   - [Core Methods](#core-methods)
+    - [`client.call()`](#clientcall)
+    - [`client.create()`](#clientcreate)
+    - [`client.get()`](#clientget)
+    - [`client.put()`](#clientput)
+    - [`client.delete()`](#clientdelete)
+    - [`client.list()`](#clientlist)
+    - [`client.applyWrites()`](#clientapplywrites)
   - [Error Handling](#error-handling)
+    - [Safe Methods](#safe-methods)
+    - [XrpcFailure Type](#xrpcfailure-type)
   - [Authentication Methods](#authentication-methods)
+    - [`client.did`](#clientdid)
+    - [`client.assertAuthenticated()`](#clientassertauthenticated)
+    - [`client.assertDid`](#clientassertdid)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
 - [Utilities](#utilities)
   - [Datetime Strings](#datetime-strings)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
+    - [Development Workflow](#development-workflow)
   - [Tree-Shaking](#tree-shaking)
+    - [Namespace notation](#namespace-notation)
+    - [Explicit `.main` reference](#explicit-main-reference)
+    - [Direct named import from the schema file](#direct-named-import-from-the-schema-file)
+    - [Default import (recommended)](#default-import-recommended)
+    - [Drawbacks of the default export](#drawbacks-of-the-default-export)
+    - [Summary](#summary)
   - [Blob references](#blob-references)
+    - [TypedBlobRef: The Current Standard](#typedblobref-the-current-standard)
+    - [LegacyBlobRef: Historical Format](#legacyblobref-historical-format)
+    - [Working with Both Formats](#working-with-both-formats)
   - [Actions](#actions)
+    - [What are Actions?](#what-are-actions)
+    - [Using Actions](#using-actions)
+    - [Composing Multiple Operations](#composing-multiple-operations)
+    - [Higher-Order Actions](#higher-order-actions)
   - [Creating a Client from Another Client](#creating-a-client-from-another-client)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
+    - [Creating Posts](#creating-posts)
+    - [Following Users](#following-users)
+    - [Updating Profile with Retry Logic](#updating-profile-with-retry-logic)
+    - [Packaging Actions as a Library](#packaging-actions-as-a-library)
+    - [Best Practices for Actions](#best-practices-for-actions)
   - [Standard Schema Compatibility](#standard-schema-compatibility)
+  - [Validating Generic Schemas with `$check`](#validating-generic-schemas-with-check)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -189,15 +232,16 @@ Options:
 - `--clear` - Clear output directory before generating
 - `--override` - Override existing files (has no effect with --clear)
 - `--no-pretty` - Don't run prettier on generated files (prettier is enabled by default)
-- `--ignore-errors` - How to handle errors when processing input files
-- `--pure-annotations` - Add `/*#__PURE__*/` annotations for tree-shaking tools. Set this to true if you are using generated lexicons in a library
+- `--ignore-errors` - Skip files that fail to parse or compile instead of aborting the build
+- `--ignore-invalid-lexicons` - Skip lexicon files that fail validation instead of exiting with an error
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
-- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
-- `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
-- `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
-- `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
+- `--import-ext <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--import-ext ""` to generate extension-less imports
+- `--file-ext <ext>` - File extension to use for generated files (default: `.ts`)
+- `--index-file` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
+- `--defs-export` - When some definitions conflict with child namespaces, export lexicon definitions under a separate `$defs` namespace (e.g. `com.example.foo.$defs`)
+- `--no-default-export` - Disable generation of a `default` export of the `main` schema in each schema's namespace file (default exports are enabled by default; see [Tree-Shaking](#tree-shaking))
 
 ### Generated Schema Structure
 
@@ -232,7 +276,7 @@ import * as app from './lexicons/app.js'
 const post = app.bsky.feed.post.$build({
   // No need to specify $type when using $build
   text: 'Hello, world!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 
 // For runtime validation, use $parse()/$validate() instead
@@ -242,11 +286,12 @@ app.bsky.feed.post.$validate(post)
 
 ### Validation Helpers
 
-Each schema provides multiple validation methods:
+Generated namespaces expose a handful of `$`-prefixed helpers bound to the namespace's `main` schema. They come in two groups:
 
-#### `$nsid` - Namespace Identifier
+- [**Universal validation helpers**](#universal-validation-helpers) are available on every schema's `main`: `$matches`, `$assert`, `$check`, `$parse`, `$safeParse`, `$validate`, `$safeValidate` (and `$cast` / `$ifMatches`). These work for records, typed objects, queries, procedures, and subscriptions.
+- [**Record / typed-object helpers**](#record--typed-object-helpers) are only emitted for record and typed-object schemas: `$type`, `$build`, `$isTypeOf`.
 
-Returns the NSID of the schema:
+In addition, every generated namespace file exports a top-level `$nsid` constant containing the NSID of the lexicon document:
 
 ```typescript
 import * as app from './lexicons/app.js'
@@ -254,9 +299,13 @@ import * as app from './lexicons/app.js'
 console.log(app.bsky.feed.defs.$nsid) // 'app.bsky.feed.defs'
 ```
 
-#### `$type` - Type Identifier
+The Schema instance itself (for example `app.bsky.feed.post.main`) also exposes the underlying methods both with and without the `$` prefix (e.g. `main.parse()` and `main.$parse()`).
 
-Returns the `$type` string of the schema (for record and object schemas):
+#### Record / typed-object helpers
+
+##### `$type` - Type Identifier
+
+Returns the `$type` string of the schema (only available on record and typed-object schemas):
 
 ```typescript
 import * as app from './lexicons/app.js'
@@ -265,121 +314,31 @@ console.log(app.bsky.feed.post.$type) // 'app.bsky.feed.post'
 console.log(app.bsky.actor.defs.profileViewBasic.$type) // 'app.bsky.actor.defs#profileViewBasic'
 ```
 
-#### `$check(data)` - Type Guard
+Prefer `$type` over hard-coding the equivalent string literal in your code. The constant is emitted exactly once per schema in the generated namespace file, so every reference reuses the same string instance. Inlining `'app.bsky.feed.post'` everywhere instead leaks the same string into every call site, increases bundle size, and creates a typo-prone source of drift between your code and the schema.
 
-Returns `true` if data matches the schema, `false` otherwise. Acts as a TypeScript type guard:
+##### `$build(data)` - Build with Defaults
 
-```typescript
-import { l } from '@atproto/lex'
-import * as app from './lexicons/app.js'
-
-const data = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello!',
-  createdAt: l.toDatetimeString(new Date()),
-}
-
-if (app.bsky.feed.post.$check(data)) {
-  // TypeScript knows data is a Post here
-  console.log(data.text)
-}
-```
-
-#### `$parse(data)` - Parse and Validate
-
-Validates and returns typed data, throwing an error if validation fails:
+Builds data by adding the `$type` property and properly types the result. This also allows to declare a variable with the correct type without having to explicitly specify it.
 
 ```typescript
 import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
-try {
-  const post = app.bsky.feed.post.$main.$parse({
-    $type: 'app.bsky.feed.post',
-    text: 'Hello!',
-    createdAt: l.toDatetimeString(new Date()),
-  })
-  // post is now typed and validated
-  console.log(post.text)
-} catch (error) {
-  console.error('Validation failed:', error)
-}
-```
-
-> [!NOTE]
->
-> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Use `$validate()` for value validation.
-
-#### `$validate(data)` - Validate a value against the schema
-
-Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
-
-```typescript
-import { l } from '@atproto/lex'
-import * as app from './lexicons/app.js'
-
-const value = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello!',
-  createdAt: l.toDatetimeString(new Date()),
-}
-
-// Throws if no valid
-const result = app.bsky.feed.post.$validate(value)
-
-value === result // true
-```
-
-#### `$safeParse(data, options?)` - Parse a value against a schema and get the resulting value
-
-Returns a detailed validation result object without throwing:
-
-```typescript
-import { l } from '@atproto/lex'
-import * as app from './lexicons/app.js'
-
-const result = app.bsky.feed.post.$safeParse({
-  $type: 'app.bsky.feed.post',
-  text: 'Hello!',
-  createdAt: l.toDatetimeString(new Date()),
-})
-
-if (result.success) {
-  console.log('Valid post:', result.value)
-} else {
-  console.error('Validation failed:', result.error)
-}
-```
-
-All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
-
-```typescript
-// Strict mode (default) - rejects datetime without timezone
-app.bsky.feed.post.$safeParse(data) // { strict: true } is the default
-
-// Non-strict mode - accepts more lenient data
-app.bsky.feed.post.$safeParse(data, { strict: false })
-```
-
-#### `$build(data)` - Build with Defaults
-
-Builds data by adding the `$type` property and properly types the result. Note that `$build()` does not perform validation - use `$parse()` if you need validation:
-
-```typescript
-import { l } from '@atproto/lex'
-import * as app from './lexicons/app.js'
-
-// The type of the "like" variable will be "app.bsky.feed.like.Main"
+// The type of the "like" variable will be "app.bsky.feed.like.Main" (no need to explicitly specify the type)
 const like = app.bsky.feed.like.$build({
   subject: {
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
     cid: 'bafyrei...',
   },
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 ```
 
-#### `$isTypeOf(data)` - Type Discriminator
+> [!NOTE]
+>
+> `$build()` does not perform validation, and expects properly typed input data - use `$parse()` if you need validation.
+
+##### `$isTypeOf(data)` - Type Discriminator
 
 Discriminates (pre-validated) data based on its `$type` property, without re-validating. This is especially useful when working with union types:
 
@@ -396,6 +355,131 @@ declare const data:
 if (app.bsky.feed.post.$isTypeOf(data)) {
   // data is a post
 }
+```
+
+#### Universal validation helpers
+
+##### `$matches(data)` - Type Guard
+
+Returns `true` if data matches the schema, `false` otherwise. Acts as a TypeScript type guard:
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const data: unknown = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: l.currentDatetimeString(),
+}
+
+if (app.bsky.feed.post.$matches(data)) {
+  // TypeScript knows data is a Post here
+  console.log(data.text)
+}
+```
+
+> [!NOTE]
+>
+> Performs validation so [`$isTypeOf`](#istypeofdata---type-discriminator) is preferred for pre-validated & properly typed data.
+
+##### `$assert(data)` - Type-Narrowing Assertion
+
+Throws if `data` does not match the schema. When the schema is statically known (e.g. `app.bsky.feed.post`), TypeScript narrows the type of `data` after the call:
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const data: unknown = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: l.currentDatetimeString(),
+}
+
+app.bsky.feed.post.$assert(data)
+
+// TypeScript now knows data is app.bsky.feed.post.Main
+console.log(data.text)
+```
+
+For library code that operates on a schema parameter whose type cannot be fully expressed, see [Validating Generic Schemas with `$check`](#validating-generic-schemas-with-check).
+
+##### `$parse(data)` - Parse and Validate
+
+Validates and returns typed data, throwing an error if validation fails:
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+try {
+  const post = app.bsky.feed.post.$parse({
+    $type: 'app.bsky.feed.post',
+    text: 'Hello!',
+    createdAt: l.currentDatetimeString(),
+  })
+
+  // post is now typed and validated
+  console.log(post.text)
+} catch (error) {
+  console.error('Validation failed:', error)
+}
+```
+
+> [!NOTE]
+>
+> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Use `$validate()` for value validation.
+
+##### `$validate(data)` - Validate a value against the schema
+
+Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const value = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: l.currentDatetimeString(),
+}
+
+// Throws if no valid
+const result = app.bsky.feed.post.$validate(value)
+
+value === result // true
+```
+
+##### `$safeParse(data, options?)` - Parse a value against a schema and get the resulting value
+
+Returns a detailed validation result object without throwing:
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const result = app.bsky.feed.post.$safeParse({
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: l.currentDatetimeString(),
+})
+
+if (result.success) {
+  console.log('Valid post:', result.value)
+} else {
+  console.error('Validation failed:', result.error)
+}
+```
+
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, non-raw CIDs are allowed in blob references, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
+
+```typescript
+// Strict mode (default) - rejects datetime without timezone
+app.bsky.feed.post.$safeParse(data) // { strict: true } is the default
+
+// Non-strict mode - accepts more lenient data
+app.bsky.feed.post.$safeParse(data, { strict: false })
 ```
 
 ## Data Model
@@ -611,7 +695,7 @@ const client = new Client(session, {
 
 - **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
-- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `true`.
+- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. Default: `true`.
 
 ### Core Methods
 
@@ -656,7 +740,7 @@ import * as app from './lexicons/app.js'
 
 const result = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
-  createdAt: l.toDatetimeString(new Date()),
+  createdAt: l.currentDatetimeString(),
 })
 
 console.log(result.uri) // at://did:plc:...
@@ -666,7 +750,7 @@ console.log(result.cid)
 Options:
 
 - `rkey` - Custom record key (auto-generated if not provided)
-- `validate` - Asks the PDS to validate the record against schema when processing the request
+- `validate` - Tri-state instruction to the PDS. `true` forces server-side schema validation, `false` explicitly disables it, and `undefined` (default) lets the PDS decide (it validates only collections whose schemas it knows)
 - `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - CID for optimistic concurrency control
 
@@ -708,8 +792,8 @@ await client.put(app.bsky.actor.profile, {
 Options:
 
 - `rkey` - Record key (required for non-literal keys)
-- `validate` - Validate record against schema before updating (falls back to `validateRequest` option if not specified)
-- `validateRequest` - Alternative way to enable validation (used if `validate` is not specified)
+- `validate` - Tri-state instruction to the PDS. `true` forces server-side schema validation, `false` explicitly disables it, and `undefined` (default) lets the PDS decide (it validates only collections whose schemas it knows)
+- `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - Expected repo commit CID
 - `swapRecord` - Expected record CID
 
@@ -741,6 +825,11 @@ for (const record of result.records) {
   console.log(record.uri, record.value.text)
 }
 
+// Records that failed local schema validation are returned separately
+for (const invalid of result.invalid) {
+  console.warn('Invalid record:', invalid)
+}
+
 // Pagination
 if (result.cursor) {
   const nextPage = await client.list(app.bsky.feed.post, {
@@ -749,6 +838,55 @@ if (result.cursor) {
   })
 }
 ```
+
+The result includes:
+
+- `records` - Records that successfully validated against the schema
+- `invalid` - Records returned by the server that failed local schema validation (raw `LexMap` values)
+- `cursor` - Pagination cursor (if more results are available)
+
+#### `client.applyWrites()`
+
+Perform an atomic batch of create, update, and delete operations in a single request.
+
+```typescript
+import { l } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+const response = await client.applyWrites((op) => [
+  // Create a new post
+  op.create(app.bsky.feed.post, {
+    text: 'Hello, world!',
+    createdAt: l.currentDatetimeString(),
+  }),
+
+  // Update profile
+  op.update(app.bsky.actor.profile, {
+    displayName: 'Alice',
+    description: 'Updated bio',
+  }),
+
+  // Delete an existing post by rkey
+  op.delete(app.bsky.feed.post, {
+    rkey: '3jxf7z2k3q2',
+  }),
+])
+
+// Check results
+for (const result of response.body.results) {
+  console.log(result.uri, result.cid)
+}
+```
+
+Options:
+
+- `repo` - Repository identifier (defaults to authenticated user's DID)
+- `validate` - Tri-state instruction to the PDS. `true` forces server-side schema validation, `false` explicitly disables it, and `undefined` (default) lets the PDS decide (it validates only collections whose schemas it knows)
+- `swapCommit` - CID for optimistic concurrency control
+
+> [!NOTE]
+>
+> All operations in an `applyWrites()` call are atomic - they either all succeed or all fail together. This is useful for maintaining consistency when making multiple related changes.
 
 ### Error Handling
 
@@ -782,13 +920,23 @@ if (result.success) {
   // Handle success
   console.log(result.body)
 } else {
-  // Handle failure - result is an XrpcFailure
+  // Handle failure - result is an XrpcFailure.
+  //
+  // All XrpcFailure subclasses inherit from XrpcError and share these members:
+  result.error // string error code (e.g. "HandleNotFound", "UpstreamFailure")
+  result.message // string
+  result.shouldRetry() // boolean - whether the error is transient
+
+  if (result.matchesSchemaErrors()) {
+    // Check if the error matches a declared error in the schema.
+    // TypeScript narrows `result.error` to one of the method's declared error codes.
+    result.error // "HandleNotFound"
+  }
+
+  // Branch on the specific error class to access additional members:
   if (result instanceof XrpcResponseError) {
     // The server responded with an error status code (4xx or 5xx).
     // This is used for all error responses, whether or not they have a valid XRPC error payload.
-
-    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", "UpstreamFailure", etc.)
-    result.message // string
     result.response.status // number
     result.response.headers // Headers
     result.payload // undefined | { body: unknown; encoding: string }
@@ -798,25 +946,11 @@ if (result.success) {
   } else if (result instanceof XrpcInvalidResponseError) {
     // The response was truly invalid (3xx redirect, malformed JSON, schema mismatch, etc.).
     // This is a more specific error for responses that are not processable.
-
-    result.error // "UpstreamFailure"
-    result.message // string
     result.response.status // number
     result.response.headers // Headers
     result.payload // undefined | { body: unknown; encoding: string }
   } else if (result instanceof XrpcInternalError) {
     // Something went wrong on the client side (network error, etc.)
-    result.error // "InternalServerError"
-    result.message // string
-  }
-
-  // All XrpcFailure types have these properties:
-  result.shouldRetry() // boolean - whether the error is transient
-
-  if (result.matchesSchemaErrors()) {
-    // Check if the error matches a declared error in the schema.
-    // TypeScript knows this is a declared error for the method.
-    result.error // "HandleNotFound"
   }
 }
 ```
@@ -932,8 +1066,16 @@ import {
   ifDatetimeString, // Returns DatetimeString or undefined
 
   // Blob references
-  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
-  isBlobRef, // Type guard for BlobRef objects
+  BlobRef, // TypedBlobRef | LegacyBlobRef
+  LegacyBlobRef, // { cid: string, mimeType: string }
+  TypedBlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef (accepts both TypedBlobRef and LegacyBlobRef)
+  isLegacyBlobRef, // Type guard for LegacyBlobRef objects
+  isTypedBlobRef, // Type guard for TypedBlobRef objects
+  getBlobCid, // Extract Cid from BlobRef or LegacyBlobRef
+  getBlobCidString, // Extract CID string from BlobRef or LegacyBlobRef
+  getBlobMime, // Extract MIME type from BlobRef or LegacyBlobRef
+  getBlobSize, // Extract size from BlobRef (returns undefined for LegacyBlobRef)
 
   // Equality
   lexEquals, // Deep equality (handles CIDs and bytes)
@@ -946,9 +1088,9 @@ import {
   isLanguageString, // Validate language tags (e.g., 'en', 'pt-BR')
 
   // Low-level JSON encoding helpers
-  parseLexLink, // { $link: string } → Cid
+  parseLexLink, // { $link: string } → Cid | undefined
   encodeLexLink, // Cid → { $link: string }
-  parseLexBytes, // { $bytes: string } → Uint8Array
+  parseLexBytes, // { $bytes: string } → Uint8Array | undefined
   encodeLexBytes, // Uint8Array → { $bytes: string }
 } from '@atproto/lex'
 
@@ -1014,58 +1156,197 @@ This ensures that:
 
 ### Tree-Shaking
 
-The generated TypeScript is optimized for tree-shaking. Import only what you need:
+The generated TypeScript code is structured to be tree-shakeable, but the way you reference schemas has a meaningful impact on the final bundle size. There are several ways to refer to a generated schema, and each comes with different trade-offs.
+
+#### Namespace notation
+
+The most ergonomic style is to use a namespace import and reference schemas through dotted paths:
 
 ```typescript
-// Import specific methods
-import { post } from './lexicons/app/bsky/feed/post.js'
-import { getProfile } from './lexicons/app/bsky/actor/getProfile.js'
+import * as com from './lexicons/com.js'
 
-// Or use namespace imports (still tree-shakeable)
-import * as app from './lexicons/app.js'
+await client.call(com.atproto.repo.getRecord, {
+  /* ... */
+})
 ```
 
-For library authors, use `--pure-annotations` when building:
+This style is convenient and reads naturally as it mirrors the NSID of the schema. However, it produces the largest bundles. From the bundler's point of view, `com.atproto.repo.getRecord` is the whole schema namespace (which contains the `main` schema as well as helpers, and any other definitions). The bundler cannot know that `client.call()` only consumes the `main` schema, so it has to keep the rest of the namespace alive in the bundle.
+
+#### Explicit `.main` reference
+
+You can mitigate the bundle-size cost by explicitly naming the `main` definition:
+
+```typescript
+import * as com from './lexicons/com.js'
+
+await client.call(com.atproto.repo.getRecord.main, {
+  /* ... */
+})
+```
+
+This lets the bundler drop the sibling definitions inside `getRecord` that aren't referenced. The drawback is that it leaks an implementation detail: the `main` segment of the path. In Lexicon, `main` is typically implicit:
+
+- Records use a `$type` of `app.bsky.feed.post` (no `#main`)
+- XRPC endpoints are exposed as `/xrpc/com.atproto.repo.getRecord` (no `main`)
+
+So writing `.main` in application code feels verbose compared to how Lexicons are normally referred to.
+
+#### Direct named import from the schema file
+
+You can also import the `main` schema directly from the file that defines it:
+
+```typescript
+import { main as getRecord } from './lexicons/com/atproto/repo/getRecord.js'
+
+await client.call(getRecord, {
+  /* ... */
+})
+```
+
+This produces equally small bundles as the explicit `.main` reference, but it still surfaces the `main` identifier: you have to know to import `main` and likely rename it.
+
+#### Default import (recommended)
+
+To make the small-bundle path also the ergonomic path, every namespace file generated by `lex build` re-exports the `main` schema as its `default` export:
+
+```typescript
+// generated file: ./lexicons/com/atproto/repo/getRecord.js
+export * from './getRecord.defs.js'
+export { main as default } from './getRecord.defs.js'
+```
+
+This means you can write:
+
+```typescript
+import getRecord from './lexicons/com/atproto/repo/getRecord.js'
+import post from './lexicons/app/bsky/feed/post.js'
+
+await client.call(getRecord, {
+  /* ... */
+})
+await client.create(post, {
+  /* ... */
+})
+```
+
+This is the most bundle-friendly style: the bundler only pulls in the `main` schema, and the import name doesn't have to mention `main` at all. This helps keeping application code aligned with how Lexicons are usually identified.
+
+#### Drawbacks of the default export
+
+The `default` re-export is enabled by default but has two minor drawbacks:
+
+1. It is one additional property on the namespace module, which can very slightly increase bundle size if you also use the namespace in some places.
+2. Any Lexicon document whose path segment is literally `default` (for example a hypothetical `com.example.records.default`) would conflict with the generated `default` export.
+
+If either of these matters for your use case, you can disable the generation of `default` exports with the `--no-defaultExport` flag:
 
 ```bash
-lex build --pure-annotations
+lex build --no-defaultExport
 ```
 
-This will make the generated code more easily tree-shakeable from places that import your library.
+#### Summary
+
+| Style                                                  | Bundle size | Ergonomics                   |
+| ------------------------------------------------------ | ----------- | ---------------------------- |
+| `com.atproto.repo.getRecord` (namespace)               | Largest     | Best: matches the NSID       |
+| `com.atproto.repo.getRecord.main`                      | Small       | Leaks the `main` identifier  |
+| `import { main as getRecord } from '.../getRecord.js'` | Small       | Verbose, leaks `main`        |
+| `import getRecord from '.../getRecord.js'`             | Small       | Concise, no `main` in source |
+
+For libraries and applications where bundle size matters (typically anything shipped to a browser), prefer the default-import style. For scripts, tests, and server-side code where the bundle size of generated schemas is not a concern, the namespace style is perfectly fine.
 
 ### Blob references
 
-In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+In AT Protocol, binary data (blobs) are referenced using blob references, which include metadata like MIME type and size. These references allow PDSs to determine which binary data ("files") is referenced by records.
+
+#### TypedBlobRef: The Current Standard
+
+The current standard format for blob references is `TypedBlobRef`:
 
 ```typescript
-import { BlobRef, isBlobRef } from '@atproto/lex'
+import { TypedBlobRef } from '@atproto/lex'
 
-const blobRef: BlobRef = {
+const blobRef: TypedBlobRef = {
   $type: 'blob',
   ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
   mimeType: 'image/png',
   size: 12345,
 }
+```
 
-if (isBlobRef(blobRef)) {
-  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+**When creating new blobs**, always use the `TypedBlobRef` format. This is the format returned by `client.uploadBlob()` and expected by PDS endpoints.
+
+#### LegacyBlobRef: Historical Format
+
+Historically, blob references used a simpler format without the `$type` property:
+
+```typescript
+type LegacyBlobRef = {
+  cid: string // CID as a string (not a Cid object)
+  mimeType: string // No size property
 }
 ```
 
-> [!NOTE]
+**Legacy blob references still exist in the AT Protocol network** in older records created before the format migration. While new blobs should always be created as `TypedBlobRef`, your code must be prepared to handle both formats when reading existing data.
+
+#### Working with Both Formats
+
+The `BlobRef` type is a union that accepts both formats:
+
+```typescript
+import {
+  BlobRef,
+  isBlobRef,
+  isTypedBlobRef,
+  isLegacyBlobRef,
+} from '@atproto/lex'
+
+// When reading data, always use BlobRef to handle both formats
+function processBlobRef(blob: BlobRef) {
+  if (isTypedBlobRef(blob)) {
+    console.log('Modern blob:', blob.ref, blob.mimeType, blob.size)
+  } else if (isLegacyBlobRef(blob)) {
+    console.log('Legacy blob:', blob.cid, blob.mimeType)
+  }
+}
+
+// Or use the isBlobRef type guard which accepts both
+if (isBlobRef(value)) {
+  // value is BlobRef (either TypedBlobRef or LegacyBlobRef)
+}
+```
+
+Helper functions work with both formats:
+
+```typescript
+import {
+  getBlobCid,
+  getBlobCidString,
+  getBlobMime,
+  getBlobSize,
+} from '@atproto/lex'
+
+// These utilities work with both TypedBlobRef and LegacyBlobRef
+const cid = getBlobCid(blobRef) // Returns Cid object
+const cidStr = getBlobCidString(blobRef) // Returns string (optimized)
+const mime = getBlobMime(blobRef) // Returns mimeType
+const size = getBlobSize(blobRef) // Returns number | undefined (legacy refs lack size)
+```
+
+> [!IMPORTANT]
 >
-> Historically, references to blobs were represented as simple objects with the following structure:
+> **Validation behavior with legacy blobs:**
+>
+> - In **strict mode** (`strict: true`, the default): Legacy blob references are rejected during validation. Use this mode when you control the data source and expect only modern blobs.
+> - In **non-strict mode** (`strict: false`): Legacy blob references are accepted. This mode is used automatically when `strictResponseProcessing: false` is set on the Client, allowing your application to handle older records from the network gracefully.
 >
 > ```typescript
-> type LegacyBlobRef = {
->   cid: string
->   mimeType: string
-> }
+> // Strict mode (default) - rejects legacy blobs
+> schema.$safeParse(data) // { strict: true }
+>
+> // Non-strict mode - accepts legacy blobs
+> schema.$safeParse(data, { strict: false })
 > ```
->
-> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
->
-> When using non-strict validation (e.g. `$safeParse(data, { strict: false })`), legacy blob references are automatically coerced into standard `BlobRef` objects with `size: -1`, even without `--allowLegacyBlobs`.
 
 ### Actions
 
@@ -1079,7 +1360,7 @@ An `Action` is a function with this signature:
 type Action<Input, Output> = (
   client: Client,
   input: Input,
-  options: CallOptions,
+  options: ActionOptions,
 ) => Output | Promise<Output>
 ```
 
@@ -1087,7 +1368,7 @@ Actions receive:
 
 - `client` - The Client instance (to make XRPC calls)
 - `input` - The input data for the action
-- `options` - Call options (signal)
+- `options` - `ActionOptions` (currently just `{ signal?: AbortSignal }`)
 
 #### Using Actions
 
@@ -1108,7 +1389,7 @@ export const likePost: Action<
     app.bsky.feed.like,
     {
       subject: { uri, cid },
-      createdAt: l.toDatetimeString(new Date()),
+      createdAt: l.currentDatetimeString(),
     },
     options,
   )
@@ -1402,10 +1683,10 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
         },
       })
 
-      const current = app.bsky.actor.profile.main.validate(res.body.record)
+      const current = app.bsky.actor.profile.$safeValidate(res.body.record)
 
       // Merge updates with current profile (if valid)
-      const updated = app.bsky.actor.profile.main.build({
+      const updated = app.bsky.actor.profile.$build({
         ...(current.success ? current.value : undefined),
         ...updates,
       })
@@ -1509,6 +1790,26 @@ if ('value' in result) {
 ```
 
 When validated through the Standard Schema interface, schemas operate in "parse" mode, meaning transformations like defaults and coercions are applied to the output.
+
+### Validating Generic Schemas with `$check`
+
+`$check(data)` is the non-narrowing counterpart to [`$assert(data)`](#assertdata---type-narrowing-assertion): both throw when `data` does not match the schema, but `$check` does not refine the static type of its argument.
+
+`$check` is rarely needed in application code — prefer `$assert`. It is intended for library-style code that takes a schema as a generic parameter, where TypeScript cannot satisfy the assertion-signature requirement and `$assert` produces the following error:
+
+> 'schema' needs an explicit type annotation.
+> Assertions require every name in the call target to be declared with an explicit type annotation. `ts(2775)`
+
+In that situation, switch to `$check`:
+
+```typescript
+import type { Schema } from '@atproto/lex'
+
+function ensureMatches<S extends Schema>(schema: S, data: unknown) {
+  // schema.$assert(data) // ❌ ts(2775): needs an explicit type annotation
+  schema.$check(data) // ✅ throws on invalid, no type narrowing
+}
+```
 
 ## License
 

@@ -1,15 +1,20 @@
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { Client, DidString } from '@atproto/lex'
-import { BlobRef } from '@atproto/lex-data'
-import { AppContext } from '../src'
-import { ActorDb } from '../src/actor-store/db'
-import { DiskBlobStore } from '../src/disk-blobstore'
+import {
+  TypedBlobRef,
+  getBlobCidString,
+  isTypedBlobRef,
+} from '@atproto/lex-data'
+import { ActorDb } from '../src/actor-store/db/index.js'
+import { DiskBlobStore } from '../src/disk-blobstore.js'
+import { AppContext } from '../src/index.js'
 import { app } from '../src/lexicons/index.js'
-import { users } from './seeds/users'
+import { users } from './seeds/users.js'
 
 describe('file uploads', () => {
   let network: TestNetworkNoAppView
@@ -40,8 +45,8 @@ describe('file uploads', () => {
     await network.close()
   })
 
-  let smallBlob: BlobRef
-  let smallFile: Uint8Array
+  let smallBlob: TypedBlobRef
+  let smallFile: Uint8Array<ArrayBuffer>
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
@@ -78,6 +83,7 @@ describe('file uploads', () => {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
+    assert(isTypedBlobRef(res.body.blob))
     smallBlob = res.body.blob
 
     const found = await aliceDb.db
@@ -123,8 +129,8 @@ describe('file uploads', () => {
     expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
   })
 
-  let largeBlob: BlobRef
-  let largeFile: Uint8Array
+  let largeBlob: TypedBlobRef
+  let largeFile: Uint8Array<ArrayBuffer>
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('../dev-env/assets/hd-key.jpg')
@@ -132,6 +138,7 @@ describe('file uploads', () => {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
+    assert(isTypedBlobRef(res.body.blob))
     largeBlob = res.body.blob
 
     const profilePromise = sc.updateProfile(alice, {
@@ -195,7 +202,7 @@ describe('file uploads', () => {
     const blob = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(uploadAfterPermanent.blob))
       .executeTakeFirstOrThrow()
     expect(blob.tempKey).toEqual(null)
   })
@@ -208,6 +215,7 @@ describe('file uploads', () => {
         'content-encoding': 'gzip',
       },
     })
+    assert(isTypedBlobRef(uploaded.blob))
     expect(uploaded.blob.ref.equals(smallBlob.ref)).toBeTruthy()
   })
 
@@ -221,7 +229,7 @@ describe('file uploads', () => {
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.body.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/jpeg')
@@ -237,7 +245,7 @@ describe('file uploads', () => {
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.body.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/png')
@@ -253,7 +261,7 @@ describe('file uploads', () => {
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.body.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('test/fake')
@@ -269,7 +277,7 @@ describe('file uploads', () => {
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.body.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('text/plain')
@@ -285,7 +293,7 @@ describe('file uploads', () => {
     const found = await aliceDb.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', res.body.blob.ref.toString())
+      .where('cid', '=', getBlobCidString(res.body.blob))
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('application/json')

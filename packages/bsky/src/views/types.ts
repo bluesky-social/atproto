@@ -1,4 +1,4 @@
-import { app, chat, com } from '../lexicons/index.js'
+import { app, chat, com, site } from '../lexicons/index.js'
 
 // app.bsky.actor
 
@@ -9,6 +9,7 @@ export type ProfileViewer = app.bsky.actor.defs.ViewerState
 export type KnownFollowers = app.bsky.actor.defs.KnownFollowers
 export type ProfileAssociatedActivitySubscription =
   app.bsky.actor.defs.ProfileAssociatedActivitySubscription
+export type ProfileAssociatedChat = app.bsky.actor.defs.ProfileAssociatedChat
 export type ProfileView = app.bsky.actor.defs.ProfileView
 export type ProfileViewBasic = app.bsky.actor.defs.ProfileViewBasic
 export type ProfileViewDetailed = app.bsky.actor.defs.ProfileViewDetailed
@@ -35,6 +36,10 @@ export type VideoEmbedView = app.bsky.embed.video.View
 export const isExternalEmbedType = app.bsky.embed.external.$isTypeOf
 export type ExternalEmbed = app.bsky.embed.external.Main
 export type ExternalEmbedView = app.bsky.embed.external.View
+export type ExternalEmbedSourceView = app.bsky.embed.external.ViewExternalSource
+export type ExternalEmbedSourceThemeView =
+  app.bsky.embed.external.ViewExternalSourceTheme
+export type ExternalEmbedColorRgb = app.bsky.embed.external.ColorRgb
 
 export const isRecordEmbedType = app.bsky.embed.record.$isTypeOf
 export type RecordEmbed = app.bsky.embed.record.Main
@@ -172,3 +177,8 @@ export const validateStrongRef = com.atproto.repo.strongRef.$safeValidate
 // com.germnetwork.declaration
 
 export type GermDeclarationRecord = com.germnetwork.declaration.Main
+
+// site.standard
+
+export type SiteStandardDocumentRecord = site.standard.document.Main
+export type SiteStandardPublicationRecord = site.standard.publication.Main

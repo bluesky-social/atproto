@@ -1,6 +1,6 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { getReposForVerifications } from '../../verification/util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { getReposForVerifications } from '../../verification/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.verification.listVerifications({

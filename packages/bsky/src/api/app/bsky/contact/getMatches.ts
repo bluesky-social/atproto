@@ -1,21 +1,21 @@
 import { mapDefined } from '@atproto/common'
 import { DidString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
+  HydrateCtxWithViewer,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { RolodexClient } from '../../../../rolodex'
-import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
+} from '../../../../pipeline.js'
+import { RolodexClient } from '../../../../rolodex.js'
+import { Views } from '../../../../views/index.js'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -32,10 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await getMatches(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getMatches({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -104,7 +101,7 @@ type Context = {
 }
 
 type Params = app.bsky.contact.getMatches.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

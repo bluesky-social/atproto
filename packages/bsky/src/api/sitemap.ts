@@ -2,9 +2,9 @@ import { Readable } from 'node:stream'
 import { Timestamp } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 import express, { RequestHandler, Router } from 'express'
-import { AppContext } from '../context'
-import { httpLogger as log } from '../logger'
-import { SitemapPageType } from '../proto/bsky_pb'
+import { AppContext } from '../context.js'
+import { httpLogger as log } from '../logger.js'
+import { SitemapPageType } from '../proto/bsky_pb.js'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()

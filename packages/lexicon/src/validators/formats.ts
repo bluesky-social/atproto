@@ -1,156 +1,72 @@
-import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
-import { validateLanguage } from '@atproto/common-web'
 import {
-  ensureValidAtUri,
-  ensureValidDid,
-  ensureValidHandle,
-  ensureValidRecordKey,
+  isAtIdentifierString,
+  isAtUriString,
+  isDatetimeStringLenient,
+  isValidDid,
+  isValidHandle,
+  isValidLanguage,
   isValidNsid,
+  isValidRecordKey,
   isValidTid,
   isValidUri,
 } from '@atproto/syntax'
-import { ValidationError, ValidationResult } from '../types'
+import { ValidationError, ValidationResult } from '../types.js'
 
-export function datetime(path: string, value: string): ValidationResult {
+export const datetime = createValidator(
+  isDatetimeStringLenient,
+  'must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
+)
+export const uri = createValidator(isValidUri, 'must be a uri')
+export const atUri = createValidator(isAtUriString, 'must be a valid at-uri')
+export const did = createValidator(isValidDid, 'must be a valid did')
+export const handle = createValidator(isValidHandle, 'must be a valid handle')
+export const atIdentifier = createValidator(
+  isAtIdentifierString,
+  'must be a valid did or a handle',
+)
+export const nsid = createValidator(isValidNsid, 'must be a valid nsid')
+export const cid = createValidator(isCidString, 'must be a cid string')
+export const language = createValidator(
+  isValidLanguage,
+  'must be a well-formed BCP 47 language tag',
+)
+export const tid = createValidator(isValidTid, 'must be a valid TID')
+export const recordKey = createValidator(
+  isValidRecordKey,
+  'must be a valid Record Key',
+)
+
+// Internal helpers
+
+function createValidator<T extends string>(
+  assertionFn: (value: string) => value is T,
+  errorMessage: string,
+): <V extends string>(path: string, value: V) => ValidationResult<V & T>
+function createValidator(
+  assertionFn: (value: string) => boolean,
+  errorMessage: string,
+): (path: string, value: string) => ValidationResult<string>
+function createValidator(
+  assertionFn: (value: string) => boolean,
+  errorMessage: string,
+) {
+  return (path: string, value: string): ValidationResult => {
+    if (assertionFn(value)) {
+      return { success: true, value }
+    }
+    return {
+      success: false,
+      error: new ValidationError(`${path} ${errorMessage}`),
+    }
+  }
+}
+
+function isCidString(v: string): v is string {
   try {
-    if (!isValidISODateString(value)) {
-      throw new Error()
-    }
+    CID.parse(v)
+    return true
   } catch {
-    return {
-      success: false,
-      error: new ValidationError(
-        `${path} must be an valid atproto datetime (both RFC-3339 and ISO-8601)`,
-      ),
-    }
+    return false
   }
-  return { success: true, value }
-}
-
-export function uri(path: string, value: string): ValidationResult {
-  if (!isValidUri(value)) {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a uri`),
-    }
-  }
-  return { success: true, value }
-}
-
-export function atUri(path: string, value: string): ValidationResult {
-  try {
-    ensureValidAtUri(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a valid at-uri`),
-    }
-  }
-
-  return { success: true, value }
-}
-
-export function did(path: string, value: string): ValidationResult {
-  try {
-    ensureValidDid(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a valid did`),
-    }
-  }
-
-  return { success: true, value }
-}
-
-export function handle(path: string, value: string): ValidationResult {
-  try {
-    ensureValidHandle(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a valid handle`),
-    }
-  }
-
-  return { success: true, value }
-}
-
-export function atIdentifier(path: string, value: string): ValidationResult {
-  // We can discriminate based on the "did:" prefix
-  if (value.startsWith('did:')) {
-    const didResult = did(path, value)
-    if (didResult.success) return didResult
-  } else {
-    const handleResult = handle(path, value)
-    if (handleResult.success) return handleResult
-  }
-
-  return {
-    success: false,
-    error: new ValidationError(`${path} must be a valid did or a handle`),
-  }
-}
-
-export function nsid(path: string, value: string): ValidationResult {
-  if (isValidNsid(value)) {
-    return {
-      success: true,
-      value,
-    }
-  } else {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a valid nsid`),
-    }
-  }
-}
-
-export function cid(path: string, value: string): ValidationResult {
-  try {
-    CID.parse(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a cid string`),
-    }
-  }
-  return { success: true, value }
-}
-
-// The language format validates well-formed BCP 47 language tags: https://www.rfc-editor.org/info/bcp47
-export function language(path: string, value: string): ValidationResult {
-  if (validateLanguage(value)) {
-    return { success: true, value }
-  }
-  return {
-    success: false,
-    error: new ValidationError(
-      `${path} must be a well-formed BCP 47 language tag`,
-    ),
-  }
-}
-
-export function tid(path: string, value: string): ValidationResult {
-  if (isValidTid(value)) {
-    return { success: true, value }
-  }
-
-  return {
-    success: false,
-    error: new ValidationError(`${path} must be a valid TID`),
-  }
-}
-
-export function recordKey(path: string, value: string): ValidationResult {
-  try {
-    ensureValidRecordKey(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a valid Record Key`),
-    }
-  }
-  return { success: true, value }
 }

@@ -7,8 +7,8 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { ids } from '../src/lexicon/lexicons.js'
+import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
 
 describe('admin get lists', () => {
   let network: TestNetwork

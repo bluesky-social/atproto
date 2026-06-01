@@ -1,5 +1,111 @@
 # @atproto/lex
 
+## 0.1.3
+
+### Patch Changes
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix README
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `yargs` depedency
+
+- Updated dependencies [[`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc)]:
+  - @atproto/lex-schema@0.1.2
+  - @atproto/lex-client@0.1.3
+
+## 0.1.2
+
+### Patch Changes
+
+- [#4984](https://github.com/bluesky-social/atproto/pull/4984) [`5bdb4ad`](https://github.com/bluesky-social/atproto/commit/5bdb4addd6a3798bf6c8c391c74044b3e251008a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `default` export of "main" schema in the namespace file
+
+- [#4979](https://github.com/bluesky-social/atproto/pull/4979) [`314df62`](https://github.com/bluesky-social/atproto/commit/314df62537bb519231aa375dd3a38360afc79ce0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Always add `#__PURE__` annotations to function calls
+
+- [#4983](https://github.com/bluesky-social/atproto/pull/4983) [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the generation of the `$defs` namespace optional by default
+
+- Updated dependencies [[`3aae4fe`](https://github.com/bluesky-social/atproto/commit/3aae4fe43448dca860fc6c4a24d18bfa64de084b), [`5bdb4ad`](https://github.com/bluesky-social/atproto/commit/5bdb4addd6a3798bf6c8c391c74044b3e251008a), [`3aae4fe`](https://github.com/bluesky-social/atproto/commit/3aae4fe43448dca860fc6c4a24d18bfa64de084b), [`314df62`](https://github.com/bluesky-social/atproto/commit/314df62537bb519231aa375dd3a38360afc79ce0), [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41), [`482767c`](https://github.com/bluesky-social/atproto/commit/482767c4bcce95aa390b2992b028fd8e27d162b2)]:
+  - @atproto/lex-builder@0.1.2
+  - @atproto/lex-client@0.1.2
+
+## 0.1.1
+
+### Patch Changes
+
+- [#4895](https://github.com/bluesky-social/atproto/pull/4895) [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `applyWrites()` method to Lex SDK client class
+
+  Thank you [@TrySound](https://github.com/TrySound) for the suggestion
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`fb1b403`](https://github.com/bluesky-social/atproto/commit/fb1b40350d46f3c49e512b7e24b071b03902e3b8), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/lex-client@0.1.1
+  - @atproto/lex-data@0.1.1
+  - @atproto/lex-builder@0.1.1
+
+## 0.1.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/lex-builder@0.1.0
+  - @atproto/lex-client@0.1.0
+  - @atproto/lex-data@0.1.0
+  - @atproto/lex-installer@0.1.0
+  - @atproto/lex-json@0.1.0
+  - @atproto/lex-schema@0.1.0
+
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies [[`d8b2374`](https://github.com/bluesky-social/atproto/commit/d8b2374e1592d1dec65a33439791bc141f02397a)]:
+  - @atproto/lex-client@0.0.22
+  - @atproto/lex-installer@0.0.27
+
+## 0.0.26
+
+### Patch Changes
+
+- Updated dependencies [[`2fd8d62`](https://github.com/bluesky-social/atproto/commit/2fd8d62708dc23de6ed21cbcccfebab68b19f588), [`907edfa`](https://github.com/bluesky-social/atproto/commit/907edfa1d16b1074bab4dc617d0bd1a810f3da02)]:
+  - @atproto/lex-schema@0.0.20
+  - @atproto/lex-client@0.0.21
+  - @atproto/lex-builder@0.0.23
+  - @atproto/lex-installer@0.0.26
+
+## 0.0.25
+
+### Patch Changes
+
+- Updated dependencies [[`61e75af`](https://github.com/bluesky-social/atproto/commit/61e75af39e63217d915850b2f8ac8db5f92eed0b), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`952354c`](https://github.com/bluesky-social/atproto/commit/952354c1dd458251f8b643d02f4b227d40c5df17)]:
+  - @atproto/lex-client@0.0.20
+  - @atproto/lex-schema@0.0.19
+  - @atproto/lex-json@0.0.16
+  - @atproto/lex-builder@0.0.22
+  - @atproto/lex-installer@0.0.25
+
+## 0.0.24
+
+### Patch Changes
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client.
+
+  BREAKING: The `allowLegacy` option has been removed from the blob schema builder, and legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, and in non-strict mode they are accepted. Consumers should stop passing `allowLegacy` and rely on strictness configuration instead. Likewise, CLI consumers should stop using the removed `--allowLegacyBlobs` flag and use the default strict/non-strict behavior.
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`b6b231f`](https://github.com/bluesky-social/atproto/commit/b6b231f9c05cf90239d4a29aa0ae2592ea5ce928), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0)]:
+  - @atproto/lex-data@0.0.15
+  - @atproto/lex-client@0.0.19
+  - @atproto/lex-schema@0.0.18
+  - @atproto/lex-json@0.0.15
+  - @atproto/lex-installer@0.0.24
+  - @atproto/lex-builder@0.0.21
+
 ## 0.0.23
 
 ### Patch Changes

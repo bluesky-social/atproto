@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
 import { JSX, ReactNode, useCallback } from 'react'
-import { DisabledStep, Step, useStepper } from '../../hooks/use-stepper.ts'
-import { Override } from '../../lib/util.ts'
+import { DisabledStep, Step, useStepper } from '#/hooks/use-stepper.ts'
+import { Override } from '#/lib/util.ts'
 
 export type DoneFn = (...a: any) => unknown
 
@@ -102,7 +102,7 @@ export function WizardCard<TDone extends DoneFn>({
 
   return (
     <div className={clsx(className, 'flex flex-col')} {...props}>
-      <p className="text-slate-500 dark:text-slate-400">
+      <p className="text-contrast-500">
         <Trans>
           Step {currentPosition} of {count}
         </Trans>

@@ -33,6 +33,9 @@
         "distinctGroup": true,
         "alphabetize": { "order": "asc" },
         "newlines-between": "never",
+        "pathGroups": [
+          { "pattern": "#/**", "group": "parent", "position": "before" }
+        ],
         "groups": [
           "builtin",
           "external",
@@ -48,6 +51,7 @@
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_|^err$|^error$",
         "ignoreRestSiblings": true
       }
     ],
@@ -59,7 +63,7 @@
   },
   "overrides": [
     {
-      "files": ["jest.config.js"],
+      "files": ["jest.config.cjs"],
       "env": { "commonjs": true }
     },
     {
@@ -67,13 +71,13 @@
       "env": { "node": true }
     },
     {
-      "files": ["jest.setup.js"],
+      "files": ["test.setup.ts"],
       "env": { "jest": true }
     },
     {
-      "files": ["*.js", "*.cjs"],
+      "files": ["*.js", "*.cjs", "*.cts"],
       "rules": {
-        "@typescript-eslint/no-var-requires": "off"
+        "@typescript-eslint/no-require-imports": "off"
       }
     },
     {
@@ -82,12 +86,21 @@
         "n/no-extraneous-import": [
           "error",
           { "allowModules": ["@atproto/dev-env"] }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_|^err$|^error$",
+            "ignoreRestSiblings": true
+          }
         ]
       }
     }
   ],
   "settings": {
-    "node": { "version": ">=18.7.0" },
+    "node": { "version": ">=22" },
     "import/internal-regex": "^@atproto(?:-labs)?/",
     "import/parsers": { "@typescript-eslint/parser": [".ts", ".tsx"] },
     "import/resolver": {

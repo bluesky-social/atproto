@@ -1,9 +1,12 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { ServerConfig } from '../../../../config.js'
+import { AppContext } from '../../../../context.js'
+import {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -11,12 +14,12 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Notification } from '../../../../proto/bsky_pb'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { isPostRecordType } from '../../../../views/types'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Notification } from '../../../../proto/bsky_pb.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { isPostRecordType } from '../../../../views/types.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -31,10 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await listNotifications(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await listNotifications({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -254,7 +254,7 @@ type Context = {
 }
 
 type Params = app.bsky.notification.listNotifications.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

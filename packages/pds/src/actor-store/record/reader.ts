@@ -8,10 +8,10 @@ import {
   ensureValidAtUri,
   ensureValidDid,
 } from '@atproto/syntax'
-import { countAll, notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util.js'
 import { app, com } from '../../lexicons/index.js'
-import { LocalRecords } from '../../read-after-write/types'
-import { ActorDb, Backlink } from '../db'
+import { LocalRecords } from '../../read-after-write/types.js'
+import { ActorDb, Backlink } from '../db/index.js'
 
 export type RecordDescript = {
   uri: string

@@ -15,19 +15,23 @@ import {
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import { ServerConfig } from '../config'
-import { AppContext } from '../context'
+import { ServerConfig } from '../config.js'
+import { AppContext } from '../context.js'
 import {
   Code,
   DataPlaneClient,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../data-plane'
-import { parseCid } from '../hydration/util'
-import { httpLogger as log } from '../logger'
-import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
-import { BSKY_USER_AGENT } from './util'
+} from '../data-plane/index.js'
+import { parseCid } from '../hydration/util.js'
+import { httpLogger as log } from '../logger.js'
+import {
+  Middleware,
+  proxyResponseHeaders,
+  responseSignal,
+} from '../util/http.js'
+import { BSKY_USER_AGENT } from './util.js'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {

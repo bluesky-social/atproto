@@ -1,29 +1,25 @@
 import { Trans } from '@lingui/react/macro'
 import { FormEvent, ReactNode, useCallback } from 'react'
+import { errorCardRender } from '#/components/utils/error-card.tsx'
 import {
   UseAsyncActionOptions,
   useAsyncAction,
-} from '../../hooks/use-async-action.ts'
-import { Override } from '../../lib/util.ts'
-import { ErrorCard } from '../utils/error-card.tsx'
+} from '#/hooks/use-async-action.ts'
+import { Override } from '#/lib/util.ts'
 import { Button } from './button.tsx'
 import { FormCard, FormCardProps } from './form-card.tsx'
 
-export type { AsyncActionController } from '../../hooks/use-async-action.ts'
-
-export type ErrorRender = (data: { error: Error }) => ReactNode
-export const errorRenderDefault: ErrorRender = ({ error }) => (
-  <ErrorCard error={error} />
-)
+export type { AsyncActionController } from '#/hooks/use-async-action.ts'
 
 export type FormCardAsyncProps = Override<
   Override<
-    Omit<FormCardProps, 'cancel' | 'actions' | 'prepend'>,
+    Omit<FormCardProps, 'cancel'>,
     Pick<UseAsyncActionOptions, 'ref' | 'onLoading' | 'onError'>
   >,
   {
     invalid?: boolean
     disabled?: boolean
+    append?: ReactNode
 
     onSubmit: (signal: AbortSignal) => void | PromiseLike<void>
     submitLabel?: ReactNode
@@ -31,7 +27,7 @@ export type FormCardAsyncProps = Override<
     onCancel?: () => void
     cancelLabel?: ReactNode
 
-    errorRender?: ErrorRender
+    errorRender?: (props: { error: Error }) => ReactNode
   }
 >
 
@@ -40,12 +36,12 @@ export function FormCardAsync({
   disabled,
 
   onSubmit,
-  submitLabel,
+  submitLabel = <Trans>Submit</Trans>,
 
   onCancel = undefined,
-  cancelLabel,
+  cancelLabel = <Trans>Cancel</Trans>,
 
-  errorRender = errorRenderDefault,
+  errorRender = errorCardRender,
 
   // UseAsyncActionOptions
   ref,
@@ -54,6 +50,8 @@ export function FormCardAsync({
 
   // FormCardProps
   children,
+  actions,
+  append,
   ...props
 }: FormCardAsyncProps) {
   const { run, loading, error } = useAsyncAction(onSubmit, {
@@ -78,23 +76,20 @@ export function FormCardAsync({
       {...props}
       onSubmit={doSubmit}
       disabled={disabled || loading}
-      prepend={error != null ? errorRender({ error }) : undefined}
-      cancel={
-        onCancel && (
-          <Button onClick={onCancel}>
-            {cancelLabel || <Trans>Cancel</Trans>}
-          </Button>
-        )
-      }
+      append={[append, error != null ? errorRender({ error }) : undefined]}
+      cancel={onCancel && <Button onClick={onCancel}>{cancelLabel}</Button>}
       actions={
-        <Button
-          color="primary"
-          type="submit"
-          loading={loading}
-          disabled={disabled}
-        >
-          {submitLabel || <Trans>Submit</Trans>}
-        </Button>
+        <>
+          <Button
+            color="primary"
+            type="submit"
+            loading={loading}
+            disabled={disabled}
+          >
+            {submitLabel}
+          </Button>
+          {actions}
+        </>
       }
     >
       {children}

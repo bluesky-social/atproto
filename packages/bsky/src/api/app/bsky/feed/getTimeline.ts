@@ -1,19 +1,19 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { FeedItem } from '../../../../hydration/feed'
+import { AppContext } from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
+import { FeedItem } from '../../../../hydration/feed.js'
 import {
-  HydrateCtx,
+  HydrateCtxWithViewer,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+} from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
-import { createPipeline } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import { createPipeline } from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getTimeline = createPipeline(
@@ -34,10 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getTimeline(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getTimeline({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -121,7 +118,7 @@ type Context = {
 }
 
 type Params = app.bsky.feed.getTimeline.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type Skeleton = {

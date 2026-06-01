@@ -1,4 +1,4 @@
-import { s32decode, s32encode } from './util'
+import { s32decode, s32encode } from './util.js'
 
 const TID_LEN = 13
 

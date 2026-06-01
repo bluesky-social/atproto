@@ -316,6 +316,18 @@ export class RequestManager {
     return parameters
   }
 
+  /**
+   * Reads the {@link ClientId} associated with a request URI without any of
+   * the validation or side-effects performed by {@link RequestManager.get}
+   *
+   * Returns `undefined` when no such request exists.
+   */
+  async peekClientId(requestUri: RequestUri): Promise<ClientId | undefined> {
+    const requestId = decodeRequestUri(requestUri)
+    const data = await this.store.readRequest(requestId)
+    return data?.clientId
+  }
+
   async get(requestUri: RequestUri, deviceId?: DeviceId, clientId?: ClientId) {
     const requestId = decodeRequestUri(requestUri)
 

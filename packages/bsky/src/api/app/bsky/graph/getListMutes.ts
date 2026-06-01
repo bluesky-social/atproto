@@ -1,8 +1,11 @@
 import { mapDefined } from '@atproto/common'
 import { AtUriString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -10,9 +13,9 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getListMutes = createPipeline(
@@ -27,10 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const result = await getListMutes(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getListMutes({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -78,7 +78,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getListBlocks.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

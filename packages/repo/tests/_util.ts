@@ -15,10 +15,10 @@ import {
   RecordWriteOp,
   RepoContents,
   WriteOpAction,
-} from '../src'
-import { MST } from '../src/mst'
-import { Repo } from '../src/repo'
-import { RepoStorage } from '../src/storage'
+} from '../src/index.js'
+import { MST } from '../src/mst/index.js'
+import { Repo } from '../src/repo.js'
+import { RepoStorage } from '../src/storage/index.js'
 
 type IdMapping = Record<string, Cid>
 

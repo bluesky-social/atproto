@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
-import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
-import LexiconDocs from './_scaffolds/lexicons'
+import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index.js'
+import LexiconDocs from './_scaffolds/lexicons.js'
 
 describe('Lexicons collection', () => {
   const lex = new Lexicons(LexiconDocs)

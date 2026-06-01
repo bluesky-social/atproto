@@ -1,7 +1,8 @@
+import { describe, expect, it } from 'vitest'
 import {
   PostSearchQuery,
   parsePostSearchQuery,
-} from '../src/data-plane/server/util'
+} from '../src/data-plane/server/util.js'
 
 describe('parsePostSearchQuery', () => {
   type TestCase = {

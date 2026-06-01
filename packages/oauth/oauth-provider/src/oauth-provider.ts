@@ -704,19 +704,13 @@ export class OAuthProvider extends OAuthVerifier {
         client,
         parameters,
         requestUri,
-        sessions: sessions.map((session) => ({
-          // Map to avoid leaking other data that might be present in the session
-          account: session.account,
-          loginRequired: session.loginRequired,
-          consentRequired: session.consentRequired,
-
-          selected:
-            parameters.prompt == null ||
-            parameters.prompt === 'login' ||
-            parameters.prompt === 'consent'
-              ? matchesHint.call(parameters, session)
-              : false,
-        })),
+        sessions,
+        selectedSub:
+          parameters.prompt == null ||
+          parameters.prompt === 'login' ||
+          parameters.prompt === 'consent'
+            ? sessions.find(matchesHint, parameters)?.account.sub
+            : undefined,
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
           .catch((cause) => {

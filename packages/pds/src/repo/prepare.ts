@@ -2,9 +2,9 @@ import { TID } from '@atproto/common'
 import { RecordSchema } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
-  BlobRef,
   Cid,
   LexMap,
+  TypedBlobRef,
   TypedLexMap,
   cidForCbor,
   enumBlobRefs,
@@ -24,7 +24,7 @@ import {
   RecordKeyString,
   isValidRecordKey,
 } from '@atproto/syntax'
-import { hasExplicitSlur } from '../handle/explicit-slurs'
+import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import { app, chat, com } from '../lexicons/index.js'
 import {
   InvalidRecordError,
@@ -33,7 +33,7 @@ import {
   PreparedUpdate,
   PreparedWrite,
   ValidationStatus,
-} from './types'
+} from './types.js'
 
 // @TODO replace this with automatically fetched (& built) schemas
 const knownSchemas = new Map<string, RecordSchema>(
@@ -159,7 +159,7 @@ async function prepareWrite(opts: {
   validationPath?: (string | number)[]
 }): Promise<{
   record: TypedLexMap
-  blobs: BlobRef[]
+  blobs: TypedBlobRef[]
   validationStatus?: ValidationStatus
   uri: AtUri
   cid: Cid

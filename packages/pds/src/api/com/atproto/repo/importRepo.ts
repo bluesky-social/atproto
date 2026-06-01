@@ -9,8 +9,8 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { ACCESS_FULL } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -90,7 +90,7 @@ export default function (server: Server, ctx: AppContext) {
               now,
             )
             const recordBlobs = Array.from(
-              enumBlobRefs(parsedRecord, { allowLegacy: true }),
+              enumBlobRefs(parsedRecord, { allowLegacy: true, strict: false }),
             )
             await store.repo.blob.insertBlobs(uri.toString(), recordBlobs)
           }

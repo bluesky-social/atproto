@@ -1,7 +1,7 @@
 import { Kysely } from 'kysely'
 import { HOUR } from '@atproto/common'
 import { ClientId, DeviceId } from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded, toDateISO } from '../../../db'
+import { DateISO, JsonEncoded, toDateISO } from '../../../db/index.js'
 
 // @NOTE this migration has been updated to be idempotent through
 // the insertInto('account_device') step. this allows users to roll

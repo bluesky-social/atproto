@@ -4,7 +4,7 @@ import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function SessionInfo() {
-  const result = useLexQuery(com.atproto.server.getSession)
+  const result = useLexQuery(com.atproto.server.getSession.main)
 
   return (
     <div>

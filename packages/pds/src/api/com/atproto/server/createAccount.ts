@@ -10,13 +10,13 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager/account-manager'
-import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
-import { AppContext } from '../../../../context'
-import { baseNormalizeAndValidate } from '../../../../handle'
+import { AccountStatus } from '../../../../account-manager/account-manager.js'
+import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
+import { AppContext } from '../../../../context.js'
+import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { syncEvtDataFromCommit } from '../../../../sequencer'
-import { safeResolveDidDoc } from './util'
+import { syncEvtDataFromCommit } from '../../../../sequencer/index.js'
+import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.createAccount, {

@@ -13,13 +13,13 @@ import {
   isErrnoException,
 } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
-import { StreamBlobOptions, streamBlob } from '../api/blob-resolver'
-import { AppContext } from '../context'
-import { Middleware, responseSignal } from '../util/http'
-import log from './logger'
-import { createImageProcessor, createImageUpscaler } from './sharp'
-import { BadPathError, ImageUriBuilder } from './uri'
-import { Options, SharpInfo, formatsToMimes } from './util'
+import { StreamBlobOptions, streamBlob } from '../api/blob-resolver.js'
+import { AppContext } from '../context.js'
+import { Middleware, responseSignal } from '../util/http.js'
+import log from './logger.js'
+import { createImageProcessor, createImageUpscaler } from './sharp.js'
+import { BadPathError, ImageUriBuilder } from './uri.js'
+import { Options, SharpInfo, formatsToMimes } from './util.js'
 
 export function createMiddleware(
   ctx: AppContext,

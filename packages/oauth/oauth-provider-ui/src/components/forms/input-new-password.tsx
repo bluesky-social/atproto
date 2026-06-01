@@ -1,7 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
 import { ChangeEvent, useCallback, useState } from 'react'
-import { MIN_PASSWORD_LENGTH } from '../../lib/password.ts'
-import { Override } from '../../lib/util.ts'
+import { MIN_PASSWORD_LENGTH } from '#/lib/password.ts'
+import { Override } from '#/lib/util.ts'
 import { PasswordStrengthLabel } from '../utils/password-strength-label.tsx'
 import { PasswordStrengthMeter } from '../utils/password-strength-meter.tsx'
 import { InputPassword, InputPasswordProps } from './input-password.tsx'
@@ -52,7 +52,7 @@ export function InputNewPassword({
         <>
           <PasswordStrengthMeter password={password} />
           <PasswordStrengthLabel
-            className="grow-1 min-w-max text-xs text-gray-500 dark:text-gray-400"
+            className="grow-1 text-text-light min-w-max text-xs"
             password={password}
           />
         </>

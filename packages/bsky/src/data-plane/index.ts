@@ -1,3 +1,3 @@
-export * from './server'
-export * from './client'
-export * from './bsync'
+export * from './server/index.js'
+export * from './client/index.js'
+export * from './bsync/index.js'

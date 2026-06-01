@@ -1,6 +1,6 @@
 import { TypeOf, z } from 'zod'
 import { atprotoDidSchema } from '@atproto/did'
-import { atprotoOAuthScopeSchema } from './atproto-oauth-scope'
+import { atprotoOAuthScopeSchema } from './atproto-oauth-scope.js'
 import { oauthTokenResponseSchema } from './oauth-token-response.js'
 
 export const atprotoOAuthTokenResponseSchema = oauthTokenResponseSchema.extend({

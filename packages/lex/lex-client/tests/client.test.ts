@@ -1,11 +1,11 @@
 import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
-import { cidForRawBytes, parseCid } from '@atproto/lex-data'
+import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   $Typed,
   LexValidationError,
-  toDatetimeString,
+  currentDatetimeString,
 } from '@atproto/lex-schema'
 import {
   Action,
@@ -465,7 +465,7 @@ describe('Client', () => {
       const aliceGenerator = await client.create(app.bsky.feed.generator, {
         did,
         displayName: 'Alice Generator',
-        createdAt: toDatetimeString(new Date()),
+        createdAt: currentDatetimeString(),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(1)
@@ -485,7 +485,7 @@ describe('Client', () => {
 
       const newPost = await client.create(app.bsky.feed.post, {
         text: 'Hello, world!',
-        createdAt: toDatetimeString(new Date()),
+        createdAt: currentDatetimeString(),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(2)
@@ -581,6 +581,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(blob)
 
       expect(fetchHandler).toHaveBeenCalledTimes(1)
+      assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('text/plain')
       expect(body.blob.size).toBe(11)
@@ -596,6 +597,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(data)
 
       expect(fetchHandler).toHaveBeenCalledTimes(2)
+      assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
       expect(body.blob.size).toBe(11)
@@ -611,6 +613,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(data)
 
       expect(fetchHandler).toHaveBeenCalledTimes(3)
+      assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
       expect(body.blob.size).toBe(11)
@@ -635,7 +638,7 @@ describe('Client', () => {
               // @ts-expect-error invalid DID
               did: 'not-a-did',
               displayName: 'Test',
-              createdAt: toDatetimeString(new Date()),
+              createdAt: currentDatetimeString(),
             },
             { rkey: 'test', validateRequest: true },
           ),
@@ -663,7 +666,7 @@ describe('Client', () => {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
             displayName: 'Test',
-            createdAt: toDatetimeString(new Date()),
+            createdAt: currentDatetimeString(),
           },
           { rkey: 'test', validateRequest: false },
         )
@@ -686,7 +689,7 @@ describe('Client', () => {
             // @ts-expect-error invalid DID
             did: 'not-a-did',
             displayName: 'Test',
-            createdAt: toDatetimeString(new Date()),
+            createdAt: currentDatetimeString(),
           },
           { rkey: 'test' },
         )
@@ -727,7 +730,7 @@ describe('Client', () => {
               did,
               // @ts-expect-error wrong type
               displayName: 123,
-              createdAt: toDatetimeString(new Date()),
+              createdAt: currentDatetimeString(),
             },
             { rkey: 'test', validateRequest: true },
           ),
@@ -800,6 +803,127 @@ describe('Client', () => {
         })
 
         expect(fetchHandler).toHaveBeenCalled()
+      })
+    })
+
+    describe('applyWrites()', () => {
+      it('allows applying multiple writes in a single request', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (path, init) => {
+          const request = new Request(new URL(path, 'http://localhost'), init)
+          expect(request.method).toBe('POST')
+
+          const payload = com.atproto.repo.applyWrites.main.input.schema.parse(
+            lexParse(await request.text()),
+          )
+
+          let cid = 0
+          const body: com.atproto.repo.applyWrites.$OutputBody = {
+            results: payload.writes.map((write) => {
+              if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
+                return com.atproto.repo.applyWrites.createResult.$build({
+                  uri: `at://${did}/${write.collection}/${write.rkey ?? '2222222222222'}`,
+                  cid: `${++cid}`,
+                })
+              }
+              if (com.atproto.repo.applyWrites.update.$isTypeOf(write)) {
+                return com.atproto.repo.applyWrites.updateResult.$build({
+                  uri: `at://${did}/${write.collection}/${write.rkey}`,
+                  cid: `${++cid}`,
+                })
+              }
+              if (com.atproto.repo.applyWrites.delete.$isTypeOf(write)) {
+                return com.atproto.repo.applyWrites.deleteResult.$build({
+                  uri: `at://${did}/${write.collection}/${write.rkey}`,
+                })
+              }
+
+              throw new Error('Unknown write type')
+            }),
+          }
+          return Response.json(body)
+        })
+
+        const client = new Client(
+          { fetchHandler, did },
+          { validateResponse: false },
+        )
+
+        const { body } = await client.applyWrites((op) => [
+          op.create(app.bsky.feed.post, {
+            text: 'Hello, world!',
+            createdAt: currentDatetimeString(),
+          }),
+
+          op.update(app.bsky.actor.profile, {
+            displayName: 'Alice',
+          }),
+
+          op.delete(app.bsky.feed.post, {
+            rkey: 'old-post',
+          }),
+
+          op.delete(app.bsky.actor.profile),
+        ])
+
+        expect(fetchHandler).toHaveBeenCalledTimes(1)
+        expect(body.results).toEqual([
+          {
+            $type: 'com.atproto.repo.applyWrites#createResult',
+            uri: `at://${did}/app.bsky.feed.post/2222222222222`,
+            cid: '1',
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#updateResult',
+            uri: `at://${did}/app.bsky.actor.profile/self`,
+            cid: '2',
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#deleteResult',
+            uri: `at://${did}/app.bsky.feed.post/old-post`,
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#deleteResult',
+            uri: `at://${did}/app.bsky.actor.profile/self`,
+          },
+        ])
+      })
+
+      it('expects an options argument when rkey is needed', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async (path, init) => {
+          const request = new Request(new URL(path, 'http://localhost'), init)
+          expect(request.method).toBe('POST')
+          const payload = com.atproto.repo.applyWrites.main.input.schema.parse(
+            lexParse(await request.text()),
+          )
+
+          expect(payload.writes).toHaveLength(2)
+
+          return Response.json({})
+        })
+        const client = new Client(
+          { fetchHandler, did },
+          { validateResponse: false },
+        )
+
+        await client.applyWrites(function* (op) {
+          yield op.delete(app.bsky.actor.profile)
+          yield op.update(app.bsky.actor.profile, { displayName: 'Alice' })
+
+          expect(() => {
+            // @ts-expect-error
+            op.update(app.bsky.feed.post, {
+              text: 'Alice',
+              createdAt: currentDatetimeString(),
+            })
+          }).toThrow()
+
+          expect(() => {
+            // @ts-expect-error
+            op.delete(app.bsky.feed.post)
+          }).toThrow()
+        })
+
+        expect(fetchHandler).toHaveBeenCalledTimes(1)
       })
     })
   })

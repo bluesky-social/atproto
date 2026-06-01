@@ -1,7 +1,7 @@
 {
   "extends": ["../../../tsconfig/isomorphic.json"],
   "include": ["./src"],
-  "exclude": ["**/*.test.ts"],
+  "exclude": ["**/*.bench.ts", "**/*.test.ts"],
   "compilerOptions": {
     "noImplicitAny": true,
     "importHelpers": true,

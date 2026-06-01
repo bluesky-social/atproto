@@ -1,32 +1,80 @@
-import {
-  API_ENDPOINT_PREFIX,
+import type {
   ApiEndpoints,
-  CSRF_COOKIE_NAME,
-  CSRF_HEADER_NAME,
+  ConfirmResetPasswordInput,
+  InitiatePasswordResetInput,
+  SignInInput,
+  SignUpInput,
+  VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
 import {
   JsonClient,
+  JsonClientOptions,
   JsonErrorPayload,
   JsonErrorResponse,
 } from './json-client.ts'
 
 export type { Options } from './json-client.ts'
+const CSRF_COOKIE_NAME = 'csrf-token'
+const CSRF_HEADER_NAME = 'x-csrf-token'
+
+const API_ENDPOINT_PREFIX = '/@atproto/oauth-provider/~api'
+
+export type ApiOptions = JsonClientOptions<ApiEndpoints>
 
 export class Api extends JsonClient<ApiEndpoints> {
-  constructor() {
+  constructor(options: ApiOptions = {}) {
     const baseUrl = new URL(API_ENDPOINT_PREFIX, window.origin).toString()
-    super(baseUrl, () => ({
-      [CSRF_HEADER_NAME]: readCookie(CSRF_COOKIE_NAME),
-    }))
+    super(baseUrl, {
+      ...options,
+      headers: async function () {
+        const optionsHeaders = await options?.headers?.call(this)
+        const csrfToken = readCookie(CSRF_COOKIE_NAME)
+        return { ...optionsHeaders, [CSRF_HEADER_NAME]: csrfToken }
+      },
+    })
   }
 
-  // Override the parent's parseError method to handle expected error responses
+  async signIn(data: SignInInput) {
+    return this.fetch('POST', '/sign-in', data)
+  }
+
+  async initiatePasswordReset(data: InitiatePasswordResetInput) {
+    return this.fetch('POST', '/reset-password-request', data)
+  }
+
+  async confirmResetPassword(data: ConfirmResetPasswordInput) {
+    return this.fetch('POST', '/reset-password-confirm', data)
+  }
+
+  async validateHandleAvailability(data: VerifyHandleAvailabilityInput) {
+    return this.fetch('POST', '/verify-handle-availability', data)
+  }
+
+  async signUp(data: SignUpInput) {
+    return this.fetch('POST', '/sign-up', data)
+  }
+
+  async signOut(sub: string | string[]) {
+    return this.fetch('POST', '/sign-out', { sub })
+  }
+
+  async consent(sub: string, scope?: string) {
+    return this.fetch('POST', '/consent', { sub, scope })
+  }
+
+  async reject() {
+    return this.fetch('POST', '/reject', {})
+  }
+
   // and transform them into instances of the corresponding error classes.
   public static override parseError(
     json: unknown,
   ): undefined | JsonErrorResponse {
     // @NOTE Most specific errors first !
+    if (UnauthorizedError.is(json)) {
+      return new UnauthorizedError(json)
+    }
     if (SecondAuthenticationFactorRequiredError.is(json)) {
       return new SecondAuthenticationFactorRequiredError(json)
     }
@@ -55,6 +103,19 @@ export class Api extends JsonClient<ApiEndpoints> {
       return new AccessDeniedError(json)
     }
     return super.parseError(json)
+  }
+}
+
+export type UnauthorizedPayload = JsonErrorPayload<'unauthorized'>
+export class UnauthorizedError<
+  P extends UnauthorizedPayload = UnauthorizedPayload,
+> extends JsonErrorResponse<P> {
+  constructor(payload: P) {
+    super(payload, payload.error_description || 'Unauthorized')
+  }
+
+  static is(json: unknown): json is UnauthorizedPayload {
+    return super.is(json) && json.error === 'unauthorized'
   }
 }
 

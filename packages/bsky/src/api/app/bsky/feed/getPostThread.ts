@@ -1,9 +1,13 @@
 import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { ServerConfig } from '../../../../config.js'
+import { AppContext } from '../../../../context.js'
+import {
+  Code,
+  DataPlaneClient,
+  isDataplaneError,
+} from '../../../../data-plane/index.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -11,10 +15,10 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { postUriToThreadgateUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { postUriToThreadgateUri } from '../../../../util/uris.js'
+import { Views } from '../../../../views/index.js'
+import { ATPROTO_REPO_REV, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -31,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       paramsParseLoose: true,
     },
     handler: async ({ params, auth, req, res }) => {
-      const { viewer, includeTakedowns, include3pBlocks } =
+      const { viewer, includeTakedowns, include3pBlocks, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -39,6 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
+        skipViewerBlocks,
       })
 
       let result: app.bsky.feed.getPostThread.$OutputBody
