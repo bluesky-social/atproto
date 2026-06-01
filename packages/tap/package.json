@@ -36,7 +36,7 @@
     "express": "^4.18.2",
     "typescript": "^6.0.3",
     "@vitest/coverage-v8": "4.0.16",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.0"
   },
   "type": "module",
   "exports": {
