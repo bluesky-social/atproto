@@ -4,6 +4,7 @@ import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
+import { ensureValidDid } from '@atproto/syntax'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import { ModeratorClient } from './moderator-client.js'
@@ -231,6 +232,7 @@ export class TestOzone {
         : role === 'moderator'
           ? this.moderatorAccnt
           : this.triageAccnt
+    ensureValidDid(account.did)
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,

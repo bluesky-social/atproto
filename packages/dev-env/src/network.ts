@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
 import { wait } from '@atproto/common-web'
+import { ensureValidDid } from '@atproto/syntax'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky.js'
 import { EXAMPLE_LABELER } from './const.js'
@@ -174,6 +175,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async serviceHeaders(did: string, lxm: string, aud?: string) {
+    ensureValidDid(did)
     const keypair = await this.pds.ctx.actorStore.keypair(did)
     const jwt = await createServiceJwt({
       iss: did,

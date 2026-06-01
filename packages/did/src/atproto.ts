@@ -194,7 +194,9 @@ export const ATPROTO_VERIFICATION_METHOD_TYPES = Object.freeze([
 export type SupportedAtprotoVerificationMethodType =
   (typeof ATPROTO_VERIFICATION_METHOD_TYPES)[number]
 
-export type VerificationMethod = NonNullable<DidDocument['verificationMethod']>[number]
+export type VerificationMethod = NonNullable<
+  DidDocument['verificationMethod']
+>[number]
 export type AtprotoVerificationMethod<
   M extends AtprotoIdentityDidMethods = AtprotoIdentityDidMethods,
 > = Extract<VerificationMethod, object> & {

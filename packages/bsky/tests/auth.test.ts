@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 import { createServiceJwt } from '@atproto/xrpc-server'
 
 describe('auth', () => {
@@ -10,8 +11,8 @@ describe('auth', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -101,7 +102,9 @@ describe('auth', () => {
       exp: Math.floor(Date.now() / 1e3) + 60,
     }
     const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url')
-    const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
+    const payloadB64 = Buffer.from(JSON.stringify(payload)).toString(
+      'base64url',
+    )
     const sig = Buffer.from(
       await aliceKeypair.sign(
         Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),

@@ -85,16 +85,13 @@ export class MockEntryway {
     const accounts = new Map<string, Account>()
 
     const getSigningKey = async (
-      iss: string,
+      iss: DidString,
+      _kid: string,
       forceRefresh: boolean,
     ): Promise<string> => {
-      const [did, serviceId] = iss.split('#')
-      if (serviceId) {
-        throw new AuthRequiredError('no service id expected in iss claim')
-      }
-      const didDoc = await idResolver.did.resolve(did, forceRefresh)
+      const didDoc = await idResolver.did.resolve(iss, forceRefresh)
       if (!didDoc) {
-        throw new AuthRequiredError(`could not resolve did: ${did}`)
+        throw new AuthRequiredError(`could not resolve did: ${iss}`)
       }
       const parsedKey = getVerificationMaterial(didDoc, 'atproto')
       if (!parsedKey) {

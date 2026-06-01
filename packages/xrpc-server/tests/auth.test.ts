@@ -433,9 +433,7 @@ describe('Auth', () => {
           'base64url',
         )
         const sig = Buffer.from(
-          await keypair.sign(
-            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
-          ),
+          await keypair.sign(Buffer.from(`${headerB64}.${payloadB64}`, 'utf8')),
         )
         const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
         let receivedKid: string | undefined
@@ -471,9 +469,7 @@ describe('Auth', () => {
           'base64url',
         )
         const sig = Buffer.from(
-          await keypair.sign(
-            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
-          ),
+          await keypair.sign(Buffer.from(`${headerB64}.${payloadB64}`, 'utf8')),
         )
         const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
         let receivedKid: string | undefined
@@ -501,12 +497,14 @@ describe('Auth', () => {
           aud: 'did:web:appview.test',
           exp: Math.floor(Date.now() / 1e3) + 60,
         }
-        const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url')
-        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
+        const headerB64 = Buffer.from(JSON.stringify(header)).toString(
+          'base64url',
+        )
+        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString(
+          'base64url',
+        )
         const sig = Buffer.from(
-          await keypair.sign(
-            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
-          ),
+          await keypair.sign(Buffer.from(`${headerB64}.${payloadB64}`, 'utf8')),
         )
         const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
         await expect(
@@ -528,12 +526,14 @@ describe('Auth', () => {
           aud: 'did:web:appview.test',
           exp: Math.floor(Date.now() / 1e3) + 60,
         }
-        const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url')
-        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url')
+        const headerB64 = Buffer.from(JSON.stringify(header)).toString(
+          'base64url',
+        )
+        const payloadB64 = Buffer.from(JSON.stringify(payload)).toString(
+          'base64url',
+        )
         const sig = Buffer.from(
-          await keypair.sign(
-            Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
-          ),
+          await keypair.sign(Buffer.from(`${headerB64}.${payloadB64}`, 'utf8')),
         )
         const jwt = `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
         const result = await xrpcServer.verifyJwt(

@@ -1,6 +1,9 @@
+import {
+  AtprotoDidDocument,
+  AtprotoDidRefAbsolute,
+  VerificationMethod,
+} from './atproto.js'
 import { DidService } from './did-document.js'
-import { AtprotoDidDocument, VerificationMethod } from './atproto.js'
-import { AtprotoDidRefAbsolute } from './did-ref.js'
 
 /**
  * Sections of a DID document that contain referenceable entries.
@@ -35,10 +38,12 @@ export function lookupDidReference<S extends DidDocumentSection>(
   if (refDid !== doc.id) return null // absolute ref to a different DID
   const fragId = ref.slice(hashIdx) // includes leading '#'
   const absoluteId = `${doc.id}${fragId}` // e.g. did:plc:xxx#atproto
-  const entries = (doc[section as keyof AtprotoDidDocument] ?? []) as readonly unknown[]
+  const entries = (doc[section as keyof AtprotoDidDocument] ??
+    []) as readonly unknown[]
   for (const entry of entries) {
     // Handle both strings (references) and objects (embedded entries)
-    const entryId = typeof entry === 'string' ? entry : (entry as { id: string }).id
+    const entryId =
+      typeof entry === 'string' ? entry : (entry as { id: string }).id
     if (entryId === fragId || entryId === absoluteId) {
       return entry as EntryFor<S>
     }

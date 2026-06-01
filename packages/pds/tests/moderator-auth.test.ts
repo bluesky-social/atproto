@@ -4,6 +4,7 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { $Typed } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
 import usersSeed from './seeds/users.js'
@@ -15,10 +16,10 @@ describe('moderator auth', () => {
 
   let repoSubject: $Typed<com.atproto.admin.defs.RepoRef>
 
-  let modServiceDid: string
-  let altModDid: string
+  let modServiceDid: DidString
+  let altModDid: DidString
   let modServiceKey: Secp256k1Keypair
-  let pdsDid: string
+  let pdsDid: DidString
 
   const opAndDid = async (handle: string, key: Keypair) => {
     const op = await plc.signOperation(
@@ -43,8 +44,8 @@ describe('moderator auth', () => {
     modServiceKey = await Secp256k1Keypair.create()
     const modServiceInfo = await opAndDid('mod.test', modServiceKey)
     const altModInfo = await opAndDid('alt-mod.test', modServiceKey)
-    modServiceDid = modServiceInfo.did
-    altModDid = altModInfo.did
+    modServiceDid = modServiceInfo.did as DidString
+    altModDid = altModInfo.did as DidString
 
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'pds_moderator_auth',
@@ -54,7 +55,7 @@ describe('moderator auth', () => {
       },
     })
 
-    pdsDid = network.pds.ctx.cfg.service.did
+    pdsDid = network.pds.ctx.cfg.service.did as DidString
 
     const plcClient = network.plc.getClient()
     await plcClient.sendOperation(modServiceInfo.did, modServiceInfo.op)

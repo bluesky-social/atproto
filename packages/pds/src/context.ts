@@ -9,7 +9,6 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
-import { DidString } from '@atproto/syntax'
 import {
   AccessTokenMode,
   JoseKey,
@@ -18,6 +17,7 @@ import {
   OAuthVerifier,
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
+import { DidString } from '@atproto/syntax'
 import {
   createServiceAuthHeaders,
   createServiceJwt,

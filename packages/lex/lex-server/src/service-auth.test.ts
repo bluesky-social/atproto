@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AtprotoDid, AtprotoDidDocument } from '@atproto/did'
 import { serviceAuth } from './service-auth.js'
 
 describe('serviceAuth - lxm validation', () => {
@@ -165,13 +166,17 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
       const auth = serviceAuth({
         audience: fixture.audience,
         unique: async () => true,
-        didResolver: { resolve },
+        didResolver: { resolve: resolve as never },
       })
       const request = new Request(`https://api.example.com/xrpc/${nsid}`, {
         headers: { authorization: `Bearer ${jwt}` },
       })
 
-      const result = await auth({ request, method: { nsid } as any, params: {} })
+      const result = await auth({
+        request,
+        method: { nsid } as any,
+        params: {},
+      })
       expect(result.did).toBe(fixture.issuer)
       expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
     })
@@ -192,13 +197,17 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
       const auth = serviceAuth({
         audience: fixture.audience,
         unique: async () => true,
-        didResolver: { resolve },
+        didResolver: { resolve: resolve as never },
       })
       const request = new Request(`https://api.example.com/xrpc/${nsid}`, {
         headers: { authorization: `Bearer ${jwt}` },
       })
 
-      const result = await auth({ request, method: { nsid } as any, params: {} })
+      const result = await auth({
+        request,
+        method: { nsid } as any,
+        params: {},
+      })
       expect(result.did).toBe(fixture.issuer)
       expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
     })
@@ -223,13 +232,17 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
       const auth = serviceAuth({
         audience: fixture.audience,
         unique: async () => true,
-        didResolver: { resolve },
+        didResolver: { resolve: resolve as never },
       })
       const request = new Request(`https://api.example.com/xrpc/${nsid}`, {
         headers: { authorization: `Bearer ${jwt}` },
       })
 
-      const result = await auth({ request, method: { nsid } as any, params: {} })
+      const result = await auth({
+        request,
+        method: { nsid } as any,
+        params: {},
+      })
       expect(result.did).toBe(fixture.issuer)
       expect(resolve).toHaveBeenCalledWith(fixture.issuer, expect.anything())
     })
@@ -238,10 +251,9 @@ describe('serviceAuth - Phase 1 service auth updates', () => {
 
 async function makeFullFixture() {
   const { Secp256k1Keypair, formatMultikey } = await import('@atproto/crypto')
-  const { AtprotoDidDocument } = await import('@atproto/did')
 
-  const issuer = 'did:web:caller.example.com'
-  const audience = 'did:web:api.example.com'
+  const issuer = 'did:web:caller.example.com' as AtprotoDid
+  const audience = 'did:web:api.example.com' as AtprotoDid
   const atprotoKp = await Secp256k1Keypair.create({ exportable: true })
   const labelerKp = await Secp256k1Keypair.create({ exportable: true })
 
@@ -283,7 +295,9 @@ async function makeFullFixture() {
       'base64url',
     )
     const sig = Buffer.from(
-      await opts.keypair.sign(Buffer.from(`${headerB64}.${payloadB64}`, 'utf8')),
+      await opts.keypair.sign(
+        Buffer.from(`${headerB64}.${payloadB64}`, 'utf8'),
+      ),
     )
     return `${headerB64}.${payloadB64}.${sig.toString('base64url')}`
   }

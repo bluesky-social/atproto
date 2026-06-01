@@ -2,7 +2,7 @@ import * as crypto from '@atproto/crypto'
 import {
   AtprotoDid,
   AtprotoDidDocument,
-  AtprotoTokenAud,
+  AtprotoDidRefAbsolute,
   Did,
   isAtprotoDid,
   isAtprotoDidRefAbsolute,
@@ -16,6 +16,11 @@ import {
 } from '@atproto-labs/did-resolver'
 import { LexServerAuthError } from './errors.js'
 import type { LexRouterAuth } from './lex-router.js'
+
+// Phase 1: an aud claim may be a bare atproto DID or a combined
+// `did:method:value#serviceId` reference. AtprotoTokenAud is local to
+// service-auth — `@atproto/did` only exports the structural primitives.
+type AtprotoTokenAud = AtprotoDid | AtprotoDidRefAbsolute
 
 const BEARER_PREFIX = 'Bearer '
 
@@ -198,7 +203,8 @@ export function serviceAuth({
       })
 
     const kid =
-      jwt.header.kid ?? serviceFragmentToKid(extractIssFragment(jwt.payload.iss) ?? '#atproto')
+      jwt.header.kid ??
+      serviceFragmentToKid(extractIssFragment(jwt.payload.iss) ?? '#atproto')
     const key = getAtprotoSigningKey(didDocument, kid)
 
     if (!key || !(await verifyJwt(jwt, key))) {
@@ -277,7 +283,6 @@ function getAtprotoSigningKey(
 
   return null
 }
-
 
 async function parseJwtBearer(
   request: Request,
