@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.2.1
+
+### Patch Changes
+
+- [#4848](https://github.com/bluesky-social/atproto/pull/4848) [`8f0c19f`](https://github.com/bluesky-social/atproto/commit/8f0c19f18072e8d2aebf57c055c8679cf38a8356) Thanks [@foysalit](https://github.com/foysalit)! - Cast large numbers in metadata to strings in ozone events
+
+- Updated dependencies [[`07014df`](https://github.com/bluesky-social/atproto/commit/07014df290b489fe63b10ad5d65d854fe3b6c849), [`b4aa930`](https://github.com/bluesky-social/atproto/commit/b4aa9308386011d85cd17395d5989c026c44f8d8)]:
+  - @atproto/api@0.20.8
+
 ## 0.2.0
 
 ### Minor Changes

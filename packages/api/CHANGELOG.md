@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.20.8
+
+### Patch Changes
+
+- [#5027](https://github.com/bluesky-social/atproto/pull/5027) [`07014df`](https://github.com/bluesky-social/atproto/commit/07014df290b489fe63b10ad5d65d854fe3b6c849) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5028](https://github.com/bluesky-social/atproto/pull/5028) [`b4aa930`](https://github.com/bluesky-social/atproto/commit/b4aa9308386011d85cd17395d5989c026c44f8d8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Revert account-level label behavior change introduced in 0.19.13 and #4769
+
 ## 0.20.7
 
 ### Patch Changes
