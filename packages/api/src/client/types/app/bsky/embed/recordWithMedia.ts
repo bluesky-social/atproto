@@ -12,6 +12,7 @@ import {
 import type * as AppBskyEmbedRecord from './record.js'
 import type * as AppBskyEmbedImages from './images.js'
 import type * as AppBskyEmbedVideo from './video.js'
+import type * as AppBskyEmbedGallery from './gallery.js'
 import type * as AppBskyEmbedExternal from './external.js'
 
 const is$typed = _is$typed,
@@ -24,6 +25,7 @@ export interface Main {
   media:
     | $Typed<AppBskyEmbedImages.Main>
     | $Typed<AppBskyEmbedVideo.Main>
+    | $Typed<AppBskyEmbedGallery.Main>
     | $Typed<AppBskyEmbedExternal.Main>
     | { $type: string }
 }
@@ -44,6 +46,7 @@ export interface View {
   media:
     | $Typed<AppBskyEmbedImages.View>
     | $Typed<AppBskyEmbedVideo.View>
+    | $Typed<AppBskyEmbedGallery.View>
     | $Typed<AppBskyEmbedExternal.View>
     | { $type: string }
 }

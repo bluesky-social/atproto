@@ -52,7 +52,7 @@
     },
     "viewImage": {
       "type": "object",
-      "required": ["thumb", "fullsize", "alt", "aspectRatio"],
+      "required": ["thumbnail", "fullsize", "alt", "aspectRatio"],
       "properties": {
         "thumbnail": {
           "type": "string",

@@ -2733,6 +2733,90 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedGallery: {
+    lexicon: 1,
+    id: 'app.bsky.embed.gallery',
+    description:
+      'An assortment of media embedded in a Bluesky record (eg, a post).',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['media'],
+        properties: {
+          media: {
+            type: 'array',
+            maxLength: 10,
+            items: {
+              type: 'union',
+              refs: ['lex:app.bsky.embed.gallery#image'],
+              description:
+                'The media items in the gallery. Each item may be of a different type, but all types must be supported by the client. Max length may change in the future, and therefore applications should be prepared to handle more or fewer items than the current max length.',
+            },
+          },
+        },
+      },
+      image: {
+        type: 'object',
+        required: ['image', 'alt', 'aspectRatio'],
+        properties: {
+          image: {
+            type: 'blob',
+            accept: ['image/*'],
+            maxSize: 2000000,
+          },
+          alt: {
+            type: 'string',
+            description:
+              'Alt text description of the image, for accessibility.',
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['media'],
+        properties: {
+          media: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: ['lex:app.bsky.embed.gallery#viewImage'],
+            },
+          },
+        },
+      },
+      viewImage: {
+        type: 'object',
+        required: ['thumbnail', 'fullsize', 'alt', 'aspectRatio'],
+        properties: {
+          thumbnail: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View.',
+          },
+          fullsize: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View.',
+          },
+          alt: {
+            type: 'string',
+            description:
+              'Alt text description of the image, for accessibility.',
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedImages: {
     lexicon: 1,
     id: 'app.bsky.embed.images',
@@ -2896,6 +2980,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.embed.images#view',
                 'lex:app.bsky.embed.video#view',
+                'lex:app.bsky.embed.gallery#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
                 'lex:app.bsky.embed.recordWithMedia#view',
@@ -2975,6 +3060,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images',
               'lex:app.bsky.embed.video',
+              'lex:app.bsky.embed.gallery',
               'lex:app.bsky.embed.external',
             ],
           },
@@ -2993,6 +3079,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images#view',
               'lex:app.bsky.embed.video#view',
+              'lex:app.bsky.embed.gallery#view',
               'lex:app.bsky.embed.external#view',
             ],
           },
@@ -3119,6 +3206,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images#view',
               'lex:app.bsky.embed.video#view',
+              'lex:app.bsky.embed.gallery#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
               'lex:app.bsky.embed.recordWithMedia#view',
@@ -4647,6 +4735,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.video',
+                'lex:app.bsky.embed.gallery',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
                 'lex:app.bsky.embed.recordWithMedia',
@@ -20998,6 +21087,7 @@ export const ids = {
   AppBskyDraftUpdateDraft: 'app.bsky.draft.updateDraft',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
+  AppBskyEmbedGallery: 'app.bsky.embed.gallery',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',

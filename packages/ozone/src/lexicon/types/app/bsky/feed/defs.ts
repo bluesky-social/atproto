@@ -12,6 +12,7 @@ import {
 import type * as AppBskyActorDefs from '../actor/defs.js'
 import type * as AppBskyEmbedImages from '../embed/images.js'
 import type * as AppBskyEmbedVideo from '../embed/video.js'
+import type * as AppBskyEmbedGallery from '../embed/gallery.js'
 import type * as AppBskyEmbedExternal from '../embed/external.js'
 import type * as AppBskyEmbedRecord from '../embed/record.js'
 import type * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia.js'
@@ -32,6 +33,7 @@ export interface PostView {
   embed?:
     | $Typed<AppBskyEmbedImages.View>
     | $Typed<AppBskyEmbedVideo.View>
+    | $Typed<AppBskyEmbedGallery.View>
     | $Typed<AppBskyEmbedExternal.View>
     | $Typed<AppBskyEmbedRecord.View>
     | $Typed<AppBskyEmbedRecordWithMedia.View>

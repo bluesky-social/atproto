@@ -17,6 +17,7 @@ import type * as AppBskyActorDefs from '../actor/defs.js'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyEmbedImages from './images.js'
 import type * as AppBskyEmbedVideo from './video.js'
+import type * as AppBskyEmbedGallery from './gallery.js'
 import type * as AppBskyEmbedExternal from './external.js'
 import type * as AppBskyEmbedRecordWithMedia from './recordWithMedia.js'
 
@@ -78,6 +79,7 @@ export interface ViewRecord {
   embeds?: (
     | $Typed<AppBskyEmbedImages.View>
     | $Typed<AppBskyEmbedVideo.View>
+    | $Typed<AppBskyEmbedGallery.View>
     | $Typed<AppBskyEmbedExternal.View>
     | $Typed<View>
     | $Typed<AppBskyEmbedRecordWithMedia.View>

@@ -12,6 +12,7 @@ import {
 import type * as AppBskyRichtextFacet from '../richtext/facet.js'
 import type * as AppBskyEmbedImages from '../embed/images.js'
 import type * as AppBskyEmbedVideo from '../embed/video.js'
+import type * as AppBskyEmbedGallery from '../embed/gallery.js'
 import type * as AppBskyEmbedExternal from '../embed/external.js'
 import type * as AppBskyEmbedRecord from '../embed/record.js'
 import type * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia.js'
@@ -34,6 +35,7 @@ export interface Main {
   embed?:
     | $Typed<AppBskyEmbedImages.Main>
     | $Typed<AppBskyEmbedVideo.Main>
+    | $Typed<AppBskyEmbedGallery.Main>
     | $Typed<AppBskyEmbedExternal.Main>
     | $Typed<AppBskyEmbedRecord.Main>
     | $Typed<AppBskyEmbedRecordWithMedia.Main>
