@@ -5,11 +5,11 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": ["media"],
+      "required": ["items"],
       "properties": {
-        "media": {
+        "items": {
           "type": "array",
-          "maxLength": 10,
+          "maxLength": 20,
           "items": {
             "type": "union",
             "refs": ["#image"],

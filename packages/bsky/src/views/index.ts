@@ -66,6 +66,7 @@ import {
   ExternalEmbedView,
   FeedViewPost,
   FollowRecord,
+  GalleryEmbed,
   GeneratorView,
   GetPostThreadV2QueryParams,
   ImagesEmbed,
