@@ -16,7 +16,7 @@ export type AccountSelectorProps = Omit<
 export function AccountSelector(props: AccountSelectorProps): ReactNode {
   const { t } = useLingui()
   const { session, canSwitchAccounts } = useAuthenticationContext()
-  const { setSession, doSignOut } = useSessionContext()
+  const { setSession, api } = useSessionContext()
 
   return (
     <Popover.Root>
@@ -47,7 +47,10 @@ export function AccountSelector(props: AccountSelectorProps): ReactNode {
             />
             <Button
               key="signout"
-              onClick={() => doSignOut(session.account)}
+              onClick={async (_event) => {
+                const { sub } = session.account
+                await api.signOut(sub)
+              }}
               color="primary"
             >
               <Trans>Sign out</Trans>

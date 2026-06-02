@@ -177,7 +177,7 @@ msgid "Authenticate"
 msgstr ""
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:76
+#: src/components/consent-form.tsx:75
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr ""
@@ -189,12 +189,12 @@ msgid "Authorized on {0}"
 msgstr ""
 
 #: src/components/sign-in-picker.tsx:90
-#: src/components/forms/wizard-card.tsx:92
+#: src/components/forms/wizard-card.tsx:118
 #: src/components/forms/form-card.tsx:55
 msgid "Back"
 msgstr "戻る"
 
-#: src/components/forms/input-handle-default.tsx:90
+#: src/components/forms/input-handle-default.tsx:103
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
@@ -214,7 +214,7 @@ msgstr "Blueskyチャットサービス"
 msgid "Branding"
 msgstr ""
 
-#: src/components/consent-form.tsx:145
+#: src/components/consent-form.tsx:146
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
 
@@ -229,7 +229,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
 
-#: src/contexts/authentication.tsx:174
+#: src/contexts/authentication.tsx:183
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:52
 msgid "Cancel"
@@ -274,7 +274,7 @@ msgstr ""
 msgid "Choose a new email address to associate with your account."
 msgstr ""
 
-#: src/components/sign-up-view.tsx:86
+#: src/components/sign-up-view.tsx:74
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
@@ -286,7 +286,7 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx:65
+#: src/components/utils/account-selector.tsx:68
 msgid "Close account selector"
 msgstr ""
 
@@ -581,7 +581,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr "言語選択"
 
-#: src/components/forms/input-handle-default.tsx:230
+#: src/components/forms/input-handle-default.tsx:243
 msgid "Invalid"
 msgstr "無効"
 
@@ -626,7 +626,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:120
+#: src/authorization-page.tsx:117
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -711,7 +711,7 @@ msgstr "新しいパスワード"
 
 #: src/components/reset-password-view.tsx:49
 #: src/components/reset-password-view.tsx:82
-#: src/components/forms/wizard-card.tsx:95
+#: src/components/forms/wizard-card.tsx:121
 msgid "Next"
 msgstr "次へ"
 
@@ -719,7 +719,7 @@ msgstr "次へ"
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/input-handle-default.tsx:95
+#: src/components/forms/input-handle-default.tsx:108
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
@@ -872,11 +872,11 @@ msgstr ""
 msgid "Security step required"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx:58
+#: src/components/utils/account-selector.tsx:61
 msgid "Select another account"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:131
+#: src/components/forms/input-handle-default.tsx:144
 msgid "Select domain"
 msgstr "ドメインを選択"
 
@@ -913,12 +913,12 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx:53
+#: src/components/utils/account-selector.tsx:56
 msgid "Sign out"
 msgstr ""
 
-#: src/components/sign-up-view.tsx:70
-#: src/components/sign-up-view.tsx:74
+#: src/components/sign-up-view.tsx:51
+#: src/components/sign-up-view.tsx:56
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "サインアップ"
@@ -928,7 +928,7 @@ msgctxt "Error"
 msgid "Stack"
 msgstr ""
 
-#: src/components/forms/wizard-card.tsx:111
+#: src/components/forms/wizard-card.tsx:152
 msgid "Step {currentPosition} of {count}"
 msgstr "ステップ {currentPosition} / {count}"
 
@@ -952,7 +952,7 @@ msgstr ""
 msgid "Support"
 msgstr "サポート"
 
-#: src/components/consent-form.tsx:118
+#: src/components/consent-form.tsx:119
 msgid "Technical details"
 msgstr "技術的な詳細"
 
@@ -1014,7 +1014,7 @@ msgstr "招待コードが有効ではありません"
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr ""
 
-#: src/components/consent-form.tsx:123
+#: src/components/consent-form.tsx:124
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr ""
 
@@ -1059,11 +1059,11 @@ msgstr ""
 msgid "Type your domain"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:102
+#: src/components/forms/input-handle-default.tsx:115
 msgid "Type your username"
 msgstr ""
 
-#: src/contexts/session.tsx:186
+#: src/contexts/session.tsx:153
 msgid "Unauthorized"
 msgstr ""
 
@@ -1123,7 +1123,7 @@ msgstr "ユーザー名またはメールアドレス"
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:225
+#: src/components/forms/input-handle-default.tsx:238
 msgid "Valid"
 msgstr "有効"
 
@@ -1162,7 +1162,7 @@ msgstr ""
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr ""
 
-#: src/components/sign-up-view.tsx:129
+#: src/components/sign-up-view.tsx:111
 msgid "Verify you are human"
 msgstr "あなたが人間であることを確認"
 
@@ -1170,11 +1170,11 @@ msgstr "あなたが人間であることを確認"
 msgid "Verify your email"
 msgstr ""
 
-#: src/components/consent-form.tsx:111
+#: src/components/consent-form.tsx:112
 msgid "wants to access your <0/> account"
 msgstr "あなたの <0/> アカウントにアクセスしようとしています"
 
-#: src/components/consent-form.tsx:105
+#: src/components/consent-form.tsx:106
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
 
@@ -1182,7 +1182,7 @@ msgstr "あなたの <0/> アカウントを通じてあなたを識別しよう
 msgid "Warning"
 msgstr ""
 
-#: src/components/sign-up-view.tsx:71
+#: src/components/sign-up-view.tsx:52
 msgid "We're so excited to have you join us!"
 msgstr "私たちはあなたが参加してくれることをとても楽しみにしています！"
 
@@ -1210,7 +1210,7 @@ msgstr "識別子またはパスワードが間違っています"
 msgid "yesterday"
 msgstr ""
 
-#: src/authorization-page.tsx:121
+#: src/authorization-page.tsx:118
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
@@ -1231,7 +1231,7 @@ msgstr "新しいパスワードでサインインできるようになりまし
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
 
-#: src/components/sign-up-view.tsx:108
+#: src/components/sign-up-view.tsx:94
 msgid "Your account"
 msgstr "あなたのアカウント"
 
@@ -1256,7 +1256,7 @@ msgid "Your email address needs to be verified."
 msgstr ""
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/forms/input-handle-default.tsx:164
+#: src/components/forms/input-handle-default.tsx:177
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
@@ -1268,7 +1268,7 @@ msgstr "パスワードが変更されました！"
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr ""
 
-#: src/contexts/session.tsx:187
+#: src/contexts/session.tsx:154
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 

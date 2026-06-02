@@ -1,6 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { WizardCard } from './forms/wizard-card.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
@@ -46,35 +46,24 @@ export function SignUpView({
     Partial<SignUpCredentialsData & SignUpHandleData & SignUpHcaptchaData>
   >({})
 
-  // Each step's data
-  const [data, setData] = useState<{
-    credentials?: SignUpCredentialsData
-    handle?: SignUpHandleData
-    hcaptcha?: SignUpHcaptchaData
-  }>({})
-
-  const doneValue = useMemo(() => {
-    if (!data.credentials || !data.handle) return null
-    if (hcaptchaSiteKey != null && !data.hcaptcha) return null
-
-    return {
-      ...data.credentials,
-      ...data.handle,
-      hcaptchaToken:
-        hcaptchaSiteKey == null ? undefined : data.hcaptcha?.verify.token,
-    }
-  }, [data, hcaptchaSiteKey])
-
   return (
     <LayoutTitle
       title={msg({ message: 'Sign up' })}
       subtitle={<Trans>We're so excited to have you join us!</Trans>}
     >
       <WizardCard
-        doneLabel={<Trans>Sign up</Trans>}
         onBack={onBack}
-        onDone={() => {
-          if (doneValue) void onDone(doneValue)
+        doneLabel={<Trans>Sign up</Trans>}
+        onDone={([handle, credentials, hcaptcha]: [
+          SignUpHandleData,
+          SignUpCredentialsData,
+          SignUpHcaptchaData | null,
+        ]) => {
+          return onDone({
+            ...credentials,
+            ...handle,
+            hcaptchaToken: hcaptcha?.verify.token,
+          })
         }}
         steps={[
           // We use the handle input first since the "onValidateNewHandle" check
@@ -82,7 +71,6 @@ export function SignUpView({
           // will result in a better user experience, especially if there is an
           // issue with the email address (e.g. already in use).
           {
-            invalid: !data.handle,
             titleRender: () => <Trans>Choose a username</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel }) => (
               <SignUpHandleForm
@@ -95,8 +83,7 @@ export function SignUpView({
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
                 handler={async (data) => {
                   await onValidateNewHandle(data)
-                  setData((prev) => ({ ...prev, handle: data }))
-                  next()
+                  next(data)
                 }}
               >
                 <SignUpDisclaimer links={links} />
@@ -104,7 +91,6 @@ export function SignUpView({
             ),
           },
           {
-            invalid: !data.credentials,
             titleRender: () => <Trans>Your account</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel }) => (
               <SignUpCredentialsForm
@@ -114,10 +100,7 @@ export function SignUpView({
                 submitLabel={nextLabel}
                 values={pending}
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={async (data) => {
-                  setData((prev) => ({ ...prev, credentials: data }))
-                  next()
-                }}
+                handler={next}
                 inviteCodeRequired={inviteCodeRequired}
               >
                 <SignUpDisclaimer links={links} />
@@ -125,7 +108,6 @@ export function SignUpView({
             ),
           },
           hcaptchaSiteKey != null && {
-            invalid: !data.hcaptcha,
             titleRender: () => <Trans>Verify you are human</Trans>,
             contentRender: ({ prev, prevLabel, next, nextLabel }) => (
               <SignUpHcaptchaForm
@@ -136,10 +118,7 @@ export function SignUpView({
                 submitLabel={nextLabel}
                 values={pending}
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
-                handler={async (data) => {
-                  setData((prev) => ({ ...prev, hcaptcha: data }))
-                  next()
-                }}
+                handler={next}
               >
                 <SignUpDisclaimer links={links} />
               </SignUpHcaptchaForm>

@@ -23,7 +23,7 @@ The boundary works as a layered stack:
 2. **High-level pure components** — `*-form.tsx`, `*-dialog.tsx`, `*-view.tsx`. Compose the low-level pieces into a feature surface and expose callbacks (`onSignIn`, `onConsent`, `onUpdateEmail`, …) for the parent to wire up.
 3. **Pages** — entry points under [src/](src/) (e.g. [authorization-page.tsx](src/authorization-page.tsx), [account-page.tsx](src/account-page.tsx)) and the route components under [src/pages/](src/pages/). These are the _only_ layer that pulls in contexts (`useSessionContext`, `useAuthenticationContext`, …), TanStack Query, the API client, and routing. They translate domain state into props and callbacks for the components in step 2.
 
-For example, [authorization-page.tsx](src/authorization-page.tsx) reads `useSessionContext()` and threads `session.account`, `doConsent`, `doReject` into a pure `<ConsentView>`; the `ConsentView` itself never knows the session context exists. Same shape for the router-driven pages in [account-page.tsx](src/account-page.tsx) — each route component pulls business logic from contexts and renders pure components.
+For example, [authorization-page.tsx](src/authorization-page.tsx) reads `useSessionContext()` and threads `session.account`, `api.myMethod()` into a pure `<ConsentView>`; the `ConsentView` itself never knows the session context exists. Same shape for the router-driven pages in [account-page.tsx](src/account-page.tsx) — each route component pulls business logic from contexts and renders pure components.
 
 When unsure where to add a piece of code: if it imports from `#/contexts/*`, an API client, or a router hook, it belongs in `src/pages/` or one of the top-level `*-page.tsx` files — not in `src/components/`.
 

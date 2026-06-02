@@ -61,6 +61,9 @@ export function useStepper<const S extends Step>(
 
   const count = steps.filter(isEnabled).length
   const completed = steps.every(isCompleted)
+  const othersCompleted = steps
+    .filter((s, i) => i !== currentIdx)
+    .every(isCompleted)
 
   const current =
     currentIdx === -1 || !steps[currentIdx] ? undefined : steps[currentIdx]
@@ -76,6 +79,7 @@ export function useStepper<const S extends Step>(
     currentPosition,
     count,
     completed,
+    othersCompleted,
     atFirst: currentPosition === 1,
     atLast: currentPosition === count,
     toFirst,

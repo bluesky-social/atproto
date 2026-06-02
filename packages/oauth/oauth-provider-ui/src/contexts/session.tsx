@@ -8,19 +8,9 @@ import {
   useState,
 } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
-import type {
-  Account,
-  ConfirmResetPasswordInput,
-  InitiatePasswordResetInput,
-  Session,
-  SignInInput,
-  SignOutInput,
-  SignUpInput,
-  VerifyHandleAvailabilityInput,
-} from '@atproto/oauth-provider-api'
+import type { Account, Session } from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
 import { upsert } from '#/lib/util.ts'
-import { useCurrentLocale } from '#/locales/locale-provider'
 import { useNotificationsContext } from './notifications.js'
 
 export type { Session }
@@ -35,28 +25,6 @@ export type SessionContextType = {
   setSession: (session: Pick<Session, 'account'> | null) => void
 
   api: Api
-
-  /** @deprecated use api.fetch instead */
-  doSignIn: (data: Omit<SignInInput, 'locale'>) => Promise<void>
-  /** @deprecated use api.fetch instead */
-  doSignOut: (data: SignOutInput) => Promise<void>
-  /** @deprecated use api.fetch instead */
-  doInitiatePasswordReset: (
-    data: Omit<InitiatePasswordResetInput, 'locale'>,
-  ) => Promise<void>
-  /** @deprecated use api.fetch instead */
-  doConfirmResetPassword: (data: ConfirmResetPasswordInput) => Promise<void>
-  /** @deprecated use api.validateHandleAvailability() instead */
-  doValidateNewHandle: (data: VerifyHandleAvailabilityInput) => Promise<void>
-  /** @deprecated use api.signUp() instead */
-  doSignUp: (data: Omit<SignUpInput, 'locale'>) => Promise<void>
-  /** @deprecated use api.consent() instead */
-  doConsent: (
-    sub: string,
-    scope?: string | undefined,
-  ) => Promise<{ url: string }>
-  /** @deprecated use api.reject() instead */
-  doReject: () => Promise<{ url: string }>
 }
 
 const SessionContext = createContext<null | SessionContextType>(null)
@@ -79,7 +47,6 @@ export function SessionProvider({
   initialSelected,
 }: SessionProviderProps) {
   const { t } = useLingui()
-  const locale = useCurrentLocale()
   const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
   const { notify } = useNotificationsContext()
   const [current, setCurrent] = useState(() => {
@@ -223,44 +190,9 @@ export function SessionProvider({
     t,
   ])
 
-  const value = useMemo<SessionContextType>(
-    () => ({
-      api,
-
-      sessions,
-      session,
-      setSession,
-
-      // Deprecated helpers: Don't add new ones, use api.fetch(). Add
-      // specific methods to the API class if needed.
-      doSignIn: async (data: Omit<SignInInput, 'locale'>) => {
-        await api.signIn({ ...data, locale })
-      },
-      doSignOut: async ({ sub }: SignOutInput) => {
-        await api.signOut(sub)
-      },
-      doInitiatePasswordReset: async (
-        data: Omit<InitiatePasswordResetInput, 'locale'>,
-      ) => {
-        await api.initiatePasswordReset({ ...data, locale })
-      },
-      doConfirmResetPassword: async (data: ConfirmResetPasswordInput) => {
-        await api.confirmResetPassword(data)
-      },
-      doValidateNewHandle: async (data: VerifyHandleAvailabilityInput) => {
-        await api.validateHandleAvailability(data)
-      },
-      doSignUp: async (data: Omit<SignUpInput, 'locale'>) => {
-        await api.signUp({ ...data, locale })
-      },
-      doConsent: async (sub: string, scope?: string) => {
-        return api.consent(sub, scope)
-      },
-      doReject: async () => {
-        return api.fetch('POST', '/reject', {})
-      },
-    }),
-    [api, locale, sessions, session, setSession],
+  const value = useMemo(
+    (): SessionContextType => ({ api, sessions, session, setSession }),
+    [api, sessions, session, setSession],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

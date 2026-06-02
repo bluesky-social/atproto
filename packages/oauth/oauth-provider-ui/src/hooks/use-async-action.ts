@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useStableCallback } from './use-stable-callback.ts'
 
 export type AsyncActionController = {
   reset: () => void
@@ -21,9 +22,7 @@ export function useAsyncAction<Args extends unknown[] = []>(
   // Abort pending action on unmount
   useEffect(() => reset, [])
 
-  const fnRef = useRef(fn)
-  fnRef.current = fn
-  const run = useCallback(async (...args: Args): Promise<void> => {
+  const run = useStableCallback(async (...args: Args): Promise<void> => {
     // Cancel previous run
     controllerRef.current?.abort()
 
@@ -36,7 +35,7 @@ export function useAsyncAction<Args extends unknown[] = []>(
     controllerRef.current = controller
 
     try {
-      await fnRef.current.call(null, signal, ...args)
+      await fn(signal, ...args)
     } catch (err) {
       if (controller === controllerRef.current) {
         setError(err instanceof Error ? err : new Error(String(err)))
@@ -53,7 +52,7 @@ export function useAsyncAction<Args extends unknown[] = []>(
 
       controller.abort()
     }
-  }, [])
+  })
 
   return useMemo(
     () => ({ run, reset, loading, error }),

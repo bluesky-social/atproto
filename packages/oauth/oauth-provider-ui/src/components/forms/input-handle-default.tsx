@@ -4,6 +4,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
 import { JSX, useCallback, useEffect, useRef, useState } from 'react'
 import { HandleString, isValidHandle } from '@atproto/syntax'
+import { useStableCallback } from '#/hooks/use-stable-callback.ts'
 import {
   MAX_FULL_LENGTH,
   MAX_LENGTH,
@@ -74,14 +75,26 @@ export function InputHandleDefault({
 
   const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
 
-  const validity = validateSegment(segment)
-  const handle =
-    domain && validity.valid && isValidHandle(`${segment}${domain}`)
-      ? (`${segment}${domain}` as HandleString)
-      : undefined
-  useEffect(() => {
-    onHandle?.(handle)
-  }, [onHandle, handle])
+  const [handle, setHandle] = useState<HandleString | undefined>(handleInit)
+  const [validity, setValidity] = useState(() => validateSegment(segment))
+
+  const update = useStableCallback((segment: string, domainIdx: number) => {
+    const validity = validateSegment(segment)
+    const domain = domains[domainIdx]
+    const handle = domain && validity.valid && `${segment}${domain}`
+
+    setSegment(segment)
+    setValidity(validity)
+    setDomainIdx(domainIdx)
+
+    if (handle && isValidHandle(handle)) {
+      setHandle(handle)
+      onHandle?.(handle)
+    } else {
+      setHandle(undefined)
+      onHandle?.(undefined)
+    }
+  })
 
   return (
     <>
@@ -119,7 +132,7 @@ export function InputHandleDefault({
           event.target.value = value
           event.target.setSelectionRange(selectionStart, selectionEnd)
 
-          setSegment(value)
+          update(value, domainIdx)
         }}
         append={
           // @TODO refactor this to a separate component
@@ -130,7 +143,7 @@ export function InputHandleDefault({
               value={domainIdx}
               aria-label={t`Select domain`}
               onChange={(event) => {
-                setDomainIdx(Number(event.target.value))
+                update(segment, Number(event.target.value))
                 inputRef.current?.focus()
               }}
               className={clsx(

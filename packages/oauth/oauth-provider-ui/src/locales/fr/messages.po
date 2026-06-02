@@ -177,7 +177,7 @@ msgid "Authenticate"
 msgstr "Vous authentifier"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:76
+#: src/components/consent-form.tsx:75
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
@@ -189,12 +189,12 @@ msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
 
 #: src/components/sign-in-picker.tsx:90
-#: src/components/forms/wizard-card.tsx:92
+#: src/components/forms/wizard-card.tsx:118
 #: src/components/forms/form-card.tsx:55
 msgid "Back"
 msgstr "Retour"
 
-#: src/components/forms/input-handle-default.tsx:90
+#: src/components/forms/input-handle-default.tsx:103
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
@@ -214,7 +214,7 @@ msgstr "Services de messagerie Bluesky"
 msgid "Branding"
 msgstr "Personnalisation"
 
-#: src/components/consent-form.tsx:145
+#: src/components/consent-form.tsx:146
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
@@ -229,7 +229,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Appeler"
 
-#: src/contexts/authentication.tsx:174
+#: src/contexts/authentication.tsx:183
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:52
 msgid "Cancel"
@@ -274,7 +274,7 @@ msgstr "Choisissez un nouveau nom d'utilisateur par défaut."
 msgid "Choose a new email address to associate with your account."
 msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 
-#: src/components/sign-up-view.tsx:86
+#: src/components/sign-up-view.tsx:74
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
@@ -286,7 +286,7 @@ msgstr "Cliquez ici pour renvoyer."
 msgid "Close"
 msgstr "Fermer"
 
-#: src/components/utils/account-selector.tsx:65
+#: src/components/utils/account-selector.tsx:68
 msgid "Close account selector"
 msgstr "Fermer le sélecteur de compte"
 
@@ -591,7 +591,7 @@ msgstr "Si vous mettez à jour votre adresse email, la 2FA par email (si activé
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/components/forms/input-handle-default.tsx:230
+#: src/components/forms/input-handle-default.tsx:243
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -636,7 +636,7 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:120
+#: src/authorization-page.tsx:117
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -721,7 +721,7 @@ msgstr "Nouveau mot de passe"
 
 #: src/components/reset-password-view.tsx:49
 #: src/components/reset-password-view.tsx:82
-#: src/components/forms/wizard-card.tsx:95
+#: src/components/forms/wizard-card.tsx:121
 msgid "Next"
 msgstr "Suivant"
 
@@ -729,7 +729,7 @@ msgstr "Suivant"
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/input-handle-default.tsx:95
+#: src/components/forms/input-handle-default.tsx:108
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
@@ -882,11 +882,11 @@ msgstr "Code de sécurité"
 msgid "Security step required"
 msgstr "Étape de sécurité requise"
 
-#: src/components/utils/account-selector.tsx:58
+#: src/components/utils/account-selector.tsx:61
 msgid "Select another account"
 msgstr "Sélectionner un autre compte"
 
-#: src/components/forms/input-handle-default.tsx:131
+#: src/components/forms/input-handle-default.tsx:144
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
@@ -923,12 +923,12 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
 
-#: src/components/utils/account-selector.tsx:53
+#: src/components/utils/account-selector.tsx:56
 msgid "Sign out"
 msgstr "Se déconnecter"
 
-#: src/components/sign-up-view.tsx:70
-#: src/components/sign-up-view.tsx:74
+#: src/components/sign-up-view.tsx:51
+#: src/components/sign-up-view.tsx:56
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Inscription"
@@ -938,7 +938,7 @@ msgctxt "Error"
 msgid "Stack"
 msgstr "Trace"
 
-#: src/components/forms/wizard-card.tsx:111
+#: src/components/forms/wizard-card.tsx:152
 msgid "Step {currentPosition} of {count}"
 msgstr "Étape {currentPosition} sur {count}"
 
@@ -962,7 +962,7 @@ msgstr "Accès révoqué"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:118
+#: src/components/consent-form.tsx:119
 msgid "Technical details"
 msgstr "Détails techniques"
 
@@ -1024,7 +1024,7 @@ msgstr "Le code d'invitation n'est pas valide"
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
-#: src/components/consent-form.tsx:123
+#: src/components/consent-form.tsx:124
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
@@ -1069,11 +1069,11 @@ msgstr "Type"
 msgid "Type your domain"
 msgstr "Saisissez votre nom de domaine"
 
-#: src/components/forms/input-handle-default.tsx:102
+#: src/components/forms/input-handle-default.tsx:115
 msgid "Type your username"
 msgstr "Saisissez votre nom d'utilisateur"
 
-#: src/contexts/session.tsx:186
+#: src/contexts/session.tsx:153
 msgid "Unauthorized"
 msgstr "Déconnecté"
 
@@ -1133,7 +1133,7 @@ msgstr "Nom d'utilisateur ou adresse email"
 msgid "Username updated"
 msgstr "Nom d'utilisateur modifié"
 
-#: src/components/forms/input-handle-default.tsx:225
+#: src/components/forms/input-handle-default.tsx:238
 msgid "Valid"
 msgstr "Valide"
 
@@ -1172,7 +1172,7 @@ msgstr "Vérifier"
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
 
-#: src/components/sign-up-view.tsx:129
+#: src/components/sign-up-view.tsx:111
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
@@ -1180,11 +1180,11 @@ msgstr "Vérifiez que vous êtes humain"
 msgid "Verify your email"
 msgstr "Vérifier votre adresse email"
 
-#: src/components/consent-form.tsx:111
+#: src/components/consent-form.tsx:112
 msgid "wants to access your <0/> account"
 msgstr "veut accéder à votre compte <0/>"
 
-#: src/components/consent-form.tsx:105
+#: src/components/consent-form.tsx:106
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "veut vous identifier de manière unique via votre compte <0/>"
 
@@ -1192,7 +1192,7 @@ msgstr "veut vous identifier de manière unique via votre compte <0/>"
 msgid "Warning"
 msgstr "Avertissement"
 
-#: src/components/sign-up-view.tsx:71
+#: src/components/sign-up-view.tsx:52
 msgid "We're so excited to have you join us!"
 msgstr "Nous sommes ravis de vous accueillir parmi nous !"
 
@@ -1220,7 +1220,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "yesterday"
 msgstr "hier"
 
-#: src/authorization-page.tsx:121
+#: src/authorization-page.tsx:118
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
 
@@ -1241,7 +1241,7 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
-#: src/components/sign-up-view.tsx:108
+#: src/components/sign-up-view.tsx:94
 msgid "Your account"
 msgstr "Votre compte"
 
@@ -1266,7 +1266,7 @@ msgid "Your email address needs to be verified."
 msgstr "Votre adresse email doit être vérifiée."
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/forms/input-handle-default.tsx:164
+#: src/components/forms/input-handle-default.tsx:177
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
@@ -1278,7 +1278,7 @@ msgstr "Votre mot de passe a été mis à jour !"
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau AT Protocol, telles que les posts, les likes et les follows de Bluesky. Il contient également les données créées via d'autres applications utilisées avec ce compte. L'application demande les autorisations nécessaires pour publier les modifications suivantes sur votre dépôt :"
 
-#: src/contexts/session.tsx:187
+#: src/contexts/session.tsx:154
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
 

@@ -8,9 +8,9 @@ import {
   useRef,
   useState,
 } from 'react'
-import { FormCard, FormCardProps } from '#/components/forms/form-card'
-import { Override } from '#/lib/util'
-import { useAsyncAction } from '../../hooks/use-async-action'
+import { FormCard, FormCardProps } from '#/components/forms/form-card.tsx'
+import { Override } from '#/lib/util.ts'
+import { useAsyncAction } from '../../hooks/use-async-action.ts'
 
 export type AsyncFormData = Record<string, unknown>
 
@@ -219,22 +219,17 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
 
   const set = useCallback<SetField<TValues>>(
     (key, value) => {
-      setValues((prev) => {
-        // Reset async error/loading state whenever the user changes any input.
-        reset()
+      // Reset async error/loading state whenever the user changes any input.
+      reset()
 
-        // Skip the state update if the value didn't actually change. Only
-        // sound for primitive values.
-        if (prev[key] === value) return prev
-
-        const next = { ...prev, [key]: value }
-
-        onValuesRef.current?.call(null, next, prev)
-
-        return next
-      })
+      // Skip the state update if the value didn't actually change. Only
+      // sound for primitive values.
+      if (values[key] !== value) {
+        setValues({ ...values, [key]: value })
+        onValuesRef.current?.call(null, { ...values, [key]: value }, values)
+      }
     },
-    [reset],
+    [values, reset],
   )
 
   const setterFor = useCallback<SetterFor<TValues>>(
