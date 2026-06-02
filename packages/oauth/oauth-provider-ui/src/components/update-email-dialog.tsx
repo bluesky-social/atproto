@@ -177,7 +177,7 @@ export function UpdateEmailDialog({
               transparent
               size="sm"
               shape="padded"
-              cooldownInitial={30}
+              startWithCooldown
             >
               <Trans>Click here to resend.</Trans>
             </ButtonRequestCode>
