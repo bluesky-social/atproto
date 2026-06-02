@@ -10,10 +10,11 @@
         "items": {
           "type": "array",
           "maxLength": 20,
+          "description": "The schema-level maxLength of 20 is a future-proof ceiling. Clients should currently enforce a soft limit of 10 items in authoring UIs.",
           "items": {
             "type": "union",
             "refs": ["#image"],
-            "description": "The media items in the gallery. Each item may be of a different type, but all types must be supported by the client. Max length may change in the future, and therefore applications should be prepared to handle more or fewer items than the current max length."
+            "description": "The media items in the gallery. Each item may be of a different type, but all types must be supported by the client."
           }
         }
       }
