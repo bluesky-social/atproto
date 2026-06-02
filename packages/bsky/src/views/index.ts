@@ -67,6 +67,9 @@ import {
   FeedViewPost,
   FollowRecord,
   GalleryEmbed,
+  GalleryEmbedView,
+  GalleryImageEmbed,
+  GalleryImageEmbedView,
   GeneratorView,
   GetPostThreadV2QueryParams,
   ImagesEmbed,
@@ -116,6 +119,8 @@ import {
   VideoEmbed,
   VideoEmbedView,
   isExternalEmbedType,
+  isGalleryEmbedType,
+  isGalleryImageEmbedType,
   isImagesEmbedType,
   isLabelerRecordType,
   isListRuleType,
@@ -2091,6 +2096,8 @@ export class Views {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbedType(embed)) {
       return this.videoEmbed(creatorFromUri(postUri), embed)
+    } else if (isGalleryEmbedType(embed)) {
+      return this.galleryEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbedType(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed, state)
     } else if (isRecordEmbedType(embed)) {
@@ -2131,6 +2138,44 @@ export class Views {
       alt: embed.alt,
       aspectRatio: embed.aspectRatio,
       presentation: embed.presentation,
+    })
+  }
+
+  galleryEmbed(did: DidString, embed: GalleryEmbed): $Typed<GalleryEmbedView> {
+    const media = embed.items.flatMap((item) => {
+      const view = this.galleryItemView(did, item)
+      return view ? [view] : []
+    })
+    return app.bsky.embed.gallery.view.$build({ media })
+  }
+
+  private galleryItemView(
+    did: DidString,
+    item: GalleryEmbed['items'][number],
+  ): $Typed<GalleryImageEmbedView> | undefined {
+    if (isGalleryImageEmbedType(item)) {
+      return this.galleryImageView(did, item)
+    }
+    return undefined
+  }
+
+  private galleryImageView(
+    did: DidString,
+    item: GalleryImageEmbed,
+  ): $Typed<GalleryImageEmbedView> {
+    return app.bsky.embed.gallery.viewImage.$build({
+      thumbnail: this.imgUriBuilder.getPresetUri(
+        'feed_thumbnail',
+        did,
+        getBlobCidString(item.image),
+      ),
+      fullsize: this.imgUriBuilder.getPresetUri(
+        'feed_fullsize',
+        did,
+        getBlobCidString(item.image),
+      ),
+      alt: item.alt,
+      aspectRatio: item.aspectRatio,
     })
   }
 
@@ -2523,11 +2568,14 @@ export class Views {
     let mediaEmbed:
       | $Typed<ImagesEmbedView>
       | $Typed<VideoEmbedView>
+      | $Typed<GalleryEmbedView>
       | $Typed<ExternalEmbedView>
     if (isImagesEmbedType(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isVideoEmbedType(embed.media)) {
       mediaEmbed = this.videoEmbed(creator, embed.media)
+    } else if (isGalleryEmbedType(embed.media)) {
+      mediaEmbed = this.galleryEmbed(creator, embed.media)
     } else if (isExternalEmbedType(embed.media)) {
       mediaEmbed = this.externalEmbed(creator, embed.media, state)
     } else {
