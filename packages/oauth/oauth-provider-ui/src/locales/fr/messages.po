@@ -403,7 +403,7 @@ msgstr "Demande de modification d'adresse email envoyée"
 msgid "Email change successful"
 msgstr "Modification de l'adresse email réussie"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:160
+#: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
 msgstr "Envoyer ces instructions par email"
 
@@ -542,7 +542,7 @@ msgstr ""
 "\n"
 "Merci."
 
-#: src/components/forms/input-handle-custom-instructions.tsx:147
+#: src/components/forms/input-handle-custom-instructions.tsx:144
 msgid "Help"
 msgstr "Aide"
 
@@ -1057,7 +1057,7 @@ msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Auprès de"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:153
+#: src/components/forms/input-handle-custom-instructions.tsx:150
 msgid "Troubleshoot"
 msgstr "Dépannage"
 
