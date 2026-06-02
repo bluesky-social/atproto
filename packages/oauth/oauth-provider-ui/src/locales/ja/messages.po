@@ -703,7 +703,6 @@ msgstr ""
 
 #: src/components/update-email-dialog.tsx:137
 #: src/components/update-email-dialog.tsx:206
-#: src/components/reset-email-confirm-form.tsx:64
 msgid "New email address"
 msgstr ""
 
@@ -840,7 +839,6 @@ msgid "Repository"
 msgstr "リポジトリ"
 
 #: src/components/reset-password-confirm-form.tsx:45
-#: src/components/reset-email-confirm-form.tsx:49
 msgid "Reset code"
 msgstr "リセットコード"
 
