@@ -276,6 +276,88 @@ describe('moderation-statuses', () => {
         "only bob's account statuses are returned, no events have a URI even though the subjectType is record",
       )
     })
+
+    it('returns statuses for conversations', async () => {
+      const convoId1 = 'test-convo-123'
+      const convoId2 = 'test-convo-456'
+
+      // Create reports for conversation 1
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'spam in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Create another report for conversation 1
+      await sc.createReport({
+        reasonType: REASONMISLEADING,
+        reason: 'misleading in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.bob,
+      })
+
+      // Create report for conversation 2
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'spam in convo 2',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId2,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Query statuses for conversation 1 using AT URI format
+      const convo1Statuses = await modClient.queryStatuses({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId1}`,
+      })
+
+      // Query statuses for conversation 2
+      const convo2Statuses = await modClient.queryStatuses({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId2}`,
+      })
+
+      // Query all conversation statuses for carol
+      const allCarolConvoStatuses = await modClient.queryStatuses({
+        subject: sc.dids.carol,
+        includeAllUserRecords: true,
+      })
+
+      // Verify conversation 1 has exactly 1 status (multiple reports create one status)
+      expect(convo1Statuses.subjectStatuses.length).toEqual(1)
+      expect(convo1Statuses.subjectStatuses[0].subject.$type).toEqual(
+        'chat.bsky.convo.defs#convoRef',
+      )
+      expect(convo1Statuses.subjectStatuses[0].reviewState).toEqual(REVIEWOPEN)
+
+      // Verify conversation 2 has exactly 1 status
+      expect(convo2Statuses.subjectStatuses.length).toEqual(1)
+      expect(convo2Statuses.subjectStatuses[0].subject.$type).toEqual(
+        'chat.bsky.convo.defs#convoRef',
+      )
+
+      // Verify statuses are properly isolated by conversation
+      const convo1Subject = convo1Statuses.subjectStatuses[0].subject as any
+      const convo2Subject = convo2Statuses.subjectStatuses[0].subject as any
+      expect(convo1Subject.convoId).toEqual(convoId1)
+      expect(convo2Subject.convoId).toEqual(convoId2)
+
+      // Verify includeAllUserRecords includes conversations
+      const convoStatuses = allCarolConvoStatuses.subjectStatuses.filter(
+        (s) => s.subject.$type === 'chat.bsky.convo.defs#convoRef',
+      )
+      expect(convoStatuses.length).toBeGreaterThanOrEqual(2)
+    })
   })
 
   describe('reviewState changes', () => {

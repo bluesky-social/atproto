@@ -1,5 +1,33 @@
 # @atproto/api
 
+## 0.20.8
+
+### Patch Changes
+
+- [#5027](https://github.com/bluesky-social/atproto/pull/5027) [`07014df`](https://github.com/bluesky-social/atproto/commit/07014df290b489fe63b10ad5d65d854fe3b6c849) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5028](https://github.com/bluesky-social/atproto/pull/5028) [`b4aa930`](https://github.com/bluesky-social/atproto/commit/b4aa9308386011d85cd17395d5989c026c44f8d8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Revert account-level label behavior change introduced in 0.19.13 and #4769
+
+## 0.20.7
+
+### Patch Changes
+
+- [#5018](https://github.com/bluesky-social/atproto/pull/5018) [`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4941](https://github.com/bluesky-social/atproto/pull/4941) [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow conversations to be reported in ozone
+
+  This change extends ozone's moderation system to handle conversation reporting alongside existing reporting subject types.
+
+- [#5011](https://github.com/bluesky-social/atproto/pull/5011) [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5023](https://github.com/bluesky-social/atproto/pull/5023) [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.6
+
+### Patch Changes
+
+- [#4999](https://github.com/bluesky-social/atproto/pull/4999) [`126ac1e`](https://github.com/bluesky-social/atproto/commit/126ac1ead8c44065e3fa7c02efba7bd20551ee99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.5
 
 ### Patch Changes

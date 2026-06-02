@@ -13,8 +13,9 @@ export interface Report {
   status: string // 'open', 'closed', 'escalated', 'queued', 'assigned'
   reportType: string // Denormalized from moderation_event.meta.reportType
   did: string // Denormalized from moderation_event.subjectDid
-  recordPath: string // '' = account/message, 'collection/rkey' = record
+  recordPath: string // '' = account/message/conversation, 'collection/rkey' = record
   subjectMessageId: string | null // Denormalized from moderation_event.subjectMessageId
+  subjectConvoId: string | null // Denormalized from moderation_event.subjectConvoId
   createdAt: string
   updatedAt: string
   assignedTo: string | null // DID of permanently assigned moderator, null if unassigned

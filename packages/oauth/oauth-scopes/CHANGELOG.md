@@ -1,5 +1,16 @@
 # @atproto/oauth-scopes
 
+## 0.5.0
+
+### Minor Changes
+
+- [#4992](https://github.com/bluesky-social/atproto/pull/4992) [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Remove the `AtprotoAudience` and `isAtprotoAudience` re-exports. They are superseded by `AtprotoDidRefAbsolute` and `isAtprotoDidRefAbsolute`, also re-exported from this package.
+
+### Patch Changes
+
+- Updated dependencies [[`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/did@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

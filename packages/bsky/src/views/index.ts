@@ -1,4 +1,4 @@
-import { HOUR, MINUTE, mapDefined } from '@atproto/common'
+import { HOUR, MINUTE, dedupeStrs, mapDefined } from '@atproto/common'
 import {
   $Typed,
   Un$Typed,
@@ -535,14 +535,22 @@ export class Views {
       ({ issuer, uri, displayName, handle, createdAt }): VerificationView => {
         // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
         // only in the overall profile verification validity.
+        // The verification record's `displayName`/`handle` are the *subject's* snapshot at
+        // verification time; we compare them to the subject's current values to determine validity.
         const isValid =
           !!displayName &&
           displayName === actor.profile?.displayName &&
           !!handle &&
           handle === actor.handle
 
+        // Expose the *issuer's* current handle/displayName, sourced from the
+        // issuer's hydrated actor record (see `Hydrator.hydrateProfiles`).
+        const issuerActor = state.actors?.get(issuer)
+
         return {
           issuer,
+          issuerDisplayName: issuerActor?.profile?.displayName,
+          issuerHandle: issuerActor?.handle,
           uri,
           isValid,
           createdAt,
@@ -2326,9 +2334,13 @@ export class Views {
     // covers these DIDs alongside post-author profiles, so misses here
     // only happen when an actor is unavailable (suspended, deleted, etc.)
     // — drop those rather than emit `undefined` slots.
-    const associatedProfiles = mapDefined(
-      [document?.ref.uri, publication?.ref.uri],
-      (uri) => (uri ? this.profileBasic(uriToDid(uri), state) : undefined),
+    const uniqueDids = dedupeStrs(
+      mapDefined([document?.ref.uri, publication?.ref.uri], (uri) =>
+        uri ? uriToDid(uri) : undefined,
+      ) as DidString[],
+    )
+    const associatedProfiles = mapDefined(uniqueDids, (did) =>
+      this.profileBasic(did, state),
     ) as ProfileViewBasic[]
     if (associatedProfiles.length)
       overlay.associatedProfiles = associatedProfiles

@@ -235,21 +235,34 @@ export class ModerationService {
 
     if (subject) {
       const isSubjectAtUri = subject.startsWith('at://')
+      const subjectAtUri = isSubjectAtUri ? new AtUri(subject) : null
       const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
       const subjectUri = isSubjectAtUri ? subject : null
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // if requester wants to include all user records, let's ignore matching on subjectUri
+      // subjectUri or subjectConvoId
       if (!includeAllUserRecords) {
-        builder = builder
-          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
-          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+        if (subjectAtUri?.collection === 'chat.bsky.convo') {
+          builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
+        } else if (subjectUri) {
+          builder = builder.where('subjectUri', '=', subjectUri)
+        } else {
+          // Account-level: subjectUri IS NULL also matches conversation events,
+          // so explicitly exclude them.
+          builder = builder
+            .where('subjectUri', 'is', null)
+            .where('subjectConvoId', 'is', null)
+        }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('subjectUri', 'is', null)
+      builder = builder
+        .where('subjectUri', 'is', null)
+        .where('subjectConvoId', 'is', null)
     } else if (subjectType === 'record') {
       builder = builder.where('subjectUri', 'is not', null)
+    } else if (subjectType === 'conversation') {
+      builder = builder.where('subjectConvoId', 'is not', null)
     }
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
@@ -433,7 +446,9 @@ export class ModerationService {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
-      .where('recordPath', '!=', '')
+      .where((qb) =>
+        qb.where('recordPath', '!=', '').orWhere('convoId', '!=', ''),
+      )
       .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
       .selectAll()
       .execute()
@@ -686,6 +701,7 @@ export class ModerationService {
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
         subjectMessageId: subjectInfo.subjectMessageId,
+        subjectConvoId: subjectInfo.subjectConvoId,
         modTool: modTool ? jsonb(modTool) : null,
         externalId: externalId ?? null,
         severityLevel,
@@ -712,6 +728,7 @@ export class ModerationService {
           eventId: modEvent.id,
           did: subjectInfo.subjectDid,
           recordPath: subjectInfo.subjectUri ?? '',
+          convoId: subjectInfo.subjectConvoId ?? '',
           tags: event.add,
           expiresAt,
           createdBy,
@@ -721,6 +738,7 @@ export class ModerationService {
         await removeExpiringTags(this.db, {
           did: subjectInfo.subjectDid,
           recordPath: subjectInfo.subjectUri ?? '',
+          convoId: subjectInfo.subjectConvoId ?? '',
           tags: event.remove,
         })
       }
@@ -815,6 +833,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('suspendUntil', '>', new Date().toISOString())
       .select('did')
       .limit(1)
@@ -1135,20 +1154,34 @@ export class ModerationService {
       )
 
       if (!includeAllUserRecords) {
-        builder = builder.where((qb) =>
-          subjectInfo.recordPath
-            ? qb.where(
-                'moderation_subject_status.recordPath',
-                '=',
-                subjectInfo.recordPath,
-              )
-            : qb.where('moderation_subject_status.recordPath', '=', ''),
-        )
+        if (subjectInfo.convoId) {
+          builder = builder.where(
+            'moderation_subject_status.convoId',
+            '=',
+            subjectInfo.convoId,
+          )
+        } else if (subjectInfo.recordPath) {
+          builder = builder.where(
+            'moderation_subject_status.recordPath',
+            '=',
+            subjectInfo.recordPath,
+          )
+        } else {
+          // Account-level: recordPath = '' also matches conversation statuses,
+          // so explicitly exclude them.
+          builder = builder
+            .where('moderation_subject_status.recordPath', '=', '')
+            .where('moderation_subject_status.convoId', '=', '')
+        }
       }
     } else if (subjectType === 'account') {
-      builder = builder.where('moderation_subject_status.recordPath', '=', '')
+      builder = builder
+        .where('moderation_subject_status.recordPath', '=', '')
+        .where('moderation_subject_status.convoId', '=', '')
     } else if (subjectType === 'record') {
       builder = builder.where('moderation_subject_status.recordPath', '!=', '')
+    } else if (subjectType === 'conversation') {
+      builder = builder.where('moderation_subject_status.convoId', '!=', '')
     }
 
     // Only fetch items that belongs to the specified queue when specified
@@ -1438,6 +1471,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
       .where('recordPath', '=', subject.recordPath ?? '')
+      .where('convoId', '=', subject.convoId ?? '')
       .selectAll()
       .executeTakeFirst()
     return result ?? null
@@ -1450,6 +1484,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('muteReportingUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
@@ -1463,6 +1498,7 @@ export class ModerationService {
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
+      .where('convoId', '=', '')
       .where('muteUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()

@@ -47,7 +47,7 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record"]
+          "refs": ["app.bsky.embed.record", "chat.bsky.embed.joinLink"]
         }
       }
     },
@@ -69,7 +69,10 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record#view"]
+          "refs": [
+            "app.bsky.embed.record#view",
+            "chat.bsky.embed.joinLink#view"
+          ]
         },
         "reactions": {
           "type": "array",
@@ -341,43 +344,47 @@
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
       "required": [
-        "name",
+        "createdAt",
         "lockStatus",
         "memberCount",
         "memberLimit",
-        "createdAt"
+        "name"
       ],
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "joinLink": {
+          "type": "ref",
+          "ref": "chat.bsky.group.defs#joinLinkView"
+        },
+        "joinRequestCount": {
+          "type": "integer",
+          "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
+        },
+        "lockStatus": {
+          "description": "The lock status of the conversation.",
+          "type": "ref",
+          "ref": "#convoLockStatus"
+        },
+        "memberCount": {
+          "type": "integer",
+          "description": "The total number of members in the group conversation."
+        },
+        "memberLimit": {
+          "type": "integer",
+          "description": "The maximum number of members allowed in the group conversation."
+        },
         "name": {
           "type": "string",
           "description": "The display name of the group conversation.",
           "maxGraphemes": 128,
           "maxLength": 1280
         },
-        "memberCount": {
+        "unreadJoinRequestCount": {
           "type": "integer",
-          "description": "The total number of members in the group conversation."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "datetime"
-        },
-        "joinRequestCount": {
-          "type": "integer",
-          "description": "The total number of pending join requests for the group conversation. Only present for the owner. Capped at 21."
-        },
-        "joinLink": {
-          "type": "ref",
-          "ref": "chat.bsky.group.defs#joinLinkView"
-        },
-        "memberLimit": {
-          "type": "integer",
-          "description": "The maximum number of members allowed in the group conversation."
-        },
-        "lockStatus": {
-          "description": "The lock status of the conversation.",
-          "type": "ref",
-          "ref": "#convoLockStatus"
+          "description": "The number of unread join requests for the group conversation. Only present for the owner."
         }
       }
     },
@@ -797,7 +804,39 @@
       }
     },
     "logOutgoingJoinRequest": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made by the viewer.",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a join request was made by the requester. Only requester actor gets this.",
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
+    },
+    "logWithdrawIncomingJoinRequest": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a prospective member withdrew their join request. Only the owner gets this.",
+      "type": "object",
+      "required": ["rev", "convoId", "member"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
+        "member": {
+          "description": "Prospective member who withdrew their join request.",
+          "type": "ref",
+          "ref": "chat.bsky.actor.defs#profileViewBasic"
+        }
+      }
+    },
+    "logWithdrawOutgoingJoinRequest": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the viewer withdrew their own join request. Only requester actor gets this.",
+      "type": "object",
+      "required": ["rev", "convoId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
+      }
+    },
+    "logReadJoinRequests": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating the group owner marked join requests as read. Only the owner gets this.",
       "type": "object",
       "required": ["rev", "convoId"],
       "properties": {

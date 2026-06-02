@@ -207,8 +207,25 @@ describe('moderation-events', () => {
         }),
       ])
 
-      expect(misleadingEvents.events.length).toEqual(2)
+      // Verify all spam events have the correct report type
       expect(spamEvents.events.length).toEqual(6)
+      spamEvents.events.forEach((event) => {
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect((event.event as any).reportType).toEqual(REASONSPAM)
+      })
+
+      // Verify all misleading events have one of the correct report types
+      expect(misleadingEvents.events.length).toEqual(2)
+      misleadingEvents.events.forEach((event) => {
+        expect(event.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+        expect([REASONMISLEADING, REASONAPPEAL]).toContain(
+          (event.event as any).reportType,
+        )
+      })
     })
 
     it('returns events matching keyword in comment', async () => {
@@ -500,6 +517,96 @@ describe('moderation-events', () => {
       events.events.forEach((event) => {
         expect(event.createdBy).toEqual(network.ozone.moderatorAccnt.did)
       })
+    })
+
+    it('queries events by conversation', async () => {
+      const convoId1 = 'conversation-123'
+      const convoId2 = 'conversation-456'
+
+      // create reports
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'spam in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      await sc.createReport({
+        reasonType: REASONMISLEADING,
+        reason: 'misleading in convo 1',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId1,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'spam in convo 2',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId: convoId2,
+        },
+        reportedBy: sc.dids.alice,
+      })
+
+      // Query events (filter by report type since auto-tagging creates extra events)
+      const convo1Events = await modClient.queryEvents({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId1}`,
+        includeAllUserRecords: false,
+        types: ['tools.ozone.moderation.defs#modEventReport'],
+      })
+      const convo2Events = await modClient.queryEvents({
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId2}`,
+        includeAllUserRecords: false,
+        types: ['tools.ozone.moderation.defs#modEventReport'],
+      })
+
+      // Verify conversation 1 events are correct
+      expect(convo1Events.events.length).toBeGreaterThan(0)
+      convo1Events.events.forEach((e) => {
+        // All events should be conversation refs
+        expect(e.subject.$type).toEqual('chat.bsky.convo.defs#convoRef')
+        // All events should be for conversation 1
+        const subject = e.subject as any
+        expect(subject.convoId).toEqual(convoId1)
+        expect(subject.did).toEqual(sc.dids.carol)
+        // All events should be reports
+        expect(e.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+      })
+      // Verify we got both reports we created
+      const convo1Comments = convo1Events.events.map(
+        (e) => (e.event as any).comment,
+      )
+      expect(convo1Comments).toContain('spam in convo 1')
+      expect(convo1Comments).toContain('misleading in convo 1')
+
+      // Verify conversation 2 events are correct
+      expect(convo2Events.events.length).toBeGreaterThan(0)
+      convo2Events.events.forEach((e) => {
+        // All events should be conversation refs
+        expect(e.subject.$type).toEqual('chat.bsky.convo.defs#convoRef')
+        // All events should be for conversation 2
+        const subject = e.subject as any
+        expect(subject.convoId).toEqual(convoId2)
+        expect(subject.did).toEqual(sc.dids.carol)
+        // All events should be reports
+        expect(e.event.$type).toEqual(
+          'tools.ozone.moderation.defs#modEventReport',
+        )
+      })
+      // Verify we got the report we created
+      const convo2Comments = convo2Events.events.map(
+        (e) => (e.event as any).comment,
+      )
+      expect(convo2Comments).toContain('spam in convo 2')
     })
   })
 

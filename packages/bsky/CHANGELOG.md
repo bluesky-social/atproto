@@ -1,5 +1,31 @@
 # @atproto/bsky
 
+## 0.0.236
+
+### Patch Changes
+
+- [#5016](https://github.com/bluesky-social/atproto/pull/5016) [`cf6a8a5`](https://github.com/bluesky-social/atproto/commit/cf6a8a50a990d8759d076778f0f90800005b48c0) Thanks [@blackmichael](https://github.com/blackmichael)! - Fix `verificationView`'s `displayName` and `handle` to reflect the verification issuer rather than the subject, and rename them to `issuerDisplayName` and `issuerHandle`. These fields were introduced in #5015 to expose the issuer's identity, but were inadvertently being populated with the subject's snapshot stored on the verification record.
+
+- [#5015](https://github.com/bluesky-social/atproto/pull/5015) [`0ac21bb`](https://github.com/bluesky-social/atproto/commit/0ac21bbf6db0bcb745adecf064eded1452be02de) Thanks [@blackmichael](https://github.com/blackmichael)! - add displayName, handle to verification view
+
+- [#5020](https://github.com/bluesky-social/atproto/pull/5020) [`3cb2a41`](https://github.com/bluesky-social/atproto/commit/3cb2a41157a2bd7783f3fc1a06c4c811d9c541e6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Loosen validation for known Standard Site publishers in order to support quote URLs
+
+- Updated dependencies [[`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff), [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d), [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341), [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3)]:
+  - @atproto/api@0.20.7
+
+## 0.0.235
+
+### Patch Changes
+
+- [#5001](https://github.com/bluesky-social/atproto/pull/5001) [`92ed125`](https://github.com/bluesky-social/atproto/commit/92ed125c27178bec1cb737ec15307334170768b7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Ensure `associatedProfiles` is returned for Standard Site external embed views
+
+- [#5004](https://github.com/bluesky-social/atproto/pull/5004) [`1a74fa5`](https://github.com/bluesky-social/atproto/commit/1a74fa559778392683f803e1bed71cd25e672114) Thanks [@blackmichael](https://github.com/blackmichael)! - Fix app.bsky.embed.getEmbedExternalView associatedProfiles duplicate data
+
+- Updated dependencies [[`126ac1e`](https://github.com/bluesky-social/atproto/commit/126ac1ead8c44065e3fa7c02efba7bd20551ee99), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/api@0.20.6
+  - @atproto/lex@0.1.3
+  - @atproto/did@0.5.0
+
 ## 0.0.234
 
 ### Patch Changes

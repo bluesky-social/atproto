@@ -1,5 +1,15 @@
 # @atproto/lex-server
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/lex-schema@0.1.2
+  - @atproto/lex-client@0.1.3
+  - @atproto/did@0.5.0
+  - @atproto-labs/did-resolver@0.3.1
+
 ## 0.1.0
 
 ### Minor Changes

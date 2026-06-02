@@ -283,6 +283,7 @@ export const adjustModerationSubjectStatus = async (
     subjectDid,
     subjectUri,
     subjectCid,
+    subjectConvoId,
     createdBy,
     meta,
     addedTags,
@@ -292,7 +293,10 @@ export const adjustModerationSubjectStatus = async (
   } = moderationEvent
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
-  const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)
+  const identifier = getStatusIdentifierFromSubject(
+    subjectUri || subjectDid,
+    subjectConvoId,
+  )
 
   db.assertTransaction()
 
@@ -301,6 +305,7 @@ export const adjustModerationSubjectStatus = async (
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
     .where('recordPath', '=', identifier.recordPath)
+    .where('convoId', '=', identifier.convoId)
     // Make sure we respect other updates that may be happening at the same time
     .forUpdate()
     .selectAll()
@@ -504,14 +509,20 @@ export const adjustModerationSubjectStatus = async (
   return status || null
 }
 
+/**
+ * Get moderation_subject_status identifier (did, recordPath, convoId).
+ * @note Supports addressing conversations explicitly (via convoId) and implicitly (via properly formed at-uri)
+ */
 export const getStatusIdentifierFromSubject = (
   subject: string | AtUri,
-): { did: string; recordPath: string } => {
+  convoId?: string | null,
+): { did: string; recordPath: string; convoId: string } => {
   const isSubjectString = typeof subject === 'string'
   if (isSubjectString && subject.startsWith('did:')) {
     return {
       did: subject,
       recordPath: '',
+      convoId: convoId || '',
     }
   }
 
@@ -520,8 +531,19 @@ export const getStatusIdentifierFromSubject = (
   }
 
   const uri = isSubjectString ? new AtUri(subject) : subject
+
+  // Handle conversation URIs
+  if (uri.collection === 'chat.bsky.convo') {
+    return {
+      did: uri.host,
+      recordPath: '',
+      convoId: uri.rkey,
+    }
+  }
+
   return {
     did: uri.host,
     recordPath: `${uri.collection}/${uri.rkey}`,
+    convoId: '',
   }
 }
