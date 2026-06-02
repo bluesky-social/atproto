@@ -2142,11 +2142,11 @@ export class Views {
   }
 
   galleryEmbed(did: DidString, embed: GalleryEmbed): $Typed<GalleryEmbedView> {
-    const media = embed.items.flatMap((item) => {
+    const items = embed.items.flatMap((item) => {
       const view = this.galleryItemView(did, item)
       return view ? [view] : []
     })
-    return app.bsky.embed.gallery.view.$build({ media })
+    return app.bsky.embed.gallery.view.$build({ items })
   }
 
   private galleryItemView(

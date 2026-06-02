@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
+  AppBskyEmbedGallery,
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
   AppBskyEmbedVideo,
@@ -282,6 +283,96 @@ describe('pds posts views', () => {
             alt: 'alt text',
             aspectRatio: { height: 3, width: 4 },
           } satisfies AppBskyEmbedVideo.Main,
+        } satisfies AppBskyEmbedRecordWithMedia.Main,
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+    const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
+    expect(data.posts.length).toBe(1)
+    expect(forSnapshot(data.posts[0])).toMatchSnapshot()
+  })
+
+  it('embeds gallery.', async () => {
+    const img1 = await sc.uploadFile(
+      sc.dids.alice,
+      '../dev-env/assets/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const img2 = await sc.uploadFile(
+      sc.dids.alice,
+      '../dev-env/assets/key-portrait-small.jpg',
+      'image/jpeg',
+    )
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'gallery',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.gallery',
+          items: [
+            {
+              $type: 'app.bsky.embed.gallery#image',
+              image: img1.image,
+              alt: 'landscape',
+              aspectRatio: { width: 4, height: 3 },
+            },
+            {
+              $type: 'app.bsky.embed.gallery#image',
+              image: img2.image,
+              alt: 'portrait',
+              aspectRatio: { width: 3, height: 4 },
+            },
+          ],
+        } satisfies AppBskyEmbedGallery.Main,
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+    const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
+    expect(data.posts.length).toBe(1)
+    expect(forSnapshot(data.posts[0])).toMatchSnapshot()
+  })
+
+  it('embeds gallery with record.', async () => {
+    const img = await sc.uploadFile(
+      sc.dids.alice,
+      '../dev-env/assets/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const embedRecord = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'embedded',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'gallery + record',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.recordWithMedia',
+          record: {
+            record: {
+              uri: embedRecord.uri,
+              cid: embedRecord.cid,
+            },
+          } satisfies AppBskyEmbedRecord.Main,
+          media: {
+            $type: 'app.bsky.embed.gallery',
+            items: [
+              {
+                $type: 'app.bsky.embed.gallery#image',
+                image: img.image,
+                alt: 'landscape',
+                aspectRatio: { width: 4, height: 3 },
+              },
+            ],
+          } satisfies AppBskyEmbedGallery.Main,
         } satisfies AppBskyEmbedRecordWithMedia.Main,
       },
       sc.getHeaders(sc.dids.alice),
