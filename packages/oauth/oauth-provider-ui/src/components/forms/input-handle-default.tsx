@@ -64,7 +64,13 @@ export function InputHandleDefault({
     const idx = domains.findIndex((d) => handleInit.endsWith(d))
     return idx === -1 ? 0 : idx
   })
-  const [segment, setSegment] = useState(() => handleInit?.split('.')[0] || '')
+  const [segment, setSegment] = useState(() => {
+    if (!handleInit) return ''
+    const domain = domains[domainIdx]
+    return handleInit.endsWith(domain)
+      ? handleInit.slice(0, -domain.length)
+      : ''
+  })
 
   const domain: ValidDomain | null = domains[domainIdx] || domains[0] || null
 

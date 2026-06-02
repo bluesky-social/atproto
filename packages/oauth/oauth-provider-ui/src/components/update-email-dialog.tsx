@@ -38,11 +38,14 @@ export function UpdateEmailDialog({
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>(Step.Init)
   const [email, setEmail] = useState<string | undefined>(undefined)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     setStep(Step.Init)
     setEmail(undefined)
   }, [open])
+
+  const dismissable = !submitting
 
   if (step === Step.Verify && email && onVerify) {
     return (
@@ -50,6 +53,7 @@ export function UpdateEmailDialog({
         trigger={children}
         open={open}
         onOpenChange={setOpen}
+        dismissable={dismissable}
         title={
           <>
             <CheckIcon className="text-success inline" weight="bold" />{' '}
@@ -68,6 +72,7 @@ export function UpdateEmailDialog({
           onCancel={() => setOpen(false)}
           cancelLabel={<Trans context="verify email">Later</Trans>}
           submitLabel={<Trans context="verify email">Verify now</Trans>}
+          onLoadingChange={setSubmitting}
           validate={({ token }: { token?: string }) =>
             token ? { token, email } : undefined
           }
@@ -97,6 +102,7 @@ export function UpdateEmailDialog({
         trigger={children}
         open={open}
         onOpenChange={setOpen}
+        dismissable={dismissable}
         title={<Trans>Update your email</Trans>}
         description={
           <Trans>
@@ -109,6 +115,7 @@ export function UpdateEmailDialog({
           requestPending={requestPending}
           confirmPending={confirmPending}
           values={{ email }}
+          onLoadingChange={setSubmitting}
           onResend={async () => {
             await onRequest()
           }}
@@ -130,6 +137,7 @@ export function UpdateEmailDialog({
       trigger={children}
       open={open}
       onOpenChange={setOpen}
+      dismissable={dismissable}
       title={<Trans>Update your email</Trans>}
       description={
         <Trans>
@@ -140,6 +148,7 @@ export function UpdateEmailDialog({
       <SmartForm
         disabled={requestPending}
         values={{ email }}
+        onLoadingChange={setSubmitting}
         validate={({ email }) => (email ? { email } : undefined)}
         handler={async (data: { email: string; token?: string }) => {
           const { tokenRequired } = await onRequest()

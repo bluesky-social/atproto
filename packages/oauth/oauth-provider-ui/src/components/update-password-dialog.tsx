@@ -33,10 +33,13 @@ export function UpdatePasswordDialog({
   const [state, setState] = useState<UpdatePasswordDialogState>(
     UpdatePasswordDialogState.Request,
   )
+  const [confirmSubmitting, setConfirmSubmitting] = useState(false)
 
   useEffect(() => {
     if (!open) setState(UpdatePasswordDialogState.Request)
   }, [open])
+
+  const dismissable = !requestPending && !confirmSubmitting
 
   return (
     <DialogSimple
@@ -50,6 +53,7 @@ export function UpdatePasswordDialog({
       }
       open={open}
       onOpenChange={setOpen}
+      dismissable={dismissable}
     >
       {state === UpdatePasswordDialogState.Request ? (
         <div className="align-stretch flex flex-col gap-4">
@@ -74,6 +78,7 @@ export function UpdatePasswordDialog({
       ) : (
         <ResetPasswordConfirmForm
           disabled={confirmPending}
+          onLoadingChange={setConfirmSubmitting}
           handler={async (data) => {
             await onConfirm(data)
             setOpen(false)

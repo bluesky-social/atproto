@@ -34,16 +34,25 @@ export function UpdateHandleDialog({
 }: UpdateHandleDialogProps) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<HandleType | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (!open) setView(null)
   }, [open])
+
+  const dismissable = !submitting
+
+  const [defaultHandle, customHandle] =
+    currentHandle && domains.some((dom) => currentHandle.endsWith(dom))
+      ? [currentHandle, undefined]
+      : [undefined, currentHandle]
 
   if (view === HandleType.Default && domains.length) {
     return (
       <DialogSimple
         open={open}
         onOpenChange={setOpen}
+        dismissable={dismissable}
         trigger={children}
         title={<Trans>Update your username</Trans>}
         description={<Trans>Choose a new default username.</Trans>}
@@ -51,7 +60,8 @@ export function UpdateHandleDialog({
         <UpdateHandleDefaultForm
           domains={domains}
           onBack={() => setView(null)}
-          values={{ handle: currentHandle }}
+          values={{ handle: defaultHandle }}
+          onLoadingChange={setSubmitting}
           handler={async (data, signal) => {
             await handler(data, signal)
             setOpen(false)
@@ -66,6 +76,7 @@ export function UpdateHandleDialog({
       <DialogSimple
         open={open}
         onOpenChange={setOpen}
+        dismissable={dismissable}
         trigger={children}
         title={<Trans>Update your username</Trans>}
         description={
@@ -79,7 +90,8 @@ export function UpdateHandleDialog({
           did={did}
           onBack={() => setView(null)}
           submitLabel={<Trans>Verify and Save</Trans>}
-          values={{ handle: currentHandle }}
+          values={{ handle: customHandle }}
+          onLoadingChange={setSubmitting}
           handler={async (data, signal) => {
             await handler(data, signal)
             setOpen(false)

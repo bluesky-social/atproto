@@ -32,10 +32,13 @@ export function VerifyEmailDialog({
   const [state, setState] = useState<VerifyEmailDialogState>(
     VerifyEmailDialogState.Request,
   )
+  const [confirmSubmitting, setConfirmSubmitting] = useState(false)
 
   useEffect(() => {
     if (!open) setState(VerifyEmailDialogState.Request)
   }, [open])
+
+  const dismissable = !requestPending && !confirmSubmitting
 
   return (
     <DialogSimple
@@ -49,6 +52,7 @@ export function VerifyEmailDialog({
       }
       open={open}
       onOpenChange={setOpen}
+      dismissable={dismissable}
     >
       {state === VerifyEmailDialogState.Request ? (
         <div className="align-stretch flex flex-col gap-4">
@@ -73,6 +77,7 @@ export function VerifyEmailDialog({
       ) : (
         <VerifyEmailConfirmForm
           disabled={confirmPending}
+          onLoadingChange={setConfirmSubmitting}
           handler={async (data) => {
             await onConfirm(data)
             setOpen(false)

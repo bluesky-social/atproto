@@ -1,19 +1,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useStableCallback } from './use-stable-callback.ts'
 
+export type UseAsyncActionOptions = {
+  /**
+   * Fired synchronously whenever the in-flight state flips (`true` on `run`
+   * start, `false` on completion or `reset`). Useful for a parent that needs
+   * to mirror the loading state outside of the hook's owner — e.g. a dialog
+   * that should not be dismissable while a submit is pending.
+   */
+  onLoadingChange?: (loading: boolean) => void
+}
+
 export function useAsyncAction<Args extends unknown[] = []>(
   fn: (signal: AbortSignal, ...args: Args) => void | PromiseLike<void>,
+  options?: UseAsyncActionOptions,
 ) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoadingState] = useState(false)
   const [error, setError] = useState<Error | undefined>()
   const controllerRef = useRef<AbortController>(null)
+
+  const setLoading = useStableCallback((value: boolean) => {
+    setLoadingState(value)
+    options?.onLoadingChange?.(value)
+  })
 
   const reset = useCallback<() => void>(() => {
     controllerRef.current?.abort()
     controllerRef.current = null
     setError(undefined)
     setLoading(false)
-  }, [])
+  }, [setLoading])
 
   // Abort pending action on unmount
   useEffect(() => reset, [])

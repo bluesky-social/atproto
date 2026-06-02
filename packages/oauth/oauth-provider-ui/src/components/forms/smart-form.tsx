@@ -108,6 +108,13 @@ export type SmartFormProps<
     ) => void
 
     /**
+     * Listener fired when the in-flight `handler` state flips. Useful for a
+     * parent that needs to reflect the loading state — e.g. a dialog that
+     * should not be dismissable while a submit is pending.
+     */
+    onLoadingChange?: (loading: boolean) => void
+
+    /**
      * Imperative handle to the form's internal state. Use it from a parent
      * that needs to read or mutate fields outside of the `fields` render —
      * e.g. to clear a field when an external event invalidates it.
@@ -192,6 +199,7 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
   ref,
   values: initialValues = {},
   onValues,
+  onLoadingChange,
   handler,
   validate,
   children,
@@ -201,11 +209,14 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
 
   const data = useMemo(() => validate(values), [validate, values])
 
-  const { run, loading, error, reset } = useAsyncAction(async (signal) => {
-    if (data) return handler(data, signal)
-    // The `submittable` prop below should prevent this from happening.
-    else throw new Error('Form data is not valid')
-  })
+  const { run, loading, error, reset } = useAsyncAction(
+    async (signal) => {
+      if (data) return handler(data, signal)
+      // The `submittable` prop below should prevent this from happening.
+      else throw new Error('Form data is not valid')
+    },
+    { onLoadingChange },
+  )
 
   const set = useStableCallback<SetField<TValues>>((key, value) => {
     // Reset async error/loading state whenever the user changes any input.
