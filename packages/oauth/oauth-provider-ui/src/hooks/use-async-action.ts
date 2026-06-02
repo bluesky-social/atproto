@@ -26,7 +26,6 @@ export function useAsyncAction<Args extends unknown[] = []>(
     // Cancel previous run
     controllerRef.current?.abort()
 
-    setError(undefined)
     setLoading(true)
 
     const controller = new AbortController()
@@ -36,6 +35,13 @@ export function useAsyncAction<Args extends unknown[] = []>(
 
     try {
       await fn(signal, ...args)
+
+      // Clear previous error only after successful completion, to avoid
+      // clearing the error if the new action fails. This way the error will be
+      // visible until a successful action occurs or the user triggers a reset.
+      if (controller === controllerRef.current) {
+        setError(undefined)
+      }
     } catch (err) {
       if (controller === controllerRef.current) {
         setError(err instanceof Error ? err : new Error(String(err)))

@@ -177,7 +177,7 @@ msgid "Authenticate"
 msgstr "Vous authentifier"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:75
+#: src/components/consent-form.tsx:83
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
@@ -214,7 +214,7 @@ msgstr "Services de messagerie Bluesky"
 msgid "Branding"
 msgstr "Personnalisation"
 
-#: src/components/consent-form.tsx:146
+#: src/components/consent-form.tsx:161
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
@@ -349,7 +349,7 @@ msgstr "Données"
 msgid "Delete"
 msgstr "Supprimer"
 
-#: src/components/consent-form.tsx:84
+#: src/components/consent-form.tsx:99
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
@@ -962,7 +962,7 @@ msgstr "Accès révoqué"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:119
+#: src/components/consent-form.tsx:134
 msgid "Technical details"
 msgstr "Détails techniques"
 
@@ -1024,7 +1024,7 @@ msgstr "Le code d'invitation n'est pas valide"
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
-#: src/components/consent-form.tsx:124
+#: src/components/consent-form.tsx:139
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
@@ -1180,11 +1180,11 @@ msgstr "Vérifiez que vous êtes humain"
 msgid "Verify your email"
 msgstr "Vérifier votre adresse email"
 
-#: src/components/consent-form.tsx:112
+#: src/components/consent-form.tsx:127
 msgid "wants to access your <0/> account"
 msgstr "veut accéder à votre compte <0/>"
 
-#: src/components/consent-form.tsx:106
+#: src/components/consent-form.tsx:121
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "veut vous identifier de manière unique via votre compte <0/>"
 

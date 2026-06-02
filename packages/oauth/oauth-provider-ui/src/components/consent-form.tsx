@@ -1,11 +1,12 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { ReactNode } from 'react'
+import { ReactNode, useRef } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Button } from './forms/button.tsx'
-import { SmartForm } from './forms/smart-form.tsx'
+import { FormHandler, SmartForm } from './forms/smart-form.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 import { ClientImage } from './utils/client-image.tsx'
 import { ClientName } from './utils/client-name.tsx'
@@ -64,6 +65,11 @@ export function ConsentForm({
   onBack,
 }: ConsentFormProps) {
   const { t } = useLingui()
+  const reject = useAsyncAction(onReject)
+
+  const formRef =
+    useRef<FormHandler<{ scope?: string }, { allowEmail: boolean }>>(null)
+  const form = formRef.current
 
   // Require the granular scope system to be able to unset the `account:email`
   // scope.
@@ -71,16 +77,25 @@ export function ConsentForm({
 
   return (
     <SmartForm
+      ref={formRef}
       onBack={onBack}
+      error={reject.error}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
       values={{ allowEmail: true }}
+      onValues={() => reject.reset()}
       validate={({ allowEmail }) => ({
         scope:
           canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope,
       })}
       handler={onConsent}
       actions={
-        <Button onClick={onReject}>
+        <Button
+          onClick={(event) => {
+            event.preventDefault()
+            form?.reset()
+            void reject.run()
+          }}
+        >
           <Trans context="OAuthConsent">Deny access</Trans>
         </Button>
       }

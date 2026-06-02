@@ -1,14 +1,7 @@
 import { composeEventHandlers } from '@radix-ui/primitive'
-import {
-  ReactNode,
-  Ref,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { ReactNode, Ref, useImperativeHandle, useMemo, useState } from 'react'
 import { FormCard, FormCardProps } from '#/components/forms/form-card.tsx'
+import { useStableCallback } from '#/hooks/use-stable-callback.ts'
 import { Override } from '#/lib/util.ts'
 import { useAsyncAction } from '../../hooks/use-async-action.ts'
 
@@ -55,7 +48,7 @@ export type FormHandler<TData extends AsyncFormData, TValues = TData> = {
    * <InputEmailAddress email={values.email} ... />
    * ```
    */
-  values: Partial<TValues>
+  values: Readonly<Partial<TValues>>
 
   /** Result of `validate(values)` — `undefined` while the form is not submittable. */
   data: TData | undefined
@@ -79,6 +72,9 @@ export type FormHandler<TData extends AsyncFormData, TValues = TData> = {
 
   /** True while a `handler` invocation is in flight. */
   loading: boolean
+
+  /** Reset form state to the initial values. */
+  reset: () => void
 }
 
 export type SmartFormProps<
@@ -211,35 +207,25 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
     else throw new Error('Form data is not valid')
   })
 
-  // `onValues` is typically triggered by user input; using a ref keeps it out
-  // of `set`'s dependency array so consumers can pass an inline callback
-  // without churning `set`'s identity.
-  const onValuesRef = useRef(onValues)
-  onValuesRef.current = onValues
+  const set = useStableCallback<SetField<TValues>>((key, value) => {
+    // Reset async error/loading state whenever the user changes any input.
+    reset()
 
-  const set = useCallback<SetField<TValues>>(
-    (key, value) => {
-      // Reset async error/loading state whenever the user changes any input.
-      reset()
+    // Skip the state update if the value didn't actually change. Only
+    // sound for primitive values.
+    if (values[key] !== value) {
+      setValues({ ...values, [key]: value })
+      onValues?.({ ...values, [key]: value }, values)
+    }
+  })
 
-      // Skip the state update if the value didn't actually change. Only
-      // sound for primitive values.
-      if (values[key] !== value) {
-        setValues({ ...values, [key]: value })
-        onValuesRef.current?.call(null, { ...values, [key]: value }, values)
-      }
-    },
-    [values, reset],
-  )
-
-  const setterFor = useCallback<SetterFor<TValues>>(
+  const setterFor = useStableCallback<SetterFor<TValues>>(
     (key) => (value) => set(key, value),
-    [set],
   )
 
   const form = useMemo(
-    () => ({ values, data, set, setterFor, loading, error }),
-    [values, data, set, setterFor, loading, error],
+    () => ({ values, data, set, setterFor, loading, error, reset }),
+    [values, data, set, setterFor, loading, error, reset],
   )
 
   useImperativeHandle(ref, () => form, [form])
