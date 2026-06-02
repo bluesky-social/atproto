@@ -2,4 +2,4 @@
 '@atproto/oauth-provider-ui': patch
 ---
 
-Refactor and normalize the implementation of forms accross the code base
+Improve form related UX (and DX) by using a unified form component that properly surfaces submission errors.
