@@ -6,6 +6,7 @@ import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { DialogSimple } from './dialog-simple'
 import { ButtonRequestCode } from './forms/button-request-code'
+import { Admonition } from './utils/admonition'
 
 export type UpdateEmailDialogProps = {
   email: string
@@ -203,6 +204,13 @@ export function UpdateEmailDialog({
         invalid={!emailNext}
         onSubmit={sendRequest}
       >
+        <Admonition role="warning" className="text-sm">
+          <Trans>
+            If you update your email address, email 2FA (if enabled) will be
+            disabled.
+          </Trans>
+        </Admonition>
+
         <FormField label={<Trans>New email address</Trans>}>
           <InputEmailAddress
             name="email"

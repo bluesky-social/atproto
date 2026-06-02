@@ -22,6 +22,7 @@ type Variant = 'info' | 'warning' | 'error' | 'success'
 const ROLE_VARIANT_MAP: ReadonlyMap<AriaRole, Variant> = new Map([
   ['note', 'info'],
   ['status', 'warning'],
+  ['warning', 'warning'],
   ['alert', 'error'],
 ])
 
