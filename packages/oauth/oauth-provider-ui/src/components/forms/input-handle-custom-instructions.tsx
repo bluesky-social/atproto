@@ -131,12 +131,9 @@ Thank you.`
       <p className="my-2">{currentInstructions.message}</p>
 
       {currentInstructions.values.map(({ label, value, copyable }, index) => (
-        <CodeSnippet
-          key={index}
-          label={label}
-          value={value}
-          copyable={copyable}
-        />
+        <CodeSnippet key={index} label={label} copyable={copyable}>
+          {value}
+        </CodeSnippet>
       ))}
 
       <p className="my-2 flex flex-row flex-wrap gap-3">

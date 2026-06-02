@@ -4,12 +4,12 @@ import { ButtonCopy } from '#/components/forms/button-copy.tsx'
 import { Override } from '#/lib/util.ts'
 
 export type CodeSnippetProps = Override<
-  Omit<JSX.IntrinsicElements['div'], 'children'>,
+  JSX.IntrinsicElements['div'],
   {
     /** Optional label shown above the code value. */
     label?: string
     /** The literal text displayed, and copied when copyable. */
-    value: string
+    children: string
     /** Whether to render a copy-to-clipboard button. Defaults to true. */
     copyable?: boolean
   }
@@ -21,7 +21,7 @@ export type CodeSnippetProps = Override<
  */
 export function CodeSnippet({
   label,
-  value,
+  children,
   copyable = true,
   className,
   ...props
@@ -31,9 +31,9 @@ export function CodeSnippet({
       {label && <span className="text-text-light text-sm">{label}</span>}
       <div className="flex items-stretch gap-2">
         <code className="flex flex-1 items-center break-all rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-gray-800">
-          {value}
+          {children}
         </code>
-        <ButtonCopy value={copyable ? value : undefined} size="sm" />
+        <ButtonCopy value={copyable ? children : undefined} size="sm" />
       </div>
     </div>
   )
