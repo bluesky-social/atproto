@@ -816,7 +816,7 @@ msgstr "Please enter the security code that was sent to your current email addre
 msgid "Please try again in a moment."
 msgstr "Please try again in a moment."
 
-#: src/components/forms/button-cooldown.tsx:83
+#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Please wait {remainingSeconds} seconds before trying again."
 
@@ -870,7 +870,7 @@ msgstr "Reset your password"
 msgid "Retry"
 msgstr "Retry"
 
-#: src/components/forms/button-cooldown.tsx:119
+#: src/components/forms/button-cooldown.tsx:110
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
 

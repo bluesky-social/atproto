@@ -806,7 +806,7 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:83
+#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr ""
 
@@ -860,7 +860,7 @@ msgstr ""
 msgid "Retry"
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:119
+#: src/components/forms/button-cooldown.tsx:110
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
 

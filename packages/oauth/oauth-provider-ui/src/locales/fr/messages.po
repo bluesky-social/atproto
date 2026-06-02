@@ -816,7 +816,7 @@ msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adres
 msgid "Please try again in a moment."
 msgstr "Veuillez réessayer dans un instant."
 
-#: src/components/forms/button-cooldown.tsx:83
+#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
 
@@ -870,7 +870,7 @@ msgstr "Réinitialisez votre mot de passe"
 msgid "Retry"
 msgstr "Réessayer"
 
-#: src/components/forms/button-cooldown.tsx:119
+#: src/components/forms/button-cooldown.tsx:110
 msgid "Retry in {remainingSeconds}s"
 msgstr "Réessayer dans {remainingSeconds}s"
 
