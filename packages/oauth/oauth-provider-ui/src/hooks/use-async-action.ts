@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useStableCallback } from './use-stable-callback.ts'
 
-export type AsyncActionController = {
-  reset: () => void
-}
-
 export function useAsyncAction<Args extends unknown[] = []>(
   fn: (signal: AbortSignal, ...args: Args) => void | PromiseLike<void>,
 ) {

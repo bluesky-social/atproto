@@ -4,8 +4,6 @@ import { JSX, ReactNode, useCallback, useState } from 'react'
 import { DisabledStep, useStepper } from '#/hooks/use-stepper.ts'
 import { Override } from '#/lib/util.ts'
 
-export type DoneFn = (...a: any) => unknown
-
 export type WizardRenderProps<TStepData> = {
   /**
    * Indicates wether the render function being invoked corresponds to the step
@@ -70,7 +68,6 @@ export function WizardCard<const T extends readonly any[]>({
   className,
 
   // div
-  key,
   ...props
 }: WizardCardProps<T>) {
   const [data, setData] = useState(
@@ -95,18 +92,19 @@ export function WizardCard<const T extends readonly any[]>({
     ),
   )
 
-  if (!current) return null
+  const index = current?.index
 
-  const { index } = current
   const setCurrentStepData = useCallback(
     (stepData: any) => {
-      setData((prevData) => {
-        const nextData = [...prevData] as {
-          -readonly [K in keyof T]: T[K] | null
-        }
-        nextData[index] = stepData
-        return nextData
-      })
+      if (index != null) {
+        setData((prevData) => {
+          const nextData = [...prevData] as {
+            -readonly [K in keyof T]: T[K] | null
+          }
+          nextData[index] = stepData
+          return nextData
+        })
+      }
     },
     [index],
   )
@@ -126,7 +124,7 @@ export function WizardCard<const T extends readonly any[]>({
       // defined, or have non-null data) in order to call `onDone`.
       if (atLast && othersCompleted) {
         const doneData: any = steps.map((step, i) =>
-          step ? (i === current.index ? stepData : data[i]) : null,
+          step ? (i === current?.index ? stepData : data[i]) : null,
         )
 
         await onDone(doneData)
@@ -137,15 +135,17 @@ export function WizardCard<const T extends readonly any[]>({
     },
   }
 
-  const stepTitle = current.step?.titleRender?.(stepProps)
-  const stepContent = current.step?.contentRender?.(stepProps)
+  const stepTitle = current?.step?.titleRender?.(stepProps)
+  const stepContent = current?.step?.contentRender?.(stepProps)
 
   return (
     <div
+      // Force re-render of the child component when the step changes, to ensure
+      // any internal state is reset. This is especially useful since most step
+      // will tends to have the same component for their content (just with
+      // different props).
+      key={currentPosition}
       className={clsx(className, 'flex flex-col')}
-      // Force re-render of the title & content when the step changes, to avoid
-      // keeping stale internal state
-      key={`${key}-${currentPosition}`}
       {...props}
     >
       <p className="text-contrast-500">

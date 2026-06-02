@@ -279,6 +279,8 @@ export class AccountManager {
    *
    * @throws {InvalidRequestError} when the handle is invalid, taken by another
    * account, or cannot be resolved for non-service domains.
+   *
+   * @see {@link AccountManager.updateAccountHandle} for behavior when the PLC update fails.
    */
   async updateHandle(
     did: DidString,
@@ -291,17 +293,15 @@ export class AccountManager {
       options,
     )
 
-    if (account.handle !== handle) {
-      if (did.startsWith('did:plc:')) {
-        // @TODO We should verify the status before issuing a PLC update.
-        await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
-      } else {
-        const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
-        if (resolved.handle !== handle) {
-          throw new InvalidRequestError(
-            'DID is not properly configured for handle',
-          )
-        }
+    if (did.startsWith('did:plc:')) {
+      // @TODO We should verify the status before issuing a PLC update.
+      await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
+    } else {
+      const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
+      if (resolved.handle !== handle) {
+        throw new InvalidRequestError(
+          'DID is not properly configured for handle',
+        )
       }
     }
 
@@ -348,6 +348,10 @@ export class AccountManager {
     return { did, handle, account }
   }
 
+  /**
+   * @note Failure to emit the identity event will silently be ignored. Users
+   * can emit the event again by updating their handle to the same value.
+   */
   async updateAccountHandle(
     did: DidString,
     handle: HandleString,

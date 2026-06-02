@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useRef } from 'react'
 
 /**
  * Returns a stable version of the given function that always calls the latest
@@ -11,21 +11,18 @@ import { useCallback, useRef } from 'react'
  * It can also be used to avoid having to add a function to the dependency array
  * of an effect when the function is defined inline in the component.
  *
- * Note: The returned function will have a stable reference, but it will call
- * the latest version of the original function, so it may have different
- * behavior if the original function changes.
+ * @note This hook is not a replacement for `useCallback` and should be used
+ * with caution, as it can lead to unexpected behavior, especially if the
+ * returned function is called during render.
+ *
+ * @see {@link https://github.com/reactjs/rfcs/blob/useevent/text/0000-useevent.md}
  */
 export function useStableCallback<T extends (...args: any[]) => any>(fn: T) {
-  const ref = useRef<T>(fn)
+  const fnRef = useRef(fn)
+  fnRef.current = fn
 
-  // Update ref.current on every render to ensure it always has the latest
-  // version of the function.
-  ref.current = fn
-
-  return useCallback<T>(
-    function (this: any, ...args: any[]) {
-      return ref.current.call(this, ...args)
-    } as T,
-    [],
-  )
+  const ref = useRef(function (this: any, ...args: any[]) {
+    return fnRef.current.call(this, ...args)
+  })
+  return ref.current
 }

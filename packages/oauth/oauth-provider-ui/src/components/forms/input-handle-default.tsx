@@ -66,11 +66,6 @@ export function InputHandleDefault({
   })
   const [segment, setSegment] = useState(() => handleInit?.split('.')[0] || '')
 
-  // Automatically update the domain index when the list length changes
-  useEffect(() => {
-    setDomainIdx((v) => Math.min(v, domains.length - 1))
-  }, [domains.length])
-
   const domain: ValidDomain | null = domains[domainIdx] || domains[0] || null
 
   const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
@@ -95,6 +90,11 @@ export function InputHandleDefault({
       onHandle?.(undefined)
     }
   })
+
+  // Automatically update the domain index when the list length changes
+  useEffect(() => {
+    if (domainIdx >= domains.length) update(segment, 0)
+  }, [update, segment, domains.length, domainIdx])
 
   return (
     <>
@@ -196,7 +196,7 @@ function useSegmentValidator(domain: ValidDomain | null) {
   const validateSegment = useCallback(
     (segment: string) => {
       const validLength = segment.length >= minLen && segment.length <= maxLen
-      const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/g.test(segment)
+      const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/.test(segment)
 
       return { validLength, validCharset, valid: validLength && validCharset }
     },

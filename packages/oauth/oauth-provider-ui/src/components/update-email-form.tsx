@@ -12,7 +12,7 @@ export type UpdateEmailFormData = {
 
 export type UpdateEmailFormProps =
   WrappedSmartFormProps<UpdateEmailFormData> & {
-    emailCurrent: string
+    emailCurrent?: string
     requestPending?: boolean
     confirmPending?: boolean
     onResend: () => void | PromiseLike<void>
@@ -52,8 +52,8 @@ export function UpdateEmailForm({
             </h3>
             <p className="mt-1">
               <Trans>
-                Please enter the security code that was sent to your current
-                email address <strong>{emailCurrent}</strong>.
+                Please enter the security code that was sent to your email
+                address.
               </Trans>
             </p>
           </div>

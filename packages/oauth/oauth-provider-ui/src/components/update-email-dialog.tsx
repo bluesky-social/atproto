@@ -9,7 +9,7 @@ import { SmartForm } from './forms/smart-form'
 import { UpdateEmailForm } from './update-email-form'
 
 export type UpdateEmailDialogProps = {
-  email: string
+  email?: string
   requestPending?: boolean
   confirmPending?: boolean
   onRequest: () => Promise<{ tokenRequired: boolean }>
@@ -145,6 +145,12 @@ export function UpdateEmailDialog({
           const { tokenRequired } = await onRequest()
 
           setEmail(data.email)
+
+          // If the previous email was not verified, we can skip asking for a
+          // token to confirm ownership of that old email (since it was not
+          // verified in the first place). In that case, we can directly go to
+          // confirming the new email, and optionally verifying it if `onVerify`
+          // is provided.
 
           if (tokenRequired) setStep(Step.Token)
           else {

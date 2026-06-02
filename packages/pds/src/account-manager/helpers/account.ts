@@ -211,7 +211,9 @@ export const updateHandle = async (
       ),
   )
   if (res.numUpdatedRows < 1) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 

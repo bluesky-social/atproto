@@ -90,7 +90,7 @@ export function SignInForm({
         remember: rememberDefault,
         otp: null as string | null,
       }}
-      onValues={(prev, next) => {
+      onValues={(next, prev) => {
         if (
           prev.username !== next.username ||
           prev.password !== next.password

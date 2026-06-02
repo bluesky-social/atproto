@@ -7,6 +7,7 @@ import {
   LockIcon,
   ShieldWarningIcon,
 } from '@phosphor-icons/react'
+import { clsx } from 'clsx'
 import { ReactNode } from 'react'
 import { isValidHandle } from '@atproto/syntax'
 import { Button, ButtonProps } from '#/components/forms/button'
@@ -88,8 +89,6 @@ function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const updateConfirm = useUpdateEmailConfirm()
   const verifyConfirm = useVerifyEmailConfirm()
 
-  if (!email) return null
-
   return (
     <UpdateEmailDialog
       email={email}
@@ -129,6 +128,10 @@ function UpdatePasswordRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const resetPasswordRequest = useResetPasswordRequest()
   const resetPasswordConfirm = useResetPasswordConfirm()
 
+  // The /reset-password-request endpoint requires an email, so if the user
+  // doesn't have one, we can't let them update their password. These users
+  // should not exist in normal conditions (may have been created manually by an
+  // admin), and are expected to contact support to update their password.
   if (!email) return null
 
   return (
@@ -190,11 +193,11 @@ function Row({
 
   // ButtonProps
   children,
-  className = '',
+  className,
   ...props
 }: RowProps) {
   return (
-    <Button shape="padded" {...props} className={`gap-2 ${className}`}>
+    <Button shape="padded" {...props} className={clsx('gap-2', className)}>
       <Icon aria-hidden className="size-5 shrink-0 grow-0" />
       <span className="grow-1 truncate text-left font-medium">{children}</span>
       {value != null && (

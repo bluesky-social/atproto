@@ -14,6 +14,7 @@ export type ResetPasswordConfirmFormProps =
   WrappedSmartFormProps<ResetPasswordConfirmData>
 
 export function ResetPasswordConfirmForm(props: ResetPasswordConfirmFormProps) {
+  const passwordRef = useRef<HTMLInputElement>(null)
   return (
     <SmartForm
       {...props}
@@ -21,7 +22,6 @@ export function ResetPasswordConfirmForm(props: ResetPasswordConfirmFormProps) {
         if (token && password) return { token, password }
       }}
       fields={({ values, set, setterFor }) => {
-        const passwordRef = useRef<HTMLInputElement>(null)
         return (
           <>
             <FormField label={<Trans>Reset code</Trans>}>

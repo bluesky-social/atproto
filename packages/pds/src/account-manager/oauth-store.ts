@@ -63,8 +63,11 @@ import { Sequencer, syncEvtDataFromCommit } from '../sequencer/index.js'
 import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import * as accountHelper from './helpers/account.js'
-import { AccountStatus, UserAlreadyExistsError } from './helpers/account.js'
+import {
+  AccountStatus,
+  ActorAccount,
+  UserAlreadyExistsError,
+} from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -269,11 +272,13 @@ export class OAuthStore
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await accountHelper.getAccount(
-      this.db,
+    const accountRow = await this.accountManager.getAccountByEmail(
       // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
       asAtIdentifierString(sub),
-      { includeDeactivated: true },
+      {
+        includeDeactivated: true,
+        includeTakenDown: false,
+      },
     )
 
     assert(accountRow, 'Account not found')
@@ -361,7 +366,7 @@ export class OAuthStore
   }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
-      includeTakenDown: true,
+      includeTakenDown: false,
     })
 
     if (!account?.email || !account?.handle) return null
@@ -388,7 +393,7 @@ export class OAuthStore
       const did = await this.accountManager.resetPassword(data)
       const account = await this.accountManager.getAccount(did, {
         includeDeactivated: true,
-        includeTakenDown: true,
+        includeTakenDown: false,
       })
 
       return account ? this.buildAccount(account) : null
@@ -691,7 +696,7 @@ export class OAuthStore
   }
 
   private async toTokenInfo(
-    row: accountHelper.ActorAccount & Selectable<schemas.Token>,
+    row: ActorAccount & Selectable<schemas.Token>,
   ): Promise<TokenInfo> {
     return {
       id: row.tokenId,
@@ -701,9 +706,7 @@ export class OAuthStore
     }
   }
 
-  private async buildAccount(
-    row: accountHelper.ActorAccount,
-  ): Promise<Account> {
+  private async buildAccount(row: ActorAccount): Promise<Account> {
     const account: Account = {
       sub: row.did,
       aud: this.serviceDid,
@@ -744,8 +747,15 @@ function toHandleUnavailableError(err: unknown): unknown {
       return new HandleUnavailableError('resolution', err.message, err)
     }
 
-    if (err.customErrorName === 'HandleNotAvailable') {
+    if (
+      err.customErrorName === 'HandleNotAvailable' &&
+      err.message === 'Reserved handle'
+    ) {
       return new HandleUnavailableError('reserved', err.message, err)
+    }
+
+    if (err.customErrorName === 'HandleNotAvailable') {
+      return new HandleUnavailableError('taken', err.message, err)
     }
 
     if (err.customErrorName === 'UnsupportedDomain') {
