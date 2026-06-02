@@ -81,6 +81,7 @@ function VerifyEmailRow() {
 
 function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
+  const data = useCustomizationData()
   const { sub, email } = account
 
   const updateRequest = useUpdateEmailRequest()
@@ -103,6 +104,16 @@ function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
       onVerify={async ({ email, token }) => {
         await verifyConfirm.mutateAsync({ sub, email, token })
       }}
+      introMessage={
+        data.show2FaWarningOnEmailUpdate && (
+          <Admonition role="warning" className="text-sm">
+            <Trans>
+              If you update your email address, email 2FA (if enabled) will be
+              disabled.
+            </Trans>
+          </Admonition>
+        )
+      }
     >
       <Row {...props} icon={EnvelopeIcon} value={email}>
         <Trans>Email address</Trans>

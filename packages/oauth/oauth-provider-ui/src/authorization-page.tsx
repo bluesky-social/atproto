@@ -2,7 +2,7 @@ import './style.css'
 
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
-import { StrictMode, useState } from 'react'
+import { StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
@@ -80,17 +80,18 @@ function App() {
     setTimeout(() => setIsDone(true))
   })
 
-  const doConsentAndRedirect = useStableCallback(
-    async (sub: string, scope?: string | undefined) => {
-      const { url } = await api.consent(sub, scope)
+  const doConsentAndRedirect = useCallback(
+    async ({ scope }: { scope?: string }) => {
+      const { url } = await api.consent(session!.account.sub, scope)
       performRedirect(url)
     },
+    [api, session, performRedirect],
   )
 
-  const doRejectAndRedirect = useStableCallback(async () => {
+  const doRejectAndRedirect = useCallback(async () => {
     const { url } = await api.reject()
     performRedirect(url)
-  })
+  }, [api, performRedirect])
 
   return (
     <AuthenticationProvider
@@ -107,9 +108,7 @@ function App() {
           permissionSets={authorizeData.permissionSets}
           account={session.account}
           scope={authorizeData.scope}
-          onConsent={({ scope }) =>
-            doConsentAndRedirect(session.account.sub, scope)
-          }
+          onConsent={doConsentAndRedirect}
           onReject={doRejectAndRedirect}
           onBack={loginHint ? undefined : () => setSession(null)}
         />

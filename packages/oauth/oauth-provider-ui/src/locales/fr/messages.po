@@ -269,8 +269,8 @@ msgstr "Vérifiez votre boîte de réception."
 msgid "Choose a new default username."
 msgstr "Choisissez un nouveau nom d'utilisateur par défaut."
 
-#: src/components/update-email-dialog.tsx:122
-#: src/components/update-email-dialog.tsx:197
+#: src/components/update-email-dialog.tsx:102
+#: src/components/update-email-dialog.tsx:135
 msgid "Choose a new email address to associate with your account."
 msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 
@@ -278,7 +278,7 @@ msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/components/update-email-dialog.tsx:182
+#: src/components/update-email-form.tsx:82
 msgid "Click here to resend."
 msgstr "Cliquez ici pour renvoyer."
 
@@ -366,7 +366,7 @@ msgstr "Appareils"
 msgid "DNS"
 msgstr "DNS"
 
-#: src/components/update-email-dialog.tsx:172
+#: src/components/update-email-form.tsx:72
 msgid "Don't see an email?"
 msgstr "Pas reçu d'email ?"
 
@@ -384,14 +384,14 @@ msgstr "ex. <0>alice{0}</0>"
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:108
+#: src/pages/account/(authenticated)/manage/page.tsx:119
 #: src/components/reset-password-request-form.tsx:28
 #: src/components/reset-password-request-form.tsx:32
 #: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "Adresse email"
 
-#: src/components/update-email-dialog.tsx:81
+#: src/components/update-email-dialog.tsx:56
 msgid "Email address successfully updated"
 msgstr "Adresse email mise à jour avec succès"
 
@@ -583,7 +583,7 @@ msgstr "Si vous avez accès à la configuration de l'hébergement web de votre d
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Si vous avez votre propre domaine, vous pouvez l'utiliser comme pseudo. Cela vous permet de vérifier vous-même votre identité. <0>En savoir plus ici</0>."
 
-#: src/components/update-email-dialog.tsx:208
+#: src/pages/account/(authenticated)/manage/page.tsx:110
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Si vous mettez à jour votre adresse email, la 2FA par email (si activée) sera désactivée."
 
@@ -627,7 +627,7 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Dernière connexion {lastUsedAgo}"
 
-#: src/components/update-email-dialog.tsx:92
+#: src/components/update-email-dialog.tsx:69
 msgctxt "verify email"
 msgid "Later"
 msgstr "Plus tard"
@@ -636,7 +636,7 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:117
+#: src/authorization-page.tsx:116
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -710,8 +710,8 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/update-email-dialog.tsx:137
-#: src/components/update-email-dialog.tsx:214
+#: src/components/update-email-form.tsx:37
+#: src/components/update-email-dialog.tsx:161
 msgid "New email address"
 msgstr "Nouvelle adresse email"
 
@@ -733,7 +733,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:146
 #: src/components/sign-up-credentials-form.tsx:67
 #: src/components/sign-in-form.tsx:186
 #: src/components/forms/input-password.tsx:46
@@ -803,7 +803,7 @@ msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
 msgid "Please check your verification code and try again."
 msgstr "Veuillez vérifier votre code de vérification et réessayer."
 
-#: src/components/update-email-dialog.tsx:154
+#: src/components/update-email-form.tsx:54
 msgid "Please enter the security code that was sent to your current email address <0>{emailCurrent}</0>."
 msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adresse email actuelle <0>{emailCurrent}</0>."
 
@@ -874,11 +874,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Révoquer l'accès"
 
-#: src/components/update-email-dialog.tsx:161
+#: src/components/update-email-form.tsx:61
 msgid "Security code"
 msgstr "Code de sécurité"
 
-#: src/components/update-email-dialog.tsx:151
+#: src/components/update-email-form.tsx:51
 msgid "Security step required"
 msgstr "Étape de sécurité requise"
 
@@ -1090,8 +1090,8 @@ msgstr "Agent utilisateur inconnu"
 msgid "Update"
 msgstr "Modifier"
 
-#: src/components/update-email-dialog.tsx:120
-#: src/components/update-email-dialog.tsx:195
+#: src/components/update-email-dialog.tsx:100
+#: src/components/update-email-dialog.tsx:133
 msgid "Update your email"
 msgstr "Modifier votre adresse email"
 
@@ -1121,7 +1121,7 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:162
+#: src/pages/account/(authenticated)/manage/page.tsx:173
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
@@ -1142,7 +1142,7 @@ msgid "Value"
 msgstr "Valeur"
 
 #: src/components/verify-email-confirm-form.tsx:19
-#: src/components/update-email-dialog.tsx:100
+#: src/components/update-email-dialog.tsx:79
 msgid "Verification code"
 msgstr "Code de vérification"
 
@@ -1163,7 +1163,7 @@ msgid "Verify and Save"
 msgstr "Vérifier et enregistrer"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:72
-#: src/components/update-email-dialog.tsx:93
+#: src/components/update-email-dialog.tsx:70
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Vérifier"
@@ -1220,7 +1220,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "yesterday"
 msgstr "hier"
 
-#: src/authorization-page.tsx:118
+#: src/authorization-page.tsx:117
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
 
@@ -1253,7 +1253,7 @@ msgstr "Une session est ouverte sur les appareils listés ci-dessous. Si votre c
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Votre compte Atmosphère est hébergé chez <0/>."
 
-#: src/components/update-email-dialog.tsx:83
+#: src/components/update-email-dialog.tsx:60
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Votre adresse email a été mise à jour avec succès et doit être vérifiée. Veuillez saisir le code de vérification qui a été envoyé à <0>{email}</0>."
 
