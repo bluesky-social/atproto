@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
+import { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
 import { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
 import { Member } from '../lexicon/types/tools/ozone/team/defs.js'
 import {
@@ -259,6 +260,7 @@ export function formatActivityView(
     createdAt: string
   },
   memberViews?: Map<string, Member>,
+  reportViews?: Map<number, ReportView>,
 ) {
   return {
     id: activity.id,
@@ -273,6 +275,7 @@ export function formatActivityView(
     isAutomated: activity.isAutomated,
     createdBy: activity.createdBy,
     moderator: memberViews?.get(activity.createdBy),
+    report: reportViews?.get(activity.reportId),
     createdAt: activity.createdAt,
   }
 }

@@ -585,6 +585,25 @@ describe('report-activity', () => {
       })
     }
 
+    it('hydrates the report on each activity', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+
+      const { data } = await queryActivities({
+        activityTypes: ['closeActivity'],
+        sortDirection: 'desc',
+        limit: 100,
+      })
+      const hit = data.activities.find((a) => a.reportId === report.id)
+      expect(hit).toBeDefined()
+      expect(hit!.report).toBeDefined()
+      expect(hit!.report!.id).toBe(report.id)
+      expect(hit!.report!.subject).toBeDefined()
+    })
+
     it('filters by activity types across reports', async () => {
       const reportA = await createReport(sc.dids.alice)
       const reportB = await createReport(sc.dids.bob)
