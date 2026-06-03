@@ -7,6 +7,7 @@ import type {
   InitiateEmailUpdateOutput,
   InitiateEmailVerificationInput,
   InitiatePasswordResetInput,
+  UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
 import { OAuthScope } from '@atproto/oauth-types'
 import { ClientId } from '../client/client-id.js'
@@ -55,6 +56,7 @@ export type UpdateEmailRequestOutput = InitiateEmailUpdateOutput
 export type UpdateEmailConfirmInput = ConfirmEmailUpdateInput
 export type VerifyEmailRequestInput = InitiateEmailVerificationInput
 export type VerifyEmailConfirmInput = ConfirmEmailVerificationInput
+export type UpdateHandleData = UpdateHandleInput
 
 export type CreateAccountData = {
   locale: string
@@ -216,6 +218,13 @@ export interface AccountStore {
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
   verifyHandleAvailability(handle: string): Awaitable<void>
+
+  /**
+   * @throws {HandleUnavailableError} - To indicate that the handle is already taken
+   * @throws {InvalidRequestError} - To indicate that the handle is invalid or
+   * cannot be used
+   */
+  updateHandle(data: UpdateHandleData): Awaitable<Account>
 }
 
 export const isAccountStore = buildInterfaceChecker<AccountStore>([
@@ -234,6 +243,7 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'verifyEmailRequest',
   'verifyEmailConfirm',
   'verifyHandleAvailability',
+  'updateHandle',
 ])
 
 export function asAccountStore<V>(implementation: V): V & AccountStore {

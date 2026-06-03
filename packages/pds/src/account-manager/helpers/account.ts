@@ -13,11 +13,11 @@ import { AccountDb, ActorEntry } from '../db/index.js'
 
 export class UserAlreadyExistsError extends Error {
   name = 'UserAlreadyExistsError'
-  constructor(options?: ErrorOptions) {
-    super(
-      'This email address is already in use, please use a different email.',
-      options,
-    )
+  constructor(
+    message = 'This email address is already in use, please use a different email.',
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
   }
 }
 
@@ -195,17 +195,25 @@ export const updateHandle = async (
   did: DidString,
   handle: HandleString,
 ) => {
+  // No-op if the handle is the same, but still returns 1 row affected, so that
+  // it can be used to check for existence of the account.
   const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
-        db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
+        db.db
+          .selectFrom('actor')
+          .where('handle', '=', handle)
+          .where('did', '!=', did)
+          .selectAll(),
       ),
   )
   if (res.numUpdatedRows < 1) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 

@@ -63,12 +63,8 @@ export function AuthenticationProvider({
   const {
     sessions: currentSessions,
     session: currentSession,
+    api,
     setSession,
-    doValidateNewHandle,
-    doSignUp,
-    doSignIn,
-    doInitiatePasswordReset,
-    doConfirmResetPassword,
   } = useSessionContext()
 
   // If there is a login hint, we constrain the session to the one matching the
@@ -143,9 +139,14 @@ export function AuthenticationProvider({
     if (view === View.SignUp) {
       return (
         <SignUpView
-          onValidateNewHandle={doValidateNewHandle}
+          onValidateNewHandle={async (data) =>
+            api.validateHandleAvailability(data)
+          }
           onBack={showHome}
-          onDone={doSignUp}
+          onDone={async (data) => {
+            await api.signUp(data)
+            showHome()
+          }}
         />
       )
     }
@@ -154,8 +155,12 @@ export function AuthenticationProvider({
       return (
         <ResetPasswordView
           emailDefault={resetPasswordHint}
-          onResetPasswordRequest={doInitiatePasswordReset}
-          onResetPasswordConfirm={doConfirmResetPassword}
+          onResetPasswordRequest={async (data) =>
+            api.initiatePasswordReset(data)
+          }
+          onResetPasswordConfirm={async (data) =>
+            api.confirmResetPassword(data)
+          }
           onBack={showSignIn}
         />
       )
@@ -168,7 +173,9 @@ export function AuthenticationProvider({
         sessions={sessions}
         session={session}
         setSession={setSession}
-        onSignIn={doSignIn}
+        onSignIn={async (data) => {
+          await api.signIn(data)
+        }}
         onSignUp={showSignUpIfAllowed}
         onBack={homeView === View.SignIn ? onCancel : showHome}
         backLabel={homeView === View.SignIn ? <Trans>Cancel</Trans> : undefined}

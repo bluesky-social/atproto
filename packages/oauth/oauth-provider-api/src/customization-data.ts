@@ -8,6 +8,7 @@ export type CustomizationData = {
   hcaptchaSiteKey?: string
   inviteCodeRequired?: boolean
   availableUserDomains?: string[]
+  show2FaWarningOnEmailUpdate?: boolean
 
   // Aesthetic customization
   name?: string

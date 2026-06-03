@@ -302,8 +302,8 @@ export function createApiMiddleware<
       schema: z
         .object({
           sub: subSchema,
-          token: emailOtpSchema,
           email: emailSchema,
+          token: emailOtpSchema.optional(),
           locale: localeSchema.optional(),
         })
         .strict(),
@@ -362,6 +362,31 @@ export function createApiMiddleware<
         const { account } = await authenticate.call(this, req, res)
 
         await server.accountManager.verifyEmailConfirm(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/update-handle',
+      schema: z
+        .object({
+          sub: subSchema,
+          handle: handleSchema,
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.updateHandle(
           this.deviceId,
           this.deviceMetadata,
           this.input,

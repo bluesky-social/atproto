@@ -12,15 +12,14 @@ export const Route = createRoute({
 })
 
 export function Page() {
-  const { doInitiatePasswordReset, doConfirmResetPassword } =
-    useSessionContext()
+  const { api } = useSessionContext()
 
   const router = useRouter()
 
   return (
     <ResetPasswordView
-      onResetPasswordRequest={doInitiatePasswordReset}
-      onResetPasswordConfirm={doConfirmResetPassword}
+      onResetPasswordRequest={async (data) => api.initiatePasswordReset(data)}
+      onResetPasswordConfirm={async (data) => api.confirmResetPassword(data)}
       onBack={() => {
         // Try to send them back to wherever they came from
         window.history.back()

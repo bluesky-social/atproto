@@ -1,7 +1,9 @@
 import { KeyObject } from 'node:crypto'
+import { Client as PlcClient } from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
   AtIdentifierString,
@@ -21,7 +23,9 @@ import {
   isServiceDomain,
 } from '../handle/index.js'
 import { com } from '../lexicons/index.js'
+import { httpLogger } from '../logger.js'
 import { ServerMailer } from '../mailer/index.js'
+import { Sequencer } from '../sequencer/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
 import * as account from './helpers/account.js'
 import { AccountStatus, ActorAccount } from './helpers/account.js'
@@ -68,6 +72,9 @@ export class AccountManager {
     readonly idResolver: IdResolver,
     readonly jwtKey: KeyObject,
     readonly mailer: ServerMailer,
+    readonly sequencer: Sequencer,
+    readonly plcClient: PlcClient,
+    readonly plcRotationKey: Keypair,
     readonly serviceDid: string,
     readonly serviceHandleDomains: string[],
     db: AccountManagerDbConfig,
@@ -138,7 +145,7 @@ export class AccountManager {
     handle: string,
     {
       did,
-      allowAnyValid,
+      allowAnyValid = false,
     }: {
       did?: string
       allowAnyValid?: boolean
@@ -168,15 +175,20 @@ export class AccountManager {
         allowAnyValid,
       )
     } else {
+      // When creating an account (no did yet), we require the handle to be a
+      // local service domain. Updating to a custom handle will be possible once
+      // the account was created.
       if (did == null) {
         throw new InvalidRequestError(
           'Not a supported handle domain',
           'UnsupportedDomain',
         )
       }
+
       // verify resolution of a non-service domain
       const resolvedDid = await this.idResolver.handle.resolve(normalized)
       if (resolvedDid !== did) {
+        // @TODO This should use a distinct error code
         throw new InvalidRequestError('External handle did not resolve to DID')
       }
     }
@@ -261,10 +273,96 @@ export class AccountManager {
     return { accessJwt, refreshJwt }
   }
 
-  // @NOTE should always be paired with a sequenceHandle().
-  // the token output from this method should be passed to sequenceHandle().
-  async updateHandle(did: DidString, handle: HandleString) {
-    return account.updateHandle(this.db, did, handle)
+  /**
+   * Validates the requested handle, updates the PLC document if needed, persists
+   * the new handle locally, and emits an identity event.
+   *
+   * @throws {InvalidRequestError} when the handle is invalid, taken by another
+   * account, or cannot be resolved for non-service domains.
+   *
+   * @see {@link AccountManager.updateAccountHandle} for behavior when the PLC update fails.
+   */
+  async updateHandle(
+    did: DidString,
+    newHandle: string,
+    options?: { allowAnyValid?: boolean },
+  ): Promise<ActorAccount & { handle: HandleString }> {
+    const { account, handle } = await this.validateHandleUpdate(
+      did,
+      newHandle,
+      options,
+    )
+
+    if (did.startsWith('did:plc:')) {
+      // @TODO We should verify the status before issuing a PLC update.
+      await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
+    } else {
+      const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
+      if (resolved.handle !== handle) {
+        throw new InvalidRequestError(
+          'DID is not properly configured for handle',
+        )
+      }
+    }
+
+    // @NOTE If the next line fails (for any reason), we don't "rollback" the
+    // PLC update above. The caller can just call this method again.
+    await this.updateAccountHandle(did, handle)
+
+    return { ...account, handle }
+  }
+
+  async validateHandleUpdate(
+    did: DidString,
+    newHandle: string,
+    options?: { allowAnyValid?: boolean },
+  ): Promise<{
+    did: DidString
+    handle: HandleString
+    // Returned for convenience
+    account: ActorAccount
+  }> {
+    const account = await this.getAccount(did, { includeDeactivated: true })
+    if (!account) {
+      throw new InvalidRequestError('Account not found')
+    }
+
+    const handle = await this.normalizeAndValidateHandle(newHandle, {
+      allowAnyValid: options?.allowAnyValid,
+      did,
+    })
+
+    // Pessimistic check to handle spam: also enforced by updateAccountHandle() and the db.
+    const existing = await this.getAccount(handle, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (existing && existing.did !== did) {
+      throw new InvalidRequestError(
+        `Handle already taken: ${handle}`,
+        'HandleNotAvailable',
+      )
+    }
+
+    return { did, handle, account }
+  }
+
+  /**
+   * @note Failure to emit the identity event will silently be ignored. Users
+   * can emit the event again by updating their handle to the same value.
+   */
+  async updateAccountHandle(
+    did: DidString,
+    handle: HandleString,
+  ): Promise<void> {
+    await account.updateHandle(this.db, did, handle)
+
+    try {
+      await this.sequencer.sequenceIdentityEvt(did, handle)
+    } catch (err) {
+      httpLogger.error({ err, did, handle }, 'failed to sequence handle update')
+    }
   }
 
   async deleteAccount(did: DidString) {
@@ -637,7 +735,7 @@ export class AccountManager {
     email: string,
     token?: string,
     opts?: { locale?: string; sendConfirmationEmail?: boolean },
-  ) {
+  ): Promise<ActorAccount> {
     if (!isEmailValid(email) || isDisposableEmail(email)) {
       throw new InvalidRequestError(
         'This email address is not supported, please use a different email.',
