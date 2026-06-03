@@ -74,7 +74,7 @@ msgstr "２要素認証の確認"
 msgid "A local app"
 msgstr ""
 
-#: src/lib/api.ts:418
+#: src/lib/api.ts:422
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
@@ -343,6 +343,10 @@ msgstr "新規アカウントの作成"
 
 #: src/components/utils/scope-description.tsx:568
 msgid "Create, update, and delete any public data linked to your account"
+msgstr ""
+
+#: src/lib/api.ts:391
+msgid "Custom domains are not supported"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx:663
@@ -990,7 +994,7 @@ msgstr "送信データが正しくありません。フォームをチェック
 msgid "The domain name is not allowed"
 msgstr "そのドメイン名は許可されていません"
 
-#: src/lib/api.ts:445
+#: src/lib/api.ts:449
 msgid "The invite code is not valid"
 msgstr "招待コードが有効ではありません"
 
@@ -1026,13 +1030,13 @@ msgstr ""
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/lib/api.ts:509
+#: src/lib/api.ts:513
 msgid "This email is already used"
 msgstr "このメールアドレスはすでに使用されています"
 
 #: src/lib/api.ts:319
-#: src/lib/api.ts:466
-#: src/lib/api.ts:497
+#: src/lib/api.ts:470
+#: src/lib/api.ts:501
 msgid "This sign-in session has expired"
 msgstr "このサインインセッションの有効期限が切れました"
 
@@ -1208,7 +1212,7 @@ msgstr ""
 msgid "What is an Atmosphere Account?"
 msgstr ""
 
-#: src/lib/api.ts:481
+#: src/lib/api.ts:485
 msgid "Wrong identifier or password"
 msgstr "識別子またはパスワードが間違っています"
 

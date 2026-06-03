@@ -74,7 +74,7 @@ msgstr "2FA Confirmation"
 msgid "A local app"
 msgstr "A local app"
 
-#: src/lib/api.ts:418
+#: src/lib/api.ts:422
 msgid "A second authentication factor is required ({hint})"
 msgstr "A second authentication factor is required ({hint})"
 
@@ -344,6 +344,10 @@ msgstr "Create a new account"
 #: src/components/utils/scope-description.tsx:568
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Create, update, and delete any public data linked to your account"
+
+#: src/lib/api.ts:391
+msgid "Custom domains are not supported"
+msgstr "Custom domains are not supported"
 
 #: src/components/utils/scope-description.tsx:663
 msgid "Data"
@@ -1000,7 +1004,7 @@ msgstr "The data you submitted is invalid. Please check the form and try again."
 msgid "The domain name is not allowed"
 msgstr "The domain name is not allowed"
 
-#: src/lib/api.ts:445
+#: src/lib/api.ts:449
 msgid "The invite code is not valid"
 msgstr "The invite code is not valid"
 
@@ -1036,13 +1040,13 @@ msgstr "This application is requesting the following permissions (scopes) to acc
 msgid "This authorization request has been denied. Please try again."
 msgstr "This authorization request has been denied. Please try again."
 
-#: src/lib/api.ts:509
+#: src/lib/api.ts:513
 msgid "This email is already used"
 msgstr "This email is already used"
 
 #: src/lib/api.ts:319
-#: src/lib/api.ts:466
-#: src/lib/api.ts:497
+#: src/lib/api.ts:470
+#: src/lib/api.ts:501
 msgid "This sign-in session has expired"
 msgstr "This sign-in session has expired"
 
@@ -1218,7 +1222,7 @@ msgstr "What does this mean?"
 msgid "What is an Atmosphere Account?"
 msgstr "What is an Atmosphere Account?"
 
-#: src/lib/api.ts:481
+#: src/lib/api.ts:485
 msgid "Wrong identifier or password"
 msgstr "Wrong identifier or password"
 
