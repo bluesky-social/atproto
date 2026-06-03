@@ -120,8 +120,10 @@ export class RecordSchema<
       rkey = this.key.slice(8)
     } else if (rkey === undefined) {
       throw new TypeError(`Record key is required for ${this.$type} records`)
+    } else {
+      this.keySchema.validate(rkey)
     }
-    return `at://${authority}/${this.$type}/${this.keySchema.parse(rkey)}`
+    return `at://${authority}/${this.$type}/${rkey}`
   }
 
   build(
