@@ -34,6 +34,12 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         includeTakedowns,
         skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
       })
       const results = await searchActors({ ...params, hydrateCtx }, ctx)
       return {
