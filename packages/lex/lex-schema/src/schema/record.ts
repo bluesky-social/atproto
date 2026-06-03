@@ -2,12 +2,15 @@ import { LexMap } from '@atproto/lex-data'
 import {
   $Typed,
   $typed,
+  AtUriString,
+  DidString,
   InferInput,
   InferOutput,
   LexiconRecordKey,
   NsidString,
+  RecordKeyValue,
+  Restricted,
   Schema,
-  TidString,
   Unknown$TypedObject,
   ValidationContext,
   Validator,
@@ -22,7 +25,7 @@ import { string } from './string.js'
  * @template R - The RecordSchema type
  */
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
+  R extends RecordSchema<infer TKey> ? RecordKeyValue<TKey> : never
 
 export type TypedRecord<
   TType extends NsidString,
@@ -86,6 +89,41 @@ export class RecordSchema<
     return result
   }
 
+  /**
+   * Builds a record URI for a given DID and record key value.
+   *
+   * @param authority - The DID of the record's author
+   * @param rkey - The value of the record key (TID, NSID, literal, etc.), as described by the `key` parameter of this schema
+   *
+   * @example
+   * ```ts
+   * const postUri = postSchema.buildUri('did:example:alice', '12345')
+   * // postUri === 'at://did:example:alice/app.bsky.feed.post/12345'
+   * ```
+   *
+   * @note Although {@link AtUriString} allow handle in the host position,
+   * record URIs, this is not a recommended practice. Because of this, the
+   * `authority` parameter is expected to be a {@link DidString}.
+   */
+  buildUri(
+    authority: TKey extends `literal:${string}`
+      ? DidString
+      : Restricted<'Only record schemas with literal:<string> key definitions can omit the "rkey" argument'>,
+    rkey?: RecordKeyValue<TKey>,
+  ): `at://${DidString}/${TType}/${RecordKeyValue<TKey>}`
+  buildUri(
+    authority: DidString,
+    rkey: RecordKeyValue<TKey>,
+  ): `at://${DidString}/${TType}/${RecordKeyValue<TKey>}`
+  buildUri(authority: unknown, rkey?: string): AtUriString {
+    if (rkey === undefined && this.key.startsWith('literal:')) {
+      rkey = this.key.slice(8)
+    } else if (rkey === undefined) {
+      throw new TypeError(`Record key is required for ${this.$type} records`)
+    }
+    return `at://${authority}/${this.$type}/${this.keySchema.parse(rkey)}`
+  }
+
   build(
     input: Omit<InferOutput<TShape>, '$type'>,
   ): $Typed<InferOutput<TShape>, TType>
@@ -100,6 +138,14 @@ export class RecordSchema<
     value: TValue,
   ): value is TypedRecord<TType, TValue> {
     return value.$type === this.$type
+  }
+
+  /**
+   * Bound alias for {@link buildUri} for compatibility with generated utilities.
+   * @see {@link buildUri}
+   */
+  get $buildUri(): typeof this.buildUri {
+    return lazyProperty(this, '$buildUri', this.buildUri.bind(this))
   }
 
   /**
@@ -120,21 +166,13 @@ export class RecordSchema<
 }
 
 export type RecordKeySchemaOutput<Key extends LexiconRecordKey> =
-  Key extends 'any'
-    ? string
-    : Key extends 'tid'
-      ? TidString
-      : Key extends 'nsid'
-        ? NsidString
-        : Key extends `literal:${infer L extends string}`
-          ? L
-          : never
+  RecordKeyValue<Key>
 
 export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
-  RecordKeySchemaOutput<Key>
+  RecordKeyValue<Key>
 >
 
-const keySchema = string({ minLength: 1 })
+const keySchema = string({ format: 'record-key' })
 const tidSchema = string({ format: 'tid' })
 const nsidSchema = string({ format: 'nsid' })
 const selfLiteralSchema = literal('self')
@@ -147,7 +185,7 @@ function recordKey<Key extends LexiconRecordKey>(
   if (key === 'tid') return tidSchema as any
   if (key === 'nsid') return nsidSchema as any
   if (key.startsWith('literal:')) {
-    const value = key.slice(8) as RecordKeySchemaOutput<Key>
+    const value = key.slice(8) as RecordKeyValue<Key>
     if (value === 'self') return selfLiteralSchema as any
     return literal(value)
   }

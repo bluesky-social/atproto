@@ -119,7 +119,7 @@ export class RecordReader {
   }
 
   async getRecord(
-    uri: AtUri,
+    uri: AtUri | AtUriString,
     cid: string | null,
     includeSoftDeleted = false,
   ): Promise<{

@@ -5,7 +5,7 @@ import {
   isLegacyBlobRef,
   parseCid,
 } from '@atproto/lex-data'
-import { AtUri } from '@atproto/syntax'
+import { AtUriString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
@@ -90,7 +90,8 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const uri = AtUri.make(did, collection, rkey)
+      // @NOTE each part of the URI was validated by the lexicon schema
+      const uri: AtUriString = `at://${did}/${collection}/${rkey}`
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
       const swapRecordCid =
         typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord

@@ -348,11 +348,7 @@ export class Views {
   ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const profileUri = AtUri.make(
-      did,
-      app.bsky.actor.profile.$nsid,
-      'self',
-    ).toString()
+    const profileUri = app.bsky.actor.profile.$buildUri(did)
     const labels = [
       ...(state.labels?.getBySubject(did) ?? []),
       ...(state.labels?.getBySubject(profileUri) ?? []),
@@ -603,7 +599,7 @@ export class Views {
       return undefined
     }
 
-    const uri = AtUri.make(did, app.bsky.actor.status.$nsid, 'self').toString()
+    const uri = app.bsky.actor.status.$buildUri(did)
     const labels = state.labels?.getBySubject(uri)
 
     const minDuration = 5 * MINUTE
@@ -838,11 +834,7 @@ export class Views {
     const viewer = state.labelerViewers?.get(did)
     const aggs = state.labelerAggs?.get(did)
 
-    const uri = AtUri.make(
-      did,
-      app.bsky.labeler.service.$type,
-      'self',
-    ).toString()
+    const uri = app.bsky.labeler.service.$buildUri(did)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({

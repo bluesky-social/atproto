@@ -12,7 +12,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -279,12 +278,93 @@ describe('RecordSchema', () => {
     })
   })
 
+  describe('buildUri() method', () => {
+    describe('tid', () => {
+      const schema = record('tid', 'com.ex.foo', object({}))
+
+      it('builds a valid record URI', () => {
+        const uri = schema.buildUri('did:example:alice', '3jzfcijpj2z2a')
+        expect(uri).toBe('at://did:example:alice/com.ex.foo/3jzfcijpj2z2a')
+      })
+
+      it('expects a second argument for non-literal keys', () => {
+        expect(() => {
+          // @ts-expect-error
+          schema.buildUri('did:example:alice')
+        }).toThrow()
+      })
+
+      it('validates the record key value', () => {
+        expect(() => {
+          schema.buildUri('did:example:alice', 'invalid-tid')
+        }).toThrow()
+      })
+    })
+
+    describe('literal', () => {
+      const literalSchema = record('literal:bar', 'com.ex.foo', object({}))
+
+      it('allows omitting the record key for literal keys', () => {
+        const uri = literalSchema.buildUri('did:example:alice')
+        expect(uri).toBe('at://did:example:alice/com.ex.foo/bar')
+      })
+
+      it('still allows providing the record key for literal keys', () => {
+        literalSchema.buildUri('did:example:alice', 'bar')
+      })
+
+      it('validates the record key value when provided', () => {
+        expect(() => {
+          // @ts-expect-error
+          literalSchema.buildUri('did:example:alice', 'wrong')
+        }).toThrow()
+      })
+    })
+
+    describe('any', () => {
+      const schema = record('any', 'com.ex.foo', object({}))
+
+      it('builds a valid record URI valid keys', () => {
+        const uri = schema.buildUri('did:example:alice', 'customKey')
+        expect(uri).toBe('at://did:example:alice/com.ex.foo/customKey')
+      })
+
+      it('rejects invalid record key values', () => {
+        expect(() => {
+          schema.buildUri('did:example:alice', '.')
+        }).toThrow()
+        expect(() => {
+          schema.buildUri('did:example:alice', '..')
+        }).toThrow()
+      })
+
+      it('expects a second argument for non-literal keys', () => {
+        expect(() => {
+          // @ts-expect-error
+          schema.buildUri('did:example:alice')
+        }).toThrow()
+      })
+
+      describe('edge cases', () => {
+        it('limits the record key to 512 characters', () => {
+          const uri = schema.buildUri('did:example:alice', 'a'.repeat(512))
+
+          expect(uri).toBe(
+            `at://did:example:alice/com.ex.foo/${'a'.repeat(512)}`,
+          )
+          expect(() => {
+            schema.buildUri('did:example:alice', 'a'.repeat(513))
+          }).toThrow()
+        })
+      })
+    })
+  })
+
   describe('key type: any', () => {
     const schema = record(
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -320,7 +400,6 @@ describe('RecordSchema', () => {
       'tid',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -356,7 +435,6 @@ describe('RecordSchema', () => {
       'nsid',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -395,7 +473,6 @@ describe('RecordSchema', () => {
         'literal:self',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -426,7 +503,6 @@ describe('RecordSchema', () => {
         'literal:customKey',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -453,7 +529,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post#main',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -488,7 +563,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string({ maxLength: 300 }),
         createdAt: string({ format: 'datetime' }),
       }),
@@ -527,7 +601,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -592,7 +665,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.complex',
         object({
-          $type: string(),
           nested: object({
             deep: object({
               value: string(),
@@ -618,7 +690,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -639,7 +710,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -656,7 +726,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
         author: string(),
       }),
@@ -719,7 +788,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -755,7 +823,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -774,7 +841,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -791,7 +857,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post#reply123',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -809,7 +874,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )

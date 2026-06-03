@@ -1575,12 +1575,8 @@ const isModList = (
 const labelSubjectsForDid = (dids: DidString[]) => {
   return [
     ...dids,
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
-    ),
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.status.$type, 'self').toString(),
-    ),
+    ...dids.map((did) => app.bsky.actor.profile.$buildUri(did)),
+    ...dids.map((did) => app.bsky.actor.status.$buildUri(did)),
   ]
 }
 
