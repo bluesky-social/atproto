@@ -33,30 +33,20 @@ export class ExpoOAuthClient
   extends OAuthClient
   implements ExpoOAuthClientInterface
 {
-  readonly #disposables: DisposableStack
-
   constructor(options: ExpoOAuthClientOptions) {
-    using stack = new DisposableStack()
-
     super({
       ...options,
       responseMode: options.responseMode ?? 'query',
       keyset: undefined,
       runtimeImplementation,
-      sessionStore: stack.use(new SessionStore()),
-      stateStore: stack.use(new StateStore()),
-      didCache: stack.use(new DidCache()),
-      handleCache: stack.use(new HandleCache()),
-      dpopNonceCache: stack.use(new DpopNonceCache()),
-      authorizationServerMetadataCache: stack.use(
-        new AuthorizationServerMetadataCache(),
-      ),
-      protectedResourceMetadataCache: stack.use(
-        new ProtectedResourceMetadataCache(),
-      ),
+      sessionStore: new SessionStore(),
+      stateStore: new StateStore(),
+      didCache: new DidCache(),
+      handleCache: new HandleCache(),
+      dpopNonceCache: new DpopNonceCache(),
+      authorizationServerMetadataCache: new AuthorizationServerMetadataCache(),
+      protectedResourceMetadataCache: new ProtectedResourceMetadataCache(),
     })
-
-    this.#disposables = stack.move()
   }
 
   async handleCallback(): Promise<null | OAuthSession> {
@@ -105,6 +95,7 @@ export class ExpoOAuthClient
   }
 
   async [Symbol.asyncDispose]() {
-    this.#disposables.dispose()
+    // Noop. Needed because the interface extends AsyncDisposable (required by
+    // the web implementation) but there's nothing to dispose on native.
   }
 }

@@ -56,7 +56,8 @@
       "Bash(whoami)",
       "Bash(whois:*)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "Bash(pnpm --filter @atproto/oauth-client-expo exec tsc --build tsconfig.json)"
     ],
     "deny": [
       "Bash(sudo *)",

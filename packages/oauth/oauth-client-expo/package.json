@@ -36,7 +36,6 @@
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto/oauth-client": "workspace:^",
     "@atproto/oauth-client-browser": "workspace:^",
-    "core-js": "^3",
     "expo-web-browser": "^15.0.8",
     "react-native-mmkv": "^3.3.3",
     "react-native-url-polyfill": "^3.0.0"

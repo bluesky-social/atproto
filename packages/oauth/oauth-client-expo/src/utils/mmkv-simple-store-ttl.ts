@@ -4,7 +4,7 @@ import { MMKVSimpleStore, MMKVSimpleStoreOptions } from './mmkv-simple-store.js'
 
 export type MMKVSimpleStoreTTLOptions<V extends Value> =
   MMKVSimpleStoreOptions<V> & {
-    clearInterval?: null | false | number
+    cleanupInterval?: null | false | number
     expiresAt: (value: V) => null | number
   }
 
@@ -14,14 +14,15 @@ export type MMKVSimpleStoreTTLOptions<V extends Value> =
  */
 export class MMKVSimpleStoreTTL<V extends Value>
   extends MMKVSimpleStore<V>
-  implements Disposable, SimpleStore<string, V>
+  implements SimpleStore<string, V>
 {
   readonly #store: MMKV
   readonly #expiresAt: (value: V) => null | number
-  readonly #clearTimer?: ReturnType<typeof setInterval>
+  readonly #cleanupInterval: number | null
+  #lastCleanup = 0
 
   constructor({
-    clearInterval = 60 * 1e3,
+    cleanupInterval = 60 * 1e3,
     expiresAt,
     encode,
     decode,
@@ -32,16 +33,7 @@ export class MMKVSimpleStoreTTL<V extends Value>
 
     this.#store = new MMKV({ ...config, id: `${config.id}.exp` })
     this.#expiresAt = expiresAt
-    if (clearInterval) {
-      this.#clearTimer = setInterval(() => this.clearExpired(), clearInterval)
-    }
-
-    this.clearExpired()
-  }
-
-  [Symbol.dispose]() {
-    clearInterval(this.#clearTimer)
-    this.clearExpired()
+    this.#cleanupInterval = cleanupInterval || null
   }
 
   override set(key: string, value: V): void {
@@ -50,9 +42,13 @@ export class MMKVSimpleStoreTTL<V extends Value>
     const expirationDate = this.#expiresAt.call(null, value)
     if (expirationDate == null) this.#store.delete(key)
     else this.#store.set(key, expirationDate)
+
+    this.maybeClearExpired()
   }
 
   override get(key: string): V | undefined {
+    this.maybeClearExpired()
+
     if (this.isExpired(key)) {
       this.del(key)
       return undefined
@@ -64,6 +60,8 @@ export class MMKVSimpleStoreTTL<V extends Value>
   override del(key: string): void {
     super.del(key)
     this.#store.delete(key)
+
+    this.maybeClearExpired()
   }
 
   override clear(): void {
@@ -71,20 +69,27 @@ export class MMKVSimpleStoreTTL<V extends Value>
     this.#store.clearAll()
   }
 
-  getExpirationTime(key: string): number | undefined {
+  protected getExpirationTime(key: string): number | undefined {
     return this.#store.getNumber(key) ?? undefined
   }
 
-  isExpired(key: string): boolean {
+  protected isExpired(key: string): boolean {
     const expirationTime = this.getExpirationTime(key)
     return expirationTime != null && expirationTime < Date.now()
   }
 
-  clearExpired() {
+  protected clearExpired() {
+    this.#lastCleanup = Date.now()
     for (const key of this.#store.getAllKeys() ?? []) {
       if (this.isExpired(key)) {
         this.del(key)
       }
     }
+  }
+
+  protected maybeClearExpired() {
+    if (this.#cleanupInterval == null) return
+    if (Date.now() - this.#lastCleanup < this.#cleanupInterval) return
+    this.clearExpired()
   }
 }

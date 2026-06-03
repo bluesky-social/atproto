@@ -1347,9 +1347,6 @@ importers:
       '@atproto/oauth-client-browser':
         specifier: workspace:^
         version: link:../oauth-client-browser
-      core-js:
-        specifier: ^3
-        version: 3.45.1
       expo:
         specifier: '*'
         version: 54.0.12(@babel/core@7.29.0)(react-native@0.81.4)(react@19.2.0)
