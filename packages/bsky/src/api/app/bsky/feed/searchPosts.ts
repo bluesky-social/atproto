@@ -1,7 +1,7 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import { AtUriString, Client } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { Timestamp } from '@bufbuild/protobuf'
 import { ServerConfig } from '../../../../config.js'
 import { AppContext } from '../../../../context.js'
 import { DataPlaneClient } from '../../../../data-plane/index.js'
@@ -11,7 +11,6 @@ import {
 } from '../../../../data-plane/server/util.js'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { parseString } from '../../../../hydration/util.js'
-import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -20,6 +19,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
+import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
 import { resHeaders } from '../../../util.js'
@@ -116,7 +116,6 @@ const skeletonV2 = async (
   const parsedQuery = parsePostSearchQuery(params.q, {
     author: params.author,
   })
-
   const res = await ctx.dataplane.searchPostsV2({
     params: {
       query: params.q,
