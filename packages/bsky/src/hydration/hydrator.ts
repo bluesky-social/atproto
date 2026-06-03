@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { dedupeStrs, mapDefined } from '@atproto/common'
+import { atUri } from '@atproto/lex'
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client/index.js'
 import {
@@ -1575,12 +1576,8 @@ const isModList = (
 const labelSubjectsForDid = (dids: DidString[]) => {
   return [
     ...dids,
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
-    ),
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.status.$type, 'self').toString(),
-    ),
+    ...dids.map((did) => atUri(did, app.bsky.actor.profile)),
+    ...dids.map((did) => atUri(did, app.bsky.actor.status)),
   ]
 }
 

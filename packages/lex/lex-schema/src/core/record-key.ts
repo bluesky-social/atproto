@@ -1,4 +1,4 @@
-import { isValidRecordKey } from '@atproto/syntax'
+import { NsidString, TidString, isValidRecordKey } from '@atproto/syntax'
 
 /**
  * The valid record key constraint types in a lexicon definition.
@@ -64,3 +64,22 @@ export function asLexiconRecordKey(key: unknown): LexiconRecordKey {
   if (isLexiconRecordKey(key)) return key
   throw new Error(`Invalid record key: ${String(key)}`)
 }
+
+/**
+ * Maps a lexicon record key definition to its corresponding string subtype.
+ *
+ * - `'any'` maps to `string`
+ * - `'nsid'` maps to `NsidString`
+ * - `'tid'` maps to `TidString`
+ * - `'literal:...'` maps to the literal string value
+ */
+export type RecordKeyValue<Key extends LexiconRecordKey = LexiconRecordKey> =
+  Key extends 'any'
+    ? string
+    : Key extends 'tid'
+      ? TidString
+      : Key extends 'nsid'
+        ? NsidString
+        : Key extends `literal:${infer L extends string}`
+          ? L
+          : never

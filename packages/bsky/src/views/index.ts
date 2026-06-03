@@ -4,6 +4,7 @@ import {
   Un$Typed,
   Unknown$TypedObject,
   UriString,
+  atUri,
   getBlobCidString,
 } from '@atproto/lex'
 import {
@@ -348,11 +349,7 @@ export class Views {
   ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const profileUri = AtUri.make(
-      did,
-      app.bsky.actor.profile.$nsid,
-      'self',
-    ).toString()
+    const profileUri = atUri(did, app.bsky.actor.profile)
     const labels = [
       ...(state.labels?.getBySubject(did) ?? []),
       ...(state.labels?.getBySubject(profileUri) ?? []),
@@ -603,7 +600,7 @@ export class Views {
       return undefined
     }
 
-    const uri = AtUri.make(did, app.bsky.actor.status.$nsid, 'self').toString()
+    const uri = atUri(did, app.bsky.actor.status)
     const labels = state.labels?.getBySubject(uri)
 
     const minDuration = 5 * MINUTE
@@ -838,11 +835,7 @@ export class Views {
     const viewer = state.labelerViewers?.get(did)
     const aggs = state.labelerAggs?.get(did)
 
-    const uri = AtUri.make(
-      did,
-      app.bsky.labeler.service.$type,
-      'self',
-    ).toString()
+    const uri = atUri(did, app.bsky.labeler.service)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({

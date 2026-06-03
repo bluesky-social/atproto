@@ -1,4 +1,4 @@
-import { describe, test } from 'vitest'
+import { describe, expect, expectTypeOf, it, test } from 'vitest'
 import * as l from './external.js'
 
 class BinaryValue {
@@ -564,6 +564,131 @@ describe('InferMethodMessage', () => {
       // @ts-expect-error Not a LexValue
       expectType<Message>({ any: 'value' })
       expectType<Message>(123)
+    })
+  })
+})
+
+describe(l.atUri, () => {
+  describe('string collection', () => {
+    const did = 'did:example:alice'
+
+    it('builds a valid record URI', () => {
+      const uri = l.atUri(did, 'com.ex.foo', 'bar')
+      expect(uri).toBe('at://did:example:alice/com.ex.foo/bar')
+      expectTypeOf(uri).toEqualTypeOf<`at://did:example:alice/com.ex.foo/bar`>()
+    })
+
+    it('validates record key values', () => {
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, 'com.ex.foo', '.')
+      }).toThrow()
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, 'com.ex.foo', '..')
+      }).toThrow()
+    })
+
+    it('expects a second argument', () => {
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, 'com.ex.foo')
+      }).toThrow()
+    })
+  })
+
+  describe('literal', () => {
+    const schema = l.record('literal:bar', 'com.ex.foo', l.object({}))
+    const did = 'did:example:alice'
+
+    it('allows omitting the record key for literal keys', () => {
+      const uri = l.atUri(did, schema)
+      expect(uri).toBe('at://did:example:alice/com.ex.foo/bar')
+      expectTypeOf(uri).toEqualTypeOf<`at://did:example:alice/com.ex.foo/bar`>()
+    })
+
+    it('still allows providing the record key for literal keys', () => {
+      expectTypeOf(
+        l.atUri(did, schema, 'bar'),
+      ).toEqualTypeOf<`at://did:example:alice/com.ex.foo/bar`>()
+    })
+
+    it('validates invalid record keys', () => {
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, schema, 'wrong')
+      }).toThrow()
+    })
+  })
+
+  describe('tid', () => {
+    const schema = l.record('tid', 'com.ex.foo', l.object({}))
+    const did = 'did:example:alice'
+
+    it('builds a valid record URI', () => {
+      const uri = l.atUri(did, schema, '3jzfcijpj2z2a')
+      expectTypeOf(
+        uri,
+      ).toEqualTypeOf<`at://did:example:alice/com.ex.foo/3jzfcijpj2z2a`>()
+      expect(uri).toBe('at://did:example:alice/com.ex.foo/3jzfcijpj2z2a')
+    })
+
+    it('expects a second argument for non-literal keys', () => {
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, schema)
+      }).toThrow()
+    })
+
+    it('validates the record key value', () => {
+      expect(() => {
+        l.atUri(did, schema, 'invalid-tid')
+      }).toThrow()
+    })
+  })
+
+  describe('any', () => {
+    const schema = l.record('any', 'com.ex.foo', l.object({}))
+    const did = 'did:example:alice'
+
+    it('builds a valid record URI valid keys', () => {
+      const uri = l.atUri(did, schema, 'customKey')
+      expect(uri).toBe('at://did:example:alice/com.ex.foo/customKey')
+      expectTypeOf(
+        uri,
+      ).toEqualTypeOf<`at://did:example:alice/com.ex.foo/customKey`>()
+    })
+
+    it('rejects invalid record key values', () => {
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, schema, '.')
+      }).toThrow()
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, schema, '..')
+      }).toThrow()
+    })
+
+    it('expects a second argument', () => {
+      expect(() => {
+        // @ts-expect-error
+        l.atUri(did, schema)
+      }).toThrow()
+    })
+
+    describe('edge cases', () => {
+      it('limits the record key to 512 characters', () => {
+        const uri = l.atUri(did, schema, 'a'.repeat(512))
+
+        expect(uri).toBe(`at://did:example:alice/com.ex.foo/${'a'.repeat(512)}`)
+        expectTypeOf(
+          uri,
+        ).toEqualTypeOf<`at://did:example:alice/com.ex.foo/${string}`>()
+        expect(() => {
+          l.atUri(did, schema, 'a'.repeat(513))
+        }).toThrow()
+      })
     })
   })
 })
