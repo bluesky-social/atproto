@@ -14,8 +14,8 @@ import {
   useContext,
   useMemo,
 } from 'react'
+import { Button, ButtonProps } from '#/components/forms/button.tsx'
 import { Override } from '#/lib/util.ts'
-import { Button, ButtonProps } from '../forms/button.tsx'
 
 type Variant = 'info' | 'warning' | 'error' | 'success'
 

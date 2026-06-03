@@ -136,6 +136,7 @@ function UpdatePasswordRow(props: Omit<RowProps, 'icon' | 'value'>) {
 
   return (
     <UpdatePasswordDialog
+      email={email}
       requestPending={resetPasswordRequest.isPending}
       confirmPending={resetPasswordConfirm.isPending}
       onRequest={async () => {

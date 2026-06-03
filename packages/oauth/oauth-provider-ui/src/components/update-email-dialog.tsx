@@ -1,12 +1,12 @@
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from '@phosphor-icons/react'
 import { ReactNode, useEffect, useState } from 'react'
-import { FormField } from '#/components/forms/form-field'
+import { FormField } from '#/components/forms/form-field.tsx'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { DialogSimple } from './dialog-simple'
-import { SmartForm } from './forms/smart-form'
-import { UpdateEmailForm } from './update-email-form'
+import { SmartForm } from '#/components/forms/smart-form.tsx'
+import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { UpdateEmailForm } from './update-email-form.tsx'
 
 export type UpdateEmailDialogProps = {
   email?: string

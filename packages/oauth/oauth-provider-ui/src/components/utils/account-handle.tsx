@@ -1,9 +1,9 @@
 import { ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
-import { Handle, sanitizeHandle } from './handle.tsx'
+import { Handle, stringifyHandle } from './handle.tsx'
 
-export function getAccountHandle(account?: Account): string | undefined {
-  return sanitizeHandle(account?.preferred_username)
+export function stringifyAccountHandle(account?: Account): string | undefined {
+  return stringifyHandle(account?.preferred_username)
 }
 
 export function AccountHandle({ account }: { account?: Account }): ReactNode {

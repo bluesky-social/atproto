@@ -53,8 +53,8 @@ msgstr "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is 
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:54
-#: src/components/forms/input-handle-custom-instructions.tsx:69
+#: src/components/forms/input-handle-custom-instructions.tsx:55
+#: src/components/forms/input-handle-custom-instructions.tsx:70
 msgid "<your-domain>"
 msgstr "<your-domain>"
 
@@ -111,11 +111,11 @@ msgstr "Account overview"
 msgid "Account selector"
 msgstr "Account selector"
 
-#: src/components/utils/handle.tsx:38
+#: src/components/utils/handle.tsx:49
 msgid "Account username"
 msgstr "Account username"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:50
+#: src/components/forms/input-handle-custom-instructions.tsx:51
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "Add the following record to your domain's DNS configuration."
 
@@ -370,7 +370,7 @@ msgstr "Details"
 msgid "Devices"
 msgstr "Devices"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:48
+#: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "DNS"
 msgstr "DNS"
 
@@ -411,7 +411,7 @@ msgstr "Email change request sent"
 msgid "Email change successful"
 msgstr "Email change successful"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:157
+#: src/components/forms/input-handle-custom-instructions.tsx:158
 msgid "Email these instructions"
 msgstr "Email these instructions"
 
@@ -505,7 +505,7 @@ msgstr "Failed to update username"
 msgid "Failed to verify email"
 msgstr "Failed to verify email"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:72
+#: src/components/forms/input-handle-custom-instructions.tsx:73
 msgid "File contents"
 msgstr "File contents"
 
@@ -525,14 +525,15 @@ msgstr "Grant access to your <0/> account"
 msgid "Having trouble? <0>Contact support</0>"
 msgstr "Having trouble? <0>Contact support</0>"
 
-#. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
-#: src/components/forms/input-handle-custom-instructions.tsx:96
+#. placeholder {0}: stringifyHandle(handle)
+#. placeholder {1}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
+#: src/components/forms/input-handle-custom-instructions.tsx:97
 msgid ""
 "Hello,\n"
 "\n"
-"To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"To associate the domain \"{0}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
 "\n"
-"{0}\n"
+"{1}\n"
 "\n"
 "The change can be verified by visiting the following URL: {troubleshootHref}\n"
 "A detailed tutorial can be found here: {tutorialHref}\n"
@@ -541,16 +542,16 @@ msgid ""
 msgstr ""
 "Hello,\n"
 "\n"
-"To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"To associate the domain \"{0}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
 "\n"
-"{0}\n"
+"{1}\n"
 "\n"
 "The change can be verified by visiting the following URL: {troubleshootHref}\n"
 "A detailed tutorial can be found here: {tutorialHref}\n"
 "\n"
 "Thank you."
 
-#: src/components/forms/input-handle-custom-instructions.tsx:144
+#: src/components/forms/input-handle-custom-instructions.tsx:145
 msgid "Help"
 msgstr "Help"
 
@@ -563,11 +564,11 @@ msgstr "Hide"
 msgid "Home"
 msgstr "Home"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:54
 msgid "Host"
 msgstr "Host"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:63
+#: src/components/forms/input-handle-custom-instructions.tsx:64
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -579,11 +580,11 @@ msgstr "Identifier"
 msgid "Identity"
 msgstr "Identity"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:49
+#: src/components/forms/input-handle-custom-instructions.tsx:50
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:64
+#: src/components/forms/input-handle-custom-instructions.tsx:65
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 
@@ -599,11 +600,11 @@ msgstr "If you update your email address, email 2FA (if enabled) will be disable
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/forms/input-handle-default.tsx:249
+#: src/components/forms/input-handle-default.tsx:254
 msgid "Invalid"
 msgstr "Invalid"
 
-#: src/components/utils/handle.tsx:42
+#: src/components/utils/handle.tsx:53
 msgid "Invalid Handle"
 msgstr "Invalid Handle"
 
@@ -664,7 +665,7 @@ msgstr "Looks like you aren't logged in on any other devices."
 msgid "loopback"
 msgstr "loopback"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:65
+#: src/components/forms/input-handle-custom-instructions.tsx:66
 msgid "Make a text file with the contents below available at the following URL."
 msgstr "Make a text file with the contents below available at the following URL."
 
@@ -917,7 +918,7 @@ msgctxt "verb"
 msgid "Sign in"
 msgstr "Sign in"
 
-#. placeholder {0}: session.account.name ?? getAccountHandle(session.account) ?? session.account.sub
+#. placeholder {0}: session.account.name ?? stringifyAccountHandle(session.account) ?? session.account.sub
 #: src/components/sign-in-picker.tsx:59
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"
@@ -1067,11 +1068,11 @@ msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Towards"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:150
+#: src/components/forms/input-handle-custom-instructions.tsx:151
 msgid "Troubleshoot"
 msgstr "Troubleshoot"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:57
+#: src/components/forms/input-handle-custom-instructions.tsx:58
 msgid "Type"
 msgstr "Type"
 
@@ -1119,7 +1120,7 @@ msgstr "Update your username to a domain name you own to self-verify your identi
 msgid "Upload files"
 msgstr "Upload files"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:68
+#: src/components/forms/input-handle-custom-instructions.tsx:69
 msgid "URL"
 msgstr "URL"
 
@@ -1143,11 +1144,11 @@ msgstr "Username or email address"
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/forms/input-handle-default.tsx:244
+#: src/components/forms/input-handle-default.tsx:249
 msgid "Valid"
 msgstr "Valid"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:58
+#: src/components/forms/input-handle-custom-instructions.tsx:59
 msgid "Value"
 msgstr "Value"
 
@@ -1160,7 +1161,7 @@ msgstr "Verification code"
 msgid "Verification email sent"
 msgstr "Verification email sent"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:116
+#: src/components/forms/input-handle-custom-instructions.tsx:117
 msgid "Verification method"
 msgstr "Verification method"
 
@@ -1275,8 +1276,8 @@ msgstr "Your email address has been verified."
 msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
-#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
-#: src/components/forms/input-handle-default.tsx:183
+#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#: src/components/forms/input-handle-default.tsx:184
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 

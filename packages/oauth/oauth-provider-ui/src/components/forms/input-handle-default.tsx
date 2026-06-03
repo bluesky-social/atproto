@@ -180,14 +180,19 @@ export function InputHandleDefault({
           )
         }
       >
-        <Trans>
-          Your full username will be:{' '}
-          {handle ? (
-            <Handle className="text-text-default" handle={handle} />
-          ) : (
-            <span aria-hidden className="bg-text-light w-24 rounded-md p-2" />
-          )}
-        </Trans>
+        <span className="truncate">
+          <Trans>
+            Your full username will be:{' '}
+            {handle ? (
+              <Handle className="text-text-default" handle={handle} />
+            ) : (
+              <span
+                aria-hidden
+                className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle"
+              />
+            )}
+          </Trans>
+        </span>
       </InputText>
     </>
   )

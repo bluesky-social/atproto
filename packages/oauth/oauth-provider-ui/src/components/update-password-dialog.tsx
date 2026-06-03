@@ -3,9 +3,10 @@ import { ReactNode, useEffect, useState } from 'react'
 import { ButtonRequestCode } from '#/components/forms/button-request-code'
 import { Button } from '#/components/forms/button.tsx'
 import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-form.tsx'
-import { DialogSimple } from './dialog-simple.tsx'
+import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 
 export type UpdatePasswordDialogProps = {
+  email: string
   requestPending?: boolean
   confirmPending?: boolean
   onRequest: () => void | PromiseLike<void>
@@ -22,6 +23,7 @@ enum UpdatePasswordDialogState {
 }
 
 export function UpdatePasswordDialog({
+  email,
   requestPending,
   confirmPending,
   onRequest,
@@ -77,6 +79,7 @@ export function UpdatePasswordDialog({
         </div>
       ) : (
         <ResetPasswordConfirmForm
+          email={email}
           disabled={confirmPending}
           onLoadingChange={setConfirmSubmitting}
           handler={async (data) => {

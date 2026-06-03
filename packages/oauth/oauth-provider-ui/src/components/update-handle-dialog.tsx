@@ -1,11 +1,11 @@
 import { Trans } from '@lingui/react/macro'
 import { ReactNode, useEffect, useState } from 'react'
 import { HandleString } from '@atproto/syntax'
-import { DialogSimple } from './dialog-simple.tsx'
-import { Button } from './forms/button.tsx'
+import { Button } from '#/components/forms/button.tsx'
+import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { LinkExternal } from '#/components/utils/link-external.tsx'
 import { UpdateHandleCustomForm } from './update-handle-custom-form.tsx'
 import { UpdateHandleDefaultForm } from './update-handle-default-form.tsx'
-import { LinkExternal } from './utils/link-external.tsx'
 
 export type UpdateHandleDialogProps = {
   children: Exclude<ReactNode, false | null | undefined>

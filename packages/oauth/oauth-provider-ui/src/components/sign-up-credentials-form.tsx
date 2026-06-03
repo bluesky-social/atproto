@@ -56,6 +56,7 @@ export function SignUpCredentialsForm({
           <FormField label={<Trans>Email</Trans>}>
             <InputEmailAddress
               autoFocus={!inviteCodeRequired}
+              autoComplete="username email"
               name="email"
               enterKeyHint="next"
               required

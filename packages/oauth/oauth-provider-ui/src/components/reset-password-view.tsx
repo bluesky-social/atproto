@@ -30,6 +30,7 @@ export function ResetPasswordView({
 }: ResetPasswordViewProps) {
   const { t } = useLingui()
   const [view, setView] = useState<View>(View.RequestReset)
+  const [email, setEmail] = useState(emailDefault)
 
   if (view === View.RequestReset) {
     return (
@@ -49,6 +50,7 @@ export function ResetPasswordView({
           submitLabel={<Trans>Next</Trans>}
           handler={async (data) => {
             await onResetPasswordRequest(data)
+            setEmail(data.email)
             setView(View.ConfirmReset)
           }}
           onBack={onBack}
@@ -79,6 +81,7 @@ export function ResetPasswordView({
         </p>
 
         <ResetPasswordConfirmForm
+          email={email}
           submitLabel={<Trans>Next</Trans>}
           handler={async (data) => {
             await onResetPasswordConfirm(data)

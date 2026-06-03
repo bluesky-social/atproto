@@ -11,9 +11,14 @@ export type ResetPasswordConfirmData = {
 }
 
 export type ResetPasswordConfirmFormProps =
-  WrappedSmartFormProps<ResetPasswordConfirmData>
+  WrappedSmartFormProps<ResetPasswordConfirmData> & {
+    email?: string
+  }
 
-export function ResetPasswordConfirmForm(props: ResetPasswordConfirmFormProps) {
+export function ResetPasswordConfirmForm({
+  email,
+  ...props
+}: ResetPasswordConfirmFormProps) {
   const passwordRef = useRef<HTMLInputElement>(null)
   return (
     <SmartForm
@@ -24,6 +29,20 @@ export function ResetPasswordConfirmForm(props: ResetPasswordConfirmFormProps) {
       fields={({ values, set, setterFor }) => {
         return (
           <>
+            {email && (
+              // For better password managers integration, we include a hidden
+              // username field with the email pre-filled. This allows password
+              // managers to associate the reset token and new password with the
+              // correct account.
+              <input
+                type="text"
+                autoComplete="username"
+                value={email}
+                readOnly
+                hidden
+              />
+            )}
+
             <FormField label={<Trans>Reset code</Trans>}>
               <InputToken
                 name="code"

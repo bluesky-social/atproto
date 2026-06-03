@@ -1,14 +1,15 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon, WarningIcon } from '@phosphor-icons/react'
+import { clsx } from 'clsx'
 import { JSX } from 'react'
 import { isValidHandle } from '@atproto/syntax'
-import { Override } from '#/lib/util'
+import { Override } from '#/lib/util.ts'
 
 export function isInvalidHandle(handle: string): boolean {
   return handle === 'handle.invalid' || !isValidHandle(handle)
 }
 
-export function sanitizeHandle(handle?: string): string | undefined {
+export function stringifyHandle(handle?: string): string | undefined {
   if (!handle) return undefined
   return isInvalidHandle(handle)
     ? '⚠Invalid Handle'
@@ -29,24 +30,27 @@ export function Handle({
 
   // span
   'aria-label': ariaLabel,
+  className,
   ...props
 }: HandleProps) {
   const { t } = useLingui()
   if (!handle) return undefined
 
+  const isInvalid = isInvalidHandle(handle)
+  const Icon = isInvalid ? WarningIcon : AtIcon
+
+  // @NOTE We use icons here so that selecting the handle text (or checking in
+  // tests) ignores the "⚠"/"@" prefix, which are only meant to be visual
+  // indicators for the handle.
   return (
-    <span {...props} aria-label={ariaLabel ?? t`Account username`}>
-      {isInvalidHandle(handle) ? (
-        <>
-          <WarningIcon weight="bold" className="inline-block" aria-hidden />
-          <Trans>Invalid Handle</Trans>
-        </>
-      ) : (
-        <>
-          <AtIcon weight="bold" className="inline-block" aria-hidden />
-          {handle}
-        </>
-      )}
+    <span
+      {...props}
+      className={clsx({ 'whitespace-nowrap': !isInvalid }, className)}
+      aria-label={ariaLabel ?? t`Account username`}
+      title={props.title ?? (isInvalid ? undefined : handle)}
+    >
+      <Icon weight="bold" className="inline-block" aria-hidden />
+      {isInvalid ? <Trans>Invalid Handle</Trans> : handle}
     </span>
   )
 }

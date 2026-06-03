@@ -34,6 +34,7 @@ export function SignUpHandleForm({
             required
             autoFocus
             enterKeyHint="done"
+            autoComplete="nickname"
           />
 
           <Admonition role="note">

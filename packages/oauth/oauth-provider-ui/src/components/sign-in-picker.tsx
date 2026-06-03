@@ -7,7 +7,7 @@ import { Override } from '#/lib/util.ts'
 import { Button } from './forms/button.tsx'
 import { InputContainer } from './forms/input-container.tsx'
 import { AccountCard } from './utils/account-card.tsx'
-import { getAccountHandle } from './utils/account-handle.tsx'
+import { stringifyAccountHandle } from './utils/account-handle.tsx'
 
 export type SignInPickerProps = Override<
   JSX.IntrinsicElements['div'],
@@ -56,7 +56,7 @@ export function SignInPicker({
 
             onSession(session)
           }}
-          aria-label={t`Sign in as ${session.account.name ?? getAccountHandle(session.account) ?? session.account.sub}`}
+          aria-label={t`Sign in as ${session.account.name ?? stringifyAccountHandle(session.account) ?? session.account.sub}`}
         />
       ))}
 

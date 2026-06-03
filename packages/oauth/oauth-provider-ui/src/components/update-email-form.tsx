@@ -34,9 +34,24 @@ export function UpdateEmailForm({
       }}
       fields={({ values, set }) => (
         <>
+          {emailCurrent && (
+            // @NOTE For better password managers integration, we include a
+            // hidden username field with the current email pre-filled.
+            <>
+              <input type="password" autoComplete="current-password" hidden />
+              <input
+                type="email"
+                autoComplete="username"
+                value={emailCurrent}
+                readOnly
+                hidden
+              />
+            </>
+          )}
+
           <FormField label={<Trans>New email address</Trans>}>
             <InputEmailAddress
-              name="email"
+              name="newEmail"
               required
               autoFocus
               defaultValue={values.email}
