@@ -382,4 +382,47 @@ describe('pds posts views', () => {
     expect(data.posts.length).toBe(1)
     expect(forSnapshot(data.posts[0])).toMatchSnapshot()
   })
+
+  it('truncates gallery view to soft limit of 10 items.', async () => {
+    const img = await sc.uploadFile(
+      sc.dids.alice,
+      '../dev-env/assets/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const items: AppBskyEmbedGallery.Main['items'] = Array.from(
+      { length: 11 },
+      (_, i) => ({
+        $type: 'app.bsky.embed.gallery#image',
+        image: img.image,
+        alt: `item ${i}`,
+        aspectRatio: { width: 4, height: 3 },
+      }),
+    )
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      {
+        text: 'oversize gallery',
+        createdAt: new Date().toISOString(),
+        embed: {
+          $type: 'app.bsky.embed.gallery',
+          items,
+        } satisfies AppBskyEmbedGallery.Main,
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+    const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
+    expect(data.posts.length).toBe(1)
+    const embed = data.posts[0].embed
+    if (!embed || !AppBskyEmbedGallery.isView(embed)) {
+      throw new Error('expected gallery view')
+    }
+    expect(embed.items).toHaveLength(10)
+    // Verify the AppView keeps the head of the items list (not the tail).
+    embed.items.forEach((item, i) => {
+      if (AppBskyEmbedGallery.isViewImage(item)) {
+        expect(item.alt).toBe(`item ${i}`)
+      }
+    })
+  })
 })
