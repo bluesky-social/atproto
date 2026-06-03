@@ -5,4 +5,4 @@
 '@atproto/pds': patch
 ---
 
-Add ability to change the user handle through the accont manager interface
+Add ability to change the user handle through the account manager interface
