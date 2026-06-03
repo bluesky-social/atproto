@@ -14,7 +14,6 @@ import { SignInView } from '#/components/sign-in-view.tsx'
 import { SignUpView } from '#/components/sign-up-view.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { Session, useSessionContext } from '#/contexts/session.tsx'
-import { useCurrentLocale } from '#/locales/locale-provider'
 
 enum View {
   Welcome,
@@ -54,7 +53,6 @@ export function AuthenticationProvider({
   onCancel,
   children,
 }: AuthenticationProviderProps): ReactNode {
-  const locale = useCurrentLocale()
   const { availableUserDomains } = useCustomizationData()
   const canSignUp = Boolean(availableUserDomains?.length)
 
@@ -141,12 +139,12 @@ export function AuthenticationProvider({
     if (view === View.SignUp) {
       return (
         <SignUpView
-          onValidateNewHandle={async (data) => {
-            await api.validateHandleAvailability(data)
-          }}
+          onValidateNewHandle={async (data) =>
+            api.validateHandleAvailability(data)
+          }
           onBack={showHome}
           onDone={async (data) => {
-            await api.signUp({ ...data, locale })
+            await api.signUp(data)
             showHome()
           }}
         />
@@ -157,12 +155,12 @@ export function AuthenticationProvider({
       return (
         <ResetPasswordView
           emailDefault={resetPasswordHint}
-          onResetPasswordRequest={async (data) => {
-            await api.initiatePasswordReset({ ...data, locale })
-          }}
-          onResetPasswordConfirm={async (data) => {
-            await api.confirmResetPassword(data)
-          }}
+          onResetPasswordRequest={async (data) =>
+            api.initiatePasswordReset(data)
+          }
+          onResetPasswordConfirm={async (data) =>
+            api.confirmResetPassword(data)
+          }
           onBack={showSignIn}
         />
       )
@@ -176,7 +174,7 @@ export function AuthenticationProvider({
         session={session}
         setSession={setSession}
         onSignIn={async (data) => {
-          await api.signIn({ ...data, locale })
+          await api.signIn(data)
         }}
         onSignUp={showSignUpIfAllowed}
         onBack={homeView === View.SignIn ? onCancel : showHome}

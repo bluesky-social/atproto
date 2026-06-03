@@ -76,6 +76,16 @@ Phosphor icons are typed as `Icon` (the exported type), not `ComponentType<IconP
 - The `disabled:hover:bg-transparent` / `disabled:cursor-default` pair is the convention for non-interactive button rows.
 - `text-text-default` / `text-text-light` and `border-contrast-25` / `border-contrast-50` are the tokens — don't introduce raw slate/gray utilities for content.
 
+## API client ([src/lib/api.ts](src/lib/api.ts))
+
+`Api` extends `JsonClient<ApiEndpoints>` and is the single seam between the UI and the OAuth provider's `~api` endpoints. Three rules apply when adding or modifying an endpoint:
+
+1. **One method per endpoint.** Every endpoint gets its own `async` method on `Api` — pages and `data/*` hooks never call `this.fetch` directly. The method takes the typed input as the first argument and an optional `options?: Options` (for `AbortSignal`, etc.) as the second, forwarded to `this.fetch(method, path, body, options)`.
+
+2. **Destructure and rebuild the payload.** Pull each field out of the input by name and pass a fresh object literal to `fetch` — never spread the input. Inputs are typed against `@atproto/oauth-provider-api` and callers may pass values that _extend_ the declared type (extra UI-only fields, derived state); spreading would forward those over the wire and the server would reject them. For inputs with a `locale` field, wrap the type in `WithOptionalLocale<T>` and default to `this.locale` during destructuring (`locale = this.locale`) so callers can omit it.
+
+3. **Register expected error payloads in `parseError`.** When the server adds a new typed error response, define the payload type and an `OAuthErrorResponse` subclass with a static `is(json)` discriminator alongside the existing ones, then add add it to the list of Error classes in the `parseError` method.
+
 ## Linting quirks
 
 - ESLint requires unused vars/args to match `/^_/u`. Drop the destructure rather than prefixing with `_` when the prop is genuinely unused.

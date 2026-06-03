@@ -272,7 +272,7 @@ export class OAuthStore
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await this.accountManager.getAccountByEmail(
+    const accountRow = await this.accountManager.getAccount(
       // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
       asAtIdentifierString(sub),
       {

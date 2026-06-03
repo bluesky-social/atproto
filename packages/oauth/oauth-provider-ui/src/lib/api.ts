@@ -1,9 +1,20 @@
+import { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
 import {
+  AccountSessionsInput,
   type ApiEndpoints,
+  ConfirmEmailUpdateInput,
+  ConfirmEmailVerificationInput,
   type ConfirmResetPasswordInput,
   type HandleUnavailableReason,
+  InitiateEmailUpdateInput,
+  InitiateEmailVerificationInput,
   type InitiatePasswordResetInput,
+  OAuthSessionsInput,
+  RevokeAccountSessionInput,
+  RevokeOAuthSessionInput,
   type SignInInput,
+  SignOutInput,
   type SignUpInput,
   type UpdateHandleInput,
   type VerifyHandleAvailabilityInput,
@@ -11,10 +22,11 @@ import {
 } from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
 import {
+  Json,
   JsonClient,
   JsonClientOptions,
-  JsonErrorPayload,
   JsonErrorResponse,
+  Options,
 } from './json-client.ts'
 
 export type { Options } from './json-client.ts'
@@ -23,138 +35,404 @@ const CSRF_HEADER_NAME = 'x-csrf-token'
 
 const API_ENDPOINT_PREFIX = '/@atproto/oauth-provider/~api'
 
-export type ApiOptions = JsonClientOptions<ApiEndpoints>
+export type ApiOptions = JsonClientOptions<ApiEndpoints> & {
+  locale: string
+}
+
+export type WithOptionalLocale<T extends { locale?: unknown }> = Omit<
+  T,
+  'locale'
+> & { locale?: T['locale'] }
 
 export class Api extends JsonClient<ApiEndpoints> {
-  constructor(options: ApiOptions = {}) {
+  locale: string
+
+  constructor(options: ApiOptions) {
     const baseUrl = new URL(API_ENDPOINT_PREFIX, window.origin).toString()
     super(baseUrl, {
       ...options,
       headers: async function () {
-        const optionsHeaders = await options?.headers?.call(this)
+        const headers = new Headers(await options?.headers?.call(this))
         const csrfToken = readCookie(CSRF_COOKIE_NAME)
-        return { ...optionsHeaders, [CSRF_HEADER_NAME]: csrfToken }
+        if (csrfToken) headers.set(CSRF_HEADER_NAME, csrfToken)
+        return headers
       },
     })
+    this.locale = options.locale
   }
 
-  async signIn(data: SignInInput) {
-    return this.fetch('POST', '/sign-in', data)
+  async signIn(
+    {
+      username,
+      password,
+      emailOtp,
+      remember,
+      locale = this.locale,
+    }: WithOptionalLocale<SignInInput>,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/sign-in',
+      { username, password, emailOtp, remember, locale },
+      options,
+    )
   }
 
-  async initiatePasswordReset(data: InitiatePasswordResetInput) {
-    return this.fetch('POST', '/reset-password-request', data)
+  async initiatePasswordReset(
+    {
+      email,
+      locale = this.locale,
+    }: WithOptionalLocale<InitiatePasswordResetInput>,
+    options?: Options,
+  ) {
+    await this.fetch(
+      'POST',
+      '/reset-password-request',
+      { email, locale },
+      options,
+    )
   }
 
-  async confirmResetPassword(data: ConfirmResetPasswordInput) {
-    return this.fetch('POST', '/reset-password-confirm', data)
+  // Account sessions
+
+  async accountSessions({ sub }: AccountSessionsInput, options?: Options) {
+    return this.fetch('GET', '/account-sessions', { sub }, options)
   }
 
-  async validateHandleAvailability(data: VerifyHandleAvailabilityInput) {
-    return this.fetch('POST', '/verify-handle-availability', data)
+  async revokeAccountSession(
+    { sub, deviceId }: RevokeAccountSessionInput,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/revoke-account-session',
+      { sub, deviceId },
+      options,
+    )
   }
 
-  async updateHandle(data: UpdateHandleInput) {
-    return this.fetch('POST', '/update-handle', data)
+  // OAuth sessions
+
+  async oauthSessions({ sub }: OAuthSessionsInput, options?: Options) {
+    return this.fetch('GET', '/oauth-sessions', { sub }, options)
   }
 
-  async signUp(data: SignUpInput) {
-    return this.fetch('POST', '/sign-up', data)
+  async revokeOAuthSession(
+    { sub, tokenId }: RevokeOAuthSessionInput,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/revoke-oauth-session',
+      { sub, tokenId },
+      options,
+    )
   }
 
-  async signOut(sub: string | string[]) {
-    return this.fetch('POST', '/sign-out', { sub })
+  //
+
+  async confirmResetPassword(
+    { token, password }: ConfirmResetPasswordInput,
+    options?: Options,
+  ) {
+    await this.fetch(
+      'POST',
+      '/reset-password-confirm',
+      { token, password },
+      options,
+    )
   }
 
-  async consent(sub: string, scope?: string) {
-    return this.fetch('POST', '/consent', { sub, scope })
+  async validateHandleAvailability(
+    { handle }: VerifyHandleAvailabilityInput,
+    options?: Options,
+  ) {
+    await this.fetch('POST', '/verify-handle-availability', { handle }, options)
   }
 
-  async reject() {
-    return this.fetch('POST', '/reject', {})
+  async updateEmailRequest(
+    { sub, locale = this.locale }: WithOptionalLocale<InitiateEmailUpdateInput>,
+    options?: Options,
+  ) {
+    return this.fetch('POST', '/update-email-request', { sub, locale }, options)
+  }
+
+  async updateEmailConfirm(
+    {
+      sub,
+      token,
+      email,
+      locale = this.locale,
+    }: WithOptionalLocale<ConfirmEmailUpdateInput>,
+    options?: Options,
+  ) {
+    await this.fetch(
+      'POST',
+      '/update-email-confirm',
+      { sub, token, email, locale },
+      options,
+    )
+  }
+
+  async verifyEmailRequest(
+    {
+      sub,
+      locale = this.locale,
+    }: WithOptionalLocale<InitiateEmailVerificationInput>,
+    options?: Options,
+  ) {
+    await this.fetch('POST', '/verify-email-request', { sub, locale }, options)
+  }
+
+  async verifyEmailConfirm(
+    { sub, token, email }: ConfirmEmailVerificationInput,
+    options?: Options,
+  ) {
+    await this.fetch(
+      'POST',
+      '/verify-email-confirm',
+      { sub, token, email },
+      options,
+    )
+  }
+
+  async updateHandle({ sub, handle }: UpdateHandleInput, options?: Options) {
+    return this.fetch('POST', '/update-handle', { sub, handle }, options)
+  }
+
+  async signUp(
+    {
+      locale = this.locale,
+      handle,
+      email,
+      password,
+      inviteCode,
+      hcaptchaToken,
+    }: WithOptionalLocale<SignUpInput>,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/sign-up',
+      { locale, handle, email, password, inviteCode, hcaptchaToken },
+      options,
+    )
+  }
+
+  async signOut({ sub }: SignOutInput, options?: Options) {
+    return this.fetch('POST', '/sign-out', { sub }, options)
+  }
+
+  async consent(sub: string, scope?: string, options?: Options) {
+    return this.fetch('POST', '/consent', { sub, scope }, options)
+  }
+
+  async reject(options?: Options) {
+    return this.fetch('POST', '/reject', {}, options)
   }
 
   // and transform them into instances of the corresponding error classes.
-  public static override parseError(
-    json: unknown,
-  ): undefined | JsonErrorResponse {
-    // @NOTE Most specific errors first !
-    if (UnauthorizedError.is(json)) {
-      return new UnauthorizedError(json)
+  protected override parseError(response: Response, payload: Json): Error {
+    if (isOAuthErrorPayload(payload)) {
+      for (const ErrorClass of [
+        // @NOTE Most specific errors must come first!
+        SecondAuthenticationFactorRequiredError,
+        InvalidCredentialsError,
+        InvalidInviteCodeError,
+        HandleUnavailableError,
+        EmailTakenError,
+        UnknownRequestUriError,
+        RequestExpiredError,
+        UnauthorizedError,
+        InvalidRequestError,
+        AccessDeniedError,
+      ] as Array<{
+        is(payload: OAuthErrorPayload): boolean
+        new (payload: any): Error
+      }>) {
+        if (ErrorClass.is(payload)) {
+          return new ErrorClass(payload)
+        }
+      }
+
+      return new OAuthErrorResponse(payload)
     }
-    if (SecondAuthenticationFactorRequiredError.is(json)) {
-      return new SecondAuthenticationFactorRequiredError(json)
-    }
-    if (InvalidCredentialsError.is(json)) {
-      return new InvalidCredentialsError(json)
-    }
-    if (InvalidInviteCodeError.is(json)) {
-      return new InvalidInviteCodeError(json)
-    }
-    if (HandleUnavailableError.is(json)) {
-      return new HandleUnavailableError(json)
-    }
-    if (EmailTakenError.is(json)) {
-      return new EmailTakenError(json)
-    }
-    if (RequestExpiredError.is(json)) {
-      return new RequestExpiredError(json)
-    }
-    if (UnknownRequestUriError.is(json)) {
-      return new UnknownRequestUriError(json)
-    }
-    if (InvalidRequestError.is(json)) {
-      return new InvalidRequestError(json)
-    }
-    if (AccessDeniedError.is(json)) {
-      return new AccessDeniedError(json)
-    }
-    return super.parseError(json)
+
+    return super.parseError(response, payload)
   }
 }
 
-export type UnauthorizedPayload = JsonErrorPayload<'unauthorized'>
+export type OAuthErrorPayload<E extends string = string> = {
+  error: E
+  error_description?: string
+} & Record<string, Json>
+
+export function isOAuthErrorPayload<E extends string = string>(
+  json: unknown,
+  error: E,
+): json is OAuthErrorPayload<E>
+export function isOAuthErrorPayload(json: unknown): json is OAuthErrorPayload
+export function isOAuthErrorPayload(json: unknown, error?: string): boolean {
+  return (
+    json != null &&
+    typeof json === 'object' &&
+    typeof json['error'] === 'string' &&
+    (error === undefined || json['error'] === error) &&
+    (json['error_description'] === undefined ||
+      typeof json['error_description'] === 'string')
+  )
+}
+
+export class OAuthErrorResponse<
+  P extends OAuthErrorPayload = OAuthErrorPayload,
+> extends JsonErrorResponse<P> {
+  name = 'OAuthErrorResponse'
+
+  constructor(
+    payload: P,
+    message = payload.error_description,
+    options?: ErrorOptions,
+  ) {
+    super(payload, message || `OAuth Error "${payload.error}"`, options)
+    this.msg = OAuthErrorResponse.getMessageForError(payload.error)
+  }
+
+  protected static getMessageForError(error: string): MessageDescriptor {
+    switch (error) {
+      // @NOTE This only needs value that are not already covered by more
+      // specific error classes with their own messages (e.g.
+      // InvalidCredentialsError). The base OAuthErrorResponse message is a
+      // generic fallback for any unrecognized error codes.
+      case 'server_error':
+        return msg`The server encountered an unexpected error. Please try again.`
+      default:
+        return msg`An unexpected error occurred. Please try again.`
+    }
+  }
+}
+
+export type UnauthorizedPayload = OAuthErrorPayload<'unauthorized'>
 export class UnauthorizedError<
   P extends UnauthorizedPayload = UnauthorizedPayload,
-> extends JsonErrorResponse<P> {
+> extends OAuthErrorResponse<P> {
+  override msg = msg`This sign-in session has expired`
+
   constructor(payload: P) {
     super(payload, payload.error_description || 'Unauthorized')
   }
 
-  static is(json: unknown): json is UnauthorizedPayload {
-    return super.is(json) && json.error === 'unauthorized'
+  static is(json: OAuthErrorPayload): json is UnauthorizedPayload {
+    return json.error === 'unauthorized'
   }
 }
 
-export type AccessDeniedPayload = JsonErrorPayload<'access_denied'>
+export type AccessDeniedPayload = OAuthErrorPayload<'access_denied'>
 export class AccessDeniedError<
   P extends AccessDeniedPayload = AccessDeniedPayload,
-> extends JsonErrorResponse<P> {
-  constructor(
-    payload: P,
-    message = payload.error_description || 'Access denied',
-  ) {
-    super(payload, message)
+> extends OAuthErrorResponse<P> {
+  override msg = msg`This authorization request has been denied. Please try again.`
+
+  constructor(payload: P, message = payload.error_description) {
+    super(payload, message || 'Access denied')
   }
 
-  static is(json: unknown): json is AccessDeniedPayload {
-    return super.is(json) && json.error === 'access_denied'
+  static is(json: OAuthErrorPayload): json is AccessDeniedPayload {
+    return json.error === 'access_denied'
   }
 }
 
-export type InvalidRequestPayload = JsonErrorPayload<'invalid_request'>
+export type InvalidRequestPayload = OAuthErrorPayload<'invalid_request'>
 export class InvalidRequestError<
   P extends InvalidRequestPayload = InvalidRequestPayload,
-> extends JsonErrorResponse<P> {
-  constructor(
-    payload: P,
-    message = payload.error_description || 'Invalid request',
-  ) {
-    super(payload, message)
+> extends OAuthErrorResponse<P> {
+  override msg = msg`The data you submitted is invalid. Please check the form and try again.`
+
+  constructor(payload: P, message = payload.error_description) {
+    super(payload, message || 'Invalid request')
   }
 
-  static is(json: unknown): json is InvalidRequestPayload {
-    return super.is(json) && json.error === 'invalid_request'
+  static is(json: OAuthErrorPayload): json is InvalidRequestPayload {
+    return json.error === 'invalid_request'
+  }
+}
+
+export type HandleUnavailablePayload =
+  OAuthErrorPayload<'handle_unavailable'> & {
+    reason: HandleUnavailableReason
+  }
+export class HandleUnavailableError<
+  P extends HandleUnavailablePayload = HandleUnavailablePayload,
+> extends OAuthErrorResponse<P> {
+  constructor(payload: P, message = payload.error_description) {
+    super(payload, message || 'Handle unavailable')
+    this.msg = HandleUnavailableError.getMessageForReason(payload.reason)
+  }
+
+  static getMessageForReason(
+    reason: HandleUnavailableReason,
+  ): MessageDescriptor {
+    switch (reason) {
+      case 'syntax':
+        return msg`The username is invalid`
+      case 'domain':
+        return msg`The domain name is not allowed`
+      case 'slur':
+        return msg`The username contains inappropriate language`
+      case 'reserved':
+        return msg`This username is reserved`
+      case 'taken':
+        return msg`The username is already in use`
+      case 'resolution':
+        return msg`The username could not be resolved`
+    }
+  }
+
+  static is(json: OAuthErrorPayload): json is HandleUnavailablePayload {
+    return (
+      json.error === 'handle_unavailable' &&
+      isHandleUnavailableReason(json['reason'])
+    )
+  }
+}
+
+export const SECOND_AUTH_FACTOR_TYPES = Object.freeze(['emailOtp'] as const)
+export type SecondAuthFactorType = (typeof SECOND_AUTH_FACTOR_TYPES)[number]
+export const isSecondAuthFactorType = (
+  value: unknown,
+): value is SecondAuthFactorType =>
+  (SECOND_AUTH_FACTOR_TYPES as readonly unknown[]).includes(value)
+
+export type SecondAuthenticationFactorRequiredPayload =
+  OAuthErrorPayload<'second_authentication_factor_required'> & {
+    type: SecondAuthFactorType
+    hint: string
+  }
+export class SecondAuthenticationFactorRequiredError<
+  P extends
+    SecondAuthenticationFactorRequiredPayload = SecondAuthenticationFactorRequiredPayload,
+> extends OAuthErrorResponse<P> {
+  constructor(payload: P, message = payload.error_description) {
+    const { type, hint } = payload
+    super(payload, message || `${type} auth factor required (hint: ${hint})`)
+    this.msg = msg`A second authentication factor is required (${hint})`
+  }
+
+  get type() {
+    return this.payload.type
+  }
+  get hint() {
+    return this.payload.hint
+  }
+
+  static is(
+    json: OAuthErrorPayload,
+  ): json is SecondAuthenticationFactorRequiredPayload {
+    return (
+      json.error === 'second_authentication_factor_required' &&
+      isSecondAuthFactorType(json['type']) &&
+      typeof json['hint'] === 'string'
+    )
   }
 }
 
@@ -164,11 +442,13 @@ export type InvalidInviteCodePayload = InvalidRequestPayload & {
 export class InvalidInviteCodeError<
   P extends InvalidInviteCodePayload = InvalidInviteCodePayload,
 > extends InvalidRequestError<P> {
+  msg = msg`The invite code is not valid`
+
   constructor(payload: P) {
     super(payload)
   }
 
-  static is(json: unknown): json is InvalidInviteCodePayload {
+  static is(json: OAuthErrorPayload): json is InvalidInviteCodePayload {
     return (
       super.is(json) &&
       json.error_description != null &&
@@ -183,7 +463,9 @@ export type RequestExpiredPayload = AccessDeniedPayload & {
 export class RequestExpiredError<
   P extends RequestExpiredPayload = RequestExpiredPayload,
 > extends AccessDeniedError<P> {
-  static is(json: unknown): json is RequestExpiredPayload {
+  override msg = msg`This sign-in session has expired`
+
+  static is(json: OAuthErrorPayload): json is RequestExpiredPayload {
     return (
       super.is(json) && json.error_description === 'This request has expired'
     )
@@ -196,7 +478,9 @@ export type InvalidCredentialsPayload = InvalidRequestPayload & {
 export class InvalidCredentialsError<
   P extends InvalidCredentialsPayload = InvalidCredentialsPayload,
 > extends InvalidRequestError<P> {
-  static is(json: unknown): json is InvalidCredentialsPayload {
+  override msg = msg`Wrong identifier or password`
+
+  static is(json: OAuthErrorPayload): json is InvalidCredentialsPayload {
     return (
       super.is(json) &&
       json.error_description === 'Invalid identifier or password'
@@ -210,7 +494,9 @@ export type UnknownRequestPayload = InvalidRequestPayload & {
 export class UnknownRequestUriError<
   P extends UnknownRequestPayload = UnknownRequestPayload,
 > extends InvalidRequestError<P> {
-  static is(json: unknown): json is UnknownRequestPayload {
+  override msg = msg`This sign-in session has expired`
+
+  static is(json: OAuthErrorPayload): json is UnknownRequestPayload {
     return super.is(json) && json.error_description === 'Unknown request_uri'
   }
 }
@@ -220,71 +506,9 @@ export type EmailTakenPayload = InvalidRequestPayload & {
 export class EmailTakenError<
   P extends EmailTakenPayload = EmailTakenPayload,
 > extends InvalidRequestError<P> {
-  static is(json: unknown): json is EmailTakenPayload {
+  override msg = msg`This email is already used`
+
+  static is(json: OAuthErrorPayload): json is EmailTakenPayload {
     return super.is(json) && json.error_description === 'Email already taken'
-  }
-}
-
-export type HandleUnavailablePayload =
-  JsonErrorPayload<'handle_unavailable'> & {
-    reason: HandleUnavailableReason
-  }
-export class HandleUnavailableError<
-  P extends HandleUnavailablePayload = HandleUnavailablePayload,
-> extends JsonErrorResponse<P> {
-  constructor(
-    payload: P,
-    message = payload.error_description || 'That handle cannot be used',
-  ) {
-    super(payload, message)
-  }
-
-  get reason() {
-    return this.payload.reason
-  }
-
-  static is(json: unknown): json is HandleUnavailablePayload {
-    return (
-      super.is(json) &&
-      json.error === 'handle_unavailable' &&
-      'reason' in json &&
-      isHandleUnavailableReason(json.reason)
-    )
-  }
-}
-
-export type SecondAuthenticationFactorRequiredPayload =
-  JsonErrorPayload<'second_authentication_factor_required'> & {
-    type: 'emailOtp'
-    hint: string
-  }
-export class SecondAuthenticationFactorRequiredError<
-  P extends
-    SecondAuthenticationFactorRequiredPayload = SecondAuthenticationFactorRequiredPayload,
-> extends JsonErrorResponse<P> {
-  constructor(
-    payload: P,
-    message = payload.error_description ||
-      `${payload.type} authentication factor required (hint: ${payload.hint})`,
-  ) {
-    super(payload, message)
-  }
-
-  get type() {
-    return this.payload.type
-  }
-  get hint() {
-    return this.payload.hint
-  }
-
-  static is(json: unknown): json is SecondAuthenticationFactorRequiredPayload {
-    return (
-      super.is(json) &&
-      json.error === 'second_authentication_factor_required' &&
-      'type' in json &&
-      json.type === 'emailOtp' &&
-      'hint' in json &&
-      typeof json.hint === 'string'
-    )
   }
 }

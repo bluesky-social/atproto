@@ -11,6 +11,7 @@ import { useErrorBoundary } from 'react-error-boundary'
 import type { Account, Session } from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
 import { upsert } from '#/lib/util.ts'
+import { useCurrentLocale } from '#/locales/locale-provider.jsx'
 import { useNotificationsContext } from './notifications.js'
 
 export type { Session }
@@ -47,6 +48,7 @@ export function SessionProvider({
   initialSelected,
 }: SessionProviderProps) {
   const { t } = useLingui()
+  const locale = useCurrentLocale()
   const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
   const { notify } = useNotificationsContext()
   const [current, setCurrent] = useState(() => {
@@ -143,6 +145,7 @@ export function SessionProvider({
 
   const api = useMemo(() => {
     return new Api({
+      locale,
       onFetchError(err) {
         if (err instanceof UnknownRequestUriError) showBoundary(err)
         if (err instanceof UnauthorizedError) {
@@ -157,8 +160,8 @@ export function SessionProvider({
         throw err
       },
       onFetchSuccess: {
-        '/sign-in': ({ json }) => upsertSession(json),
-        '/sign-up': ({ json }) => upsertSession(json),
+        '/sign-in': ({ payload }) => upsertSession(payload),
+        '/sign-up': ({ payload }) => upsertSession(payload),
         '/sign-out': ({ input }) => removeSession(input.sub),
         '/update-email-confirm': ({ input }) =>
           updateAccount(input.sub, {
@@ -181,6 +184,7 @@ export function SessionProvider({
         : undefined,
     })
   }, [
+    locale,
     session,
     showBoundary,
     removeSession,

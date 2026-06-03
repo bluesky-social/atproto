@@ -2,7 +2,6 @@ import { createRoute, useRouter } from '@tanstack/react-router'
 import { ErrorView } from '#/components/error-view'
 import { ResetPasswordView } from '#/components/reset-password-view'
 import { useSessionContext } from '#/contexts/session'
-import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 import { RootRoute } from '../../../route.tsx'
 
 export const Route = createRoute({
@@ -13,19 +12,14 @@ export const Route = createRoute({
 })
 
 export function Page() {
-  const locale = useCurrentLocale()
   const { api } = useSessionContext()
 
   const router = useRouter()
 
   return (
     <ResetPasswordView
-      onResetPasswordRequest={async (data) => {
-        await api.initiatePasswordReset({ ...data, locale })
-      }}
-      onResetPasswordConfirm={async (data) => {
-        await api.confirmResetPassword(data)
-      }}
+      onResetPasswordRequest={async (data) => api.initiatePasswordReset(data)}
+      onResetPasswordConfirm={async (data) => api.confirmResetPassword(data)}
       onBack={() => {
         // Try to send them back to wherever they came from
         window.history.back()

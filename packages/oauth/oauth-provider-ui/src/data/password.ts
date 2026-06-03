@@ -6,17 +6,16 @@ import {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
-import { useCurrentLocale } from '#/locales/locale-provider.tsx'
+import { WithOptionalLocale } from '#/lib/api.ts'
 
 export function useResetPasswordRequest() {
   const api = useApi()
   const { t } = useLingui()
   const { notify } = useNotificationsContext()
-  const locale = useCurrentLocale()
 
   return useMutation({
-    async mutationFn({ email }: Omit<InitiatePasswordResetInput, 'locale'>) {
-      return api.fetch('POST', '/reset-password-request', { locale, email })
+    async mutationFn(data: WithOptionalLocale<InitiatePasswordResetInput>) {
+      return api.initiatePasswordReset(data)
     },
     onSuccess(_data, _variables, _context) {
       notify({
@@ -42,8 +41,8 @@ export function useResetPasswordConfirm() {
   const { notify } = useNotificationsContext()
 
   return useMutation({
-    async mutationFn({ token, password }: ConfirmResetPasswordInput) {
-      return api.fetch('POST', '/reset-password-confirm', { token, password })
+    async mutationFn(data: ConfirmResetPasswordInput) {
+      return api.confirmResetPassword(data)
     },
     onSuccess(_data, _variables, _context) {
       notify({

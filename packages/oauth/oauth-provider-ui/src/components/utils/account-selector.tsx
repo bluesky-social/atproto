@@ -48,8 +48,7 @@ export function AccountSelector(props: AccountSelectorProps): ReactNode {
             <Button
               key="signout"
               onClick={async (_event) => {
-                const { sub } = session.account
-                await api.signOut(sub)
+                await api.signOut(session.account)
               }}
               color="primary"
             >

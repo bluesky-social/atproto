@@ -25,7 +25,7 @@ describe('oauth', () => {
       // For debugging:
       // headless: false,
       // devtools: true,
-      // slowMo: 250,
+      // slowMo: 25,
     })
 
     network = await TestNetworkNoAppView.create({
