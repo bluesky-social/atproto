@@ -67,6 +67,10 @@ import {
   ExternalEmbedView,
   FeedViewPost,
   FollowRecord,
+  GalleryEmbed,
+  GalleryEmbedView,
+  GalleryImageEmbed,
+  GalleryImageEmbedView,
   GeneratorView,
   GetPostThreadV2QueryParams,
   ImagesEmbed,
@@ -116,6 +120,8 @@ import {
   VideoEmbed,
   VideoEmbedView,
   isExternalEmbedType,
+  isGalleryEmbedType,
+  isGalleryImageEmbedType,
   isImagesEmbedType,
   isLabelerRecordType,
   isListRuleType,
@@ -135,6 +141,11 @@ const notificationDeletedRecord =
 // Pre-computed CID for the `notificationDeletedRecord`.
 const notificationDeletedRecordCid =
   'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim'
+
+// Soft-limit for `app.bsky.embed.gallery#main.items`. The lexicon's
+// schema-level cap is 20, but clients are expected to enforce a soft limit
+// of 10 today. The AppView trims defensively at the view boundary.
+const GALLERY_SOFT_LIMIT = 10
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -2083,6 +2094,8 @@ export class Views {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbedType(embed)) {
       return this.videoEmbed(creatorFromUri(postUri), embed)
+    } else if (isGalleryEmbedType(embed)) {
+      return this.galleryEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbedType(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed, state)
     } else if (isRecordEmbedType(embed)) {
@@ -2123,6 +2136,47 @@ export class Views {
       alt: embed.alt,
       aspectRatio: embed.aspectRatio,
       presentation: embed.presentation,
+    })
+  }
+
+  galleryEmbed(did: DidString, embed: GalleryEmbed): $Typed<GalleryEmbedView> {
+    // The lexicon's schema-level cap is 20, but clients are expected to
+    // enforce a soft limit of 10. Trim defensively at the view boundary so
+    // viewers see at most 10 items regardless of what was authored.
+    const items = embed.items.slice(0, GALLERY_SOFT_LIMIT).flatMap((item) => {
+      const view = this.galleryItemView(did, item)
+      return view ? [view] : []
+    })
+    return app.bsky.embed.gallery.view.$build({ items })
+  }
+
+  private galleryItemView(
+    did: DidString,
+    item: GalleryEmbed['items'][number],
+  ): $Typed<GalleryImageEmbedView> | undefined {
+    if (isGalleryImageEmbedType(item)) {
+      return this.galleryImageView(did, item)
+    }
+    return undefined
+  }
+
+  private galleryImageView(
+    did: DidString,
+    item: GalleryImageEmbed,
+  ): $Typed<GalleryImageEmbedView> {
+    return app.bsky.embed.gallery.viewImage.$build({
+      thumbnail: this.imgUriBuilder.getPresetUri(
+        'feed_thumbnail',
+        did,
+        getBlobCidString(item.image),
+      ),
+      fullsize: this.imgUriBuilder.getPresetUri(
+        'feed_fullsize',
+        did,
+        getBlobCidString(item.image),
+      ),
+      alt: item.alt,
+      aspectRatio: item.aspectRatio,
     })
   }
 
@@ -2521,11 +2575,14 @@ export class Views {
     let mediaEmbed:
       | $Typed<ImagesEmbedView>
       | $Typed<VideoEmbedView>
+      | $Typed<GalleryEmbedView>
       | $Typed<ExternalEmbedView>
     if (isImagesEmbedType(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isVideoEmbedType(embed.media)) {
       mediaEmbed = this.videoEmbed(creator, embed.media)
+    } else if (isGalleryEmbedType(embed.media)) {
+      mediaEmbed = this.galleryEmbed(creator, embed.media)
     } else if (isExternalEmbedType(embed.media)) {
       mediaEmbed = this.externalEmbed(creator, embed.media, state)
     } else {

@@ -8,6 +8,7 @@ import {
   vi,
 } from 'vitest'
 import {
+  $Typed,
   AppBskyDraftCreateDraft,
   AppBskyDraftDefs,
   AppBskyDraftGetDrafts,
@@ -300,6 +301,110 @@ describe('appview drafts views', () => {
       // Check pagination ordering (most recent first).
       expect(paginated.at(0)?.id).toBe(full.at(0)?.id)
       expect(paginated.at(-1)?.id).toBe(full.at(-1)?.id)
+    })
+  })
+
+  describe('gallery embed', () => {
+    const galleryItem = (
+      i: number,
+    ): $Typed<AppBskyDraftDefs.DraftEmbedImage> => ({
+      $type: 'app.bsky.draft.defs#draftEmbedImage',
+      localRef: { path: `/local/img-${i}.jpg` },
+      alt: `image ${i}`,
+    })
+
+    const galleryDraft = (size: number): AppBskyDraftDefs.Draft => ({
+      posts: [
+        {
+          text: 'gallery draft',
+          embedGallery: {
+            items: Array.from({ length: size }, (_, i) => galleryItem(i)),
+          },
+        },
+      ],
+    })
+
+    it('round-trips a draft with embedGallery', async () => {
+      await create(alice, galleryDraft(3))
+      const { data } = await get(alice)
+      expect(data.drafts).toHaveLength(1)
+
+      const post = data.drafts[0].draft.posts[0]
+      expect(post.embedGallery?.items).toHaveLength(3)
+      post.embedGallery?.items.forEach((item, i) => {
+        expect(item.$type).toBe('app.bsky.draft.defs#draftEmbedImage')
+        if (AppBskyDraftDefs.isDraftEmbedImage(item)) {
+          expect(item.localRef.path).toBe(`/local/img-${i}.jpg`)
+          expect(item.alt).toBe(`image ${i}`)
+        }
+      })
+    })
+
+    it('updates a draft to add a gallery', async () => {
+      await create(alice, { posts: [{ text: 'text only' }] })
+      const { data: before } = await get(alice)
+      expect(before.drafts).toHaveLength(1)
+      expect(before.drafts[0].draft.posts[0].embedGallery).toBeUndefined()
+
+      const draftId = before.drafts[0].id
+      await update(alice, {
+        id: draftId,
+        draft: galleryDraft(2),
+      })
+
+      const { data: after } = await get(alice)
+      expect(after.drafts).toHaveLength(1)
+      expect(after.drafts[0].id).toBe(draftId)
+      expect(after.drafts[0].draft.posts[0].embedGallery?.items).toHaveLength(2)
+    })
+
+    it('updates a draft to change gallery items', async () => {
+      await create(alice, galleryDraft(2))
+      const { data: before } = await get(alice)
+      expect(before.drafts[0].draft.posts[0].embedGallery?.items).toHaveLength(
+        2,
+      )
+
+      const draftId = before.drafts[0].id
+      await update(alice, {
+        id: draftId,
+        draft: galleryDraft(5),
+      })
+
+      const { data: after } = await get(alice)
+      const post = after.drafts[0].draft.posts[0]
+      expect(post.embedGallery?.items).toHaveLength(5)
+      // Confirm full replacement (new items 0..4, not appended onto old 0..1).
+      post.embedGallery?.items.forEach((item, i) => {
+        if (AppBskyDraftDefs.isDraftEmbedImage(item)) {
+          expect(item.localRef.path).toBe(`/local/img-${i}.jpg`)
+        }
+      })
+    })
+
+    it('rejects embedGallery.items exceeding maxLength=20', async () => {
+      await expect(create(alice, galleryDraft(21))).rejects.toThrow()
+    })
+
+    it('rejects gallery items without $type', async () => {
+      const badDraft = {
+        posts: [
+          {
+            text: 'gallery without $type',
+            embedGallery: {
+              items: [
+                // Union members must be $type-tagged. Cast away types so the
+                // request reaches the server, where lex validation rejects it.
+                {
+                  localRef: { path: '/local/untagged.jpg' },
+                  alt: 'untagged',
+                } as unknown as $Typed<AppBskyDraftDefs.DraftEmbedImage>,
+              ],
+            },
+          },
+        ],
+      }
+      await expect(create(alice, badDraft)).rejects.toThrow()
     })
   })
 })
