@@ -350,7 +350,6 @@ export class LexDefBuilder {
           `l.record<${key}, ${ref.typeName}>(${key}, $nsid, ${objectSchema})`,
         ),
       objectUtils: true,
-      recordUtils: true,
       validationUtils: true,
     })
   }
@@ -408,13 +407,11 @@ export class LexDefBuilder {
       type,
       schema,
       objectUtils,
-      recordUtils,
       validationUtils,
     }: {
       type?: string | ((ref: ResolvedRef) => string)
       schema?: string | ((ref: ResolvedRef) => string)
       objectUtils?: boolean
-      recordUtils?: boolean
       validationUtils?: boolean
     },
   ): Promise<ResolvedRef> {
@@ -472,12 +469,6 @@ export class LexDefBuilder {
         $type: `$nsid`,
         $isTypeOf: markPure(`${ref.varName}.isTypeOf.bind(${ref.varName})`),
         $build: markPure(`${ref.varName}.build.bind(${ref.varName})`),
-      })
-    }
-
-    if (hash === 'main' && recordUtils) {
-      this.addUtils({
-        $buildUri: markPure(`${ref.varName}.buildUri.bind(${ref.varName})`),
       })
     }
 

@@ -1,4 +1,4 @@
-import { AtUriString } from '@atproto/syntax'
+import { atUri } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -11,8 +11,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // fetch from pds if available, if not then fetch from appview
     if (did) {
-      // @NOTE each part of the URI was validated by the lexicon schema
-      const uri: AtUriString = `at://${did}/${collection}/${rkey}`
+      const uri = atUri(did, collection, rkey)
       const record = await ctx.actorStore.read(did, (store) =>
         store.record.getRecord(uri, cid ?? null),
       )

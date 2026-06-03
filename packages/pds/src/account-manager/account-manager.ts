@@ -124,7 +124,7 @@ export class AccountManager {
   async getDidForActor(
     handleOrDid: AtIdentifierString,
     flags?: account.AvailabilityFlags,
-  ): Promise<string | null> {
+  ): Promise<DidString | null> {
     const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
   }

@@ -1,4 +1,4 @@
-import { AtUriString } from '@atproto/syntax'
+import { atUri } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -21,8 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
 
-      // @NOTE each part of the URI was validated by the lexicon schema
-      const uri: AtUriString = `at://${did}/${collection}/${rkey}`
+      const uri = atUri(did, collection, rkey)
       const result = await ctx.hydrator.getRecord(uri, includeTakedowns)
 
       if (!result || (cid && result.cid !== cid)) {

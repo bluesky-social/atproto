@@ -73,12 +73,13 @@ export function asLexiconRecordKey(key: unknown): LexiconRecordKey {
  * - `'tid'` maps to `TidString`
  * - `'literal:...'` maps to the literal string value
  */
-export type RecordKeyValue<Key extends LexiconRecordKey> = Key extends 'any'
-  ? string
-  : Key extends 'tid'
-    ? TidString
-    : Key extends 'nsid'
-      ? NsidString
-      : Key extends `literal:${infer L extends string}`
-        ? L
-        : never
+export type RecordKeyValue<Key extends LexiconRecordKey = LexiconRecordKey> =
+  Key extends 'any'
+    ? string
+    : Key extends 'tid'
+      ? TidString
+      : Key extends 'nsid'
+        ? NsidString
+        : Key extends `literal:${infer L extends string}`
+          ? L
+          : never

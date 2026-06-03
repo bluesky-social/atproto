@@ -3,4 +3,4 @@
 '@atproto/pds': patch
 ---
 
-Improve AtUri generation
+Use the new `atUri()` helper from `@atproto/lex` for safer `AtUriString` construction.
