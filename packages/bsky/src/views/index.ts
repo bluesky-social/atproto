@@ -2195,19 +2195,25 @@ export class Views {
       state,
       assumedUrl: embed.external.uri,
     })
+    // The author-supplied (scraped) thumbnail always wins when present —
+    // it's the per-article OG image. Only when the embed has no thumb do
+    // we fall back to whatever the SS overlay provides (the document's
+    // `coverImage`). `thumb` is set after the `...ssView` spread so the
+    // overlay's `coverImage`-derived thumb can't clobber the embed's.
+    const embeddedThumb = embed.external.thumb
+      ? this.imgUriBuilder.getPresetUri(
+          'feed_thumbnail',
+          did,
+          getBlobCidString(embed.external.thumb),
+        )
+      : undefined
     return app.bsky.embed.external.view.$build({
       external: {
         uri: embed.external.uri,
         title: embed.external.title,
         description: embed.external.description,
-        thumb: embed.external.thumb
-          ? this.imgUriBuilder.getPresetUri(
-              'feed_thumbnail',
-              did,
-              getBlobCidString(embed.external.thumb),
-            )
-          : undefined,
         ...ssView,
+        thumb: embeddedThumb ?? ssView?.thumb,
         associatedRefs: embed.external.associatedRefs,
       },
     })

@@ -17,7 +17,7 @@ export function useAccountSessionsQuery({ sub }: AccountSessionsInput) {
     staleTime: 15e3, // 15s
     queryKey: accountSessionsQueryKey({ sub }),
     queryFn: async ({ signal }) => {
-      return api.fetch('GET', '/account-sessions', { sub }, { signal })
+      return api.accountSessions({ sub }, { signal })
     },
   })
 }
@@ -27,8 +27,8 @@ export function useRevokeAccountSessionMutation() {
   const qc = useQueryClient()
 
   return useMutation({
-    async mutationFn({ sub, deviceId }: RevokeAccountSessionInput) {
-      return api.fetch('POST', '/revoke-account-session', { sub, deviceId })
+    async mutationFn(data: RevokeAccountSessionInput) {
+      await api.revokeAccountSession(data)
     },
     onSuccess(_, { sub }) {
       qc.invalidateQueries({ queryKey: accountSessionsQueryKey({ sub }) })

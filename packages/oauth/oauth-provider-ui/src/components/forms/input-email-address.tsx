@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
-import { ChangeEvent, useCallback, useState } from 'react'
+import { composeEventHandlers } from '@radix-ui/primitive'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
 
@@ -20,30 +20,13 @@ export function InputEmailAddress({
   autoCorrect = 'off',
   dir = 'auto',
   icon = <AtIcon aria-hidden weight="bold" className="w-5" />,
-  onBlur,
   onChange,
   pattern = '^[^@]+@[^@]+\\.[^@]+$',
   spellCheck = 'false',
-  value,
-  defaultValue = value,
   title,
   ...props
 }: InputEmailAddressProps) {
   const { t } = useLingui()
-  const [email, setEmail] = useState<string>(
-    typeof defaultValue === 'string' ? defaultValue : '',
-  )
-
-  const doChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const email = event.target.value.toLowerCase()
-
-      setEmail(email)
-      onChange?.(event)
-      onEmail?.(event.target.validity.valid ? email : undefined)
-    },
-    [onChange, onEmail],
-  )
 
   return (
     <InputText
@@ -51,15 +34,16 @@ export function InputEmailAddress({
       title={title ?? t`Email address`}
       type="email"
       autoCapitalize={autoCapitalize}
+      autoComplete={autoComplete}
       autoCorrect={autoCorrect}
-      dir={dir}
       spellCheck={spellCheck}
+      dir={dir}
       icon={icon}
       pattern={pattern}
-      autoComplete={autoComplete}
-      value={email}
-      onChange={doChange}
-      onBlur={onBlur}
+      onChange={composeEventHandlers(onChange, (event) => {
+        const { value } = event.target
+        onEmail?.(event.target.validity.valid ? value.toLowerCase() : undefined)
+      })}
     />
   )
 }

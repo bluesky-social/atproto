@@ -8,20 +8,15 @@ import {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
-import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
 export function useUpdateEmailRequest() {
   const api = useApi()
   const { t } = useLingui()
   const { notify } = useNotificationsContext()
-  const locale = useCurrentLocale()
 
   return useMutation({
     async mutationFn(data: InitiateEmailUpdateInput) {
-      return api.fetch('POST', '/update-email-request', {
-        ...data,
-        locale: data.locale ?? locale,
-      })
+      return api.updateEmailRequest(data)
     },
     onSuccess(_data, _variables, _context) {
       notify({
@@ -45,14 +40,10 @@ export function useUpdateEmailConfirm() {
   const api = useApi()
   const { t } = useLingui()
   const { notify } = useNotificationsContext()
-  const locale = useCurrentLocale()
 
   return useMutation({
     async mutationFn(data: ConfirmEmailUpdateInput) {
-      return api.fetch('POST', '/update-email-confirm', {
-        ...data,
-        locale: data.locale ?? locale,
-      })
+      return api.updateEmailConfirm(data)
     },
     onSuccess(_data, _variables, _context) {
       notify({
@@ -76,14 +67,10 @@ export function useVerifyEmailRequest() {
   const api = useApi()
   const { t } = useLingui()
   const { notify } = useNotificationsContext()
-  const locale = useCurrentLocale()
 
   return useMutation({
     async mutationFn(data: InitiateEmailVerificationInput) {
-      return api.fetch('POST', '/verify-email-request', {
-        ...data,
-        locale: data.locale ?? locale,
-      })
+      return api.verifyEmailRequest(data)
     },
     onSuccess(_data, _variables, _context) {
       notify({
@@ -110,7 +97,7 @@ export function useVerifyEmailConfirm() {
 
   return useMutation({
     async mutationFn(data: ConfirmEmailVerificationInput) {
-      return api.fetch('POST', '/verify-email-confirm', data)
+      return api.verifyEmailConfirm(data)
     },
     onSuccess(_data, _variables, _context) {
       notify({

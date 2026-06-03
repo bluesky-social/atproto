@@ -13,3 +13,11 @@ export function upsert<T>(
 export type Explicit<T> = { [K in keyof T & string]: T[K] }
 export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 export type Override<T, U> = Simplify<Omit<T, keyof U> & U>
+
+export function toJsonSafe(value: unknown): string | undefined {
+  try {
+    return JSON.stringify(value, null, 2)
+  } catch {
+    return undefined
+  }
+}

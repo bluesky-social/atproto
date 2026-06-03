@@ -14,6 +14,7 @@ import {
   SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
+  UpdateHandleData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account/account-store.js'
@@ -76,6 +77,7 @@ export {
   type SignUpInput,
   type Sub,
   type TokenClaims,
+  type UpdateHandleData,
 }
 
 export type OAuthHooks = {
@@ -178,6 +180,29 @@ export type OAuthHooks = {
    */
   onVerifyEmailConfirmed?: (data: {
     input: VerifyEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests a handle change, before the change
+   * is performed on the account store. Only triggered with authenticated
+   * sessions, so the `account` is always available.
+   */
+  onUpdateHandle?: (data: {
+    input: UpdateHandleData
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user successfully changed their handle on the
+   * account store.
+   */
+  onUpdatedHandle?: (data: {
+    input: UpdateHandleData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account

@@ -18,7 +18,7 @@ describe('account manager', () => {
       // For debugging:
       // headless: false,
       // devtools: true,
-      // slowMo: 150,
+      // slowMo: 25,
     })
 
     network = await TestNetworkNoAppView.create({
@@ -34,6 +34,10 @@ describe('account manager', () => {
     })
   })
 
+  afterEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network?.close()
     await browser?.close()
@@ -44,7 +48,7 @@ describe('account manager', () => {
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.assertTitle(`S'identifier`)
+    await page.assertTitle(`Se connecter`)
 
     await page.clickOnText('Créer un nouveau compte')
 
@@ -55,12 +59,14 @@ describe('account manager', () => {
     await page.typeInInput('email', 'bob@test.com')
     await page.typeInInput('password', 'bob-pass')
 
-    await page.clickOnText("S'inscrire")
+    await page.clickOnText('Inscription')
 
-    await page.assertTitle(`Compte utilisateur`)
+    await page.waitForNetworkIdle()
 
     await page.ensureTextVisibility('bob.test', 'span')
     await page.ensureTextVisibility('Votre compte Atmosphère est hébergé chez')
+
+    await page.assertTitle('Mon compte Atmosphère')
   })
 
   it('allows switching accounts', async () => {
@@ -68,7 +74,7 @@ describe('account manager', () => {
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.assertTitle(`Compte utilisateur`)
+    await page.assertTitle('Mon compte Atmosphère')
 
     await page.clickOnAriaLabel(`Sélecteur de compte`)
     await page.clickOnText('Sélectionner un autre compte')
@@ -93,18 +99,13 @@ describe('account manager', () => {
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.assertTitle(`Compte utilisateur`)
+    await page.assertTitle('Mon compte Atmosphère')
 
     await page.ensureTextVisibility('bob.test', 'span')
 
-    await page.ensureTextVisibility('alice.test', 'span').then(
-      () => {
-        throw new Error('Should not be visible')
-      },
-      (err) => {
-        expect(err).toBeInstanceOf(Error)
-      },
-    )
+    await expect(async () => {
+      await page.ensureTextVisibility('alice.test', 'span', 500)
+    }).rejects.toThrow('Waiting for selector')
   })
 
   it('allows changing the password', async () => {
@@ -112,9 +113,11 @@ describe('account manager', () => {
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.assertTitle(`Compte utilisateur`)
+    await page.assertTitle('Mon compte Atmosphère')
 
-    await page.clickOnText('Mot de passe', 'a')
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText('Mot de passe')
 
     using sendResetPasswordMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
@@ -122,7 +125,7 @@ describe('account manager', () => {
         // noop
       })
 
-    await page.clickOnText('Envoyer le code')
+    await page.clickOnText('Envoyer le code de vérification')
 
     await page.waitForNetworkIdle()
 
@@ -137,20 +140,23 @@ describe('account manager', () => {
     await page.typeInInput('code', params.token)
     await page.typeInInput('password', 'bob-new-pass')
 
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Valider')
 
-    await page.ensureTextVisibility(
-      'Réinitialisation du mot de passe réussie',
-      'div',
-    )
+    await page.ensureNotification('Réinitialisation du mot de passe réussie')
   })
 
-  it('allows validating the email address', async () => {
+  it('allows verifying the email address', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.clickOnText('Vérifier maintenant', 'button')
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
+
+    await page.clickOnText('Vérifier')
 
     using sendConfirmEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
@@ -158,7 +164,7 @@ describe('account manager', () => {
         // noop
       })
 
-    await page.clickOnText('Envoyer le code', 'button')
+    await page.clickOnText('Envoyer le code de vérification', 'button')
 
     await page.waitForNetworkIdle()
 
@@ -171,9 +177,31 @@ describe('account manager', () => {
     })
 
     await page.typeInInput('code', params.token)
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Valider')
 
-    await page.ensureTextVisibility('Adresse email vérifiée', 'div')
+    await page.ensureNotification('Adresse email vérifiée')
+  })
+
+  it('allows changing the username', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText("Nom d'utilisateur")
+
+    await page.clickOnText("Utiliser un nom d'utilisateur par défaut")
+
+    await page.typeInInput('handle', 'bob-renamed')
+
+    await page.clickOnText('Valider')
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
   })
 
   it('allows changing the email address', async () => {
@@ -181,7 +209,11 @@ describe('account manager', () => {
 
     await page.goto(new URL('/account', network.pds.url))
 
-    await page.clickOnText('Email', 'a')
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText('Adresse email')
 
     using sendUpdateEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
@@ -189,13 +221,11 @@ describe('account manager', () => {
         // noop
       })
 
-    using sendConfirmEmailMock = jest
-      .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
-      .mockImplementation(async () => {
-        // noop
-      })
-
-    await page.clickOnText('Envoyer le code', 'button')
+    const emailInput = await page.typeInInput(
+      'email',
+      'bob-new-email@example.com',
+    )
+    emailInput.press('Enter')
 
     await page.waitForNetworkIdle()
 
@@ -207,26 +237,69 @@ describe('account manager', () => {
       token: expect.any(String),
     })
 
-    await page.typeInInput('code', updateParams.token)
-    await page.typeInInput('email', 'bob-new-email@example.com')
-    await page.clickOnText('Soumettre')
+    const codeInput = await page.typeInInput('code', updateParams.token)
+    codeInput.press('Enter')
 
-    await page.ensureTextVisibility(
-      "Modification de l'adresse email réussie",
-      'div',
+    await page.ensureNotification("Modification de l'adresse email réussie")
+
+    // The email needs to be verified again
+    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
+  })
+
+  it('allows signing out & signing back in', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnAriaLabel(`Sélecteur de compte`)
+    await page.clickOnText('Se déconnecter')
+
+    await page.assertTitle(`Se connecter`)
+    await page.clickOnText('Se connecter')
+
+    await page.clickOnText('Se souvenir de ce compte sur cet appareil', 'label')
+    await page.typeInInput('username', 'bob-new-email@example.com')
+    const input = await page.typeInInput('password', 'bob-new-pass')
+
+    input.press('Enter')
+
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
+  })
+
+  it('does not ask for a token when changing a non-verified email', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText('Adresse email')
+
+    using sendUpdateEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    const emailInput = await page.typeInInput(
+      'email',
+      'bob-new-email@example.com',
     )
+    emailInput.press('Enter')
 
-    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(1)
+    await page.waitForNetworkIdle()
 
-    const [confirmParams] = sendConfirmEmailMock.mock.lastCall!
-    expect(confirmParams).toEqual({
-      locale: 'fr',
-      token: expect.any(String),
-    })
+    expect(sendUpdateEmailMock).not.toHaveBeenCalled()
 
-    await page.typeInInput('code', confirmParams.token)
-    await page.clickOnText('Soumettre')
+    await page.clickOnText('Plus tard')
 
-    await page.ensureTextVisibility('Adresse email vérifiée', 'div')
+    await page.ensureNotification("Modification de l'adresse email réussie")
+
+    // The email needs to be verified again
+    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
   })
 })

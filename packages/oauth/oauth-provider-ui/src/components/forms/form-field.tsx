@@ -1,17 +1,8 @@
-import { JSX, ReactNode, createContext, useMemo } from 'react'
+import { JSX, ReactNode, useMemo } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Override } from '#/lib/util.ts'
-import { useFormContext } from './form-card.js'
-
-export type FieldsetContextValue = {
-  disabled: boolean
-  labelId?: string
-}
-
-export const FieldsetContext = createContext<FieldsetContextValue>({
-  disabled: false,
-})
-FieldsetContext.displayName = 'FieldsetContext'
+import { FieldsetContext, FieldsetContextValue } from './fieldset-context.js'
+import { useFormContext } from './form-context.js'
 
 export type FormFieldProps = Override<
   Omit<JSX.IntrinsicElements['fieldset'], 'aria-labelledby'>,

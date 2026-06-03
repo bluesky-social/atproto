@@ -1,11 +1,12 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { ReactNode, useState } from 'react'
+import { ReactNode, useRef } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Button } from './forms/button.tsx'
-import { FormCard } from './forms/form-card.tsx'
+import { FormHandler, SmartForm } from './forms/smart-form.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 import { ClientImage } from './utils/client-image.tsx'
 import { ClientName } from './utils/client-name.tsx'
@@ -22,7 +23,7 @@ export type ConsentFormProps = {
   account: Account
   scope?: string
 
-  onConsent: (scope?: string) => void
+  onConsent: (data: { scope?: string }) => void | PromiseLike<void>
   consentLabel?: ReactNode
 
   onReject: () => void
@@ -64,120 +65,136 @@ export function ConsentForm({
   onBack,
 }: ConsentFormProps) {
   const { t } = useLingui()
-  const [allowEmail, setAllowEmail] = useState(true)
+  const reject = useAsyncAction(onReject)
+
+  const formRef =
+    useRef<FormHandler<{ scope?: string }, { allowEmail: boolean }>>(null)
+  const form = formRef.current
 
   // Require the granular scope system to be able to unset the `account:email`
   // scope.
   const canUnsetEmail = !scope?.split(' ').some(isTransitionScope)
 
   return (
-    <FormCard
-      onSubmit={(event) => {
-        event.preventDefault()
-        const acceptedScope =
-          canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope
-        onConsent(acceptedScope)
-      }}
-      cancel={onBack && <Button onClick={onBack}>{<Trans>Back</Trans>}</Button>}
+    <SmartForm
+      ref={formRef}
+      onBack={onBack}
+      error={reject.error}
+      submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
+      values={{ allowEmail: true }}
+      onValues={() => reject.reset()}
+      validate={({ allowEmail }) => ({
+        scope:
+          canUnsetEmail && !allowEmail ? stripAccountEmailScope(scope) : scope,
+      })}
+      handler={onConsent}
       actions={
-        <>
-          <Button type="submit" color="primary">
-            {<Trans context="OAuthConsent">Authorize</Trans>}
-          </Button>
-
-          <Button onClick={onReject}>
-            {<Trans context="OAuthConsent">Deny access</Trans>}
-          </Button>
-        </>
+        <Button
+          onClick={(event) => {
+            event.preventDefault()
+            form?.reset()
+            void reject.run()
+          }}
+        >
+          <Trans context="OAuthConsent">Deny access</Trans>
+        </Button>
       }
-    >
-      <DescriptionCard
-        image={
-          <ClientImage
-            clientId={clientId}
-            clientMetadata={clientMetadata}
-            clientTrusted={clientTrusted}
-          />
-        }
-        title={
-          <ClientName
-            clientId={clientId}
-            clientMetadata={clientMetadata}
-            clientTrusted={clientTrusted}
-          />
-        }
-        description={
-          !scope || scope === 'atproto' ? (
-            <Trans>
-              wants to uniquely identify you through your{' '}
-              <AccountIdentifier account={account} className="font-bold" />{' '}
-              account
-            </Trans>
-          ) : (
-            <Trans>
-              wants to access your{' '}
-              <AccountIdentifier account={account} className="font-bold" />{' '}
-              account
-            </Trans>
-          )
-        }
-        hint={t`Technical details`}
-      >
-        {scope ? (
-          <>
-            <p>
-              <Trans>
-                This application is requesting the following permissions
-                (scopes) to access your account:
-              </Trans>
-            </p>
-            <pre className="bg-light mt-2 overflow-x-auto whitespace-pre-wrap rounded border p-2 text-sm">
-              {scope}
-            </pre>
-          </>
-        ) : null}
-      </DescriptionCard>
-
-      <ScopeDescription
-        scope={scope}
-        permissionSets={permissionSets}
-        clientTrusted={clientTrusted}
-        clientFirstParty={clientFirstParty}
-        allowEmail={canUnsetEmail ? allowEmail : true}
-        onAllowEmail={canUnsetEmail ? setAllowEmail : undefined}
-      />
-
-      <p>
-        <Trans>
-          By clicking <b>{<Trans context="OAuthConsent">Authorize</Trans>}</b>,
-          you will grant this application access to your account in accordance
-          with its{' '}
-          <a
-            role="link"
-            href={clientMetadata.tos_uri}
-            rel="nofollow noopener"
-            target="_blank"
-            className={
-              clientMetadata.tos_uri ? 'text-primary underline' : undefined
+      fields={({ values, setterFor }) => (
+        <>
+          <DescriptionCard
+            image={
+              <ClientImage
+                clientId={clientId}
+                clientMetadata={clientMetadata}
+                clientTrusted={clientTrusted}
+              />
             }
-          >
-            <Trans>terms of service</Trans>
-          </a>
-          {' and '}
-          <a
-            role="link"
-            href={clientMetadata.policy_uri}
-            rel="nofollow noopener"
-            target="_blank"
-            className={
-              clientMetadata.policy_uri ? 'text-primary underline' : undefined
+            title={
+              <ClientName
+                clientId={clientId}
+                clientMetadata={clientMetadata}
+                clientTrusted={clientTrusted}
+              />
             }
+            description={
+              !scope || scope === 'atproto' ? (
+                <Trans>
+                  wants to uniquely identify you through your{' '}
+                  <AccountIdentifier account={account} className="font-bold" />{' '}
+                  account
+                </Trans>
+              ) : (
+                <Trans>
+                  wants to access your{' '}
+                  <AccountIdentifier account={account} className="font-bold" />{' '}
+                  account
+                </Trans>
+              )
+            }
+            hint={t`Technical details`}
           >
-            <Trans>privacy policy</Trans>
-          </a>
-          .
-        </Trans>
-      </p>
-    </FormCard>
+            {scope ? (
+              <>
+                <p>
+                  <Trans>
+                    This application is requesting the following permissions
+                    (scopes) to access your account:
+                  </Trans>
+                </p>
+                <pre className="bg-light mt-2 overflow-x-auto whitespace-pre-wrap rounded border p-2 text-sm">
+                  {scope}
+                </pre>
+              </>
+            ) : null}
+          </DescriptionCard>
+
+          <ScopeDescription
+            scope={scope}
+            permissionSets={permissionSets}
+            clientTrusted={clientTrusted}
+            clientFirstParty={clientFirstParty}
+            allowEmail={canUnsetEmail ? values.allowEmail : true}
+            onAllowEmail={canUnsetEmail ? setterFor('allowEmail') : undefined}
+          />
+
+          <p>
+            <Trans>
+              By clicking{' '}
+              <b>
+                <Trans context="OAuthConsent">Authorize</Trans>
+              </b>
+              , you will grant this application access to your account in
+              accordance with its{' '}
+              <a
+                role="link"
+                href={clientMetadata.tos_uri}
+                rel="nofollow noopener"
+                target="_blank"
+                className={
+                  clientMetadata.tos_uri ? 'text-primary underline' : undefined
+                }
+              >
+                <Trans>terms of service</Trans>
+              </a>
+              {' and '}
+              <a
+                role="link"
+                href={clientMetadata.policy_uri}
+                rel="nofollow noopener"
+                target="_blank"
+                className={
+                  clientMetadata.policy_uri
+                    ? 'text-primary underline'
+                    : undefined
+                }
+              >
+                <Trans>privacy policy</Trans>
+              </a>
+              .
+            </Trans>
+          </p>
+        </>
+      )}
+    />
   )
 }

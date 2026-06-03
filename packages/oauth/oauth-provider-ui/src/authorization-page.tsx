@@ -14,6 +14,7 @@ import { NotificationsProvider } from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
+import { useStableCallback } from './hooks/use-stable-callback'
 
 const {
   __authorizeData: authorizeData,
@@ -61,12 +62,12 @@ createRoot(container).render(
 function App() {
   const loginHint = authorizeData.loginHint || undefined
 
-  const { session, setSession, doConsent, doReject } = useSessionContext()
+  const { session, setSession, api } = useSessionContext()
   const [isDone, setIsDone] = useState(
     session != null && session.consentRequired === false,
   )
 
-  const performRedirect = useCallback((url: string) => {
+  const performRedirect = useStableCallback((url: string) => {
     // @TODO At this point, the request cannot be accepted/rejected anymore.
     // We should probably change the app's state to something that indicates
     // that in order to improve UX in case the user comes back to the app.
@@ -77,23 +78,20 @@ function App() {
 
     window.location.href = url
     setTimeout(() => setIsDone(true))
-  }, [])
+  })
 
   const doConsentAndRedirect = useCallback(
-    async (...args: Parameters<typeof doConsent>) => {
-      const { url } = await doConsent(...args)
+    async ({ scope }: { scope?: string }) => {
+      const { url } = await api.consent(session!.account.sub, scope)
       performRedirect(url)
     },
-    [doConsent, performRedirect],
+    [api, session, performRedirect],
   )
 
-  const doRejectAndRedirect = useCallback(
-    async (...args: Parameters<typeof doReject>) => {
-      const { url } = await doReject(...args)
-      performRedirect(url)
-    },
-    [doReject, performRedirect],
-  )
+  const doRejectAndRedirect = useCallback(async () => {
+    const { url } = await api.reject()
+    performRedirect(url)
+  }, [api, performRedirect])
 
   return (
     <AuthenticationProvider
@@ -110,9 +108,7 @@ function App() {
           permissionSets={authorizeData.permissionSets}
           account={session.account}
           scope={authorizeData.scope}
-          onConsent={(scope) =>
-            doConsentAndRedirect(session.account.sub, scope)
-          }
+          onConsent={doConsentAndRedirect}
           onReject={doRejectAndRedirect}
           onBack={loginHint ? undefined : () => setSession(null)}
         />

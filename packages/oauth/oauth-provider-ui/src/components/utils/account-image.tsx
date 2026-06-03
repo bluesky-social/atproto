@@ -38,19 +38,19 @@ export function AccountImage({
       aria-hidden
       src={src}
       alt={t`Account avatar`}
-      className={clsx(`rounded-full`, sizeMap[size], className)}
+      className={clsx(`flex-none rounded-full`, sizeMap[size], className)}
       onError={() => setErrored(true)}
     />
   ) : (
     <div
       aria-hidden
       className={clsx(
-        'bg-primary border-primary overflow-hidden rounded-full border-2 border-solid text-white',
+        'bg-primary border-primary flex-none overflow-hidden rounded-full border-2 border-solid text-white',
         sizeMap[size],
         className,
       )}
     >
-      <UserIcon className="size-full" />
+      <UserIcon className="m-[10%] size-[80%]" />
     </div>
   )
 }

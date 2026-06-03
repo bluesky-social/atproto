@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.237
+
+### Patch Changes
+
+- [#5031](https://github.com/bluesky-social/atproto/pull/5031) [`df57268`](https://github.com/bluesky-social/atproto/commit/df572689465f9836223cc79ad6e106be96e20eda) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Prefer opengraph image, fall back to Standard Site `document.coverImage`
+
 ## 0.0.236
 
 ### Patch Changes

@@ -23,6 +23,7 @@ import {
   DeviceStore,
   FoundRequestResult,
   HandleUnavailableError,
+  HandleUnavailableReason,
   InvalidCredentialsError,
   InvalidInviteCodeError,
   InvalidRequestError,
@@ -44,6 +45,7 @@ import {
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
   UpdateEmailRequestOutput,
+  UpdateHandleData,
   UpdateRequestData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
@@ -62,8 +64,11 @@ import { Sequencer, syncEvtDataFromCommit } from '../sequencer/index.js'
 import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import * as accountHelper from './helpers/account.js'
-import { AccountStatus, UserAlreadyExistsError } from './helpers/account.js'
+import {
+  AccountStatus,
+  ActorAccount,
+  UserAlreadyExistsError,
+} from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -268,11 +273,13 @@ export class OAuthStore
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await accountHelper.getAccount(
-      this.db,
+    const accountRow = await this.accountManager.getAccount(
       // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
       asAtIdentifierString(sub),
-      { includeDeactivated: true },
+      {
+        includeDeactivated: true,
+        includeTakenDown: false,
+      },
     )
 
     assert(accountRow, 'Account not found')
@@ -360,7 +367,7 @@ export class OAuthStore
   }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
-      includeTakenDown: true,
+      includeTakenDown: false,
     })
 
     if (!account?.email || !account?.handle) return null
@@ -387,7 +394,7 @@ export class OAuthStore
       const did = await this.accountManager.resetPassword(data)
       const account = await this.accountManager.getAccount(did, {
         includeDeactivated: true,
-        includeTakenDown: true,
+        includeTakenDown: false,
       })
 
       return account ? this.buildAccount(account) : null
@@ -422,13 +429,7 @@ export class OAuthStore
         throw new HandleUnavailableError('taken')
       }
     } catch (err) {
-      if (err instanceof XrpcInvalidRequestError) {
-        throw err.customErrorName === 'HandleNotAvailable'
-          ? new HandleUnavailableError('taken', err.message)
-          : new HandleUnavailableError('syntax', err.message)
-      }
-
-      throw err
+      throw toHandleUnavailableError(err)
     }
   }
 
@@ -682,8 +683,21 @@ export class OAuthStore
     }
   }
 
+  async updateHandle({ sub: did, handle }: UpdateHandleData): Promise<Account> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      const account = await this.accountManager.updateHandle(did, handle)
+
+      return this.buildAccount(account)
+    } catch (err) {
+      throw toHandleUnavailableError(err)
+    }
+  }
+
   private async toTokenInfo(
-    row: accountHelper.ActorAccount & Selectable<schemas.Token>,
+    row: ActorAccount & Selectable<schemas.Token>,
   ): Promise<TokenInfo> {
     return {
       id: row.tokenId,
@@ -693,9 +707,7 @@ export class OAuthStore
     }
   }
 
-  private async buildAccount(
-    row: accountHelper.ActorAccount,
-  ): Promise<Account> {
+  private async buildAccount(row: ActorAccount): Promise<Account> {
     const account: Account = {
       sub: row.did,
       aud: this.serviceDid,
@@ -727,5 +739,51 @@ export class OAuthStore
     }
 
     return account
+  }
+}
+
+function toHandleUnavailableError(err: unknown): unknown {
+  if (err instanceof XrpcInvalidRequestError) {
+    const reason = toHandleUnavailableReason(err)
+    if (reason) throw new HandleUnavailableError(reason, err.message, err)
+
+    return new InvalidRequestError(err.message, err)
+  }
+
+  return err
+}
+
+/**
+ * This function maps specific `XrpcInvalidRequestError`, thrown by the
+ * `AccountManager` when validating a handle, to a more specific
+ * `HandleUnavailableError` with a reason. This allows the OAuthProvider to
+ * provide properly localized and specific error messages to the user when a
+ * handle is not available.
+ */
+function toHandleUnavailableReason(
+  err: XrpcInvalidRequestError,
+): HandleUnavailableReason | undefined {
+  switch (err.error) {
+    case 'HandleNotAvailable': {
+      if (err.message === 'Reserved handle') return 'reserved'
+      return 'taken'
+    }
+
+    case 'UnsupportedDomain': {
+      return 'unsupported'
+    }
+
+    case 'InvalidHandle': {
+      if (err.message === 'Inappropriate language in handle') return 'slur'
+      if (err.message === 'Handle TLD is invalid or disallowed') return 'domain'
+      return 'syntax'
+    }
+
+    case 'InvalidRequest': {
+      if (err.message === 'External handle did not resolve to DID') {
+        return 'resolution'
+      }
+      return undefined
+    }
   }
 }

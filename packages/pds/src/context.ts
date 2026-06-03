@@ -267,16 +267,6 @@ export class AppContext {
       backgroundQueue,
     })
 
-    const accountManager = new AccountManager(
-      idResolver,
-      jwtSecretKey,
-      mailer,
-      cfg.service.did,
-      cfg.identity.serviceHandleDomains,
-      cfg.db,
-    )
-    await accountManager.migrateOrThrow()
-
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
@@ -285,6 +275,19 @@ export class AppContext {
         : await crypto.Secp256k1Keypair.import(
             secrets.plcRotationKey.privateKeyHex,
           )
+
+    const accountManager = new AccountManager(
+      idResolver,
+      jwtSecretKey,
+      mailer,
+      sequencer,
+      plcClient,
+      plcRotationKey,
+      cfg.service.did,
+      cfg.identity.serviceHandleDomains,
+      cfg.db,
+    )
+    await accountManager.migrateOrThrow()
 
     const localViewer = LocalViewer.creator(
       accountManager,
