@@ -23,6 +23,7 @@ import {
   DeviceStore,
   FoundRequestResult,
   HandleUnavailableError,
+  HandleUnavailableReason,
   InvalidCredentialsError,
   InvalidInviteCodeError,
   InvalidRequestError,
@@ -743,36 +744,46 @@ export class OAuthStore
 
 function toHandleUnavailableError(err: unknown): unknown {
   if (err instanceof XrpcInvalidRequestError) {
-    if (err.message === 'External handle did not resolve to DID') {
-      return new HandleUnavailableError('resolution', err.message, err)
-    }
+    const reason = toHandleUnavailableReason(err)
+    if (reason) throw new HandleUnavailableError(reason, err.message, err)
 
-    if (
-      err.customErrorName === 'HandleNotAvailable' &&
-      err.message === 'Reserved handle'
-    ) {
-      return new HandleUnavailableError('reserved', err.message, err)
-    }
-
-    if (err.customErrorName === 'HandleNotAvailable') {
-      return new HandleUnavailableError('taken', err.message, err)
-    }
-
-    if (err.customErrorName === 'UnsupportedDomain') {
-      return new HandleUnavailableError('domain', err.message, err)
-    }
-
-    if (err.customErrorName === 'InvalidHandle') {
-      if (err.message === 'Inappropriate language in handle') {
-        return new HandleUnavailableError('slur', err.message, err)
-      }
-
-      return new HandleUnavailableError('syntax', err.message, err)
-    }
-
-    // Unexpected case
     return new InvalidRequestError(err.message, err)
   }
 
   return err
+}
+
+/**
+ * This function maps specific `XrpcInvalidRequestError`, thrown by the
+ * `AccountManager` when validating a handle, to a more specific
+ * `HandleUnavailableError` with a reason. This allows the OAuthProvider to
+ * provide properly localized and specific error messages to the user when a
+ * handle is not available.
+ */
+function toHandleUnavailableReason(
+  err: XrpcInvalidRequestError,
+): HandleUnavailableReason | undefined {
+  switch (err.error) {
+    case 'HandleNotAvailable': {
+      if (err.message === 'Reserved handle') return 'reserved'
+      return 'taken'
+    }
+
+    case 'UnsupportedDomain': {
+      return 'unsupported'
+    }
+
+    case 'InvalidHandle': {
+      if (err.message === 'Inappropriate language in handle') return 'slur'
+      if (err.message === 'Handle TLD is invalid or disallowed') return 'domain'
+      return 'syntax'
+    }
+
+    case 'InvalidRequest': {
+      if (err.message === 'External handle did not resolve to DID') {
+        return 'resolution'
+      }
+      return undefined
+    }
+  }
 }

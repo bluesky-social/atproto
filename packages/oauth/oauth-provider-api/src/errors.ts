@@ -5,6 +5,7 @@ export const HANDLE_UNAVAILABLE_REASON = Object.freeze([
   'taken',
   'reserved',
   'resolution',
+  'unsupported',
 ] as const)
 
 export type HandleUnavailableReason = (typeof HANDLE_UNAVAILABLE_REASON)[number]

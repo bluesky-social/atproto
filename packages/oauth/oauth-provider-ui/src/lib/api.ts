@@ -385,6 +385,10 @@ export class HandleUnavailableError<
         return msg`The username is already in use`
       case 'resolution':
         return msg`The username could not be resolved`
+      case 'unsupported':
+        // @NOTE Only happens during account creation: should never happen since
+        // the UI doesn't allow entering custom handles during account creation.
+        return msg`Custom domains are not supported`
     }
   }
 
