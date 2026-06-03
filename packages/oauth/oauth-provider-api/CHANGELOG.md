@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-api
 
+## 0.6.1
+
+### Patch Changes
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to change the user handle through the account manager interface
+
 ## 0.6.0
 
 ### Minor Changes

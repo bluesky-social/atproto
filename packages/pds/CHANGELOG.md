@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.5.2
+
+### Patch Changes
+
+- [#5037](https://github.com/bluesky-social/atproto/pull/5037) [`7b8ca6e`](https://github.com/bluesky-social/atproto/commit/7b8ca6e0aace79cca38e880429317fde8268ba50) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use the new `atUri()` helper from `@atproto/lex` for safer `AtUriString` construction.
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to change the user handle through the account manager interface
+
+- Updated dependencies [[`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372)]:
+  - @atproto/oauth-provider@0.18.2
+
 ## 0.5.1
 
 ### Patch Changes

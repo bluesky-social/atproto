@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.238
+
+### Patch Changes
+
+- [#5037](https://github.com/bluesky-social/atproto/pull/5037) [`7b8ca6e`](https://github.com/bluesky-social/atproto/commit/7b8ca6e0aace79cca38e880429317fde8268ba50) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use the new `atUri()` helper from `@atproto/lex` for safer `AtUriString` construction.
+
+- [#4827](https://github.com/bluesky-social/atproto/pull/4827) [`41a561e`](https://github.com/bluesky-social/atproto/commit/41a561e80a6c906e9a6ec8e29f8ea970ce9fe2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new lexicon for gallery embed type
+
+- Updated dependencies [[`41a561e`](https://github.com/bluesky-social/atproto/commit/41a561e80a6c906e9a6ec8e29f8ea970ce9fe2e9)]:
+  - @atproto/api@0.20.9
+
 ## 0.0.237
 
 ### Patch Changes
