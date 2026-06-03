@@ -330,7 +330,9 @@ function matchAllMuteWords(
                 const matches = matchMuteWords({
                   mutedWords,
                   text: item.alt,
-                  languages: AppBskyFeedPost.isRecord(embeddedPost.record) ? embeddedPost.langs : [],
+                  languages: AppBskyFeedPost.isRecord(embeddedPost.record)
+                    ? embeddedPost.langs
+                    : [],
                   actor: embedAuthor,
                 })
                 if (matches) {
@@ -402,7 +404,9 @@ function matchAllMuteWords(
             const matches = matchMuteWords({
               mutedWords,
               text: item.alt,
-              languages: AppBskyFeedPost.isRecord(subject.record) ? (subject.record as AppBskyFeedPost.Record).langs : [],
+              languages: AppBskyFeedPost.isRecord(subject.record)
+                ? (subject.record as AppBskyFeedPost.Record).langs
+                : [],
               actor: embedAuthor,
             })
             if (matches) {

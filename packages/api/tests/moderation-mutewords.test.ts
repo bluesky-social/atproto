@@ -1,3 +1,4 @@
+import { $Typed } from '../src/client/util.js'
 import {
   AppBskyEmbedGallery,
   AppBskyEmbedRecord,
@@ -8,7 +9,6 @@ import {
   mock,
   moderatePost,
 } from '../src/index.js'
-import { $Typed } from '../src/client/util.js'
 import { matchMuteWords } from '../src/moderation/mutewords.js'
 import { ModerationOpts } from '../src/moderation/types.js'
 
@@ -17,9 +17,7 @@ const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 const fakeBlob = (): BlobRef =>
   new BlobRef({ '/': FAKE_CID } as any, 'image/jpeg', 1234)
 
-const galleryRecord = (
-  alts: string[],
-): $Typed<AppBskyEmbedGallery.Main> => ({
+const galleryRecord = (alts: string[]): $Typed<AppBskyEmbedGallery.Main> => ({
   $type: 'app.bsky.embed.gallery',
   items: alts.map(
     (alt): $Typed<AppBskyEmbedGallery.Image> => ({
@@ -31,9 +29,7 @@ const galleryRecord = (
   ),
 })
 
-const galleryView = (
-  alts: string[],
-): $Typed<AppBskyEmbedGallery.View> => ({
+const galleryView = (alts: string[]): $Typed<AppBskyEmbedGallery.View> => ({
   $type: 'app.bsky.embed.gallery#view',
   items: alts.map(
     (alt): $Typed<AppBskyEmbedGallery.ViewImage> => ({
