@@ -27,7 +27,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
+      })
       const results = await searchActorsTypeahead(
         { ...params, hydrateCtx },
         ctx,
@@ -41,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -73,6 +82,30 @@ const skeleton = async (
   return {
     dids: res.dids as DidString[],
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  const res = await ctx.dataplane.searchActorsTypeahead({
+    viewer: params.hydrateCtx.viewer ?? undefined,
+    query: term,
+    limit: params.limit,
+  })
+  return {
+    dids: res.actors.map(({ did }) => did as DidString),
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate.SearchV2Enable,
+  )
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (

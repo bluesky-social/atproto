@@ -35,6 +35,12 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         includeTakedowns,
         skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
       })
       const results = await searchStarterPacks({ ...params, hydrateCtx }, ctx)
       return {
@@ -46,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -78,6 +84,34 @@ const skeleton = async (
     uris: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const { q } = params
+
+  const res = await ctx.dataplane.searchStarterPacksV2({
+    params: {
+      query: q,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      limit: params.limit,
+      cursor: params.cursor,
+    },
+  })
+  return {
+    uris: res.starterPacks.map(({ uri }) => uri as AtUriString),
+    cursor: parseString(res.pageInfo?.cursor),
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate.SearchV2Enable,
+  )
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (
