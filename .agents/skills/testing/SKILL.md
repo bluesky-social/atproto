@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Testing practices for this monorepo — choosing between unit and end-to-end tests, where test files live, how tsconfig.test.json fits in, and which test runner (vitest vs jest) to use. Trigger when the user asks to write tests, testing a newly added feature, add coverage, create test files, set up testing in a new package, or mentions vitest/jest/testing.
+description: Testing practices for this monorepo — choosing between unit and end-to-end tests, where test files live, how tsconfig.test.json fits in, how to use playwright to test UI interactions, and which test runner (vitest vs jest) to use. Trigger when the user asks to write tests, testing a newly added feature, add coverage, create test files, set up testing in a new package, or mentions vitest/jest/testing.
 ---
 
 # Testing in this repo
@@ -18,6 +18,7 @@ Runner-reference summary:
 
 - [references/vitest.md](references/vitest.md) — preferred. Patterns for writing vitest tests, plus setup instructions for adopting vitest in a package that doesn't have tests yet.
 - [references/jest.md](references/jest.md) — deprecated. Only for adding cases to existing jest test files or maintaining them until migration.
+- [references/playwright.md](references/playwright.md) — for tests that interact with the UI, use Playwright with the patterns in this reference (in combination with [references/jest.md](references/jest.md) as all UI test are currently jest based, ask the user to update this skill if that is no longer the case).
 
 ## Test file location
 
