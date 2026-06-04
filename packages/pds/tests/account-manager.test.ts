@@ -346,6 +346,24 @@ describe('account manager', () => {
 
     await page.clickOnText('Utiliser un nom de domaine que je possède')
 
+    // DNS is the default verification method
+    await page.ensureTextVisibility(
+      'Ajoutez le champ suivant à la configuration DNS de votre domaine.',
+    )
+    await page.ensureTextVisibility('_atproto.<votre-domaine>', 'code')
+    await page.ensureTextVisibility('TXT', 'code')
+
+    // Switch to HTTP verification method
+    await page.clickOnText('HTTP', 'span')
+
+    await page.ensureTextVisibility(
+      "Rendez un fichier texte avec le contenu ci-dessous disponible à l'URL suivante.",
+    )
+    await page.ensureTextVisibility(
+      'https://<votre-domaine>/.well-known/atproto-did',
+      'code',
+    )
+
     // Try to use an unconfigured domain
     await page.typeInInput('domain', 'notconfigured.com')
 

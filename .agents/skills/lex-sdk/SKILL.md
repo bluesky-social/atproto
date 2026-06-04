@@ -24,6 +24,7 @@ description: >
   require `@atproto/lex`.
   When a task matches multiple triggers, consult all corresponding references
   in the routing table below before responding.
+disable-model-invocation: false
 ---
 
 # `@atproto/lex` SDK

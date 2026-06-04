@@ -41,31 +41,15 @@ pnpm exec eslint --fix <path>         # lint specific files only
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 
-## Test runners
+## Tests
 
-The monorepo uses two runners. **Vitest is the standard going forward; Jest is deprecated.** Don't introduce jest into a package that doesn't already have it — migrate to vitest when feasible. See [.claude/skills/testing/SKILL.md](.claude/skills/testing/SKILL.md) and the references it points to.
-
-- Vitest packages (per [vitest.config.ts](vitest.config.ts)): `bsky`, `lex/*`, `syntax`, `tap`, plus growing list.
-- Jest packages: most others, including `pds`. Root [jest.config.cjs](jest.config.cjs) aggregates per-package `jest.config.cjs` files.
-
-Single-test invocations from a package directory:
-
-```bash
-pnpm test -- path/to/file.test.ts        # vitest or jest, depending on package
-```
-
-Tests that need infra are wrapped by [packages/dev-infra/with-test-redis-and-db.sh](packages/dev-infra/with-test-redis-and-db.sh), which boots a postgres + redis docker-compose stack. The root `pnpm test` uses this wrapper automatically; per-package `pnpm test` for `pds`/`bsky`/etc. does the same.
-
-Test files live next to the code (`foo.ts` + `foo.test.ts`) for unit tests. End-to-end tests live in a package's top-level `./tests` directory (e.g. [packages/bsky/tests](packages/bsky/tests), [packages/pds/tests](packages/pds/tests)). Each package has three tsconfig files: `tsconfig.json` (project references), `tsconfig.build.json` (excludes `*.test.ts`, emits `./dist`), and `tsconfig.tests.json` (extends `tsconfig/vitest.json` or `tsconfig/tests.json`).
+Before writing or extending any test, invoke the `testing` skill ([.claude/skills/testing/SKILL.md](.claude/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.claude/skills/playwright/SKILL.md](.claude/skills/playwright/SKILL.md)) instead.
 
 ## Codegen
 
-Most packages run `lex build --clear --indexFile --lexicons ../../lexicons` as a `prebuild` step (see [packages/pds/package.json](packages/pds/package.json) or [packages/bsky/package.json](packages/bsky/package.json)). The `bsky` package additionally runs `buf generate` for protobuf bindings against `bsync`. After editing anything under [lexicons/](lexicons/) you must rerun `pnpm codegen` before building or testing dependent packages. The root `precodegen` script first builds `@atproto/lex-cli` and the `@atproto/lex/*` family so the codegen tools are up-to-date.
+After editing anything under [lexicons/](lexicons/), run `pnpm codegen` from the repo root before building or testing. The `bsky` package additionally runs `buf generate` for protobuf bindings against `bsync` as part of its codegen step.
 
-Two generations of lexicon tooling coexist:
-
-- **Old**: `@atproto/lex-cli` generates code consumed via `@atproto/api`, `@atproto/lexicon`, `@atproto/xrpc`. `AtpAgent`, `ids.XxxYyy`, `jsonStringToLex`.
-- **New**: `@atproto/lex` family — type-safe schemas, namespace accessors, branded string types, `Client` (replaces `AtpAgent`), `lexParse` (replaces `jsonStringToLex`). When migrating a package from old to new, use the `lex-sdk` skill (specifically its `lexification-server.md` / `lexification-client.md` references).
+For everything else lexicon-related — `lex install` / `lex build`, the per-package `prebuild` setup, and migrating from the legacy `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack to the new `@atproto/lex` family — invoke the `lex-sdk` skill ([.claude/skills/lex-sdk/SKILL.md](.claude/skills/lex-sdk/SKILL.md)).
 
 ## Architecture notes
 
