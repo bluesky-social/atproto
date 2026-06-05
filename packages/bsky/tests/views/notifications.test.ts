@@ -1254,6 +1254,132 @@ describe('notification views', () => {
     })
   })
 
+  describe('internal getPreferences', () => {
+    beforeEach(async () => {
+      await clearPrivateData(db)
+    })
+
+    // Defaults, as filled in by the endpoint.
+    const fp: AppBskyNotificationDefs.FilterablePreference = {
+      include: 'all',
+      list: true,
+      push: true,
+    }
+    const p: AppBskyNotificationDefs.Preference = {
+      list: true,
+      push: true,
+    }
+    const cp: AppBskyNotificationDefs.ChatPreference = {
+      include: 'all',
+      push: true,
+    }
+    const crp: AppBskyNotificationDefs.ChatRequestPreference = {
+      include: 'all',
+      push: true,
+    }
+    const defaults: AppBskyNotificationDefs.Preferences = {
+      chat: cp,
+      chatRequest: crp,
+      follow: fp,
+      like: fp,
+      likeViaRepost: fp,
+      mention: fp,
+      quote: fp,
+      reply: fp,
+      repost: fp,
+      repostViaRepost: fp,
+      starterpackJoined: p,
+      subscribedPost: p,
+      unverified: p,
+      verified: p,
+    }
+
+    const storePreferences = async (
+      actorDid: string,
+      input: AppBskyNotificationPutPreferencesV2.InputSchema,
+    ) => {
+      await agent.app.bsky.notification.putPreferencesV2(input, {
+        encoding: 'application/json',
+        headers: await network.serviceHeaders(
+          actorDid,
+          ids.AppBskyNotificationPutPreferencesV2,
+        ),
+      })
+      await network.processAll()
+    }
+
+    const getPreferences = async (dids: string[]) => {
+      const params = new URLSearchParams()
+      dids.forEach((did) => params.append('dids', did))
+      const res = await fetch(
+        `${network.bsky.url}/xrpc/internal.bsky.notification.getPreferences?${params.toString()}`,
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      return {
+        status: res.status,
+        body: (await res.json()) as {
+          preferences: {
+            did: string
+            preferences: AppBskyNotificationDefs.Preferences
+          }[]
+        },
+      }
+    }
+
+    it('requires role auth, rejecting standard user auth', async () => {
+      // A regular user (standard service JWT) must not be able to call this.
+      const userHeaders = await network.serviceHeaders(
+        carol,
+        'internal.bsky.notification.getPreferences',
+      )
+      const res = await fetch(
+        `${network.bsky.url}/xrpc/internal.bsky.notification.getPreferences?dids=${carol}`,
+        { headers: userHeaders },
+      )
+      expect(res.status).toBe(401)
+    })
+
+    it('returns preferences for the accounts that have them stored', async () => {
+      await storePreferences(carol, { verified: { list: false, push: false } })
+      await storePreferences(dan, { chat: { include: 'follows', push: false } })
+
+      const { status, body } = await getPreferences([carol, dan])
+      expect(status).toBe(200)
+
+      expect(body.preferences).toStrictEqual([
+        {
+          did: carol,
+          preferences: { ...defaults, verified: { list: false, push: false } },
+        },
+        {
+          did: dan,
+          preferences: {
+            ...defaults,
+            chat: { include: 'follows', push: false },
+          },
+        },
+      ])
+    })
+
+    it('omits accounts that have no stored preferences', async () => {
+      await storePreferences(carol, { verified: { list: false, push: false } })
+
+      // `eve` never stored preferences.
+      const { status, body } = await getPreferences([carol, eve])
+      expect(status).toBe(200)
+
+      // Only `carol` is returned, and the response is not positional.
+      expect(body.preferences).toHaveLength(1)
+      expect(body.preferences[0].did).toBe(carol)
+    })
+
+    it('returns an empty list when no account has stored preferences', async () => {
+      const { status, body } = await getPreferences([carol, dan, eve])
+      expect(status).toBe(200)
+      expect(body.preferences).toStrictEqual([])
+    })
+  })
+
   describe('activity subscriptions', () => {
     const sortProfiles = (profiles: AppBskyActorDefs.ProfileView[]) => {
       return profiles.sort((a, b) => (a.handle > b.handle ? 1 : -1))

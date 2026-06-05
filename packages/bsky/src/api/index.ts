@@ -97,6 +97,7 @@ import resolveHandle from './com/atproto/identity/resolveHandle.js'
 import queryLabels from './com/atproto/label/queryLabels.js'
 import getRecord from './com/atproto/repo/getRecord.js'
 import fetchLabels from './com/atproto/temp/fetchLabels.js'
+import getNotificationPreferences from './internal/bsky/notification/getPreferences.js'
 
 export * as health from './health.js'
 
@@ -200,6 +201,8 @@ export default function (server: Server, ctx: AppContext) {
   aaGetConfig(server, ctx)
   aaGetState(server, ctx)
   aaBegin(server, ctx)
+  // internal.bsky
+  getNotificationPreferences(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

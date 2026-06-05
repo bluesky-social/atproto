@@ -1,0 +1,48 @@
+{
+  "lexicon": 1,
+  "id": "internal.bsky.notification.getPreferences",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get notification-related preferences for a list of accounts. Intended for internal service-to-service use. Only accounts that have stored preferences are returned, so the response may be shorter than the requested list and is not positional.",
+      "parameters": {
+        "type": "params",
+        "required": ["dids"],
+        "properties": {
+          "dids": {
+            "type": "array",
+            "items": { "type": "string", "format": "did" },
+            "description": "The DIDs of the accounts to get notification preferences for."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["preferences"],
+          "properties": {
+            "preferences": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#preferencesByDid"
+              }
+            }
+          }
+        }
+      }
+    },
+    "preferencesByDid": {
+      "type": "object",
+      "required": ["did", "preferences"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "preferences": {
+          "type": "ref",
+          "ref": "app.bsky.notification.defs#preferences"
+        }
+      }
+    }
+  }
+}
