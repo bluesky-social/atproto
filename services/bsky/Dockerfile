@@ -4,11 +4,14 @@ RUN corepack enable
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
 RUN corepack install
 
 # Move files into the image and install
-COPY ./*.* ./
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
 COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
@@ -16,11 +19,9 @@ COPY ./packages/internal ./packages/internal
 COPY ./packages/lex ./packages/lex
 
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter '@atproto/bsky...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | sort -u
+# pnpm list --filter '@atproto/bsky...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | grep -v 'packages/bsky"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
-COPY ./packages/bsky ./packages/bsky
-COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -57,8 +58,6 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
-WORKDIR services/bsky
-
 # Uses assets from build stage to reduce build size
 FROM node:24.15-alpine3.23
 
@@ -66,12 +65,11 @@ FROM node:24.15-alpine3.23
 # runit is installed so it can be (optionally) used for logging via svlogd.
 RUN apk add --update dumb-init runit
 
-
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/bsky
 COPY --from=build /app /app
+WORKDIR /app/services/bsky
 
 EXPOSE 3000
 ENV PORT=3000

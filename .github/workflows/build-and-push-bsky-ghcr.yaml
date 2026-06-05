@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - msi/pds-lexification
+      - msi/docker-build-fix
 
 env:
   REGISTRY: ghcr.io

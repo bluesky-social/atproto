@@ -5,11 +5,14 @@ RUN corepack enable
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
 RUN corepack install
 
 # Move files into the image and install
-COPY ./*.* ./
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
 COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
@@ -17,11 +20,10 @@ COPY ./packages/internal ./packages/internal
 COPY ./packages/lex ./packages/lex
 
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter '@atproto/pds...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | sort -u
+# pnpm list --filter '@atproto/pds...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | grep -v 'packages/pds"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/bsky ./packages/bsky
-COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -40,7 +42,6 @@ COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
 COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
 COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
-COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
 COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
@@ -57,8 +58,6 @@ RUN pnpm run --recursive --stream --filter '@atproto/pds...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
-WORKDIR services/pds
-
 # Uses assets from build stage to reduce build size
 FROM node:24.15-alpine3.23
 
@@ -67,11 +66,12 @@ RUN apk add --update dumb-init
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/pds
 COPY --from=build /app /app
-RUN mkdir /app/data && chown node /app/data
+WORKDIR /app/services/pds
 
+RUN mkdir /app/data && chown node /app/data
 VOLUME /app/data
+
 EXPOSE 3000
 ENV PDS_PORT=3000
 ENV NODE_ENV=production
