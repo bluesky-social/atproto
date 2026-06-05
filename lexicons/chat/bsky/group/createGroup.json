@@ -31,8 +31,8 @@
             "name": {
               "type": "string",
               "minLength": 1,
-              "maxGraphemes": 128,
-              "maxLength": 1280
+              "maxGraphemes": 50,
+              "maxLength": 500
             }
           }
         }
