@@ -150,6 +150,22 @@ pnpm run prebuild   # regenerate ./src/lexicons/
 
 The new schema appears under the matching namespace path automatically.
 
+## Editing lexicon JSON
+
+When you change anything under a package's `./lexicons/` directory (or the
+repo-wide [lexicons/](../../../../lexicons/) directory consumed by services
+via `--lexicons ../../lexicons`), regenerate the TS tree before building or
+testing any dependent package:
+
+```bash
+pnpm codegen   # from repo root, recursive across packages
+# or
+pnpm run prebuild   # from a single package
+```
+
+Stale generated code is the most common source of "type X is not assignable
+to Y" errors after a lexicon edit.
+
 ## Removing the legacy setup
 
 If migrating from `@atproto/lex-cli` codegen, see

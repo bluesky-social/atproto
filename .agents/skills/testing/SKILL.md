@@ -1,23 +1,37 @@
 ---
 name: testing
-description: Testing practices for this monorepo — choosing between unit and end-to-end tests, where test files live, how tsconfig.test.json fits in, and which test runner (vitest vs jest) to use. Trigger when the user asks to write tests, testing a newly added feature, add coverage, create test files, set up testing in a new package, or mentions vitest/jest/testing.
+description: >
+  Testing practices for this monorepo — choosing between unit and end-to-end tests, where test files live, how tsconfig.test.json fits in, how to drive Playwright, to to write/adapt UI/end-to-end tests, and which test runner (vitest vs jest) to use. MUST be invoked BEFORE any code search or file reads whenever the user asks to add, write, or extend a test, add coverage, create a test file, set up testing in a new package, mentions vitest/jest, or refers to an existing `*.test.ts` file. Applies equally to unit tests and to end-to-end / UI tests — the skill routes to a Playwright-MCP-first discovery flow for the latter, which differs from normal code-search workflow.
+disable-model-invocation: false
 ---
 
 # Testing in this repo
 
-This monorepo uses two test runners. **Vitest is the standard going forward.** Jest is deprecated and only used by packages that haven't been migrated yet — write new jest tests _only_ in packages that already use jest.
+## End-to-end UI tests: Playwright MCP first
+
+If the test you're about to write drives a UI (anything in `packages/pds/tests/{oauth,account-manager}.test.ts`, or any test that boots a browser via `puppeteer` / Playwright), STOP before grepping or reading source.
+
+**Discover the flow by driving the running app through the Playwright MCP**, not by reading the implementation. Boot the dev env (`cd packages/dev-env && pnpm dev`, PDS at http://localhost:2583), then use `browser_navigate` / `browser_click` / `browser_snapshot` to walk the user flow yourself and copy the exact visible strings out of the snapshot. This catches what the user actually sees — including i18n strings, conditional UI, and edge cases that source-reading misses.
+
+Reading code is the fallback only when Playwright MCP can't reach the state (e.g. the feature isn't wired up yet). See the [playwright skill](../playwright/SKILL.md) for the full workflow and `PageHelper` API.
+
+## Test runner
+
+This monorepo uses two test runners. **Vitest is the standard going forward.** Jest is deprecated and only used by packages that haven't been migrated yet — write new jest tests _only_ in packages that already use jest, and migrate to vitest when feasible.
+
+Currently on vitest (per the root [vitest.config.ts](../../../vitest.config.ts) `projects` list): `bsky`, `lex/*`, `syntax`, `tap`, plus a growing list. Most other packages — including `pds` — are still on jest, aggregated by the root [jest.config.cjs](../../../jest.config.cjs).
 
 Decide which runner to use by following these steps in order:
 
 1. Does the package directory contain `vitest.config.ts`? → use Vitest, follow [references/vitest.md](references/vitest.md).
 2. Does the package directory contain `jest.config.cjs`? → use Jest, follow [references/jest.md](references/jest.md).
 3. Neither exists? → the package has no tests yet. Adopt Vitest: before writing any test code, create `vitest.config.ts` and `tsconfig.tests.json` by following the setup section of [references/vitest.md](references/vitest.md), then write the test.
-4. Does the test code import `@atproto/lex` (or sub-packages)? → also consult the [lex-sdk skill](../lex-sdk/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
+4. Does the test code import `@atproto/lex` (or any `@atproto/lex-*` sub-packages)? → also consult the [lex-sdk skill](../lex-sdk/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
 
 Runner-reference summary:
 
 - [references/vitest.md](references/vitest.md) — preferred. Patterns for writing vitest tests, plus setup instructions for adopting vitest in a package that doesn't have tests yet.
-- [references/jest.md](references/jest.md) — deprecated. Only for adding cases to existing jest test files or maintaining them until migration.
+- [references/jest.md](references/jest.md) — deprecated. Only for adding cases to existing jest test files or maintaining them until migration. UI tests in `pds` are currently jest-based; combine this reference with the [playwright skill](../playwright/SKILL.md) when extending them.
 
 ## Test file location
 

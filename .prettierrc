@@ -12,11 +12,18 @@
       }
     },
     {
-      "files": [".eslintrc"],
-      "options": {
-        "parser": "json",
-        "trailingComma": "none"
-      }
+      "files": ["**/lexicons/**/*.json", "**/.prettierrc", "**/.eslintrc"],
+      "options": { "parser": "json", "trailingComma": "none" }
+    },
+    {
+      "files": [
+        "**/tsconfig/*.json",
+        "**/tsconfig.*.json",
+        "**/tsconfig.json",
+        "**/.vscode/*.json",
+        "**/.zed/*.json"
+      ],
+      "options": { "parser": "jsonc", "trailingComma": "all" }
     }
   ]
 }

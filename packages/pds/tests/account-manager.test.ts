@@ -302,4 +302,82 @@ describe('account manager', () => {
     // The email needs to be verified again
     await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
   })
+
+  it('rejects racial slurs when changing username', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText("Nom d'utilisateur")
+
+    await page.clickOnText("Utiliser un nom d'utilisateur par défaut")
+
+    // Try to change username to a racial slur
+    await page.typeInInput('handle', 'nigger')
+
+    await page.clickOnText('Valider')
+
+    await page.waitForNetworkIdle()
+
+    // Should display appropriate error message
+    await page.ensureTextVisibility(
+      "Le nom d'utilisateur contient un langage inapproprié",
+    )
+
+    // Username should not have changed
+    await page.clickOnText('Retour')
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
+  })
+
+  it('rejects custom domain when not configured', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText("Nom d'utilisateur")
+
+    await page.clickOnText('Utiliser un nom de domaine que je possède')
+
+    // DNS is the default verification method
+    await page.ensureTextVisibility(
+      'Ajoutez le champ suivant à la configuration DNS de votre domaine.',
+    )
+    await page.ensureTextVisibility('_atproto.<votre-domaine>', 'code')
+    await page.ensureTextVisibility('TXT', 'code')
+
+    // Switch to HTTP verification method
+    await page.clickOnText('HTTP', 'span')
+
+    await page.ensureTextVisibility(
+      "Rendez un fichier texte avec le contenu ci-dessous disponible à l'URL suivante.",
+    )
+    await page.ensureTextVisibility(
+      'https://<votre-domaine>/.well-known/atproto-did',
+      'code',
+    )
+
+    // Try to use an unconfigured domain
+    await page.typeInInput('domain', 'notconfigured.com')
+
+    await page.clickOnText('Vérifier et enregistrer')
+
+    await page.waitForNetworkIdle()
+
+    // Should display appropriate error message
+    await page.ensureTextVisibility(
+      "Le nom d'utilisateur n'a pas pu être résolu",
+    )
+
+    // Username should not have changed
+    await page.clickOnText('Retour')
+    await page.ensureTextVisibility('bob-renamed.test', 'span')
+  })
 })

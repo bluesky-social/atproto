@@ -33,9 +33,9 @@
     "sourceMap": true,
     "jsx": "preserve",
     "module": "Node20",
-    "target": "ES2022"
+    "target": "ES2022",
   },
   "typeAcquisition": {
-    "enable": false
-  }
+    "enable": false,
+  },
 }

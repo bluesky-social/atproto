@@ -4,7 +4,7 @@
     "./examples/**/*.ts",
     "./examples/**/*.js",
     "./examples/**/*.mjs",
-    "./examples/**/*.cjs"
+    "./examples/**/*.cjs",
   ],
   "compilerOptions": {
     "allowJs": true,
@@ -19,6 +19,6 @@
     "verbatimModuleSyntax": true,
     "ignoreDeprecations": "6.0",
     "rootDir": ".",
-    "baseUrl": "."
-  }
+    "baseUrl": ".",
+  },
 }
