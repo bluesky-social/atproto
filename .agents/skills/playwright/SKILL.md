@@ -30,12 +30,12 @@ Use the Playwright MCP to drive a real browser against this repo's web UIs:
 
 ## When to use this skill
 
-| Situation                                                                     | What to do                                                                                                                                                         |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Writing or extending a UI test (oauth, account-manager, anything `puppeteer`) | Follow the **Test workflow** below. Discover the flow with the Playwright MCP first, then write the test.                                                           |
-| Demoing / debugging an OAuth flow against the local dev env                   | Boot the dev env + the demo client, navigate to `http://127.0.0.1:8080/?env=development`, drive interactively with `browser_*` tools.                              |
+| Situation                                                                     | What to do                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Writing or extending a UI test (oauth, account-manager, anything `puppeteer`) | Follow the **Test workflow** below. Discover the flow with the Playwright MCP first, then write the test.                                                                                                  |
+| Demoing / debugging an OAuth flow against the local dev env                   | Boot the dev env + the demo client, navigate to `http://127.0.0.1:8080/?env=development`, drive interactively with `browser_*` tools.                                                                      |
 | Demoing / debugging an OAuth flow against **production**                      | Boot only the demo client (no dev env needed), navigate to `http://127.0.0.1:8080/?env=production`. Only sign in with accounts you control. Never automate auth against production accounts you don't own. |
-| Demoing / debugging the Account Manager                                       | Boot the dev env, navigate to `http://localhost:2583/account`, sign in as a seeded account.                                                                         |
+| Demoing / debugging the Account Manager                                       | Boot the dev env, navigate to `http://localhost:2583/account`, sign in as a seeded account.                                                                                                                |
 
 ## Setup
 
@@ -104,7 +104,7 @@ Then navigate to one of:
 
 ```js
 browser_navigate('http://localhost:2583/account')
-browser_snapshot({ boxes: true })       // accessibility snapshot, preferred over screenshots
+browser_snapshot({ boxes: true }) // accessibility snapshot, preferred over screenshots
 browser_console_messages({ level: 'error' })
 browser_network_requests({ static: false })
 ```
@@ -113,7 +113,11 @@ browser_network_requests({ static: false })
 
 ```js
 browser_click({ element: 'button "Sign in"', target: 'ref' })
-browser_type({ element: 'textbox name="username"', target: 'ref', text: 'alice.test' })
+browser_type({
+  element: 'textbox name="username"',
+  target: 'ref',
+  text: 'alice.test',
+})
 browser_press_key({ key: 'Enter' })
 browser_wait_for({ text: 'Mon compte Atmosphère' })
 browser_take_screenshot({ filename: 'evidence.png' })
