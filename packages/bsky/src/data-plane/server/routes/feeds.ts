@@ -20,7 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       builder = builder
         // only your own posts
         .where('type', '=', 'post')
-        // only posts with media (legacy images embed or gallery embed)
+        // only posts with media
         .where((qb) =>
           qb
             .whereExists((iqb) =>
