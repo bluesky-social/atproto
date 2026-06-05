@@ -27,13 +27,13 @@
     },
   },
   "file_types": {
-    "JSON": ["**/.eslintrc", "**/lexicons/**/*.json"],
+    "JSON": ["**/lexicons/**/*.json", "**/.prettierrc", "**/.eslintrc"],
     "JSONC": [
       "**/tsconfig/*.json",
       "**/tsconfig.*.json",
+      "**/tsconfig.json",
       "**/.vscode/*.json",
       "**/.zed/*.json",
-      "**/.prettierrc",
     ],
   },
   "lsp": {
