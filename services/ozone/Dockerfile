@@ -4,13 +4,14 @@ RUN corepack enable
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
 RUN corepack install
 
 # Move files into the image and install
-COPY ./package.json ./package.json
-COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
-COPY ./pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
 COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons

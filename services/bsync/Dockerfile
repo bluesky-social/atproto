@@ -4,19 +4,21 @@ RUN corepack enable
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
 RUN corepack install
+RUN node --version
+RUN pnpm --version
 
 # Move files into the image and install
-COPY ./package.json ./package.json
-COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
-COPY ./pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
 COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path' | sort -u
-COPY ./packages/bsync ./packages/bsync
+# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path' | grep -v 'packages/bsync"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/lex/lex-cbor ./packages/lex/lex-cbor
@@ -33,7 +35,7 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsync...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
-WORKDIR services/bsync
+WORKDIR /app/services/bsync
 
 # Uses assets from build stage to reduce build size
 FROM node:24.15-alpine3.23
