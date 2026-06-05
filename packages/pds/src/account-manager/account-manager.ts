@@ -700,9 +700,13 @@ export class AccountManager {
     did: DidString,
     opts?: { locale?: string },
   ): Promise<{ tokenRequired: boolean }> {
+    // @NOTE Takendown accounts are already rejected by this method's callers
+    // (the XRPC route's auth verifier uses `checkTakedown: true`, and the
+    // OAuth account store resolves accounts with `includeTakenDown: false`),
+    // so they are excluded here as well, for consistency.
     const account = await this.getAccount(did, {
       includeDeactivated: true,
-      includeTakenDown: true,
+      includeTakenDown: false,
     })
 
     if (!account) {
