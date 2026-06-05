@@ -8,6 +8,7 @@ import { Service } from '../../../proto/bsky_connect.js'
 import {
   ChatNotificationInclude,
   ChatNotificationPreference,
+  ChatRequestNotificationPreference,
   FilterableNotificationPreference,
   NotificationInclude,
   NotificationPreference,
@@ -205,8 +206,19 @@ export const notificationPreferencesLexToProtobuf = (
   ): ChatNotificationPreference =>
     new ChatNotificationPreference({
       include:
-        p.include === 'accepted'
-          ? ChatNotificationInclude.ACCEPTED
+        p.include === 'follows'
+          ? ChatNotificationInclude.FOLLOWS
+          : ChatNotificationInclude.ALL,
+      push: { enabled: p.push ?? true },
+    })
+
+  const lexChatRequestPreferenceToProtobuf = (
+    p: app.bsky.notification.defs.ChatRequestPreference,
+  ): ChatRequestNotificationPreference =>
+    new ChatRequestNotificationPreference({
+      include:
+        p.include === 'follows'
+          ? ChatNotificationInclude.FOLLOWS
           : ChatNotificationInclude.ALL,
       push: { enabled: p.push ?? true },
     })
@@ -234,6 +246,9 @@ export const notificationPreferencesLexToProtobuf = (
   return new NotificationPreferences({
     entry: Buffer.from(json),
     chat: lexChatPreferenceToProtobuf(p.chat),
+    chatRequest: p.chatRequest
+      ? lexChatRequestPreferenceToProtobuf(p.chatRequest)
+      : undefined,
     follow: lexFilterablePreferenceToProtobuf(p.follow),
     like: lexFilterablePreferenceToProtobuf(p.like),
     likeViaRepost: lexFilterablePreferenceToProtobuf(p.likeViaRepost),

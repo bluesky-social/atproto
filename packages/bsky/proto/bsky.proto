@@ -818,10 +818,15 @@ message NotificationPreference {
 enum ChatNotificationInclude {
   CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
   CHAT_NOTIFICATION_INCLUDE_ALL = 1;
-  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
+  CHAT_NOTIFICATION_INCLUDE_FOLLOWS = 2;
 }
 
 message ChatNotificationPreference {
+  ChatNotificationInclude include = 1;
+  NotificationChannelPush push = 2;
+}
+
+message ChatRequestNotificationPreference {
   ChatNotificationInclude include = 1;
   NotificationChannelPush push = 2;
 }
@@ -841,6 +846,7 @@ message NotificationPreferences {
   NotificationPreference subscribed_post = 12;
   NotificationPreference unverified = 13;
   NotificationPreference verified = 14;
+  ChatRequestNotificationPreference chat_request = 15;
 }
 
 message GetNotificationPreferencesResponse {

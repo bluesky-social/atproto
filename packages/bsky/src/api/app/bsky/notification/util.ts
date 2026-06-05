@@ -2,6 +2,7 @@ import { app } from '../../../../lexicons/index.js'
 import {
   ChatNotificationInclude,
   ChatNotificationPreference,
+  ChatRequestNotificationPreference,
   FilterableNotificationPreference,
   NotificationInclude,
   NotificationPreference,
@@ -18,7 +19,20 @@ type DeepPartial<T> = T extends object
 const ensureChatPreference = (
   p?: DeepPartial<app.bsky.notification.defs.ChatPreference>,
 ): app.bsky.notification.defs.ChatPreference => {
-  const includeValues = ['all', 'accepted']
+  const includeValues = ['all', 'follows']
+  return {
+    include:
+      typeof p?.include === 'string' && includeValues.includes(p.include)
+        ? p.include
+        : 'all',
+    push: p?.push ?? true,
+  }
+}
+
+const ensureChatRequestPreference = (
+  p?: DeepPartial<app.bsky.notification.defs.ChatRequestPreference>,
+): app.bsky.notification.defs.ChatRequestPreference => {
+  const includeValues = ['all', 'follows']
   return {
     include:
       typeof p?.include === 'string' && includeValues.includes(p.include)
@@ -56,6 +70,7 @@ const ensurePreferences = (
 ): app.bsky.notification.defs.Preferences => {
   return {
     chat: ensureChatPreference(p.chat),
+    chatRequest: ensureChatRequestPreference(p.chatRequest),
     follow: ensureFilterablePreference(p.follow),
     like: ensureFilterablePreference(p.like),
     likeViaRepost: ensureFilterablePreference(p.likeViaRepost),
@@ -75,8 +90,16 @@ const protobufChatPreferenceToLex = (
   p?: DeepPartial<ChatNotificationPreference>,
 ): Partial<app.bsky.notification.defs.ChatPreference> => {
   return {
-    include:
-      p?.include === ChatNotificationInclude.ACCEPTED ? 'accepted' : 'all',
+    include: p?.include === ChatNotificationInclude.FOLLOWS ? 'follows' : 'all',
+    push: p?.push?.enabled,
+  }
+}
+
+const protobufChatRequestPreferenceToLex = (
+  p?: DeepPartial<ChatRequestNotificationPreference>,
+): Partial<app.bsky.notification.defs.ChatRequestPreference> => {
+  return {
+    include: p?.include === ChatNotificationInclude.FOLLOWS ? 'follows' : 'all',
     push: p?.push?.enabled,
   }
 }
@@ -105,6 +128,7 @@ export const protobufToLex = (
 ): app.bsky.notification.defs.Preferences => {
   return ensurePreferences({
     chat: protobufChatPreferenceToLex(res.chat),
+    chatRequest: protobufChatRequestPreferenceToLex(res.chatRequest),
     follow: protobufFilterablePreferenceToLex(res.follow),
     like: protobufFilterablePreferenceToLex(res.like),
     likeViaRepost: protobufFilterablePreferenceToLex(res.likeViaRepost),

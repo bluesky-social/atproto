@@ -1052,6 +1052,10 @@ describe('notification views', () => {
       include: 'all',
       push: true,
     }
+    const crp: AppBskyNotificationDefs.ChatRequestPreference = {
+      include: 'all',
+      push: true,
+    }
 
     it('gets preferences filling up with the defaults', async () => {
       const actorDid = sc.dids.carol
@@ -1102,6 +1106,7 @@ describe('notification views', () => {
 
       const expectedApi0: AppBskyNotificationDefs.Preferences = {
         chat: cp,
+        chatRequest: crp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1133,6 +1138,7 @@ describe('notification views', () => {
 
       const expectedApi1: AppBskyNotificationDefs.Preferences = {
         chat: cp,
+        chatRequest: crp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1199,11 +1205,12 @@ describe('notification views', () => {
       const input0 = {
         chat: {
           push: false,
-          include: 'accepted',
+          include: 'follows',
         },
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
         chat: input0.chat,
+        chatRequest: crp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1229,6 +1236,7 @@ describe('notification views', () => {
       const expected1: AppBskyNotificationDefs.Preferences = {
         // Kept from the previous call.
         chat: input0.chat,
+        chatRequest: crp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
