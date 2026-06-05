@@ -8,8 +8,6 @@ COPY ./.npmrc ./
 COPY ./.nvmrc ./
 COPY ./package.json ./
 RUN corepack install
-RUN node --version
-RUN pnpm --version
 
 # Move files into the image and install
 COPY ./pnpm-lock.yaml ./
@@ -35,8 +33,6 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsync...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
-WORKDIR /app/services/bsync
-
 # Uses assets from build stage to reduce build size
 FROM node:24.15-alpine3.23
 
@@ -45,8 +41,8 @@ RUN apk add --update dumb-init
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/bsync
 COPY --from=build /app /app
+WORKDIR /app/services/bsync
 
 EXPOSE 3000
 ENV BSYNC_PORT=3000
