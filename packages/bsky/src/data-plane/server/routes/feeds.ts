@@ -20,12 +20,25 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       builder = builder
         // only your own posts
         .where('type', '=', 'post')
-        // only posts with media
-        .whereExists((qb) =>
+        // only posts with media (legacy images embed or gallery embed)
+        .where((qb) =>
           qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            .whereExists((iqb) =>
+              iqb
+                .selectFrom('post_embed_image')
+                .select('post_embed_image.postUri')
+                .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            )
+            .orWhereExists((iqb) =>
+              iqb
+                .selectFrom('post_embed_gallery_image')
+                .select('post_embed_gallery_image.postUri')
+                .whereRef(
+                  'post_embed_gallery_image.postUri',
+                  '=',
+                  'feed_item.postUri',
+                ),
+            ),
         )
     } else if (feedType === FeedType.POSTS_WITH_VIDEO) {
       builder = builder
