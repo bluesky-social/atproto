@@ -10,7 +10,15 @@
       "type": "object",
       "required": ["include", "push"],
       "properties": {
-        "include": { "type": "string", "knownValues": ["all", "accepted"] },
+        "include": { "type": "string", "knownValues": ["all", "follows"] },
+        "push": { "type": "boolean" }
+      }
+    },
+    "chatRequestPreference": {
+      "type": "object",
+      "required": ["include", "push"],
+      "properties": {
+        "include": { "type": "string", "knownValues": ["all", "follows"] },
         "push": { "type": "boolean" }
       }
     },
@@ -50,6 +58,7 @@
       ],
       "properties": {
         "chat": { "type": "ref", "ref": "#chatPreference" },
+        "chatRequest": { "type": "ref", "ref": "#chatRequestPreference" },
         "follow": { "type": "ref", "ref": "#filterablePreference" },
         "like": { "type": "ref", "ref": "#filterablePreference" },
         "likeViaRepost": { "type": "ref", "ref": "#filterablePreference" },

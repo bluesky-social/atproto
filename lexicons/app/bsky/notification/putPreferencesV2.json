@@ -14,6 +14,10 @@
               "type": "ref",
               "ref": "app.bsky.notification.defs#chatPreference"
             },
+            "chatRequest": {
+              "type": "ref",
+              "ref": "app.bsky.notification.defs#chatRequestPreference"
+            },
             "follow": {
               "type": "ref",
               "ref": "app.bsky.notification.defs#filterablePreference"
