@@ -298,12 +298,12 @@ export async function generateMockSetup(env: TestNetwork) {
   })
 
   // post with a gallery of images
-  const galleryItems: Array<any> = [];
+  const galleryItems: Array<any> = []
   for (let i = 0; i < 10; i++) {
     galleryItems.push({
       $type: 'app.bsky.embed.gallery#image',
       image: uploadedImg.data.blob,
-      alt: 'naughty ' + (i+1),
+      alt: 'naughty ' + (i + 1),
       aspectRatio: {
         $type: 'app.bsky.embed.defs#aspectRatio',
         width: 10,
@@ -320,7 +320,7 @@ export async function generateMockSetup(env: TestNetwork) {
         items: galleryItems,
       },
       createdAt: date.next().value,
-    }
+    },
   )
   posts.push(galleryPost)
 
