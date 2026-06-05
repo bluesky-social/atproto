@@ -84,7 +84,6 @@ message PostRecordMeta {
   bool has_post_gate = 5;
   bool has_thread_gate = 6;
   bool has_video = 7;
-  bool has_gallery = 8;
 }
 
 message GetPostRecordsRequest {
@@ -1021,7 +1020,6 @@ message AuthorFeedItem {
   bool is_repost = 9;
   bool is_quote_post = 10;
   bool posts_with_video = 11;
-  bool posts_with_gallery = 12;
 }
 
 message GetAuthorFeedResponse {
@@ -1230,7 +1228,6 @@ message SearchPostsV2Request {
   // Media filters
   optional bool has_media = 9;
   optional bool has_video = 10;
-  optional bool has_gallery = 17;
 
   // Reply filters
   optional string reply_parent_uri = 11;
