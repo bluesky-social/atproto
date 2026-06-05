@@ -264,7 +264,7 @@ export async function generateMockSetup(env: TestNetwork) {
   const labeledPost = await bob.app.bsky.feed.post.create(
     { repo: bob.assertDid },
     {
-      text: 'naughty WOW',
+      text: 'naughty post',
       embed: {
         $type: 'app.bsky.embed.images',
         images: [
