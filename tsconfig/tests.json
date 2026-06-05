@@ -7,6 +7,6 @@
     "module": "NodeNext",
     "ignoreDeprecations": "6.0",
     "skipLibCheck": true,
-    "noEmit": true
-  }
+    "noEmit": true,
+  },
 }
