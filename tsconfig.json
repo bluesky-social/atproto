@@ -53,6 +53,7 @@
     { "path": "./packages/ozone" },
     { "path": "./packages/pds" },
     { "path": "./packages/repo" },
+    { "path": "./packages/sokaa-appview" },
     { "path": "./packages/sync" },
     { "path": "./packages/syntax" },
     { "path": "./packages/tap" },
