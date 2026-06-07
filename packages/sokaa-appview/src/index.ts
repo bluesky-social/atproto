@@ -1,8 +1,7 @@
 // Sokaa App View — package entry point.
-// Scaffold only (Phase 0). Components land in subsequent phases:
-//   - data-plane/server: Postgres schema, migrations, indexer, dataplane routes
-//   - hydration / views: presentation layer
-//   - api: app.sokaa.* XRPC handlers
-//   - auth-verifier / identity: inter-service JWT verification + DID resolution
+// Phase 1: Postgres schema + migrations (data-plane/server/db).
+// Subsequent phases: indexer, dataplane routes, API handlers, hydration.
 
 export const PACKAGE_NAME = '@atproto/sokaa-appview'
+export { Database } from './data-plane/server/db'
+export type { DatabaseSchema } from './data-plane/server/db'
