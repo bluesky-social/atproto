@@ -18,6 +18,7 @@ test.sqlite
 .claude/
 coverage
 .pnpm-store/
+docs/
 
 # TypeScript build output in src/
 packages/**/src/**/*.js
