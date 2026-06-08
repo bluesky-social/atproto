@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.2.2
+
+### Patch Changes
+
+- [#5054](https://github.com/bluesky-social/atproto/pull/5054) [`dfce9df`](https://github.com/bluesky-social/atproto/commit/dfce9dfe3584ea3057b06a21526b033b0adbd4c1) Thanks [@gcwill70](https://github.com/gcwill70)! - add chat.bsky.moderation.getConvos to ozone
+
+- Updated dependencies [[`da8818f`](https://github.com/bluesky-social/atproto/commit/da8818f13577c91a5001a9998279d695fccb7bcf)]:
+  - @atproto/api@0.20.11
+
 ## 0.2.1
 
 ### Patch Changes
