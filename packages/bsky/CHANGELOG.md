@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.239
+
+### Patch Changes
+
+- [#5035](https://github.com/bluesky-social/atproto/pull/5035) [`0d62d5b`](https://github.com/bluesky-social/atproto/commit/0d62d5b4c6086189793d3a1e0c51ecd764df6a83) Thanks [@treethought](https://github.com/treethought)! - Route appview search through new V2 dataplane RPCs behind the `search:v2:enable` feature gate.
+
+- [#5039](https://github.com/bluesky-social/atproto/pull/5039) [`16c8a94`](https://github.com/bluesky-social/atproto/commit/16c8a948b71d473568917f33f4d43dbd85b2a599) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Set timeout when getting feed skeletons
+
+- Updated dependencies [[`77a3861`](https://github.com/bluesky-social/atproto/commit/77a3861561691ea51a94f96de86069c7875772da), [`4280e58`](https://github.com/bluesky-social/atproto/commit/4280e585b63b1e53704fee8c68a8347224f74253)]:
+  - @atproto/api@0.20.10
+
 ## 0.0.238
 
 ### Patch Changes
