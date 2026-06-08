@@ -12,6 +12,7 @@
       "knownValues": ["anyone", "followedByOwner"]
     },
     "joinLinkView": {
+      "description": "Join link view to be used within a group view, so the convo is surrounding, not specified inside this view.",
       "type": "object",
       "required": [
         "code",
@@ -32,8 +33,10 @@
       }
     },
     "joinLinkPreviewView": {
+      "description": "Preview that can be shown in feeds, including to unauthenticated viewers.",
       "type": "object",
       "required": [
+        "convoId",
         "code",
         "name",
         "owner",
@@ -44,6 +47,7 @@
         "enabledStatus"
       ],
       "properties": {
+        "convoId": { "type": "string" },
         "code": { "type": "string" },
         "name": { "type": "string" },
         "owner": {
@@ -73,6 +77,7 @@
       }
     },
     "joinRequestView": {
+      "description": "A join request from the perspective of the group owner.",
       "type": "object",
       "required": ["convoId", "requestedBy", "requestedAt"],
       "properties": {
@@ -93,7 +98,7 @@
         "owner",
         "memberCount",
         "memberLimit",
-        "requestedAt"
+        "viewer"
       ],
       "properties": {
         "convoId": { "type": "string" },
@@ -104,7 +109,10 @@
         },
         "memberCount": { "type": "integer" },
         "memberLimit": { "type": "integer" },
-        "requestedAt": { "type": "string", "format": "datetime" }
+        "viewer": {
+          "type": "ref",
+          "ref": "#joinLinkViewerState"
+        }
       }
     }
   }
