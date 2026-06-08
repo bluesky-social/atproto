@@ -46,7 +46,7 @@ export class ServerMailer {
   }
 
   async sendAccountDelete(
-    params: { token: string },
+    params: { token: string; locale?: string },
     mailOpts: SendMailOptions,
   ) {
     await this.sendTemplate('deleteAccount', params, {

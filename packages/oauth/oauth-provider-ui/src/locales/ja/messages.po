@@ -74,7 +74,7 @@ msgstr "２要素認証の確認"
 msgid "A local app"
 msgstr ""
 
-#: src/lib/api.ts:426
+#: src/lib/api.ts:466
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
@@ -91,8 +91,16 @@ msgstr ""
 msgid "Account"
 msgstr "アカウント"
 
-#: src/components/utils/account-image.tsx:40
+#: src/components/utils/account-image.tsx:60
 msgid "Account avatar"
+msgstr ""
+
+#: src/data/account.ts:25
+msgid "Account deactivated"
+msgstr ""
+
+#: src/data/account.ts:106
+msgid "Account deleted"
 msgstr ""
 
 #: src/components/utils/account-identifier.tsx:29
@@ -107,11 +115,16 @@ msgstr ""
 msgid "Account overview"
 msgstr ""
 
+#: src/data/account.ts:52
+#: src/components/reactivate-account-view.tsx:34
+msgid "Account reactivated"
+msgstr ""
+
 #: src/components/utils/account-selector.tsx:25
 msgid "Account selector"
 msgstr ""
 
-#: src/components/utils/handle.tsx:49
+#: src/components/utils/handle.tsx:53
 msgid "Account username"
 msgstr ""
 
@@ -133,15 +146,16 @@ msgstr "コードをすでに持っていますか？"
 msgid "An application on your device"
 msgstr "デバイス上のアプリ"
 
-#: src/components/error-view.tsx:21
+#: src/hooks/use-notify-error.ts:12
+#: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr ""
 
-#: src/lib/api.ts:314
+#: src/lib/api.ts:354
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
-#: src/components/utils/error-card.tsx:80
+#: src/components/utils/error-card.tsx:82
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
@@ -169,6 +183,10 @@ msgstr ""
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr ""
 
+#: src/components/delete-account-dialog.tsx:89
+msgid "Are you really, really sure?"
+msgstr ""
+
 #: src/components/authenticate-welcome-view.tsx:19
 msgctxt "AuthenticationPage"
 msgid "Authenticate"
@@ -194,7 +212,7 @@ msgstr ""
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
-#: src/components/forms/form-card.tsx:55
+#: src/components/forms/form-card.tsx:57
 msgid "Back"
 msgstr "戻る"
 
@@ -233,13 +251,17 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
 
-#: src/contexts/authentication.tsx:181
+#: src/contexts/authentication.tsx:184
+#: src/components/reactivate-account-view.tsx:84
+#: src/components/delete-account-dialog.tsx:123
+#: src/components/delete-account-dialog.tsx:157
+#: src/components/delete-account-dialog.tsx:208
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card.tsx:52
+#: src/components/forms/form-card.tsx:54
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:120
+#: src/pages/account/(authenticated)/devices/page.tsx:123
 msgid "Cannot remove current device"
 msgstr ""
 
@@ -255,10 +277,22 @@ msgstr ""
 msgid "Chat"
 msgstr "チャット"
 
+#: src/components/delete-account-dialog.tsx:140
+msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
+msgstr ""
+
 #. placeholder {0}: secondFactorError.hint
 #: src/components/sign-in-form.tsx:253
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
+
+#: src/components/delete-account-dialog.tsx:145
+msgid "Check your email for the confirmation code to enter below:"
+msgstr ""
+
+#: src/data/account.ts:80
+msgid "Check your inbox for the confirmation code."
+msgstr ""
 
 #: src/data/email.ts:79
 msgid "Check your inbox for the verification code."
@@ -273,8 +307,8 @@ msgstr ""
 msgid "Choose a new default username."
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:108
-#: src/components/update-email-dialog.tsx:143
+#: src/components/update-email-dialog.tsx:111
+#: src/components/update-email-dialog.tsx:147
 msgid "Choose a new email address to associate with your account."
 msgstr ""
 
@@ -282,12 +316,8 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/authorization-page.tsx:164
+#: src/authorization-page.tsx:168
 msgid "Click here if you are not automatically redirected"
-msgstr ""
-
-#: src/components/update-email-form.tsx:97
-msgid "Click here to resend."
 msgstr ""
 
 #: src/components/utils/dialog-simple.tsx:70
@@ -317,8 +347,13 @@ msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
 #: src/components/sign-in-form.tsx:244
+#: src/components/delete-account-confirm-form.tsx:55
 msgid "Confirmation code"
 msgstr "確認コード"
+
+#: src/data/account.ts:79
+msgid "Confirmation email sent"
+msgstr ""
 
 #: src/cookie-error-page.tsx:61
 msgid "Continue"
@@ -349,7 +384,7 @@ msgstr "新規アカウントの作成"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr ""
 
-#: src/lib/api.ts:395
+#: src/lib/api.ts:435
 msgid "Custom domains are not supported"
 msgstr ""
 
@@ -357,9 +392,31 @@ msgstr ""
 msgid "Data"
 msgstr ""
 
+#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/components/deactivate-account-dialog.tsx:22
+msgid "Deactivate account"
+msgstr ""
+
+#: src/components/utils/account-image.tsx:82
+msgid "Deactivated account"
+msgstr ""
+
 #: src/components/utils/scope-description.tsx:666
 msgid "Delete"
 msgstr "削除"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/components/delete-account-dialog.tsx:79
+msgid "Delete account"
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:75
+msgid "Delete account <0/>"
+msgstr ""
+
+#: src/components/delete-account-confirm-form.tsx:37
+msgid "Delete my account"
+msgstr ""
 
 #: src/components/consent-form.tsx:99
 msgctxt "OAuthConsent"
@@ -374,12 +431,12 @@ msgstr ""
 msgid "Devices"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:48
-msgid "DNS"
+#: src/components/forms/input-token.tsx:88
+msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
-#: src/components/update-email-form.tsx:87
-msgid "Don't see an email?"
+#: src/components/forms/input-handle-custom-instructions.tsx:48
+msgid "DNS"
 msgstr ""
 
 #: src/components/update-handle-dialog.tsx:143
@@ -396,14 +453,14 @@ msgstr ""
 msgid "Email"
 msgstr "メールアドレス"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:118
+#: src/pages/account/(authenticated)/manage/page.tsx:135
 #: src/components/reset-password-request-form.tsx:28
 #: src/components/reset-password-request-form.tsx:32
 #: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "メールアドレス"
 
-#: src/components/update-email-dialog.tsx:60
+#: src/components/update-email-dialog.tsx:62
 msgid "Email address successfully updated"
 msgstr ""
 
@@ -447,14 +504,18 @@ msgstr "メールアドレスを入力してください"
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
 
-#: src/components/sign-in-view.tsx:75
+#: src/components/sign-in-view.tsx:73
 msgid "Enter your password"
 msgstr "パスワードを入力"
 
-#: src/components/sign-in-view.tsx:94
-#: src/components/sign-in-view.tsx:112
+#: src/components/sign-in-view.tsx:92
+#: src/components/sign-in-view.tsx:110
 msgid "Enter your username and password"
 msgstr "ユーザー名とパスワードを入力してください"
+
+#: src/components/deactivate-account-dialog.tsx:53
+msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
+msgstr ""
 
 #: src/components/sign-up-credentials-form.tsx:47
 msgid "example-com-xxxxx-xxxxx"
@@ -472,12 +533,24 @@ msgstr "最強"
 msgid "Failed to change email"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/data/account.ts:33
+msgid "Failed to deactivate account"
+msgstr ""
+
+#: src/data/account.ts:114
+msgid "Failed to delete account"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:37
 #: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:94
+#: src/data/account.ts:60
+msgid "Failed to reactivate account"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:97
 msgid "Failed to remove device"
 msgstr ""
 
@@ -497,6 +570,10 @@ msgstr ""
 msgid "Failed to revoke access"
 msgstr ""
 
+#: src/data/account.ts:87
+msgid "Failed to send confirmation email"
+msgstr ""
+
 #: src/data/email.ts:86
 msgid "Failed to send verification email"
 msgstr ""
@@ -511,6 +588,14 @@ msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:72
 msgid "File contents"
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:177
+msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:182
+msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr ""
 
 #: src/components/reset-password-view.tsx:38
@@ -585,8 +670,12 @@ msgstr ""
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:109
+#: src/pages/account/(authenticated)/manage/page.tsx:126
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
+msgstr ""
+
+#: src/components/deactivate-account-dialog.tsx:61
+msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr ""
 
 #: src/locales/locale-selector.tsx:47
@@ -597,7 +686,7 @@ msgstr "言語選択"
 msgid "Invalid"
 msgstr "無効"
 
-#: src/components/utils/handle.tsx:53
+#: src/components/utils/handle.tsx:56
 msgid "Invalid Handle"
 msgstr ""
 
@@ -624,12 +713,12 @@ msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:110
+#: src/pages/account/(authenticated)/devices/page.tsx:113
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:73
+#: src/components/update-email-dialog.tsx:75
 msgctxt "verify email"
 msgid "Later"
 msgstr ""
@@ -638,7 +727,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:155
+#: src/authorization-page.tsx:159
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -650,7 +739,7 @@ msgstr "リストにないアカウントにログイン"
 msgid "Logo"
 msgstr "ロゴ"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:63
+#: src/pages/account/(authenticated)/devices/page.tsx:66
 msgid "Looks like you aren't logged in on any other devices."
 msgstr ""
 
@@ -712,12 +801,12 @@ msgctxt "Error"
 msgid "Name"
 msgstr ""
 
-#: src/components/update-email-form.tsx:52
-#: src/components/update-email-dialog.tsx:176
+#: src/components/update-email-form.tsx:54
+#: src/components/update-email-dialog.tsx:181
 msgid "New email address"
 msgstr ""
 
-#: src/components/reset-password-confirm-form.tsx:61
+#: src/components/reset-password-confirm-form.tsx:64
 msgid "New password"
 msgstr "新しいパスワード"
 
@@ -735,9 +824,10 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:150
+#: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:68
 #: src/components/sign-in-form.tsx:186
+#: src/components/delete-account-confirm-form.tsx:70
 #: src/components/forms/input-password.tsx:46
 msgid "Password"
 msgstr "パスワード"
@@ -796,6 +886,10 @@ msgstr ""
 msgid "Please check the username and try again."
 msgstr ""
 
+#: src/data/account.ts:115
+msgid "Please check your code and password, then try again."
+msgstr ""
+
 #: src/data/password.ts:59
 #: src/data/email.ts:60
 msgid "Please check your reset code and try again."
@@ -805,15 +899,18 @@ msgstr ""
 msgid "Please check your verification code and try again."
 msgstr ""
 
-#: src/components/update-email-form.tsx:69
+#: src/components/update-email-form.tsx:71
 msgid "Please enter the security code that was sent to your email address."
 msgstr ""
 
 #: src/data/email.ts:87
+#: src/data/account.ts:34
+#: src/data/account.ts:61
+#: src/data/account.ts:88
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:74
+#: src/components/forms/button-cooldown.tsx:68
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr ""
 
@@ -826,6 +923,15 @@ msgstr "プライバシーポリシー"
 #: src/components/utils/scope-description.tsx:582
 msgid "Publish changes"
 msgstr "公開された変更"
+
+#: src/components/reactivate-account-dialog.tsx:36
+msgid "Reactivate"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/components/reactivate-account-dialog.tsx:22
+msgid "Reactivate account"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:379
 msgid "Read and send messages"
@@ -849,7 +955,7 @@ msgstr "このアカウントをこのデバイスに記憶する"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/reset-password-confirm-form.tsx:46
+#: src/components/reset-password-confirm-form.tsx:48
 msgid "Reset code"
 msgstr "リセットコード"
 
@@ -861,13 +967,13 @@ msgstr "パスワードをリセット"
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/devices/page.tsx:33
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:75
+#: src/components/utils/error-card.tsx:77
 msgid "Retry"
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:108
+#: src/components/forms/button-cooldown.tsx:65
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
 
@@ -876,11 +982,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr ""
 
-#: src/components/update-email-form.tsx:76
+#: src/components/update-email-form.tsx:78
 msgid "Security code"
 msgstr ""
 
-#: src/components/update-email-form.tsx:66
+#: src/components/update-email-form.tsx:68
 msgid "Security step required"
 msgstr ""
 
@@ -892,9 +998,13 @@ msgstr ""
 msgid "Select domain"
 msgstr "ドメインを選択"
 
-#: src/components/sign-in-view.tsx:128
+#: src/components/sign-in-view.tsx:126
 msgid "Select from an existing account"
 msgstr "既存のアカウントから選択"
+
+#: src/components/delete-account-dialog.tsx:200
+msgid "Send email"
+msgstr ""
 
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
@@ -911,7 +1021,7 @@ msgctxt "verb"
 msgid "Sign in"
 msgstr "サインイン"
 
-#. placeholder {0}: session.account.name ?? stringifyAccountHandle(session.account) ?? session.account.sub
+#. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
 #: src/components/sign-in-picker.tsx:59
 msgid "Sign in as {0}"
 msgstr "{0} でサインイン"
@@ -920,7 +1030,7 @@ msgstr "{0} でサインイン"
 msgid "Sign in as..."
 msgstr "アカウントの選択"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:123
+#: src/pages/account/(authenticated)/devices/page.tsx:126
 msgctxt "device list"
 msgid "Sign out"
 msgstr ""
@@ -948,11 +1058,11 @@ msgstr "ステップ {currentPosition} / {count}"
 msgid "Strong"
 msgstr "強い"
 
-#: src/components/forms/form-card.tsx:48
+#: src/components/forms/form-card.tsx:49
 msgid "Submit"
 msgstr "送信"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:91
 msgid "Successfully removed device"
 msgstr ""
 
@@ -990,36 +1100,40 @@ msgstr "アプリは、あなたに代わって次のアクションを実行す
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr ""
 
-#: src/lib/api.ts:353
+#: src/lib/api.ts:393
 msgid "The data you submitted is invalid. Please check the form and try again."
-msgstr "送信データが正しくありません。フォームをチェックしてもう一度お試しください。"
+msgstr ""
 
-#: src/lib/api.ts:383
+#: src/lib/api.ts:423
 msgid "The domain name is not allowed"
 msgstr "そのドメイン名は許可されていません"
 
-#: src/lib/api.ts:453
+#: src/lib/api.ts:493
 msgid "The invite code is not valid"
 msgstr "招待コードが有効ではありません"
 
-#: src/lib/api.ts:312
+#: src/lib/api.ts:352
 msgid "The server encountered an unexpected error. Please try again."
 msgstr ""
 
-#: src/lib/api.ts:385
+#: src/lib/api.ts:425
 msgid "The username contains inappropriate language"
 msgstr ""
 
-#: src/lib/api.ts:391
+#: src/lib/api.ts:431
 msgid "The username could not be resolved"
 msgstr ""
 
-#: src/lib/api.ts:389
+#: src/lib/api.ts:429
 msgid "The username is already in use"
 msgstr ""
 
-#: src/lib/api.ts:381
+#: src/lib/api.ts:421
 msgid "The username is invalid"
+msgstr ""
+
+#: src/components/deactivate-account-dialog.tsx:46
+msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx:43
@@ -1030,22 +1144,30 @@ msgstr ""
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr ""
 
-#: src/lib/api.ts:338
+#: src/lib/api.ts:378
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/lib/api.ts:517
+#: src/lib/api.ts:557
 msgid "This email is already used"
 msgstr "このメールアドレスはすでに使用されています"
 
-#: src/lib/api.ts:323
-#: src/lib/api.ts:474
-#: src/lib/api.ts:505
+#: src/lib/api.ts:363
+#: src/lib/api.ts:514
+#: src/lib/api.ts:545
 msgid "This sign-in session has expired"
 msgstr "このサインインセッションの有効期限が切れました"
 
-#: src/lib/api.ts:387
+#: src/lib/api.ts:427
 msgid "This username is reserved"
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:92
+msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:99
+msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 msgstr ""
 
 #: src/components/update-password-dialog.tsx:51
@@ -1077,7 +1199,7 @@ msgstr ""
 msgid "Type your username"
 msgstr ""
 
-#: src/contexts/session.tsx:156
+#: src/contexts/session.tsx:154
 msgid "Unauthorized"
 msgstr ""
 
@@ -1085,7 +1207,7 @@ msgstr ""
 msgid "Unexpected server response"
 msgstr "予期しないサーバー応答"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:105
+#: src/pages/account/(authenticated)/devices/page.tsx:108
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr ""
@@ -1094,8 +1216,8 @@ msgstr ""
 msgid "Update"
 msgstr "更新"
 
-#: src/components/update-email-dialog.tsx:106
-#: src/components/update-email-dialog.tsx:141
+#: src/components/update-email-dialog.tsx:109
+#: src/components/update-email-dialog.tsx:145
 msgid "Update your email"
 msgstr ""
 
@@ -1125,7 +1247,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:177
+#: src/pages/account/(authenticated)/manage/page.tsx:249
 msgid "Username"
 msgstr ""
 
@@ -1145,8 +1267,8 @@ msgstr "有効"
 msgid "Value"
 msgstr ""
 
-#: src/components/verify-email-confirm-form.tsx:19
-#: src/components/update-email-dialog.tsx:84
+#: src/components/verify-email-confirm-form.tsx:24
+#: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr ""
 
@@ -1166,8 +1288,8 @@ msgstr ""
 msgid "Verify and Save"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:73
-#: src/components/update-email-dialog.tsx:74
+#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
@@ -1208,6 +1330,10 @@ msgstr "弱い"
 msgid "Welcome"
 msgstr ""
 
+#: src/components/reactivate-account-view.tsx:52
+msgid "Welcome back"
+msgstr ""
+
 #: src/pages/account/(authenticated)/page.tsx:33
 msgid "What does this mean?"
 msgstr ""
@@ -1216,21 +1342,41 @@ msgstr ""
 msgid "What is an Atmosphere Account?"
 msgstr ""
 
-#: src/lib/api.ts:489
+#: src/lib/api.ts:529
 msgid "Wrong identifier or password"
 msgstr "識別子またはパスワードが間違っています"
+
+#: src/components/deactivate-account-dialog.tsx:35
+msgid "Yes, Deactivate"
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:115
+msgid "Yes, delete my account"
+msgstr ""
+
+#: src/components/reactivate-account-view.tsx:74
+msgid "Yes, reactivate my account"
+msgstr ""
 
 #: src/hooks/use-date-ago.ts:31
 msgid "yesterday"
 msgstr ""
 
-#: src/authorization-page.tsx:156
+#: src/authorization-page.tsx:160
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
+
+#: src/components/delete-account-dialog.tsx:212
+msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
+msgstr ""
 
 #: src/components/sign-up-handle-form.tsx:41
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "アカウントのセットアップ後にユーザー名を自分がコントロールしているドメイン名に変更することができます。"
+
+#: src/components/reactivate-account-dialog.tsx:46
+msgid "You can deactivate your account again at any time from this page."
+msgstr ""
 
 #: src/data/email.ts:52
 msgid "You can now sign in with your new email."
@@ -1241,6 +1387,10 @@ msgstr ""
 msgid "You can now sign in with your new password."
 msgstr "新しいパスワードでサインインできるようになりました。"
 
+#: src/components/reactivate-account-view.tsx:59
+msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
+msgstr ""
+
 #: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
@@ -1249,15 +1399,39 @@ msgstr "「リセットコード」が記載されたメールが届きます。
 msgid "Your account"
 msgstr "あなたのアカウント"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:42
+#: src/data/account.ts:107
+msgid "Your account and all associated data have been deleted."
+msgstr ""
+
+#: src/components/reactivate-account-view.tsx:35
+msgid "Your account has been successfully reactivated."
+msgstr ""
+
+#: src/components/reactivate-account-view.tsx:53
+msgid "Your account is currently deactivated."
+msgstr ""
+
+#: src/data/account.ts:26
+msgid "Your account is now deactivated."
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:45
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
+msgstr ""
+
+#: src/data/account.ts:53
+msgid "Your account is visible again."
 msgstr ""
 
 #: src/pages/account/(authenticated)/page.tsx:26
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:64
+#: src/components/deactivate-account-dialog.tsx:24
+msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden form the Bluesky app and across the Atmosphere network."
+msgstr ""
+
+#: src/components/update-email-dialog.tsx:66
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr ""
 
@@ -1265,7 +1439,7 @@ msgstr ""
 msgid "Your email address has been verified."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:78
+#: src/pages/account/(authenticated)/manage/page.tsx:91
 msgid "Your email address needs to be verified."
 msgstr ""
 
@@ -1278,11 +1452,15 @@ msgstr "あなたのフルユーザー名： {0}"
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
 
+#: src/components/reactivate-account-dialog.tsx:24
+msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
+msgstr ""
+
 #: src/components/utils/scope-description.tsx:585
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr ""
 
-#: src/contexts/session.tsx:157
+#: src/contexts/session.tsx:155
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 

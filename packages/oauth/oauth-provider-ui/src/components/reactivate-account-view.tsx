@@ -1,0 +1,91 @@
+import { msg } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
+import { Account } from '@atproto/oauth-provider-api'
+import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
+import { AccountOverview } from '#/components/utils/account-overview.tsx'
+import { useNotificationsContext } from '#/contexts/notifications.tsx'
+import { useAsyncAction } from '#/hooks/use-async-action.ts'
+import { useNotifyError } from '#/hooks/use-notify-error.ts'
+import { Button } from './forms/button.tsx'
+import { AccountIdentifier } from './utils/account-identifier.tsx'
+
+export type ReactivateAccountViewProps = {
+  account: Account
+  onReactivate: () => void | PromiseLike<void>
+  onCancel?: () => void | PromiseLike<void>
+}
+
+export function ReactivateAccountView({
+  account,
+  onReactivate,
+  onCancel,
+}: ReactivateAccountViewProps) {
+  const { _ } = useLingui()
+
+  const { notify } = useNotificationsContext()
+  const notifyError = useNotifyError()
+
+  const reactivate = useAsyncAction(async () => {
+    try {
+      await onReactivate()
+      notify({
+        variant: 'success',
+        title: _(msg`Account reactivated`),
+        description: _(msg`Your account has been successfully reactivated.`),
+      })
+    } catch (err) {
+      notifyError(err)
+    }
+  })
+
+  const cancel = useAsyncAction(async () => {
+    try {
+      await onCancel?.()
+    } catch (err) {
+      notifyError(err)
+    }
+  })
+
+  return (
+    <LayoutTitle
+      title={msg`Welcome back`}
+      subtitle={<Trans>Your account is currently deactivated.</Trans>}
+    >
+      <div className="flex w-full max-w-md flex-col items-stretch gap-6">
+        <AccountOverview account={account} />
+
+        <p className="text-text-light text-center">
+          <Trans>
+            You previously deactivated <AccountIdentifier account={account} />.
+            You can reactivate your account to continue logging in. Your content
+            (profile, posts, feeds, lists, etc.) will become visible again to
+            other users.
+          </Trans>
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <Button
+            color="primary"
+            className="w-full"
+            loading={reactivate.loading}
+            onClick={() => void reactivate.run()}
+          >
+            <Trans>Yes, reactivate my account</Trans>
+          </Button>
+
+          {onCancel && (
+            <Button
+              color="darkGrey"
+              className="w-full"
+              loading={cancel.loading}
+              onClick={() => void cancel.run()}
+            >
+              <Trans>Cancel</Trans>
+            </Button>
+          )}
+        </div>
+      </div>
+    </LayoutTitle>
+  )
+}

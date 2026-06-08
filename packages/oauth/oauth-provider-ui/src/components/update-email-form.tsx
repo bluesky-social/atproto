@@ -1,9 +1,11 @@
 import { Trans } from '@lingui/react/macro'
-import { FormField } from '#/components/forms/form-field'
+import { FormField } from '#/components/forms/form-field.tsx'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
-import { ButtonRequestCode } from './forms/button-request-code'
+import {
+  SmartForm,
+  WrappedSmartFormProps,
+} from '#/components/forms/smart-form.tsx'
 
 export type UpdateEmailFormData = {
   email: string
@@ -80,23 +82,9 @@ export function UpdateEmailForm({
               autoFocus
               defaultValue={values.token}
               onToken={(value) => set('token', value ?? undefined)}
+              onResend={onResend}
             />
           </FormField>
-
-          <p className="text-sm italic">
-            <Trans>Don't see an email?</Trans>
-            <ButtonRequestCode
-              disabled={confirmPending}
-              loading={requestPending}
-              action={onResend}
-              transparent
-              size="sm"
-              shape="padded"
-              startWithCooldown
-            >
-              <Trans>Click here to resend.</Trans>
-            </ButtonRequestCode>
-          </p>
         </>
       )}
     />

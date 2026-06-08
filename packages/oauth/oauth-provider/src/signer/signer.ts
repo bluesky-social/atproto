@@ -1,10 +1,13 @@
 import {
+  JwtHeader,
   JwtPayload,
   JwtPayloadGetter,
   JwtSignHeader,
+  Key,
   Keyset,
   SignedJwt,
   VerifyOptions,
+  VerifyResult,
 } from '@atproto/jwk'
 import { EPHEMERAL_SESSION_MAX_AGE } from '../constants.js'
 import { dateToEpoch } from '../lib/util/date.js'
@@ -29,7 +32,7 @@ export class Signer {
   async verify<C extends string = never>(
     token: SignedJwt,
     options?: Omit<VerifyOptions<C>, 'issuer'>,
-  ) {
+  ): Promise<VerifyResult<C> & { key: Key }> {
     return this.keyset.verifyJwt<C>(token, {
       ...options,
       issuer: [this.issuer],
@@ -64,7 +67,10 @@ export class Signer {
   async verifyAccessToken<C extends string = never>(
     token: SignedJwt,
     options?: Omit<VerifyOptions<C>, 'issuer' | 'typ'>,
-  ) {
+  ): Promise<{
+    protectedHeader: JwtHeader
+    payload: RequiredKey<AccessTokenPayload, C>
+  }> {
     const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
     return {
       protectedHeader: result.protectedHeader,
@@ -77,7 +83,7 @@ export class Signer {
 
   async createEphemeralToken(
     payload: OmitKey<ApiTokenPayload, 'iss' | 'aud' | 'iat'>,
-  ) {
+  ): Promise<SignedJwt> {
     return this.sign(
       {
         alg: undefined,
@@ -94,7 +100,10 @@ export class Signer {
   async verifyEphemeralToken<C extends string = never>(
     token: SignedJwt,
     options?: Omit<VerifyOptions<C>, 'issuer' | 'audience' | 'typ'>,
-  ) {
+  ): Promise<{
+    protectedHeader: JwtHeader
+    payload: RequiredKey<ApiTokenPayload, C>
+  }> {
     const result = await this.verify<C>(token, {
       ...options,
       maxTokenAge: options?.maxTokenAge ?? EPHEMERAL_SESSION_MAX_AGE / 1e3,

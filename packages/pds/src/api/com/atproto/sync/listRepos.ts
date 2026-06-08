@@ -1,5 +1,8 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import {
+  AccountStatus,
+  formatAccountStatus,
+} from '../../../../account-manager/account-manager.js'
 import { AppContext } from '../../../../context.js'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination.js'
 import { com } from '../../../../lexicons/index.js'
@@ -36,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         head: row.head,
         rev: row.rev ?? '',
         active,
-        status,
+        status: status === AccountStatus.Active ? undefined : status,
       }
     })
     return {

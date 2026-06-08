@@ -1,6 +1,9 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
-import type { ActiveAccountSession } from '@atproto/oauth-provider-api'
+import type {
+  ActiveAccountSession,
+  DidString,
+} from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
 import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
@@ -52,8 +55,8 @@ export function Page() {
 
       {data.map((session) => (
         <AccountSessionCard
-          key={`${account.sub}@${session.deviceId}`}
-          sub={account.sub}
+          key={`${account.did}@${session.deviceId}`}
+          did={account.did}
           session={session}
         />
       ))}
@@ -67,10 +70,10 @@ export function Page() {
 
 function AccountSessionCard({
   session,
-  sub,
+  did,
 }: {
   session: ActiveAccountSession
-  sub: string
+  did: DidString
 }) {
   const { notify } = useNotificationsContext()
   const { t } = useLingui()
@@ -82,7 +85,7 @@ function AccountSessionCard({
 
   const remove = async () => {
     try {
-      await mutateAsync({ sub, deviceId: session.deviceId })
+      await mutateAsync({ did, deviceId: session.deviceId })
       notify({
         variant: 'success',
         title: t`Successfully removed device`,

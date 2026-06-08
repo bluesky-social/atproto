@@ -97,7 +97,7 @@ export function Page(): ReactNode {
           identité Atmosphère, indépendamment des aspects spécifiques liés à une
           application, comme par exemple le profil que vous avez sur{' '}
           <LinkExternal
-            href={`https://bsky.app/profile/${account.preferred_username ?? account.sub}`}
+            href={`https://bsky.app/profile/${account.handle ?? account.did}`}
           >
             Bluesky
           </LinkExternal>

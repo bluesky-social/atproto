@@ -314,19 +314,37 @@ export const activateAccount = async (db: AccountDb, did: DidString) => {
   )
 }
 
-export const formatAccountStatus = (
-  account: null | {
+export const formatAccountStatus = <
+  TAccount extends null | {
     takedownRef: string | null
     deactivatedAt: string | null
   },
+>(
+  account: TAccount,
 ) => {
   if (!account) {
-    return { active: false, status: AccountStatus.Deleted } as const
+    return {
+      account,
+      active: false,
+      status: AccountStatus.Deleted,
+    } as const
   } else if (account.takedownRef) {
-    return { active: false, status: AccountStatus.Takendown } as const
+    return {
+      account,
+      active: false,
+      status: AccountStatus.Takendown,
+    } as const
   } else if (account.deactivatedAt) {
-    return { active: false, status: AccountStatus.Deactivated } as const
+    return {
+      account,
+      active: false,
+      status: AccountStatus.Deactivated,
+    } as const
   } else {
-    return { active: true, status: undefined } as const
+    return {
+      account,
+      active: true,
+      status: AccountStatus.Active,
+    } as const
   }
 }

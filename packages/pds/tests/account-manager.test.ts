@@ -380,4 +380,82 @@ describe('account manager', () => {
     await page.clickOnText('Retour')
     await page.ensureTextVisibility('bob-renamed.test', 'span')
   })
+
+  it('allows deactivating & reactivating the account', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText('Désactiver le compte')
+
+    await page.ensureTextVisibility(
+      'limite de temps pour la désactivation du compte',
+    )
+
+    await page.clickOnText('Oui, désactiver')
+
+    await page.waitForNetworkIdle()
+
+    // The row should now offer re-activation
+    await page.ensureTextVisibility('Réactiver le compte', 'span')
+
+    await page.clickOnText('Réactiver le compte')
+
+    // @NOTE The dialog's submit label ("Réactiver") is a substring of the
+    // trigger row ("Réactiver le compte"), which comes first in DOM order, so
+    // we target the dialog's submit button instead of using its text.
+    await page.clickOn('[role="dialog"] button[type="submit"]')
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('Désactiver le compte', 'span')
+  })
+
+  it('allows deleting the account', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.clickOnText('Supprimer le compte')
+
+    using sendAccountDeleteMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendAccountDelete')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await page.clickOnText("Envoyer l'email")
+
+    await page.waitForNetworkIdle()
+
+    expect(sendAccountDeleteMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendAccountDeleteMock.mock.lastCall!
+    expect(params).toEqual({
+      locale: 'fr',
+      token: expect.any(String),
+    })
+
+    await page.typeInInput('code', params.token)
+    await page.typeInInput('password', 'bob-new-pass')
+
+    await page.clickOnText('Supprimer mon compte')
+
+    // A final confirmation step is displayed
+    await page.ensureTextVisibility('Êtes-vous vraiment, vraiment sûr ?', 'h2')
+
+    await page.clickOnText('Oui, supprimer mon compte')
+
+    // Once the account is deleted, the session is gone and the user is
+    // brought back to the sign-in page.
+    await page.assertTitle('Se connecter')
+  })
 })

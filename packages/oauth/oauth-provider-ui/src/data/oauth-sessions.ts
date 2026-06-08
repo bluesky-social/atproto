@@ -6,19 +6,19 @@ import type {
 } from '@atproto/oauth-provider-api'
 import { useApi } from '#/contexts/session.tsx'
 
-export const oauthSessionsQueryKey = ({ sub }: OAuthSessionsInput) =>
-  ['oauth-sessions', sub] as const
+export const oauthSessionsQueryKey = ({ did }: OAuthSessionsInput) =>
+  ['oauth-sessions', did] as const
 
-export function useOAuthSessionsQuery({ sub }: OAuthSessionsInput) {
+export function useOAuthSessionsQuery({ did }: OAuthSessionsInput) {
   const api = useApi()
   return useQuery<ActiveOAuthSession[]>({
     refetchOnWindowFocus: 'always',
     // staleTime: 15e3, // 15s
-    queryKey: oauthSessionsQueryKey({ sub }),
+    queryKey: oauthSessionsQueryKey({ did }),
     retry: 0,
     staleTime: 5e3,
     queryFn: async (options) => {
-      return await api.oauthSessions({ sub }, options)
+      return await api.oauthSessions({ did }, options)
     },
   })
 }
@@ -31,11 +31,11 @@ export function useRevokeOAuthSessionMutation() {
     async mutationFn(data: RevokeOAuthSessionInput) {
       await api.revokeOAuthSession(data)
     },
-    onError(error, { sub }) {
-      qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ sub }) })
+    onError(error, { did }) {
+      qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ did }) })
     },
-    onSuccess(_, { sub }) {
-      qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ sub }) })
+    onSuccess(_, { did }) {
+      qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ did }) })
     },
   })
 }

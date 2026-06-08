@@ -1,5 +1,9 @@
 {
   "include": [],
+  "compilerOptions": {
+    // Needed for Zed's eslint integration to properly support the "import/order" rule (looks like )
+    "paths": { "#/*": ["./src/*"] },
+  },
   "references": [
     { "path": "./tsconfig.src.json" },
     { "path": "./tsconfig.tools.json" },

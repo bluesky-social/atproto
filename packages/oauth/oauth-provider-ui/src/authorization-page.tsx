@@ -6,7 +6,7 @@ import { StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
-import { errorViewRender } from '#/components/error-view.tsx'
+import { ErrorView } from '#/components/error-view.tsx'
 import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
 import { LayoutTitle } from '#/components/layouts/layout-title'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
@@ -43,10 +43,14 @@ createRoot(container).render(
     <CustomizationProvider value={customizationData}>
       <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
         <NotificationsProvider>
-          <ErrorBoundary fallbackRender={errorViewRender}>
+          <ErrorBoundary
+            fallbackRender={({ error, resetErrorBoundary }) => (
+              <ErrorView error={error} retry={resetErrorBoundary} />
+            )}
+          >
             <SessionProvider
               initialSessions={initialSessions}
-              initialSelected={authorizeData.selectedSub}
+              initialSelected={authorizeData.selectedDid}
             >
               <App />
             </SessionProvider>
@@ -121,7 +125,7 @@ function App() {
 
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string }) => {
-      const { url } = await api.consent(session!.account.sub, scope)
+      const { url } = await api.consent(session!.account.did, scope)
       performRedirect(url)
     },
     [api, session, performRedirect],

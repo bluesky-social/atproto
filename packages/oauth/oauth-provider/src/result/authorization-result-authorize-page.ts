@@ -12,5 +12,5 @@ export type AuthorizationResultAuthorizePage = {
 
   requestUri: RequestUri
   sessions: readonly Session[]
-  selectedSub?: Account['sub']
+  selectedDid?: Account['did']
 }

@@ -1,5 +1,8 @@
 import { Server } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import {
+  AccountStatus,
+  formatAccountStatus,
+} from '../../../../account-manager/account-manager.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from './util.js'
@@ -25,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did,
           active,
-          status,
+          status: status === AccountStatus.Active ? undefined : status,
           rev,
         },
       }

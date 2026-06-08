@@ -1,6 +1,9 @@
 import { DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import {
+  AccountStatus,
+  formatAccountStatus,
+} from '../../../../account-manager/account-manager.js'
 import { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
 import { AuthScope } from '../../../../auth-scope.js'
 import { AppContext } from '../../../../context.js'
@@ -57,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
           active,
-          status,
+          status: status === AccountStatus.Active ? undefined : status,
         }),
       }
     },

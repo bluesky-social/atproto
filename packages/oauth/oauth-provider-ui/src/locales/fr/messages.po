@@ -74,7 +74,7 @@ msgstr "Confirmation 2FA"
 msgid "A local app"
 msgstr "Une application locale"
 
-#: src/lib/api.ts:426
+#: src/lib/api.ts:466
 msgid "A second authentication factor is required ({hint})"
 msgstr "Un second facteur d'authentification est requis ({hint})"
 
@@ -91,9 +91,17 @@ msgstr "À propos"
 msgid "Account"
 msgstr "Compte utilisateur"
 
-#: src/components/utils/account-image.tsx:40
+#: src/components/utils/account-image.tsx:60
 msgid "Account avatar"
 msgstr "Avatar du compte"
+
+#: src/data/account.ts:25
+msgid "Account deactivated"
+msgstr "Compte désactivé"
+
+#: src/data/account.ts:106
+msgid "Account deleted"
+msgstr "Compte supprimé"
 
 #: src/components/utils/account-identifier.tsx:29
 msgid "Account identifier"
@@ -107,11 +115,16 @@ msgstr "Nom du compte"
 msgid "Account overview"
 msgstr "Aperçu du compte"
 
+#: src/data/account.ts:52
+#: src/components/reactivate-account-view.tsx:34
+msgid "Account reactivated"
+msgstr "Compte réactivé"
+
 #: src/components/utils/account-selector.tsx:25
 msgid "Account selector"
 msgstr "Sélecteur de compte"
 
-#: src/components/utils/handle.tsx:49
+#: src/components/utils/handle.tsx:53
 msgid "Account username"
 msgstr "Nom d'utilisateur du compte"
 
@@ -133,15 +146,16 @@ msgstr "Vous avez déjà un code ?"
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
 
-#: src/components/error-view.tsx:21
+#: src/hooks/use-notify-error.ts:12
+#: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "Une erreur s'est produite"
 
-#: src/lib/api.ts:314
+#: src/lib/api.ts:354
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
 
-#: src/components/utils/error-card.tsx:80
+#: src/components/utils/error-card.tsx:82
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
@@ -169,6 +183,10 @@ msgstr "Applications"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\" affichée ci-dessus."
 
+#: src/components/delete-account-dialog.tsx:89
+msgid "Are you really, really sure?"
+msgstr "Êtes-vous vraiment, vraiment sûr ?"
+
 #: src/components/authenticate-welcome-view.tsx:19
 msgctxt "AuthenticationPage"
 msgid "Authenticate"
@@ -194,7 +212,7 @@ msgstr "Autorisé le {0}"
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
-#: src/components/forms/form-card.tsx:55
+#: src/components/forms/form-card.tsx:57
 msgid "Back"
 msgstr "Retour"
 
@@ -233,13 +251,17 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Appeler"
 
-#: src/contexts/authentication.tsx:181
+#: src/contexts/authentication.tsx:184
+#: src/components/reactivate-account-view.tsx:84
+#: src/components/delete-account-dialog.tsx:123
+#: src/components/delete-account-dialog.tsx:157
+#: src/components/delete-account-dialog.tsx:208
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card.tsx:52
+#: src/components/forms/form-card.tsx:54
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:120
+#: src/pages/account/(authenticated)/devices/page.tsx:123
 msgid "Cannot remove current device"
 msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 
@@ -255,10 +277,22 @@ msgstr "Changer votre mot de passe"
 msgid "Chat"
 msgstr "Messagerie"
 
+#: src/components/delete-account-dialog.tsx:140
+msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
+msgstr "Vérifiez votre boîte mail <0>{email}</0> pour un email contenant le code de confirmation à saisir ci-dessous :"
+
 #. placeholder {0}: secondFactorError.hint
 #: src/components/sign-in-form.tsx:253
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Consultez la boîte de réception de {0} pour y trouver un code de connexion, et saisissez-le ici."
+
+#: src/components/delete-account-dialog.tsx:145
+msgid "Check your email for the confirmation code to enter below:"
+msgstr "Vérifiez votre boîte mail pour le code de confirmation à saisir ci-dessous :"
+
+#: src/data/account.ts:80
+msgid "Check your inbox for the confirmation code."
+msgstr "Vérifiez votre boîte mail pour le code de confirmation."
 
 #: src/data/email.ts:79
 msgid "Check your inbox for the verification code."
@@ -273,8 +307,8 @@ msgstr "Vérifiez votre boîte de réception."
 msgid "Choose a new default username."
 msgstr "Choisissez un nouveau nom d'utilisateur par défaut."
 
-#: src/components/update-email-dialog.tsx:108
-#: src/components/update-email-dialog.tsx:143
+#: src/components/update-email-dialog.tsx:111
+#: src/components/update-email-dialog.tsx:147
 msgid "Choose a new email address to associate with your account."
 msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 
@@ -282,13 +316,9 @@ msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/authorization-page.tsx:164
+#: src/authorization-page.tsx:168
 msgid "Click here if you are not automatically redirected"
 msgstr "Cliquez ici si vous n'êtes pas automatiquement redirigé"
-
-#: src/components/update-email-form.tsx:97
-msgid "Click here to resend."
-msgstr "Cliquez ici pour renvoyer."
 
 #: src/components/utils/dialog-simple.tsx:70
 msgid "Close"
@@ -317,8 +347,13 @@ msgid "Confirm your password to continue"
 msgstr "Confirmez votre mot de passe pour continuer"
 
 #: src/components/sign-in-form.tsx:244
+#: src/components/delete-account-confirm-form.tsx:55
 msgid "Confirmation code"
 msgstr "Code de confirmation"
+
+#: src/data/account.ts:79
+msgid "Confirmation email sent"
+msgstr "Email de confirmation envoyé"
 
 #: src/cookie-error-page.tsx:61
 msgid "Continue"
@@ -349,7 +384,7 @@ msgstr "Créer un nouveau compte"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Créer, mettre à jour et supprimer toutes les données publiques de votre compte"
 
-#: src/lib/api.ts:395
+#: src/lib/api.ts:435
 msgid "Custom domains are not supported"
 msgstr "Les domaines personnalisés ne sont pas pris en charge"
 
@@ -357,9 +392,31 @@ msgstr "Les domaines personnalisés ne sont pas pris en charge"
 msgid "Data"
 msgstr "Données"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/components/deactivate-account-dialog.tsx:22
+msgid "Deactivate account"
+msgstr "Désactiver le compte"
+
+#: src/components/utils/account-image.tsx:82
+msgid "Deactivated account"
+msgstr "Compte désactivé"
+
 #: src/components/utils/scope-description.tsx:666
 msgid "Delete"
 msgstr "Supprimer"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/components/delete-account-dialog.tsx:79
+msgid "Delete account"
+msgstr "Supprimer le compte"
+
+#: src/components/delete-account-dialog.tsx:75
+msgid "Delete account <0/>"
+msgstr "Supprimer le compte <0/>"
+
+#: src/components/delete-account-confirm-form.tsx:37
+msgid "Delete my account"
+msgstr "Supprimer mon compte"
 
 #: src/components/consent-form.tsx:99
 msgctxt "OAuthConsent"
@@ -374,13 +431,13 @@ msgstr "Détails"
 msgid "Devices"
 msgstr "Appareils"
 
+#: src/components/forms/input-token.tsx:88
+msgid "Didn't receive a code? <0>Click here to resend.</0>"
+msgstr "Vous n'avez pas reçu de code ? <0>Renvoyer un code</0>"
+
 #: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
 msgstr "DNS"
-
-#: src/components/update-email-form.tsx:87
-msgid "Don't see an email?"
-msgstr "Pas reçu d'email ?"
 
 #: src/components/update-handle-dialog.tsx:143
 msgid "e.g. <0>alice.com</0>"
@@ -396,14 +453,14 @@ msgstr "ex. <0>alice{0}</0>"
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:118
+#: src/pages/account/(authenticated)/manage/page.tsx:135
 #: src/components/reset-password-request-form.tsx:28
 #: src/components/reset-password-request-form.tsx:32
 #: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "Adresse email"
 
-#: src/components/update-email-dialog.tsx:60
+#: src/components/update-email-dialog.tsx:62
 msgid "Email address successfully updated"
 msgstr "Adresse email mise à jour avec succès"
 
@@ -447,14 +504,18 @@ msgstr "Saisissez votre adresse email"
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
-#: src/components/sign-in-view.tsx:75
+#: src/components/sign-in-view.tsx:73
 msgid "Enter your password"
 msgstr "Saisissez votre mot de passe"
 
-#: src/components/sign-in-view.tsx:94
-#: src/components/sign-in-view.tsx:112
+#: src/components/sign-in-view.tsx:92
+#: src/components/sign-in-view.tsx:110
 msgid "Enter your username and password"
 msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
+
+#: src/components/deactivate-account-dialog.tsx:53
+msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
+msgstr "Toutes les applications actuellement connectées à votre compte, ainsi que les « mots de passe d'application » que vous avez créés, seront révoqués. Vous devrez vous reconnecter lors de la réactivation."
 
 #: src/components/sign-up-credentials-form.tsx:47
 msgid "example-com-xxxxx-xxxxx"
@@ -472,12 +533,24 @@ msgstr "Extra"
 msgid "Failed to change email"
 msgstr "Échec de la modification de l'adresse email"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/data/account.ts:33
+msgid "Failed to deactivate account"
+msgstr "Échec de la désactivation du compte"
+
+#: src/data/account.ts:114
+msgid "Failed to delete account"
+msgstr "Échec de la suppression du compte"
+
+#: src/pages/account/(authenticated)/devices/page.tsx:37
 #: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr "Échec du chargement des applications connectées"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:94
+#: src/data/account.ts:60
+msgid "Failed to reactivate account"
+msgstr "Échec de la réactivation du compte"
+
+#: src/pages/account/(authenticated)/devices/page.tsx:97
 msgid "Failed to remove device"
 msgstr "Échec de la suppression de l'appareil"
 
@@ -497,6 +570,10 @@ msgstr "Échec de la réinitialisation du mot de passe"
 msgid "Failed to revoke access"
 msgstr "Échec de la révocation de l'accès"
 
+#: src/data/account.ts:87
+msgid "Failed to send confirmation email"
+msgstr "Échec de l'envoi de l'email de confirmation"
+
 #: src/data/email.ts:86
 msgid "Failed to send verification email"
 msgstr "Échec de l'envoi de l'email de vérification"
@@ -512,6 +589,14 @@ msgstr "Échec de la vérification de l'adresse email"
 #: src/components/forms/input-handle-custom-instructions.tsx:72
 msgid "File contents"
 msgstr "Contenu du fichier"
+
+#: src/components/delete-account-dialog.tsx:177
+msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
+msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email <0>{email}</0>."
+
+#: src/components/delete-account-dialog.tsx:182
+msgid "For security reasons, we'll need to send a confirmation code to your email address."
+msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email."
 
 #: src/components/reset-password-view.tsx:38
 msgid "Forgot Password"
@@ -550,7 +635,7 @@ msgstr ""
 "{0}\n"
 "\n"
 "La modification peut être vérifiée en visitant l'URL suivante : {troubleshootHref}\n"
-"Un tutoriel détaillé est disponible ici : {tutorialHref}\n"
+"Un tutoriel détaillé (en anglais) peut être trouvé ici : {tutorialHref}\n"
 "\n"
 "Merci."
 
@@ -595,9 +680,13 @@ msgstr "Si vous avez accès à la configuration de l'hébergement web de votre d
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Si vous avez votre propre domaine, vous pouvez l'utiliser comme pseudo. Cela vous permet de vérifier vous-même votre identité. <0>En savoir plus ici</0>."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:109
+#: src/pages/account/(authenticated)/manage/page.tsx:126
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Si vous mettez à jour votre adresse email, la 2FA par email (si activée) sera désactivée."
+
+#: src/components/deactivate-account-dialog.tsx:61
+msgid "If you're trying to change your handle or email, do so before you deactivate."
+msgstr "Si vous souhaitez changer votre pseudo ou votre adresse email, faites-le avant de désactiver votre compte."
 
 #: src/locales/locale-selector.tsx:47
 msgid "Interface language selector"
@@ -607,7 +696,7 @@ msgstr "Sélecteur de langue"
 msgid "Invalid"
 msgstr "Invalide"
 
-#: src/components/utils/handle.tsx:53
+#: src/components/utils/handle.tsx:56
 msgid "Invalid Handle"
 msgstr "Pseudo invalide"
 
@@ -634,12 +723,12 @@ msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Dernier accès <0/>"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:110
+#: src/pages/account/(authenticated)/devices/page.tsx:113
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Dernière connexion {lastUsedAgo}"
 
-#: src/components/update-email-dialog.tsx:73
+#: src/components/update-email-dialog.tsx:75
 msgctxt "verify email"
 msgid "Later"
 msgstr "Plus tard"
@@ -648,7 +737,7 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:155
+#: src/authorization-page.tsx:159
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -660,7 +749,7 @@ msgstr "Se connecter à un compte qui n'est pas listé"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:63
+#: src/pages/account/(authenticated)/devices/page.tsx:66
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Il semble que vous n'ayez de session active sur aucun autre appareil."
 
@@ -722,12 +811,12 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/update-email-form.tsx:52
-#: src/components/update-email-dialog.tsx:176
+#: src/components/update-email-form.tsx:54
+#: src/components/update-email-dialog.tsx:181
 msgid "New email address"
 msgstr "Nouvelle adresse email"
 
-#: src/components/reset-password-confirm-form.tsx:61
+#: src/components/reset-password-confirm-form.tsx:64
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
@@ -745,9 +834,10 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:150
+#: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:68
 #: src/components/sign-in-form.tsx:186
+#: src/components/delete-account-confirm-form.tsx:70
 #: src/components/forms/input-password.tsx:46
 msgid "Password"
 msgstr "Mot de passe"
@@ -806,6 +896,10 @@ msgstr "Veuillez vérifier l'adresse email et réessayer."
 msgid "Please check the username and try again."
 msgstr "Veuillez vérifier le nom d'utilisateur et réessayer."
 
+#: src/data/account.ts:115
+msgid "Please check your code and password, then try again."
+msgstr "Veuillez vérifier votre code et votre mot de passe, puis réessayer."
+
 #: src/data/password.ts:59
 #: src/data/email.ts:60
 msgid "Please check your reset code and try again."
@@ -815,15 +909,18 @@ msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
 msgid "Please check your verification code and try again."
 msgstr "Veuillez vérifier votre code de vérification et réessayer."
 
-#: src/components/update-email-form.tsx:69
+#: src/components/update-email-form.tsx:71
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adresse email."
 
 #: src/data/email.ts:87
+#: src/data/account.ts:34
+#: src/data/account.ts:61
+#: src/data/account.ts:88
 msgid "Please try again in a moment."
 msgstr "Veuillez réessayer dans un instant."
 
-#: src/components/forms/button-cooldown.tsx:74
+#: src/components/forms/button-cooldown.tsx:68
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
 
@@ -836,6 +933,15 @@ msgstr "Politique de Confidentialité"
 #: src/components/utils/scope-description.tsx:582
 msgid "Publish changes"
 msgstr "Publier des modifications"
+
+#: src/components/reactivate-account-dialog.tsx:36
+msgid "Reactivate"
+msgstr "Réactiver"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/components/reactivate-account-dialog.tsx:22
+msgid "Reactivate account"
+msgstr "Réactiver le compte"
 
 #: src/components/utils/scope-description.tsx:379
 msgid "Read and send messages"
@@ -859,7 +965,7 @@ msgstr "Se souvenir de ce compte sur cet appareil"
 msgid "Repository"
 msgstr "Données publiques"
 
-#: src/components/reset-password-confirm-form.tsx:46
+#: src/components/reset-password-confirm-form.tsx:48
 msgid "Reset code"
 msgstr "Code de réinitialisation"
 
@@ -871,13 +977,13 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/devices/page.tsx:33
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:75
+#: src/components/utils/error-card.tsx:77
 msgid "Retry"
 msgstr "Réessayer"
 
-#: src/components/forms/button-cooldown.tsx:108
+#: src/components/forms/button-cooldown.tsx:65
 msgid "Retry in {remainingSeconds}s"
 msgstr "Réessayer dans {remainingSeconds}s"
 
@@ -886,11 +992,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Révoquer l'accès"
 
-#: src/components/update-email-form.tsx:76
+#: src/components/update-email-form.tsx:78
 msgid "Security code"
 msgstr "Code de sécurité"
 
-#: src/components/update-email-form.tsx:66
+#: src/components/update-email-form.tsx:68
 msgid "Security step required"
 msgstr "Étape de sécurité requise"
 
@@ -902,9 +1008,13 @@ msgstr "Sélectionner un autre compte"
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
-#: src/components/sign-in-view.tsx:128
+#: src/components/sign-in-view.tsx:126
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
+
+#: src/components/delete-account-dialog.tsx:200
+msgid "Send email"
+msgstr "Envoyer l'email"
 
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
@@ -921,7 +1031,7 @@ msgctxt "verb"
 msgid "Sign in"
 msgstr "Se connecter"
 
-#. placeholder {0}: session.account.name ?? stringifyAccountHandle(session.account) ?? session.account.sub
+#. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
 #: src/components/sign-in-picker.tsx:59
 msgid "Sign in as {0}"
 msgstr "Se connecter en tant que {0}"
@@ -930,7 +1040,7 @@ msgstr "Se connecter en tant que {0}"
 msgid "Sign in as..."
 msgstr "Se connecter en tant que..."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:123
+#: src/pages/account/(authenticated)/devices/page.tsx:126
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
@@ -958,11 +1068,11 @@ msgstr "Étape {currentPosition} sur {count}"
 msgid "Strong"
 msgstr "Fort"
 
-#: src/components/forms/form-card.tsx:48
+#: src/components/forms/form-card.tsx:49
 msgid "Submit"
 msgstr "Valider"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:91
 msgid "Successfully removed device"
 msgstr "Appareil supprimé"
 
@@ -1000,37 +1110,41 @@ msgstr "L'application demande les autorisations nécessaires pour effectuer les 
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "Le réseau AT Protocol utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que les messages privés, les feeds ou le contenu de modération. L'application demande les autorisations nécessaires pour effectuer les actions authentifiées suivantes en votre nom :"
 
-#: src/lib/api.ts:353
+#: src/lib/api.ts:393
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer."
 
-#: src/lib/api.ts:383
+#: src/lib/api.ts:423
 msgid "The domain name is not allowed"
 msgstr "Le nom de domaine n'est pas autorisé"
 
-#: src/lib/api.ts:453
+#: src/lib/api.ts:493
 msgid "The invite code is not valid"
 msgstr "Le code d'invitation n'est pas valide"
 
-#: src/lib/api.ts:312
+#: src/lib/api.ts:352
 msgid "The server encountered an unexpected error. Please try again."
 msgstr "Le serveur a rencontré une erreur inattendue. Veuillez réessayer."
 
-#: src/lib/api.ts:385
+#: src/lib/api.ts:425
 msgid "The username contains inappropriate language"
 msgstr "Le nom d'utilisateur contient un langage inapproprié"
 
-#: src/lib/api.ts:391
+#: src/lib/api.ts:431
 msgid "The username could not be resolved"
 msgstr "Le nom d'utilisateur n'a pas pu être résolu"
 
-#: src/lib/api.ts:389
+#: src/lib/api.ts:429
 msgid "The username is already in use"
 msgstr "Le nom d'utilisateur est déjà utilisé"
 
-#: src/lib/api.ts:381
+#: src/lib/api.ts:421
 msgid "The username is invalid"
 msgstr "Le nom d'utilisateur est invalide"
+
+#: src/components/deactivate-account-dialog.tsx:46
+msgid "There is no time limit for account deactivation, come back any time."
+msgstr "Il n'y a pas de limite de temps pour la désactivation du compte, revenez quand vous le souhaitez."
 
 #: src/pages/account/(authenticated)/apps/page.tsx:43
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
@@ -1040,23 +1154,31 @@ msgstr "Ces applications ont accès à votre compte. Une application peut appara
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
-#: src/lib/api.ts:338
+#: src/lib/api.ts:378
 msgid "This authorization request has been denied. Please try again."
 msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
 
-#: src/lib/api.ts:517
+#: src/lib/api.ts:557
 msgid "This email is already used"
 msgstr "Cette adresse email est déjà utilisée"
 
-#: src/lib/api.ts:323
-#: src/lib/api.ts:474
-#: src/lib/api.ts:505
+#: src/lib/api.ts:363
+#: src/lib/api.ts:514
+#: src/lib/api.ts:545
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/lib/api.ts:387
+#: src/lib/api.ts:427
 msgid "This username is reserved"
 msgstr "Ce nom d'utilisateur est réservé"
+
+#: src/components/delete-account-dialog.tsx:92
+msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
+msgstr "Cela supprimera de manière irréversible votre compte Bluesky <0/> et toutes les données associées. Notez que cela affectera également tout autre service AT Protocol que vous utilisez avec ce compte."
+
+#: src/components/delete-account-dialog.tsx:99
+msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
+msgstr "Cela supprimera de manière irréversible votre compte Bluesky et toutes les données associées. Notez que cela affectera également tout autre service AT Protocol que vous utilisez avec ce compte."
 
 #: src/components/update-password-dialog.tsx:51
 msgid "To change your password, you'll need to enter a security code sent to your email."
@@ -1087,7 +1209,7 @@ msgstr "Saisissez votre nom de domaine"
 msgid "Type your username"
 msgstr "Saisissez votre nom d'utilisateur"
 
-#: src/contexts/session.tsx:156
+#: src/contexts/session.tsx:154
 msgid "Unauthorized"
 msgstr "Déconnecté"
 
@@ -1095,7 +1217,7 @@ msgstr "Déconnecté"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:105
+#: src/pages/account/(authenticated)/devices/page.tsx:108
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilisateur inconnu"
@@ -1104,8 +1226,8 @@ msgstr "Agent utilisateur inconnu"
 msgid "Update"
 msgstr "Modifier"
 
-#: src/components/update-email-dialog.tsx:106
-#: src/components/update-email-dialog.tsx:141
+#: src/components/update-email-dialog.tsx:109
+#: src/components/update-email-dialog.tsx:145
 msgid "Update your email"
 msgstr "Modifier votre adresse email"
 
@@ -1135,7 +1257,7 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:177
+#: src/pages/account/(authenticated)/manage/page.tsx:249
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
@@ -1155,8 +1277,8 @@ msgstr "Valide"
 msgid "Value"
 msgstr "Valeur"
 
-#: src/components/verify-email-confirm-form.tsx:19
-#: src/components/update-email-dialog.tsx:84
+#: src/components/verify-email-confirm-form.tsx:24
+#: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr "Code de vérification"
 
@@ -1176,8 +1298,8 @@ msgstr "Vérification réussie !"
 msgid "Verify and Save"
 msgstr "Vérifier et enregistrer"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:73
-#: src/components/update-email-dialog.tsx:74
+#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Vérifier"
@@ -1218,6 +1340,10 @@ msgstr "Faible"
 msgid "Welcome"
 msgstr "Bienvenue"
 
+#: src/components/reactivate-account-view.tsx:52
+msgid "Welcome back"
+msgstr "Bon retour"
+
 #: src/pages/account/(authenticated)/page.tsx:33
 msgid "What does this mean?"
 msgstr "Qu'est-ce que ça signifie ?"
@@ -1226,21 +1352,41 @@ msgstr "Qu'est-ce que ça signifie ?"
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
-#: src/lib/api.ts:489
+#: src/lib/api.ts:529
 msgid "Wrong identifier or password"
 msgstr "Identifiant ou mot de passe incorrect"
+
+#: src/components/deactivate-account-dialog.tsx:35
+msgid "Yes, Deactivate"
+msgstr "Oui, désactiver"
+
+#: src/components/delete-account-dialog.tsx:115
+msgid "Yes, delete my account"
+msgstr "Oui, supprimer mon compte"
+
+#: src/components/reactivate-account-view.tsx:74
+msgid "Yes, reactivate my account"
+msgstr "Oui, réactiver mon compte"
 
 #: src/hooks/use-date-ago.ts:31
 msgid "yesterday"
 msgstr "hier"
 
-#: src/authorization-page.tsx:156
+#: src/authorization-page.tsx:160
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
+
+#: src/components/delete-account-dialog.tsx:212
+msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
+msgstr "Vous pouvez également désactiver temporairement votre compte. Votre profil, vos publications, vos feeds et vos listes ne seront plus visibles par les autres utilisateurs de Bluesky. Vous pouvez réactiver votre compte à tout moment en vous reconnectant."
 
 #: src/components/sign-up-handle-form.tsx:41
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
+
+#: src/components/reactivate-account-dialog.tsx:46
+msgid "You can deactivate your account again at any time from this page."
+msgstr "Vous pouvez désactiver votre compte à nouveau à tout moment depuis cette page."
 
 #: src/data/email.ts:52
 msgid "You can now sign in with your new email."
@@ -1251,6 +1397,10 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email.
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 
+#: src/components/reactivate-account-view.tsx:59
+msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
+msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre compte pour continuer à vous connecter. Votre contenu (profil, publications, feeds, listes, etc.) redeviendra visible pour les autres utilisateurs."
+
 #: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
@@ -1259,15 +1409,39 @@ msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez 
 msgid "Your account"
 msgstr "Votre compte"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:42
+#: src/data/account.ts:107
+msgid "Your account and all associated data have been deleted."
+msgstr "Votre compte et toutes les données associées ont été supprimés."
+
+#: src/components/reactivate-account-view.tsx:35
+msgid "Your account has been successfully reactivated."
+msgstr "Votre compte a été réactivé avec succès."
+
+#: src/components/reactivate-account-view.tsx:53
+msgid "Your account is currently deactivated."
+msgstr "Votre compte est actuellement désactivé."
+
+#: src/data/account.ts:26
+msgid "Your account is now deactivated."
+msgstr "Votre compte est maintenant désactivé."
+
+#: src/pages/account/(authenticated)/devices/page.tsx:45
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Une session est ouverte sur les appareils listés ci-dessous. Si votre compte a été compromis, déconnectez tous les appareils, changez votre mot de passe et vérifiez vos <0>applications</0> connectées."
+
+#: src/data/account.ts:53
+msgid "Your account is visible again."
+msgstr "Votre compte est à nouveau visible."
 
 #: src/pages/account/(authenticated)/page.tsx:26
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Votre compte Atmosphère est hébergé chez <0/>."
 
-#: src/components/update-email-dialog.tsx:64
+#: src/components/deactivate-account-dialog.tsx:24
+msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden form the Bluesky app and across the Atmosphere network."
+msgstr "Votre contenu (profil, publications, feeds, listes, etc.) sera masqué dans l'application Bluesky et sur le réseau Atmosphère."
+
+#: src/components/update-email-dialog.tsx:66
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Votre adresse email a été mise à jour avec succès et doit être vérifiée. Veuillez saisir le code de vérification qui a été envoyé à <0>{email}</0>."
 
@@ -1275,7 +1449,7 @@ msgstr "Votre adresse email a été mise à jour avec succès et doit être vér
 msgid "Your email address has been verified."
 msgstr "Votre adresse email a été vérifiée."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:78
+#: src/pages/account/(authenticated)/manage/page.tsx:91
 msgid "Your email address needs to be verified."
 msgstr "Votre adresse email doit être vérifiée."
 
@@ -1288,11 +1462,15 @@ msgstr "Votre nom d'utilisateur complet sera : {0}"
 msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
 
+#: src/components/reactivate-account-dialog.tsx:24
+msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
+msgstr "Votre profil, vos publications, vos feeds et vos listes redeviendront visibles sur le réseau Atmosphère — cela inclut l'application Bluesky et toute autre application AT Protocol sur laquelle vous utilisez ce compte."
+
 #: src/components/utils/scope-description.tsx:585
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau AT Protocol, telles que les posts, les likes et les follows de Bluesky. Il contient également les données créées via d'autres applications utilisées avec ce compte. L'application demande les autorisations nécessaires pour publier les modifications suivantes sur votre dépôt :"
 
-#: src/contexts/session.tsx:157
+#: src/contexts/session.tsx:155
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
 

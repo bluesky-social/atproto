@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import type { ActiveOAuthSession } from '@atproto/oauth-provider-api'
+import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
 import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
@@ -15,8 +15,8 @@ import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
 export function Page() {
   const { account } = useAuthenticatedSession()
-  const { sub } = account
-  const { data, isLoading, refetch } = useOAuthSessionsQuery({ sub })
+  const { did } = account
+  const { data, isLoading, refetch } = useOAuthSessionsQuery({ did })
 
   if (!data) {
     if (isLoading) {
@@ -50,7 +50,7 @@ export function Page() {
       {data.map((session) => (
         <ApplicationSessionCard
           key={session.tokenId}
-          sub={sub}
+          did={did}
           session={session}
         />
       ))}
@@ -83,10 +83,10 @@ function ApplicationSessionCard({
     updatedAt,
     scope: _scope = clientMetadata?.scope, // @TODO Display scopes using <ScopeDescription />
   },
-  sub,
+  did,
 }: {
   session: ActiveOAuthSession
-  sub: string
+  did: DidString
 }) {
   const { t, i18n } = useLingui()
   const { notify } = useNotificationsContext()
@@ -103,7 +103,7 @@ function ApplicationSessionCard({
 
   const revoke = async () => {
     try {
-      await revokeSessions({ sub, tokenId })
+      await revokeSessions({ did, tokenId })
       notify({
         variant: 'success',
         title: t`Successfully revoked access`,

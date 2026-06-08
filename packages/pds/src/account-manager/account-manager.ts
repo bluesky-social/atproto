@@ -4,6 +4,7 @@ import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
+import { Did } from '@atproto/did'
 import { IdResolver } from '@atproto/identity'
 import {
   AtIdentifierString,
@@ -28,7 +29,7 @@ import { ServerMailer } from '../mailer/index.js'
 import { Sequencer } from '../sequencer/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
 import * as account from './helpers/account.js'
-import { AccountStatus, ActorAccount } from './helpers/account.js'
+import { ActorAccount } from './helpers/account.js'
 import * as auth from './helpers/auth.js'
 import * as emailToken from './helpers/email-token.js'
 import * as invite from './helpers/invite.js'
@@ -53,7 +54,7 @@ export { AccountStatus, formatAccountStatus } from './helpers/account.js'
  */
 export class InvalidPasswordError extends AuthRequiredError {
   constructor(
-    public readonly did: string,
+    public readonly did: Did,
     errorMessage = 'Invalid identifier or password',
   ) {
     super(errorMessage)
@@ -75,7 +76,7 @@ export class AccountManager {
     readonly sequencer: Sequencer,
     readonly plcClient: PlcClient,
     readonly plcRotationKey: Keypair,
-    readonly serviceDid: string,
+    readonly serviceDid: DidString,
     readonly serviceHandleDomains: string[],
     db: AccountManagerDbConfig,
   ) {
@@ -129,16 +130,13 @@ export class AccountManager {
     return got?.did ?? null
   }
 
-  async getAccountStatus(
-    handleOrDid: AtIdentifierString,
-  ): Promise<AccountStatus> {
+  async getAccountStatus(handleOrDid: AtIdentifierString) {
     const got = await this.getAccount(handleOrDid, {
       includeDeactivated: true,
       includeTakenDown: true,
     })
 
-    const res = account.formatAccountStatus(got)
-    return res.active ? AccountStatus.Active : res.status
+    return account.formatAccountStatus(got)
   }
 
   async normalizeAndValidateHandle(
@@ -380,7 +378,7 @@ export class AccountManager {
       Promise.all([
         account.updateAccountTakedownStatus(dbTxn, did, takedown),
         auth.revokeRefreshTokensByDid(dbTxn, did),
-        token.removeByDidQB(dbTxn, did).execute(),
+        token.removeByDid(dbTxn, did),
       ]),
     )
   }
@@ -556,6 +554,10 @@ export class AccountManager {
     did: DidString,
     passwordStr: string,
   ): Promise<boolean> {
+    if (passwordStr.length > scrypt.OLD_PASSWORD_MAX_LENGTH) {
+      throw new InvalidRequestError('Invalid password length.')
+    }
+
     return password.verifyAccountPassword(this.db, did, passwordStr)
   }
 

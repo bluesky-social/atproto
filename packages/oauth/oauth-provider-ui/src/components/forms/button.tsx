@@ -13,6 +13,9 @@ export type ButtonColor =
 
 export type ButtonColoring = 'transparent' | 'bordered' | 'default'
 
+export type ButtonShape = 'padded' | 'rounded' | 'circle'
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
+
 export type ButtonProps = Override<
   JSX.IntrinsicElements['button'],
   {
@@ -23,12 +26,13 @@ export type ButtonProps = Override<
     /** Alias for `coloring="bordered"` */
     bordered?: boolean
     coloring?: ButtonColoring
-    shape?: 'padded' | 'rounded' | 'circle'
-    size?: 'sm' | 'md' | 'lg'
+    shape?: ButtonShape
+    size?: ButtonSize
   }
 >
 
 const TEXT_SIZES = {
+  xs: 'text-xs',
   sm: 'text-sm',
   md: 'text-md',
   lg: 'text-lg',
@@ -36,16 +40,19 @@ const TEXT_SIZES = {
 
 const PADDING_SIZES = {
   rounded: {
+    xs: 'px-2 py-0',
     sm: 'px-4 py-1',
     md: 'px-6 py-2',
     lg: 'px-8 py-3',
   },
   padded: {
+    xs: 'py-0.5 px-1',
     sm: 'py-1 px-2',
     md: 'py-2 px-3',
     lg: 'py-3 px-4',
   },
   circle: {
+    xs: 'size-4',
     sm: 'size-6',
     md: 'size-8',
     lg: 'size-10',

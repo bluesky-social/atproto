@@ -4,7 +4,10 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import {
+  AccountStatus,
+  formatAccountStatus,
+} from '../../../../account-manager/account-manager.js'
 import { AppContext } from '../../../../context.js'
 import { softDeleted } from '../../../../db/util.js'
 import { com } from '../../../../lexicons/index.js'
@@ -64,7 +67,7 @@ export default function (server: Server, ctx: AppContext) {
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
           active,
-          status,
+          status: status === AccountStatus.Active ? undefined : status,
         },
       }
     },

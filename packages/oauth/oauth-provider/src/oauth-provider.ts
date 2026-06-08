@@ -662,6 +662,9 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const ssoSession = ssoSessions[0]!
+        if (ssoSession.account.deactivated) {
+          throw new LoginRequiredError(parameters, 'Account deactivated')
+        }
         if (ssoSession.loginRequired) {
           throw new LoginRequiredError(parameters)
         }
@@ -685,7 +688,11 @@ export class OAuthProvider extends OAuthVerifier {
         const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
-          if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
+          if (
+            !ssoSession.loginRequired &&
+            !ssoSession.consentRequired &&
+            !ssoSession.account.deactivated
+          ) {
             const code = await this.requestManager.setAuthorized(
               requestUri,
               client,
@@ -705,11 +712,11 @@ export class OAuthProvider extends OAuthVerifier {
         parameters,
         requestUri,
         sessions,
-        selectedSub:
+        selectedDid:
           parameters.prompt == null ||
           parameters.prompt === 'login' ||
           parameters.prompt === 'consent'
-            ? sessions.find(matchesHint, parameters)?.account.sub
+            ? sessions.find(matchesHint, parameters)?.account.did
             : undefined,
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
@@ -884,9 +891,9 @@ export class OAuthProvider extends OAuthVerifier {
             // As an additional security measure, we also sign the device out,
             // so that the device cannot be used to access the account anymore
             // without a new authentication.
-            const { deviceId, sub } = tokenInfo.data
+            const { deviceId, did } = tokenInfo.data
             if (deviceId) {
-              await this.accountManager.removeDeviceAccount(deviceId, sub)
+              await this.accountManager.removeDeviceAccount(deviceId, did)
             }
           }
         }
@@ -912,7 +919,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     await this.validateCodeGrant(parameters, input)
 
-    const { account } = await this.accountManager.getAccount(data.sub)
+    const { account } = await this.accountManager.getAccount(data.did)
 
     return this.tokenManager.createToken(
       client,
@@ -1098,5 +1105,5 @@ function matchesHint(
   const hint = this.login_hint
   if (!hint) return false
 
-  return account.sub === hint || account.preferred_username === hint
+  return account.did === hint || account.handle === hint
 }

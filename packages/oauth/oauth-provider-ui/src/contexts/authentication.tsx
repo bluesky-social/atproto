@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { OAuthPromptMode } from '@atproto/oauth-types'
 import { AuthenticateWelcomeView } from '#/components/authenticate-welcome-view.tsx'
+import { ReactivateAccountView } from '#/components/reactivate-account-view.tsx'
 import { ResetPasswordView } from '#/components/reset-password-view.tsx'
 import { SignInView } from '#/components/sign-in-view.tsx'
 import { SignUpView } from '#/components/sign-up-view.tsx'
@@ -38,6 +39,7 @@ export type AuthenticationProviderProps = {
   disableRemember?: boolean
   promptMode?: OAuthPromptMode
   forcedIdentifier?: string
+  allowDeactivated?: boolean
   onCancel?: () => void
   children: ReactNode
 }
@@ -48,6 +50,7 @@ export type AuthenticationProviderProps = {
  */
 export function AuthenticationProvider({
   disableRemember = false,
+  allowDeactivated = false,
   promptMode,
   forcedIdentifier,
   onCancel,
@@ -82,8 +85,8 @@ export function AuthenticationProvider({
     } else {
       const matchingSessions = currentSessions.filter(
         ({ account }) =>
-          account.sub === forcedIdentifier ||
-          account.preferred_username === forcedIdentifier,
+          account.did === forcedIdentifier ||
+          account.handle === forcedIdentifier,
       )
       return [false, matchingSessions[0] ?? null, matchingSessions]
     }
@@ -182,6 +185,23 @@ export function AuthenticationProvider({
         onForgotPassword={(email) => {
           setView(View.ResetPassword)
           setResetPasswordHint(email)
+        }}
+      />
+    )
+  }
+
+  if (value.session.account.deactivated && !allowDeactivated) {
+    const { did } = value.session.account
+    return (
+      <ReactivateAccountView
+        account={value.session.account}
+        onCancel={async () => {
+          await api.signOut({ did })
+          setView(homeView)
+          setSession(null)
+        }}
+        onReactivate={async () => {
+          await api.reactivateAccount({ did })
         }}
       />
     )

@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
           requester,
           body.deleteAfter ?? null,
         )
-        const status = await ctx.accountManager.getAccountStatus(requester)
+        const { status } = await ctx.accountManager.getAccountStatus(requester)
         await ctx.sequencer.sequenceAccount(requester, status)
       },
     })
