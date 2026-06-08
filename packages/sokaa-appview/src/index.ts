@@ -5,3 +5,5 @@
 export const PACKAGE_NAME = '@atproto/sokaa-appview'
 export { Database } from './data-plane/server/db'
 export type { DatabaseSchema } from './data-plane/server/db'
+export { IndexingService } from './data-plane/server/indexing'
+export { RepoSubscription } from './data-plane/server/subscription'

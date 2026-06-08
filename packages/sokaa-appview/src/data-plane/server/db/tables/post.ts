@@ -1,3 +1,5 @@
+import { Generated } from 'kysely'
+
 export const tableName = 'post'
 
 export interface Post {
@@ -7,7 +9,8 @@ export interface Post {
   caption: string | null
   mediaType: string | null
   mediaJson: unknown | null
-  likeCount: number
+  // Generated<> = Postgres DEFAULT 0 on insert; reads still return plain number.
+  likeCount: Generated<number>
   createdAt: string
   indexedAt: string
 }

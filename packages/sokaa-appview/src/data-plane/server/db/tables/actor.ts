@@ -1,3 +1,5 @@
+import { Generated } from 'kysely'
+
 export const tableName = 'actor'
 
 export interface Actor {
@@ -8,9 +10,10 @@ export interface Actor {
   description: string | null
   avatarCid: string | null
   bannerCid: string | null
-  followersCount: number
-  postsCount: number
-  upstreamStatus: string
+  // Generated<> = Postgres DEFAULT on insert; reads still return plain number/string.
+  followersCount: Generated<number>
+  postsCount: Generated<number>
+  upstreamStatus: Generated<string>
   indexedAt: string
 }
 

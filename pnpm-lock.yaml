@@ -2075,9 +2075,33 @@ importers:
 
   packages/sokaa-appview:
     dependencies:
+      '@atproto/api':
+        specifier: workspace:@sokaa-converge/atproto-custom-api@*
+        version: link:../api
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
+      '@atproto/identity':
+        specifier: workspace:^
+        version: link:../identity
+      '@atproto/lexicon':
+        specifier: workspace:^
+        version: link:../lexicon
+      '@atproto/repo':
+        specifier: workspace:^
+        version: link:../repo
+      '@atproto/sync':
+        specifier: workspace:^
+        version: link:../sync
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
+      multiformats:
+        specifier: ^9.9.0
+        version: 9.9.0
       pg:
         specifier: ^8.10.0
         version: 8.10.0
