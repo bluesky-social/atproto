@@ -26,6 +26,11 @@ const isMessageRefWithoutConvoId = (
   typeof subject === 'object' &&
   isValidMessageRef({ convoId: '', ...subject })
 
+/**
+ * Cast subject input into ModSubject.
+ * @description Represents the subject types that can appear in the moderation event stream.
+ * NOTE: Downstream services should be updated to handle new subject types including appview.
+ */
 export const subjectFromInput = (
   subject: SubjectInput,
   blobs?: string[],
