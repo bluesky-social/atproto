@@ -49,6 +49,7 @@ COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
+COPY ./packages/ozone ./packages/ozone
 COPY ./services/ozone ./services/ozone
 
 # install all deps
