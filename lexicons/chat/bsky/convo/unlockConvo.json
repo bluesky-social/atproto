@@ -5,7 +5,11 @@
     "main": {
       "type": "procedure",
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Unlocks a group convo so it is able to receive new content.",
-      "errors": [{ "name": "InvalidConvo" }, { "name": "InsufficientRole" }],
+      "errors": [
+        { "name": "InvalidConvo" },
+        { "name": "InsufficientRole" },
+        { "name": "ConvoLockedByModeration" }
+      ],
       "input": {
         "encoding": "application/json",
         "schema": {
