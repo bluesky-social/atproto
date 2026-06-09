@@ -50,6 +50,10 @@ COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
 COPY ./packages/pds ./packages/pds
+
+# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
+COPY ./packages/bsync ./packages/bsync
+
 COPY ./services/pds ./services/pds
 
 # install all deps
