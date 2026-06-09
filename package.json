@@ -8,7 +8,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531",
+  "packageManager": "pnpm@10.34.1+sha512.b58fbde6dca66a929538021581f648b4570b6ca19b18e7cbd7f2c07a7b24454155388dacdf08f2af3678e88a6d1fe04f9d609df24bf51735a060ea041b374ab7",
   "devEngines": {
     "runtime": {
       "name": "node",
@@ -73,6 +73,17 @@
     "vitest": "^4.0.16"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@bufbuild/buf",
+      "@swc/core",
+      "better-sqlite3",
+      "dd-trace",
+      "esbuild",
+      "protobufjs",
+      "puppeteer",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
       "cookie": "^0.7.2",
       "opentelemetry-plugin-better-sqlite3>@opentelemetry/core": "^1.30.0"
