@@ -355,6 +355,14 @@ export class IndexingService {
       .deleteFrom('post_embed_record')
       .where('post_embed_record.postUri', 'in', postByUser)
       .execute()
+    await this.db.db
+      .deleteFrom('post_embed_video')
+      .where('post_embed_video.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_gallery_image')
+      .where('post_embed_gallery_image.postUri', 'in', postByUser)
+      .execute()
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
     await this.db.db
       .deleteFrom('thread_gate')
