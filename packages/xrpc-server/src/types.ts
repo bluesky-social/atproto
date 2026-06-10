@@ -22,6 +22,7 @@ export type Options = {
     global?: ServerRateLimitDescription<HandlerContext>[]
     shared?: ServerRateLimitDescription<HandlerContext>[]
     bypass?: (ctx: HandlerContext) => boolean
+    ignoreGlobalLimits?: boolean
   }
   /**
    * By default, errors are converted to {@link XRPCError} using

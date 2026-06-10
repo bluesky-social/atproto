@@ -685,7 +685,7 @@ export class Server {
     // `rateLimits` options was not provided to the constructor.
     if (!rateLimits) return globalRateLimiter
 
-    const { creator, bypass } = rateLimits
+    const { creator, bypass, ignoreGlobalLimits = false } = rateLimits
 
     const rateLimiters = asArray(config.rateLimit).map((options, i) => {
       if (isSharedRateLimitOpts(options)) {
@@ -711,12 +711,11 @@ export class Server {
       }
     })
 
-    // If the route config contains an empty array, use global rate limiter.
-    if (!rateLimiters.length) return globalRateLimiter
-
     // The global rate limiter (if present) should be applied in addition to
     // the route specific rate limiters.
-    if (globalRateLimiter) rateLimiters.push(globalRateLimiter)
+    if (globalRateLimiter && !ignoreGlobalLimits) {
+      rateLimiters.push(globalRateLimiter)
+    }
 
     return HttpRateLimiter.from<HandlerContext<A, P, I>>(rateLimiters, {
       bypass,
