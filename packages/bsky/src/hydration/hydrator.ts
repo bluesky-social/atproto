@@ -335,28 +335,26 @@ export class Hydrator {
     dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    let knownFollowers: KnownFollowersStates = new HydrationMap()
-    try {
-      knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get known followers for profiles',
-      )
-    }
-
-    let activitySubscriptions: ActivitySubscriptionStates = new HydrationMap()
-    try {
-      activitySubscriptions = await this.actor.getActivitySubscriptions(
-        dids,
-        ctx.viewer,
-      )
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get activity subscriptions state for profiles',
-      )
-    }
+    const [knownFollowers, activitySubscriptions] = await Promise.all([
+      this.actor
+        .getKnownFollowers(dids, ctx.viewer)
+        .catch((err): KnownFollowersStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get known followers for profiles',
+          )
+          return new HydrationMap()
+        }),
+      this.actor
+        .getActivitySubscriptions(dids, ctx.viewer)
+        .catch((err): ActivitySubscriptionStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get activity subscriptions state for profiles',
+          )
+          return new HydrationMap()
+        }),
+    ])
 
     const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
 
@@ -1051,12 +1049,11 @@ export class Hydrator {
         )
       },
     )
-    const blocks = await this.hydrateBidirectionalBlocks(
-      pairsToMap(listCreatorMemberPairs),
-      ctx,
-    )
-    // sample top list items per starter pack based on their follows
-    const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
+    const [blocks, listMemberAggs] = await Promise.all([
+      this.hydrateBidirectionalBlocks(pairsToMap(listCreatorMemberPairs), ctx),
+      // sample top list items per starter pack based on their follows
+      this.actor.getProfileAggregates(listMemberDids),
+    ])
     const listItemUris: AtUriString[] = []
     uris.forEach((uri) => {
       const sp = starterPackState.starterPacks?.get(uri)
