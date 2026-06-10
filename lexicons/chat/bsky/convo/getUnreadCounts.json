@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.convo.getUnreadCounts",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Returns unread conversation counts equivalent to one page of chat.bsky.convo.listConvos with readState=unread and lockStatus=unlocked, split by convo status. The combined total is capped at 31, where 31 means more than 30.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["unreadAcceptedConvos", "unreadRequestConvos"],
+          "properties": {
+            "unreadAcceptedConvos": {
+              "type": "integer",
+              "description": "Number of unread, unlocked accepted convos. Counts convos with unread messages and unread join requests. Capped at 31, where 31 means more than 30."
+            },
+            "unreadRequestConvos": {
+              "type": "integer",
+              "description": "Number of unread, unlocked request convos. Includes convos with unread messages, but not with unread join request, since only the owner of a group has join requests to read, and the group would necessarily be accepted. Capped at 11, where 11 means more than 10."
+            }
+          }
+        }
+      }
+    }
+  }
+}
