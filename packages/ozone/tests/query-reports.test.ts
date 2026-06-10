@@ -351,6 +351,74 @@ describe('query-reports', () => {
     })
   })
 
+  describe('message and conversation subjectType filtering', () => {
+    const convoId = 'query-reports-convo-1'
+    const messageId = 'query-reports-message-1'
+
+    beforeAll(async () => {
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'Report on a conversation',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'Report on a message',
+        subject: {
+          $type: 'chat.bsky.convo.defs#messageRef',
+          did: sc.dids.carol,
+          convoId,
+          messageId,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      // Report rows are inserted asynchronously by the queue-router daemon —
+      // drain it before querying.
+      await network.processAll()
+    })
+
+    it('filters reports by subjectType (conversation)', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'conversation',
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a conversation')
+    })
+
+    it('filters reports by subjectType (message)', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'message',
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a message')
+    })
+
+    it('excludes message and conversation reports from the account filter', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'account',
+      })
+
+      // Message and conversation reports also have an empty recordPath; they
+      // must not surface as account reports.
+      expect(response.reports.length).toBeGreaterThan(0)
+      response.reports.forEach((report) => {
+        expect(report.subject.subject).toMatch(/^did:/)
+        expect(report.comment).not.toBe('Report on a conversation')
+        expect(report.comment).not.toBe('Report on a message')
+      })
+    })
+  })
+
   describe('isMuted filtering', () => {
     let mutedReporterReportId: number
     let mutedSubjectReportId: number

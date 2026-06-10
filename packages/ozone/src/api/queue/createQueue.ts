@@ -2,7 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context.js'
 import { Server } from '../../lexicon/index.js'
 
-const VALID_SUBJECT_TYPES = ['account', 'record', 'message']
+const VALID_SUBJECT_TYPES = ['account', 'record', 'message', 'conversation']
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.queue.createQueue({

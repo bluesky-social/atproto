@@ -61,11 +61,26 @@ export async function queryReports(
   }
 
   if (params.subjectType) {
-    const normalizedType = params.subjectType as 'account' | 'record'
+    const normalizedType = params.subjectType as
+      | 'account'
+      | 'record'
+      | 'message'
+      | 'conversation'
     if (normalizedType === 'account') {
-      builder = builder.where('r.recordPath', '=', '')
+      // Message and conversation reports also have an empty recordPath, so
+      // they must be excluded explicitly.
+      builder = builder
+        .where('r.recordPath', '=', '')
+        .where('r.subjectMessageId', 'is', null)
+        .where('r.subjectConvoId', 'is', null)
     } else if (normalizedType === 'record') {
       builder = builder.where('r.recordPath', '!=', '')
+    } else if (normalizedType === 'message') {
+      builder = builder.where('r.subjectMessageId', 'is not', null)
+    } else if (normalizedType === 'conversation') {
+      builder = builder
+        .where('r.subjectConvoId', 'is not', null)
+        .where('r.subjectMessageId', 'is', null)
     }
   }
 

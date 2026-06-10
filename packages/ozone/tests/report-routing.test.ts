@@ -75,6 +75,35 @@ describe('queue-router', () => {
     return query.executeTakeFirstOrThrow()
   }
 
+  // Creates a conversation-level report event via modClient
+  const reportConvo = async (
+    did: string,
+    convoId: string,
+    reportType: string,
+  ) => {
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReport',
+        reportType,
+        comment: 'automated test report',
+      },
+      subject: { $type: 'chat.bsky.convo.defs#convoRef', did, convoId },
+    })
+  }
+
+  // Returns the most recent report row for a conversation subject
+  const getLatestReportForConvo = async (convoId: string) => {
+    const db = network.ozone.daemon.ctx.db
+    return db.db
+      .selectFrom('report as r')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+      .select(['r.id', 'r.queueId', 'r.queuedAt', 'r.status'])
+      .where('me.subjectConvoId', '=', convoId)
+      .orderBy('r.id', 'desc')
+      .limit(1)
+      .executeTakeFirstOrThrow()
+  }
+
   const getLatest = async () => {
     const { data } = await agent.tools.ozone.report.getLatestReport(
       {},
@@ -188,6 +217,52 @@ describe('queue-router', () => {
 
     // cleanup
     await deleteQueue(misleadingQueue.id)
+  })
+
+  it('re-routes a conversation report into a conversation queue, not an account queue', async () => {
+    // The convo report initially has no matching queue: only the spam account
+    // queue exists and it must not match a conversation subject.
+    const convoId = 'rr-convo-1'
+    await reportConvo(sc.dids.carol, convoId, REASON_SPAM)
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+    const unmatched = await getLatestReportForConvo(convoId)
+    expect(unmatched.queueId).toBe(-1)
+
+    // Conversation reports share an empty recordPath with account reports —
+    // the re-route path must derive the subject type from subjectConvoId,
+    // not fall through to 'account'.
+    const convoQueue = await createQueue({
+      name: 'RR: Spam Convos',
+      subjectTypes: ['conversation'],
+      reportTypes: [REASON_SPAM],
+    })
+
+    const result = await routeReports(unmatched.id, unmatched.id)
+    expect(result.assigned).toBe(1)
+    expect(result.unmatched).toBe(0)
+
+    const routed = await getLatestReportForConvo(convoId)
+    expect(routed.queueId).toBe(convoQueue.id)
+    expect(routed.status).toBe('queued')
+
+    await deleteQueue(convoQueue.id)
+  })
+
+  it('does not re-route a conversation report into an account queue', async () => {
+    // Spam account queue exists; a spam conversation report must stay
+    // unmatched rather than being mis-typed as an account subject.
+    const convoId = 'rr-convo-2'
+    await reportConvo(sc.dids.carol, convoId, REASON_SPAM)
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+    const unmatched = await getLatestReportForConvo(convoId)
+    expect(unmatched.queueId).toBe(-1)
+
+    const result = await routeReports(unmatched.id, unmatched.id)
+    expect(result.assigned).toBe(0)
+    expect(result.unmatched).toBe(1)
+
+    const after = await getLatestReportForConvo(convoId)
+    expect(after.queueId).toBe(-1)
   })
 
   it('skips reports already assigned to a valid queue', async () => {
