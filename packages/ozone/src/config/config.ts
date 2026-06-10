@@ -11,6 +11,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   assert(env.serverDid, 'serverDid is required')
   const serviceCfg: OzoneConfig['service'] = {
     port,
+    // Intentionally has no default: metrics are opt-in. When unset, the metrics
+    // server is never started (off by default for 3p labelers/self-hosters).
+    metricsPort: env.metricsPort,
     publicUrl: env.publicUrl,
     did: env.serverDid,
     version: env.version,
@@ -143,6 +146,10 @@ export type StatsConfig = {
 
 export type ServiceConfig = {
   port: number
+  // Port for the separate, pull-based Prometheus /metrics server. Optional and
+  // off by default: when undefined, no metrics server is started and no metrics
+  // are collected. Bluesky's first-party deploy sets OZONE_METRICS_PORT to opt in.
+  metricsPort?: number
   publicUrl: string
   did: string
   version?: string

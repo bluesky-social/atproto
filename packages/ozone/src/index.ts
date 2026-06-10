@@ -6,6 +6,7 @@ import cors from 'cors'
 import express from 'express'
 // eslint-disable-next-line import/default, import/no-named-as-default-member
 import httpTerminator from 'http-terminator'
+import * as prometheus from 'prom-client'
 // eslint-disable-next-line import/no-named-as-default-member
 const { createHttpTerminator } = httpTerminator
 type HttpTerminator = ReturnType<typeof createHttpTerminator>
@@ -41,12 +42,40 @@ export class OzoneService {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<AppContextOptions>,
+    // Optional Prometheus registry. Its presence is the collection gate: when
+    // omitted (dev-env, tests, self-hosted distros that don't opt in), no
+    // metrics are collected and no per-request timing overhead is incurred.
+    register?: prometheus.Registry,
   ): Promise<OzoneService> {
     const app = express()
     app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
+
+    if (register) {
+      // Collect standard metrics on the nodejs runtime (GC, event loop, etc).
+      prometheus.collectDefaultMetrics({ prefix: 'ozone_', register })
+
+      const requestDuration = new prometheus.Histogram({
+        name: 'ozone_request_duration_seconds',
+        help: 'Request duration in seconds',
+        labelNames: ['path', 'method', 'code'],
+        registers: [register],
+      })
+
+      app.use((req, res, next) => {
+        const end = requestDuration.startTimer()
+        res.on('finish', () => {
+          end({
+            path: req.route?.path || '',
+            method: req.method,
+            code: res.statusCode,
+          })
+        })
+        next()
+      })
+    }
 
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
@@ -138,6 +167,36 @@ export class OzoneService {
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
+  }
+}
+
+// A separate, pull-based Prometheus metrics server. Kept on its own port and
+// HTTP server so private metrics are never exposed on the public ozone server.
+// Only started by an entrypoint when metrics are explicitly opted in.
+export class MetricsService {
+  private terminator?: HttpTerminator
+
+  constructor(public app: express.Application) {}
+
+  static create(register: prometheus.Registry): MetricsService {
+    const app = express()
+    app.get('/metrics', async (_req, res) => {
+      res.set('Content-Type', register.contentType)
+      res.end(await register.metrics())
+    })
+    return new MetricsService(app)
+  }
+
+  async start(port: number): Promise<http.Server> {
+    const server = this.app.listen(port)
+    server.keepAliveTimeout = 90000
+    this.terminator = createHttpTerminator({ server })
+    await events.once(server, 'listening')
+    return server
+  }
+
+  async destroy(): Promise<void> {
+    await this.terminator?.terminate()
   }
 }
 

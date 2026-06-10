@@ -75,6 +75,8 @@ COPY --from=build /app /app
 WORKDIR /app/services/ozone
 
 EXPOSE 3000
+# Metrics server port (opt-in via OZONE_METRICS_PORT; documented here, not enabled).
+EXPOSE 3001
 ENV PORT=3000
 ENV NODE_ENV=production
 
