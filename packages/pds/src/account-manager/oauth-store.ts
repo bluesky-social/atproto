@@ -168,12 +168,14 @@ export class OAuthStore
 
     try {
       await this.actorStore.create(did, signingKey)
+
       try {
         const commit = await this.actorStore.transact(did, (actorTxn) => {
           return actorTxn.repo.createRepo([])
         })
 
         await this.plcClient.sendOperation(did, op)
+
         try {
           await this.accountManager.createAccount({
             did,
@@ -184,19 +186,24 @@ export class OAuthStore
             repoCid: commit.cid,
             repoRev: commit.rev,
           })
+
           try {
+            // @TODO Implement a way for accounts to self heal in case of
+            // sequencer failure during account creation, to allow not
+            // propagating errors here.
             await this.sequencer.createAccount(did, handle, commit)
+
             try {
-              try {
-                await this.actorStore.clearReservedKeypair(signingKeyDid, did)
-              } catch (err) {
-                // @NOTE This is a cleanup operation so we won't fail the whole
-                // flow if it fails, but we log it just in case
-                dbLogger.error(
-                  { did, signingKeyDid, err },
-                  'Failed to clear reserved keypair',
-                )
-              }
+              await this.actorStore
+                .clearReservedKeypair(signingKeyDid, did)
+                .catch((err) => {
+                  // @NOTE This is a cleanup operation so we won't fail the
+                  // whole flow if it fails, but we log it just in case
+                  dbLogger.error(
+                    { did, signingKeyDid, err },
+                    'Failed to clear reserved keypair',
+                  )
+                })
 
               const account = await this.accountManager.getAccount(did)
               assert(account, 'Account not found after creation')

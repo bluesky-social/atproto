@@ -46,6 +46,7 @@ export default function (server: Server, ctx: AppContext) {
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
       await ctx.actorStore.create(did, signingKey)
+
       try {
         const commit = await ctx.actorStore.transact(did, (actorTxn) => {
           return actorTxn.repo.createRepo([])
@@ -72,20 +73,22 @@ export default function (server: Server, ctx: AppContext) {
 
           try {
             if (!deactivated) {
-              // @TODO Should we catch error thrown here ?
+              // @TODO Implement a way for accounts to self heal in case of
+              // sequencer failure during account creation, to allow not
+              // propagating errors here.
               await ctx.sequencer.createAccount(did, handle, commit)
             }
 
-            try {
-              await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
-            } catch (err) {
-              // @NOTE This is a cleanup operation so we won't fail the whole
-              // flow if it fails, but we log it just in case
-              req.log.error(
-                { did, signingKeyDid: signingKey.did(), err },
-                'Failed to clear reserved keypair',
-              )
-            }
+            await ctx.actorStore
+              .clearReservedKeypair(signingKey.did(), did)
+              .catch((err) => {
+                // @NOTE This is a cleanup operation so we won't fail the whole
+                // flow if it fails, but we log it just in case
+                req.log.error(
+                  { did, signingKeyDid: signingKey.did(), err },
+                  'Failed to clear reserved keypair',
+                )
+              })
 
             return {
               encoding: 'application/json' as const,
