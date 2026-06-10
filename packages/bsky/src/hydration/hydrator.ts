@@ -334,10 +334,14 @@ export class Hydrator {
   async hydrateProfilesDetailed(
     dids: DidString[],
     ctx: HydrateCtx,
+    opts?: {
+      // when set, restricts known followers hydration to this subset of dids
+      knownFollowersDids?: DidString[]
+    },
   ): Promise<HydrationState> {
     const [knownFollowers, activitySubscriptions] = await Promise.all([
       this.actor
-        .getKnownFollowers(dids, ctx.viewer)
+        .getKnownFollowers(opts?.knownFollowersDids ?? dids, ctx.viewer)
         .catch((err): KnownFollowersStates => {
           hydrationLogger.error(
             { err },
