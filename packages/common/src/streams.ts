@@ -61,6 +61,69 @@ export const byteIterableToStream = (
   return Readable.from(iter, { objectMode: false })
 }
 
+export const coalesceByteStream = (
+  stream: Readable,
+  targetSize: number,
+): Readable => {
+  if (!Number.isInteger(targetSize) || targetSize < 1) {
+    throw new TypeError('targetSize must be a positive integer')
+  }
+  const coalescer = new ByteCoalescer(targetSize)
+  return pipeline(stream, coalescer, () => {})
+}
+
+class ByteCoalescer extends Transform {
+  private buffered: Uint8Array[] = []
+  private bufferedSize = 0
+
+  constructor(private targetSize: number) {
+    super()
+  }
+
+  _transform(
+    chunk: Uint8Array,
+    _enc: BufferEncoding,
+    cb: TransformCallback,
+  ) {
+    let offset = 0
+
+    while (offset < chunk.length) {
+      if (chunk.length - offset >= this.targetSize) {
+        this.flushBuffered()
+        this.push(chunk.subarray(offset))
+        offset = chunk.length
+        continue
+      }
+
+      const take = Math.min(
+        this.targetSize - this.bufferedSize,
+        chunk.length - offset,
+      )
+      this.buffered.push(chunk.subarray(offset, offset + take))
+      this.bufferedSize += take
+      offset += take
+
+      if (this.bufferedSize === this.targetSize) {
+        this.flushBuffered()
+      }
+    }
+
+    cb()
+  }
+
+  _flush(cb: TransformCallback) {
+    this.flushBuffered()
+    cb()
+  }
+
+  private flushBuffered() {
+    if (this.bufferedSize < 1) return
+    this.push(Buffer.concat(this.buffered, this.bufferedSize))
+    this.buffered = []
+    this.bufferedSize = 0
+  }
+}
+
 export const bytesToStream = (bytes: Uint8Array): Readable => {
   const stream = new Readable()
   stream.push(bytes)

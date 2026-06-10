@@ -1,5 +1,5 @@
 import stream from 'node:stream'
-import { byteIterableToStream } from '@atproto/common'
+import { byteIterableToStream, coalesceByteStream } from '@atproto/common'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -10,6 +10,8 @@ import { isUserOrAdmin } from '../../../../auth-verifier.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from './util.js'
+
+const CAR_STREAM_CHUNK_SIZE = 64 * 1024
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.sync.getRepo, {
@@ -43,7 +45,10 @@ export const getCarStream = async (
   try {
     const storage = new SqlRepoReader(actorDb)
     const carIter = await storage.getCarStream(since)
-    carStream = byteIterableToStream(carIter)
+    carStream = coalesceByteStream(
+      byteIterableToStream(carIter),
+      CAR_STREAM_CHUNK_SIZE,
+    )
   } catch (err) {
     await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {
