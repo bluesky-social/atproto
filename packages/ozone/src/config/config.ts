@@ -14,6 +14,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     // Intentionally has no default: metrics are opt-in. When unset, the metrics
     // server is never started (off by default for 3p labelers/self-hosters).
     metricsPort: env.metricsPort,
+    // Separate opt-in metrics port for the daemon process (runs in its own
+    // container, so it needs its own scrape target). No default for the same reason.
+    daemonMetricsPort: env.daemonMetricsPort,
     publicUrl: env.publicUrl,
     did: env.serverDid,
     version: env.version,
@@ -150,6 +153,9 @@ export type ServiceConfig = {
   // off by default: when undefined, no metrics server is started and no metrics
   // are collected. Bluesky's first-party deploy sets OZONE_METRICS_PORT to opt in.
   metricsPort?: number
+  // Metrics port for the daemon process (separate container/scrape target).
+  // Optional and off by default; set via OZONE_DAEMON_METRICS_PORT.
+  daemonMetricsPort?: number
   publicUrl: string
   did: string
   version?: string

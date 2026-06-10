@@ -1,3 +1,4 @@
+import * as prometheus from 'prom-client'
 import { OzoneConfig, OzoneSecrets } from '../config/index.js'
 import { AppContextOptions } from '../context.js'
 import { DaemonContext } from './context.js'
@@ -14,8 +15,16 @@ export class OzoneDaemon {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<AppContextOptions>,
+    // Optional Prometheus registry for instrumented daemon jobs (e.g. the queue
+    // router). Omitted when metrics are not opted in.
+    register?: prometheus.Registry,
   ): Promise<OzoneDaemon> {
-    const ctx = await DaemonContext.fromConfig(cfg, secrets, overrides)
+    const ctx = await DaemonContext.fromConfig(
+      cfg,
+      secrets,
+      overrides,
+      register,
+    )
     return new OzoneDaemon(ctx)
   }
 

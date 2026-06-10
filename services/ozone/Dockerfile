@@ -75,7 +75,9 @@ COPY --from=build /app /app
 WORKDIR /app/services/ozone
 
 EXPOSE 3000
-# Metrics server port (opt-in via OZONE_METRICS_PORT; documented here, not enabled).
+# Metrics + ops-probe (/metrics, /livez, /readyz) server port. Opt-in and off by
+# default: api.ts uses OZONE_METRICS_PORT, daemon.ts uses OZONE_DAEMON_METRICS_PORT.
+# Documented here for reference; not enabled unless the env var is set.
 EXPOSE 3001
 ENV PORT=3000
 ENV NODE_ENV=production

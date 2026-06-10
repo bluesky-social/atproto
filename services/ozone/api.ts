@@ -78,7 +78,9 @@ const main = async () => {
 
   let metrics: MetricsService | undefined
   if (register && cfg.service.metricsPort) {
-    metrics = MetricsService.create(register)
+    metrics = MetricsService.create(register, {
+      readinessCheck: () => ozone.ctx.db.ping(),
+    })
     await metrics.start(cfg.service.metricsPort)
     httpLogger.info('ozone metrics is running')
   }

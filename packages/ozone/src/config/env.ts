@@ -7,6 +7,7 @@ export const readEnv = (): OzoneEnvironment => {
     version: envStr('OZONE_VERSION'),
     port: envInt('OZONE_PORT'),
     metricsPort: envInt('OZONE_METRICS_PORT'),
+    daemonMetricsPort: envInt('OZONE_DAEMON_METRICS_PORT'),
     publicUrl: envStr('OZONE_PUBLIC_URL'),
     serverDid: envStr('OZONE_SERVER_DID'),
     serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
@@ -58,6 +59,7 @@ export type OzoneEnvironment = {
   version?: string
   port?: number
   metricsPort?: number
+  daemonMetricsPort?: number
   publicUrl?: string
   serverDid?: string
   serviceRecordCacheTTL?: number
