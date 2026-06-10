@@ -157,6 +157,7 @@ export type SharedRateLimitOpts<C extends HandlerContext = HandlerContext> = {
 }
 
 export type RouteRateLimitOpts<C extends HandlerContext = HandlerContext> = {
+  ignoreGlobalLimits?: boolean
   durationMs: number
   points: number
   calcKey?: CalcKeyFn<C>
@@ -202,6 +203,7 @@ export type MethodConfig<
   handler: MethodHandler<A, P, I, O>
   auth?: MethodAuth<A, P>
   opts?: RouteOptions
+  ignoreGlobalRateLimits?: boolean
   rateLimit?: MethodRateLimit<A, P, I>
 }
 

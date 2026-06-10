@@ -672,9 +672,11 @@ export class Server {
     // the context of the global rate limiter to the context of the route
     // specific rate limiter (HandlerContext<A, P, I>).
 
-    const globalRateLimiter = this.globalRateLimiter as
-      | HttpRateLimiter<HandlerContext<A, P, I>>
-      | undefined
+    const globalRateLimiter = config.ignoreGlobalRateLimits
+      ? undefined
+      : (this.globalRateLimiter as
+          | HttpRateLimiter<HandlerContext<A, P, I>>
+          | undefined)
 
     // No route specific rate limiting configured, use the global rate limiter.
     if (!config.rateLimit) return globalRateLimiter
@@ -710,9 +712,6 @@ export class Server {
         })
       }
     })
-
-    // If the route config contains an empty array, use global rate limiter.
-    if (!rateLimiters.length) return globalRateLimiter
 
     // The global rate limiter (if present) should be applied in addition to
     // the route specific rate limiters.
