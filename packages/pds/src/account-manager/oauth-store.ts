@@ -60,15 +60,11 @@ import { fromDateISO } from '../db/index.js'
 import { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import { ServerMailer } from '../mailer/index.js'
-import { Sequencer, syncEvtDataFromCommit } from '../sequencer/index.js'
+import { Sequencer } from '../sequencer/index.js'
 import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import {
-  AccountStatus,
-  ActorAccount,
-  UserAlreadyExistsError,
-} from './helpers/account.js'
+import { ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -173,38 +169,49 @@ export class OAuthStore
     try {
       await this.actorStore.create(did, signingKey)
       try {
-        const commit = await this.actorStore.transact(did, (actorTxn) =>
-          actorTxn.repo.createRepo([]),
-        )
+        const commit = await this.actorStore.transact(did, (actorTxn) => {
+          return actorTxn.repo.createRepo([])
+        })
 
         await this.plcClient.sendOperation(did, op)
-
-        await this.accountManager.createAccount({
-          did,
-          handle,
-          email,
-          password,
-          inviteCode,
-          repoCid: commit.cid,
-          repoRev: commit.rev,
-        })
         try {
-          await this.sequencer.sequenceIdentityEvt(did, handle)
-          await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-          await this.sequencer.sequenceCommit(did, commit)
-          await this.sequencer.sequenceSyncEvt(
+          await this.accountManager.createAccount({
             did,
-            syncEvtDataFromCommit(commit),
-          )
-          await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-          await this.actorStore.clearReservedKeypair(signingKeyDid, did)
+            handle,
+            email,
+            password,
+            inviteCode,
+            repoCid: commit.cid,
+            repoRev: commit.rev,
+          })
+          try {
+            await this.sequencer.createAccount(did, handle, commit)
+            try {
+              try {
+                await this.actorStore.clearReservedKeypair(signingKeyDid, did)
+              } catch (err) {
+                // @NOTE This is a cleanup operation so we won't fail the whole
+                // flow if it fails, but we log it just in case
+                dbLogger.error(
+                  { did, signingKeyDid, err },
+                  'Failed to clear reserved keypair',
+                )
+              }
 
-          const account = await this.accountManager.getAccount(did)
-          if (!account) throw new Error('Account not found')
+              const account = await this.accountManager.getAccount(did)
+              assert(account, 'Account not found after creation')
 
-          return await this.buildAccount(account)
+              return await this.buildAccount(account)
+            } catch (err) {
+              await this.sequencer.deleteAccount(did)
+              throw err
+            }
+          } catch (err) {
+            await this.accountManager.deleteAccount(did)
+            throw err
+          }
         } catch (err) {
-          this.accountManager.deleteAccount(did)
+          await this.plcClient.tombstone(did, signingKey)
           throw err
         }
       } catch (err) {

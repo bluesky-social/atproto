@@ -4,7 +4,6 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager/account-manager.js'
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -54,13 +53,14 @@ export default function (server: Server, ctx: AppContext) {
         'delete_account',
         token,
       )
-      await ctx.actorStore.destroy(did)
+
+      // @NOTE Order matters here and is the reverse order of account creation.
+      // Putting the sequencer first allows for proper restoration of the
+      // account's state in case of outage recovery. We then "unlink" the
+      // account and finally remove the files from the file system.
+      await ctx.sequencer.deleteAccount(did)
       await ctx.accountManager.deleteAccount(did)
-      const accountSeq = await ctx.sequencer.sequenceAccountEvt(
-        did,
-        AccountStatus.Deleted,
-      )
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
+      await ctx.actorStore.destroy(did)
     },
   })
 }

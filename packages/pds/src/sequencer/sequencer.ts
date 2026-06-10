@@ -24,6 +24,7 @@ import {
   formatSeqCommit,
   formatSeqIdentityEvt,
   formatSeqSyncEvt,
+  syncEvtDataFromCommit,
 } from './events.js'
 
 export * from './events.js'
@@ -206,6 +207,42 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         .if(excludingSeqs.length > 0, (qb) =>
           qb.where('seq', 'not in', excludingSeqs),
         ),
+    )
+  }
+
+  async createAccount(
+    did: DidString,
+    handle: HandleString,
+    commit: CommitDataWithOps,
+  ) {
+    // @TODO make this 1) atomic (transaction or single insert query), and 2)
+    // notify crawlers once.
+    await this.sequenceIdentityEvt(did, handle)
+    await this.sequenceAccountEvt(did, AccountStatus.Active)
+    await this.sequenceCommit(did, commit)
+    await this.sequenceSyncEvt(did, syncEvtDataFromCommit(commit))
+  }
+
+  async activateAccount(
+    did: DidString,
+    handle: HandleString,
+    status: AccountStatus,
+    syncData: SyncEvtData,
+  ) {
+    // @TODO make this 1) atomic (transaction or single insert query), and 2)
+    // notify crawlers once.
+    await this.sequenceAccountEvt(did, status)
+    await this.sequenceIdentityEvt(did, handle)
+    await this.sequenceSyncEvt(did, syncData)
+  }
+
+  async deleteAccount(did: DidString) {
+    const seq = await this.sequenceAccountEvt(did, AccountStatus.Deleted)
+    await this.db.executeWithRetry(
+      this.db.db
+        .deleteFrom('repo_seq')
+        .where('did', '=', did)
+        .where('seq', '!=', seq),
     )
   }
 }

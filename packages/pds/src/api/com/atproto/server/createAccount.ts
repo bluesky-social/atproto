@@ -1,7 +1,7 @@
 import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-import { DidDocument, MINUTE, check } from '@atproto/common'
+import { MINUTE, check } from '@atproto/common'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { DidString } from '@atproto/syntax'
@@ -10,12 +10,10 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager/account-manager.js'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { syncEvtDataFromCommit } from '../../../../sequencer/index.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -47,67 +45,73 @@ export default function (server: Server, ctx: AppContext) {
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
-      let didDoc: DidDocument | undefined
-      let creds: { accessJwt: string; refreshJwt: string }
       await ctx.actorStore.create(did, signingKey)
       try {
-        const commit = await ctx.actorStore.transact(did, (actorTxn) =>
-          actorTxn.repo.createRepo([]),
-        )
+        const commit = await ctx.actorStore.transact(did, (actorTxn) => {
+          return actorTxn.repo.createRepo([])
+        })
 
         // Generate a real did with PLC
         if (plcOp) {
+          await ctx.plcClient.sendOperation(did, plcOp)
+        }
+
+        try {
+          const didDoc = await safeResolveDidDoc(ctx, did, true)
+
+          const creds = await ctx.accountManager.createAccountAndSession({
+            did,
+            handle,
+            email,
+            password,
+            repoCid: commit.cid,
+            repoRev: commit.rev,
+            inviteCode,
+            deactivated,
+          })
+
           try {
-            await ctx.plcClient.sendOperation(did, plcOp)
+            if (!deactivated) {
+              // @TODO Should we catch error thrown here ?
+              await ctx.sequencer.createAccount(did, handle, commit)
+            }
+
+            try {
+              await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
+            } catch (err) {
+              // @NOTE This is a cleanup operation so we won't fail the whole
+              // flow if it fails, but we log it just in case
+              req.log.error(
+                { did, signingKeyDid: signingKey.did(), err },
+                'Failed to clear reserved keypair',
+              )
+            }
+
+            return {
+              encoding: 'application/json' as const,
+              body: {
+                handle,
+                did: did,
+                // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
+                didDoc,
+                accessJwt: creds.accessJwt,
+                refreshJwt: creds.refreshJwt,
+              },
+            }
           } catch (err) {
-            req.log.error(
-              { didKey: ctx.plcRotationKey.did(), handle },
-              'failed to create did:plc',
-            )
+            await ctx.accountManager.deleteAccount(did)
             throw err
           }
+        } catch (err) {
+          // If we created the did just now, let's tombstone it
+          if (!ctx.entrywayClient && !input.body.did && plcOp) {
+            await ctx.plcClient.tombstone(did, signingKey)
+          }
+          throw err
         }
-
-        didDoc = await safeResolveDidDoc(ctx, did, true)
-
-        creds = await ctx.accountManager.createAccountAndSession({
-          did,
-          handle,
-          email,
-          password,
-          repoCid: commit.cid,
-          repoRev: commit.rev,
-          inviteCode,
-          deactivated,
-        })
-
-        if (!deactivated) {
-          await ctx.sequencer.sequenceIdentityEvt(did, handle)
-          await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-          await ctx.sequencer.sequenceCommit(did, commit)
-          await ctx.sequencer.sequenceSyncEvt(
-            did,
-            syncEvtDataFromCommit(commit),
-          )
-        }
-        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
       } catch (err) {
-        // this will only be reached if the actor store _did not_ exist before
         await ctx.actorStore.destroy(did)
         throw err
-      }
-
-      return {
-        encoding: 'application/json' as const,
-        body: {
-          handle,
-          did: did,
-          // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
-          didDoc,
-          accessJwt: creds.accessJwt,
-          refreshJwt: creds.refreshJwt,
-        },
       }
     },
   })
@@ -117,9 +121,10 @@ const validateInputsForEntrywayPds = async (
   ctx: AppContext,
   input: com.atproto.server.createAccount.$InputBody,
 ) => {
-  const { did, plcOp } = input
   const handle = baseNormalizeAndValidate(input.handle)
-  if (!did || !input.plcOp) {
+
+  const { did, plcOp } = input
+  if (!did || !plcOp) {
     throw new InvalidRequestError(
       'non-entryway pds requires bringing a DID and plcOp',
     )

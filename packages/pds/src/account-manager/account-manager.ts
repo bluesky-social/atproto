@@ -221,33 +221,36 @@ export class AccountManager {
       throw new InvalidRequestError('Password too long')
     }
 
-    const passwordScrypt = password
-      ? await scrypt.genSaltAndHash(password)
-      : undefined
+    const passwordScrypt =
+      email && password ? await scrypt.genSaltAndHash(password) : undefined
 
     const now = currentDatetimeString()
-    await this.db.transaction(async (dbTxn) => {
+    return this.db.transaction(async (dbTxn) => {
       if (inviteCode) {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
       }
-      await Promise.all([
-        account.registerActor(dbTxn, { did, handle, deactivated }),
-        email && passwordScrypt
-          ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
-          : Promise.resolve(),
-        invite.recordInviteUse(dbTxn, {
-          did,
-          inviteCode,
-          now,
-        }),
-        refreshJwt &&
-          auth.storeRefreshToken(
-            dbTxn,
-            auth.decodeRefreshToken(refreshJwt),
-            null,
-          ),
-        repo.updateRoot(dbTxn, did, repoCid, repoRev),
-      ])
+
+      await account.registerActor(dbTxn, { did, handle, deactivated })
+
+      if (email && passwordScrypt) {
+        await account.registerAccount(dbTxn, { did, email, passwordScrypt })
+      }
+
+      await invite.recordInviteUse(dbTxn, {
+        did,
+        inviteCode,
+        now,
+      })
+
+      if (refreshJwt) {
+        await auth.storeRefreshToken(
+          dbTxn,
+          auth.decodeRefreshToken(refreshJwt),
+          null,
+        )
+      }
+
+      await repo.updateRoot(dbTxn, did, repoCid, repoRev)
     })
   }
 
