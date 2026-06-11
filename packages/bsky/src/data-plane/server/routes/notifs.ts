@@ -32,17 +32,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     let builder = db.db
       .selectFrom('notification as notif')
       .where('notif.did', '=', actorDid)
-      .where((clause) =>
-        clause
-          .where('reasonSubject', 'is', null)
-          .orWhereExists(
+      .where((eb) =>
+        eb.or([
+          eb('reasonSubject', 'is', null),
+          eb.exists(
             db.db
               .selectFrom('record as subject')
               .selectAll()
               .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
           ),
+        ]),
       )
-      .if(priority, (qb) => qb.whereExists(priorityFollowQb))
+      .$if(priority, (qb) => qb.where(({ exists }) => exists(priorityFollowQb)))
       .select([
         'notif.author as authorDid',
         'notif.recordUri as uri',
@@ -117,13 +118,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
       .where('notification.did', '=', actorDid)
       .where('notification.sortAt', '>', lastSeen ?? '')
-      .if(priority, (qb) =>
-        qb.whereExists(
-          db.db
-            .selectFrom('follow')
-            .select(sql<boolean>`${true}`.as('val'))
-            .where('creator', '=', actorDid)
-            .whereRef('subjectDid', '=', ref('notification.author')),
+      .$if(priority, (qb) =>
+        qb.where(({ exists }) =>
+          exists(
+            db.db
+              .selectFrom('follow')
+              .select(sql<boolean>`${true}`.as('val'))
+              .where('creator', '=', actorDid)
+              .whereRef('subjectDid', '=', ref('notification.author')),
+          ),
         ),
       )
       .executeTakeFirst()
