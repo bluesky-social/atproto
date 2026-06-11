@@ -33,7 +33,7 @@ Where this repo differs from a typical TypeScript service:
   against live deployments: flag destructive column changes, missing
   down-migrations, and schema changes the old code version cannot run
   against during a rolling deploy.
-- Auth and identity surfaces (packages/oauth/*, packages/identity, PDS
+- Auth and identity surfaces (packages/oauth/\*, packages/identity, PDS
   account management and session handling) are security-critical by
   default: scrutinize token validation, scope checks, redirect handling,
   and anything that varies behavior on attacker-controlled input.

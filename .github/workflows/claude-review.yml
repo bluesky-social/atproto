@@ -105,7 +105,7 @@ jobs:
       - name: Claude review
         uses: anthropics/claude-code-action@v1
         with:
-          use_bedrock: "true"
+          use_bedrock: 'true'
           additional_permissions: |
             actions: read
           track_progress: true
