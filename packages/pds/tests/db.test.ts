@@ -21,11 +21,11 @@ describe('db', () => {
     const result = await db.transaction(async (dbTxn) => {
       return await dbTxn.db
         .insertInto('repo_root')
-        // @ts-expect-error invalid date is intentional for testing purposes
         .values({
           did: 'x',
           cid: 'x',
           rev: 'x',
+          // @ts-expect-error invalid date is intentional for testing purposes
           indexedAt: 'bad-date',
         })
         .returning('did')
@@ -56,11 +56,11 @@ describe('db', () => {
     const promise = db.transaction(async (dbTxn) => {
       await dbTxn.db
         .insertInto('repo_root')
-        // @ts-expect-error invalid date is intentional for testing purposes
         .values({
           did: 'y',
           cid: 'y',
           rev: 'y',
+          // @ts-expect-error invalid date is intentional for testing purposes
           indexedAt: 'bad-date',
         })
         .returning('did')
@@ -139,11 +139,11 @@ describe('db', () => {
           const name = `user${i}`
           const query = dbTxn.db
             .insertInto('repo_root')
-            // @ts-expect-error invalid date is intentional for testing purposes
             .values({
               cid: name,
               did: name,
               rev: name,
+              // @ts-expect-error invalid date is intentional for testing purposes
               indexedAt: 'bad-date',
             })
             .execute()

@@ -203,7 +203,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       this.db.db
         .deleteFrom('repo_seq')
         .where('did', '=', did)
-        .if(excludingSeqs.length > 0, (qb) =>
+        .$if(excludingSeqs.length > 0, (qb) =>
           qb.where('seq', 'not in', excludingSeqs),
         ),
     )
