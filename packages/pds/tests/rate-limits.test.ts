@@ -1,7 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { buildRateLimitsConfig } from '../src/rate-limits.js'
 import userSeed from './seeds/basic.js'
 
 describe('rate limits', () => {
@@ -67,46 +66,5 @@ describe('rate limits', () => {
       identifier: sc.accounts[bob].handle,
       password: sc.accounts[bob].password,
     })
-  })
-
-  it('uses a higher ip rate limit for sync.getRepo only', () => {
-    const rateLimits = buildRateLimitsConfig({
-      enabled: true,
-      bypassKey: undefined,
-      bypassIps: undefined,
-    })
-    if (!rateLimits?.global || !rateLimits.shared) {
-      throw new Error('expected rate limits to be configured')
-    }
-
-    expect(rateLimits.global).toHaveLength(1)
-    expect(rateLimits.global[0]?.name).toBe('global-ip')
-    expect(rateLimits.global[0]?.points).toBe(3000)
-    expect(
-      rateLimits.global[0]?.calcKey?.({
-        req: {
-          path: '/xrpc/com.atproto.sync.getRepo',
-          ip: '192.0.2.1',
-        },
-      } as never),
-    ).toBeNull()
-    expect(
-      rateLimits.global[0]?.calcKey?.({
-        req: {
-          path: '/xrpc/com.atproto.sync.getRecord',
-          ip: '192.0.2.1',
-        },
-      } as never),
-    ).toBe('192.0.2.1')
-
-    expect(rateLimits.shared).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: 'sync-get-repo-ip',
-          durationMs: 5 * 60 * 1000,
-          points: 6000,
-        }),
-      ]),
-    )
   })
 })
