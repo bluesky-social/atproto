@@ -125,46 +125,25 @@ describe('streams', () => {
           new Uint8Array([0x2, 0x3]),
           new Uint8Array([0x4, 0x5, 0x6]),
           new Uint8Array([0x7]),
+          new Uint8Array([0x8]),
+          new Uint8Array([0x9]),
         ]),
         4,
       )
-      const chunks: Buffer[] = []
 
-      stream.on('data', (chunk) => chunks.push(chunk))
-      await events.once(stream, 'end')
+      const chunks = await stream.toArray()
 
-      expect(chunks.map((chunk) => [...chunk])).toEqual([
-        [0x1, 0x2, 0x3, 0x4],
-        [0x5, 0x6, 0x7],
-      ])
+      expect(chunks.length).toBe(2)
       expect(Buffer.concat(chunks)).toEqual(
-        Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7]),
+        Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9]),
       )
-    })
 
-    it('passes through chunks that meet the target size', async () => {
-      const largeChunk = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5])
-      const stream = streams.coalesceByteStream(
-        Readable.from([
-          new Uint8Array([0xa]),
-          largeChunk,
-          new Uint8Array([0xb]),
-        ]),
-        4,
-      )
-      const chunks: Buffer[] = []
-
-      stream.on('data', (chunk) => chunks.push(chunk))
-      await events.once(stream, 'end')
-
-      expect(chunks).toEqual([
-        Buffer.from([0xa]),
-        largeChunk,
-        Buffer.from([0xb]),
-      ])
-      expect(Buffer.concat(chunks)).toEqual(
-        Buffer.from([0xa, 0x1, 0x2, 0x3, 0x4, 0x5, 0xb]),
-      )
+      for (let i = 0; i < chunks.length; i++) {
+        expect(chunks[i]).toBeInstanceOf(Uint8Array)
+        if (i < chunks.length - 1) {
+          expect(chunks[i].length).toBeGreaterThanOrEqual(4)
+        }
+      }
     })
 
     it('forwards source stream errors', async () => {

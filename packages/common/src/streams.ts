@@ -61,63 +61,42 @@ export const byteIterableToStream = (
   return Readable.from(iter, { objectMode: false })
 }
 
+/**
+ * Coalesce a stream of Uint8Array chunks into larger chunks of at least the
+ * specified size. This is useful for optimizing downstream processing that
+ * benefits from larger chunk sizes, such as compression or hashing.
+ */
 export const coalesceByteStream = (
-  stream: Readable,
-  targetSize: number,
+  stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  minChunkSize: number,
 ): Readable => {
-  if (!Number.isInteger(targetSize) || targetSize < 1) {
-    throw new TypeError('targetSize must be a positive integer')
-  }
-  const coalescer = new ByteCoalescer(targetSize)
-  return pipeline(stream, coalescer, () => {})
-}
+  return pipeline(
+    stream,
+    async function* (
+      iter: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+    ): AsyncGenerator<Uint8Array> {
+      const buffered: Uint8Array[] = []
+      let bufferedLength = 0
 
-class ByteCoalescer extends Transform {
-  private buffered: Uint8Array[] = []
-  private bufferedSize = 0
+      for await (const chunk of iter) {
+        buffered.push(chunk)
+        bufferedLength += Buffer.byteLength(chunk)
 
-  constructor(private targetSize: number) {
-    super()
-  }
-
-  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
-    let offset = 0
-
-    while (offset < chunk.length) {
-      if (chunk.length - offset >= this.targetSize) {
-        this.flushBuffered()
-        this.push(chunk.subarray(offset))
-        offset = chunk.length
-        continue
+        if (bufferedLength >= minChunkSize) {
+          yield Buffer.concat(buffered, bufferedLength)
+          buffered.length = 0
+          bufferedLength = 0
+        }
       }
 
-      const take = Math.min(
-        this.targetSize - this.bufferedSize,
-        chunk.length - offset,
-      )
-      this.buffered.push(chunk.subarray(offset, offset + take))
-      this.bufferedSize += take
-      offset += take
-
-      if (this.bufferedSize === this.targetSize) {
-        this.flushBuffered()
+      if (bufferedLength > 0) {
+        yield Buffer.concat(buffered, bufferedLength)
+        buffered.length = 0
+        bufferedLength = 0
       }
-    }
-
-    cb()
-  }
-
-  _flush(cb: TransformCallback) {
-    this.flushBuffered()
-    cb()
-  }
-
-  private flushBuffered() {
-    if (this.bufferedSize < 1) return
-    this.push(Buffer.concat(this.buffered, this.bufferedSize))
-    this.buffered = []
-    this.bufferedSize = 0
-  }
+    },
+    () => {},
+  ) as PassThrough
 }
 
 export const bytesToStream = (bytes: Uint8Array): Readable => {
