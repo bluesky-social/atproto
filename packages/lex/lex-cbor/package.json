@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@atproto/lex-json": "workspace:^",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

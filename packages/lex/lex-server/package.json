@@ -58,7 +58,7 @@
     "@atproto/lex-client": "workspace:^",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "4.0.16",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

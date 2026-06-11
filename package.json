@@ -65,7 +65,7 @@
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "^6.0.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.0"
   },
   "pnpm": {
     "executionEnv": {

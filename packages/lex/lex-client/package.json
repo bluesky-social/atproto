@@ -43,7 +43,7 @@
   "devDependencies": {
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-builder": "workspace:^",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.0"
   },
   "scripts": {
     "prebuild": "node ./scripts/lex-build.mjs",

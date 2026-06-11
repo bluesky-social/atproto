@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "typescript": "^6.0.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.0"
   },
   "browser": {
     "dns/promises": false
