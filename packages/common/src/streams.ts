@@ -80,11 +80,7 @@ class ByteCoalescer extends Transform {
     super()
   }
 
-  _transform(
-    chunk: Uint8Array,
-    _enc: BufferEncoding,
-    cb: TransformCallback,
-  ) {
+  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
     let offset = 0
 
     while (offset < chunk.length) {
