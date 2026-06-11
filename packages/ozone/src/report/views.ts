@@ -102,6 +102,11 @@ export function buildReportView(
     memberViews,
   } = hydrated
   const isRecord = !!report.subjectUri
+  // Conversation reports carry no subjectUri — without this check they would
+  // surface as account subjects. Message reports also set subjectConvoId, so
+  // exclude them via subjectMessageId.
+  const isConvo =
+    !report.subjectUri && !!report.subjectConvoId && !report.subjectMessageId
   const did = report.subjectDid
   const partialRepo = partialRepos.get(did)
   const repo = partialRepo
@@ -115,13 +120,21 @@ export function buildReportView(
   const record = isRecord ? recordInfo.get(report.subjectUri!) : undefined
   const status = isRecord
     ? record?.moderation.subjectStatus
-    : repo?.moderation.subjectStatus
+    : isConvo
+      ? undefined
+      : repo?.moderation.subjectStatus
 
   const reportType = report.meta?.reportType as string
 
-  const subject = isRecord ? report.subjectUri! : report.subjectDid
+  // Conversations are not records; the synthetic at-uri is the convention
+  // used across event querying and subject statuses to address them.
+  const subject = isRecord
+    ? report.subjectUri!
+    : isConvo
+      ? `at://${report.subjectDid}/chat.bsky.convo/${report.subjectConvoId}`
+      : report.subjectDid
   const subjectView = {
-    type: isRecord ? 'record' : 'account',
+    type: isRecord ? 'record' : isConvo ? 'chat' : 'account',
     subject,
     repo,
     record,

@@ -43,16 +43,35 @@ export async function queryReports(
   builder = builder.where('r.status', '=', params.status)
 
   if (params.subject) {
-    const isRecord = params.subject.startsWith('at://')
-    if (isRecord) {
+    const isAtUri = params.subject.startsWith('at://')
+    if (isAtUri) {
       const uri = new AtUri(params.subject)
-      builder = builder
-        .where('r.did', '=', uri.host)
-        .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
+      if (uri.collection === 'chat.bsky.convo') {
+        // Conversations are addressed by a synthetic at-uri (matching the
+        // convention in queryEvents); they have no recordPath. Message
+        // reports carry the same subjectConvoId but are a different subject.
+        builder = builder
+          .where('r.did', '=', uri.host)
+          .where('r.subjectConvoId', '=', uri.rkey)
+          .where('r.subjectMessageId', 'is', null)
+      } else {
+        builder = builder
+          .where('r.did', '=', uri.host)
+          .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
+      }
     } else {
+      // A plain DID addresses the account subject. Conversation reports share
+      // the empty recordPath but present a synthetic at-uri subject, so they
+      // must be excluded here. Message reports still present the bare DID as
+      // their subject and remain included.
       builder = builder
         .where('r.did', '=', params.subject)
         .where('r.recordPath', '=', '')
+        .where((qb) =>
+          qb
+            .orWhere('r.subjectConvoId', 'is', null)
+            .orWhere('r.subjectMessageId', 'is not', null),
+        )
     }
   }
 
