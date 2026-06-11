@@ -194,10 +194,7 @@ export class OAuthStore
           })
 
           try {
-            // @TODO Implement a way for accounts to self heal in case of
-            // sequencer failure during account creation, to allow not
-            // propagating errors here.
-            await this.sequencer.createAccount(did, handle, commit)
+            await this.sequencer.sequenceAccountCreation(did, handle, commit)
 
             try {
               await this.actorStore
@@ -216,7 +213,7 @@ export class OAuthStore
 
               return await this.buildAccount(account)
             } catch (err) {
-              await this.sequencer.deleteAccount(did)
+              await this.sequencer.sequenceAccountDeletion(did)
               throw err
             }
           } catch (err) {

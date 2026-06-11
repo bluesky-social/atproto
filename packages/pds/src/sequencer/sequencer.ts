@@ -180,28 +180,25 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await this.sequenceEvts([await formatSeqCommit(did, commitData)])
   }
 
-  public async sequenceSyncEvt(
-    did: DidString,
-    data: SyncEvtData,
-  ): Promise<void> {
+  public async sequenceSync(did: DidString, data: SyncEvtData): Promise<void> {
     await this.sequenceEvts([await formatSeqSyncEvt(did, data)])
   }
 
-  public async sequenceIdentityEvt(
+  public async sequenceIdentity(
     did: DidString,
     handle?: HandleString,
   ): Promise<void> {
     await this.sequenceEvts([await formatSeqIdentityEvt(did, handle)])
   }
 
-  public async sequenceAccountEvt(
+  public async sequenceAccount(
     did: DidString,
     status: AccountStatus,
   ): Promise<void> {
     await this.sequenceEvts([await formatSeqAccountEvt(did, status)])
   }
 
-  public async createAccount(
+  public async sequenceAccountCreation(
     did: DidString,
     handle: HandleString,
     commit: CommitDataWithOps,
@@ -215,7 +212,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     ])
   }
 
-  public async activateAccount(
+  public async sequenceAccountActivation(
     did: DidString,
     handle: HandleString,
     status: AccountStatus,
@@ -229,7 +226,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     ])
   }
 
-  public async deleteAccount(did: DidString) {
+  public async sequenceAccountDeletion(did: DidString) {
     const [seq] = await this.sequenceEvts([
       await formatSeqAccountEvt(did, AccountStatus.Deleted),
     ])

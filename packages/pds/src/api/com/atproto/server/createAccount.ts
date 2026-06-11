@@ -77,43 +77,40 @@ export default function (server: Server, ctx: AppContext) {
             deactivated,
           })
 
-          let wasSequenced = false
           try {
-            if (!deactivated) {
-              // @TODO Implement a way for accounts to self heal in case of
-              // sequencer failure during account creation, to allow not
-              // propagating errors here.
-              await ctx.sequencer.createAccount(did, handle, commit)
-              wasSequenced = true
+            const sequenceEvt = !deactivated
+            if (sequenceEvt) {
+              await ctx.sequencer.sequenceAccountCreation(did, handle, commit)
             }
 
-            await ctx.actorStore
-              .clearReservedKeypair(signingKey.did(), did)
-              .catch((err) => {
-                // @NOTE This is a cleanup operation so we won't fail the whole
-                // flow if it fails, but we log it just in case
-                req.log.error(
-                  { did, signingKeyDid: signingKey.did(), err },
-                  'Failed to clear reserved keypair',
-                )
-              })
+            try {
+              await ctx.actorStore
+                .clearReservedKeypair(signingKey.did(), did)
+                .catch((err) => {
+                  // @NOTE This is a cleanup operation so we won't fail the whole
+                  // flow if it fails, but we log it just in case
+                  req.log.error(
+                    { did, signingKeyDid: signingKey.did(), err },
+                    'Failed to clear reserved keypair',
+                  )
+                })
 
-            return {
-              encoding: 'application/json' as const,
-              body: {
-                handle,
-                did: did,
-                // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
-                didDoc,
-                accessJwt: creds.accessJwt,
-                refreshJwt: creds.refreshJwt,
-              },
+              return {
+                encoding: 'application/json' as const,
+                body: {
+                  handle,
+                  did: did,
+                  // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
+                  didDoc,
+                  accessJwt: creds.accessJwt,
+                  refreshJwt: creds.refreshJwt,
+                },
+              }
+            } catch (err) {
+              if (sequenceEvt) await ctx.sequencer.sequenceAccountDeletion(did)
+              throw err
             }
           } catch (err) {
-            if (wasSequenced) {
-              await ctx.sequencer.deleteAccount(did)
-            }
-
             await ctx.accountManager.deleteAccount(did)
             throw err
           }
@@ -292,7 +289,7 @@ const formatDidAndPlcOp = async (
   if (input.recoveryKey) {
     rotationKeys.unshift(input.recoveryKey)
   }
-  return await plc.createOp({
+  return plc.createOp({
     signingKey: signingKey.did(),
     rotationKeys,
     handle,

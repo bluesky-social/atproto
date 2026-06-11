@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       // sequencer, and finally cleanup files from the file system.
       await ctx.accountManager.deleteAccount(did)
       try {
-        await ctx.sequencer.deleteAccount(did)
+        await ctx.sequencer.sequenceAccountDeletion(did)
       } finally {
         await ctx.actorStore.destroy(did)
       }

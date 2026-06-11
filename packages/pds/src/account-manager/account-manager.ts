@@ -362,7 +362,7 @@ export class AccountManager {
     await account.updateHandle(this.db, did, handle)
 
     try {
-      await this.sequencer.sequenceIdentityEvt(did, handle)
+      await this.sequencer.sequenceIdentity(did, handle)
     } catch (err) {
       httpLogger.error({ err, did, handle }, 'failed to sequence handle update')
     }
