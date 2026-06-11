@@ -6,8 +6,11 @@
   "dependencies": {
     "@atproto/pds": "workspace:^",
     "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.213.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.213.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.213.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.213.0",
+    "@opentelemetry/host-metrics": "^0.39.0",
     "@opentelemetry/instrumentation": "^0.213.0",
     "@opentelemetry/instrumentation-aws-sdk": "^0.68.0",
     "@opentelemetry/instrumentation-express": "^0.61.0",
@@ -15,6 +18,7 @@
     "@opentelemetry/instrumentation-ioredis": "^0.61.0",
     "@opentelemetry/instrumentation-pino": "^0.59.0",
     "@opentelemetry/instrumentation-undici": "^0.23.0",
+    "@opentelemetry/sdk-metrics": "^2.6.0",
     "@opentelemetry/sdk-trace-base": "^2.6.0",
     "@opentelemetry/sdk-trace-node": "^2.6.0",
     "opentelemetry-plugin-better-sqlite3": "^1.13.0"

@@ -1,5 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
+import { metrics } from '@opentelemetry/api'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { DidDocument, MINUTE, check } from '@atproto/common'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -17,6 +18,12 @@ import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
 import { syncEvtDataFromCommit } from '../../../../sequencer/index.js'
 import { safeResolveDidDoc } from './util.js'
+
+const accountCreations = metrics
+  .getMeter('@atproto/pds')
+  .createCounter('pds.account.creations', {
+    description: 'Number of accounts created on this PDS',
+  })
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.createAccount, {
@@ -97,6 +104,8 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.actorStore.destroy(did)
         throw err
       }
+
+      accountCreations.add(1, { deactivated })
 
       return {
         encoding: 'application/json' as const,
