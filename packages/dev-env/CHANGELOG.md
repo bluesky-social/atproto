@@ -1,5 +1,35 @@
 # @atproto/dev-env
 
+## 0.5.10
+
+### Patch Changes
+
+- Updated dependencies [[`c4bcb12`](https://github.com/bluesky-social/atproto/commit/c4bcb12a21bebb9e83f5c98c7ccdb16b5344ee9e), [`b9ef557`](https://github.com/bluesky-social/atproto/commit/b9ef5576beeb949bbac776dcbe4e4c2c7af60e74)]:
+  - @atproto/api@0.20.13
+  - @atproto/bsky@0.0.241
+  - @atproto/pds@0.5.2
+
+## 0.5.9
+
+### Patch Changes
+
+- [#5048](https://github.com/bluesky-social/atproto/pull/5048) [`5140be2`](https://github.com/bluesky-social/atproto/commit/5140be267b649288502cd7ace8f07bce4b098bc0) Thanks [@blackmichael](https://github.com/blackmichael)! - Add support for gallery image embeds to data-plane and dev-env
+
+- Updated dependencies [[`67a0ee8`](https://github.com/bluesky-social/atproto/commit/67a0ee88de1227c9b663b04148993d93083a051a), [`24c7311`](https://github.com/bluesky-social/atproto/commit/24c7311427b8ccd5d8529a70ed93b4d77f38a516), [`1f89abb`](https://github.com/bluesky-social/atproto/commit/1f89abb908ce1214638f91c19ef957553b7ebc03), [`5140be2`](https://github.com/bluesky-social/atproto/commit/5140be267b649288502cd7ace8f07bce4b098bc0)]:
+  - @atproto/ozone@0.2.3
+  - @atproto/api@0.20.12
+  - @atproto/bsky@0.0.240
+  - @atproto/pds@0.5.2
+
+## 0.5.8
+
+### Patch Changes
+
+- Updated dependencies [[`0d62d5b`](https://github.com/bluesky-social/atproto/commit/0d62d5b4c6086189793d3a1e0c51ecd764df6a83), [`77a3861`](https://github.com/bluesky-social/atproto/commit/77a3861561691ea51a94f96de86069c7875772da), [`16c8a94`](https://github.com/bluesky-social/atproto/commit/16c8a948b71d473568917f33f4d43dbd85b2a599), [`4280e58`](https://github.com/bluesky-social/atproto/commit/4280e585b63b1e53704fee8c68a8347224f74253)]:
+  - @atproto/bsky@0.0.239
+  - @atproto/api@0.20.10
+  - @atproto/pds@0.5.2
+
 ## 0.5.7
 
 ### Patch Changes

@@ -297,6 +297,33 @@ export async function generateMockSetup(env: TestNetwork) {
     val: 'dmca-violation',
   })
 
+  // post with a gallery of images
+  const galleryItems: Array<any> = []
+  for (let i = 0; i < 10; i++) {
+    galleryItems.push({
+      $type: 'app.bsky.embed.gallery#image',
+      image: uploadedImg.data.blob,
+      alt: 'naughty ' + (i + 1),
+      aspectRatio: {
+        $type: 'app.bsky.embed.defs#aspectRatio',
+        width: 10,
+        height: 10,
+      },
+    })
+  }
+  const galleryPost = await bob.app.bsky.feed.post.create(
+    { repo: bob.assertDid },
+    {
+      text: 'look at my cool pics',
+      embed: {
+        $type: 'app.bsky.embed.gallery',
+        items: galleryItems,
+      },
+      createdAt: date.next().value,
+    },
+  )
+  posts.push(galleryPost)
+
   // a set of replies
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri

@@ -12,6 +12,7 @@
       "knownValues": ["anyone", "followedByOwner"]
     },
     "joinLinkView": {
+      "description": "Join link view to be used within a group view, so the convo is surrounding, not specified inside this view.",
       "type": "object",
       "required": [
         "code",
@@ -32,18 +33,20 @@
       }
     },
     "joinLinkPreviewView": {
+      "description": "Preview that can be shown in feeds, including to unauthenticated viewers.",
       "type": "object",
       "required": [
+        "convoId",
         "code",
         "name",
         "owner",
         "memberCount",
         "memberLimit",
         "requireApproval",
-        "joinRule",
-        "enabledStatus"
+        "joinRule"
       ],
       "properties": {
+        "convoId": { "type": "string" },
         "code": { "type": "string" },
         "name": { "type": "string" },
         "owner": {
@@ -54,7 +57,6 @@
         "memberLimit": { "type": "integer" },
         "requireApproval": { "type": "boolean" },
         "joinRule": { "type": "ref", "ref": "#joinRule" },
-        "enabledStatus": { "type": "ref", "ref": "#linkEnabledStatus" },
         "convo": {
           "type": "ref",
           "ref": "chat.bsky.convo.defs#convoView",
@@ -66,6 +68,22 @@
         }
       }
     },
+    "disabledJoinLinkPreviewView": {
+      "description": "Preview for a disabled join link. Carries only the code so clients can correlate with the input and render a disabled state.",
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string" }
+      }
+    },
+    "invalidJoinLinkPreviewView": {
+      "description": "Preview for a join link code that does not map to an existing link. Carries only the code so clients can correlate with the input and render an invalid state.",
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string" }
+      }
+    },
     "joinLinkViewerState": {
       "type": "object",
       "properties": {
@@ -73,6 +91,7 @@
       }
     },
     "joinRequestView": {
+      "description": "A join request from the perspective of the group owner.",
       "type": "object",
       "required": ["convoId", "requestedBy", "requestedAt"],
       "properties": {
@@ -93,7 +112,7 @@
         "owner",
         "memberCount",
         "memberLimit",
-        "requestedAt"
+        "viewer"
       ],
       "properties": {
         "convoId": { "type": "string" },
@@ -104,7 +123,10 @@
         },
         "memberCount": { "type": "integer" },
         "memberLimit": { "type": "integer" },
-        "requestedAt": { "type": "string", "format": "datetime" }
+        "viewer": {
+          "type": "ref",
+          "ref": "#joinLinkViewerState"
+        }
       }
     }
   }

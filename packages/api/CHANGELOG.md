@@ -1,5 +1,33 @@
 # @atproto/api
 
+## 0.20.13
+
+### Patch Changes
+
+- [#5075](https://github.com/bluesky-social/atproto/pull/5075) [`c4bcb12`](https://github.com/bluesky-social/atproto/commit/c4bcb12a21bebb9e83f5c98c7ccdb16b5344ee9e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.12
+
+### Patch Changes
+
+- [#5066](https://github.com/bluesky-social/atproto/pull/5066) [`24c7311`](https://github.com/bluesky-social/atproto/commit/24c7311427b8ccd5d8529a70ed93b4d77f38a516) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5064](https://github.com/bluesky-social/atproto/pull/5064) [`1f89abb`](https://github.com/bluesky-social/atproto/commit/1f89abb908ce1214638f91c19ef957553b7ebc03) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.11
+
+### Patch Changes
+
+- [#5056](https://github.com/bluesky-social/atproto/pull/5056) [`da8818f`](https://github.com/bluesky-social/atproto/commit/da8818f13577c91a5001a9998279d695fccb7bcf) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.10
+
+### Patch Changes
+
+- [#5046](https://github.com/bluesky-social/atproto/pull/5046) [`77a3861`](https://github.com/bluesky-social/atproto/commit/77a3861561691ea51a94f96de86069c7875772da) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5052](https://github.com/bluesky-social/atproto/pull/5052) [`4280e58`](https://github.com/bluesky-social/atproto/commit/4280e585b63b1e53704fee8c68a8347224f74253) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.9
 
 ### Patch Changes
