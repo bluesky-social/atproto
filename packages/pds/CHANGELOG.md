@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.5.3
+
+### Patch Changes
+
+- [#5080](https://github.com/bluesky-social/atproto/pull/5080) [`b2c098f`](https://github.com/bluesky-social/atproto/commit/b2c098fdfa26137bb6f7d092ef89757e39748353) Thanks [@devinivy](https://github.com/devinivy)! - Make account deletion more robust to partial failures of file operations.
+
+- [#5078](https://github.com/bluesky-social/atproto/pull/5078) [`cc329bf`](https://github.com/bluesky-social/atproto/commit/cc329bf55c658752675d561dba792fedbe9c2626) Thanks [@jcalabro](https://github.com/jcalabro)! - Improve gzip streaming performance for com.atproto.sync.getRepo by coalescing in larger chunks before compression.
+
+- Updated dependencies [[`b2c098f`](https://github.com/bluesky-social/atproto/commit/b2c098fdfa26137bb6f7d092ef89757e39748353), [`cc329bf`](https://github.com/bluesky-social/atproto/commit/cc329bf55c658752675d561dba792fedbe9c2626)]:
+  - @atproto/common@0.6.2
+
 ## 0.5.2
 
 ### Patch Changes

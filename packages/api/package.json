@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.20.13",
+  "version": "0.20.14",
   "engines": {
     "node": ">=22"
   },
