@@ -133,7 +133,6 @@ describe('streams', () => {
 
       const chunks = await stream.toArray()
 
-      expect(chunks.length).toBe(2)
       expect(Buffer.concat(chunks)).toEqual(
         Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9]),
       )
@@ -158,7 +157,6 @@ describe('streams', () => {
 
       const chunks = await stream.toArray()
 
-      expect(chunks.length).toBe(3)
       expect(chunks).toEqual([
         new Uint8Array([0x1]),
         new Uint8Array([0x2, 0x3]),
@@ -173,7 +171,7 @@ describe('streams', () => {
           new Uint8Array([0x2, 0x3]),
           new Uint8Array([0x4, 0x5, 0x6]),
         ]),
-        Infinity,
+        1000,
       )
 
       const chunks = await stream.toArray()

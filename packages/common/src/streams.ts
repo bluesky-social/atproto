@@ -71,36 +71,71 @@ export const coalesceByteStream = (
   stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   minChunkSize: number,
 ): Readable => {
-  if (Number.isNaN(minChunkSize) || minChunkSize < 1) {
+  if (!Number.isInteger(minChunkSize) || minChunkSize < 1) {
     throw new TypeError('targetSize must be a positive number')
   }
-  return pipeline(
-    stream,
-    async function* (
-      iter: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
-    ): AsyncGenerator<Uint8Array> {
-      const buffered: Uint8Array[] = []
-      let bufferedLength = 0
 
-      for await (const chunk of iter) {
-        buffered.push(chunk)
-        bufferedLength += Buffer.byteLength(chunk)
+  // @NOTE On Node 22, this *does* return a PassThrough ("@types/node"
+  // incorrectly types it as Writable).
+  return pipeline(stream, coalesce, (_err) => {
+    // Errors are expected to be handled through the stream
+  }) as PassThrough
 
-        if (bufferedLength >= minChunkSize) {
-          yield Buffer.concat(buffered, bufferedLength)
-          buffered.length = 0
-          bufferedLength = 0
+  // @NOTE This implementation is not NodeJS specific and could be exported as
+  // utility (from "@atproto/common-web") if needed. We don't do it now to avoid
+  // adding increasing the API surface.
+  async function* coalesce(
+    iter: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  ): AsyncGenerator<Uint8Array> {
+    // @NOTE This implementation avoids as many un-necessary copies as possible
+    // and only buffers incoming chunks when they are smaller than the
+    // coalescing buffer.
+
+    let buffer = new Uint8Array(minChunkSize)
+    let offset = 0
+
+    for await (const chunk of iter) {
+      const freeSpace = buffer.length - offset
+      if (freeSpace > chunk.length) {
+        // If the incoming chunk is smaller than the free space, we copy the
+        // entire chunk into the coalescing buffer and continue to the next
+        // chunk
+        buffer.set(chunk, offset)
+        offset += chunk.length
+      } else if (offset === 0 && chunk.length >= minChunkSize) {
+        // If the coalescing buffer is empty and the incoming chunk is larger
+        // than the coalescing buffer, we can skip any copying and yield the
+        // incoming chunk directly
+        yield chunk
+      } else {
+        // Otherwise, we need to copy as much of the incoming chunk as we can
+        // into the coalescing buffer and yield the full coalescing buffer.
+        buffer.set(chunk.subarray(0, freeSpace), offset)
+        yield buffer
+
+        // We create a new coalescing buffer (for future use)
+        buffer = new Uint8Array(minChunkSize)
+        offset = 0
+
+        const remainingBytes = chunk.subarray(freeSpace)
+        if (remainingBytes.length > minChunkSize) {
+          // If the remaining of chunk is still too big to fit in the
+          // coalescing buffer, we yield it directly without copying it
+          yield remainingBytes
+        } else if (remainingBytes.length > 0) {
+          // Otherwise, we copy the remaining bytes into the coalescing buffer
+          // and continue to the next chunk
+          buffer.set(remainingBytes, offset)
+          offset += remainingBytes.length
         }
       }
+    }
 
-      if (bufferedLength > 0) {
-        yield Buffer.concat(buffered, bufferedLength)
-        buffered.length = 0
-        bufferedLength = 0
-      }
-    },
-    () => {},
-  ) as PassThrough
+    // Yield any remaining bytes in the coalescing buffer
+    if (offset > 0) {
+      yield buffer.subarray(0, offset)
+    }
+  }
 }
 
 export const bytesToStream = (bytes: Uint8Array): Readable => {
