@@ -52,6 +52,7 @@ clean: ## Deletes all 'dist' and 'node_package' directories (including nested)
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
-	nvm install 18
-	nvm use 18
+	nvm install
+	nvm use
 	corepack enable
+	corepack install
