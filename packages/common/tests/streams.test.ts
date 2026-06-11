@@ -146,6 +146,44 @@ describe('streams', () => {
       }
     })
 
+    it('yields chunks as they come when target size is 1', async () => {
+      const stream = streams.coalesceByteStream(
+        Readable.from([
+          new Uint8Array([0x1]),
+          new Uint8Array([0x2, 0x3]),
+          new Uint8Array([0x4, 0x5, 0x6]),
+        ]),
+        1,
+      )
+
+      const chunks = await stream.toArray()
+
+      expect(chunks.length).toBe(3)
+      expect(chunks).toEqual([
+        new Uint8Array([0x1]),
+        new Uint8Array([0x2, 0x3]),
+        new Uint8Array([0x4, 0x5, 0x6]),
+      ])
+    })
+
+    it('coaloasces into a single chunk when target size Infinity', async () => {
+      const stream = streams.coalesceByteStream(
+        Readable.from([
+          new Uint8Array([0x1]),
+          new Uint8Array([0x2, 0x3]),
+          new Uint8Array([0x4, 0x5, 0x6]),
+        ]),
+        Infinity,
+      )
+
+      const chunks = await stream.toArray()
+
+      expect(chunks.length).toBe(1)
+      expect(Buffer.concat(chunks)).toEqual(
+        Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6]),
+      )
+    })
+
     it('forwards source stream errors', async () => {
       const source = new PassThrough()
       const stream = streams.coalesceByteStream(source, 4)

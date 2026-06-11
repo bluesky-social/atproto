@@ -63,13 +63,17 @@ export const byteIterableToStream = (
 
 /**
  * Coalesce a stream of Uint8Array chunks into larger chunks of at least the
- * specified size. This is useful for optimizing downstream processing that
- * benefits from larger chunk sizes, such as compression or hashing.
+ * specified size ({@link minChunkSize}). This is useful for optimizing
+ * downstream processing that benefits from larger chunk sizes, such as
+ * compression or hashing.
  */
 export const coalesceByteStream = (
   stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   minChunkSize: number,
 ): Readable => {
+  if (Number.isNaN(minChunkSize) || minChunkSize < 1) {
+    throw new TypeError('targetSize must be a positive number')
+  }
   return pipeline(
     stream,
     async function* (
