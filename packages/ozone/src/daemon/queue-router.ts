@@ -1,3 +1,4 @@
+import * as prometheus from 'prom-client'
 import { MINUTE } from '@atproto/common'
 import { Database } from '../db/index.js'
 import { dbLogger } from '../logger.js'
@@ -7,15 +8,47 @@ import { initJobCursor } from './job-cursor.js'
 const JOB_NAME = 'queue_router'
 const BATCH_SIZE = 100
 
+type QueueRouterMetrics = {
+  // Duration of each poll's routeReports() run, labeled by outcome. Use for
+  // "taking too long" alerts (e.g. p99 over a threshold).
+  duration: prometheus.Histogram<'outcome'>
+  // Unix timestamp of the last successful poll. Use for "stalling" alerts
+  // (e.g. time() - <gauge> exceeds a few poll intervals).
+  lastSuccess: prometheus.Gauge
+}
+
+const createMetrics = (register: prometheus.Registry): QueueRouterMetrics => ({
+  duration: new prometheus.Histogram({
+    name: 'ozone_daemon_queue_router_duration_seconds',
+    help: 'Duration of each queue router poll (routeReports) in seconds',
+    labelNames: ['outcome'],
+    buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30],
+    registers: [register],
+  }),
+  lastSuccess: new prometheus.Gauge({
+    name: 'ozone_daemon_queue_router_last_success_timestamp_seconds',
+    help: 'Unix timestamp of the last successful queue router poll, for stall detection',
+    registers: [register],
+  }),
+})
+
 export class QueueRouter {
   destroyed = false
   processingPromise: Promise<void> = Promise.resolve()
   timer?: NodeJS.Timeout
+  private metrics?: QueueRouterMetrics
 
   constructor(
     private db: Database,
     private queueServiceCreator: QueueServiceCreator,
-  ) {}
+    // Optional Prometheus registry. When omitted (metrics not opted in), no
+    // instruments are created and polling incurs no measurement overhead.
+    register?: prometheus.Registry,
+  ) {
+    if (register) {
+      this.metrics = createMetrics(register)
+    }
+  }
 
   start() {
     this.initializeCursor().then(() => this.poll())
@@ -23,8 +56,18 @@ export class QueueRouter {
 
   poll() {
     if (this.destroyed) return
+    const stopTimer = this.metrics?.duration.startTimer()
     this.processingPromise = this.routeReports()
-      .catch((err) => dbLogger.error({ err }, 'queue routing errored'))
+      .then(
+        () => {
+          stopTimer?.({ outcome: 'success' })
+          this.metrics?.lastSuccess.setToCurrentTime()
+        },
+        (err) => {
+          stopTimer?.({ outcome: 'error' })
+          dbLogger.error({ err }, 'queue routing errored')
+        },
+      )
       .finally(() => {
         this.timer = setTimeout(() => this.poll(), getInterval())
       })

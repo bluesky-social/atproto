@@ -6,10 +6,12 @@ import cors from 'cors'
 import express from 'express'
 // eslint-disable-next-line import/default, import/no-named-as-default-member
 import httpTerminator from 'http-terminator'
+import * as prometheus from 'prom-client'
 // eslint-disable-next-line import/no-named-as-default-member
 const { createHttpTerminator } = httpTerminator
 type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
+import { extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { AppContext, AppContextOptions } from './context.js'
@@ -41,12 +43,48 @@ export class OzoneService {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<AppContextOptions>,
+    // Optional Prometheus registry. Its presence is the collection gate: when
+    // omitted (dev-env, tests, self-hosted distros that don't opt in), no
+    // metrics are collected and no per-request timing overhead is incurred.
+    register?: prometheus.Registry,
   ): Promise<OzoneService> {
     const app = express()
     app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
+
+    if (register) {
+      // Collect standard metrics on the nodejs runtime (GC, event loop, etc).
+      prometheus.collectDefaultMetrics({ prefix: 'ozone_', register })
+
+      // Per-XRPC-method request timing. Labeled by nsid (e.g.
+      // tools.ozone.moderation.emitEvent) so every method is covered without
+      // per-endpoint code. This middleware runs above the xrpc router, so
+      // req.route is not yet populated; we derive the nsid from the URL instead.
+      const xrpcRequestDuration = new prometheus.Histogram({
+        name: 'ozone_xrpc_request_duration_seconds',
+        help: 'XRPC request duration in seconds, by method',
+        labelNames: ['nsid', 'method', 'code'],
+        registers: [register],
+      })
+
+      app.use((req, res, next) => {
+        const nsid = extractUrlNsid(req.originalUrl)
+        // Only record xrpc methods; non-xrpc paths (health, robots, frontend)
+        // are skipped to keep the metric's label cardinality bounded.
+        if (!nsid) return next()
+        const end = xrpcRequestDuration.startTimer()
+        res.on('finish', () => {
+          end({
+            nsid,
+            method: req.method,
+            code: res.statusCode,
+          })
+        })
+        next()
+      })
+    }
 
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
@@ -138,6 +176,71 @@ export class OzoneService {
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
+  }
+}
+
+export type MetricsServiceOpts = {
+  // Optional readiness probe. Should reject/throw when the service cannot serve
+  // traffic (e.g. database unreachable). When omitted, /readyz behaves like
+  // /livez (process-alive only).
+  readinessCheck?: () => Promise<void>
+}
+
+// A separate, pull-based Prometheus metrics server. Kept on its own port and
+// HTTP server so private metrics and ops probes are never exposed on the public
+// ozone server. Only started by an entrypoint when metrics are explicitly
+// opted in. Also serves Kubernetes-style liveness (/livez) and readiness
+// (/readyz) probes.
+export class MetricsService {
+  private terminator?: HttpTerminator
+
+  constructor(public app: express.Application) {}
+
+  static create(
+    register: prometheus.Registry,
+    opts: MetricsServiceOpts = {},
+  ): MetricsService {
+    const app = express()
+
+    app.get('/metrics', async (_req, res) => {
+      res.set('Content-Type', register.contentType)
+      res.end(await register.metrics())
+    })
+
+    // Liveness: is the process up and the event loop responsive? No external
+    // dependencies, so a transient dependency outage never causes a pod restart.
+    app.get('/livez', (_req, res) => {
+      res.send({ status: 'ok' })
+    })
+
+    // Readiness: can the service handle traffic right now? Runs the optional
+    // readiness check (e.g. a db ping); a failure pulls the pod from the load
+    // balancer without restarting it.
+    app.get('/readyz', async (_req, res) => {
+      if (!opts.readinessCheck) {
+        return res.send({ status: 'ok' })
+      }
+      try {
+        await opts.readinessCheck()
+        res.send({ status: 'ok' })
+      } catch {
+        res.status(503).send({ status: 'not ready' })
+      }
+    })
+
+    return new MetricsService(app)
+  }
+
+  async start(port: number): Promise<http.Server> {
+    const server = this.app.listen(port)
+    server.keepAliveTimeout = 90000
+    this.terminator = createHttpTerminator({ server })
+    await events.once(server, 'listening')
+    return server
+  }
+
+  async destroy(): Promise<void> {
+    await this.terminator?.terminate()
   }
 }
 

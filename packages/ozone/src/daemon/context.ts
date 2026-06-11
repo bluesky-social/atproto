@@ -1,3 +1,4 @@
+import * as prometheus from 'prom-client'
 import { AtpAgent } from '@atproto/api'
 import { allFulfilled } from '@atproto/common'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -47,6 +48,9 @@ export class DaemonContext {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<DaemonContextOptions>,
+    // Optional Prometheus registry, threaded to instrumented daemon jobs. When
+    // omitted (metrics not opted in), those jobs collect nothing.
+    register?: prometheus.Registry,
   ): Promise<DaemonContext> {
     const db = new Database({
       url: cfg.db.postgresUrl,
@@ -118,7 +122,7 @@ export class DaemonContext {
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
     const queueService = QueueService.creator()
-    const queueRouter = new QueueRouter(db, queueService)
+    const queueRouter = new QueueRouter(db, queueService, register)
 
     const reportStatsService = ReportStatsService.creator()
     const statsComputer = new StatsComputer(

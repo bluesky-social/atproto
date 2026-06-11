@@ -6,6 +6,7 @@
   "dependencies": {
     "@atproto/aws": "workspace:^",
     "@atproto/ozone": "workspace:^",
-    "dd-trace": "^5.103.0"
+    "dd-trace": "^5.103.0",
+    "prom-client": "^15.1.3"
   }
 }
