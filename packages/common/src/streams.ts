@@ -72,7 +72,7 @@ export const coalesceByteStream = (
   minChunkSize: number,
 ): Readable => {
   if (!Number.isInteger(minChunkSize) || minChunkSize < 1) {
-    throw new TypeError('targetSize must be a positive number')
+    throw new TypeError('minChunkSize must be a positive integer')
   }
 
   // @NOTE On Node 22, this *does* return a PassThrough ("@types/node"
@@ -83,7 +83,7 @@ export const coalesceByteStream = (
 
   // @NOTE This implementation is not NodeJS specific and could be exported as
   // utility (from "@atproto/common-web") if needed. We don't do it now to avoid
-  // adding increasing the API surface.
+  // increasing the API surface of our packages.
   async function* coalesce(
     iter: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   ): AsyncGenerator<Uint8Array> {
