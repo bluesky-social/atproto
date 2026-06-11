@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vitest } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { CommitDataWithOps, sequencer } from '@atproto/pds'
+import { sequencer } from '@atproto/pds'
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema.js'
 import { forSnapshot } from '../_util.js'
 
