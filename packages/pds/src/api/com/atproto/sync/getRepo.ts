@@ -9,6 +9,7 @@ import { AuthScope } from '../../../../auth-scope.js'
 import { isUserOrAdmin } from '../../../../auth-verifier.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { SYNC_GET_REPO_IP_RATE_LIMIT } from '../../../../rate-limits.js'
 import { assertRepoAvailability } from './util.js'
 
 const CAR_STREAM_CHUNK_SIZE = 64 * 1024
@@ -21,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
         // always allow
       },
     }),
+    rateLimit: {
+      name: SYNC_GET_REPO_IP_RATE_LIMIT,
+    },
     handler: async ({ req, params, auth }) => {
       const { did, since } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
