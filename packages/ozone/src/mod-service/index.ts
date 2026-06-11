@@ -57,6 +57,8 @@ import {
 } from './status.js'
 import { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
   ModSubject,
   RecordSubject,
   RepoSubject,
@@ -241,18 +243,22 @@ export class ModerationService {
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // subjectUri or subjectConvoId
+      // subjectUri, subjectConvoId, or subjectMessageId
       if (!includeAllUserRecords) {
-        if (subjectAtUri?.collection === 'chat.bsky.convo') {
+        if (subjectAtUri?.collection === CHAT_MESSAGE_COLLECTION) {
+          builder = builder.where('subjectMessageId', '=', subjectAtUri.rkey)
+        } else if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
+          // Includes message-level events within the conversation
           builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
         } else if (subjectUri) {
           builder = builder.where('subjectUri', '=', subjectUri)
         } else {
-          // Account-level: subjectUri IS NULL also matches conversation events,
+          // Account-level: subjectUri IS NULL also matches chat events,
           // so explicitly exclude them.
           builder = builder
             .where('subjectUri', 'is', null)
             .where('subjectConvoId', 'is', null)
+            .where('subjectMessageId', 'is', null)
         }
       }
     } else if (subjectType === 'account') {

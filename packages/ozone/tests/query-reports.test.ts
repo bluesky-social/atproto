@@ -409,22 +409,6 @@ describe('query-reports', () => {
       expect(response.reports[0].comment).toBe('Report on a conversation')
     })
 
-    it('excludes conversation reports from a DID subject query', async () => {
-      const response = await modClient.queryReports({
-        status: 'open',
-        subject: sc.dids.carol,
-      })
-
-      // Conversation reports are addressed by their synthetic at-uri, not the
-      // owner DID. Message reports still present the DID as their subject.
-      response.reports.forEach((report) => {
-        expect(report.comment).not.toBe('Report on a conversation')
-      })
-      expect(
-        response.reports.some((r) => r.comment === 'Report on a message'),
-      ).toBe(true)
-    })
-
     it('filters reports by subjectType (message)', async () => {
       const response = await modClient.queryReports({
         status: 'open',
@@ -433,6 +417,37 @@ describe('query-reports', () => {
 
       expect(response.reports.length).toBe(1)
       expect(response.reports[0].comment).toBe('Report on a message')
+
+      // Message subjects surface as 'chat' with a synthetic at-uri whose
+      // rkey is the messageId.
+      expect(response.reports[0].subject.type).toBe('chat')
+      expect(response.reports[0].subject.subject).toBe(
+        `at://${sc.dids.carol}/chat.bsky.convo.message/${messageId}`,
+      )
+    })
+
+    it('filters reports by message subject at-uri', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subject: `at://${sc.dids.carol}/chat.bsky.convo.message/${messageId}`,
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a message')
+    })
+
+    it('excludes message and conversation reports from a DID subject query', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subject: sc.dids.carol,
+      })
+
+      // Chat reports are addressed by their synthetic at-uris, not the
+      // owner DID.
+      response.reports.forEach((report) => {
+        expect(report.comment).not.toBe('Report on a conversation')
+        expect(report.comment).not.toBe('Report on a message')
+      })
     })
 
     it('excludes message and conversation reports from the account filter', async () => {

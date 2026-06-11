@@ -12,6 +12,10 @@ import * as ToolsOzoneQueueDefs from '../lexicon/types/tools/ozone/queue/defs.js
 import * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
 import { ReportWithEvent } from '../mod-service/report.js'
+import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+} from '../mod-service/subject.js'
 import { ParsedLabelers } from '../util.js'
 
 type ReportViews = {
@@ -102,11 +106,12 @@ export function buildReportView(
     memberViews,
   } = hydrated
   const isRecord = !!report.subjectUri
-  // Conversation reports carry no subjectUri — without this check they would
-  // surface as account subjects. Message reports also set subjectConvoId, so
-  // exclude them via subjectMessageId.
+  // Chat reports carry no subjectUri — without these checks they would
+  // surface as account subjects.
+  const isMessage = !report.subjectUri && !!report.subjectMessageId
   const isConvo =
     !report.subjectUri && !!report.subjectConvoId && !report.subjectMessageId
+  const isChat = isMessage || isConvo
   const did = report.subjectDid
   const partialRepo = partialRepos.get(did)
   const repo = partialRepo
@@ -120,21 +125,23 @@ export function buildReportView(
   const record = isRecord ? recordInfo.get(report.subjectUri!) : undefined
   const status = isRecord
     ? record?.moderation.subjectStatus
-    : isConvo
+    : isChat
       ? undefined
       : repo?.moderation.subjectStatus
 
   const reportType = report.meta?.reportType as string
 
-  // Conversations are not records; the synthetic at-uri is the convention
+  // Chat subjects are not records; the synthetic at-uri is the convention
   // used across event querying and subject statuses to address them.
   const subject = isRecord
     ? report.subjectUri!
-    : isConvo
-      ? `at://${report.subjectDid}/chat.bsky.convo/${report.subjectConvoId}`
-      : report.subjectDid
+    : isMessage
+      ? `at://${report.subjectDid}/${CHAT_MESSAGE_COLLECTION}/${report.subjectMessageId}`
+      : isConvo
+        ? `at://${report.subjectDid}/${CHAT_CONVO_COLLECTION}/${report.subjectConvoId}`
+        : report.subjectDid
   const subjectView = {
-    type: isRecord ? 'record' : isConvo ? 'chat' : 'account',
+    type: isRecord ? 'record' : isChat ? 'chat' : 'account',
     subject,
     repo,
     record,

@@ -8,6 +8,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from '../report/handle-report-update.js'
+import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
@@ -46,10 +47,11 @@ export async function queryReports(
     const isAtUri = params.subject.startsWith('at://')
     if (isAtUri) {
       const uri = new AtUri(params.subject)
-      if (uri.collection === 'chat.bsky.convo') {
-        // Conversations are addressed by a synthetic at-uri (matching the
-        // convention in queryEvents); they have no recordPath. Message
-        // reports carry the same subjectConvoId but are a different subject.
+      if (uri.collection === CHAT_MESSAGE_COLLECTION) {
+        builder = builder
+          .where('r.did', '=', uri.host)
+          .where('r.subjectMessageId', '=', uri.rkey)
+      } else if (uri.collection === CHAT_CONVO_COLLECTION) {
         builder = builder
           .where('r.did', '=', uri.host)
           .where('r.subjectConvoId', '=', uri.rkey)
@@ -60,18 +62,11 @@ export async function queryReports(
           .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
       }
     } else {
-      // A plain DID addresses the account subject. Conversation reports share
-      // the empty recordPath but present a synthetic at-uri subject, so they
-      // must be excluded here. Message reports still present the bare DID as
-      // their subject and remain included.
       builder = builder
         .where('r.did', '=', params.subject)
         .where('r.recordPath', '=', '')
-        .where((qb) =>
-          qb
-            .orWhere('r.subjectConvoId', 'is', null)
-            .orWhere('r.subjectMessageId', 'is not', null),
-        )
+        .where('r.subjectMessageId', 'is', null)
+        .where('r.subjectConvoId', 'is', null)
     }
   }
 
