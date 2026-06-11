@@ -97,6 +97,7 @@ import resolveHandle from './com/atproto/identity/resolveHandle.js'
 import queryLabels from './com/atproto/label/queryLabels.js'
 import getRecord from './com/atproto/repo/getRecord.js'
 import fetchLabels from './com/atproto/temp/fetchLabels.js'
+import internalGetProfiles from './internal/bsky/actor/getProfiles.js'
 
 export * as health from './health.js'
 
@@ -208,4 +209,6 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   fetchLabels(server, ctx)
   queryLabels(server, ctx)
+  // internal.bsky
+  internalGetProfiles(server, ctx)
 }

@@ -346,6 +346,7 @@
       "required": [
         "createdAt",
         "lockStatus",
+        "lockStatusModerationOverride",
         "memberCount",
         "memberLimit",
         "name"
@@ -367,6 +368,10 @@
           "description": "The lock status of the conversation.",
           "type": "ref",
           "ref": "#convoLockStatus"
+        },
+        "lockStatusModerationOverride": {
+          "description": "Whether the lock status is being forced by a moderation override (account inactivation or convo takedown) rather than the owner's own setting.",
+          "type": "boolean"
         },
         "memberCount": {
           "type": "integer",

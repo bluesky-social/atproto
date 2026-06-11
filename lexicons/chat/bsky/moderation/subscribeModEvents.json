@@ -505,7 +505,8 @@
             "owner_deleted",
             "owner_suspended",
             "owner_taken_down",
-            "label_applied"
+            "label_applied",
+            "convo_taken_down"
           ]
         },
         "newName": {

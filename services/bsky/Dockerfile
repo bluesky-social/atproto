@@ -48,6 +48,11 @@ COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
+COPY ./packages/bsky ./packages/bsky
+
+# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
+COPY ./packages/bsync ./packages/bsync
+
 COPY ./services/bsky ./services/bsky
 
 # install all deps
