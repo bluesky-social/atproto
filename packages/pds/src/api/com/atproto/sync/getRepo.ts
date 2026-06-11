@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         // always allow
       },
     }),
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, params, auth }) => {
       const { did, since } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
@@ -29,7 +29,15 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/vnd.ipld.car' as const,
-        body: carStream,
+        // @NOTE If the client asked for compression (via "accept-encoding"), we
+        // coalesce the CAR stream into larger chunks to improve compression
+        // efficiency. See https://github.com/bluesky-social/atproto/pull/5078
+        //
+        // @TODO This would be better handled by xrpc-server and/or the
+        // compression middleware instead of manually coalescing the stream.
+        body: req.headers['accept-encoding']
+          ? coalesceByteStream(carStream, CAR_STREAM_CHUNK_SIZE)
+          : carStream,
       }
     },
   })
@@ -41,14 +49,14 @@ export const getCarStream = async (
   since?: string,
 ): Promise<stream.Readable> => {
   const actorDb = await ctx.actorStore.openDb(did)
-  let carStream: stream.Readable
   try {
     const storage = new SqlRepoReader(actorDb)
     const carIter = await storage.getCarStream(since)
-    carStream = coalesceByteStream(
-      byteIterableToStream(carIter),
-      CAR_STREAM_CHUNK_SIZE,
-    )
+    const carStream = byteIterableToStream(carIter)
+    const closeDb = () => actorDb.close()
+    carStream.on('error', closeDb)
+    carStream.on('close', closeDb)
+    return carStream
   } catch (err) {
     await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {
@@ -56,8 +64,4 @@ export const getCarStream = async (
     }
     throw err
   }
-  const closeDb = () => actorDb.close()
-  carStream.on('error', closeDb)
-  carStream.on('close', closeDb)
-  return carStream
 }
