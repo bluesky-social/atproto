@@ -41,7 +41,7 @@ Where this repo differs from a typical TypeScript service:
   signatures; silent data corruption there is the worst failure mode in
   the codebase. Be suspicious of changes to hashing, CBOR encoding, or
   block storage ordering.
-- XRPC endpoints in pds/bsky are internet-facing. New endpoints or
+- XRPC endpoints in pds/bsky/ozone are internet-facing. New endpoints or
   loosened input validation deserve a look at rate limits, payload size
   bounds, and unbounded-fan-out queries (hydration joins, cursors).
 
