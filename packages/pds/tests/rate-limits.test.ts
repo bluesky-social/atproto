@@ -82,18 +82,22 @@ describe('rate limits', () => {
     expect(rateLimits.global).toHaveLength(1)
     expect(rateLimits.global[0]?.name).toBe('global-ip')
     expect(rateLimits.global[0]?.points).toBe(3000)
-    expect(rateLimits.global[0]?.calcKey?.({
-      req: {
-        path: '/xrpc/com.atproto.sync.getRepo',
-        ip: '192.0.2.1',
-      },
-    } as never)).toBeNull()
-    expect(rateLimits.global[0]?.calcKey?.({
-      req: {
-        path: '/xrpc/com.atproto.sync.getRecord',
-        ip: '192.0.2.1',
-      },
-    } as never)).toBe('192.0.2.1')
+    expect(
+      rateLimits.global[0]?.calcKey?.({
+        req: {
+          path: '/xrpc/com.atproto.sync.getRepo',
+          ip: '192.0.2.1',
+        },
+      } as never),
+    ).toBeNull()
+    expect(
+      rateLimits.global[0]?.calcKey?.({
+        req: {
+          path: '/xrpc/com.atproto.sync.getRecord',
+          ip: '192.0.2.1',
+        },
+      } as never),
+    ).toBe('192.0.2.1')
 
     expect(rateLimits.shared).toEqual(
       expect.arrayContaining([

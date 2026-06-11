@@ -2,10 +2,7 @@ import { DAY, HOUR, MINUTE } from '@atproto/common'
 import type { Options } from '@atproto/xrpc-server'
 import type { RateLimitsConfig } from './config/index.js'
 
-type RateLimitDescriptions = Omit<
-  NonNullable<Options['rateLimits']>,
-  'creator'
->
+type RateLimitDescriptions = Omit<NonNullable<Options['rateLimits']>, 'creator'>
 
 const SYNC_GET_REPO_PATH = '/xrpc/com.atproto.sync.getRepo'
 
