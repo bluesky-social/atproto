@@ -1,15 +1,12 @@
 name: claude-review
 
-# VENDORED from bluesky-social/.github/.github/workflows/claude-review.yml.
+# Automatic Claude review on PR creation/update, via Bedrock (OIDC, no
+# long-lived tokens). Self-contained: this intentionally uses upstream
+# claude-code-action defaults rather than the org reusable workflows in
+# bluesky-social/.github (which a public repo cannot call, and whose
+# customizations added no value over upstream).
 #
-# atproto is a public repo, and GitHub does not allow public repos to call
-# reusable workflows hosted in internal repos (bluesky-social/.github is
-# internal), so this repo carries its own copy of the workflow. The role
-# ARN comes from the org secret AWS_BEDROCK_REVIEW_ROLE_ARN (visibility:
-# all repositories).
-#
-# When the upstream reusable workflow changes, sync this file manually.
-# See bluesky-social/.github/docs/claude-review-setup.md for design notes.
+# Review guidance lives in .github/claude-review-prompt.md.
 
 on:
   pull_request:
@@ -47,55 +44,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Load prompt
-        id: prompt
-        env:
-          PROMPT_FILE: .github/claude-review-prompt.md
-        run: |
-          set -euo pipefail
-          if [ ! -f "$PROMPT_FILE" ]; then
-            echo "::error::prompt-file '$PROMPT_FILE' not found"
-            exit 1
-          fi
-          {
-            echo "prompt<<PROMPT_EOF"
-            cat "$PROMPT_FILE"
-            echo "PROMPT_EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      # Post (or update) a pinned comment explaining how to give feedback
-      # on Claude's reviews.
-      - name: Post feedback legend
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          marker='<!-- claude-feedback-legend -->'
-          body="$marker
-
-          **How to give feedback on this review**
-
-          - React on any of Claude's comments:
-            👍 useful · 👎 noise · 🎉 caught something we'd have missed · 😕 confusing
-          - Or reply with \`/feedback good\`, \`/feedback noise\`,
-            \`/feedback missed: <note>\`, or \`/feedback confusing: <note>\`
-            for finer-grained signal.
-
-          These are harvested periodically to tune Claude's prompt. Silence counts as 👎."
-          existing=$(gh api "repos/${REPO}/issues/${PR}/comments" --paginate \
-            --jq ".[] | select(.body | contains(\"$marker\")) | .id" | head -n 1)
-          if [ -n "$existing" ]; then
-            gh api -X PATCH "repos/${REPO}/issues/comments/$existing" \
-              -f body="$body" >/dev/null
-            echo "Updated existing feedback legend comment ($existing)"
-          else
-            gh api -X POST "repos/${REPO}/issues/${PR}/comments" \
-              -f body="$body" >/dev/null
-            echo "Posted new feedback legend comment"
-          fi
-
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -116,4 +64,5 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            ${{ steps.prompt.outputs.prompt }}
+            Read .github/claude-review-prompt.md in the checked-out repo
+            and review this pull request following its guidance.

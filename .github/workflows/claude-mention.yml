@@ -1,8 +1,17 @@
 name: claude-mention
 
-# VENDORED from bluesky-social/.github/.github/workflows/claude-mention.yml.
-# See the header comment in claude-review.yml for why this is a vendored
-# copy rather than a `uses:` reference to the reusable workflow.
+# @claude mention handler on PR conversation comments, inline review
+# comments, and review bodies. See the header comment in
+# claude-review.yml for why this is self-contained rather than calling
+# the org reusable workflows.
+#
+# Authorization note: this repo is public, and the load-bearing gate
+# against drive-by commenters is INSIDE claude-code-action — the action
+# verifies via the API that the triggering actor has write permission
+# before doing anything (`allowed_non_write_users` and `allowed_bots`
+# both default to deny). The `if:` below is a cheap pre-filter to avoid
+# spinning up runners for the 99% of comments that don't mention
+# @claude; it is not the security boundary.
 
 on:
   issue_comment:
@@ -21,32 +30,18 @@ permissions:
 
 jobs:
   mention:
-    # Handles @claude on three surfaces: PR conversation comments
-    # (issue_comment), inline review-comment replies
-    # (pull_request_review_comment), and review bodies
-    # (pull_request_review). Skip:
-    # - non-PR issue_comments (we only handle PR conversation)
-    # - comments/reviews that don't actually mention @claude
-    # - authors who aren't repo insiders. This repo is public, so this
-    #   gate is load-bearing: OWNER/MEMBER/COLLABORATOR restricts the
-    #   trigger to bluesky-social org members and explicitly-added
-    #   collaborators. Drive-by commenters must not be able to spend
-    #   Bedrock tokens.
-    # - events triggered by claude[bot] itself — Claude's review prose
-    #   often contains "@claude" as a substring and we don't want that to
-    #   retrigger the workflow.
+    # Skip comments/reviews that don't mention @claude, non-PR issue
+    # comments, and events from claude[bot] itself (its review prose
+    # often quotes "@claude" and must not retrigger the workflow).
     if: >
       (
         (github.event_name == 'issue_comment' &&
           github.event.issue.pull_request != null &&
-          contains(github.event.comment.body, '@claude') &&
-          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)) ||
+          contains(github.event.comment.body, '@claude')) ||
         (github.event_name == 'pull_request_review_comment' &&
-          contains(github.event.comment.body, '@claude') &&
-          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)) ||
+          contains(github.event.comment.body, '@claude')) ||
         (github.event_name == 'pull_request_review' &&
-          contains(github.event.review.body, '@claude') &&
-          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.review.author_association))
+          contains(github.event.review.body, '@claude'))
       ) &&
       github.actor != 'claude[bot]'
 
@@ -62,39 +57,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-
-      # Post (or update) a pinned comment explaining how to give feedback
-      # on Claude's reviews.
-      - name: Post feedback legend
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.issue.number || github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          marker='<!-- claude-feedback-legend -->'
-          body="$marker
-
-          **How to give feedback on this review**
-
-          - React on any of Claude's comments:
-            👍 useful · 👎 noise · 🎉 caught something we'd have missed · 😕 confusing
-          - Or reply with \`/feedback good\`, \`/feedback noise\`,
-            \`/feedback missed: <note>\`, or \`/feedback confusing: <note>\`
-            for finer-grained signal.
-
-          These are harvested periodically to tune Claude's prompt. Silence counts as 👎."
-          existing=$(gh api "repos/${REPO}/issues/${PR}/comments" --paginate \
-            --jq ".[] | select(.body | contains(\"$marker\")) | .id" | head -n 1)
-          if [ -n "$existing" ]; then
-            gh api -X PATCH "repos/${REPO}/issues/comments/$existing" \
-              -f body="$body" >/dev/null
-            echo "Updated existing feedback legend comment ($existing)"
-          else
-            gh api -X POST "repos/${REPO}/issues/${PR}/comments" \
-              -f body="$body" >/dev/null
-            echo "Posted new feedback legend comment"
-          fi
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
