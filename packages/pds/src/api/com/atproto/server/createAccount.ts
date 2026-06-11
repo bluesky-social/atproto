@@ -77,12 +77,14 @@ export default function (server: Server, ctx: AppContext) {
             deactivated,
           })
 
+          let wasSequenced = false
           try {
             if (!deactivated) {
               // @TODO Implement a way for accounts to self heal in case of
               // sequencer failure during account creation, to allow not
               // propagating errors here.
               await ctx.sequencer.createAccount(did, handle, commit)
+              wasSequenced = true
             }
 
             await ctx.actorStore
@@ -108,7 +110,7 @@ export default function (server: Server, ctx: AppContext) {
               },
             }
           } catch (err) {
-            if (!deactivated) {
+            if (wasSequenced) {
               await ctx.sequencer.deleteAccount(did)
             }
 
