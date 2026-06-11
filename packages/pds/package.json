@@ -96,7 +96,7 @@
     "puppeteer": "^23.11.1",
     "ts-node": "^10.8.2",
     "typescript": "^6.0.3",
-    "ws": "^8.12.0"
+    "ws": "^8.20.1"
   },
   "type": "module",
   "exports": {
