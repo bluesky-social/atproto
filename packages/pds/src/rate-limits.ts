@@ -1,19 +1,23 @@
+import type { Redis } from 'ioredis'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
+import { MemoryRateLimiter, RedisRateLimiter } from '@atproto/xrpc-server'
 import type { Options } from '@atproto/xrpc-server'
 import type { RateLimitsConfig } from './config/index.js'
 
-type RateLimitDescriptions = Omit<NonNullable<Options['rateLimits']>, 'creator'>
+type RateLimitDescriptions = NonNullable<Options['rateLimits']>
 
 const SYNC_GET_REPO_PATH = '/xrpc/com.atproto.sync.getRepo'
 
-export const SYNC_GET_REPO_IP_RATE_LIMIT = 'sync-get-repo-ip'
-
 export const buildRateLimitsConfig = (
   rateLimits: RateLimitsConfig,
+  redisScratch?: Redis,
 ): RateLimitDescriptions | undefined => {
   if (!rateLimits.enabled) return undefined
 
   return {
+    creator: redisScratch
+      ? (opts) => new RedisRateLimiter(redisScratch, opts)
+      : (opts) => new MemoryRateLimiter(opts),
     bypass: ({ req }) => {
       const { bypassKey, bypassIps } = rateLimits
       if (bypassKey && bypassKey === req.headers['x-ratelimit-bypass']) {
@@ -29,6 +33,8 @@ export const buildRateLimitsConfig = (
         name: 'global-ip',
         durationMs: 5 * MINUTE,
         points: 3000,
+        // getRepo can be a high-volume sync path, so it has its own endpoint
+        // limit and should not consume the shared global read bucket.
         calcKey: ({ req }) => {
           if (req.path === SYNC_GET_REPO_PATH) {
             return null
@@ -38,11 +44,6 @@ export const buildRateLimitsConfig = (
       },
     ],
     shared: [
-      {
-        name: SYNC_GET_REPO_IP_RATE_LIMIT,
-        durationMs: 5 * MINUTE,
-        points: 6000,
-      },
       {
         name: 'repo-write-hour',
         durationMs: HOUR,

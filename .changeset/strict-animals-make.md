@@ -1,5 +1,4 @@
 ---
-'@atproto/common': patch
 '@atproto/pds': patch
 ---
 

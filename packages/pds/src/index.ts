@@ -16,9 +16,7 @@ const { createHttpTerminator } = httpTerminator
 type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
 import {
-  MemoryRateLimiter,
   MethodHandler,
-  RedisRateLimiter,
   ResponseType,
   XRPCError,
   createServer,
@@ -114,14 +112,7 @@ export class PDS {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: rateLimits.enabled
-        ? {
-            ...buildRateLimitsConfig(rateLimits),
-            creator: ctx.redisScratch
-              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
-              : (opts) => new MemoryRateLimiter(opts),
-          }
-        : undefined,
+      rateLimits: buildRateLimitsConfig(rateLimits, ctx.redisScratch),
     })
 
     apiRoutes(server, ctx)

@@ -1,5 +1,9 @@
 import stream from 'node:stream'
-import { byteIterableToStream, coalesceByteStream } from '@atproto/common'
+import {
+  MINUTE,
+  byteIterableToStream,
+  coalesceByteStream,
+} from '@atproto/common'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -9,7 +13,6 @@ import { AuthScope } from '../../../../auth-scope.js'
 import { isUserOrAdmin } from '../../../../auth-verifier.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { SYNC_GET_REPO_IP_RATE_LIMIT } from '../../../../rate-limits.js'
 import { assertRepoAvailability } from './util.js'
 
 const CAR_STREAM_CHUNK_SIZE = 64 * 1024
@@ -23,7 +26,8 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
-      name: SYNC_GET_REPO_IP_RATE_LIMIT,
+      durationMs: 5 * MINUTE,
+      points: 6000,
     },
     handler: async ({ req, params, auth }) => {
       const { did, since } = params
