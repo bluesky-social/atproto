@@ -3,6 +3,7 @@ import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
+  DidString,
   HandleString,
   asAtIdentifierString,
   getBlobCidString,
@@ -153,7 +154,13 @@ export class OAuthStore
     const signingKey = await Secp256k1Keypair.create({ exportable: true })
     const signingKeyDid = signingKey.did()
 
-    const plcCreate = await createPlcOp({
+    const canTombstone =
+      // @NOTE IMPORTANT We don't support "bring your own DID" here (yet?). If
+      // we ever do, make sure to update the computation of canTombstone so that
+      // the user's did don't get tombstoned.
+      true
+
+    const plc = await createPlcOp({
       signingKey: signingKeyDid,
       rotationKeys: this.recoveryDidKey
         ? [this.recoveryDidKey, this.plcRotationKey.did()]
@@ -163,8 +170,7 @@ export class OAuthStore
       signer: this.plcRotationKey,
     })
 
-    const { did, op } = plcCreate
-    assert(isDidString(did), 'Generated DID is not a valid DidString')
+    const did = plc.did as DidString
 
     try {
       await this.actorStore.create(did, signingKey)
@@ -174,7 +180,7 @@ export class OAuthStore
           return actorTxn.repo.createRepo([])
         })
 
-        await this.plcClient.sendOperation(did, op)
+        await this.plcClient.sendOperation(did, plc.op)
 
         try {
           await this.accountManager.createAccount({
@@ -218,7 +224,9 @@ export class OAuthStore
             throw err
           }
         } catch (err) {
-          await this.plcClient.tombstone(did, signingKey)
+          if (canTombstone) {
+            await this.plcClient.tombstone(did, this.plcRotationKey)
+          }
           throw err
         }
       } catch (err) {

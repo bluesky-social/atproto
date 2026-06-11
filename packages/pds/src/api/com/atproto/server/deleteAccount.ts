@@ -54,13 +54,15 @@ export default function (server: Server, ctx: AppContext) {
         token,
       )
 
-      // @NOTE Order matters here and is the reverse order of account creation.
-      // Putting the sequencer first allows for proper restoration of the
-      // account's state in case of outage recovery. We then "unlink" the
-      // account and finally remove the files from the file system.
-      await ctx.sequencer.deleteAccount(did)
+      // @NOTE Order matters here: first "unlink" the account by removing it
+      // from the account manager database ("source of truth"), then notify the
+      // sequencer, and finally cleanup files from the file system.
       await ctx.accountManager.deleteAccount(did)
-      await ctx.actorStore.destroy(did)
+      try {
+        await ctx.sequencer.deleteAccount(did)
+      } finally {
+        await ctx.actorStore.destroy(did)
+      }
     },
   })
 }

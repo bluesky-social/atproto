@@ -52,6 +52,12 @@ export default function (server: Server, ctx: AppContext) {
           return actorTxn.repo.createRepo([])
         })
 
+        const canTombstone =
+          // @NOTE IMPORTANT Because the user may be bringing their own did, we
+          // must make sure not to tombstone their did on failure if we didn't
+          // create it here.
+          !ctx.entrywayClient && !input.body.did && !!plcOp
+
         // Generate a real did with PLC
         if (plcOp) {
           await ctx.plcClient.sendOperation(did, plcOp)
@@ -102,13 +108,16 @@ export default function (server: Server, ctx: AppContext) {
               },
             }
           } catch (err) {
+            if (!deactivated) {
+              await ctx.sequencer.deleteAccount(did)
+            }
+
             await ctx.accountManager.deleteAccount(did)
             throw err
           }
         } catch (err) {
-          // If we created the did just now, let's tombstone it
-          if (!ctx.entrywayClient && !input.body.did && plcOp) {
-            await ctx.plcClient.tombstone(did, signingKey)
+          if (canTombstone) {
+            await ctx.plcClient.tombstone(did, ctx.plcRotationKey)
           }
           throw err
         }
@@ -252,7 +261,7 @@ const validateInputsForLocalPds = async (
   } else {
     const formatted = await formatDidAndPlcOp(ctx, handle, input, signingKey)
     did = formatted.did as DidString
-    plcOp = formatted.plcOp
+    plcOp = formatted.op
   }
 
   return {
@@ -272,10 +281,7 @@ const formatDidAndPlcOp = async (
   handle: string,
   input: com.atproto.server.createAccount.$InputBody,
   signingKey: Keypair,
-): Promise<{
-  did: string
-  plcOp: plc.Operation | null
-}> => {
+) => {
   // if the user is not bringing a DID, then we format a create op for PLC
   const rotationKeys = [ctx.plcRotationKey.did()]
   if (ctx.cfg.identity.recoveryDidKey) {
@@ -284,17 +290,13 @@ const formatDidAndPlcOp = async (
   if (input.recoveryKey) {
     rotationKeys.unshift(input.recoveryKey)
   }
-  const plcCreate = await plc.createOp({
+  return await plc.createOp({
     signingKey: signingKey.did(),
     rotationKeys,
     handle,
     pds: ctx.cfg.service.publicUrl,
     signer: ctx.plcRotationKey,
   })
-  return {
-    did: plcCreate.did,
-    plcOp: plcCreate.op,
-  }
 }
 const validateAtprotoData = (
   data: AtprotoData,

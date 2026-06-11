@@ -2,4 +2,4 @@
 '@atproto/pds': patch
 ---
 
-Make account create and deletion more resilient
+Make account creation and deletion more resilient
