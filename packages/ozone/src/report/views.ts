@@ -96,7 +96,7 @@ export function buildReportView(
   hydrated: HydratedReport,
   isModerator: boolean,
   actions?: ToolsOzoneModerationDefs.ModEventView[],
-) {
+): ToolsOzoneReportDefs.ReportView {
   const {
     partialRepos,
     accountInfo,
@@ -105,14 +105,15 @@ export function buildReportView(
     queues,
     memberViews,
   } = hydrated
+
+  // flags
   const isRecord = !!report.subjectUri
-  // Chat reports carry no subjectUri — without these checks they would
-  // surface as account subjects.
-  const isMessage = !report.subjectUri && !!report.subjectMessageId
-  const isConvo =
-    !report.subjectUri && !!report.subjectConvoId && !report.subjectMessageId
+  const isMessage = !!report.subjectMessageId
+  const isConvo = !!report.subjectConvoId && !report.subjectMessageId
   const isChat = isMessage || isConvo
   const did = report.subjectDid
+
+  // enrich
   const partialRepo = partialRepos.get(did)
   const repo = partialRepo
     ? addAccountInfoToRepoViewDetail(
@@ -123,16 +124,8 @@ export function buildReportView(
     : undefined
   const profile = profiles.get(did)
   const record = isRecord ? recordInfo.get(report.subjectUri!) : undefined
-  const status = isRecord
-    ? record?.moderation.subjectStatus
-    : isChat
-      ? undefined
-      : repo?.moderation.subjectStatus
 
-  const reportType = report.meta?.reportType as string
-
-  // Chat subjects are not records; the synthetic at-uri is the convention
-  // used across event querying and subject statuses to address them.
+  // subject
   const subject = isRecord
     ? report.subjectUri!
     : isMessage
@@ -140,6 +133,11 @@ export function buildReportView(
       : isConvo
         ? `at://${report.subjectDid}/${CHAT_CONVO_COLLECTION}/${report.subjectConvoId}`
         : report.subjectDid
+  const subjectStatus = isRecord
+    ? record?.moderation.subjectStatus
+    : isChat
+      ? undefined
+      : repo?.moderation.subjectStatus
   const subjectView = {
     type: isRecord ? 'record' : isChat ? 'chat' : 'account',
     subject,
@@ -151,9 +149,11 @@ export function buildReportView(
           ...profile,
         }
       : undefined,
-    status,
+    status: subjectStatus,
   }
 
+  // report
+  const reportType = report.meta?.reportType as string
   const reporterDid = report.reportedBy
   const reporterPartialRepo = partialRepos.get(reporterDid)
   const reporterRepo = reporterPartialRepo
@@ -165,7 +165,6 @@ export function buildReportView(
     : undefined
   const reporterProfile = profiles.get(reporterDid)
   const reporterStatus = reporterRepo?.moderation.subjectStatus
-
   const reporterView = {
     type: 'account',
     subject: reporterDid,
@@ -179,6 +178,7 @@ export function buildReportView(
     status: reporterStatus,
   }
 
+  // assignment
   const assignmentView =
     report.assignedTo && report.assignedAt
       ? {
