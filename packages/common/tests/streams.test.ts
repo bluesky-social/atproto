@@ -164,7 +164,7 @@ describe('streams', () => {
       ])
     })
 
-    it('coaloasces into a single chunk when target size exceeds total', async () => {
+    it('coalesces into a single chunk when target size exceeds total', async () => {
       const stream = streams.coalesceByteStream(
         Readable.from([
           new Uint8Array([0x1]),
