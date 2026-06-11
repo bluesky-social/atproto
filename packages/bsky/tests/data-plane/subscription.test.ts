@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vitest } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -70,17 +70,20 @@ describe('sync', () => {
 
   it('indexes actor when commit is unprocessable.', async () => {
     // mock sequencing to create an unprocessable commit event
-    const sequenceCommitOrig = network.pds.ctx.sequencer.sequenceCommit
-    network.pds.ctx.sequencer.sequenceCommit = async function (
-      did: string,
-      commitData: CommitDataWithOps,
-    ) {
-      const seqEvt = await sequencer.formatSeqCommit(did, commitData)
-      const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
-      evt.blocks = new Uint8Array() // bad blocks
-      seqEvt.event = cborEncode(evt)
-      await network.pds.ctx.sequencer.sequenceEvts([seqEvt])
-    }
+    using _ = vitest
+      .spyOn(network.pds.ctx.sequencer, 'sequenceCommit')
+      .mockImplementation(async function (
+        this: typeof network.pds.ctx.sequencer,
+        did,
+        commitData,
+      ) {
+        const seqEvt = await sequencer.formatSeqCommit(did, commitData)
+        const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
+        evt.blocks = new Uint8Array() // bad blocks
+        seqEvt.event = cborEncode(evt)
+        await this.sequenceEvts([seqEvt])
+      })
+
     // create account and index the initial commit event
     await sc.createAccount('jack', {
       handle: 'jack.test',
@@ -91,7 +94,6 @@ describe('sync', () => {
     // confirm jack was indexed as an actor despite the bad event
     const actors = await dumpTable(network.bsky.db, 'actor', ['did'])
     expect(actors.map((a) => a.handle)).toContain('jack.test')
-    network.pds.ctx.sequencer.sequenceCommit = sequenceCommitOrig
   })
 
   async function updateProfile(
