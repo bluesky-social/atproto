@@ -17,6 +17,7 @@ export type ReportWithEvent = Omit<Report, 'id'> & {
   reportedBy: string
   comment: string | null
   meta: Record<string, string | boolean | number> | null
+  modTool: { name: string; meta?: { [_ in string]: unknown } } | null
 }
 
 export type QueryReportsResult = {
@@ -133,6 +134,7 @@ export async function queryReports(
       'me.createdBy as reportedBy',
       'me.comment',
       'me.meta',
+      'me.modTool',
     ])
     .limit(limit + 1)
 
@@ -169,6 +171,7 @@ export async function getReportById(
       'me.createdBy as reportedBy',
       'me.comment',
       'me.meta',
+      'me.modTool',
     ])
     .executeTakeFirst()
 }
@@ -185,6 +188,7 @@ export async function getLatestReport(
       'me.createdBy as reportedBy',
       'me.comment',
       'me.meta',
+      'me.modTool',
     ])
     .orderBy('r.id', 'desc')
     .limit(1)

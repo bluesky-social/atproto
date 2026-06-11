@@ -27,10 +27,33 @@ function resolveAssignment(
   reportType: string,
   queues: Selectable<ReportQueue>[],
   now: string,
+  explicitQueueId?: number,
 ): ResolvedAssignment {
+  // An explicit queue id (e.g. from an Osprey rule via modTool.meta.queueId)
+  // wins over attribute matching. If the id doesn't resolve to an enabled
+  // queue, the report lands unrouted (-1) rather than falling back to
+  // attribute matching — a misconfigured rule should surface visibly, not
+  // land in a wrong queue.
+  if (explicitQueueId !== undefined) {
+    const target = queues.find((q) => q.id === explicitQueueId)
+    if (target) return { queueId: target.id, queuedAt: now, status: 'queued' }
+    return { queueId: -1, queuedAt: null, status: 'open' }
+  }
   const matched = findMatchingQueue(queues, subjectType, collection, reportType)
   if (matched) return { queueId: matched.id, queuedAt: now, status: 'queued' }
   return { queueId: -1, queuedAt: null, status: 'open' }
+}
+
+export function getQueueIdFromModTool(
+  modTool: { name: string; meta?: { [_ in string]: unknown } } | null,
+): number | undefined {
+  // modTool.meta is untrusted input — accept only a positive integer.
+  const queueId = modTool?.meta?.queueId
+  return typeof queueId === 'number' &&
+    Number.isInteger(queueId) &&
+    queueId > 0
+    ? queueId
+    : undefined
 }
 
 export type QueueServiceCreator = (db: Database) => QueueService
@@ -293,14 +316,19 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
     }
 
+    // Join the originating event so explicit id routing (modTool.meta.queueId)
+    // applies on re-route too. The join is on moderation_event's PK via
+    // report.eventId, so it stays cheap.
     let query = this.db.db
       .selectFrom('report as r')
+      .innerJoin('moderation_event as e', 'e.id', 'r.eventId')
       .select([
         'r.id',
         'r.status',
         'r.reportType',
         'r.recordPath',
         'r.subjectMessageId',
+        'e.modTool',
       ])
       .where('r.status', '!=', 'closed')
       .where('r.id', '>=', params.start)
@@ -354,6 +382,7 @@ export class QueueService {
         report.reportType,
         queues,
         now,
+        getQueueIdFromModTool(report.modTool),
       )
 
       if (assignment.queueId !== -1) {
@@ -480,6 +509,7 @@ export class QueueService {
         'subjectMessageId',
         'subjectConvoId',
         'meta',
+        'modTool',
         'createdAt',
       ])
       .where('action', '=', MOD_EVENT_REPORT_ACTION)
@@ -527,6 +557,7 @@ export class QueueService {
         reportType,
         queues,
         now,
+        getQueueIdFromModTool(event.modTool),
       )
 
       if (assignment.queueId === -1) unmatched++
