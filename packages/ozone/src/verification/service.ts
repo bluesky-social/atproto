@@ -197,8 +197,8 @@ export class VerificationService {
       .updateTable('firehose_cursor')
       .set({ cursor })
       .where('service', '=', 'verification')
-      .where((qb) =>
-        qb.where('cursor', '<', cursor).orWhere('cursor', 'is', null),
+      .where((eb) =>
+        eb.or([eb('cursor', '<', cursor), eb('cursor', 'is', null)]),
       )
       .returningAll()
       .executeTakeFirst()

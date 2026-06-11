@@ -207,9 +207,6 @@ overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
 
-patchedDependencies:
-  kysely@0.22.0: 52862ec1e676090351484a2f22e0211649e62b691c5bebca14a0489a14d3ad4e
-
 importers:
 
   .:
@@ -1896,8 +1893,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       kysely:
-        specifier: ^0.22.0
-        version: 0.22.0(patch_hash=52862ec1e676090351484a2f22e0211649e62b691c5bebca14a0489a14d3ad4e)
+        specifier: ^0.29.2
+        version: 0.29.2
       lande:
         specifier: ^1.0.10
         version: 1.0.10
@@ -1951,8 +1948,8 @@ importers:
         specifier: ^4.17.36
         version: 4.17.36
       '@types/pg':
-        specifier: ^8.6.6
-        version: 8.6.6
+        specifier: ^8.15.5
+        version: 8.20.0
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
@@ -5805,9 +5802,6 @@ packages:
   '@types/pg@8.20.0':
     resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
 
-  '@types/pg@8.6.6':
-    resolution: {integrity: sha512-O2xNmXebtwVekJDD+02udOncjVcMZQuTEQEMpKJ0ZRf5E7/9JJX3izhKUcUifBkyKpljyUM6BTgy2trmviKlpw==}
-
   '@types/prettier@2.7.3':
     resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
 
@@ -8847,10 +8841,6 @@ packages:
   kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
-
-  kysely@0.22.0:
-    resolution: {integrity: sha512-ZE3qWtnqLOalodzfK5QUEcm7AEulhxsPNuKaGFsC3XiqO92vMLm+mAHk/NnbSIOtC4RmGm0nsv700i8KDp1gfQ==}
-    engines: {node: '>=14.0.0'}
 
   kysely@0.23.5:
     resolution: {integrity: sha512-TH+b56pVXQq0tsyooYLeNfV11j6ih7D50dyN8tkM0e7ndiUH28Nziojiog3qRFlmEj9XePYdZUrNJ2079Qjdow==}
@@ -15963,12 +15953,6 @@ snapshots:
       pg-protocol: 1.6.0
       pg-types: 2.2.0
 
-  '@types/pg@8.6.6':
-    dependencies:
-      '@types/node': 18.19.56
-      pg-protocol: 1.6.0
-      pg-types: 2.2.0
-
   '@types/prettier@2.7.3': {}
 
   '@types/qs@6.9.7': {}
@@ -19715,8 +19699,6 @@ snapshots:
       elliptic: 6.5.4
 
   kleur@3.0.3: {}
-
-  kysely@0.22.0(patch_hash=52862ec1e676090351484a2f22e0211649e62b691c5bebca14a0489a14d3ad4e): {}
 
   kysely@0.23.5: {}
 
