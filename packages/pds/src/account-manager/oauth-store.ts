@@ -741,17 +741,17 @@ export class OAuthStore
     // @NOTE Mirroring the XRPC handler, we over-emit on activation for
     // backwards compatibility.
     const { status, account } = await this.accountManager.getAccountStatus(did)
-    if (status === AccountStatus.Deleted) {
+    if (status !== AccountStatus.Active) {
       // A concurrent operation deleted the account
       throw new InvalidRequestError('Account not found')
     }
 
-    await this.sequencer.sequenceAccount(did, status)
-    await this.sequencer.sequenceIdentity(
+    await this.sequencer.sequenceAccountActivation(
       did,
       existing.handle ?? INVALID_HANDLE,
+      status,
+      syncData,
     )
-    await this.sequencer.sequenceSync(did, syncData)
 
     return this.buildAccount(account)
   }

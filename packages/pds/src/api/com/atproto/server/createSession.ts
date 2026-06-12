@@ -5,10 +5,7 @@ import {
   MethodRateLimit,
   Server,
 } from '@atproto/xrpc-server'
-import {
-  AccountStatus,
-  formatAccountStatus,
-} from '../../../../account-manager/account-manager.js'
+import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -91,7 +88,7 @@ export default function (server: Server, ctx: AppContext) {
             email: user.email ?? undefined,
             emailConfirmed: !!user.emailConfirmedAt,
             active,
-            status: status === AccountStatus.Active ? undefined : status,
+            status,
           },
         }
       },

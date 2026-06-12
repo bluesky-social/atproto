@@ -29,7 +29,11 @@ import { ServerMailer } from '../mailer/index.js'
 import { Sequencer } from '../sequencer/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
 import * as account from './helpers/account.js'
-import { ActorAccount } from './helpers/account.js'
+import {
+  AccountStatus,
+  ActorAccount,
+  formatAccountStatus,
+} from './helpers/account.js'
 import * as auth from './helpers/auth.js'
 import * as emailToken from './helpers/email-token.js'
 import * as invite from './helpers/invite.js'
@@ -136,7 +140,12 @@ export class AccountManager {
       includeTakenDown: true,
     })
 
-    return account.formatAccountStatus(got)
+    const { status = AccountStatus.Active } = formatAccountStatus(got)
+    return { status, account: got } as
+      | { status: AccountStatus.Deleted; account: null }
+      | { status: AccountStatus.Takendown; account: ActorAccount }
+      | { status: AccountStatus.Deactivated; account: ActorAccount }
+      | { status: AccountStatus.Active; account: ActorAccount }
   }
 
   async normalizeAndValidateHandle(
