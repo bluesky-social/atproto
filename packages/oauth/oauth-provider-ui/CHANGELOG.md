@@ -1,5 +1,13 @@
 # @atproto/oauth-provider-ui
 
+## 0.7.3
+
+### Patch Changes
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve UX when the browser fails to redirect the user after the OAuth flow ends
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix error page no longer showing "This request has expired" when navigating back to the authorization page
+
 ## 0.7.2
 
 ### Patch Changes

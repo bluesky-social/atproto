@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.5.4
+
+### Patch Changes
+
+- [#5082](https://github.com/bluesky-social/atproto/pull/5082) [`7b8a240`](https://github.com/bluesky-social/atproto/commit/7b8a240bcfd91df3465d374d86259477490a0ff4) Thanks [@jcalabro](https://github.com/jcalabro)! - Increase rate limit rules on com.atproto.sync.getRepo
+
+- [#5070](https://github.com/bluesky-social/atproto/pull/5070) [`3247279`](https://github.com/bluesky-social/atproto/commit/324727933699bee63a1db3b1fba040e067511ad4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make account creation and deletion more resilient
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.18.3
+
 ## 0.5.3
 
 ### Patch Changes
