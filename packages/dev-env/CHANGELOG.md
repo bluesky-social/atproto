@@ -1,5 +1,14 @@
 # @atproto/dev-env
 
+## 0.5.11
+
+### Patch Changes
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Temporarily ignore error when creating mock post replies
+
+- Updated dependencies [[`7b8a240`](https://github.com/bluesky-social/atproto/commit/7b8a240bcfd91df3465d374d86259477490a0ff4), [`3247279`](https://github.com/bluesky-social/atproto/commit/324727933699bee63a1db3b1fba040e067511ad4)]:
+  - @atproto/pds@0.5.4
+
 ## 0.5.10
 
 ### Patch Changes
