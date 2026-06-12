@@ -80,7 +80,7 @@ function App() {
   const performRedirect = useCallback(
     (url: string) => {
       // @NOTE At this point, the request data is no longer accessible. If the
-      // user manages to reload the current page's url again (eg. refresh), the
+      // user manages to reload the current page's url (eg. refresh), the
       // server's back-forward cache busting should prevent this page state from
       // being restored, and will result in an error page being displayed
       // ("Unknown request_uri"). If the user is "offline" (eg. network
@@ -98,9 +98,12 @@ function App() {
       // We do this by first attempting to automatically redirect the user:
       redirectTo(url)
 
-      // If that fails, we show a link that they can click to continue. There is
-      // a long(ish) pause in between these actions to allow the browser to
-      // perform the navigation.
+      // In case automatically redirecting fails, we will also show a link that
+      // the user can click to continue. There is a long(ish) pause in between
+      // the automatic redirect and the link being clickable, to give the
+      // browser some time to perform the navigation and prevent the user from
+      // clicking the link multiple times and causing multiple navigation
+      // attempts.
       setRedirectUrl(url)
 
       // If, despite our best efforts, the client backend receives multiple
@@ -113,7 +116,7 @@ function App() {
       // browser is navigating by delaying the state update.
       setTimeout(() => setIsDone(true), 250)
     },
-    [setRedirectUrl, setIsDone, redirectTo],
+    [redirectTo],
   )
 
   const doConsentAndRedirect = useCallback(
