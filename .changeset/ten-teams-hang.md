@@ -2,4 +2,4 @@
 '@atproto/dev-env': patch
 ---
 
-Temprarily ignore error when creating mock post replies
+Temporarily ignore error when creating mock post replies

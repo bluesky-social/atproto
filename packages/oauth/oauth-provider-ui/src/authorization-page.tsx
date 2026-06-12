@@ -158,7 +158,7 @@ function App() {
               cooldown={10}
               action={() => redirectTo(redirectUrl)}
             >
-              <Trans>Click here if nothing happens</Trans>
+              <Trans>Click here if you are not automatically redirected</Trans>
             </ButtonCooldown>
           )}
         </LayoutTitle>
