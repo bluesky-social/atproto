@@ -88,11 +88,12 @@ function App() {
       // browser may restore the page state.
       //
       // On a related note, client processing of the token response should be a
-      // one time operation (because of nonce invalidation). So we should ensure
-      // that the navigation event does not happen more than once.
+      // one time operation (because of nonce invalidation). So we should do our
+      // best to prevent the navigation from being interrupted, or happening
+      // more than once.
       //
-      // This gets tricky as users may have a bad network connection, for which we
-      // should do the best we can to help them complete the login process.
+      // This gets tricky as users may have a bad network connection, for which
+      // we should do the best we can to help them complete the login process.
       //
       // We do this by first attempting to automatically redirect the user:
       redirectTo(url)
@@ -101,6 +102,12 @@ function App() {
       // a long(ish) pause in between these actions to allow the browser to
       // perform the navigation.
       setRedirectUrl(url)
+
+      // If, despite our best efforts, the client backend receives multiple
+      // redirect requests, it should handle them gracefully: Either by
+      // recognizing that the login process has already been completed for that
+      // user (through the use of a cookie), or by revoking previous credentials
+      // and triggering a new login process.
 
       // Prevent react from rendering the "redirecting..." view while the
       // browser is navigating by delaying the state update.
