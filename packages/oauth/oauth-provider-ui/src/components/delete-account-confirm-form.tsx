@@ -46,7 +46,7 @@ export function DeleteAccountConfirmForm({
             <input
               type="text"
               autoComplete="username"
-              value={email}
+              defaultValue={email}
               readOnly
               hidden
             />

@@ -44,7 +44,7 @@ export function UpdateEmailForm({
               <input
                 type="email"
                 autoComplete="username"
-                value={emailCurrent}
+                defaultValue={emailCurrent}
                 readOnly
                 hidden
               />
