@@ -93,7 +93,7 @@
           "items": { "type": "ref", "ref": "#reactionView" }
         },
         "replyTo": {
-          "description": "If set, the message this message is replying to. The full view of the referenced message is embedded so the client can render it inline. Only a single level is embedded: the embedded message will not itself have a populated 'reply' field even if it was also a reply.",
+          "description": "If set, the message this message is replying to. The full view of the referenced message is embedded so the client can render it inline. Only a single level is embedded: the embedded message will not itself have a populated 'replyTo' field even if it was also a reply.",
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
         },
