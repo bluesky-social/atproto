@@ -1,11 +1,11 @@
+import { Insertable, RawBuilder, sql } from 'kysely'
+import { CID } from 'multiformats/cid'
 import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Insertable, RawBuilder, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { getReviewState } from '../api/util.js'
 import { BackgroundQueue } from '../background.js'
 import { OzoneConfig } from '../config/index.js'
@@ -61,7 +61,7 @@ import {
   ModSubject,
   RecordSubject,
   RepoSubject,
-  subjectFromStatusRow
+  subjectFromStatusRow,
 } from './subject.js'
 import {
   ModEventType,
