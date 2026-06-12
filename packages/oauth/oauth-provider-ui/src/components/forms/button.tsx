@@ -120,17 +120,20 @@ export function Button({
   type = 'button',
   role = 'Button',
   disabled = false,
+  'aria-disabled': ariaDisabled,
   ...props
 }: ButtonProps) {
   const actionable = type === 'submit' || props.onClick != null
+  const isDisabled = disabled || loading === true
 
   return (
     <button
+      {...props}
       role={role}
       type={type}
-      disabled={disabled || loading === true}
+      disabled={isDisabled}
       tabIndex={props?.tabIndex ?? (actionable ? 0 : -1)}
-      {...props}
+      aria-disabled={ariaDisabled ?? isDisabled}
       className={clsx(
         'touch-manipulation overflow-hidden',
         'truncate tracking-wide',
