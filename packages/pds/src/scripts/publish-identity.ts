@@ -48,7 +48,7 @@ export const publishIdentityEvtForDids = async (
 ) => {
   for (const did of dids) {
     try {
-      await ctx.sequencer.sequenceIdentityEvt(did)
+      await ctx.sequencer.sequenceIdentity(did)
       console.log(`published identity evt for ${did}`)
     } catch (err) {
       console.error(`failed to sequence new identity evt for ${did}: ${err}`)
