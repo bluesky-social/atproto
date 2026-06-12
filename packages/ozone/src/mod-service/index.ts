@@ -243,22 +243,18 @@ export class ModerationService {
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
-      // subjectUri, subjectConvoId, or subjectMessageId
+      // subjectUri or subjectConvoId
       if (!includeAllUserRecords) {
-        if (subjectAtUri?.collection === CHAT_MESSAGE_COLLECTION) {
-          builder = builder.where('subjectMessageId', '=', subjectAtUri.rkey)
-        } else if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
-          // Includes message-level events within the conversation
+        if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
           builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
         } else if (subjectUri) {
           builder = builder.where('subjectUri', '=', subjectUri)
         } else {
-          // Account-level: subjectUri IS NULL also matches chat events,
+          // Account-level: subjectUri IS NULL also matches conversation events,
           // so explicitly exclude them.
           builder = builder
             .where('subjectUri', 'is', null)
             .where('subjectConvoId', 'is', null)
-            .where('subjectMessageId', 'is', null)
         }
       }
     } else if (subjectType === 'account') {
