@@ -36,9 +36,10 @@ export class ServerMailer {
   }
 
   async sendResetPassword(
-    params: { handle: string; token: string },
+    params: { handle: string; token: string; locale?: string },
     mailOpts: SendMailOptions,
   ) {
+    // @TODO (later) handle locale in the template
     await this.sendTemplate('resetPassword', params, {
       subject: 'Password Reset Requested',
       ...mailOpts,
@@ -49,6 +50,7 @@ export class ServerMailer {
     params: { token: string; locale?: string },
     mailOpts: SendMailOptions,
   ) {
+    // @TODO (later) handle locale in the template
     await this.sendTemplate('deleteAccount', params, {
       subject: 'Account Deletion Requested',
       ...mailOpts,

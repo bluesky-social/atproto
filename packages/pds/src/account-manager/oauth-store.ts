@@ -63,7 +63,6 @@ import { Sequencer } from '../sequencer/index.js'
 import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import * as accountHelper from './helpers/account.js'
 import {
   AccountStatus,
   ActorAccount,
@@ -379,8 +378,8 @@ export class OAuthStore
   }
 
   async resetPasswordRequest({
-    locale: _locale,
     email,
+    locale,
   }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
@@ -395,9 +394,8 @@ export class OAuthStore
       'reset_password',
     )
 
-    // @TODO Use the locale to send the email in the right language
     await this.mailer.sendResetPassword(
-      { handle, token },
+      { handle, token, locale },
       { to: account.email },
     )
 
@@ -702,9 +700,9 @@ export class OAuthStore
     // Mirror the XRPC `com.atproto.server.deactivateAccount` flow (no-entryway
     // path) and additionally revoke every active credential bound to the
     // account: OAuth sessions, OAuth-authorized clients, and App Passwords.
-    await this.db.transaction(async (db) => {
-      await accountHelper.deactivateAccount(db, did, null)
+    await this.accountManager.deactivateAccount(did, null)
 
+    await this.db.transaction(async (db) => {
       await tokenHelper.removeByDid(db, did)
       await authorizedClientHelper.deleteAllAuthorizedClients(db, did)
       await passwordHelper.deleteAllAppPasswords(db, did)
