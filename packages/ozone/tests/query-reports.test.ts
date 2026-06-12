@@ -15,6 +15,7 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 
 describe('query-reports', () => {
   let network: TestNetwork
@@ -377,6 +378,17 @@ describe('query-reports', () => {
         },
         reportedBy: sc.dids.alice,
       })
+      // Give carol an account-level subject status, distinct from the
+      // convo-keyed status rows created by the chat reports above.
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: "Report on carol's account",
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.carol,
+        },
+        reportedBy: sc.dids.alice,
+      })
       // Report rows are inserted asynchronously by the queue-router daemon —
       // drain it before querying.
       await network.processAll()
@@ -434,6 +446,41 @@ describe('query-reports', () => {
 
       expect(response.reports.length).toBe(1)
       expect(response.reports[0].comment).toBe('Report on a message')
+    })
+
+    it("includes the convo's own subject status on conversation reports", async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'conversation',
+      })
+
+      // The convoRef report created a moderation_subject_status row keyed by
+      // (did, convoId); the report view should surface that status, not the
+      // account's.
+      const status = response.reports[0].subject.status
+      expect(status).toBeDefined()
+      expect(status?.reviewState).toBe(REVIEWOPEN)
+      expect(status?.subject).toMatchObject({
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did: sc.dids.carol,
+        convoId,
+      })
+    })
+
+    it('maps message reports to the account subject status', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'message',
+      })
+
+      // Messages don't have their own subject status; the account's status is
+      // surfaced instead.
+      const status = response.reports[0].subject.status
+      expect(status).toBeDefined()
+      expect(status?.subject).toMatchObject({
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      })
     })
 
     it('excludes message and conversation reports from a DID subject query', async () => {

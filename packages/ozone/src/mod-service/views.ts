@@ -50,8 +50,12 @@ import {
 import { Un$Typed, asPredicate } from '../lexicon/util.js'
 import { dbLogger, httpLogger } from '../logger.js'
 import { ParsedLabelers } from '../util.js'
-import { moderationSubjectStatusQueryBuilder } from './status.js'
 import {
+  getStatusIdentifierFromSubject,
+  moderationSubjectStatusQueryBuilder,
+} from './status.js'
+import {
+  CHAT_CONVO_COLLECTION,
   ModSubject,
   subjectFromEventRow,
   subjectFromStatusRow,
@@ -684,7 +688,9 @@ export class ModerationViews {
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
     if (!subjects.length) return new Map()
 
-    const parsedSubjects = subjects.map(parseSubjectId)
+    const parsedSubjects = subjects.map((subject) =>
+      getStatusIdentifierFromSubject(subject),
+    )
 
     const builder = moderationSubjectStatusQueryBuilder(this.db.db)
       //
@@ -696,9 +702,9 @@ export class ModerationViews {
               .where(
                 'moderation_subject_status.recordPath',
                 '=',
-                sub.recordPath ?? '',
+                sub.recordPath,
               )
-              .where('moderation_subject_status.convoId', '=', ''),
+              .where('moderation_subject_status.convoId', '=', sub.convoId),
           )
         }
         return qb
@@ -711,7 +717,7 @@ export class ModerationViews {
 
     return new Map(
       statusRes.map((row): [string, ModerationSubjectStatusRowWithHandle] => {
-        const subjectId = formatSubjectId(row.did, row.recordPath)
+        const subjectId = formatSubjectId(row.did, row.recordPath, row.convoId)
         const handle = accountsByDid.get(row.did)?.handle ?? INVALID_HANDLE
         return [subjectId, { ...row, handle }]
       }),
@@ -849,16 +855,10 @@ type RecordInfo = {
   indexedAt: string
 }
 
-function parseSubjectId(subject: string): { did: string; recordPath?: string } {
-  if (subject.startsWith('did:')) {
-    return { did: subject }
-  }
-  const uri = new AtUri(subject)
-  return { did: uri.hostname, recordPath: `${uri.collection}/${uri.rkey}` }
-}
-
-function formatSubjectId(did: string, recordPath?: string) {
-  return recordPath ? `at://${did}/${recordPath}` : did
+function formatSubjectId(did: string, recordPath?: string, convoId?: string) {
+  if (recordPath) return `at://${did}/${recordPath}`
+  if (convoId) return `at://${did}/${CHAT_CONVO_COLLECTION}/${convoId}`
+  return did
 }
 
 function findBlobRefs(value: unknown, refs: BlobRef[] = []) {
