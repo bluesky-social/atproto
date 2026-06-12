@@ -53,8 +53,8 @@ msgstr ""
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:55
-#: src/components/forms/input-handle-custom-instructions.tsx:70
+#: src/components/forms/input-handle-custom-instructions.tsx:54
+#: src/components/forms/input-handle-custom-instructions.tsx:69
 msgid "<your-domain>"
 msgstr ""
 
@@ -74,7 +74,7 @@ msgstr "２要素認証の確認"
 msgid "A local app"
 msgstr ""
 
-#: src/lib/api.ts:422
+#: src/lib/api.ts:426
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
@@ -115,7 +115,7 @@ msgstr ""
 msgid "Account username"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:51
+#: src/components/forms/input-handle-custom-instructions.tsx:50
 msgid "Add the following record to your domain's DNS configuration."
 msgstr ""
 
@@ -124,8 +124,8 @@ msgid "alice.com"
 msgstr ""
 
 #: src/components/verify-email-dialog.tsx:74
-#: src/components/update-password-dialog.tsx:75
-#: src/components/reset-password-view.tsx:59
+#: src/components/update-password-dialog.tsx:77
+#: src/components/reset-password-view.tsx:61
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
@@ -137,7 +137,7 @@ msgstr "デバイス上のアプリ"
 msgid "An error occurred"
 msgstr ""
 
-#: src/lib/api.ts:310
+#: src/lib/api.ts:314
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
@@ -247,7 +247,7 @@ msgstr ""
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@handle</0> を変更"
 
-#: src/components/update-password-dialog.tsx:47
+#: src/components/update-password-dialog.tsx:49
 msgid "Change your password"
 msgstr ""
 
@@ -282,11 +282,15 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/components/update-email-form.tsx:82
+#: src/authorization-page.tsx:149
+msgid "Click here if nothing happens"
+msgstr ""
+
+#: src/components/update-email-form.tsx:97
 msgid "Click here to resend."
 msgstr ""
 
-#: src/components/dialog-simple.tsx:70
+#: src/components/utils/dialog-simple.tsx:70
 msgid "Close"
 msgstr ""
 
@@ -345,7 +349,7 @@ msgstr "新規アカウントの作成"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr ""
 
-#: src/lib/api.ts:391
+#: src/lib/api.ts:395
 msgid "Custom domains are not supported"
 msgstr ""
 
@@ -370,11 +374,11 @@ msgstr ""
 msgid "Devices"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:49
+#: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
 msgstr ""
 
-#: src/components/update-email-form.tsx:72
+#: src/components/update-email-form.tsx:87
 msgid "Don't see an email?"
 msgstr ""
 
@@ -411,7 +415,7 @@ msgstr ""
 msgid "Email change successful"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:158
+#: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
 msgstr ""
 
@@ -423,7 +427,7 @@ msgstr ""
 msgid "Enter a password"
 msgstr "パスワードを入力"
 
-#: src/components/reset-password-view.tsx:71
+#: src/components/reset-password-view.tsx:73
 msgid "Enter the code you received to reset your password."
 msgstr "パスワードをリセットするために受け取ったコードを入力してください。"
 
@@ -431,7 +435,7 @@ msgstr "パスワードをリセットするために受け取ったコードを
 msgid "Enter the domain you want to use"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:41
+#: src/components/reset-password-view.tsx:42
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "アカウントの作成に使用したメールアドレスを入力します。新しいパスワードを設定できるように、「リセットコード」をお送りします。"
 
@@ -505,11 +509,11 @@ msgstr ""
 msgid "Failed to verify email"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:73
+#: src/components/forms/input-handle-custom-instructions.tsx:72
 msgid "File contents"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:37
+#: src/components/reset-password-view.tsx:38
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
@@ -525,15 +529,14 @@ msgstr ""
 msgid "Having trouble? <0>Contact support</0>"
 msgstr "なにか問題が発生しましたか？ <0>サポートに連絡</0>"
 
-#. placeholder {0}: stringifyHandle(handle)
-#. placeholder {1}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
-#: src/components/forms/input-handle-custom-instructions.tsx:97
+#. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
+#: src/components/forms/input-handle-custom-instructions.tsx:96
 msgid ""
 "Hello,\n"
 "\n"
-"To associate the domain \"{0}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
 "\n"
-"{1}\n"
+"{0}\n"
 "\n"
 "The change can be verified by visiting the following URL: {troubleshootHref}\n"
 "A detailed tutorial can be found here: {tutorialHref}\n"
@@ -541,7 +544,7 @@ msgid ""
 "Thank you."
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:145
+#: src/components/forms/input-handle-custom-instructions.tsx:144
 msgid "Help"
 msgstr ""
 
@@ -554,11 +557,11 @@ msgstr "隠す"
 msgid "Home"
 msgstr "ホーム"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:54
+#: src/components/forms/input-handle-custom-instructions.tsx:53
 msgid "Host"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:64
+#: src/components/forms/input-handle-custom-instructions.tsx:63
 msgid "HTTP"
 msgstr ""
 
@@ -570,11 +573,11 @@ msgstr "識別子"
 msgid "Identity"
 msgstr "識別情報"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:50
+#: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:65
+#: src/components/forms/input-handle-custom-instructions.tsx:64
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr ""
 
@@ -631,11 +634,11 @@ msgctxt "verify email"
 msgid "Later"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:38
+#: src/components/reset-password-view.tsx:39
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:116
+#: src/authorization-page.tsx:140
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -655,7 +658,7 @@ msgstr ""
 msgid "loopback"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:66
+#: src/components/forms/input-handle-custom-instructions.tsx:65
 msgid "Make a text file with the contents below available at the following URL."
 msgstr ""
 
@@ -709,22 +712,22 @@ msgctxt "Error"
 msgid "Name"
 msgstr ""
 
-#: src/components/update-email-form.tsx:37
+#: src/components/update-email-form.tsx:52
 #: src/components/update-email-dialog.tsx:176
 msgid "New email address"
 msgstr ""
 
-#: src/components/reset-password-confirm-form.tsx:42
+#: src/components/reset-password-confirm-form.tsx:61
 msgid "New password"
 msgstr "新しいパスワード"
 
-#: src/components/reset-password-view.tsx:49
-#: src/components/reset-password-view.tsx:82
+#: src/components/reset-password-view.tsx:50
+#: src/components/reset-password-view.tsx:85
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "次へ"
 
-#: src/components/reset-password-view.tsx:108
+#: src/components/reset-password-view.tsx:111
 msgid "Okay"
 msgstr "OK"
 
@@ -732,8 +735,8 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:149
-#: src/components/sign-up-credentials-form.tsx:67
+#: src/pages/account/(authenticated)/manage/page.tsx:150
+#: src/components/sign-up-credentials-form.tsx:68
 #: src/components/sign-in-form.tsx:186
 #: src/components/forms/input-password.tsx:46
 msgid "Password"
@@ -755,11 +758,11 @@ msgstr "パスワード強度"
 msgid "Password strength indicator"
 msgstr "パスワード強度表示"
 
-#: src/components/reset-password-view.tsx:96
+#: src/components/reset-password-view.tsx:99
 msgid "Password Updated"
 msgstr "パスワードが更新されました"
 
-#: src/components/reset-password-view.tsx:101
+#: src/components/reset-password-view.tsx:104
 msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
@@ -802,7 +805,7 @@ msgstr ""
 msgid "Please check your verification code and try again."
 msgstr ""
 
-#: src/components/update-email-form.tsx:54
+#: src/components/update-email-form.tsx:69
 msgid "Please enter the security code that was sent to your email address."
 msgstr ""
 
@@ -810,7 +813,7 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:76
+#: src/components/forms/button-cooldown.tsx:74
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr ""
 
@@ -846,11 +849,11 @@ msgstr "このアカウントをこのデバイスに記憶する"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/reset-password-confirm-form.tsx:27
+#: src/components/reset-password-confirm-form.tsx:46
 msgid "Reset code"
 msgstr "リセットコード"
 
-#: src/components/reset-password-view.tsx:69
+#: src/components/reset-password-view.tsx:71
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
@@ -864,7 +867,7 @@ msgstr "パスワードをリセット"
 msgid "Retry"
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:110
+#: src/components/forms/button-cooldown.tsx:108
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
 
@@ -873,11 +876,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr ""
 
-#: src/components/update-email-form.tsx:61
+#: src/components/update-email-form.tsx:76
 msgid "Security code"
 msgstr ""
 
-#: src/components/update-email-form.tsx:51
+#: src/components/update-email-form.tsx:66
 msgid "Security step required"
 msgstr ""
 
@@ -987,35 +990,35 @@ msgstr "アプリは、あなたに代わって次のアクションを実行す
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr ""
 
-#: src/lib/api.ts:349
+#: src/lib/api.ts:353
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "送信データが正しくありません。フォームをチェックしてもう一度お試しください。"
 
-#: src/lib/api.ts:379
+#: src/lib/api.ts:383
 msgid "The domain name is not allowed"
 msgstr "そのドメイン名は許可されていません"
 
-#: src/lib/api.ts:449
+#: src/lib/api.ts:453
 msgid "The invite code is not valid"
 msgstr "招待コードが有効ではありません"
 
-#: src/lib/api.ts:308
+#: src/lib/api.ts:312
 msgid "The server encountered an unexpected error. Please try again."
 msgstr ""
 
-#: src/lib/api.ts:381
+#: src/lib/api.ts:385
 msgid "The username contains inappropriate language"
 msgstr ""
 
-#: src/lib/api.ts:387
+#: src/lib/api.ts:391
 msgid "The username could not be resolved"
 msgstr ""
 
-#: src/lib/api.ts:385
+#: src/lib/api.ts:389
 msgid "The username is already in use"
 msgstr ""
 
-#: src/lib/api.ts:377
+#: src/lib/api.ts:381
 msgid "The username is invalid"
 msgstr ""
 
@@ -1027,25 +1030,25 @@ msgstr ""
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr ""
 
-#: src/lib/api.ts:334
+#: src/lib/api.ts:338
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/lib/api.ts:513
+#: src/lib/api.ts:517
 msgid "This email is already used"
 msgstr "このメールアドレスはすでに使用されています"
 
-#: src/lib/api.ts:319
-#: src/lib/api.ts:470
-#: src/lib/api.ts:501
+#: src/lib/api.ts:323
+#: src/lib/api.ts:474
+#: src/lib/api.ts:505
 msgid "This sign-in session has expired"
 msgstr "このサインインセッションの有効期限が切れました"
 
-#: src/lib/api.ts:383
+#: src/lib/api.ts:387
 msgid "This username is reserved"
 msgstr ""
 
-#: src/components/update-password-dialog.tsx:49
+#: src/components/update-password-dialog.tsx:51
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr ""
 
@@ -1058,11 +1061,11 @@ msgctxt "RPC aud"
 msgid "Towards"
 msgstr "対象"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:151
+#: src/components/forms/input-handle-custom-instructions.tsx:150
 msgid "Troubleshoot"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:58
+#: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Type"
 msgstr ""
 
@@ -1110,7 +1113,7 @@ msgstr ""
 msgid "Upload files"
 msgstr "ファイルのアップロード"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:69
+#: src/components/forms/input-handle-custom-instructions.tsx:68
 msgid "URL"
 msgstr ""
 
@@ -1122,7 +1125,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:176
+#: src/pages/account/(authenticated)/manage/page.tsx:177
 msgid "Username"
 msgstr ""
 
@@ -1138,7 +1141,7 @@ msgstr ""
 msgid "Valid"
 msgstr "有効"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:59
+#: src/components/forms/input-handle-custom-instructions.tsx:58
 msgid "Value"
 msgstr ""
 
@@ -1151,7 +1154,7 @@ msgstr ""
 msgid "Verification email sent"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:117
+#: src/components/forms/input-handle-custom-instructions.tsx:116
 msgid "Verification method"
 msgstr ""
 
@@ -1213,7 +1216,7 @@ msgstr ""
 msgid "What is an Atmosphere Account?"
 msgstr ""
 
-#: src/lib/api.ts:485
+#: src/lib/api.ts:489
 msgid "Wrong identifier or password"
 msgstr "識別子またはパスワードが間違っています"
 
@@ -1221,11 +1224,11 @@ msgstr "識別子またはパスワードが間違っています"
 msgid "yesterday"
 msgstr ""
 
-#: src/authorization-page.tsx:117
+#: src/authorization-page.tsx:141
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
-#: src/components/sign-up-handle-form.tsx:40
+#: src/components/sign-up-handle-form.tsx:41
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "アカウントのセットアップ後にユーザー名を自分がコントロールしているドメイン名に変更することができます。"
 
@@ -1234,11 +1237,11 @@ msgid "You can now sign in with your new email."
 msgstr ""
 
 #: src/data/password.ts:51
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "新しいパスワードでサインインできるようになりました。"
 
-#: src/components/reset-password-view.tsx:75
+#: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
 
@@ -1271,7 +1274,7 @@ msgstr ""
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
-#: src/components/reset-password-view.tsx:97
+#: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
 

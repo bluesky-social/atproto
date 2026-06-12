@@ -333,19 +333,24 @@ export async function generateMockSetup(env: TestNetwork) {
       rkey: urip.rkey,
     })
     const author = picka(userAgents)
-    posts.push(
-      await author.app.bsky.feed.post.create(
+    try {
+      const post = await author.app.bsky.feed.post.create(
         { repo: author.did },
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply ? target.value.reply.root : target,
+            root: target.value.reply?.root ?? target,
             parent: target,
           },
           createdAt: date.next().value,
         },
-      ),
-    )
+      )
+
+      posts.push(post)
+    } catch (err) {
+      // @TODO Investigate why this sometimes fails.
+      console.error('Failed to create reply', err)
+    }
   }
 
   // a set of likes

@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
 import { errorViewRender } from '#/components/error-view.tsx'
+import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
 import { LayoutTitle } from '#/components/layouts/layout-title'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
@@ -14,7 +15,6 @@ import { NotificationsProvider } from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
-import { useStableCallback } from './hooks/use-stable-callback'
 
 const {
   __authorizeData: authorizeData,
@@ -63,22 +63,49 @@ function App() {
   const loginHint = authorizeData.loginHint || undefined
 
   const { session, setSession, api } = useSessionContext()
-  const [isDone, setIsDone] = useState(
-    session != null && session.consentRequired === false,
+  const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
+  const [isDone, setIsDone] = useState(false)
+
+  const redirectTo = useCallback((url: string) => {
+    console.debug('Redirecting back to client:', url)
+    // @NOTE We use `window.location.replace` to prevent the user from coming
+    // back. Also note that in the past, this was using `window.location.href =
+    // url` which sometimes failed to perform the navigation.
+    // https://github.com/bluesky-social/atproto/issues/5077
+    window.location.replace(url)
+  }, [])
+
+  const performRedirect = useCallback(
+    (url: string) => {
+      // @NOTE At this point, the request data is no longer accessible. If the
+      // user manages to reload the current page's url again (eg. refresh), the
+      // server's back-forward cache busting should prevent this page state from
+      // being restored, and will result in an error page being displayed
+      // ("Unknown request_uri"). If the user is "offline" (eg. network
+      // disconnected), this cache busting by the backend will not work and the
+      // browser may restore the page state.
+      //
+      // On a related note, client processing of the token response should be a
+      // one time operation (because of nonce invalidation). So we should ensure
+      // that the navigation event does not happen more than once.
+      //
+      // This gets tricky as users may have a bad network connection, for which we
+      // should do the best we can to help them complete the login process.
+      //
+      // We do this by first attempting to automatically redirect the user:
+      redirectTo(url)
+
+      // If that fails, we show a link that they can click to continue. There is
+      // a long(ish) pause in between these actions to allow the browser to
+      // perform the navigation.
+      setRedirectUrl(url)
+
+      // Prevent react from rendering the "redirecting..." view while the
+      // browser is navigating by delaying the state update.
+      setTimeout(() => setIsDone(true), 250)
+    },
+    [setRedirectUrl, setIsDone, redirectTo],
   )
-
-  const performRedirect = useStableCallback((url: string) => {
-    // @TODO At this point, the request cannot be accepted/rejected anymore.
-    // We should probably change the app's state to something that indicates
-    // that in order to improve UX in case the user comes back to the app.
-    // This is currently ensured by the backend (through back-forward cache
-    // busting) but handling it here would provide a better UX since the
-    // backend will remove (and prevent access) to accepted/rejected requests
-    // data, while the back-forward cache remembers them.
-
-    window.location.href = url
-    setTimeout(() => setIsDone(true))
-  })
 
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string }) => {
@@ -115,6 +142,16 @@ function App() {
       ) : (
         <LayoutTitle title={msg`Login complete`}>
           <Trans>You are being redirected...</Trans>
+          <br />
+          {redirectUrl && (
+            <ButtonCooldown
+              startWithCooldown
+              cooldown={10}
+              action={() => redirectTo(redirectUrl)}
+            >
+              <Trans>Click here if nothing happens</Trans>
+            </ButtonCooldown>
+          )}
         </LayoutTitle>
       )}
     </AuthenticationProvider>

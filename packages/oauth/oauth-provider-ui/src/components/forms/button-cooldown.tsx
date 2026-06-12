@@ -1,5 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Icon } from '@phosphor-icons/react'
+import { composeEventHandlers } from '@radix-ui/primitive'
 import * as Popover from '@radix-ui/react-popover'
 import { clsx } from 'clsx'
 import { useState } from 'react'
@@ -57,12 +58,9 @@ export function ButtonCooldown({
       <Popover.Root open={showRateLimit && isHovered}>
         <Popover.Trigger asChild>
           <Button
-            onClick={(event) => {
-              onClick?.(event)
-              if (!event.defaultPrevented) {
-                void handler.trigger()
-              }
-            }}
+            onClick={composeEventHandlers(onClick, () => {
+              void handler.trigger()
+            })}
             size={size}
             loading={loading || handler.isPending}
             disabled={disabled || handler.isRateLimited}
