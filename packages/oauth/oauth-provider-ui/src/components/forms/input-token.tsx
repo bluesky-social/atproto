@@ -83,28 +83,26 @@ export function InputToken({
       })}
     >
       {onResend && (
-        <>
-          <span className="inline-flex items-center text-xs">
-            <Trans>
-              Didn't receive a code?{' '}
-              <ButtonRequestCode
-                disabled={ctx.disabled}
-                action={async () => {
-                  await onResend()
-                  // Next tick to let the time for the disabled state to be
-                  // applied (after next render) before focusing the input.
-                  if (autoFocus) setTimeout(() => ref.current?.focus())
-                }}
-                transparent
-                size="xs"
-                shape="padded"
-                startWithCooldown
-              >
-                Click here to resend.
-              </ButtonRequestCode>
-            </Trans>
-          </span>
-        </>
+        <span className="inline-flex items-center text-xs">
+          <Trans>
+            Didn't receive a code?{' '}
+            <ButtonRequestCode
+              disabled={ctx.disabled}
+              action={async () => {
+                await onResend()
+                // Next tick to let the time for the disabled state to be
+                // applied (after next render) before focusing the input.
+                if (autoFocus) setTimeout(() => ref.current?.focus())
+              }}
+              transparent
+              size="xs"
+              shape="padded"
+              startWithCooldown
+            >
+              Click here to resend.
+            </ButtonRequestCode>
+          </Trans>
+        </span>
       )}
     </InputText>
   )
