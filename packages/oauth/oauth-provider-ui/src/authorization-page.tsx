@@ -64,7 +64,9 @@ function App() {
 
   const { session, setSession, api } = useSessionContext()
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
-  const [isDone, setIsDone] = useState(false)
+  const [isDone, setIsDone] = useState(
+    session != null && session.consentRequired === false,
+  )
 
   const redirectTo = useCallback((url: string) => {
     console.debug('Redirecting back to client:', url)
