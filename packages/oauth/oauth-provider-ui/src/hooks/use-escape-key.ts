@@ -1,11 +1,8 @@
 import { useEffect } from 'react'
-import { useStableCallback } from './use-stable-callback.ts'
 
-export function useEscapeKey(handler: (event: KeyboardEvent) => void) {
-  const cb = useStableCallback(handler)
-
+export function useEscapeKey(callback: (event: KeyboardEvent) => void) {
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') cb(event)
+    if (event.key === 'Escape') callback(event)
   }
 
   useEffect(() => {
@@ -13,5 +10,5 @@ export function useEscapeKey(handler: (event: KeyboardEvent) => void) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [cb])
+  }, [callback])
 }

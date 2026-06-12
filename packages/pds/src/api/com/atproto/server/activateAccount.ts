@@ -61,12 +61,12 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError('user not found', 'AccountNotFound')
         }
 
-        await ctx.sequencer.sequenceAccount(requester, status)
-        await ctx.sequencer.sequenceIdentity(
+        await ctx.sequencer.sequenceAccountActivation(
           requester,
           account.handle ?? INVALID_HANDLE,
+          status,
+          syncData,
         )
-        await ctx.sequencer.sequenceSync(requester, syncData)
       },
     })
   }

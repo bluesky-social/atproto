@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isAbortReason } from '#/lib/util.ts'
 import { useStableCallback } from './use-stable-callback.ts'
 
 export type UseAsyncActionOptions = {
@@ -75,14 +76,5 @@ export function useAsyncAction<Args extends unknown[] = []>(
   return useMemo(
     () => ({ run, reset, loading, error }),
     [run, reset, loading, error],
-  )
-}
-
-function isAbortReason(signal: AbortSignal, err: unknown): boolean {
-  return (
-    signal.aborted &&
-    (signal.reason === err ||
-      signal.reason === err?.['cause'] ||
-      (err instanceof DOMException && err.name === 'AbortError'))
   )
 }

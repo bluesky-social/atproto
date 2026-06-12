@@ -376,6 +376,8 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
+    if (deviceAccount.account.deactivated) return true
+
     const authAge = Date.now() - deviceAccount.updatedAt.getTime()
     return authAge > this.authenticationMaxAge
   }
@@ -662,9 +664,6 @@ export class OAuthProvider extends OAuthVerifier {
         }
 
         const ssoSession = ssoSessions[0]!
-        if (ssoSession.account.deactivated) {
-          throw new LoginRequiredError(parameters, 'Account deactivated')
-        }
         if (ssoSession.loginRequired) {
           throw new LoginRequiredError(parameters)
         }
@@ -688,11 +687,7 @@ export class OAuthProvider extends OAuthVerifier {
         const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
-          if (
-            !ssoSession.loginRequired &&
-            !ssoSession.consentRequired &&
-            !ssoSession.account.deactivated
-          ) {
+          if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
             const code = await this.requestManager.setAuthorized(
               requestUri,
               client,

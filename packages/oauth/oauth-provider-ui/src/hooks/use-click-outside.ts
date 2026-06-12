@@ -1,12 +1,9 @@
 import { RefObject, useEffect } from 'react'
-import { useStableCallback } from './use-stable-callback.ts'
 
 export function useClickOutside(
   ref: RefObject<HTMLElement | null>,
   handler: (event: MouseEvent) => void,
 ) {
-  const cb = useStableCallback(handler)
-
   useEffect(() => {
     const listener = (event: MouseEvent) => {
       if (
@@ -14,7 +11,7 @@ export function useClickOutside(
         ref.current &&
         !ref.current.contains(event.target as Node)
       ) {
-        cb(event)
+        handler(event)
       }
     }
 
@@ -22,5 +19,5 @@ export function useClickOutside(
     return () => {
       document.removeEventListener('mousedown', listener)
     }
-  }, [ref])
+  }, [ref, handler])
 }
