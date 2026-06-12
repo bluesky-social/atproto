@@ -46,7 +46,6 @@ export type HydratedReport = {
   profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
   queues: Map<number, ToolsOzoneQueueDefs.QueueView>
   memberViews: Map<string, TeamMember>
-  // keyed by synthetic convo at-uri
   convoStatuses: Map<string, ToolsOzoneModerationDefs.SubjectStatusView>
 }
 
@@ -60,12 +59,12 @@ export async function hydrateReportInfo(
   getTeamMembers: (dids: string[]) => Promise<Map<string, TeamMember>>,
   labelers: ParsedLabelers,
 ): Promise<HydratedReport> {
+  // populate data to fetch
   const dids = new Set<string>()
   const uris = new Set<string>()
   const convoUris = new Set<string>()
   const queueIds = new Set<number>()
   const assignmentDids: string[] = []
-
   for (const report of reports) {
     dids.add(report.subjectDid)
     dids.add(report.reportedBy)
@@ -81,8 +80,20 @@ export async function hydrateReportInfo(
       assignmentDids.push(report.assignedTo)
     }
   }
-
   const didsArray = Array.from(dids)
+
+  // fetch data
+  const getConvoStatuses = async () => {
+    const rows = await views.getSubjectStatus(Array.from(convoUris))
+    const statuses = new Map<
+      string,
+      ToolsOzoneModerationDefs.SubjectStatusView
+    >()
+    for (const [subject, row] of rows) {
+      statuses.set(subject, views.formatSubjectStatus(row))
+    }
+    return statuses
+  }
   const [
     partialRepos,
     accountInfo,
@@ -90,7 +101,7 @@ export async function hydrateReportInfo(
     profiles,
     queues,
     memberViews,
-    convoStatusRows,
+    convoStatuses,
   ] = await Promise.all([
     views.repoDetails(didsArray, labelers),
     getAccountInfos(didsArray),
@@ -101,16 +112,8 @@ export async function hydrateReportInfo(
     views.getProfiles(didsArray),
     getQueues(Array.from(queueIds)),
     getTeamMembers(assignmentDids),
-    views.getSubjectStatus(Array.from(convoUris)),
+    getConvoStatuses(),
   ])
-
-  const convoStatuses = new Map<
-    string,
-    ToolsOzoneModerationDefs.SubjectStatusView
-  >()
-  for (const [subject, row] of convoStatusRows) {
-    convoStatuses.set(subject, views.formatSubjectStatus(row))
-  }
 
   return {
     partialRepos,
