@@ -1,5 +1,5 @@
 msgid ""
-msgstr ""
+msgstr "Vos contenus (profil, posts, flux, listes, etc.) seront cachés de l'application Bluesky et à travers le réseau Atmosphère."
 "POT-Creation-Date: 2025-02-27 14:03+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -1438,8 +1438,8 @@ msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Votre compte Atmosphère est hébergé chez <0/>."
 
 #: src/components/deactivate-account-dialog.tsx:24
-msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden form the Bluesky app and across the Atmosphere network."
-msgstr "Votre contenu (profil, publications, feeds, listes, etc.) sera masqué dans l'application Bluesky et sur le réseau Atmosphère."
+msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
+msgstr "Vos contenus (profil, posts, flux, listes, etc.) seront cachés de l'application Bluesky et à travers de l'Atmosphère."
 
 #: src/components/update-email-dialog.tsx:66
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."

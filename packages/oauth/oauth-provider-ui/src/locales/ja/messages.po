@@ -1428,7 +1428,7 @@ msgid "Your Atmosphere account is hosted by <0/>."
 msgstr ""
 
 #: src/components/deactivate-account-dialog.tsx:24
-msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden form the Bluesky app and across the Atmosphere network."
+msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
 msgstr ""
 
 #: src/components/update-email-dialog.tsx:66

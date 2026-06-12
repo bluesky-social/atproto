@@ -22,7 +22,7 @@ export function DeactivateAccountDialog({
       title={<Trans>Deactivate account</Trans>}
       description={
         <Trans>
-          Your content (profile, posts, feeds, lists, etc.) will be hidden form
+          Your content (profile, posts, feeds, lists, etc.) will be hidden from
           the Bluesky app and across the Atmosphere network.
         </Trans>
       }
