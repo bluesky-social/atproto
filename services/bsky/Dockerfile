@@ -9,6 +9,7 @@ COPY ./.nvmrc ./
 COPY ./package.json ./
 
 # Move files into the image and install
+COPY ./[a-zA-Z]*.* ./
 COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
 COPY ./patches ./patches
