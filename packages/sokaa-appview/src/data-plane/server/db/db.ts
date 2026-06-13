@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { Kysely, Migrator, PostgresDialect } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import { DatabaseSchema, DatabaseSchemaType } from './database-schema'
@@ -61,6 +62,29 @@ export class Database {
 
   get schema(): string | undefined {
     return this.opts.schema
+  }
+
+  get isTransaction() {
+    return this.db.isTransaction
+  }
+
+  assertTransaction() {
+    assert(this.isTransaction, 'Transaction required')
+  }
+
+  assertNotTransaction() {
+    assert(!this.isTransaction, 'Cannot be in a transaction')
+  }
+
+  async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
+    return this.db.transaction().execute(async (txn) => {
+      const dbTxn = new Database(this.opts, {
+        db: txn,
+        pool: this.pool,
+        migrator: this.migrator,
+      })
+      return fn(dbTxn)
+    })
   }
 
   async migrateToLatestOrThrow() {

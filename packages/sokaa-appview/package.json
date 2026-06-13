@@ -14,7 +14,15 @@
     "node": ">=18.7.0"
   },
   "dependencies": {
+    "@atproto/api": "workspace:^",
+    "@atproto/common": "workspace:^",
+    "@atproto/identity": "workspace:^",
+    "@atproto/lexicon": "workspace:^",
+    "@atproto/repo": "workspace:^",
+    "@atproto/sync": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "kysely": "^0.22.0",
+    "multiformats": "^9.9.0",
     "pg": "^8.10.0"
   },
   "devDependencies": {
