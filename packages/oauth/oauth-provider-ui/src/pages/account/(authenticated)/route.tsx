@@ -214,7 +214,6 @@ function AuthGate({
     <AuthenticationProvider
       forcedIdentifier={identifier}
       disableRemember={isPopup}
-      allowDeactivated
       onCancel={done}
     >
       {children}

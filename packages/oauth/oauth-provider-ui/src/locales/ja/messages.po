@@ -251,7 +251,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
 
-#: src/contexts/authentication.tsx:184
+#: src/contexts/authentication.tsx:181
 #: src/components/reactivate-account-view.tsx:84
 #: src/components/delete-account-dialog.tsx:123
 #: src/components/delete-account-dialog.tsx:157
@@ -316,7 +316,7 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/authorization-page.tsx:168
+#: src/authorization-page.tsx:171
 msgid "Click here if you are not automatically redirected"
 msgstr ""
 
@@ -431,7 +431,7 @@ msgstr ""
 msgid "Devices"
 msgstr ""
 
-#: src/components/forms/input-token.tsx:88
+#: src/components/forms/input-token.tsx:87
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
@@ -727,7 +727,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:159
+#: src/authorization-page.tsx:162
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -1362,7 +1362,7 @@ msgstr ""
 msgid "yesterday"
 msgstr ""
 
-#: src/authorization-page.tsx:160
+#: src/authorization-page.tsx:163
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 

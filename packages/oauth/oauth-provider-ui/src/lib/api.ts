@@ -211,7 +211,7 @@ export class Api extends JsonClient<ApiEndpoints> {
   }
 
   async reactivateAccount({ did }: ReactivateAccountInput, options?: Options) {
-    await this.fetch('POST', '/reactivate-account', { did }, options)
+    return this.fetch('POST', '/reactivate-account', { did }, options)
   }
 
   async deleteAccountRequest(

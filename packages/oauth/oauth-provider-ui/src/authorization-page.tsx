@@ -1,15 +1,18 @@
 import './style.css'
 
 import { msg } from '@lingui/core/macro'
-import { Trans } from '@lingui/react/macro'
+import { ReactNode } from '@tanstack/react-router'
 import { StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
 import { ErrorView } from '#/components/error-view.tsx'
-import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
-import { LayoutTitle } from '#/components/layouts/layout-title'
-import { AuthenticationProvider } from '#/contexts/authentication.tsx'
+import { ReactivateAccountView } from '#/components/reactivate-account-view'
+import { RedirectingView } from '#/components/redirecting-view'
+import {
+  AuthenticationProvider,
+  useAuthenticationContext,
+} from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import { NotificationsProvider } from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
@@ -68,9 +71,7 @@ function App() {
 
   const { session, setSession, api } = useSessionContext()
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
-  const [isDone, setIsDone] = useState(
-    session != null && session.consentRequired === false,
-  )
+  const [isDone, setIsDone] = useState(false)
 
   const redirectTo = useCallback((url: string) => {
     console.debug('Redirecting back to client:', url)
@@ -124,7 +125,7 @@ function App() {
   )
 
   const doConsentAndRedirect = useCallback(
-    async ({ scope }: { scope?: string }) => {
+    async ({ scope }: { scope?: string } = {}) => {
       const { url } = await api.consent(session!.account.did, scope)
       performRedirect(url)
     },
@@ -142,34 +143,48 @@ function App() {
       forcedIdentifier={loginHint}
       promptMode={authorizeData.promptMode}
     >
-      {session && !isDone ? (
-        <ConsentView
-          clientId={authorizeData.clientId}
-          clientMetadata={authorizeData.clientMetadata}
-          clientTrusted={authorizeData.clientTrusted}
-          clientFirstParty={authorizeData.clientFirstParty}
-          permissionSets={authorizeData.permissionSets}
-          account={session.account}
-          scope={authorizeData.scope}
-          onConsent={doConsentAndRedirect}
-          onReject={doRejectAndRedirect}
-          onBack={loginHint ? undefined : () => setSession(null)}
-        />
-      ) : (
-        <LayoutTitle title={msg`Login complete`}>
-          <Trans>You are being redirected...</Trans>
-          <br />
-          {redirectUrl && (
-            <ButtonCooldown
-              startWithCooldown
-              cooldown={10}
-              action={() => redirectTo(redirectUrl)}
-            >
-              <Trans>Click here if you are not automatically redirected</Trans>
-            </ButtonCooldown>
-          )}
-        </LayoutTitle>
-      )}
+      <ActivatedAccountGate>
+        {session && !isDone ? (
+          <ConsentView
+            clientId={authorizeData.clientId}
+            clientMetadata={authorizeData.clientMetadata}
+            clientTrusted={authorizeData.clientTrusted}
+            clientFirstParty={authorizeData.clientFirstParty}
+            permissionSets={authorizeData.permissionSets}
+            account={session.account}
+            scope={authorizeData.scope}
+            onConsent={doConsentAndRedirect}
+            onReject={doRejectAndRedirect}
+            onBack={loginHint ? undefined : () => setSession(null)}
+          />
+        ) : (
+          <RedirectingView
+            title={msg`Login complete`}
+            redirect={redirectUrl ? () => redirectTo(redirectUrl) : undefined}
+          />
+        )}
+      </ActivatedAccountGate>
     </AuthenticationProvider>
   )
+}
+
+function ActivatedAccountGate({ children }: { children?: ReactNode }) {
+  const { session, api } = useAuthenticationContext()
+
+  if (session.account.deactivated) {
+    const { did } = session.account
+    return (
+      <ReactivateAccountView
+        account={session.account}
+        onCancel={async () => {
+          await api.signOut({ did })
+        }}
+        onReactivate={async () => {
+          await api.reactivateAccount({ did })
+        }}
+      />
+    )
+  }
+
+  return <>{children}</>
 }

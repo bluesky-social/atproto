@@ -5,7 +5,7 @@ import { useStableCallback } from '#/hooks/use-stable-callback.ts'
 import { Override } from '#/lib/util.ts'
 import { useAsyncAction } from '../../hooks/use-async-action.ts'
 
-export type AsyncFormData = Record<string, unknown>
+export type SmartFormData = Record<string, unknown>
 
 export type SetField<TValues> = <K extends keyof TValues>(
   key: K,
@@ -39,7 +39,7 @@ export type ValidateData<TValues, TData> = (
  * return <SmartForm ref={formRef} ... />
  * ```
  */
-export type FormHandler<TData extends AsyncFormData, TValues = TData> = {
+export type FormHandler<TData extends SmartFormData, TValues = TData> = {
   /**
    * Live snapshot of every field's input value.
    *
@@ -78,7 +78,7 @@ export type FormHandler<TData extends AsyncFormData, TValues = TData> = {
 }
 
 export type SmartFormProps<
-  TData extends AsyncFormData,
+  TData extends SmartFormData,
   TValues = TData,
 > = Override<
   FormCardProps,
@@ -194,7 +194,7 @@ export type SmartFormProps<
  * }
  * ```
  */
-export function SmartForm<TData extends AsyncFormData, TValues = TData>({
+export function SmartForm<TData extends SmartFormData, TValues = TData>({
   fields,
   ref,
   values: initialValues = {},
@@ -300,6 +300,6 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
  * ```
  */
 export type WrappedSmartFormProps<
-  TData extends AsyncFormData,
+  TData extends SmartFormData,
   TValues = TData,
 > = Omit<SmartFormProps<TData, TValues>, 'fields' | 'validate'>

@@ -9,12 +9,12 @@ import {
 } from 'react'
 import { OAuthPromptMode } from '@atproto/oauth-types'
 import { AuthenticateWelcomeView } from '#/components/authenticate-welcome-view.tsx'
-import { ReactivateAccountView } from '#/components/reactivate-account-view.tsx'
 import { ResetPasswordView } from '#/components/reset-password-view.tsx'
 import { SignInView } from '#/components/sign-in-view.tsx'
 import { SignUpView } from '#/components/sign-up-view.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { Session, useSessionContext } from '#/contexts/session.tsx'
+import { Api } from '#/lib/api'
 
 enum View {
   Welcome,
@@ -28,6 +28,7 @@ export type AuthenticationContextType = {
   session: Session
   sessions: readonly Session[]
   canSwitchAccounts: boolean
+  api: Api
 }
 
 const AuthenticationContext = createContext<null | AuthenticationContextType>(
@@ -39,7 +40,6 @@ export type AuthenticationProviderProps = {
   disableRemember?: boolean
   promptMode?: OAuthPromptMode
   forcedIdentifier?: string
-  allowDeactivated?: boolean
   onCancel?: () => void
   children: ReactNode
 }
@@ -50,7 +50,6 @@ export type AuthenticationProviderProps = {
  */
 export function AuthenticationProvider({
   disableRemember = false,
-  allowDeactivated = false,
   promptMode,
   forcedIdentifier,
   onCancel,
@@ -125,8 +124,8 @@ export function AuthenticationProvider({
 
   const value = useMemo<AuthenticationContextType | null>(() => {
     if (!session || session.loginRequired) return null
-    return { session, sessions, canSwitchAccounts }
-  }, [session, sessions, canSwitchAccounts])
+    return { session, sessions, canSwitchAccounts, api }
+  }, [session, sessions, canSwitchAccounts, api])
 
   if (!value) {
     if (view === View.Welcome) {
@@ -142,9 +141,9 @@ export function AuthenticationProvider({
     if (view === View.SignUp) {
       return (
         <SignUpView
-          onValidateNewHandle={async (data) =>
-            api.validateHandleAvailability(data)
-          }
+          onValidateNewHandle={async (data) => {
+            await api.validateHandleAvailability(data)
+          }}
           onBack={showHome}
           onDone={async (data) => {
             await api.signUp(data)
@@ -158,12 +157,12 @@ export function AuthenticationProvider({
       return (
         <ResetPasswordView
           emailDefault={resetPasswordHint}
-          onResetPasswordRequest={async (data) =>
-            api.initiatePasswordReset(data)
-          }
-          onResetPasswordConfirm={async (data) =>
-            api.confirmResetPassword(data)
-          }
+          onResetPasswordRequest={async (data) => {
+            await api.initiatePasswordReset(data)
+          }}
+          onResetPasswordConfirm={async (data) => {
+            await api.confirmResetPassword(data)
+          }}
           onBack={showSignIn}
         />
       )
@@ -185,23 +184,6 @@ export function AuthenticationProvider({
         onForgotPassword={(email) => {
           setView(View.ResetPassword)
           setResetPasswordHint(email)
-        }}
-      />
-    )
-  }
-
-  if (value.session.account.deactivated && !allowDeactivated) {
-    const { did } = value.session.account
-    return (
-      <ReactivateAccountView
-        account={value.session.account}
-        onCancel={async () => {
-          await api.signOut({ did })
-          setView(homeView)
-          setSession(null)
-        }}
-        onReactivate={async () => {
-          await api.reactivateAccount({ did })
         }}
       />
     )

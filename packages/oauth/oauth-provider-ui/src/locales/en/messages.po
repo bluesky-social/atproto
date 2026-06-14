@@ -251,7 +251,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
 
-#: src/contexts/authentication.tsx:184
+#: src/contexts/authentication.tsx:181
 #: src/components/reactivate-account-view.tsx:84
 #: src/components/delete-account-dialog.tsx:123
 #: src/components/delete-account-dialog.tsx:157
@@ -316,7 +316,7 @@ msgstr "Choose a new email address to associate with your account."
 msgid "Choose a username"
 msgstr "Choose a username"
 
-#: src/authorization-page.tsx:168
+#: src/authorization-page.tsx:171
 msgid "Click here if you are not automatically redirected"
 msgstr "Click here if you are not automatically redirected"
 
@@ -431,7 +431,7 @@ msgstr "Details"
 msgid "Devices"
 msgstr "Devices"
 
-#: src/components/forms/input-token.tsx:88
+#: src/components/forms/input-token.tsx:87
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Didn't receive a code? <0>Click here to resend.</0>"
 
@@ -737,7 +737,7 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:159
+#: src/authorization-page.tsx:162
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -1372,7 +1372,7 @@ msgstr "Yes, reactivate my account"
 msgid "yesterday"
 msgstr "yesterday"
 
-#: src/authorization-page.tsx:160
+#: src/authorization-page.tsx:163
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
