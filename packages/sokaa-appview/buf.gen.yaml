@@ -1,0 +1,12 @@
+version: v1
+plugins:
+  - plugin: es
+    opt:
+      - target=ts
+      - import_extension=
+    out: src/proto
+  - plugin: connect-es
+    opt:
+      - target=ts
+      - import_extension=
+    out: src/proto
