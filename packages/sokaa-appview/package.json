@@ -7,6 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "buf:gen": "buf generate ./proto",
     "build": "tsc --build tsconfig.build.json",
     "test": "../dev-infra/with-test-db.sh jest --passWithNoTests"
   },
@@ -21,14 +22,24 @@
     "@atproto/repo": "workspace:^",
     "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
+    "@atproto/xrpc-server": "workspace:^",
+    "@bufbuild/protobuf": "^1.5.0",
+    "@connectrpc/connect": "^1.1.4",
+    "@connectrpc/connect-express": "^1.1.4",
+    "@connectrpc/connect-node": "^1.1.4",
+    "express": "^4.17.2",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
     "pg": "^8.10.0"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.28.1",
+    "@bufbuild/protoc-gen-es": "^1.5.0",
+    "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@jest/globals": "28",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
+    "@types/express": "^4.17.13",
     "@types/jest": "^28.1.4",
     "@types/pg": "^8.6.6",
     "jest": "^28.1.2",

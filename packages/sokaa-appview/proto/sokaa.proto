@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package sokaa;
+
+// Sokaa dataplane — trimmed read surface for app.sokaa.* MVP.
+
+message FeedItem {
+  string uri = 1;
+  string cid = 2;
+}
+
+message GetTimelineRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetTimelineResponse {
+  repeated FeedItem items = 1;
+  string cursor = 2;
+}
+
+message GetAuthorFeedRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetAuthorFeedResponse {
+  repeated FeedItem items = 1;
+  string cursor = 2;
+}
+
+message GetActorsRequest {
+  repeated string dids = 1;
+}
+
+message ActorInfo {
+  bool exists = 1;
+  string handle = 2;
+  string display_name = 3;
+  string description = 4;
+  string avatar_cid = 5;
+  string banner_cid = 6;
+  int32 followers_count = 7;
+  int32 posts_count = 8;
+  string upstream_status = 9;
+  string indexed_at = 10;
+}
+
+message GetActorsResponse {
+  repeated ActorInfo actors = 1;
+}
+
+message PostInfo {
+  bool exists = 1;
+  string uri = 2;
+  string cid = 3;
+  string creator = 4;
+  string caption = 5;
+  string media_type = 6;
+  string media_json = 7;
+  int32 like_count = 8;
+  string created_at = 9;
+  string indexed_at = 10;
+}
+
+message GetPostsRequest {
+  repeated string uris = 1;
+}
+
+message GetPostsResponse {
+  repeated PostInfo posts = 1;
+}
+
+message RecordRef {
+  string uri = 1;
+  string cid = 2;
+}
+
+message GetLikesByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated RecordRef refs = 2;
+}
+
+message GetLikesByActorAndSubjectsResponse {
+  repeated string uris = 1;
+}
+
+message GetActorFollowsActorsRequest {
+  string actor_did = 1;
+  repeated string target_dids = 2;
+}
+
+message GetActorFollowsActorsResponse {
+  repeated string uris = 1;
+}
+
+message PingRequest {}
+
+message PingResponse {}
+
+service Service {
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
+  rpc GetAuthorFeed(GetAuthorFeedRequest) returns (GetAuthorFeedResponse);
+  rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
+  rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
+  rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest)
+      returns (GetLikesByActorAndSubjectsResponse);
+  rpc GetActorFollowsActors(GetActorFollowsActorsRequest)
+      returns (GetActorFollowsActorsResponse);
+}
