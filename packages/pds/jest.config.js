@@ -10,15 +10,8 @@ module.exports = {
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
-  // Sokaa: skip tests that require a live Bluesky AppView (SOK-34).
-  // - proxied/: all 8 tests proxy app.bsky.* queries to an AppView that
-  //   doesn't exist in the Sokaa deployment.
-  // - oauth.test.ts: Puppeteer E2E test for the bsky OAuth client browser
-  //   example; requests app.bsky.actor.getPreferences scope.
-  // - account-migration.test.ts: core com.atproto migration logic is fine but
-  //   the test calls app.bsky.actor.getPreferences and app.bsky.feed.post
-  //   at the end, which fail without an AppView.
-  // These will be replaced with app.sokaa.* equivalents in a follow-up.
+  // Sokaa: skip bsky AppView proxy tests (SOK-34). sokaa-proxy.test.ts lives in
+  // tests/ (not proxied/) and runs in CI.
   testPathIgnorePatterns: [
     '/node_modules/',
     '<rootDir>/tests/proxied/',

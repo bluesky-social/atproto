@@ -104,6 +104,8 @@ export function readEnv() {
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
+    sokaaAppViewUrl: envStr('PDS_SOKAA_APP_VIEW_URL'),
+    sokaaAppViewDid: envStr('PDS_SOKAA_APP_VIEW_DID'),
 
     // mod service
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),
