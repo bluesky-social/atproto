@@ -87,14 +87,20 @@ export function AuthenticationProvider({
           account.did === forcedIdentifier ||
           account.handle === forcedIdentifier,
       )
-      return [false, matchingSessions[0] ?? null, matchingSessions]
+      const matchingSession = currentSession
+        ? matchingSessions.find(
+            ({ account }) => account.did === currentSession.account.did,
+          ) ?? null
+        : null
+
+      return [false, matchingSession, matchingSessions]
     }
   }, [currentSession, currentSessions, forcedIdentifier])
 
   const homeView =
-    !canSignUp || sessions.length > 0 || !canSwitchAccounts
-      ? View.SignIn
-      : View.Welcome
+    canSwitchAccounts && canSignUp && sessions.length === 0
+      ? View.Welcome
+      : View.SignIn
 
   const [view, setView] = useState<View>(() => {
     if (promptMode === 'create' && canSignUp) {

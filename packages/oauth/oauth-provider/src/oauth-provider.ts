@@ -376,8 +376,6 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
-    if (deviceAccount.account.deactivated) return true
-
     const authAge = Date.now() - deviceAccount.updatedAt.getTime()
     return authAge > this.authenticationMaxAge
   }
@@ -644,6 +642,10 @@ export class OAuthProvider extends OAuthVerifier {
         throw new AccountSelectionRequiredError(parameters)
       }
 
+      const ssoSessions = sessions
+        .filter(hasActiveAccount)
+        .filter(matchesHint, parameters)
+
       // prompt=none
       //
       // > The Authorization Server MUST NOT display any authentication or
@@ -655,7 +657,6 @@ export class OAuthProvider extends OAuthVerifier {
       // > Section 3.1.2.6. This can be used as a method to check for existing
       // > authentication and/or consent.
       if (parameters.prompt === 'none') {
-        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length > 1) {
           throw new AccountSelectionRequiredError(parameters)
         }
@@ -684,7 +685,6 @@ export class OAuthProvider extends OAuthVerifier {
 
       // Automatic SSO when a hint was provided that matches a single session
       if (parameters.prompt == null && parameters.login_hint != null) {
-        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
@@ -1101,4 +1101,8 @@ function matchesHint(
   if (!hint) return false
 
   return account.did === hint || account.handle === hint
+}
+
+function hasActiveAccount({ account }: { account: Account }): boolean {
+  return !account.deactivated
 }

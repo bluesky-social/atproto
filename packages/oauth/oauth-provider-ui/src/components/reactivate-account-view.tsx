@@ -44,7 +44,7 @@ export function ReactivateAccountView({
 
   return (
     <LayoutTitle
-      title={msg`Welcome back`}
+      title={msg`Welcome back!`}
       subtitle={<Trans>Your account is currently deactivated.</Trans>}
     >
       <div className="flex w-full max-w-md flex-col items-stretch gap-6">

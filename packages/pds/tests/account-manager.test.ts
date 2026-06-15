@@ -134,6 +134,7 @@ describe('account manager', () => {
     const [params] = sendResetPasswordMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'bob.test',
+      locale: 'fr',
       token: expect.any(String),
     })
 

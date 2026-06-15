@@ -160,6 +160,7 @@ describe('oauth', () => {
     const [params] = sendTemplateMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'alice.test',
+      locale: 'fr',
       token: expect.any(String),
     })
 
@@ -308,7 +309,7 @@ describe('oauth', () => {
 
     await page.clickOnText('alice.test', 'span')
 
-    await page.assertTitle('Bon retour')
+    await page.assertTitle('Heureux de vous revoir!')
 
     await page.ensureTextVisibility('Vous avez précédemment désactivé')
 

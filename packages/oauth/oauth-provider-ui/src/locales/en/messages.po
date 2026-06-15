@@ -66,7 +66,7 @@ msgstr "1 hour ago"
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
-#: src/components/sign-in-form.tsx:240
+#: src/components/sign-in-form.tsx:243
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -95,11 +95,11 @@ msgstr "Account"
 msgid "Account avatar"
 msgstr "Account avatar"
 
-#: src/data/account.ts:25
+#: src/data/account.ts:24
 msgid "Account deactivated"
 msgstr "Account deactivated"
 
-#: src/data/account.ts:106
+#: src/data/account.ts:102
 msgid "Account deleted"
 msgstr "Account deleted"
 
@@ -115,8 +115,8 @@ msgstr "Account name"
 msgid "Account overview"
 msgstr "Account overview"
 
-#: src/data/account.ts:52
-#: src/components/reactivate-account-view.tsx:34
+#: src/data/account.ts:50
+#: src/components/reactivate-account-view.tsx:29
 msgid "Account reactivated"
 msgstr "Account reactivated"
 
@@ -146,7 +146,7 @@ msgstr "Already have a code?"
 msgid "An application on your device"
 msgstr "An application on your device"
 
-#: src/hooks/use-notify-error.ts:12
+#: src/contexts/notifications.tsx:128
 #: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "An error occurred"
@@ -179,7 +179,7 @@ msgstr "Any service"
 msgid "Apps"
 msgstr "Apps"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:59
+#: src/pages/account/(authenticated)/apps/page.tsx:60
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 
@@ -205,7 +205,7 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:128
+#: src/pages/account/(authenticated)/apps/page.tsx:129
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
@@ -251,8 +251,8 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
 
-#: src/contexts/authentication.tsx:181
-#: src/components/reactivate-account-view.tsx:84
+#: src/contexts/authentication.tsx:189
+#: src/components/reactivate-account-view.tsx:79
 #: src/components/delete-account-dialog.tsx:123
 #: src/components/delete-account-dialog.tsx:157
 #: src/components/delete-account-dialog.tsx:208
@@ -261,7 +261,7 @@ msgstr "Call"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:123
+#: src/pages/account/(authenticated)/devices/page.tsx:124
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
@@ -282,7 +282,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:253
+#: src/components/sign-in-form.tsx:256
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -290,16 +290,16 @@ msgstr "Check your {0} email for a login code and enter it here."
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Check your email for the confirmation code to enter below:"
 
-#: src/data/account.ts:80
+#: src/data/account.ts:77
 msgid "Check your inbox for the confirmation code."
 msgstr "Check your inbox for the confirmation code."
 
-#: src/data/email.ts:79
+#: src/data/email.ts:76
 msgid "Check your inbox for the verification code."
 msgstr "Check your inbox for the verification code."
 
-#: src/data/password.ts:24
-#: src/data/email.ts:25
+#: src/data/password.ts:23
+#: src/data/email.ts:24
 msgid "Check your inbox."
 msgstr "Check your inbox."
 
@@ -316,7 +316,7 @@ msgstr "Choose a new email address to associate with your account."
 msgid "Choose a username"
 msgstr "Choose a username"
 
-#: src/authorization-page.tsx:171
+#: src/components/redirecting-view.tsx:43
 msgid "Click here if you are not automatically redirected"
 msgstr "Click here if you are not automatically redirected"
 
@@ -337,7 +337,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "Code"
 
-#: src/components/sign-in-form.tsx:82
+#: src/components/sign-in-form.tsx:85
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirm"
@@ -346,12 +346,12 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/components/sign-in-form.tsx:244
+#: src/components/sign-in-form.tsx:247
 #: src/components/delete-account-confirm-form.tsx:55
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
-#: src/data/account.ts:79
+#: src/data/account.ts:76
 msgid "Confirmation email sent"
 msgstr "Confirmation email sent"
 
@@ -464,11 +464,11 @@ msgstr "Email address"
 msgid "Email address successfully updated"
 msgstr "Email address successfully updated"
 
-#: src/data/email.ts:24
+#: src/data/email.ts:23
 msgid "Email change request sent"
 msgstr "Email change request sent"
 
-#: src/data/email.ts:51
+#: src/data/email.ts:49
 msgid "Email change successful"
 msgstr "Email change successful"
 
@@ -476,7 +476,7 @@ msgstr "Email change successful"
 msgid "Email these instructions"
 msgstr "Email these instructions"
 
-#: src/data/email.ts:105
+#: src/data/email.ts:101
 msgid "Email verified"
 msgstr "Email verified"
 
@@ -529,60 +529,60 @@ msgstr "Expand details"
 msgid "Extra"
 msgstr "Extra"
 
-#: src/data/email.ts:59
+#: src/data/email.ts:57
 msgid "Failed to change email"
 msgstr "Failed to change email"
 
-#: src/data/account.ts:33
+#: src/data/account.ts:32
 msgid "Failed to deactivate account"
 msgstr "Failed to deactivate account"
 
-#: src/data/account.ts:114
+#: src/data/account.ts:110
 msgid "Failed to delete account"
 msgstr "Failed to delete account"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:37
-#: src/pages/account/(authenticated)/apps/page.tsx:35
+#: src/pages/account/(authenticated)/devices/page.tsx:38
+#: src/pages/account/(authenticated)/apps/page.tsx:36
 msgid "Failed to load connected apps"
 msgstr "Failed to load connected apps"
 
-#: src/data/account.ts:60
+#: src/data/account.ts:58
 msgid "Failed to reactivate account"
 msgstr "Failed to reactivate account"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:97
+#: src/pages/account/(authenticated)/devices/page.tsx:98
 msgid "Failed to remove device"
 msgstr "Failed to remove device"
 
-#: src/data/email.ts:32
+#: src/data/email.ts:31
 msgid "Failed to request email change"
 msgstr "Failed to request email change"
 
-#: src/data/password.ts:31
+#: src/data/password.ts:30
 msgid "Failed to request password reset"
 msgstr "Failed to request password reset"
 
-#: src/data/password.ts:58
+#: src/data/password.ts:56
 msgid "Failed to reset password"
 msgstr "Failed to reset password"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:116
+#: src/pages/account/(authenticated)/apps/page.tsx:117
 msgid "Failed to revoke access"
 msgstr "Failed to revoke access"
 
-#: src/data/account.ts:87
+#: src/data/account.ts:84
 msgid "Failed to send confirmation email"
 msgstr "Failed to send confirmation email"
 
-#: src/data/email.ts:86
+#: src/data/email.ts:83
 msgid "Failed to send verification email"
 msgstr "Failed to send verification email"
 
-#: src/data/handle.ts:29
+#: src/data/handle.ts:27
 msgid "Failed to update username"
 msgstr "Failed to update username"
 
-#: src/data/email.ts:113
+#: src/data/email.ts:109
 msgid "Failed to verify email"
 msgstr "Failed to verify email"
 
@@ -602,7 +602,7 @@ msgstr "For security reasons, we'll need to send a confirmation code to your ema
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/sign-in-form.tsx:206
+#: src/components/sign-in-form.tsx:209
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -660,7 +660,7 @@ msgstr "Host"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:147
+#: src/components/sign-in-form.tsx:150
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -705,7 +705,7 @@ msgstr "Invalid Handle"
 msgid "Invite code"
 msgstr "Invite code"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:69
+#: src/pages/account/(authenticated)/apps/page.tsx:70
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
 
@@ -718,12 +718,12 @@ msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" 
 msgid "just now"
 msgstr "just now"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:137
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Last accessed <0/>"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:113
+#: src/pages/account/(authenticated)/devices/page.tsx:114
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Last seen {lastUsedAgo}"
@@ -737,7 +737,11 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:160
+msgid "Login canceled"
+msgstr "Login canceled"
+
+#: src/authorization-page.tsx:160
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -749,7 +753,7 @@ msgstr "Login to account that is not listed"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:66
+#: src/pages/account/(authenticated)/devices/page.tsx:67
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
@@ -836,17 +840,17 @@ msgstr "Only letters, numbers, and hyphens"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:68
-#: src/components/sign-in-form.tsx:186
+#: src/components/sign-in-form.tsx:189
 #: src/components/delete-account-confirm-form.tsx:70
 #: src/components/forms/input-password.tsx:46
 msgid "Password"
 msgstr "Password"
 
-#: src/data/password.ts:23
+#: src/data/password.ts:22
 msgid "Password reset email sent"
 msgstr "Password reset email sent"
 
-#: src/data/password.ts:50
+#: src/data/password.ts:48
 msgid "Password reset successful"
 msgstr "Password reset successful"
 
@@ -887,25 +891,25 @@ msgstr "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgid "Please authenticate to continue"
 msgstr "Please authenticate to continue"
 
-#: src/data/password.ts:32
-#: src/data/email.ts:33
+#: src/data/password.ts:31
+#: src/data/email.ts:32
 msgid "Please check the email address and try again."
 msgstr "Please check the email address and try again."
 
-#: src/data/handle.ts:32
+#: src/data/handle.ts:30
 msgid "Please check the username and try again."
 msgstr "Please check the username and try again."
 
-#: src/data/account.ts:115
+#: src/data/account.ts:111
 msgid "Please check your code and password, then try again."
 msgstr "Please check your code and password, then try again."
 
-#: src/data/password.ts:59
-#: src/data/email.ts:60
+#: src/data/password.ts:57
+#: src/data/email.ts:58
 msgid "Please check your reset code and try again."
 msgstr "Please check your reset code and try again."
 
-#: src/data/email.ts:114
+#: src/data/email.ts:110
 msgid "Please check your verification code and try again."
 msgstr "Please check your verification code and try again."
 
@@ -913,14 +917,14 @@ msgstr "Please check your verification code and try again."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Please enter the security code that was sent to your email address."
 
-#: src/data/email.ts:87
-#: src/data/account.ts:34
-#: src/data/account.ts:61
-#: src/data/account.ts:88
+#: src/data/email.ts:84
+#: src/data/account.ts:33
+#: src/data/account.ts:59
+#: src/data/account.ts:85
 msgid "Please try again in a moment."
 msgstr "Please try again in a moment."
 
-#: src/components/forms/button-cooldown.tsx:68
+#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Please wait {remainingSeconds} seconds before trying again."
 
@@ -955,8 +959,8 @@ msgstr "Read and update your account's email address"
 msgid "Read your account's email address"
 msgstr "Read your account's email address"
 
-#: src/components/sign-in-form.tsx:227
-#: src/components/sign-in-form.tsx:232
+#: src/components/sign-in-form.tsx:230
+#: src/components/sign-in-form.tsx:235
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -973,21 +977,21 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/components/sign-in-form.tsx:204
+#: src/components/sign-in-form.tsx:207
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:33
-#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:32
 #: src/components/utils/error-card.tsx:77
 msgid "Retry"
 msgstr "Retry"
 
-#: src/components/forms/button-cooldown.tsx:65
+#: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:148
+#: src/pages/account/(authenticated)/apps/page.tsx:149
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Revoke access"
@@ -1025,7 +1029,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/components/sign-in-form.tsx:84
+#: src/components/sign-in-form.tsx:87
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
@@ -1040,7 +1044,7 @@ msgstr "Sign in as {0}"
 msgid "Sign in as..."
 msgstr "Sign in as..."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:126
+#: src/pages/account/(authenticated)/devices/page.tsx:127
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
@@ -1072,11 +1076,11 @@ msgstr "Strong"
 msgid "Submit"
 msgstr "Submit"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:91
+#: src/pages/account/(authenticated)/devices/page.tsx:92
 msgid "Successfully removed device"
 msgstr "Successfully removed device"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:109
+#: src/pages/account/(authenticated)/apps/page.tsx:110
 msgid "Successfully revoked access"
 msgstr "Successfully revoked access"
 
@@ -1146,7 +1150,7 @@ msgstr "The username is invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "There is no time limit for account deactivation, come back any time."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:43
+#: src/pages/account/(authenticated)/apps/page.tsx:44
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
@@ -1209,7 +1213,7 @@ msgstr "Type your domain"
 msgid "Type your username"
 msgstr "Type your username"
 
-#: src/contexts/session.tsx:154
+#: src/contexts/session.tsx:153
 msgid "Unauthorized"
 msgstr "Unauthorized"
 
@@ -1217,7 +1221,7 @@ msgstr "Unauthorized"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:108
+#: src/pages/account/(authenticated)/devices/page.tsx:109
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
@@ -1261,11 +1265,11 @@ msgstr "Use a domain name I own"
 msgid "Username"
 msgstr "Username"
 
-#: src/components/sign-in-form.tsx:152
+#: src/components/sign-in-form.tsx:155
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/data/handle.ts:21
+#: src/data/handle.ts:19
 msgid "Username updated"
 msgstr "Username updated"
 
@@ -1282,7 +1286,7 @@ msgstr "Value"
 msgid "Verification code"
 msgstr "Verification code"
 
-#: src/data/email.ts:78
+#: src/data/email.ts:75
 msgid "Verification email sent"
 msgstr "Verification email sent"
 
@@ -1304,7 +1308,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"
 
-#: src/components/sign-in-form.tsx:218
+#: src/components/sign-in-form.tsx:221
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 
@@ -1324,7 +1328,7 @@ msgstr "wants to access your <0/> account"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
-#: src/components/sign-in-form.tsx:217
+#: src/components/sign-in-form.tsx:220
 msgid "Warning"
 msgstr "Warning"
 
@@ -1340,9 +1344,9 @@ msgstr "Weak"
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/components/reactivate-account-view.tsx:52
-msgid "Welcome back"
-msgstr "Welcome back"
+#: src/components/reactivate-account-view.tsx:47
+msgid "Welcome back!"
+msgstr "Welcome back!"
 
 #: src/pages/account/(authenticated)/page.tsx:33
 msgid "What does this mean?"
@@ -1364,7 +1368,7 @@ msgstr "Yes, Deactivate"
 msgid "Yes, delete my account"
 msgstr "Yes, delete my account"
 
-#: src/components/reactivate-account-view.tsx:74
+#: src/components/reactivate-account-view.tsx:69
 msgid "Yes, reactivate my account"
 msgstr "Yes, reactivate my account"
 
@@ -1372,7 +1376,7 @@ msgstr "Yes, reactivate my account"
 msgid "yesterday"
 msgstr "yesterday"
 
-#: src/authorization-page.tsx:163
+#: src/components/redirecting-view.tsx:31
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
@@ -1388,16 +1392,16 @@ msgstr "You can change this username to any domain name you control after your a
 msgid "You can deactivate your account again at any time from this page."
 msgstr "You can deactivate your account again at any time from this page."
 
-#: src/data/email.ts:52
+#: src/data/email.ts:50
 msgid "You can now sign in with your new email."
 msgstr "You can now sign in with your new email."
 
-#: src/data/password.ts:51
+#: src/data/password.ts:49
 #: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
-#: src/components/reactivate-account-view.tsx:59
+#: src/components/reactivate-account-view.tsx:54
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 
@@ -1409,27 +1413,27 @@ msgstr "You will receive an email with a \"reset code\". Enter that code here th
 msgid "Your account"
 msgstr "Your account"
 
-#: src/data/account.ts:107
+#: src/data/account.ts:103
 msgid "Your account and all associated data have been deleted."
 msgstr "Your account and all associated data have been deleted."
 
-#: src/components/reactivate-account-view.tsx:35
+#: src/components/reactivate-account-view.tsx:30
 msgid "Your account has been successfully reactivated."
 msgstr "Your account has been successfully reactivated."
 
-#: src/components/reactivate-account-view.tsx:53
+#: src/components/reactivate-account-view.tsx:48
 msgid "Your account is currently deactivated."
 msgstr "Your account is currently deactivated."
 
-#: src/data/account.ts:26
+#: src/data/account.ts:25
 msgid "Your account is now deactivated."
 msgstr "Your account is now deactivated."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:45
+#: src/pages/account/(authenticated)/devices/page.tsx:46
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
-#: src/data/account.ts:53
+#: src/data/account.ts:51
 msgid "Your account is visible again."
 msgstr "Your account is visible again."
 
@@ -1445,7 +1449,7 @@ msgstr "Your content (profile, posts, feeds, lists, etc.) will be hidden from th
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 
-#: src/data/email.ts:106
+#: src/data/email.ts:102
 msgid "Your email address has been verified."
 msgstr "Your email address has been verified."
 
@@ -1470,10 +1474,10 @@ msgstr "Your profile, posts, feeds, and lists will become visible again across t
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 
-#: src/contexts/session.tsx:155
+#: src/contexts/session.tsx:154
 msgid "Your session has expired. Please sign in again."
 msgstr "Your session has expired. Please sign in again."
 
-#: src/data/handle.ts:22
+#: src/data/handle.ts:20
 msgid "Your username has been updated."
 msgstr "Your username has been updated."
