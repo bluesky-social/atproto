@@ -23,7 +23,7 @@ export class TestNetworkSokaa extends TestNetworkNoAppView {
     const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl, 'Missing postgres url for Sokaa AppView tests')
     const dbPostgresSchema =
-      params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA || 'sokaa_e2e'
+      params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA || 'e2e'
 
     const plc = await TestPlc.create(params.plc ?? {})
     const pdsPort = params.pds?.port ?? (await getPort())
@@ -34,6 +34,7 @@ export class TestNetworkSokaa extends TestNetworkNoAppView {
       dbPostgresUrl,
       dbPostgresSchema: `sokaa_${dbPostgresSchema}`,
       ...params.sokaa,
+      startSubscription: false,
     })
 
     const pds = await TestPds.create({
@@ -43,6 +44,8 @@ export class TestNetworkSokaa extends TestNetworkNoAppView {
       sokaaAppViewDid: sokaa.serverDid,
       ...params.pds,
     })
+
+    sokaa.sub.start()
 
     mockNetworkUtilities(pds, undefined, sokaa)
 

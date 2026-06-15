@@ -1,3 +1,4 @@
+import { ComAtprotoRepoDefs } from '@atproto/api'
 import { SeedClient, TestNetworkSokaa, usersSeed } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
 
@@ -12,18 +13,13 @@ async function uploadImage(
   network: TestNetworkSokaa,
   did: string,
   sc: SeedClient,
-): Promise<{ ref: { $link: string }; mimeType: string; size: number }> {
+): Promise<ComAtprotoRepoDefs.BlobRef> {
   const agent = network.pds.getClient()
   const res = await agent.com.atproto.repo.uploadBlob(PNG_1X1, {
     encoding: 'image/png',
     headers: sc.getHeaders(did),
   })
-  const blob = res.data.blob
-  return {
-    ref: blob.ref,
-    mimeType: blob.mimeType,
-    size: blob.size,
-  }
+  return res.data.blob
 }
 
 async function createSokaaPost(
@@ -101,7 +97,7 @@ describe('Sokaa AppView via PDS proxy (TestNetworkSokaa)', () => {
 
   beforeAll(async () => {
     network = await TestNetworkSokaa.create({
-      dbPostgresSchema: 'sokaa_e2e',
+      dbPostgresSchema: 'e2e',
     })
     sc = network.getSeedClient()
     await usersSeed(sc)
@@ -204,7 +200,6 @@ describe('Sokaa AppView via PDS proxy (TestNetworkSokaa)', () => {
     await network.processAll()
     await waitForCaption(network, bob, sc, caption)
 
-    await network.sokaa.sub.destroy()
     await network.sokaa.sub.restart()
     await network.processAll()
 

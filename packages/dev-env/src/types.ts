@@ -53,6 +53,8 @@ export type SokaaAppViewConfig = {
   dbPostgresSchema: string
   migration?: string
   privateKey?: string
+  /** When false, caller must invoke sub.start() after PDS is listening. */
+  startSubscription?: boolean
 }
 
 export type TestServerParams = {

@@ -79,7 +79,9 @@ export class TestSokaaAppView {
     })
 
     await server.start()
-    sub.start()
+    if (cfg.startSubscription !== false) {
+      sub.start()
+    }
 
     return new TestSokaaAppView(
       url,
