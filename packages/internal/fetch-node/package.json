@@ -30,9 +30,7 @@
     "ipaddr.js": "^2.1.0",
     "undici": "^6.14.1"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.json"
   }

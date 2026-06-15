@@ -27,9 +27,7 @@
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "peerDependencies": {
     "ioredis": "^5.3.2"
   },

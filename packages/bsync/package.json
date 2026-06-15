@@ -46,8 +46,7 @@
     "@types/pg": "^8.6.6",
     "get-port": "^5.1.1",
     "jest": "^30.0.0",
-    "ts-node": "^10.8.2",
-    "typescript": "^6.0.3"
+    "ts-node": "^10.8.2"
   },
   "type": "module",
   "exports": {

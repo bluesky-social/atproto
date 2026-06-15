@@ -28,9 +28,7 @@
     "@atproto/jwk": "workspace:^",
     "jose": "^5.2.0"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }

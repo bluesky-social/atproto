@@ -32,8 +32,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "type": "module",
   "exports": {

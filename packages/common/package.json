@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "jest": "^30.0.0",
-    "typescript": "^6.0.3",
     "uint8arrays": "^5.0.0"
   },
   "type": "module",

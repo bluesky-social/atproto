@@ -23,9 +23,7 @@
       "default": "./dist/index.js"
     }
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }

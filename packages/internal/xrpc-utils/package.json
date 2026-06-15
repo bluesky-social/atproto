@@ -36,9 +36,7 @@
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }

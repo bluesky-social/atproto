@@ -33,9 +33,7 @@
     "multiformats": "^13.0.0",
     "uint8arrays": "^5.0.0"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "type": "module",
   "exports": {
     ".": {

@@ -27,8 +27,7 @@
   "devDependencies": {
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "type": "module",
   "exports": {

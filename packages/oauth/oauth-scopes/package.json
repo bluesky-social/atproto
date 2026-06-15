@@ -30,8 +30,7 @@
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",

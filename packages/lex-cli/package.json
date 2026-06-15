@@ -32,9 +32,7 @@
     "yesno": "^0.4.0",
     "zod": "^3.23.8"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "type": "module",
   "exports": {
     ".": {

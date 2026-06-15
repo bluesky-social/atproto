@@ -85,7 +85,6 @@
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
     "ts-node": "^10.8.2",
-    "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },
   "type": "module",

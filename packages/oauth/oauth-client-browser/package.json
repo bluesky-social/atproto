@@ -42,9 +42,7 @@
     "@atproto/oauth-types": "workspace:^",
     "core-js": "^3"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }
