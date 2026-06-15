@@ -4,6 +4,7 @@ node_modules
 # buf
 packages/bsky/src/proto
 packages/bsync/src/proto
+packages/sokaa-appview/src/proto
 
 # codegen
 packages/api/src/client
@@ -11,6 +12,7 @@ packages/lexicon-resolver/src/client
 packages/bsky/src/lexicon
 packages/pds/src/lexicon
 packages/ozone/src/lexicon
+packages/sokaa-appview/src/lexicon
 
 # @atproto/lex
 packages/lex/*/src/lexicons
