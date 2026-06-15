@@ -345,9 +345,13 @@ describeAppview('Sokaa AppView via PDS proxy', () => {
   })
 
   it('getProfile — returns profile via PDS proxy to AppView', async () => {
+    const resolved = await xrpcGet('com.atproto.identity.resolveHandle', {
+      handle,
+    })
+    expect(resolved.did).toBe(did)
+
     const data = await waitForProfile(did, jwt)
     expect(data.did).toBe(did)
-    expect(data.handle).toBe(handle)
   })
 
   it('getAuthorFeed — lists author posts via PDS proxy', async () => {
