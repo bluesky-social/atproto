@@ -374,13 +374,14 @@ describe('repo subscribe repos', () => {
   })
 
   it('resends identity events on idempotent updates', async () => {
-    const update = sc.updateHandle(bob, 'bob2.test')
-
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos`,
     )
 
     const gen = byFrame(ws)
+    await wait(200)
+
+    const update = sc.updateHandle(bob, 'bob2.test')
     const evts = await readTillCaughtUp(gen, update)
     ws.terminate()
 

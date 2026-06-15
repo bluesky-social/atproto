@@ -68,6 +68,7 @@ export class Firehose {
   private sub: Subscription<RepoEvent>
   private abortController: AbortController
   private destoryDefer: Deferrable
+  private destroyed = false
   private matchCollection: ((col: string) => boolean) | null = null
 
   constructor(public opts: FirehoseOptions) {
@@ -120,6 +121,7 @@ export class Firehose {
   }
 
   async start() {
+    if (this.destroyed) return
     try {
       for await (const evt of this.sub) {
         if (this.opts.runner) {
@@ -142,12 +144,14 @@ export class Firehose {
         }
       }
     } catch (err) {
+      if (this.destroyed) return
       if (err && err['name'] === 'AbortError') {
         this.destoryDefer.resolve()
         return
       }
       this.opts.onError(new FirehoseSubscriptionError(err))
       await wait(this.opts.subscriptionReconnectDelay ?? 3000)
+      if (this.destroyed) return
       return this.start()
     }
   }
@@ -196,7 +200,10 @@ export class Firehose {
   }
 
   async destroy(): Promise<void> {
+    if (this.destroyed) return
+    this.destroyed = true
     this.abortController.abort()
+    this.destoryDefer.resolve()
     await this.destoryDefer.complete
   }
 }
