@@ -1,3 +1,4 @@
+import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
 import type {
@@ -88,13 +89,13 @@ function AccountSessionCard({
       await mutateAsync({ did, deviceId: session.deviceId })
       notify({
         variant: 'success',
-        title: t`Successfully removed device`,
+        title: msg`Successfully removed device`,
         duration: 2e3,
       })
     } catch {
       notify({
         variant: 'error',
-        title: t`Failed to remove device`,
+        title: msg`Failed to remove device`,
         duration: 2e3,
       })
     }

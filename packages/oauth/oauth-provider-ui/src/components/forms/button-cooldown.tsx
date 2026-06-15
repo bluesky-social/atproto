@@ -2,23 +2,29 @@ import { useLingui } from '@lingui/react/macro'
 import { Icon } from '@phosphor-icons/react'
 import { composeEventHandlers } from '@radix-ui/primitive'
 import { clsx } from 'clsx'
+import { Ref, useImperativeHandle } from 'react'
 import {
   RateLimitedActionOptions,
+  RateLimitedHandler,
   useRateLimitedAction,
 } from '#/hooks/use-rate-limited-action.ts'
 import { Override } from '#/lib/util.ts'
 import { CircularProgress } from '../utils/circular-progress.tsx'
 import { Button, ButtonProps } from './button.tsx'
 
+export type ButtonCooldownHandler = RateLimitedHandler
+
 export type ButtonCooldownProps = Override<
   ButtonProps,
   RateLimitedActionOptions & {
-    idleIcon?: Icon
+    ref?: Ref<ButtonCooldownHandler>
+    idleIcon?: Icon | 'progress' | null
   }
 >
 
 export function ButtonCooldown({
-  idleIcon: IdleIcon,
+  ref,
+  idleIcon: IdleIcon = 'progress',
 
   // RateLimitedActionOptions
   action,
@@ -49,6 +55,8 @@ export function ButtonCooldown({
   const showRateLimit = !disabled && handler.isRateLimited
   const percent = ((handler.total - handler.remaining) / handler.total) * 100
 
+  useImperativeHandle(ref, () => handler, [handler])
+
   return (
     <Button
       onClick={composeEventHandlers(onClick, () => {
@@ -72,16 +80,7 @@ export function ButtonCooldown({
       aria-atomic="true"
       {...props}
     >
-      {!showRateLimit && IdleIcon ? (
-        <IdleIcon
-          className={clsx(
-            'absolute top-1/2 -translate-y-1/2',
-            size === 'xs' || size === 'sm' ? 'left-2' : 'left-3',
-          )}
-          aria-hidden
-          weight="bold"
-        />
-      ) : (
+      {showRateLimit || IdleIcon === 'progress' ? (
         <CircularProgress
           className={clsx(
             'absolute top-1/2 -translate-y-1/2',
@@ -92,7 +91,16 @@ export function ButtonCooldown({
           value={percent}
           startAngle={-90}
         />
-      )}
+      ) : IdleIcon ? (
+        <IdleIcon
+          className={clsx(
+            'absolute top-1/2 -translate-y-1/2',
+            size === 'xs' || size === 'sm' ? 'left-2' : 'left-3',
+          )}
+          aria-hidden
+          weight="bold"
+        />
+      ) : null}
       {children}
     </Button>
   )

@@ -4,8 +4,8 @@ import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
 import { Button } from '#/components/forms/button.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
-import { useNotifyError } from '#/hooks/use-notify-error.ts'
 import { DeleteAccountConfirmForm } from './delete-account-confirm-form.tsx'
 import { Handle } from './utils/handle.tsx'
 
@@ -37,7 +37,7 @@ export function DeleteAccountDialog({
   onConfirm,
   children,
 }: DeleteAccountDialogProps) {
-  const notifyError = useNotifyError()
+  const { notifyError } = useNotificationsContext()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>(Step.Request)
   const [confirmSubmitting, setConfirmSubmitting] = useState(false)

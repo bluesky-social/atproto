@@ -219,12 +219,12 @@ export function SmartForm<TData extends SmartFormData, TValues = TData>({
   )
 
   const set = useStableCallback<SetField<TValues>>((key, value) => {
-    // Reset async error/loading state whenever the user changes any input.
-    reset()
-
     // Skip the state update if the value didn't actually change. Only
     // sound for primitive values.
     if (values[key] !== value) {
+      // Reset async error/loading state whenever the user changes any input.
+      reset()
+
       setValues({ ...values, [key]: value })
       onValues?.({ ...values, [key]: value }, values)
     }

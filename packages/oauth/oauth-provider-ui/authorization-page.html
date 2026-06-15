@@ -138,10 +138,10 @@
 
       window.__customizationData = customizationData
       window.__sessions =
-        accountDeviceSessions.get(currentDeviceId)?.map((s, i) => ({
+        accountDeviceSessions.get(currentDeviceId)?.map((s, i, a) => ({
           account: accounts.get(s.did),
           loginRequired: s.loginRequired,
-          consentRequired: i !== 0,
+          consentRequired: a.length > 0,
         })) ?? []
       window.__authorizeData = {
         requestUri,

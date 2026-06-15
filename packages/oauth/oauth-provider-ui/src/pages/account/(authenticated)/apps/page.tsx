@@ -1,3 +1,4 @@
+import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
@@ -88,7 +89,7 @@ function ApplicationSessionCard({
   session: ActiveOAuthSession
   did: DidString
 }) {
-  const { t, i18n } = useLingui()
+  const { i18n } = useLingui()
   const { notify } = useNotificationsContext()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeOAuthSessionMutation()
@@ -106,14 +107,14 @@ function ApplicationSessionCard({
       await revokeSessions({ did, tokenId })
       notify({
         variant: 'success',
-        title: t`Successfully revoked access`,
+        title: msg`Successfully revoked access`,
         duration: 2e3,
       })
     } catch (err) {
       console.error('Failed to revoke OAuth session', err)
       notify({
         variant: 'error',
-        title: t`Failed to revoke access`,
+        title: msg`Failed to revoke access`,
         duration: 2e3,
       })
     }

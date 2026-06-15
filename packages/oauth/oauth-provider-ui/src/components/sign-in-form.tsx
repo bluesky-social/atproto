@@ -1,6 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
-import { useCallback, useRef, useState } from 'react'
+import { Ref, useCallback, useRef, useState } from 'react'
 import { Button } from '#/components/forms/button.tsx'
 import { FormField } from '#/components/forms/form-field.tsx'
 import { InputCheckbox } from '#/components/forms/input-checkbox.tsx'
@@ -9,6 +9,7 @@ import { InputText } from '#/components/forms/input-text.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { FormHandler, SmartForm } from '#/components/forms/smart-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
+import { mergeRefs } from '#/hooks/merge-refs.ts'
 import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
@@ -45,6 +46,8 @@ export type SignInFormProps = Override<
       data: SignInData,
       signal: AbortSignal,
     ) => void | PromiseLike<void>
+
+    ref?: Ref<FormHandler<SignInData, SignInValues>>
   }
 >
 
@@ -76,7 +79,7 @@ export function SignInForm({
   return (
     <SmartForm
       {...props}
-      ref={formRef}
+      ref={mergeRefs(props.ref, formRef)}
       submitLabel={
         secondFactorError ? (
           <Trans context="verb">Confirm</Trans>

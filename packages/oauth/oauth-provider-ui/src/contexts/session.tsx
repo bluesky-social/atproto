@@ -1,4 +1,4 @@
-import { useLingui } from '@lingui/react/macro'
+import { msg } from '@lingui/core/macro'
 import {
   ReactNode,
   createContext,
@@ -47,7 +47,6 @@ export function SessionProvider({
   initialSessions,
   initialSelected,
 }: SessionProviderProps) {
-  const { t } = useLingui()
   const locale = useCurrentLocale()
   const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
   const { notify } = useNotificationsContext()
@@ -151,8 +150,8 @@ export function SessionProvider({
 
           notify({
             variant: 'error',
-            title: t`Unauthorized`,
-            description: t`Your session has expired. Please sign in again.`,
+            title: msg`Unauthorized`,
+            description: msg`Your session has expired. Please sign in again.`,
           })
         }
         throw err
@@ -183,7 +182,6 @@ export function SessionProvider({
     upsertSession,
     removeSession,
     notify,
-    t,
   ])
 
   const value = useMemo(

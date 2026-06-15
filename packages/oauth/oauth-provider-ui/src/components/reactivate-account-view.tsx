@@ -1,12 +1,10 @@
 import { msg } from '@lingui/core/macro'
-import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { Account } from '@atproto/oauth-provider-api'
 import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
 import { AccountOverview } from '#/components/utils/account-overview.tsx'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
-import { useNotifyError } from '#/hooks/use-notify-error.ts'
 import { Button } from './forms/button.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 
@@ -21,18 +19,15 @@ export function ReactivateAccountView({
   onReactivate,
   onCancel,
 }: ReactivateAccountViewProps) {
-  const { _ } = useLingui()
-
-  const { notify } = useNotificationsContext()
-  const notifyError = useNotifyError()
+  const { notify, notifyError } = useNotificationsContext()
 
   const reactivate = useAsyncAction(async () => {
     try {
       await onReactivate()
       notify({
         variant: 'success',
-        title: _(msg`Account reactivated`),
-        description: _(msg`Your account has been successfully reactivated.`),
+        title: msg`Account reactivated`,
+        description: msg`Your account has been successfully reactivated.`,
       })
     } catch (err) {
       notifyError(err)

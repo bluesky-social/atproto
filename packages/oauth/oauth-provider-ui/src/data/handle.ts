@@ -1,5 +1,4 @@
 import { msg } from '@lingui/core/macro'
-import { useLingui } from '@lingui/react'
 import { useMutation } from '@tanstack/react-query'
 import { UpdateHandleInput } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
@@ -8,7 +7,6 @@ import { apiErrorMessage } from '#/lib/api-error-parser'
 
 export function useUpdateHandle() {
   const api = useApi()
-  const { _ } = useLingui()
   const { notify } = useNotificationsContext()
 
   return useMutation({
@@ -18,19 +16,18 @@ export function useUpdateHandle() {
     onSuccess(_data, _variables, _context) {
       notify({
         variant: 'success',
-        title: _(msg`Username updated`),
-        description: _(msg`Your username has been updated.`),
+        title: msg`Username updated`,
+        description: msg`Your username has been updated.`,
       })
     },
     onError(error, _variables, _context) {
       console.error('Failed to update username', error)
       notify({
         variant: 'error',
-        title: _(msg`Failed to update username`),
-        description: _(
+        title: msg`Failed to update username`,
+        description:
           apiErrorMessage(error) ??
-            msg`Please check the username and try again.`,
-        ),
+          msg`Please check the username and try again.`,
       })
     },
   })

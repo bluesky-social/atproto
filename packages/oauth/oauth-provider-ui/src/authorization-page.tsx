@@ -14,7 +14,10 @@ import {
   useAuthenticationContext,
 } from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
-import { NotificationsProvider } from '#/contexts/notifications.tsx'
+import {
+  NotificationsProvider,
+  useNotificationsContext,
+} from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
@@ -69,7 +72,9 @@ createRoot(container).render(
 function App() {
   const loginHint = authorizeData.loginHint || undefined
 
-  const { session, setSession, api } = useSessionContext()
+  const { api, session, setSession } = useSessionContext()
+  const { notifyError } = useNotificationsContext()
+  const [rejected, setRejected] = useState<null | boolean>(null)
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
   const [isDone, setIsDone] = useState(false)
 
@@ -126,16 +131,37 @@ function App() {
 
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string } = {}) => {
-      const { url } = await api.consent(session!.account.did, scope)
-      performRedirect(url)
+      try {
+        const { url } = await api.consent(session!.account.did, scope)
+        performRedirect(url)
+        setRejected(false)
+      } catch (err) {
+        notifyError(err)
+        throw err
+      }
     },
-    [api, session, performRedirect],
+    [api, session, performRedirect, notifyError],
   )
 
   const doRejectAndRedirect = useCallback(async () => {
-    const { url } = await api.reject()
-    performRedirect(url)
-  }, [api, performRedirect])
+    try {
+      const { url } = await api.reject()
+      performRedirect(url)
+      setRejected(true)
+    } catch (err) {
+      notifyError(err)
+      throw err
+    }
+  }, [api, performRedirect, notifyError])
+
+  if (redirectUrl && isDone) {
+    return (
+      <RedirectingView
+        title={rejected ? msg`Login canceled` : msg`Login complete`}
+        retry={() => redirectTo(redirectUrl)}
+      />
+    )
+  }
 
   return (
     <AuthenticationProvider
@@ -143,8 +169,19 @@ function App() {
       forcedIdentifier={loginHint}
       promptMode={authorizeData.promptMode}
     >
-      <ActivatedAccountGate>
-        {session && !isDone ? (
+      <ActivatedAccountGate
+        onCancel={
+          // If the account is "forced" through a login hint, cancelling the
+          // re-activation is equivalent to rejecting the consent. If not,
+          // cancelling the re-activation just takes the user back to the
+          // account selection screen.
+          loginHint ? doRejectAndRedirect : () => setSession(null)
+        }
+      >
+        {session && (
+          // Note that the AuthenticationProvider acts as a gate that will
+          // ensure that a "session" is available when its children are
+          // rendered.
           <ConsentView
             clientId={authorizeData.clientId}
             clientMetadata={authorizeData.clientMetadata}
@@ -157,18 +194,19 @@ function App() {
             onReject={doRejectAndRedirect}
             onBack={loginHint ? undefined : () => setSession(null)}
           />
-        ) : (
-          <RedirectingView
-            title={msg`Login complete`}
-            redirect={redirectUrl ? () => redirectTo(redirectUrl) : undefined}
-          />
         )}
       </ActivatedAccountGate>
     </AuthenticationProvider>
   )
 }
 
-function ActivatedAccountGate({ children }: { children?: ReactNode }) {
+function ActivatedAccountGate({
+  children,
+  onCancel,
+}: {
+  children?: ReactNode
+  onCancel?: () => void | PromiseLike<void>
+}) {
   const { session, api } = useAuthenticationContext()
 
   if (session.account.deactivated) {
@@ -176,9 +214,7 @@ function ActivatedAccountGate({ children }: { children?: ReactNode }) {
     return (
       <ReactivateAccountView
         account={session.account}
-        onCancel={async () => {
-          await api.signOut({ did })
-        }}
+        onCancel={onCancel}
         onReactivate={async () => {
           await api.reactivateAccount({ did })
         }}

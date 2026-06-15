@@ -1,16 +1,32 @@
+import { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react'
 import { XIcon } from '@phosphor-icons/react'
 import * as ToastBase from '@radix-ui/react-toast'
 import { clsx } from 'clsx'
-import { createContext, useContext, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { apiErrorParser } from '#/lib/api-error-parser.ts'
+import { parseError } from '#/lib/error-parser.ts'
 
 type Variant = 'success' | 'warning' | 'error' | 'info'
 
 export type NotificationOptions = {
   variant: Variant
-  title: string
-  description?: string
+  title: string | MessageDescriptor
+  description?: string | MessageDescriptor
   duration?: number
 }
+
+export type ErrorNotificationOptions = Partial<
+  Omit<NotificationOptions, 'description'>
+>
 
 export interface NotificationHandler {
   update(options: Partial<NotificationOptions>): void
@@ -19,11 +35,19 @@ export interface NotificationHandler {
 
 export type NotificationsValue = {
   notify(options: NotificationOptions): NotificationHandler
+  notifyError(
+    err: unknown,
+    options?: ErrorNotificationOptions,
+  ): NotificationHandler
 }
 
 const NotificationsContext = createContext<NotificationsValue>({
   notify: (options) => {
     console.warn('Notification triggered without a provider:', options)
+    return { update() {}, close() {} }
+  },
+  notifyError: (err, _options) => {
+    console.error('Error notification triggered without a provider:', err)
     return { update() {}, close() {} }
   },
 })
@@ -64,39 +88,53 @@ export function NotificationsProvider({
 
   const idRef = useRef(0)
 
-  const value = useMemo<NotificationsValue>(
-    () => ({
-      notify: (options) => {
-        const id = idRef.current++
+  const notify = useCallback(
+    (options: NotificationOptions): NotificationHandler => {
+      const id = idRef.current++
 
-        const handler: NotificationHandler = {
-          update(options) {
-            setNotifications((prev) => {
-              return prev.map((d) =>
-                d.id === id
-                  ? { ...d, options: { ...d.options, ...options } }
-                  : d,
-              )
-            })
+      const handler: NotificationHandler = {
+        update(options) {
+          setNotifications((prev) => {
+            return prev.map((d) =>
+              d.id === id ? { ...d, options: { ...d.options, ...options } } : d,
+            )
+          })
 
-            if (options.duration != null) {
-              clearTimeout(timer)
-              timer = setTimeout(handler.close, options.duration)
-            }
-          },
-          close: () => {
+          if (options.duration != null) {
             clearTimeout(timer)
-            setNotifications((prev) => prev.filter((d) => d.id !== id))
-          },
-        }
+            timer = setTimeout(handler.close, options.duration)
+          }
+        },
+        close: () => {
+          clearTimeout(timer)
+          setNotifications((prev) => prev.filter((d) => d.id !== id))
+        },
+      }
 
-        let timer = setTimeout(handler.close, options.duration ?? duration)
-        setNotifications((prev) => [...prev, { id, handler, options }])
+      let timer = setTimeout(handler.close, options.duration ?? duration)
+      setNotifications((prev) => [...prev, { id, handler, options }])
 
-        return handler
-      },
-    }),
+      return handler
+    },
     [],
+  )
+
+  const notifyError = useCallback(
+    (err: unknown, options?: ErrorNotificationOptions): NotificationHandler => {
+      const { description, message } = apiErrorParser(err) ?? parseError(err)
+      return notify({
+        ...options,
+        variant: options?.variant ?? 'error',
+        title: options?.title ?? msg`An error occurred`,
+        description: description ?? message,
+      })
+    },
+    [notify],
+  )
+
+  const value = useMemo<NotificationsValue>(
+    () => ({ notify, notifyError }),
+    [notify, notifyError],
   )
 
   return (
@@ -120,11 +158,11 @@ export function NotificationsProvider({
                 textColors[variant],
               )}
             >
-              {title}
+              <Translated message={title} />
             </ToastBase.Title>
             {description && (
               <ToastBase.Description className={clsx(textColors[variant])}>
-                {description}
+                <Translated message={description} />
               </ToastBase.Description>
             )}
             <ToastBase.Close
@@ -144,4 +182,9 @@ export function NotificationsProvider({
 
 export function useNotificationsContext() {
   return useContext(NotificationsContext)
+}
+
+function Translated({ message }: { message: MessageDescriptor | string }) {
+  const { _ } = useLingui()
+  return <>{typeof message === 'string' ? message : _(message)}</>
 }

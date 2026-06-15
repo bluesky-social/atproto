@@ -1,4 +1,4 @@
-import { useLingui } from '@lingui/react/macro'
+import { msg } from '@lingui/core/macro'
 import { useMutation } from '@tanstack/react-query'
 import {
   ConfirmAccountDeletionInput,
@@ -12,7 +12,6 @@ import { WithOptionalLocale } from '#/lib/api.ts'
 
 export function useDeactivateAccount() {
   const api = useApi()
-  const { t } = useLingui()
   const { notify } = useNotificationsContext()
 
   return useMutation({
@@ -22,16 +21,16 @@ export function useDeactivateAccount() {
     onSuccess(_data, _variables, _context) {
       notify({
         variant: 'success',
-        title: t`Account deactivated`,
-        description: t`Your account is now deactivated.`,
+        title: msg`Account deactivated`,
+        description: msg`Your account is now deactivated.`,
       })
     },
     onError(error, _variables, _context) {
       console.error('Failed to deactivate account', error)
       notify({
         variant: 'error',
-        title: t`Failed to deactivate account`,
-        description: t`Please try again in a moment.`,
+        title: msg`Failed to deactivate account`,
+        description: msg`Please try again in a moment.`,
       })
     },
   })
@@ -39,7 +38,6 @@ export function useDeactivateAccount() {
 
 export function useReactivateAccount() {
   const api = useApi()
-  const { t } = useLingui()
   const { notify } = useNotificationsContext()
 
   return useMutation({
@@ -49,16 +47,16 @@ export function useReactivateAccount() {
     onSuccess(_data, _variables, _context) {
       notify({
         variant: 'success',
-        title: t`Account reactivated`,
-        description: t`Your account is visible again.`,
+        title: msg`Account reactivated`,
+        description: msg`Your account is visible again.`,
       })
     },
     onError(error, _variables, _context) {
       console.error('Failed to reactivate account', error)
       notify({
         variant: 'error',
-        title: t`Failed to reactivate account`,
-        description: t`Please try again in a moment.`,
+        title: msg`Failed to reactivate account`,
+        description: msg`Please try again in a moment.`,
       })
     },
   })
@@ -66,7 +64,6 @@ export function useReactivateAccount() {
 
 export function useDeleteAccountRequest() {
   const api = useApi()
-  const { t } = useLingui()
   const { notify } = useNotificationsContext()
 
   return useMutation({
@@ -76,16 +73,16 @@ export function useDeleteAccountRequest() {
     onSuccess(_data, _variables, _context) {
       notify({
         variant: 'success',
-        title: t`Confirmation email sent`,
-        description: t`Check your inbox for the confirmation code.`,
+        title: msg`Confirmation email sent`,
+        description: msg`Check your inbox for the confirmation code.`,
       })
     },
     onError(error, _variables, _context) {
       console.error('Failed to request account deletion', error)
       notify({
         variant: 'error',
-        title: t`Failed to send confirmation email`,
-        description: t`Please try again in a moment.`,
+        title: msg`Failed to send confirmation email`,
+        description: msg`Please try again in a moment.`,
       })
     },
   })
@@ -93,7 +90,6 @@ export function useDeleteAccountRequest() {
 
 export function useDeleteAccountConfirm() {
   const api = useApi()
-  const { t } = useLingui()
   const { notify } = useNotificationsContext()
 
   return useMutation({
@@ -103,16 +99,16 @@ export function useDeleteAccountConfirm() {
     onSuccess(_data, _variables, _context) {
       notify({
         variant: 'success',
-        title: t`Account deleted`,
-        description: t`Your account and all associated data have been deleted.`,
+        title: msg`Account deleted`,
+        description: msg`Your account and all associated data have been deleted.`,
       })
     },
     onError(error, _variables, _context) {
       console.error('Failed to delete account', error)
       notify({
         variant: 'error',
-        title: t`Failed to delete account`,
-        description: t`Please check your code and password, then try again.`,
+        title: msg`Failed to delete account`,
+        description: msg`Please check your code and password, then try again.`,
       })
     },
   })

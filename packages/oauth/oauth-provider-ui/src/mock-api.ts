@@ -9,6 +9,11 @@ import { OAuthClientId, OAuthClientMetadata } from '@atproto/oauth-types'
 
 export const currentDeviceId = 'device1' // Simulate that this device is "device1"
 
+const requestUri =
+  window.location.pathname === '/authorization-page.html'
+    ? 'urn:ietf:params:oauth:request_uri:req-123123123'
+    : undefined
+
 const PDS_DID = 'did:web:pds.bsky.social'
 
 export const accounts = new Map<DidString, Account>(
@@ -286,7 +291,7 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         return Response.json({ account })
       }
       case `POST ${API_ENDPOINT_PREFIX}/sign-in`: {
-        const { username, remember, emailOtp } = await request.json()
+        const { username, remember, password, emailOtp } = await request.json()
         for (const [did, account] of accounts) {
           if (account.email === username || account.handle === username) {
             if (
@@ -314,10 +319,19 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
                   ?.filter((s) => s.did !== did) ?? []
               ).concat({ did, remember, loginRequired: false }),
             )
-            return Response.json({ account })
+
+            const consentRequired = requestUri ? password !== 'aaa' : undefined
+
+            return Response.json({ account, consentRequired })
           }
         }
-        return Response.json({ error: 'Invalid credentials' }, { status: 400 })
+        return Response.json(
+          {
+            error: 'invalid_request',
+            error_description: 'Invalid identifier or password',
+          },
+          { status: 400 },
+        )
       }
       case `GET ${API_ENDPOINT_PREFIX}/device-sessions`:
         return Response.json(
