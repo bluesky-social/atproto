@@ -1203,7 +1203,7 @@ msgstr ""
 msgid "Type your username"
 msgstr ""
 
-#: src/contexts/session.tsx:153
+#: src/contexts/session.tsx:149
 msgid "Unauthorized"
 msgstr ""
 
@@ -1464,7 +1464,7 @@ msgstr ""
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr ""
 
-#: src/contexts/session.tsx:154
+#: src/contexts/session.tsx:150
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 

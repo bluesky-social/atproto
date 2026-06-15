@@ -1213,7 +1213,7 @@ msgstr "Saisissez votre nom de domaine"
 msgid "Type your username"
 msgstr "Saisissez votre nom d'utilisateur"
 
-#: src/contexts/session.tsx:153
+#: src/contexts/session.tsx:149
 msgid "Unauthorized"
 msgstr "Déconnecté"
 
@@ -1474,7 +1474,7 @@ msgstr "Votre profil, vos publications, vos feeds et vos listes redeviendront vi
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau AT Protocol, telles que les posts, les likes et les follows de Bluesky. Il contient également les données créées via d'autres applications utilisées avec ce compte. L'application demande les autorisations nécessaires pour publier les modifications suivantes sur votre dépôt :"
 
-#: src/contexts/session.tsx:154
+#: src/contexts/session.tsx:150
 msgid "Your session has expired. Please sign in again."
 msgstr "Votre session a expiré. Veuillez vous reconnecter."
 
