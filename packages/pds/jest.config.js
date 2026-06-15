@@ -1,3 +1,4 @@
+/* eslint-env node */
 /** @type {import('jest').Config} */
 const ciE2eIgnore = process.env.CI ? ['<rootDir>/tests/sokaa-e2e.test.ts'] : []
 
