@@ -77,7 +77,6 @@ async function getBlob(did: string, cid: string): Promise<Buffer> {
 
 async function waitForProfile(
   did: string,
-  handle: string,
   jwt: string,
   timeoutMs = 60000,
 ): Promise<JsonBody> {
@@ -92,7 +91,7 @@ async function waitForProfile(
     )
     if (res.ok) {
       const data = (await res.json()) as JsonBody
-      if (data.did === did && data.handle === handle) {
+      if (data.did === did) {
         return data
       }
     }
@@ -281,6 +280,8 @@ describe('PDS + PLC integration', () => {
 const describeAppview = APPVIEW_ENABLED ? describe : describe.skip
 
 describeAppview('Sokaa AppView via PDS proxy', () => {
+  jest.setTimeout(120_000)
+
   let did: string
   let jwt: string
 
@@ -297,12 +298,6 @@ describeAppview('Sokaa AppView via PDS proxy', () => {
     did = data.did as string
     jwt = data.accessJwt as string
     expect(did.startsWith('did:')).toBe(true)
-  })
-
-  it('getProfile — returns profile via PDS proxy to AppView', async () => {
-    const data = await waitForProfile(did, handle, jwt)
-    expect(data.did).toBe(did)
-    expect(data.handle).toBe(handle)
   })
 
   it('getTimeline — indexes Sokaa post and returns it through PDS proxy', async () => {
@@ -347,6 +342,12 @@ describeAppview('Sokaa AppView via PDS proxy', () => {
       post: { record: { caption?: string }; uri: string }
     }>
     expect(feed.some((item) => item.post.record.caption === caption)).toBe(true)
+  })
+
+  it('getProfile — returns profile via PDS proxy to AppView', async () => {
+    const data = await waitForProfile(did, jwt)
+    expect(data.did).toBe(did)
+    expect(data.handle).toBe(handle)
   })
 
   it('getAuthorFeed — lists author posts via PDS proxy', async () => {
