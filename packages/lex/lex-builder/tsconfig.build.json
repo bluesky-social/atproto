@@ -1,13 +1,14 @@
 {
-  "extends": ["../../../tsconfig/node.json"],
+  "extends": ["../../../tsconfig/node-exec.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
-    "noImplicitAny": true,
-    "importHelpers": true,
-    "target": "ES2023",
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"],
   },
+  "references": [
+    { "path": "../lex-document/tsconfig.build.json" },
+    { "path": "../lex-schema/tsconfig.build.json" },
+  ],
 }

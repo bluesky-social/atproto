@@ -1,4 +1,4 @@
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.ts'
 
 /**
  * Schema for validating strings against a regular expression pattern.
@@ -20,11 +20,13 @@ export class RegexpSchema<
 > extends Schema<TValue> {
   readonly type = 'regexp' as const
 
-  constructor(
-    public readonly pattern: RegExp,
-    public readonly message?: string,
-  ) {
+  public readonly pattern: RegExp
+  public readonly message?: string
+
+  constructor(pattern: RegExp, message?: string) {
     super()
+    this.pattern = pattern
+    this.message = message
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

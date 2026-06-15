@@ -1,4 +1,4 @@
-import { aggregateErrors, bailableWait } from './util.js'
+import { aggregateErrors, bailableWait } from './util.ts'
 
 // reads values from a generator into a list
 // breaks when isDone signals `true` AND `waitFor` completes OR when a max length is reached
@@ -78,7 +78,10 @@ export class AsyncBuffer<T> {
   private closed = false
   private toThrow: unknown | undefined
 
-  constructor(public maxSize?: number) {
+  public maxSize?: number
+
+  constructor(maxSize?: number) {
+    this.maxSize = maxSize
     // Initializing to satisfy types/build, immediately reset by resetPromise()
     this.promise = Promise.resolve()
     this.resolve = () => null

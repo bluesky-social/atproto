@@ -1,9 +1,17 @@
 {
-  "extends": ["../../tsconfig/node.json"],
+  "extends": ["../../tsconfig/node.tsconfig.json"],
   "compilerOptions": {
+    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "noUnusedLocals": false,
   },
   "include": ["src"],
+  "references": [
+    { "path": "../identity/tsconfig.build.json" },
+    { "path": "../internal/fetch-node/tsconfig.build.json" },
+    { "path": "../lex/lex-document/tsconfig.build.json" },
+    { "path": "../lex/lex/tsconfig.build.json" },
+    { "path": "../repo/tsconfig.build.json" },
+    { "path": "../syntax/tsconfig.build.json" },
+  ],
 }

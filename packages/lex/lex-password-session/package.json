@@ -20,7 +20,7 @@
   "files": [
     "./src",
     "./tsconfig.build.json",
-    "./tsconfig.tests.json",
+    "./tsconfig.test.json",
     "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
@@ -44,7 +44,8 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "prebuild": "node ./scripts/lex-build.mjs",
+    "codegen:lex": "node ./scripts/lex-build.mjs",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }

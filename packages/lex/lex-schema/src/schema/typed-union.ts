@@ -1,14 +1,14 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  Unknown$TypedObject,
+  type Unknown$TypedObject,
   ValidationContext,
-} from '../core.js'
-import { lazyProperty } from '../util/lazy-property.js'
-import { TypedObjectSchema } from './typed-object.js'
-import { TypedRefSchema } from './typed-ref.js'
+} from '../core.ts'
+import { lazyProperty } from '../util/lazy-property.ts'
+import { TypedObjectSchema } from './typed-object.ts'
+import { TypedRefSchema } from './typed-ref.ts'
 
 /**
  * Schema for Lexicon typed unions (unions discriminated by $type).
@@ -44,16 +44,19 @@ export class TypedUnionSchema<
 > {
   readonly type = 'typedUnion' as const
 
-  constructor(
-    protected readonly validators: TValidators,
-    public readonly closed: TClosed,
-  ) {
+  protected readonly validators: TValidators
+  public readonly closed: TClosed
+
+  constructor(validators: TValidators, closed: TClosed) {
+    super()
+
     // @NOTE In order to avoid circular dependency issues, we don't access the
     // refs's schema (or $type) here. Instead, we access them lazily when first
     // needed. The biggest issue with this strategy is that we can't throw
     // early if the refs contain multiple refs with the same $type.
 
-    super()
+    this.validators = validators
+    this.closed = closed
   }
 
   get validatorsMap(): Map<unknown, TValidators[number]> {

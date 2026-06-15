@@ -1,8 +1,10 @@
 {
-  "extends": ["../../../tsconfig/nodenext.json"],
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
   "compilerOptions": {
+    "composite": true,
     "outDir": "dist",
     "rootDir": "src",
   },
   "include": ["src"],
+  "references": [{ "path": "../jwk/tsconfig.build.json" }],
 }

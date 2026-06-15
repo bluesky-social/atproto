@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig/jest.tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["jest", "./jest.d.ts"],
+  },
+  "include": ["./tests"],
+  "references": [
+    { "path": "../dev-env/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
+}

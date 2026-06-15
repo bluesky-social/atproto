@@ -1,13 +1,13 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  UnwrapValidator,
+  type UnwrapValidator,
   ValidationContext,
-  Validator,
-} from '../core.js'
-import { memoizedTransformer } from '../util/memoize.js'
-import { WithDefaultSchema } from './with-default.js'
+  type Validator,
+} from '../core.ts'
+import { memoizedTransformer } from '../util/memoize.ts'
+import { WithDefaultSchema } from './with-default.ts'
 
 /**
  * Schema wrapper that makes a value optional (allows undefined).
@@ -33,8 +33,11 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
 > {
   readonly type = 'optional' as const
 
-  constructor(readonly validator: TValidator) {
+  readonly validator: TValidator
+
+  constructor(validator: TValidator) {
     super()
+    this.validator = validator
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

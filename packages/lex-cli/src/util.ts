@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
-import { type FileDiff, type GeneratedAPI } from './types.js'
+import { type FileDiff, type GeneratedAPI } from './types.ts'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
   paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
@@ -126,7 +126,7 @@ function printZodError(node: ZodFormattedError<any>, path = ''): boolean {
       if (k === '_errors') {
         continue
       }
-      printZodError(node[k], `${path}/${k}`)
+      printZodError((node as any)[k], `${path}/${k}`)
     }
   }
   return false

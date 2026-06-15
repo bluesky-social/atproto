@@ -20,7 +20,7 @@
   "files": [
     "./src",
     "./tsconfig.build.json",
-    "./tsconfig.tests.json",
+    "./tsconfig.test.json",
     "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
@@ -29,6 +29,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "typescript": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }

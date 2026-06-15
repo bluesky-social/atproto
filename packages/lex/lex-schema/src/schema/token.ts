@@ -1,4 +1,4 @@
-import { $type, NsidString, Schema, ValidationContext } from '../core.js'
+import { $type, type NsidString, Schema, ValidationContext } from '../core.ts'
 
 /**
  * Schema for Lexicon token values.
@@ -20,8 +20,11 @@ export class TokenSchema<
 > extends Schema<TValue> {
   readonly type = 'token' as const
 
-  constructor(readonly value: TValue) {
+  readonly value: TValue
+
+  constructor(value: TValue) {
     super()
+    this.value = value
   }
 
   get $token(): TValue {

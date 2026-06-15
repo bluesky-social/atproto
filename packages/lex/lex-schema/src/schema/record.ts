@@ -1,21 +1,21 @@
-import { LexMap } from '@atproto/lex-data'
+import { type LexMap } from '@atproto/lex-data'
 import {
-  $Typed,
+  type $Typed,
   $typed,
-  InferInput,
-  InferOutput,
-  LexiconRecordKey,
-  NsidString,
-  RecordKeyValue,
+  type InferInput,
+  type InferOutput,
+  type LexiconRecordKey,
+  type NsidString,
+  type RecordKeyValue,
   Schema,
-  Unknown$TypedObject,
+  type Unknown$TypedObject,
   ValidationContext,
-  Validator,
-} from '../core.js'
-import { lazyProperty } from '../util/lazy-property.js'
-import { literal } from './literal.js'
-import { string } from './string.js'
-import { withDefault } from './with-default.js'
+  type Validator,
+} from '../core.ts'
+import { lazyProperty } from '../util/lazy-property.ts'
+import { literal } from './literal.ts'
+import { string } from './string.ts'
+import { withDefault } from './with-default.ts'
 
 /**
  * Infers the record key type from a RecordSchema.
@@ -64,13 +64,16 @@ export class RecordSchema<
 
   keySchema: RecordKeySchema<TKey>
 
-  constructor(
-    readonly key: TKey,
-    readonly $type: TType,
-    readonly schema: TShape,
-  ) {
+  readonly key: TKey
+  readonly $type: TType
+  readonly schema: TShape
+
+  constructor(key: TKey, $type: TType, schema: TShape) {
     super()
     this.keySchema = recordKey(key)
+    this.key = key
+    this.$type = $type
+    this.schema = schema
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

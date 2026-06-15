@@ -28,7 +28,6 @@
       "Bash(pnpm --filter @atproto/*:*)",
       "Bash(pnpm -r:*)",
       "Bash(pnpm -w exec vitest:*)",
-      "Bash(pnpm -w run verify:types)",
       "Bash(pnpm build:*)",
       "Bash(pnpm codegen:*)",
       "Bash(pnpm dev)",

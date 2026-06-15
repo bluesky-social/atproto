@@ -1,6 +1,11 @@
-import { CheckCidOptions, Cid, InferCheckedCid, isCid } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
-import { memoizedOptions } from '../util/memoize.js'
+import {
+  type CheckCidOptions,
+  type Cid,
+  type InferCheckedCid,
+  isCid,
+} from '@atproto/lex-data'
+import { Schema, ValidationContext } from '../core.ts'
+import { memoizedOptions } from '../util/memoize.ts'
 
 export type { Cid }
 
@@ -30,9 +35,11 @@ export class CidSchema<
   const TOptions extends CidSchemaOptions = { flavor: undefined },
 > extends Schema<InferCheckedCid<TOptions>> {
   readonly type = 'cid' as const
+  readonly options: TOptions
 
-  constructor(readonly options?: TOptions) {
+  constructor(options: TOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
@@ -64,6 +71,6 @@ export class CidSchema<
  */
 export const cid = /*#__PURE__*/ memoizedOptions(function <
   O extends CidSchemaOptions = NonNullable<unknown>,
->(options?: O) {
+>(options: O = {} as O): CidSchema<O> {
   return new CidSchema(options)
 })

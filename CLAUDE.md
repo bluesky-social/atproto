@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-This is the TypeScript reference implementation of [AT Protocol](https://atproto.com), the decentralized social media protocol behind Bluesky. It is a pnpm monorepo (Node.js ≥22) containing client libraries, schema/codegen tooling, and the two main service implementations: the Personal Data Server (PDS) and the `app.bsky` AppView.
+This is the TypeScript reference implementation of [AT Protocol](https://atproto.com), the decentralized social media protocol behind Bluesky. It is a pnpm monorepo (runtime floor Node.js ≥22; local dev and CI build/verify default to Node 26 via `.nvmrc` — only the test matrix runs on 22) containing client libraries, schema/codegen tooling, and the two main service implementations: the Personal Data Server (PDS) and the `app.bsky` AppView.
 
 Workspace layout (see [pnpm-workspace.yaml](./pnpm-workspace.yaml) and [tsconfig.json](./tsconfig.json)):
 
@@ -21,11 +21,12 @@ Workspace layout (see [pnpm-workspace.yaml](./pnpm-workspace.yaml) and [tsconfig
 Whole-repo verification commands (from root):
 
 ```bash
-pnpm verify         # parallel: style + lint + types
-pnpm verify:types   # tsc --build tsconfig.json (project references)
-pnpm build --force  # recursive, topo-sorted build
-pnpm codegen        # recursive codegen across packages that define one
+pnpm verify         # parallel: style + lint
+pnpm build --force  # single root `tsgo --build` over the project-references graph, then UI bundlers
+pnpm codegen        # parallel codegen across all packages; runs from .ts sources via Node type-stripping
 ```
+
+The pipeline is: `codegen` → `prebuild` → `build` (one `tsgo --build tsconfig.json` at the root) → `postbuild` (Vite/UI bundlers). Codegen and prebuild scripts are launched with `NODE_OPTIONS='--conditions=typescript'` so that `lex-cli` / `@atproto/lex` resolve their `./src/*.ts` sources directly (via a `"typescript"` export condition) instead of requiring a prior compiled output. There is no `verify:types` step — type-checking happens inside the root build.
 
 The [Makefile](Makefile) wraps the most common entry points: `make build`, `make test`, `make lint`, `make fmt`, `make codegen`, `make run-dev-env` (boots the in-process PDS+AppView+bsync+plc+ozone constellation), `make run-dev-env-logged` (same with `pino-pretty` log output), `make fmt-lexicons` (eslint-fix on `lexicons/*.json`).
 
@@ -33,11 +34,13 @@ Per-package work — **always run from inside the package directory**, not from 
 
 ```bash
 cd packages/<pkg>
-pnpm exec tsc --build tsconfig.json   # build & type-check source + tests
-pnpm test                             # run that package's test suite
-pnpm exec prettier --write <path>     # format specific files only
-pnpm exec eslint --fix <path>         # lint specific files only
+pnpm exec tsgo --build tsconfig.build.json   # build that package + its referenced deps
+pnpm test                                    # run that package's test suite
+pnpm exec prettier --write <path>            # format specific files only
+pnpm exec eslint --fix <path>                # lint specific files only
 ```
+
+Every package now ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps) and a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 
@@ -63,7 +66,9 @@ For everything else lexicon-related — `lex install` / `lex build`, the per-pac
 
 ## Conventions
 
-- Node ≥22, ESM only (`"type": "module"` in every package). Use `node --enable-source-maps` for production-style runs.
+- Node ≥22 runtime floor; build/dev default to Node 26 (`.nvmrc`). ESM only (`"type": "module"` in every package). Use `node --enable-source-maps` for production-style runs.
+- TypeScript compilation uses `tsgo` (TS7, `@typescript/native-preview`), not `tsc`. There is no per-package `typescript` devDependency — `tsgo` is hoisted at the root.
+- Packages on the codegen critical path (transitive deps of `@atproto/lex` / `@atproto/lex-cli`) extend `tsconfig/node-exec.tsconfig.json` or `tsconfig/isomorphic-exec.tsconfig.json`, which enable `rewriteRelativeImportExtensions`, `erasableSyntaxOnly`, and `verbatimModuleSyntax`. Within those packages: imports must use explicit `.ts` extensions, `import type` is mandatory for type-only imports, and erasable-only syntax (no enums, namespaces, or parameter properties).
 - Import paths use workspace protocol (`workspace:^`). Don't pin internal packages to a published version.
 - Don't refactor unrelated code; this project's contribution guidelines explicitly discourage large refactors and unsolicited tooling changes (see [README.md](README.md) "Contributions").
 - Don't add new dependencies without strong justification.
@@ -72,4 +77,5 @@ For everything else lexicon-related — `lex install` / `lex build`, the per-pac
 ## Troubleshooting
 
 - **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) or [packages/ozone](packages/ozone) being out of date, run `pnpm run '/^codegen/' && pnpm run build` from those packages, then re-run the build. This is only needed on these two packages because their `prebuild` step skips codegen as a performance optimization.
+- **Codegen ran but produced stale output.** Codegen relies on `NODE_OPTIONS='--conditions=typescript'` so Node loads `lex-cli` / `@atproto/lex` from their `.ts` sources. If you invoke `node …` directly (outside the `pnpm` script wrappers — ad-hoc shell, IDE task runners, etc.) without that condition, you'll silently resolve `dist/` and may use stale compiled output. Always go through `pnpm codegen` / `pnpm prebuild`.
 - **End-to-end test fails with stale infra.** If docker containers persist across test runs, reset them with `cd packages/dev-infra && docker compose down --volumes`.

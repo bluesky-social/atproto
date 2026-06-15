@@ -1,6 +1,6 @@
-import { LexValue } from '@atproto/lex-data'
-import { Infer, NsidString, Schema } from '../core.js'
-import { ParamsSchema } from './params.js'
+import { type LexValue } from '@atproto/lex-data'
+import { type Infer, type NsidString, Schema } from '../core.ts'
+import { ParamsSchema } from './params.ts'
 
 /**
  * Infers the parameters type from a Subscription definition.
@@ -52,12 +52,22 @@ export class Subscription<
 > {
   readonly type = 'subscription' as const
 
+  readonly nsid: TNsid
+  readonly parameters: TParameters
+  readonly message: TMessage
+  readonly errors: TErrors
+
   constructor(
-    readonly nsid: TNsid,
-    readonly parameters: TParameters,
-    readonly message: TMessage,
-    readonly errors: TErrors,
-  ) {}
+    nsid: TNsid,
+    parameters: TParameters,
+    message: TMessage,
+    errors: TErrors,
+  ) {
+    this.nsid = nsid
+    this.parameters = parameters
+    this.message = message
+    this.errors = errors
+  }
 }
 
 /**

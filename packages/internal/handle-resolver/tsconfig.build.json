@@ -1,8 +1,14 @@
 {
-  "extends": "../../../tsconfig/isomorphic.json",
+  "extends": "../../../tsconfig/isomorphic.tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
   "include": ["./src"],
+  "references": [
+    { "path": "../../did/tsconfig.build.json" },
+    { "path": "../simple-store-memory/tsconfig.build.json" },
+    { "path": "../simple-store/tsconfig.build.json" },
+  ],
 }

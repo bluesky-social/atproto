@@ -1,15 +1,15 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../core.js'
-import { EnumSchema } from './enum.js'
-import { LiteralSchema } from './literal.js'
-import { ObjectSchema } from './object.js'
+  type ValidationResult,
+  type Validator,
+} from '../core.ts'
+import { EnumSchema } from './enum.ts'
+import { LiteralSchema } from './literal.ts'
+import { ObjectSchema } from './object.ts'
 
 /**
  * Type representing a single variant in a discriminated union.
@@ -81,12 +81,14 @@ export class DiscriminatedUnionSchema<
   readonly type = 'discriminatedUnion' as const
 
   readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<TDiscriminator>>
+  readonly discriminator: TDiscriminator
+  readonly variants: TVariants
 
-  constructor(
-    readonly discriminator: TDiscriminator,
-    readonly variants: TVariants,
-  ) {
+  constructor(discriminator: TDiscriminator, variants: TVariants) {
     super()
+
+    this.discriminator = discriminator
+    this.variants = variants
 
     // Although we usually try to avoid initialization work in constructors,
     // here it is necessary to ensure that invalid discriminated throw from the

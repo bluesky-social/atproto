@@ -1,7 +1,7 @@
-import { DidResolverBase } from './did-resolver-base.js'
-import { DidPlcMethod, DidPlcMethodOptions } from './methods/plc.js'
-import { DidWebMethod, DidWebMethodOptions } from './methods/web.js'
-import { Simplify } from './util.js'
+import { DidResolverBase } from './did-resolver-base.ts'
+import { DidPlcMethod, type DidPlcMethodOptions } from './methods/plc.ts'
+import { DidWebMethod, type DidWebMethodOptions } from './methods/web.ts'
+import type { Simplify } from './util.ts'
 
 export type DidResolverCommonOptions = Simplify<
   DidPlcMethodOptions & DidWebMethodOptions

@@ -51,9 +51,9 @@ export class MockEntryway {
   public plcRotationKey: Secp256k1Keypair
   public idResolver: IdResolver
 
-  private server: http.Server
-  private terminator: HttpTerminator
-  private accounts = new Map<string, Account>()
+  protected server: http.Server
+  protected terminator: HttpTerminator
+  protected accounts = new Map<string, Account>()
 
   private constructor(
     server: http.Server,

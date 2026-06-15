@@ -1,11 +1,11 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
-} from '../core.js'
-import { memoizedTransformer } from '../util/memoize.js'
+  type Validator,
+} from '../core.ts'
+import { memoizedTransformer } from '../util/memoize.ts'
 
 /**
  * Schema wrapper that allows null values in addition to the wrapped schema.
@@ -28,8 +28,11 @@ export class NullableSchema<const TValidator extends Validator> extends Schema<
 > {
   readonly type = 'nullable' as const
 
-  constructor(readonly validator: TValidator) {
+  readonly validator: TValidator
+
+  constructor(validator: TValidator) {
     super()
+    this.validator = validator
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

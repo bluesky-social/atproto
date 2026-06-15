@@ -1,10 +1,10 @@
 import {
-  CheckCidOptions,
-  Cid,
-  InferCheckedCid,
+  type CheckCidOptions,
+  type Cid,
+  type InferCheckedCid,
   parseCid,
 } from '@atproto/lex-data'
-import { JsonValue } from './json.js'
+import { type JsonValue } from './json.ts'
 
 /**
  * Parses a `{$link: string}` JSON object into a {@link Cid} instance.

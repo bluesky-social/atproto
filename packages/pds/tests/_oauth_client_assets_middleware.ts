@@ -9,7 +9,7 @@ export function oauthClientAssetsMiddleware(
   const path = req.url?.split('?')[0].slice(1) || 'index.html'
   const file = Object.hasOwn(files, path) ? files[path] : null
 
-  if (file) {
+  if (file?.data) {
     res
       .writeHead(200, 'OK', { 'content-type': file.mime })
       .end(Buffer.from(file.data, 'base64'))

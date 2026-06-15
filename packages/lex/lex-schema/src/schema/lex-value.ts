@@ -1,6 +1,6 @@
-import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
-import { memoizedOptions } from '../util/memoize.js'
+import { type LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
+import { Schema, ValidationContext } from '../core.ts'
+import { memoizedOptions } from '../util/memoize.ts'
 
 export type { LexValue }
 

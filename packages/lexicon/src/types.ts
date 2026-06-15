@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { validateLanguage } from '@atproto/common-web'
 import { isValidNsid } from '@atproto/syntax'
-import { requiredPropertiesRefinement } from './util.js'
+import { requiredPropertiesRefinement } from './util.ts'
 
 export const languageSchema = z
   .string()
@@ -454,7 +454,7 @@ export function isValidLexiconDoc(v: unknown): v is LexiconDoc {
   return lexiconDoc.safeParse(v).success
 }
 
-export function isObj<V>(v: V): v is V & object {
+export function isObj<V>(v: V): v is V & object & Record<string, unknown> {
   return v != null && typeof v === 'object'
 }
 

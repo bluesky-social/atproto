@@ -25,7 +25,6 @@ describe('plc operations', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'plc_operations',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     const mailer = ctx.mailer
 

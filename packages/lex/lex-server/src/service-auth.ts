@@ -1,18 +1,18 @@
 import * as crypto from '@atproto/crypto'
 import {
-  AtprotoDid,
-  AtprotoDidDocument,
-  Did,
+  type AtprotoDid,
+  type AtprotoDidDocument,
+  type Did,
   matchesIdentifier,
 } from '@atproto/did'
 import { fromBase64, isPlainObject, utf8FromBase64 } from '@atproto/lex-data'
-import { DidString, isDidString } from '@atproto/lex-schema'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import {
-  CreateDidResolverOptions,
+  type CreateDidResolverOptions,
   createDidResolver,
 } from '@atproto-labs/did-resolver'
-import { LexServerAuthError } from './errors.js'
-import type { LexRouterAuth } from './lex-router.js'
+import { LexServerAuthError } from './errors.ts'
+import type { LexRouterAuth } from './lex-router.ts'
 
 const BEARER_PREFIX = 'Bearer '
 

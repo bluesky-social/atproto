@@ -1,8 +1,11 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { Cid } from '@atproto/lex-data'
-import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
+import { type Cid } from '@atproto/lex-data'
+import {
+  type LexiconDocument,
+  lexiconDocumentSchema,
+} from '@atproto/lex-document'
 import {
   MST,
   MemoryBlockstore,
@@ -10,19 +13,19 @@ import {
   readCarWithRoot,
   verifyCommitSig,
 } from '@atproto/repo'
-import { AtUri, NSID, NsidString } from '@atproto/syntax'
+import { AtUri, NSID, type NsidString } from '@atproto/syntax'
 import {
-  AtprotoVerificationMethod,
-  CreateDidResolverOptions,
-  Did,
-  DidResolver,
-  ResolveDidOptions,
+  type AtprotoVerificationMethod,
+  type CreateDidResolverOptions,
+  type Did,
+  type DidResolver,
+  type ResolveDidOptions,
   assertDid,
   createDidResolver,
   extractAtprotoData,
 } from '@atproto-labs/did-resolver'
-import { LexResolverError } from './lex-resolver-error.js'
-import { com } from './lexicons/index.js'
+import { LexResolverError } from './lex-resolver-error.ts'
+import { com } from './lexicons/index.ts'
 
 /**
  * Result returned when successfully resolving a lexicon document.
@@ -248,9 +251,11 @@ export type { LexiconDocument, ResolveDidOptions }
  * ```
  */
 export class LexResolver {
+  protected readonly options: LexResolverOptions
   protected readonly didResolver: DidResolver<'plc' | 'web'>
 
-  constructor(protected readonly options: LexResolverOptions) {
+  constructor(options: LexResolverOptions) {
+    this.options = options
     this.didResolver = createDidResolver(options)
   }
 

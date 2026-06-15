@@ -1,5 +1,5 @@
-import { LexiconDocument } from './lexicon-document.js'
-import { LexiconIndexer } from './lexicon-indexer.js'
+import { type LexiconDocument } from './lexicon-document.ts'
+import { type LexiconIndexer } from './lexicon-indexer.ts'
 
 /**
  * Lazily indexes Lexicon documents from an iterable source.
@@ -53,7 +53,7 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
    * ```
    */
   constructor(
-    readonly source: AsyncIterable<LexiconDocument> | Iterable<LexiconDocument>,
+    source: AsyncIterable<LexiconDocument> | Iterable<LexiconDocument>,
   ) {
     this.#iterator =
       Symbol.asyncIterator in source

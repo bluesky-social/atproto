@@ -1,8 +1,21 @@
 {
-  "extends": "../../tsconfig/node.json",
+  "extends": "../../tsconfig/node.tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
   "include": ["./src"],
+  "references": [
+    { "path": "../common/tsconfig.build.json" },
+    { "path": "../crypto/tsconfig.build.json" },
+    { "path": "../lex/lex-cbor/tsconfig.build.json" },
+    { "path": "../lex/lex-client/tsconfig.build.json" },
+    { "path": "../lex/lex-data/tsconfig.build.json" },
+    { "path": "../lex/lex-json/tsconfig.build.json" },
+    { "path": "../lex/lex-schema/tsconfig.build.json" },
+    { "path": "../lexicon/tsconfig.build.json" },
+    { "path": "../ws-client/tsconfig.build.json" },
+    { "path": "../xrpc/tsconfig.build.json" },
+  ],
 }

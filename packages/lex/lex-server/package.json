@@ -21,7 +21,7 @@
   "files": [
     "./src",
     "./tsconfig.build.json",
-    "./tsconfig.tests.json",
+    "./tsconfig.test.json",
     "./tsconfig.json",
     "./dist",
     "./nodejs.cjs",
@@ -35,8 +35,8 @@
       "default": "./dist/index.js"
     },
     "./nodejs": {
+      "typescript": "./src/index.ts",
       "types": "./dist/nodejs.d.ts",
-      "require": "./dist/nodejs.js",
       "default": "./dist/nodejs.js"
     }
   },

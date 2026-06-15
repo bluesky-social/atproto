@@ -14,16 +14,19 @@ import { NSID } from '@atproto/syntax'
 class MappedMap<K, V, I = any> implements Map<K, V> {
   private map = new Map<I, V>()
 
+  private readonly encodeKey: (key: K) => I
+  private readonly decodeKey: (enc: I) => K
+
   /**
    * Creates a new MappedMap with custom key encoding/decoding functions.
    *
    * @param encodeKey - Function to convert external keys to internal representation
    * @param decodeKey - Function to convert internal representation back to external keys
    */
-  constructor(
-    private readonly encodeKey: (key: K) => I,
-    private readonly decodeKey: (enc: I) => K,
-  ) {}
+  constructor(encodeKey: (key: K) => I, decodeKey: (enc: I) => K) {
+    this.encodeKey = encodeKey
+    this.decodeKey = decodeKey
+  }
 
   get size(): number {
     return this.map.size

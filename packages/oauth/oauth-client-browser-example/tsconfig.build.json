@@ -1,7 +1,7 @@
 {
   "extends": [
-    "../../../tsconfig/browser.json",
-    "../../../tsconfig/bundler.json",
+    "../../../tsconfig/browser.tsconfig.json",
+    "../../../tsconfig/bundler.tsconfig.json",
   ],
   "compilerOptions": {
     "moduleResolution": "bundler",
@@ -10,4 +10,5 @@
     "outDir": "./dist",
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
+  "references": [{ "path": "../oauth-client-browser/tsconfig.build.json" }],
 }

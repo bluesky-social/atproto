@@ -1,9 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
-import { isUint8, toHexString } from './lib/util.js'
-import { isObject } from './object.js'
-import { ui8Equals } from './uint8array.js'
+import { isUint8, toHexString } from './lib/util.ts'
+import { isObject } from './object.ts'
+import { ui8Equals } from './uint8array.ts'
 
 /**
  * Codec code that indicates the CID references a CBOR-encoded data structure.

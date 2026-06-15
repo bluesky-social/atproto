@@ -1,12 +1,23 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": ["../../../tsconfig/isomorphic-exec.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
+    "composite": true,
     "noImplicitAny": true,
     "importHelpers": true,
     "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
   },
+  "references": [
+    { "path": "../../crypto/tsconfig.build.json" },
+    { "path": "../../did/tsconfig.build.json" },
+    { "path": "../../internal/did-resolver/tsconfig.build.json" },
+    { "path": "../lex-cbor/tsconfig.build.json" },
+    { "path": "../lex-client/tsconfig.build.json" },
+    { "path": "../lex-data/tsconfig.build.json" },
+    { "path": "../lex-json/tsconfig.build.json" },
+    { "path": "../lex-schema/tsconfig.build.json" },
+  ],
 }

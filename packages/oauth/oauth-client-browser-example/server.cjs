@@ -4,7 +4,8 @@
 
 const { once } = require('node:events')
 const { createServer } = require('node:http')
-const files = require('./dist/files.json')
+// @ts-expect-error
+const files = require('.')
 
 exports.middleware = middleware
 function middleware(

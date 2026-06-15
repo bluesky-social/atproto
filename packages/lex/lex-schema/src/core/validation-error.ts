@@ -1,11 +1,11 @@
 import { LexError } from '@atproto/lex-data'
-import { arrayAgg } from '../util/array-agg.js'
-import { ResultFailure } from './result.js'
+import { arrayAgg } from '../util/array-agg.ts'
+import type { ResultFailure } from './result.ts'
 import {
   Issue,
   IssueInvalidType,
   IssueInvalidValue,
-} from './validation-issue.js'
+} from './validation-issue.ts'
 
 /**
  * Error thrown when validation fails.

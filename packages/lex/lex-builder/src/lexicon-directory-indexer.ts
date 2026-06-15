@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
-  LexiconDocument,
+  type LexiconDocument,
   LexiconIterableIndexer,
   lexiconDocumentSchema,
 } from '@atproto/lex-document'

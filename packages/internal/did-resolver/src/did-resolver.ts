@@ -1,5 +1,5 @@
-import { Did, DidDocument } from '@atproto/did'
-import { ResolveDidOptions } from './did-method.js'
+import type { Did, DidDocument } from '@atproto/did'
+import type { ResolveDidOptions } from './did-method.ts'
 
 export type ResolvedDocument<D extends Did, M extends string = string> =
   D extends Did<infer N>

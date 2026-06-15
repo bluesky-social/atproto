@@ -1,5 +1,5 @@
-import type * as Result from './result.js'
-import { LexValidationError } from './validation-error.js'
+import type * as Result from './result.ts'
+import { LexValidationError } from './validation-error.ts'
 import {
   Issue,
   IssueInvalidFormat,
@@ -8,8 +8,8 @@ import {
   IssueRequiredKey,
   IssueTooBig,
   IssueTooSmall,
-  MeasurableType,
-} from './validation-issue.js'
+  type MeasurableType,
+} from './validation-issue.ts'
 
 /**
  * Represents a successful validation result.
@@ -281,6 +281,8 @@ export class ValidationContext {
     return context.validate(input, validator)
   }
 
+  public readonly options: Required<ValidationOptions>
+
   /**
    * The current path being validated, used for error reporting.
    */
@@ -296,7 +298,8 @@ export class ValidationContext {
    *
    * @param options - The validation options (path and mode are required)
    */
-  constructor(readonly options: Required<ValidationOptions>) {
+  constructor(options: Required<ValidationOptions>) {
+    this.options = options
     // Create a copy because we will be mutating the array during validation.
     this.currentPath = Array.from(options.path)
   }

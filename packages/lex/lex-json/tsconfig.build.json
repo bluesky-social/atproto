@@ -1,11 +1,11 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": ["../../../tsconfig/isomorphic-exec.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.bench.ts", "**/*.test.ts"],
   "compilerOptions": {
-    "noImplicitAny": true,
-    "importHelpers": true,
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
+  "references": [{ "path": "../lex-data/tsconfig.build.json" }],
 }

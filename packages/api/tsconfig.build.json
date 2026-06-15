@@ -1,9 +1,17 @@
 {
-  "extends": "../../tsconfig/isomorphic.json",
+  "extends": "../../tsconfig/isomorphic.tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
+    // Needed because of lex-cli
     "noUnusedLocals": false,
   },
   "include": ["./src"],
+  "references": [
+    { "path": "../common-web/tsconfig.build.json" },
+    { "path": "../lexicon/tsconfig.build.json" },
+    { "path": "../syntax/tsconfig.build.json" },
+    { "path": "../xrpc/tsconfig.build.json" },
+  ],
 }

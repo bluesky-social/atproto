@@ -17,10 +17,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons",
-    "prebuild": "pnpm run codegen",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "codegen:templates": "node ./build.templates.cjs",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
-    "postbuild": "node ./build.templates.cjs",
     "dev": "node ./build.templates.cjs --watch",
     "pretest": "puppeteer browsers install chrome",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",

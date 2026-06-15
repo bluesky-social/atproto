@@ -1,8 +1,8 @@
-import { Did, DidDocument } from '@atproto/did'
-import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
-import { DidCacheMemory } from './did-cache-memory.js'
-import { DidMethod, ResolveDidOptions } from './did-method.js'
-import { DidResolver, ResolvedDocument } from './did-resolver.js'
+import type { Did, DidDocument } from '@atproto/did'
+import { CachedGetter, type SimpleStore } from '@atproto-labs/simple-store'
+import { DidCacheMemory } from './did-cache-memory.ts'
+import type { DidMethod, ResolveDidOptions } from './did-method.ts'
+import type { DidResolver, ResolvedDocument } from './did-resolver.ts'
 
 export type { DidMethod, ResolveDidOptions, ResolvedDocument }
 

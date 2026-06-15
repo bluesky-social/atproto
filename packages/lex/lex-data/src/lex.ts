@@ -1,5 +1,5 @@
-import { Cid, isCid } from './cid.js'
-import { isPlainObject } from './object.js'
+import { type Cid, isCid } from './cid.ts'
+import { isPlainObject } from './object.ts'
 
 /**
  * Primitive values in the Lexicon data model.

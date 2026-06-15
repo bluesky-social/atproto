@@ -1,16 +1,16 @@
-import { Lexicons } from '../lexicons.js'
+import { Lexicons } from '../lexicons.ts'
 import {
-  LexArray,
-  LexRefVariant,
-  LexUserType,
+  type LexArray,
+  type LexRefVariant,
+  type LexUserType,
   ValidationError,
-  ValidationResult,
+  type ValidationResult,
   isDiscriminatedObject,
   isObj,
-} from '../types.js'
-import { toLexUri } from '../util.js'
-import { blob } from './blob.js'
-import { validate as validatePrimitive } from './primitives.js'
+} from '../types.ts'
+import { toLexUri } from '../util.ts'
+import { blob } from './blob.ts'
+import { validate as validatePrimitive } from './primitives.ts'
 
 export function validate(
   lexicons: Lexicons,

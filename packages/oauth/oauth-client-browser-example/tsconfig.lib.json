@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig/node.tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "moduleResolution": "node16",
+    "module": "node18",
+    "noEmit": true,
+  },
+  "include": ["./*.js", "./*.mjs", "./*.cjs", "./*.ts"],
+  "exclude": [],
+}

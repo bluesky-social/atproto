@@ -1,13 +1,13 @@
 import {
-  CheckCidOptions,
-  Cid,
-  RawCid,
+  type CheckCidOptions,
+  type Cid,
+  type RawCid,
   ifCid,
   parseCid,
   validateCidString,
-} from './cid.js'
-import { LexValue } from './lex.js'
-import { isPlainObject, isPlainProto } from './object.js'
+} from './cid.ts'
+import { type LexValue } from './lex.ts'
+import { isPlainObject, isPlainProto } from './object.ts'
 
 /**
  * Options to use with {@link ifCid}, {@link validateCidString}, and related CID

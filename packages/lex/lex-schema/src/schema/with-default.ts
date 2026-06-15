@@ -1,10 +1,10 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
-} from '../core.js'
+  type Validator,
+} from '../core.ts'
 
 /**
  * Schema wrapper that provides a default value when the input is undefined.
@@ -27,11 +27,13 @@ export class WithDefaultSchema<
 > extends Schema<InferInput<TValidator>, InferOutput<TValidator>> {
   readonly type = 'withDefault' as const
 
-  constructor(
-    readonly validator: TValidator,
-    readonly defaultValue: InferInput<TValidator>,
-  ) {
+  validator: TValidator
+  defaultValue: InferInput<TValidator>
+
+  constructor(validator: TValidator, defaultValue: InferInput<TValidator>) {
     super()
+    this.validator = validator
+    this.defaultValue = defaultValue
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

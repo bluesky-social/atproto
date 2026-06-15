@@ -1,4 +1,4 @@
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.ts'
 
 /**
  * Schema that only accepts a specific literal value.
@@ -20,8 +20,11 @@ export class LiteralSchema<
 > extends Schema<TValue> {
   readonly type = 'literal' as const
 
-  constructor(readonly value: TValue) {
+  readonly value: TValue
+
+  constructor(value: TValue) {
     super()
+    this.value = value
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

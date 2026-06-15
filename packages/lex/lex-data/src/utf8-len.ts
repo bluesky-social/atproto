@@ -1,4 +1,4 @@
-import { NodeJSBuffer } from './lib/nodejs-buffer.js'
+import { NodeJSBuffer } from './lib/nodejs-buffer.ts'
 
 // @NOTE This file is not meant to be exported directly. Instead, we re-export
 // public functions from ./utf8.ts. The reason for this separation is that this

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./isomorphic.tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "target": "ES2023",
+  },
+}

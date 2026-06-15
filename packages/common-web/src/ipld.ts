@@ -1,5 +1,5 @@
-import { LexValue, lexEquals } from '@atproto/lex-data'
-import { JsonValue, jsonToLex, lexToJson } from '@atproto/lex-json'
+import { type LexValue, lexEquals } from '@atproto/lex-data'
+import { type JsonValue, jsonToLex, lexToJson } from '@atproto/lex-json'
 
 /**
  * @deprecated Use {@link JsonValue} from `@atproto/lex-cbor` instead.

@@ -1,4 +1,4 @@
-import { wait } from './util.js'
+import { wait } from './util.ts'
 
 export type RetryOptions = {
   maxRetries?: number

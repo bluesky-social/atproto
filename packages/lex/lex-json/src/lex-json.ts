@@ -1,16 +1,16 @@
 import {
-  BlobRef,
-  Cid,
-  LexArray,
-  LexMap,
-  LexValue,
+  type BlobRef,
+  type Cid,
+  type LexArray,
+  type LexMap,
+  type LexValue,
   isCid,
   utf8FromBytes,
 } from '@atproto/lex-data'
-import { parseTypedBlobRef } from './blob.js'
-import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { JsonObject, JsonValue } from './json.js'
-import { encodeLexLink, parseLexLink } from './link.js'
+import { parseTypedBlobRef } from './blob.ts'
+import { encodeLexBytes, parseLexBytes } from './bytes.ts'
+import { type JsonObject, type JsonValue } from './json.ts'
+import { encodeLexLink, parseLexLink } from './link.ts'
 
 /**
  * Serialize a Lex value to a JSON string.

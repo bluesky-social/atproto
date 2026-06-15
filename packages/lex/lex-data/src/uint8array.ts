@@ -1,15 +1,15 @@
-import { Base64Alphabet } from './uint8array-base64.js'
-import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
+import { type Base64Alphabet } from './uint8array-base64.ts'
+import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.ts'
 import {
   fromBase64Native,
   fromBase64Node,
   fromBase64Ponyfill,
-} from './uint8array-from-base64.js'
+} from './uint8array-from-base64.ts'
 import {
   toBase64Native,
   toBase64Node,
   toBase64Ponyfill,
-} from './uint8array-to-base64.js'
+} from './uint8array-to-base64.ts'
 
 export type { Base64Alphabet }
 

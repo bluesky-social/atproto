@@ -1,5 +1,5 @@
-import { Schema, ValidationContext } from '../core.js'
-import { memoizedOptions } from '../util/memoize.js'
+import { Schema, ValidationContext } from '../core.ts'
+import { memoizedOptions } from '../util/memoize.ts'
 
 /**
  * Schema for validating null values.

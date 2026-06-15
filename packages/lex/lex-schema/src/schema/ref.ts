@@ -1,11 +1,11 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
-  WrappedValidator,
-} from '../core.js'
+  type Validator,
+  type WrappedValidator,
+} from '../core.ts'
 
 /**
  * Function type that returns a validator, used for lazy schema resolution.

@@ -23,7 +23,10 @@
   "bin": "./server.cjs",
   "type": "module",
   "exports": {
-    ".": "./dist/files.json",
+    ".": {
+      "types": "./files.d.ts",
+      "default": "./dist/files.json"
+    },
     "./server": {
       "default": "./server.cjs"
     }
@@ -48,9 +51,10 @@
     "vite": "^6.2.0"
   },
   "scripts": {
-    "codegen": "lex build --clear --indexFile --lexicons ../../../lexicons --out ./src/lexicons",
-    "prebuild": "pnpm run codegen",
-    "build": "vite build --emptyOutDir -- ignore additional npm args",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../../lexicons --out ./src/lexicons",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build:ui": "vite build --emptyOutDir",
+    "build": "pnpm run build:ui -- ignore additional npm args",
     "dev": "vite --port 8080 --host 127.0.0.1"
   }
 }

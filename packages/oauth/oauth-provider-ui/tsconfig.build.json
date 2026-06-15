@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "../../../tsconfig/browser.tsconfig.json",
+    "../../../tsconfig/bundler.tsconfig.json",
+  ],
+  "compilerOptions": {
+    "rootDir": "src",
+    "types": ["vite/client"],
+    "paths": {
+      "#/*": ["./src/*"],
+    },
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+}

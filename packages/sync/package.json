@@ -19,8 +19,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
-    "prebuild": "pnpm run codegen",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"
   },

@@ -6,8 +6,8 @@ import {
 } from 'ts-morph'
 import { type LexRecord, type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { type GeneratedAPI } from '../types.js'
-import { gen, lexiconsTs, utilTs } from './common.js'
+import { type GeneratedAPI } from '../types.ts'
+import { gen, lexiconsTs, utilTs } from './common.ts'
 import {
   genCommonImports,
   genImports,
@@ -16,7 +16,7 @@ import {
   genXrpcInput,
   genXrpcOutput,
   genXrpcParams,
-} from './lex-gen.js'
+} from './lex-gen.ts'
 import {
   type DefTreeNode,
   lexiconsToDefTree,
@@ -24,7 +24,7 @@ import {
   toCamelCase,
   toScreamingSnakeCase,
   toTitleCase,
-} from './util.js'
+} from './util.ts'
 
 const ATP_METHODS = {
   list: 'com.atproto.repo.listRecords',
@@ -431,7 +431,11 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   }
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+const lexiconTs = (
+  project: Project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,

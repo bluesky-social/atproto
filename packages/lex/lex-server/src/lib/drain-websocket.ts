@@ -1,4 +1,4 @@
-import { abortableSleep } from './sleep.js'
+import { abortableSleep } from './sleep.ts'
 
 /**
  * Performs polling based backpressure management for a WebSocket connection. If

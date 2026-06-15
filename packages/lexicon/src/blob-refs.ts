@@ -26,12 +26,19 @@ export type JsonBlobRef = z.infer<typeof jsonBlobRef>
 export class BlobRef {
   public original: JsonBlobRef
 
+  public ref: CID
+  public mimeType: string
+  public size: number
+
   constructor(
-    public ref: CID,
-    public mimeType: string,
-    public size: number,
+    ref: CID,
+    mimeType: string,
+    size: number,
     original?: JsonBlobRef,
   ) {
+    this.ref = ref
+    this.mimeType = mimeType
+    this.size = size
     this.original = original ?? {
       $type: 'blob',
       ref,

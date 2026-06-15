@@ -1,12 +1,12 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Issue,
   LexValidationError,
   Schema,
   ValidationContext,
-  Validator,
-} from '../core.js'
+  type Validator,
+} from '../core.ts'
 
 /**
  * Type representing a non-empty tuple of validators for union schemas.
@@ -39,8 +39,11 @@ export class UnionSchema<
 > {
   readonly type = 'union' as const
 
-  constructor(protected readonly validators: TValidators) {
+  protected readonly validators: TValidators
+
+  constructor(validators: TValidators) {
     super()
+    this.validators = validators
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

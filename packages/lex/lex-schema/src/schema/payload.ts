@@ -1,6 +1,6 @@
-import { LexValue } from '@atproto/lex-data'
-import { InferInput, Schema, Validator } from '../core.js'
-import { ObjectSchema, object } from './object.js'
+import { type LexValue } from '@atproto/lex-data'
+import { type InferInput, Schema, type Validator } from '../core.ts'
+import { ObjectSchema, object } from './object.ts'
 
 export type { LexValue }
 
@@ -93,13 +93,15 @@ export class Payload<
   const TEncoding extends string | undefined = string | undefined,
   const TSchema extends PayloadSchema<TEncoding> = PayloadSchema<TEncoding>,
 > {
-  constructor(
-    readonly encoding: TEncoding,
-    readonly schema: TSchema,
-  ) {
+  readonly encoding: TEncoding
+  readonly schema: TSchema
+
+  constructor(encoding: TEncoding, schema: TSchema) {
     if (encoding === undefined && schema !== undefined) {
       throw new TypeError('schema cannot be defined when encoding is undefined')
     }
+    this.encoding = encoding
+    this.schema = schema
   }
 
   /**

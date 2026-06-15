@@ -1,20 +1,20 @@
-import { LexMap, isPlainObject } from '@atproto/lex-data'
+import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import {
-  $Type,
-  $TypeOf,
-  $Typed,
-  $TypedMaybe,
+  type $Type,
+  type $TypeOf,
+  type $Typed,
+  type $TypedMaybe,
   $type,
   $typed,
-  InferInput,
-  InferOutput,
-  NsidString,
+  type InferInput,
+  type InferOutput,
+  type NsidString,
   Schema,
-  Unknown$TypedObject,
+  type Unknown$TypedObject,
   ValidationContext,
-  Validator,
-} from '../core.js'
-import { lazyProperty } from '../util/lazy-property.js'
+  type Validator,
+} from '../core.ts'
+import { lazyProperty } from '../util/lazy-property.ts'
 
 export type MaybeTypedObject<
   TType extends $Type,
@@ -50,11 +50,13 @@ export class TypedObjectSchema<
 > {
   readonly type = 'typedObject' as const
 
-  constructor(
-    readonly $type: TType,
-    readonly schema: TShape,
-  ) {
+  readonly $type: TType
+  readonly schema: TShape
+
+  constructor($type: TType, schema: TShape) {
     super()
+    this.$type = $type
+    this.schema = schema
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

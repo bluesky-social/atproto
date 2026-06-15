@@ -1,8 +1,13 @@
 {
-  "extends": "../../tsconfig/node.json",
+  "extends": "../../tsconfig/node.tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
   "include": ["./src"],
+  "references": [
+    { "path": "../common/tsconfig.build.json" },
+    { "path": "../syntax/tsconfig.build.json" },
+  ],
 }

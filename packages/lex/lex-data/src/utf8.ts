@@ -1,12 +1,12 @@
-import { Base64Alphabet } from './uint8array.js'
+import { type Base64Alphabet } from './uint8array.ts'
 import {
   utf8FromBase64Node,
   utf8FromBase64Ponyfill,
-} from './utf8-from-base64.js'
-import { utf8FromBytesNative, utf8FromBytesNode } from './utf8-from-bytes.js'
-import { graphemeLenNative, graphemeLenPonyfill } from './utf8-grapheme-len.js'
-import { utf8LenCompute, utf8LenNode } from './utf8-len.js'
-import { utf8ToBase64Node, utf8ToBase64Ponyfill } from './utf8-to-base64.js'
+} from './utf8-from-base64.ts'
+import { utf8FromBytesNative, utf8FromBytesNode } from './utf8-from-bytes.ts'
+import { graphemeLenNative, graphemeLenPonyfill } from './utf8-grapheme-len.ts'
+import { utf8LenCompute, utf8LenNode } from './utf8-len.ts'
+import { utf8ToBase64Node, utf8ToBase64Ponyfill } from './utf8-to-base64.ts'
 
 /**
  * Converts a Uint8Array to a UTF-8 string.

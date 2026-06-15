@@ -1,10 +1,10 @@
 import {
-  BlobRefCheckOptions,
-  LexMap,
-  TypedBlobRef,
+  type BlobRefCheckOptions,
+  type LexMap,
+  type TypedBlobRef,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { parseLexLink } from './link.js'
+import { parseLexLink } from './link.ts'
 
 /**
  * Parses a blob reference from a JSON object.

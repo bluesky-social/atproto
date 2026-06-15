@@ -1,4 +1,4 @@
-import { NodeJSBuffer } from './lib/nodejs-buffer.js'
+import { NodeJSBuffer } from './lib/nodejs-buffer.ts'
 
 const Buffer = NodeJSBuffer
 

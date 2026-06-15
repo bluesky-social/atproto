@@ -1,11 +1,11 @@
 import {
-  InferInput,
+  type InferInput,
   IssueCustom,
   ValidationContext,
-  ValidationResult,
-  Validator,
-} from '../core.js'
-import { CustomAssertionContext } from './custom.js'
+  type ValidationResult,
+  type Validator,
+} from '../core.ts'
+import { type CustomAssertionContext } from './custom.ts'
 
 /**
  * Configuration for a refinement check that validates a condition.

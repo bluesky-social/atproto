@@ -1,19 +1,19 @@
-import { LexErrorData } from '@atproto/lex-data'
+import { type LexErrorData } from '@atproto/lex-data'
 import {
-  AtIdentifierString,
-  InferOutput,
-  NsidString,
-  RecordKeyValue,
-  Restricted,
+  type AtIdentifierString,
+  type InferOutput,
+  type NsidString,
+  type RecordKeyValue,
+  type Restricted,
   Schema,
   assertAtIdentifierString,
   assertStringFormat,
-} from './core.js'
+} from './core.ts'
 import {
-  InferPayload,
-  InferPayloadBody,
-  InferPayloadEncoding,
-  InferRecordKey,
+  type InferPayload,
+  type InferPayloadBody,
+  type InferPayloadEncoding,
+  type InferRecordKey,
   Procedure,
   Query,
   RecordSchema,
@@ -22,7 +22,7 @@ import {
   optional,
   regexp,
   string,
-} from './schema.js'
+} from './schema.ts'
 
 export type Main<T> = T | { main: T }
 

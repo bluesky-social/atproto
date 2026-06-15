@@ -206,9 +206,7 @@ describe('proxy read after write', () => {
       { headers: { ...sc.getHeaders(alice) } },
     )
     assert(AppBskyFeedDefs.isThreadViewPost(res.data.thread))
-    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
     assert(res.data.thread.replies, 'replies is undefined')
-    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
     const { replies } = res.data.thread
     expect(replies.length).toBe(1)
     assert(AppBskyFeedDefs.isThreadViewPost(replies[0]))

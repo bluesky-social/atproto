@@ -1,22 +1,22 @@
 import {
   InvalidLexiconError,
-  LexRecord,
-  LexUserType,
+  type LexRecord,
+  type LexUserType,
   LexiconDefNotFoundError,
-  LexiconDoc,
+  type LexiconDoc,
   ValidationError,
-  ValidationResult,
+  type ValidationResult,
   isObj,
-} from './types.js'
-import { toLexUri } from './util.js'
+} from './types.ts'
+import { toLexUri } from './util.ts'
 import {
   assertValidRecord,
   assertValidXrpcInput,
   assertValidXrpcMessage,
   assertValidXrpcOutput,
   assertValidXrpcParams,
-} from './validation.js'
-import { object as validateObject } from './validators/complex.js'
+} from './validation.ts'
+import { object as validateObject } from './validators/complex.ts'
 
 /**
  * A collection of compiled lexicons.
@@ -235,7 +235,7 @@ function resolveRefUris(obj: any, baseUri: string): any {
     if (obj.type === 'ref') {
       obj.ref = toLexUri(obj.ref, baseUri)
     } else if (obj.type === 'union') {
-      obj.refs = obj.refs.map((ref) => toLexUri(ref, baseUri))
+      obj.refs = obj.refs.map((ref: any) => toLexUri(ref, baseUri))
     } else if (Array.isArray(obj[k])) {
       obj[k] = obj[k].map((item: any) => {
         if (typeof item === 'string') {

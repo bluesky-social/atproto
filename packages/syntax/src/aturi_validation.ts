@@ -1,7 +1,10 @@
-import { AtIdentifierString, isAtIdentifierString } from './at-identifier.js'
-import { Result, failure, success } from './lib/result.js'
-import { NsidString, isValidNsid } from './nsid.js'
-import { isValidRecordKey } from './recordkey.js'
+import {
+  type AtIdentifierString,
+  isAtIdentifierString,
+} from './at-identifier.ts'
+import { type Result, failure, success } from './lib/result.ts'
+import { type NsidString, isValidNsid } from './nsid.ts'
+import { isValidRecordKey } from './recordkey.ts'
 
 export type AtUriStringBase =
   | `at://${AtIdentifierString}`

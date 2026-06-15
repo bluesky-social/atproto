@@ -32,20 +32,23 @@ When a package doesn't yet have vitest set up:
 
    **Do not add the package to the root `projects` list if its tests depend on dev-infra** (postgres + redis docker stack). The workspace-level runner does not start dev-infra, so those tests would fail when invoked from the root. This is why `packages/bsky` is intentionally omitted from the root config — it must be run from its own directory via `pnpm test`, which goes through [packages/dev-infra/with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh). See the comment in [vitest.config.ts](../../../../vitest.config.ts) for context.
 
-4. Create `tsconfig.tests.json` extending the shared vitest config. Always extend `../../tsconfig/vitest.json` (the jest-typed `../../tsconfig/tests.json` pulls in `@types/jest` and is for jest packages only):
+4. Create `tsconfig.test.json` extending the shared vitest config. Always extend `../../tsconfig/vitest.tsconfig.json` (the jest-typed `../../tsconfig/jest.tsconfig.json` pulls in `@types/jest` and is for jest packages only):
 
    ```json
    {
-     "extends": "../../tsconfig/vitest.json",
-     "include": ["./tests", "./src/**/*.test.ts"],
+     "extends": "../../tsconfig/vitest.tsconfig.json",
      "compilerOptions": {
-       "rootDir": ".",
-       "noUnusedLocals": false
-     }
+       "rootDir": "."
+     },
+     "include": ["./tests", "./src/**/*.test.ts"],
+     "references": [
+       { "path": "./tsconfig.build.json" }
+       // [Add references to any local packages imported from tests]
+     ]
    }
    ```
 
-   The shared [tsconfig/vitest.json](../../../../tsconfig/vitest.json) supplies `lib`, `module`, and `noEmit`. Make sure the package's root `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.tests.json`.
+   The shared [tsconfig/vitest.tsconfig.json](../../../../tsconfig/vitest.tsconfig.json) supplies `lib`, `module`, and `noEmit`. Make sure the package's root `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.test.json`.
 
    Extend `include` for any additional test-only sources the package has — benchmarks (`./src/**/*.bench.ts`), ambient declarations (`./src/core-js.d.ts`), etc.
 

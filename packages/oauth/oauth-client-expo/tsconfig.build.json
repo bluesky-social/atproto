@@ -1,8 +1,14 @@
 {
-  "extends": ["../../../tsconfig/expo.json"],
+  "extends": ["../../../tsconfig/expo.tsconfig.json"],
   "compilerOptions": {
+    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
   "include": ["./src"],
+  "references": [
+    { "path": "../../internal/simple-store/tsconfig.build.json" },
+    { "path": "../oauth-client-browser/tsconfig.build.json" },
+    { "path": "../oauth-client/tsconfig.build.json" },
+  ],
 }

@@ -48,17 +48,20 @@ export type LexErrorData<N extends LexErrorCode = LexErrorCode> = {
 export class LexError<N extends LexErrorCode = LexErrorCode> extends Error {
   name = 'LexError'
 
+  readonly error: N
+
   /**
    * @param error - The error code identifying the type of error, typically used in XRPC error payloads
    * @param message - Optional human-readable error message
    * @param options - Standard Error options (e.g., cause)
    */
   constructor(
-    readonly error: N,
+    error: N,
     message?: string, // Defaults to empty string in Error constructor
     options?: ErrorOptions,
   ) {
     super(message, options)
+    this.error = error
   }
 
   /**

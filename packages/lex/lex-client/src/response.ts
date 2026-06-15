@@ -1,25 +1,25 @@
-import { LexParseOptions, jsonToLex } from '@atproto/lex-json'
+import { type LexParseOptions, jsonToLex } from '@atproto/lex-json'
 import {
-  InferMethodOutputEncoding,
-  InferOutput,
-  LexValue,
+  type InferMethodOutputEncoding,
+  type InferOutput,
+  type LexValue,
   Payload,
   Procedure,
   Query,
-  ResultSuccess,
-  Validator,
+  type ResultSuccess,
+  type Validator,
 } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
   XrpcInvalidResponseError,
   XrpcResponseError,
   XrpcResponseValidationError,
-} from './errors.js'
+} from './errors.ts'
 import {
-  EncodingString,
-  XrpcUnknownResponsePayload,
+  type EncodingString,
+  type XrpcUnknownResponsePayload,
   isEncodingString,
-} from './types.js'
+} from './types.ts'
 
 const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'
@@ -149,12 +149,22 @@ export class XrpcResponse<M extends Procedure | Query>
     return this
   }
 
+  readonly method: M
+  readonly status: number
+  readonly headers: Headers
+  readonly payload: XrpcResponsePayload<M>
+
   constructor(
-    readonly method: M,
-    readonly status: number,
-    readonly headers: Headers,
-    readonly payload: XrpcResponsePayload<M>,
-  ) {}
+    method: M,
+    status: number,
+    headers: Headers,
+    payload: XrpcResponsePayload<M>,
+  ) {
+    this.method = method
+    this.status = status
+    this.headers = headers
+    this.payload = payload
+  }
 
   /**
    * Whether the response payload was parsed as {@link LexValue} (`true`) or is

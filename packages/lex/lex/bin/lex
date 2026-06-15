@@ -9,8 +9,6 @@
 
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { build } from '@atproto/lex-builder'
-import { install } from '@atproto/lex-installer'
 
 yargs(hideBin(process.argv))
   .strict()
@@ -108,6 +106,7 @@ yargs(hideBin(process.argv))
       })
     },
     async (argv) => {
+      const { build } = await import('@atproto/lex-builder')
       await build(argv)
     },
   )
@@ -149,6 +148,13 @@ yargs(hideBin(process.argv))
       })
     },
     async (argv) => {
+      // @NOTE We use dynamic imports from here because `lex-installer`'s
+      // dependencies don't all have a "typescript" export condition, which
+      // means that these packages need to be built before we can import from
+      // them. By using dynamic imports, we can limit the packages that need to
+      // support "erasableSyntaxOnly" and "verbatimModuleSyntax" to just the
+      // ones on the codegen critical path (`lex-builder` and its dependencies).
+      const { install } = await import('@atproto/lex-installer')
       await install({
         add: argv.nsid,
         save: argv.save,

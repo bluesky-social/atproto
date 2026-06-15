@@ -1,10 +1,10 @@
-import { AtprotoIdentityDidMethods } from '@atproto/did'
-import { DidCache, DidResolverCached } from './did-cache.js'
+import type { AtprotoIdentityDidMethods } from '@atproto/did'
+import { type DidCache, DidResolverCached } from './did-cache.ts'
 import {
   DidResolverCommon,
-  DidResolverCommonOptions,
-} from './did-resolver-common.js'
-import { DidResolver } from './did-resolver.js'
+  type DidResolverCommonOptions,
+} from './did-resolver-common.ts'
+import type { DidResolver } from './did-resolver.ts'
 
 export type { AtprotoIdentityDidMethods }
 

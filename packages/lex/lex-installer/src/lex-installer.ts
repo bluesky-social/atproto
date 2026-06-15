@@ -1,27 +1,27 @@
 import { join } from 'node:path'
 import { LexiconDirectoryIndexer } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
-import { Cid, lexEquals } from '@atproto/lex-data'
+import { type Cid, lexEquals } from '@atproto/lex-data'
 import {
-  LexiconDocument,
-  LexiconParameters,
-  LexiconPermission,
-  LexiconRef,
-  LexiconRefUnion,
-  LexiconUnknown,
-  MainLexiconDefinition,
-  NamedLexiconDefinition,
+  type LexiconDocument,
+  type LexiconParameters,
+  type LexiconPermission,
+  type LexiconRef,
+  type LexiconRefUnion,
+  type LexiconUnknown,
+  type MainLexiconDefinition,
+  type NamedLexiconDefinition,
 } from '@atproto/lex-document'
-import { LexResolver, LexResolverOptions } from '@atproto/lex-resolver'
-import { AtUriString, NsidString } from '@atproto/lex-schema'
+import { LexResolver, type LexResolverOptions } from '@atproto/lex-resolver'
+import { type AtUriString, type NsidString } from '@atproto/lex-schema'
 import { AtUri, NSID } from '@atproto/syntax'
-import { isEnoentError, writeJsonFile } from './fs.js'
+import { isEnoentError, writeJsonFile } from './fs.ts'
 import {
-  LexiconsManifest,
+  type LexiconsManifest,
   normalizeLexiconsManifest,
-} from './lexicons-manifest.js'
-import { NsidMap } from './nsid-map.js'
-import { NsidSet } from './nsid-set.js'
+} from './lexicons-manifest.ts'
+import { NsidMap } from './nsid-map.ts'
+import { NsidSet } from './nsid-set.ts'
 
 /**
  * Configuration options for the {@link LexInstaller} class.
@@ -102,6 +102,7 @@ export type LexInstallerOptions = LexResolverOptions & {
  * ```
  */
 export class LexInstaller implements AsyncDisposable {
+  protected readonly options: LexInstallerOptions
   protected readonly lexiconResolver: LexResolver
   protected readonly indexer: LexiconDirectoryIndexer
   protected readonly documents = new NsidMap<LexiconDocument>()
@@ -111,7 +112,8 @@ export class LexInstaller implements AsyncDisposable {
     resolutions: {},
   }
 
-  constructor(protected readonly options: LexInstallerOptions) {
+  constructor(options: LexInstallerOptions) {
+    this.options = options
     this.lexiconResolver = new LexResolver(options)
     this.indexer = new LexiconDirectoryIndexer({
       lexicons: options.lexicons,

@@ -1,14 +1,14 @@
 import {
-  BlobRef,
-  LegacyBlobRef,
-  TypedBlobRef,
+  type BlobRef,
+  type LegacyBlobRef,
+  type TypedBlobRef,
   getBlobSize,
   isBlobRef,
   isLegacyBlobRef,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
-import { memoizedOptions } from '../util/memoize.js'
+import { Schema, ValidationContext } from '../core.ts'
+import { memoizedOptions } from '../util/memoize.ts'
 
 /**
  * Configuration options for blob schema validation.
@@ -51,9 +51,11 @@ export class BlobSchema<
   const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
 > extends Schema<BlobRef> {
   readonly type = 'blob' as const
+  readonly options: TOptions
 
-  constructor(readonly options?: TOptions) {
+  constructor(options: TOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
@@ -145,6 +147,6 @@ function matchesMime(mime: string, accepted: string[]): boolean {
  */
 export const blob = /*#__PURE__*/ memoizedOptions(function <
   O extends BlobSchemaOptions = NonNullable<unknown>,
->(options?: O) {
+>(options: O = {} as O): BlobSchema<O> {
   return new BlobSchema(options)
 })

@@ -1,23 +1,23 @@
 import {
-  AtprotoDid,
-  AtprotoIdentityDidMethods,
-  DidDocument,
-  DidResolver,
-  ResolveDidOptions,
+  type AtprotoDid,
+  type AtprotoIdentityDidMethods,
+  type DidDocument,
+  type DidResolver,
+  type ResolveDidOptions,
   isAtprotoDid,
 } from '@atproto-labs/did-resolver'
-import {
+import type {
   HandleResolver,
   ResolveHandleOptions,
 } from '@atproto-labs/handle-resolver'
-import { HANDLE_INVALID } from './constants.js'
-import { IdentityResolverError } from './identity-resolver-error.js'
-import {
+import { HANDLE_INVALID } from './constants.ts'
+import { IdentityResolverError } from './identity-resolver-error.ts'
+import type {
   IdentityInfo,
   IdentityResolver,
   ResolveIdentityOptions,
-} from './identity-resolver.js'
-import { asNormalizedHandle, extractNormalizedHandle } from './util.js'
+} from './identity-resolver.ts'
+import { asNormalizedHandle, extractNormalizedHandle } from './util.ts'
 
 // @TODO Move this to its own package as soon as we have a distinct
 // implementation based on XRPC calls to the
@@ -30,10 +30,15 @@ import { asNormalizedHandle, extractNormalizedHandle } from './util.js'
  * - Handle resolution (using the `HandleResolver` interface)
  */
 export class AtprotoIdentityResolver implements IdentityResolver {
+  protected readonly didResolver: DidResolver<AtprotoIdentityDidMethods>
+  protected readonly handleResolver: HandleResolver
   constructor(
-    protected readonly didResolver: DidResolver<AtprotoIdentityDidMethods>,
-    protected readonly handleResolver: HandleResolver,
-  ) {}
+    didResolver: DidResolver<AtprotoIdentityDidMethods>,
+    handleResolver: HandleResolver,
+  ) {
+    this.didResolver = didResolver
+    this.handleResolver = handleResolver
+  }
 
   public async resolve(
     input: string,

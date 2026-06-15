@@ -1,7 +1,7 @@
-import { ifCid, isCid } from './cid.js'
-import { LexValue } from './lex.js'
-import { isPlainObject } from './object.js'
-import { ui8Equals } from './uint8array.js'
+import { ifCid, isCid } from './cid.ts'
+import { type LexValue } from './lex.ts'
+import { isPlainObject } from './object.ts'
+import { ui8Equals } from './uint8array.ts'
 
 /**
  * Performs deep equality comparison between two {@link LexValue}s.

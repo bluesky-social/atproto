@@ -1,10 +1,10 @@
-import { CborCid, LexValue, cidForCbor } from '@atproto/lex-data'
-import { encode } from './encoding.js'
+import { type CborCid, type LexValue, cidForCbor } from '@atproto/lex-data'
+import { encode } from './encoding.ts'
 
 export type { Cid } from '@atproto/lex-data'
 export type { CborCid, LexValue }
 
-export { decode, decodeAll, encode } from './encoding.js'
+export { decode, decodeAll, encode } from './encoding.ts'
 
 export {
   decode as cborDecode,
@@ -12,7 +12,7 @@ export {
   decodeOptions,
   encode as cborEncode,
   encodeOptions,
-} from './encoding.js'
+} from './encoding.ts'
 
 /**
  * Computes a CID (Content Identifier) for a given LexValue.

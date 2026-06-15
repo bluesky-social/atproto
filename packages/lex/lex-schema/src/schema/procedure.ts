@@ -1,6 +1,6 @@
-import { NsidString } from '../core.js'
-import { ParamsSchema } from './params.js'
-import { Payload } from './payload.js'
+import { type NsidString } from '../core.ts'
+import { ParamsSchema } from './params.ts'
+import { Payload } from './payload.ts'
 
 /**
  * Represents a Lexicon procedure (HTTP POST) endpoint definition.
@@ -37,13 +37,25 @@ export class Procedure<
 > {
   readonly type = 'procedure' as const
 
+  readonly nsid: TNsid
+  readonly parameters: TParameters
+  readonly input: TInputPayload
+  readonly output: TOutputPayload
+  readonly errors: TErrors
+
   constructor(
-    readonly nsid: TNsid,
-    readonly parameters: TParameters,
-    readonly input: TInputPayload,
-    readonly output: TOutputPayload,
-    readonly errors: TErrors,
-  ) {}
+    nsid: TNsid,
+    parameters: TParameters,
+    input: TInputPayload,
+    output: TOutputPayload,
+    errors: TErrors,
+  ) {
+    this.nsid = nsid
+    this.parameters = parameters
+    this.input = input
+    this.output = output
+    this.errors = errors
+  }
 }
 
 /**

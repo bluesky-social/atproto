@@ -1,11 +1,11 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
-} from '../core.js'
+  type Validator,
+} from '../core.ts'
 
 /**
  * Schema for validating dictionary/map-like objects with dynamic keys.
@@ -35,12 +35,13 @@ export class DictSchema<
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
   readonly type = 'dict' as const
+  readonly keySchema: TKey
+  readonly valueSchema: TValue
 
-  constructor(
-    readonly keySchema: TKey,
-    readonly valueSchema: TValue,
-  ) {
+  constructor(keySchema: TKey, valueSchema: TValue) {
     super()
+    this.keySchema = keySchema
+    this.valueSchema = valueSchema
   }
 
   validateInContext(

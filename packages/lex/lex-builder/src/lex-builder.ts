@@ -2,16 +2,19 @@ import assert from 'node:assert'
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { IndentationText, Project } from 'ts-morph'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
-import { BuildFilterOptions, buildFilter } from './filter.js'
-import { FilteredIndexer } from './filtered-indexer.js'
-import { Formatter, FormatterOptions } from './formatter.js'
-import { LexDefBuilder, LexDefBuilderOptions } from './lex-def-builder.js'
+import {
+  type LexiconDocument,
+  type LexiconIndexer,
+} from '@atproto/lex-document'
+import { type BuildFilterOptions, buildFilter } from './filter.ts'
+import { FilteredIndexer } from './filtered-indexer.ts'
+import { Formatter, type FormatterOptions } from './formatter.ts'
+import { LexDefBuilder, type LexDefBuilderOptions } from './lex-def-builder.ts'
 import {
   LexiconDirectoryIndexer,
-  LexiconDirectoryIndexerOptions,
-} from './lexicon-directory-indexer.js'
-import { asNamespaceExport } from './ts-lang.js'
+  type LexiconDirectoryIndexerOptions,
+} from './lexicon-directory-indexer.ts'
+import { asNamespaceExport } from './ts-lang.ts'
 
 /**
  * Configuration options for the {@link LexBuilder} class.
@@ -139,20 +142,23 @@ export type LexBuilderSaveOptions = FormatterOptions & {
  * ```
  */
 export class LexBuilder {
+  readonly #options: LexBuilderOptions
   readonly #imported = new Set<string>()
   readonly #project = new Project({
     useInMemoryFileSystem: true,
     manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
 
-  constructor(private readonly options: LexBuilderOptions = {}) {}
+  constructor(options: LexBuilderOptions = {}) {
+    this.#options = options
+  }
 
   get fileExt() {
-    return this.options.fileExt ?? '.ts'
+    return this.#options.fileExt ?? '.ts'
   }
 
   get importExt() {
-    return this.options.importExt ?? '.js'
+    return this.#options.importExt ?? '.js'
   }
 
   public async load(options: LexBuilderLoadOptions) {
@@ -212,7 +218,7 @@ export class LexBuilder {
   private async createExportTree(doc: LexiconDocument) {
     const namespaces = doc.id.split('.')
 
-    if (this.options.indexFile) {
+    if (this.#options.indexFile) {
       const indexFile = this.getFile(`/index${this.fileExt}`)
 
       const tldNs = namespaces[0]!
@@ -255,7 +261,7 @@ export class LexBuilder {
       moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
     })
 
-    if (this.options.defsExport) {
+    if (this.#options.defsExport) {
       // @NOTE Individual exports exports from the defs file might conflict with
       // child namespaces. For this reason, we also add a namespace export for the
       // defs (export * as $defs from './xyz.defs.js'). This is an escape hatch
@@ -267,7 +273,7 @@ export class LexBuilder {
       })
     }
 
-    if (this.options.defaultExport && doc.defs.main != null) {
+    if (this.#options.defaultExport && doc.defs.main != null) {
       // export { main as default } from './xyz.defs.js'
       file.addExportDeclaration({
         moduleSpecifier: `./${namespaces.at(-1)}.defs${this.importExt}`,
@@ -283,7 +289,7 @@ export class LexBuilder {
     const path = join('/', ...doc.id.split('.'))
     const file = this.createFile(`${path}.defs${this.fileExt}`)
 
-    const fileBuilder = new LexDefBuilder(this.options, file, doc, indexer)
+    const fileBuilder = new LexDefBuilder(this.#options, file, doc, indexer)
     await fileBuilder.build()
   }
 }

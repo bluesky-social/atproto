@@ -15,18 +15,19 @@ The root [jest.config.cjs](../../../../jest.config.cjs) aggregates these via `pr
 
 ## TypeScript config
 
-Jest packages extend [tsconfig/tests.json](../../../../tsconfig/tests.json), which adds `"types": ["node", "jest"]`. A typical `tsconfig.tests.json`:
+Jest packages extend [tsconfig/jest.tsconfig.json](../../../../tsconfig/jest.tsconfig.json), which adds `"types": ["node", "jest"]`. A typical `tsconfig.test.json`:
 
-```json
+```jsonc
 {
-  "extends": "../../tsconfig/tests.json",
+  "extends": "../../tsconfig/jest.tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
-    "types": ["jest", "./jest.d.ts"],
-    "noEmit": true,
-    "noUnusedLocals": false
   },
-  "include": ["./tests"]
+  "include": ["./tests", "./src/**/*.test.ts"],
+  "references": [
+    { "path": "./tsconfig.build.json" },
+    // [Add references to any local packages imported from tests]
+  ],
 }
 ```
 

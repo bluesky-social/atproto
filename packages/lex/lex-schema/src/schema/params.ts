@@ -1,30 +1,30 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  Infer,
-  InferInput,
-  InferOutput,
+  type Infer,
+  type InferInput,
+  type InferOutput,
   Issue,
   IssueInvalidType,
   IssueInvalidValue,
   LexValidationError,
-  ParseOptions,
+  type ParseOptions,
   Schema,
   ValidationContext,
-  Validator,
-  WithOptionalProperties,
-} from '../core.js'
-import { lazyProperty } from '../util/lazy-property.js'
-import { memoizedOptions } from '../util/memoize.js'
-import { ArraySchema, array } from './array.js'
-import { BooleanSchema, boolean } from './boolean.js'
-import { dict } from './dict.js'
-import { EnumSchema } from './enum.js'
-import { IntegerSchema, integer } from './integer.js'
-import { LiteralSchema } from './literal.js'
-import { OptionalSchema, optional } from './optional.js'
-import { StringSchema, string } from './string.js'
-import { union } from './union.js'
-import { WithDefaultSchema } from './with-default.js'
+  type Validator,
+  type WithOptionalProperties,
+} from '../core.ts'
+import { lazyProperty } from '../util/lazy-property.ts'
+import { memoizedOptions } from '../util/memoize.ts'
+import { ArraySchema, array } from './array.ts'
+import { BooleanSchema, boolean } from './boolean.ts'
+import { dict } from './dict.ts'
+import { EnumSchema } from './enum.ts'
+import { IntegerSchema, integer } from './integer.ts'
+import { LiteralSchema } from './literal.ts'
+import { OptionalSchema, optional } from './optional.ts'
+import { StringSchema, string } from './string.ts'
+import { union } from './union.ts'
+import { WithDefaultSchema } from './with-default.ts'
 
 /**
  * Scalar types allowed in URL parameters: boolean, integer, or string.
@@ -130,8 +130,11 @@ export class ParamsSchema<
 > {
   readonly type = 'params' as const
 
-  constructor(readonly shape: TShape) {
+  readonly shape: TShape
+
+  constructor(shape: TShape) {
     super()
+    this.shape = shape
   }
 
   get shapeValidators(): Map<string, ParamValidator> {

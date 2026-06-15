@@ -1,11 +1,11 @@
 import {
-  $Typed,
-  InferInput,
-  InferOutput,
+  type $Typed,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
-} from '../core.js'
+  type Validator,
+} from '../core.ts'
 
 /**
  * Interface for validators that have a $type property.

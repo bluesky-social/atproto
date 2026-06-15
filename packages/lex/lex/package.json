@@ -30,6 +30,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "typescript": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
@@ -49,8 +50,8 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "codegen": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
-    "prebuild": "pnpm run codegen",
+    "codegen:lex": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }

@@ -1,12 +1,12 @@
 import { CID } from 'multiformats/cid'
 import {
-  IpldValue,
-  JsonValue,
+  type IpldValue,
+  type JsonValue,
   check,
   ipldToJson,
   jsonToIpld,
 } from '@atproto/common-web'
-import { BlobRef, jsonBlobRef } from './blob-refs.js'
+import { BlobRef, jsonBlobRef } from './blob-refs.ts'
 
 /**
  * @note this is equivalent to `unknown` because of {@link IpldValue} being `unknown`.
@@ -41,9 +41,9 @@ export const lexToIpld = (val: LexValue): IpldValue => {
       return val
     }
     // walk plain objects
-    const toReturn = {}
+    const toReturn: Record<string, LexValue> = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = lexToIpld(val[key])
+      toReturn[key] = lexToIpld((val as any)[key])
     }
     return toReturn
   }
@@ -62,22 +62,24 @@ export const ipldToLex = (val: IpldValue): LexValue => {
   // objects
   if (val && typeof val === 'object') {
     // convert blobs, using hints to avoid expensive is() check
+    const obj = val as Record<string, unknown>
+
     if (
-      (val['$type'] === 'blob' ||
-        (typeof val['cid'] === 'string' &&
-          typeof val['mimeType'] === 'string')) &&
-      check.is(val, jsonBlobRef)
+      (obj['$type'] === 'blob' ||
+        (typeof obj['cid'] === 'string' &&
+          typeof obj['mimeType'] === 'string')) &&
+      check.is(obj, jsonBlobRef)
     ) {
-      return BlobRef.fromJsonRef(val)
+      return BlobRef.fromJsonRef(obj)
     }
     // retain cids, bytes
     if (CID.asCID(val) || val instanceof Uint8Array) {
       return val
     }
     // map plain objects
-    const toReturn = {}
-    for (const key of Object.keys(val)) {
-      toReturn[key] = ipldToLex(val[key])
+    const toReturn: Record<string, LexValue> = {}
+    for (const key of Object.keys(obj)) {
+      toReturn[key] = ipldToLex(obj[key])
     }
     return toReturn
   }

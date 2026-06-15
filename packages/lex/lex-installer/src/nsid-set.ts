@@ -13,16 +13,19 @@ import { NSID } from '@atproto/syntax'
 export class MappedSet<K, I = any> implements Set<K> {
   private set = new Set<I>()
 
+  private readonly encodeValue: (val: K) => I
+  private readonly decodeValue: (enc: I) => K
+
   /**
    * Creates a new MappedSet with custom encoding/decoding functions.
    *
    * @param encodeValue - Function to convert external values to internal representation
    * @param decodeValue - Function to convert internal representation back to external values
    */
-  constructor(
-    private readonly encodeValue: (val: K) => I,
-    private readonly decodeValue: (enc: I) => K,
-  ) {}
+  constructor(encodeValue: (val: K) => I, decodeValue: (enc: I) => K) {
+    this.encodeValue = encodeValue
+    this.decodeValue = decodeValue
+  }
 
   get size(): number {
     return this.set.size

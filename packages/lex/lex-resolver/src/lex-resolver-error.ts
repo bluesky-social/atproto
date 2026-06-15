@@ -42,6 +42,16 @@ export class LexResolverError extends LexError {
   name = 'LexResolverError'
 
   /**
+   * The NSID that failed to resolve.
+   */
+  public readonly nsid: NSID
+
+  /**
+   * Human-readable description of what went wrong during resolution.
+   */
+  public readonly description: string
+
+  /**
    * Creates a new LexResolverError instance.
    *
    * @param nsid - The NSID that failed to resolve
@@ -63,17 +73,13 @@ export class LexResolverError extends LexError {
    * ```
    */
   constructor(
-    /**
-     * The NSID that failed to resolve.
-     */
-    public readonly nsid: NSID,
-    /**
-     * Human-readable description of what went wrong during resolution.
-     */
-    public readonly description = `Could not resolve Lexicon for NSID`,
+    nsid: NSID,
+    description = `Could not resolve Lexicon for NSID`,
     options?: ErrorOptions,
   ) {
     super('LexiconResolutionFailure', `${description} (${nsid})`, options)
+    this.nsid = nsid
+    this.description = description
   }
 
   /**

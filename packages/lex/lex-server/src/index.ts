@@ -1,3 +1,3 @@
-export * from './errors.js'
-export * from './lex-router.js'
-export * from './service-auth.js'
+export * from './errors.ts'
+export * from './lex-router.ts'
+export * from './service-auth.ts'
