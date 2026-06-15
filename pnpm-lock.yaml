@@ -520,6 +520,9 @@ importers:
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
+      '@atproto/sokaa-appview':
+        specifier: workspace:^
+        version: link:../sokaa-appview
       '@atproto/sync':
         specifier: workspace:^
         version: link:../sync

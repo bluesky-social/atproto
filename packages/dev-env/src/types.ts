@@ -45,6 +45,16 @@ export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   imgInvalidator?: ozone.ImageInvalidator
 }
 
+export type SokaaAppViewConfig = {
+  port?: number
+  plcUrl: string
+  repoProvider: string
+  dbPostgresUrl: string
+  dbPostgresSchema: string
+  migration?: string
+  privateKey?: string
+}
+
 export type TestServerParams = {
   dbPostgresUrl: string
   dbPostgresSchema: string
@@ -52,6 +62,7 @@ export type TestServerParams = {
   plc: Partial<PlcConfig>
   bsky: Partial<BskyConfig>
   ozone: Partial<OzoneConfig>
+  sokaa: Partial<SokaaAppViewConfig>
   introspect: Partial<IntrospectConfig>
 }
 

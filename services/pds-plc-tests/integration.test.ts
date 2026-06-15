@@ -1,4 +1,11 @@
 const PDS_URL = process.env.PDS_URL ?? 'http://localhost:3000'
+const APPVIEW_ENABLED =
+  process.env.APPVIEW_ENABLED === 'true' || process.env.APPVIEW_ENABLED === '1'
+
+const PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+)
 
 // Unique suffix per run so handles never collide across test runs
 const suffix = Date.now().toString(36)
@@ -66,6 +73,29 @@ async function getBlob(did: string, cid: string): Promise<Buffer> {
     throw new Error(`getBlob failed ${res.status}: ${text}`)
   }
   return Buffer.from(await res.arrayBuffer())
+}
+
+async function waitForTimelineCaption(
+  jwt: string,
+  caption: string,
+  timeoutMs = 60000,
+): Promise<JsonBody> {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    const data = await xrpcGet(
+      'app.sokaa.feed.getTimeline',
+      { limit: '50' },
+      jwt,
+    )
+    const feed = data.feed as Array<{
+      post: { record: { caption?: string } }
+    }>
+    if (feed?.some((item) => item.post.record.caption === caption)) {
+      return data
+    }
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+  throw new Error(`Timed out waiting for Sokaa timeline caption: ${caption}`)
 }
 
 describe('PDS + PLC integration', () => {
@@ -219,5 +249,92 @@ describe('PDS + PLC integration', () => {
 
     expect(returned.byteLength).toBe(payload.byteLength)
     expect(returned.equals(payload)).toBe(true)
+  })
+})
+
+const describeAppview = APPVIEW_ENABLED ? describe : describe.skip
+
+describeAppview('Sokaa AppView via PDS proxy', () => {
+  let did: string
+  let jwt: string
+
+  const handle = `sokaa${suffix}.test`
+  const email = `sokaa${suffix}@example.com`
+  const password = 'hunter2-sokaa-integration'
+
+  it('create_user — registers account for AppView tests', async () => {
+    const data = await xrpcPost('com.atproto.server.createAccount', {
+      handle,
+      email,
+      password,
+    })
+    did = data.did as string
+    jwt = data.accessJwt as string
+    expect(did.startsWith('did:')).toBe(true)
+  })
+
+  it('getProfile — returns profile via PDS proxy to AppView', async () => {
+    const data = await xrpcGet(
+      'app.sokaa.actor.getProfile',
+      { actor: did },
+      jwt,
+    )
+    expect(data.did).toBe(did)
+    expect(data.handle).toBe(handle)
+  })
+
+  it('getTimeline — indexes Sokaa post and returns it through PDS proxy', async () => {
+    const caption = `integration-sokaa-${suffix}`
+    const blob = await uploadBlob(PNG_1X1, jwt)
+    const image = blob.blob as {
+      ref: { $link: string }
+      mimeType: string
+      size: number
+    }
+
+    await xrpcPost(
+      'com.atproto.repo.createRecord',
+      {
+        repo: did,
+        collection: 'app.sokaa.feed.post',
+        record: {
+          $type: 'app.sokaa.feed.post',
+          caption,
+          media: {
+            $type: 'app.sokaa.embed.images',
+            images: [
+              {
+                alt: 'integration',
+                image: {
+                  $type: 'blob',
+                  ref: image.ref,
+                  mimeType: image.mimeType,
+                  size: image.size,
+                },
+              },
+            ],
+          },
+          createdAt: new Date().toISOString(),
+        },
+      },
+      jwt,
+    )
+
+    const timeline = await waitForTimelineCaption(jwt, caption)
+    const feed = timeline.feed as Array<{
+      post: { record: { caption?: string }; uri: string }
+    }>
+    expect(feed.some((item) => item.post.record.caption === caption)).toBe(true)
+  })
+
+  it('getAuthorFeed — lists author posts via PDS proxy', async () => {
+    const data = await xrpcGet(
+      'app.sokaa.feed.getAuthorFeed',
+      { actor: did, limit: '10' },
+      jwt,
+    )
+    const feed = data.feed as Array<{ post: { uri: string } }>
+    expect(feed.length).toBeGreaterThanOrEqual(1)
+    expect(feed[0].post.uri).toMatch(/^at:\/\//)
   })
 })

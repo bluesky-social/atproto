@@ -35,6 +35,7 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/ozone": "workspace:^",
     "@atproto/pds": "workspace:^",
+    "@atproto/sokaa-appview": "workspace:^",
     "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",

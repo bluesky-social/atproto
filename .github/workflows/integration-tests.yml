@@ -9,6 +9,21 @@ jobs:
   integration-tests:
     runs-on: ubuntu-22.04
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pg
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_sokaa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,26 +51,28 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Start PDS + PLC container
+      - name: Start PDS + PLC + Sokaa AppView container
         run: |
           docker run -d \
             --name pds-plc \
-            -p 3000:3000 \
-            -p 3001:3001 \
+            --network host \
+            -e APPVIEW_ENABLED=true \
+            -e DB_POSTGRES_URL=postgres://pg:password@127.0.0.1:5432/test_sokaa \
+            -e DB_POSTGRES_SCHEMA=integration \
             pds-plc-dev:ci
 
       - name: Wait for PDS to be healthy
         run: |
-          echo "Waiting for PDS to start..."
-          for i in $(seq 1 30); do
+          echo "Waiting for PDS (+ AppView) to start..."
+          for i in $(seq 1 45); do
             if curl -sf http://localhost:3000/xrpc/_health > /dev/null 2>&1; then
               echo "PDS is healthy after ${i}x2s"
               exit 0
             fi
-            echo "  attempt $i/30..."
+            echo "  attempt $i/45..."
             sleep 2
           done
-          echo "PDS did not become healthy within 60s"
+          echo "PDS did not become healthy within 90s"
           docker logs pds-plc
           exit 1
 
@@ -66,6 +83,7 @@ jobs:
         run: pnpm --filter @atproto/pds-plc-tests test:integration
         env:
           PDS_URL: http://localhost:3000
+          APPVIEW_ENABLED: 'true'
 
       - name: Dump container logs on failure
         if: failure()
