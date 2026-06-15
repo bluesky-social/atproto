@@ -103,9 +103,9 @@ export class TestSokaaAppView {
   }
 
   async close() {
+    await this.sub.destroy()
     await this.server.destroy()
     await this.dataplane.destroy()
-    await this.sub.destroy()
     await this.db.close()
   }
 }

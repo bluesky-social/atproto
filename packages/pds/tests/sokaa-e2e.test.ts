@@ -107,7 +107,7 @@ describe('Sokaa AppView via PDS proxy (TestNetworkSokaa)', () => {
   })
 
   afterAll(async () => {
-    await network?.close()
+    await network.close()
   })
 
   it('getTimeline returns own post after firehose indexing', async () => {

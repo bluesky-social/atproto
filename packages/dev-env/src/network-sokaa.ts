@@ -75,8 +75,13 @@ export class TestNetworkSokaa extends TestNetworkNoAppView {
 
   async close() {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
-    await this.sokaa.close()
+    // Stop the firehose client before closing PDS so the websocket shuts down
+    // cleanly (otherwise Firehose may enter a reconnect loop and keep Jest alive).
+    await this.sokaa.sub.destroy()
     await this.pds.close()
+    await this.sokaa.server.destroy()
+    await this.sokaa.dataplane.destroy()
+    await this.sokaa.db.close()
     await this.plc.close()
   }
 }
