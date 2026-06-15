@@ -173,31 +173,6 @@ export function createApiMiddleware<
               requestUri,
             })
 
-        if (requestUri) {
-          // Check if a consent is required for the client, but only if this
-          // call is made within the context of an oauth request.
-
-          const { clientId, parameters } = await server.requestManager.get(
-            requestUri,
-            deviceId,
-          )
-
-          const { authorizedClients } = await server.accountManager.getAccount(
-            account.did,
-          )
-
-          const json = {
-            account,
-            ephemeralToken,
-            consentRequired: server.checkConsentRequired(
-              parameters,
-              authorizedClients.get(clientId),
-            ),
-          }
-
-          return { json }
-        }
-
         const json = { account, ephemeralToken }
         return { json }
       },

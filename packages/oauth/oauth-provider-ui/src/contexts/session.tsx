@@ -88,9 +88,6 @@ export function SessionProvider({
     ({
       account,
       ephemeralToken,
-      // The server will tell us if the user needs to consent to the
-      // authorization. Defaults to true in case of sign-ups
-      consentRequired = true,
       // When a new session is inserted, it is assumed that the user just
       // created the session, and therefore, login is not required.
       loginRequired = false,
@@ -102,7 +99,6 @@ export function SessionProvider({
             account,
             ephemeralToken,
             loginRequired,
-            consentRequired,
           },
           (s) => s.account.did === account.did,
         )

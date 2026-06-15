@@ -188,7 +188,6 @@ export type SignInInput = {
 export type SignInOutput = {
   account: Account
   ephemeralToken?: EphemeralToken
-  consentRequired?: boolean
 }
 
 export type SignUpInput = {

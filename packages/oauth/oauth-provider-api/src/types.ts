@@ -24,7 +24,6 @@ export type Session = {
   info?: never // Prevent relying on this in the frontend
 
   loginRequired: boolean
-  consentRequired?: boolean
 }
 
 export type MultiLangString = Record<string, string | undefined>
