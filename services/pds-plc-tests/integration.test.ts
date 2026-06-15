@@ -75,6 +75,32 @@ async function getBlob(did: string, cid: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer())
 }
 
+async function waitForProfile(
+  did: string,
+  handle: string,
+  jwt: string,
+  timeoutMs = 60000,
+): Promise<JsonBody> {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    const qs = new URLSearchParams({ actor: did }).toString()
+    const headers: Record<string, string> = {}
+    if (jwt) headers['Authorization'] = `Bearer ${jwt}`
+    const res = await fetch(
+      `${PDS_URL}/xrpc/app.sokaa.actor.getProfile?${qs}`,
+      { headers },
+    )
+    if (res.ok) {
+      const data = (await res.json()) as JsonBody
+      if (data.did === did && data.handle === handle) {
+        return data
+      }
+    }
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+  throw new Error(`Timed out waiting for Sokaa profile: ${did}`)
+}
+
 async function waitForTimelineCaption(
   jwt: string,
   caption: string,
@@ -274,11 +300,7 @@ describeAppview('Sokaa AppView via PDS proxy', () => {
   })
 
   it('getProfile — returns profile via PDS proxy to AppView', async () => {
-    const data = await xrpcGet(
-      'app.sokaa.actor.getProfile',
-      { actor: did },
-      jwt,
-    )
+    const data = await waitForProfile(did, handle, jwt)
     expect(data.did).toBe(did)
     expect(data.handle).toBe(handle)
   })

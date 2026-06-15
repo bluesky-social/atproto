@@ -1,5 +1,5 @@
-import { ComAtprotoRepoDefs } from '@atproto/api'
 import { SeedClient, TestNetworkSokaa, usersSeed } from '@atproto/dev-env'
+import { BlobRef } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 
 jest.setTimeout(120_000)
@@ -13,7 +13,7 @@ async function uploadImage(
   network: TestNetworkSokaa,
   did: string,
   sc: SeedClient,
-): Promise<ComAtprotoRepoDefs.BlobRef> {
+): Promise<BlobRef> {
   const agent = network.pds.getClient()
   const res = await agent.com.atproto.repo.uploadBlob(PNG_1X1, {
     encoding: 'image/png',
