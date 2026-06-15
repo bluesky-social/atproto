@@ -269,6 +269,13 @@ export const parseProxyHeader = async (
     return { did, url: ctx.cfg.bskyAppView.url }
   }
 
+  if (
+    ctx.cfg.sokaaAppView &&
+    proxyTo === `${ctx.cfg.sokaaAppView.did}#sokaa_appview`
+  ) {
+    return { did, url: ctx.cfg.sokaaAppView.url }
+  }
+
   const didDoc = await ctx.idResolver.did.resolve(did)
   if (!didDoc) {
     throw new InvalidRequestError('could not resolve proxy did')
@@ -553,6 +560,8 @@ export const PROTECTED_METHODS = new Set<string>([
   ids.ComAtprotoServerUpdateEmail,
 ])
 
+const SOKAA_LEXICON_PREFIX = 'app.sokaa.'
+
 const defaultService = (
   ctx: AppContext,
   nsid: string,
@@ -598,6 +607,12 @@ const defaultService = (
         serviceInfo: ctx.cfg.reportService,
       }
     default:
+      if (nsid.startsWith(SOKAA_LEXICON_PREFIX)) {
+        return {
+          serviceId: 'sokaa_appview',
+          serviceInfo: ctx.cfg.sokaaAppView,
+        }
+      }
       return {
         serviceId: 'bsky_appview',
         serviceInfo: ctx.cfg.bskyAppView,

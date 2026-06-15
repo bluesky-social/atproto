@@ -188,6 +188,18 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     }
   }
 
+  let sokaaAppViewCfg: ServerConfig['sokaaAppView'] = null
+  if (env.sokaaAppViewUrl) {
+    assert(
+      env.sokaaAppViewDid,
+      'if sokaa appview service url is configured, must configure its did as well.',
+    )
+    sokaaAppViewCfg = {
+      url: env.sokaaAppViewUrl,
+      did: env.sokaaAppViewDid,
+    }
+  }
+
   let modServiceCfg: ServerConfig['modService'] = null
   if (env.modServiceUrl) {
     assert(
@@ -340,6 +352,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmail: moderationEmailCfg,
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
+    sokaaAppView: sokaaAppViewCfg,
     modService: modServiceCfg,
     reportService: reportServiceCfg,
     redis: redisCfg,
@@ -364,6 +377,7 @@ export type ServerConfig = {
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
   bskyAppView: BksyAppViewConfig | null
+  sokaaAppView: SokaaAppViewConfig | null
   modService: ModServiceConfig | null
   reportService: ReportServiceConfig | null
   redis: RedisScratchConfig | null
@@ -513,6 +527,11 @@ export type BksyAppViewConfig = {
   url: string
   did: string
   cdnUrlPattern?: string
+}
+
+export type SokaaAppViewConfig = {
+  url: string
+  did: string
 }
 
 export type ModServiceConfig = {
