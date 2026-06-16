@@ -333,14 +333,15 @@ export async function generateMockSetup(env: TestNetwork) {
       rkey: urip.rkey,
     })
     const author = picka(userAgents)
+    const targetRef = { uri: target.uri, cid: target.cid }
     posts.push(
       await author.app.bsky.feed.post.create(
         { repo: author.did },
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply ? target.value.reply.root : target,
-            parent: target,
+            root: target.value.reply ? target.value.reply.root : targetRef,
+            parent: targetRef,
           },
           createdAt: date.next().value,
         },
