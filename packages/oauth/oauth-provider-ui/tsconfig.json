@@ -1,7 +1,7 @@
 {
   "include": [],
   "compilerOptions": {
-    // Needed for Zed's eslint integration to properly support the "import/order" rule (looks like )
+    // Needed by Zed's eslint extension
     "paths": { "#/*": ["./src/*"] },
   },
   "references": [

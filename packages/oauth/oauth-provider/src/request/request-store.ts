@@ -43,11 +43,11 @@ export interface RequestStore {
 }
 
 export const isRequestStore = buildInterfaceChecker<RequestStore>([
+  'consumeRequestCode',
   'createRequest',
+  'deleteRequest',
   'readRequest',
   'updateRequest',
-  'deleteRequest',
-  'consumeRequestCode',
 ])
 
 export function asRequestStore<V extends Partial<RequestStore>>(

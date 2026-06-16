@@ -8,7 +8,7 @@ Type-check from the package directory only — root `pnpm verify:types` is fine 
 
 ```bash
 cd packages/oauth/oauth-provider-ui
-pnpm exec tsc --build tsconfig.json
+pnpm exec tsgo --build tsconfig.json
 ```
 
 The hooks-driven IDE diagnostics surface prettier-tailwind class-ordering violations as errors. When the formatter reorders Tailwind classes, accept its order — don't argue with it.

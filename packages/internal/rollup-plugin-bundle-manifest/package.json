@@ -34,10 +34,9 @@
     "rollup": "^4.0.0"
   },
   "devDependencies": {
-    "rollup": "^4.10.0",
-    "typescript": "^6.0.3"
+    "rollup": "^4.10.0"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsgo --build tsconfig.json"
   }
 }

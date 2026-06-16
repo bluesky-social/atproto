@@ -70,12 +70,12 @@ export interface TokenStore {
 
 export const isTokenStore = buildInterfaceChecker<TokenStore>([
   'createToken',
-  'readToken',
   'deleteToken',
-  'rotateToken',
-  'findTokenByRefreshToken',
   'findTokenByCode',
+  'findTokenByRefreshToken',
   'listAccountTokens',
+  'readToken',
+  'rotateToken',
 ])
 
 export function asTokenStore<V extends Partial<TokenStore>>(
