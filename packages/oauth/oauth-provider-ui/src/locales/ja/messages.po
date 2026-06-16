@@ -78,7 +78,7 @@ msgstr ""
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:857
+#: src/components/utils/scope-description.tsx:863
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0> によって管理されているサービス"
 
@@ -86,11 +86,11 @@ msgstr "<0>{domain}</0> によって管理されているサービス"
 msgid "About"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:388
+#: src/components/utils/scope-description.tsx:394
 msgid "Access specific parts of your Bluesky account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:383
+#: src/components/utils/scope-description.tsx:389
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr ""
 
@@ -157,15 +157,15 @@ msgstr "何らかのエラーが発生しました"
 msgid "Another account"
 msgstr "他のアカウント"
 
-#: src/components/utils/scope-description.tsx:885
+#: src/components/utils/scope-description.tsx:891
 msgid "Any collection"
 msgstr "すべてのコレクション"
 
-#: src/components/utils/scope-description.tsx:827
+#: src/components/utils/scope-description.tsx:833
 msgid "Any method"
 msgstr "すべてのメソッド"
 
-#: src/components/utils/scope-description.tsx:866
+#: src/components/utils/scope-description.tsx:872
 msgid "Any service"
 msgstr "すべてのサービス"
 
@@ -182,8 +182,8 @@ msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:498
-#: src/components/utils/scope-description.tsx:514
+#: src/components/utils/scope-description.tsx:504
+#: src/components/utils/scope-description.tsx:520
 msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr ""
@@ -210,15 +210,15 @@ msgstr "戻る"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
-#: src/components/utils/scope-description.tsx:751
+#: src/components/utils/scope-description.tsx:757
 msgid "Blob storage"
 msgstr "Blobストレージ"
 
-#: src/components/utils/scope-description.tsx:842
+#: src/components/utils/scope-description.tsx:848
 msgid "Bluesky App services"
 msgstr "Blueksyアプリサービス"
 
-#: src/components/utils/scope-description.tsx:849
+#: src/components/utils/scope-description.tsx:855
 msgid "Bluesky Chat services"
 msgstr "Blueskyチャットサービス"
 
@@ -236,7 +236,7 @@ msgstr ""
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
 
-#: src/components/utils/scope-description.tsx:577
+#: src/components/utils/scope-description.tsx:583
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
@@ -251,7 +251,7 @@ msgstr "キャンセル"
 msgid "Cannot remove current device"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:474
+#: src/components/utils/scope-description.tsx:480
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@handle</0> を変更"
 
@@ -259,7 +259,7 @@ msgstr "<0>@handle</0> を変更"
 msgid "Change your password"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:434
+#: src/components/utils/scope-description.tsx:440
 msgid "Chat"
 msgstr "チャット"
 
@@ -345,7 +345,7 @@ msgstr ""
 msgid "Copy to clipboard"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:720
+#: src/components/utils/scope-description.tsx:726
 msgid "Create"
 msgstr "作成"
 
@@ -353,7 +353,7 @@ msgstr "作成"
 msgid "Create a new account"
 msgstr "新規アカウントの作成"
 
-#: src/components/utils/scope-description.tsx:624
+#: src/components/utils/scope-description.tsx:630
 msgid "Create, update, and delete any public data linked to your account"
 msgstr ""
 
@@ -361,11 +361,11 @@ msgstr ""
 msgid "Custom domains are not supported"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:719
+#: src/components/utils/scope-description.tsx:725
 msgid "Data"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:722
+#: src/components/utils/scope-description.tsx:728
 msgid "Delete"
 msgstr "削除"
 
@@ -577,7 +577,7 @@ msgstr ""
 msgid "Identifier"
 msgstr "識別子"
 
-#: src/components/utils/scope-description.tsx:467
+#: src/components/utils/scope-description.tsx:473
 msgid "Identity"
 msgstr "識別情報"
 
@@ -678,7 +678,7 @@ msgstr "表示する"
 msgid "Manage applications that have access to your account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:470
+#: src/components/utils/scope-description.tsx:476
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "あなたの <1>@handle</1> を含む <0>すべての識別情報</0> を管理する"
 
@@ -690,11 +690,11 @@ msgstr ""
 msgid "Manage your active sessions"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:381
+#: src/components/utils/scope-description.tsx:387
 msgid "Manage your profile, posts, likes and follows"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理"
 
-#: src/components/utils/scope-description.tsx:376
+#: src/components/utils/scope-description.tsx:382
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理し、あなたのプライベートな設定を読み取る"
 
@@ -783,11 +783,11 @@ msgctxt "Error"
 msgid "Payload"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:515
+#: src/components/utils/scope-description.tsx:521
 msgid "Perform actions on your behalf"
 msgstr "あなたに代わってアクションを実行する"
 
-#: src/components/utils/scope-description.tsx:500
+#: src/components/utils/scope-description.tsx:506
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "あなたに代わって認証されたアクションを <0>任意のサービス</0> が実行する"
 
@@ -831,11 +831,11 @@ msgstr ""
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
 
-#: src/components/utils/scope-description.tsx:638
+#: src/components/utils/scope-description.tsx:644
 msgid "Publish changes"
 msgstr "公開された変更"
 
-#: src/components/utils/scope-description.tsx:435
+#: src/components/utils/scope-description.tsx:441
 msgid "Read and send messages"
 msgstr "メッセージの読み取りと送信"
 
@@ -847,7 +847,7 @@ msgstr "あなたのアカウントのメールアドレスを読み取り、更
 msgid "Read your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取る"
 
-#: src/components/utils/scope-description.tsx:390
+#: src/components/utils/scope-description.tsx:396
 msgid "Read your private preferences"
 msgstr ""
 
@@ -856,8 +856,8 @@ msgstr ""
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
-#: src/components/utils/scope-description.tsx:622
-#: src/components/utils/scope-description.tsx:637
+#: src/components/utils/scope-description.tsx:628
+#: src/components/utils/scope-description.tsx:643
 msgid "Repository"
 msgstr "リポジトリ"
 
@@ -998,11 +998,11 @@ msgstr "アプリは、あなたのネットワーク識別情報を完全に制
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "アプリは、あなたに代わって次のアクションを実行するために必要な権限を要求しています："
 
-#: src/components/utils/scope-description.tsx:403
+#: src/components/utils/scope-description.tsx:409
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:518
+#: src/components/utils/scope-description.tsx:524
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr ""
 
@@ -1072,7 +1072,7 @@ msgstr ""
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:580
+#: src/components/utils/scope-description.tsx:586
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "対象"
@@ -1106,7 +1106,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:721
+#: src/components/utils/scope-description.tsx:727
 msgid "Update"
 msgstr "更新"
 
@@ -1125,7 +1125,7 @@ msgstr ""
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:754
+#: src/components/utils/scope-description.tsx:760
 msgid "Upload files"
 msgstr "ファイルのアップロード"
 
@@ -1294,7 +1294,7 @@ msgstr "あなたのフルユーザー名： {0}"
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
 
-#: src/components/utils/scope-description.tsx:641
+#: src/components/utils/scope-description.tsx:647
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr ""
 

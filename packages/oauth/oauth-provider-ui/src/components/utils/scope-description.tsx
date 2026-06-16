@@ -273,12 +273,6 @@ function AccountPermissions({
 }
 
 /**
- * Will display detailed rep and rpc permissions unless the app only has
- * app.bsky or chat.bsky specific permissions, in which case the
- * <BlueskyAppviewPermissions /> and <BlueskyChatPermissions /> components cover
- * them.
- */
-/**
  * True when every repo/rpc permission in the request targets Bluesky-specific
  * collections or methods (app.bsky.*, chat.bsky.*, com.atproto.moderation.
  * createReport), in which case <BlueskyAppviewPermissions /> /
@@ -314,12 +308,22 @@ function hasOnlyBskyAppSpecificPermissions(
   return foundOne
 }
 
+/**
+ * Will display detailed repo and rpc permissions unless the app only has
+ * app.bsky or chat.bsky specific permissions, in which case the
+ * <BlueskyAppviewPermissions /> and <BlueskyChatPermissions /> components cover
+ * them.
+ */
 function FineGrainedPermissions({
   permissions,
 }: {
   permissions: ScopePermissionsTransition
 }) {
-  if (hasOnlyBskyAppSpecificPermissions(permissions)) return null
+  const hasOnlyBskySpecific = useMemo(() => {
+    return hasOnlyBskyAppSpecificPermissions(permissions)
+  }, [permissions])
+
+  if (hasOnlyBskySpecific) return null
 
   return (
     <>
@@ -350,7 +354,9 @@ function BlueskyAppviewPermissions({
   const hasBroadBskyAppRepo = useMemo(() => {
     return (
       permissions.hasTransitionGeneric ||
-      permissions.allowsRepo({ collection: '*', action: 'create' })
+      permissions.allowsRepo({ collection: '*', action: 'create' }) ||
+      permissions.allowsRepo({ collection: '*', action: 'update' }) ||
+      permissions.allowsRepo({ collection: '*', action: 'delete' })
     )
   }, [permissions])
 
