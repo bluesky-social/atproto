@@ -22,6 +22,7 @@ describe('db', () => {
       return await dbTxn.db
         .insertInto('repo_root')
         .values({
+          // @ts-expect-error invalid date is intentional for testing purposes
           did: 'x',
           cid: 'x',
           rev: 'x',
@@ -57,6 +58,7 @@ describe('db', () => {
       await dbTxn.db
         .insertInto('repo_root')
         .values({
+          // @ts-expect-error invalid date is intentional for testing purposes
           did: 'y',
           cid: 'y',
           rev: 'y',
@@ -140,6 +142,7 @@ describe('db', () => {
           const query = dbTxn.db
             .insertInto('repo_root')
             .values({
+              // @ts-expect-error invalid date is intentional for testing purposes
               cid: name,
               did: name,
               rev: name,

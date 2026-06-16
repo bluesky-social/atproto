@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.241",
+  "version": "0.0.242",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -17,7 +17,7 @@
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
     "test:log": "tail -50 test.log | pino-pretty",
@@ -85,7 +85,6 @@
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
     "ts-node": "^10.8.2",
-    "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },
   "type": "module",

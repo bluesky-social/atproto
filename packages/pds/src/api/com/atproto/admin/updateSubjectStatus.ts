@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
         const status = await ctx.accountManager.getAccountStatus(subject.did)
-        await ctx.sequencer.sequenceAccountEvt(subject.did, status)
+        await ctx.sequencer.sequenceAccount(subject.did, status)
       }
 
       return {

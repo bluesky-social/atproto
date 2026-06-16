@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-node",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the NodeJS",
   "keywords": [
@@ -39,10 +39,8 @@
     "@atproto/oauth-client": "workspace:^",
     "@atproto/oauth-types": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

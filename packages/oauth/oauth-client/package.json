@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "engines": {
     "node": ">=22"
   },
@@ -40,10 +40,8 @@
     "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

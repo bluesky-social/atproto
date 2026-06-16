@@ -68,11 +68,11 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
       { name: 'OmitKey', isTypeOnly: true },
     ])
 
-  // tsc adds protection against circular imports, which hurts bundle size.
-  // Since we know that lexicon.ts and util.ts do not depend on the file being
-  // generated, we can safely bypass this protection.
-  // Note that we are not using `import * as util from '../../util.js'` because
-  // typescript will emit is own helpers for the import, which we want to avoid.
+  // TypeScript adds protection against circular imports, which hurts bundle
+  // size. Since we know that lexicon.ts and util.ts do not depend on the file
+  // being generated, we can safely bypass this protection. Note that we are not
+  // using `import * as util from '../../util.js'` because typescript will emit
+  // is own helpers for the import, which we want to avoid.
   file.addVariableStatement({
     isExported: false,
     declarationKind: VariableDeclarationKind.Const,

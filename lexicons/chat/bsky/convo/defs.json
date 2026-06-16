@@ -48,7 +48,20 @@
         "embed": {
           "type": "union",
           "refs": ["app.bsky.embed.record", "chat.bsky.embed.joinLink"]
+        },
+        "replyTo": {
+          "description": "If set, the message this message is replying to. The referenced message must be in the same convo.",
+          "type": "ref",
+          "ref": "#replyRef"
         }
+      }
+    },
+    "replyRef": {
+      "description": "A reference to another message within the same convo, used to indicate that a message is a reply to it.",
+      "type": "object",
+      "required": ["messageId"],
+      "properties": {
+        "messageId": { "type": "string" }
       }
     },
     "messageView": {
@@ -78,6 +91,11 @@
           "type": "array",
           "description": "Reactions to this message, in ascending order of creation time.",
           "items": { "type": "ref", "ref": "#reactionView" }
+        },
+        "replyTo": {
+          "description": "If set, the message this message is replying to. The full view of the referenced message is embedded so the client can render it inline. Only a single level is embedded: the embedded message will not itself have a populated 'replyTo' field even if it was also a reply.",
+          "type": "union",
+          "refs": ["#messageView", "#deletedMessageView"]
         },
         "sender": { "type": "ref", "ref": "#messageViewSender" },
         "sentAt": { "type": "string", "format": "datetime" }
