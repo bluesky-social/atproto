@@ -88,11 +88,11 @@ msgstr "À propos"
 
 #: src/components/utils/scope-description.tsx:388
 msgid "Access specific parts of your Bluesky account"
-msgstr "Accéder à certaines parties de votre compte Bluesky"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:383
 msgid "Access specific parts of your Bluesky account and read your private preferences"
-msgstr "Accéder à certaines parties de votre compte Bluesky et lire vos préférences privées"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:266
 #: src/pages/account/(authenticated)/route.tsx:56
@@ -859,7 +859,7 @@ msgstr "Lire l'adresse email de votre compte"
 
 #: src/components/utils/scope-description.tsx:390
 msgid "Read your private preferences"
-msgstr "Lire vos préférences privées"
+msgstr ""
 
 #: src/components/sign-in-form.tsx:227
 #: src/components/sign-in-form.tsx:232
@@ -1010,7 +1010,7 @@ msgstr "L'application demande les autorisations nécessaires pour effectuer les 
 
 #: src/components/utils/scope-description.tsx:403
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
-msgstr "L'application demande les autorisations nécessaires pour effectuer les actions suivantes sur votre compte Bluesky :"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:518
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
