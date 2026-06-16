@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-password-session",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "node": ">=22"
   },
@@ -45,7 +45,7 @@
   },
   "scripts": {
     "prebuild": "node ./scripts/lex-build.mjs",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/jwk-jose",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engines": {
     "node": ">=22"
   },
@@ -28,10 +28,8 @@
     "@atproto/jwk": "workspace:^",
     "jose": "^5.2.0"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

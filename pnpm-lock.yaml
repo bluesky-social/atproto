@@ -208,9 +208,7 @@ overrides:
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
 
 patchedDependencies:
-  kysely@0.22.0:
-    hash: 52862ec1e676090351484a2f22e0211649e62b691c5bebca14a0489a14d3ad4e
-    path: patches/kysely@0.22.0.patch
+  kysely@0.22.0: 52862ec1e676090351484a2f22e0211649e62b691c5bebca14a0489a14d3ad4e
 
 importers:
 
@@ -246,6 +244,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.59.2
         version: 8.59.2(eslint@8.57.0)(typescript@6.0.3)
+      '@typescript/native-preview':
+        specifier: ^7.0.0-beta
+        version: 7.0.0-dev.20260614.1
       '@vitest/coverage-v8':
         specifier: 4.0.16
         version: 4.0.16(vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1))
@@ -288,9 +289,6 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.6.11
         version: 0.6.11(prettier@3.2.5)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -334,9 +332,6 @@ importers:
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/aws:
     dependencies:
@@ -376,10 +371,6 @@ importers:
       uint8arrays:
         specifier: ^5.0.0
         version: 5.1.1
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/bsky:
     dependencies:
@@ -546,9 +537,6 @@ importers:
       ts-node:
         specifier: ^10.8.2
         version: 10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -607,9 +595,6 @@ importers:
       ts-node:
         specifier: ^10.8.2
         version: 10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/common:
     dependencies:
@@ -632,9 +617,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       uint8arrays:
         specifier: ^5.0.0
         version: 5.1.1
@@ -657,9 +639,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/crypto:
     dependencies:
@@ -679,9 +658,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/dev-env:
     dependencies:
@@ -752,9 +728,6 @@ importers:
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.21
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/did:
     dependencies:
@@ -768,9 +741,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/identity:
     dependencies:
@@ -802,9 +772,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/did-resolver:
     dependencies:
@@ -826,20 +793,12 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/fetch:
     dependencies:
       '@atproto-labs/pipe':
         specifier: workspace:^
         version: link:../pipe
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/fetch-node:
     dependencies:
@@ -855,10 +814,6 @@ importers:
       undici:
         specifier: ^6.14.1
         version: 6.19.8
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/handle-resolver:
     dependencies:
@@ -874,10 +829,6 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/handle-resolver-node:
     dependencies:
@@ -890,10 +841,6 @@ importers:
       '@atproto/did':
         specifier: workspace:^
         version: link:../../did
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/identity-resolver:
     dependencies:
@@ -903,16 +850,8 @@ importers:
       '@atproto-labs/handle-resolver':
         specifier: workspace:^
         version: link:../handle-resolver
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
-  packages/internal/pipe:
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
+  packages/internal/pipe: {}
 
   packages/internal/rollup-plugin-bundle-manifest:
     dependencies:
@@ -923,15 +862,8 @@ importers:
       rollup:
         specifier: ^4.10.0
         version: 4.34.9
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
-  packages/internal/simple-store:
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
+  packages/internal/simple-store: {}
 
   packages/internal/simple-store-memory:
     dependencies:
@@ -941,10 +873,6 @@ importers:
       lru-cache:
         specifier: ^10.2.0
         version: 10.2.0
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/simple-store-redis:
     dependencies:
@@ -954,10 +882,6 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/internal/xrpc-utils:
     dependencies:
@@ -967,10 +891,6 @@ importers:
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../../xrpc-server
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/lex-cli:
     dependencies:
@@ -998,10 +918,6 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/lex/lex:
     dependencies:
@@ -1336,9 +1252,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/lexicon-resolver:
     dependencies:
@@ -1364,9 +1277,6 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -1379,10 +1289,6 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/jwk-jose:
     dependencies:
@@ -1392,10 +1298,6 @@ importers:
       jose:
         specifier: ^5.2.0
         version: 5.3.0
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/jwk-webcrypto:
     dependencies:
@@ -1408,10 +1310,6 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/oauth-client:
     dependencies:
@@ -1455,9 +1353,6 @@ importers:
         specifier: ^3.23.8
         version: 3.24.2
     devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -1491,10 +1386,6 @@ importers:
       core-js:
         specifier: ^3
         version: 3.45.1
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/oauth-client-browser-example:
     devDependencies:
@@ -1597,10 +1488,6 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:^
         version: link:../oauth-types
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/oauth-provider:
     dependencies:
@@ -1710,10 +1597,6 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:^
         version: link:../oauth-types
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/oauth-provider-ui:
     devDependencies:
@@ -1807,9 +1690,6 @@ importers:
       tailwindcss:
         specifier: ^4.1.3
         version: 4.1.3
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       ua-parser-js:
         specifier: ^2.0.3
         version: 2.0.3(encoding@0.1.13)
@@ -1836,9 +1716,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/oauth/oauth-types:
     dependencies:
@@ -1851,10 +1728,6 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/ozone:
     dependencies:
@@ -1967,9 +1840,6 @@ importers:
       ts-node:
         specifier: ^10.8.2
         version: 10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/pds:
     dependencies:
@@ -2160,9 +2030,6 @@ importers:
       ts-node:
         specifier: ^10.8.2
         version: 10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       ws:
         specifier: ^8.12.0
         version: 8.12.0
@@ -2197,9 +2064,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/sync:
     dependencies:
@@ -2234,9 +2098,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/syntax:
     dependencies:
@@ -2247,9 +2108,6 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -2284,9 +2142,6 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.18.2
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -2309,9 +2164,6 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/xrpc:
     dependencies:
@@ -2321,10 +2173,6 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
-    devDependencies:
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   packages/xrpc-server:
     dependencies:
@@ -2413,9 +2261,6 @@ importers:
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
 
   services/bsky:
     dependencies:
@@ -3992,6 +3837,7 @@ packages:
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -3999,6 +3845,7 @@ packages:
 
   '@humanwhocodes/object-schema@2.0.2':
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
+    deprecated: Use @eslint/object-schema instead
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -5920,14 +5767,63 @@ packages:
     resolution: {integrity: sha512-NwjLUnGy8/Zfx23fl50tRC8rYaYnM52xNRYFAXvmiil9yh1+K6aRVQMnzW6gQB/1DLgWt977lYQn7C+wtgXZiA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-2JHbdJ00FKTKDR1+NL4zhQBDlFZfZHEXaAarV6kbEjV0P47qKnSrAzzKHuponG0B9FqkPEMHOgu7WGJTBW2rHw==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-/8enyEb1tDsVvUp4rDeA5DernrvWgD6cQ4rY6O6PH6BQK8fqwY+CcHEHmw2xgwfqoswHNYjznLvmQmHBOjHqLw==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-jqhqAXqyEUxJpno/wRfWGa72R3VTt7p2LRTOFJ0C1bx5dEKrVosQSOdr2m9+2VhjXFXNvorXsGZPIWqxLOo28Q==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-zYrUKq5oC6fUoHpOmT3B65hFMhbdIlLp7T9RW1/6a+wSYoq9xTRAeFufQ2XZ9cpTJ1tfIvlUmtgJJ5CGE/cOrg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm]
+    os: [linux]
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-K2c/DN7Q3a6Z+KIl7bq45xByuuGjacqWO/UPCa/iTBA/m6GDzoMJ/Q/DBLtLRHyROBRiy5kjgEZfyLy3Tp8ygw==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-C+C25Grr4sCbQIYPT5WfKYIL613ZIN9aGcUwDGMSTmIQ3azIR5MtdkSF4l4vsOC4lF8HwFV83MDa28JuQYhQFg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-nJBR61NGiCMBJOpdzJ4ZgA/HEd+fqIb99ur39UljSH9xvFKFlRwDosyAQFD8UEwrZsUbXN0VPLJY5MDknug3GA==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [win32]
+
+  '@typescript/native-preview@7.0.0-dev.20260614.1':
+    resolution: {integrity: sha512-4N1ZBHJUcsjKJQnUCxKUemV3jnm0PKZIZ4xh7dXN/3/AfmckE8Z1llyqOFfDwGOf8oQpdgkwQ6JUm7pqI3bGPg==}
+    engines: {node: '>=16.20.0'}
+    hasBin: true
+
   '@typescript/vfs@1.5.0':
     resolution: {integrity: sha512-AJS307bPgbsZZ9ggCT3wwpg3VbTKMFNHfaY/uF0ahSkYYrPF2dSSKDNIDIQAHm9qJqbLvCsSJH7yN4Vs/CsMMg==}
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     resolution: {integrity: sha512-ppLRUgHVaGRWUx0R0Ut06Mjo9gBaBkg3v/8AxusGLhsIotbBLuRk51rAzqLC8gq6NyyAojEXglNjzf6R948DNw==}
@@ -6086,6 +5982,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -6100,6 +5997,7 @@ packages:
 
   acorn-import-assertions@1.9.0:
     resolution: {integrity: sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==}
+    deprecated: package has been renamed to acorn-import-attributes
     peerDependencies:
       acorn: ^8
 
@@ -6213,6 +6111,7 @@ packages:
   are-we-there-yet@3.0.1:
     resolution: {integrity: sha512-QZW4EDmGwlYur0Yyf/b2uGucHQMa8aFUP7eu9ddR73vvhFyt4V0Vl3QHPcTNJ8l6qYOBdxgXdnBXQrHilfRQBg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+    deprecated: This package is no longer supported.
 
   arg@4.1.3:
     resolution: {integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==}
@@ -6463,6 +6362,7 @@ packages:
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   better-opn@3.0.2:
     resolution: {integrity: sha512-aVNobHnJqLiUelTaHat9DZ1qM2w0C0Eym4LPI/3JxOnSokGVdsl1T1kN7TFvsEAD8G47A6VKQ0TVHqbBnYMJlQ==}
@@ -6502,6 +6402,7 @@ packages:
 
   boolean@3.2.0:
     resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   bowser@2.11.0:
     resolution: {integrity: sha512-AlcaJBi/pqqJBIQ8U9Mcpc9i8Aqxn88Skv5d+xBX006BY5u8N3mGLHa5Lgppa7L/HfwgwLgZ6NYs+Ag6uUmJRA==}
@@ -7526,6 +7427,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -7911,6 +7813,7 @@ packages:
   gauge@4.0.4:
     resolution: {integrity: sha512-f9m+BEN5jkg6a0fZjleidjN51VE1X+mPFQ2DJ0uv1V39oCLCbsGe6yjbBnp7eK7z/+GAon99a3nHuqbuuthyPg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+    deprecated: This package is no longer supported.
 
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
@@ -7996,10 +7899,12 @@ packages:
   glob@10.3.10:
     resolution: {integrity: sha512-fa46+tv1Ak0UPK1TOy/pZrIybNNt4HCv7SDzwyfiOZkvZLEbjsZkJBPtDHVshZjbecAoAGSC20MjLDG/qr679g==}
     engines: {node: '>=16 || 14 >=14.17'}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@10.5.0:
@@ -8010,15 +7915,17 @@ packages:
   glob@11.0.1:
     resolution: {integrity: sha512-zrQDm8XPnYEKawJScsnM0QzobJxlT/kHOOlRTio8IH/GrmxRE5fjllkzdaHclIuNjUQTJYH2xHNIGfdpJkDJUw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   glob@8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
     engines: {node: '>=12'}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   global-dirs@0.1.1:
     resolution: {integrity: sha512-NknMLn7F2J7aflwFOlGdNIuCDpN3VGoSoB+aap3KABFWbHVn1TCgFC+np23J8W2BiZbjfEw3BFBycSMv1AFblg==}
@@ -8273,6 +8180,7 @@ packages:
 
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -9514,6 +9422,7 @@ packages:
   npmlog@6.0.2:
     resolution: {integrity: sha512-/vBvz5Jfr9dT/aFWd0FIRf+T/Q2WBsLENygUaFUqstqsycmZAP/t5BvFJTK0viFmSUxiUKTUplWy5vt+rvKIxg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+    deprecated: This package is no longer supported.
 
   nullthrows@1.1.1:
     resolution: {integrity: sha512-2vPPEi+Z7WqML2jZYddDIfy5Dqb0r2fze2zTxNNknZaFpVHU3mFB3R+DWeJWGVx0ecvttSGlJTI+WG+8Z4cDWw==}
@@ -10632,6 +10541,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   spark-md5@3.0.2:
     resolution: {integrity: sha512-wcFzz9cDfbuqe0FZzfi2or1sgyIrsDwmPwfZC4hiNidPdPINjeUwNfv5kldczoEAcjl9Y1L3SM7Uz2PUEQzxQw==}
@@ -10839,10 +10749,12 @@ packages:
   tar@6.1.15:
     resolution: {integrity: sha512-/zKt9UyngnxIT/EAGYuxaMYgOIJiP81ab9ZfkILq4oNLPFX50qyYmu7jRj9qeXoxmJHjGlbH0+cm2uy1WCs10A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   tar@7.5.1:
     resolution: {integrity: sha512-nlGpxf+hv0v7GkWBK2V9spgactGOp0qvfWRxUMjqHyzrt3SgwE48DIv/FhqPHJYLHpgW1opq3nERbz5Anq7n1g==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
@@ -11223,10 +11135,12 @@ packages:
 
   uuid@7.0.3:
     resolution: {integrity: sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -12412,7 +12326,7 @@ snapshots:
 
   '@babel/helper-wrap-function@7.28.3':
     dependencies:
-      '@babel/template': 7.27.2
+      '@babel/template': 7.28.6
       '@babel/traverse': 7.28.4
       '@babel/types': 7.29.0
     transitivePeerDependencies:
@@ -16088,6 +16002,37 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.59.2
       eslint-visitor-keys: 5.0.1
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20260614.1':
+    optional: true
+
+  '@typescript/native-preview@7.0.0-dev.20260614.1':
+    optionalDependencies:
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20260614.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20260614.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20260614.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20260614.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20260614.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20260614.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20260614.1
 
   '@typescript/vfs@1.5.0':
     dependencies:
