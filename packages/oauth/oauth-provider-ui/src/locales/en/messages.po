@@ -95,11 +95,11 @@ msgstr "Account"
 msgid "Account avatar"
 msgstr "Account avatar"
 
-#: src/data/account.ts:24
+#: src/data/account.ts:23
 msgid "Account deactivated"
 msgstr "Account deactivated"
 
-#: src/data/account.ts:102
+#: src/data/account.ts:92
 msgid "Account deleted"
 msgstr "Account deleted"
 
@@ -115,8 +115,8 @@ msgstr "Account name"
 msgid "Account overview"
 msgstr "Account overview"
 
-#: src/data/account.ts:50
-#: src/components/reactivate-account-view.tsx:29
+#: src/authorization-page.tsx:221
+#: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Account reactivated"
 
@@ -146,7 +146,7 @@ msgstr "Already have a code?"
 msgid "An application on your device"
 msgstr "An application on your device"
 
-#: src/contexts/notifications.tsx:128
+#: src/contexts/notifications.tsx:123
 #: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "An error occurred"
@@ -179,7 +179,7 @@ msgstr "Any service"
 msgid "Apps"
 msgstr "Apps"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:60
+#: src/pages/account/(authenticated)/apps/page.tsx:58
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 
@@ -205,7 +205,7 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:129
+#: src/pages/account/(authenticated)/apps/page.tsx:108
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
@@ -252,7 +252,7 @@ msgid "Call"
 msgstr "Call"
 
 #: src/contexts/authentication.tsx:189
-#: src/components/reactivate-account-view.tsx:79
+#: src/components/reactivate-account-view.tsx:54
 #: src/components/delete-account-dialog.tsx:123
 #: src/components/delete-account-dialog.tsx:157
 #: src/components/delete-account-dialog.tsx:208
@@ -261,7 +261,7 @@ msgstr "Call"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:124
+#: src/pages/account/(authenticated)/devices/page.tsx:108
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
@@ -290,16 +290,16 @@ msgstr "Check your {0} email for a login code and enter it here."
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Check your email for the confirmation code to enter below:"
 
-#: src/data/account.ts:77
+#: src/data/account.ts:70
 msgid "Check your inbox for the confirmation code."
 msgstr "Check your inbox for the confirmation code."
 
-#: src/data/email.ts:76
+#: src/data/email.ts:69
 msgid "Check your inbox for the verification code."
 msgstr "Check your inbox for the verification code."
 
-#: src/data/password.ts:23
-#: src/data/email.ts:24
+#: src/data/password.ts:22
+#: src/data/email.ts:23
 msgid "Check your inbox."
 msgstr "Check your inbox."
 
@@ -332,7 +332,7 @@ msgstr "Close account selector"
 msgid "Close details"
 msgstr "Close details"
 
-#: src/components/utils/error-details.tsx:44
+#: src/components/utils/error-details.tsx:43
 msgctxt "Error"
 msgid "Code"
 msgstr "Code"
@@ -351,7 +351,7 @@ msgstr "Confirm your password to continue"
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
-#: src/data/account.ts:76
+#: src/data/account.ts:69
 msgid "Confirmation email sent"
 msgstr "Confirmation email sent"
 
@@ -464,11 +464,11 @@ msgstr "Email address"
 msgid "Email address successfully updated"
 msgstr "Email address successfully updated"
 
-#: src/data/email.ts:23
+#: src/data/email.ts:22
 msgid "Email change request sent"
 msgstr "Email change request sent"
 
-#: src/data/email.ts:49
+#: src/data/email.ts:45
 msgid "Email change successful"
 msgstr "Email change successful"
 
@@ -476,7 +476,7 @@ msgstr "Email change successful"
 msgid "Email these instructions"
 msgstr "Email these instructions"
 
-#: src/data/email.ts:101
+#: src/data/email.ts:91
 msgid "Email verified"
 msgstr "Email verified"
 
@@ -529,60 +529,60 @@ msgstr "Expand details"
 msgid "Extra"
 msgstr "Extra"
 
-#: src/data/email.ts:57
+#: src/data/email.ts:51
 msgid "Failed to change email"
 msgstr "Failed to change email"
 
-#: src/data/account.ts:32
+#: src/data/account.ts:29
 msgid "Failed to deactivate account"
 msgstr "Failed to deactivate account"
 
-#: src/data/account.ts:110
+#: src/data/account.ts:98
 msgid "Failed to delete account"
 msgstr "Failed to delete account"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:38
-#: src/pages/account/(authenticated)/apps/page.tsx:36
+#: src/pages/account/(authenticated)/devices/page.tsx:36
+#: src/pages/account/(authenticated)/apps/page.tsx:34
 msgid "Failed to load connected apps"
 msgstr "Failed to load connected apps"
 
-#: src/data/account.ts:58
+#: src/data/account.ts:52
 msgid "Failed to reactivate account"
 msgstr "Failed to reactivate account"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:98
+#: src/data/account-sessions.ts:41
 msgid "Failed to remove device"
 msgstr "Failed to remove device"
 
-#: src/data/email.ts:31
+#: src/data/email.ts:28
 msgid "Failed to request email change"
 msgstr "Failed to request email change"
 
-#: src/data/password.ts:30
+#: src/data/password.ts:27
 msgid "Failed to request password reset"
 msgstr "Failed to request password reset"
 
-#: src/data/password.ts:56
+#: src/data/password.ts:50
 msgid "Failed to reset password"
 msgstr "Failed to reset password"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:117
+#: src/data/oauth-sessions.ts:47
 msgid "Failed to revoke access"
 msgstr "Failed to revoke access"
 
-#: src/data/account.ts:84
+#: src/data/account.ts:75
 msgid "Failed to send confirmation email"
 msgstr "Failed to send confirmation email"
 
-#: src/data/email.ts:83
+#: src/data/email.ts:74
 msgid "Failed to send verification email"
 msgstr "Failed to send verification email"
 
-#: src/data/handle.ts:27
+#: src/data/handle.ts:23
 msgid "Failed to update username"
 msgstr "Failed to update username"
 
-#: src/data/email.ts:109
+#: src/data/email.ts:97
 msgid "Failed to verify email"
 msgstr "Failed to verify email"
 
@@ -705,7 +705,7 @@ msgstr "Invalid Handle"
 msgid "Invite code"
 msgstr "Invite code"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:70
+#: src/pages/account/(authenticated)/apps/page.tsx:68
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
 
@@ -718,12 +718,12 @@ msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" 
 msgid "just now"
 msgstr "just now"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:117
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Last accessed <0/>"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:114
+#: src/pages/account/(authenticated)/devices/page.tsx:94
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Last seen {lastUsedAgo}"
@@ -737,11 +737,11 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:160
+#: src/authorization-page.tsx:159
 msgid "Login canceled"
 msgstr "Login canceled"
 
-#: src/authorization-page.tsx:160
+#: src/authorization-page.tsx:159
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -753,7 +753,7 @@ msgstr "Login to account that is not listed"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:67
+#: src/pages/account/(authenticated)/devices/page.tsx:65
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
@@ -793,7 +793,7 @@ msgstr "Manage your profile, posts, likes and follows"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Manage your profile, posts, likes and follows as well as read your private preferences"
 
-#: src/components/utils/error-details.tsx:50
+#: src/components/utils/error-details.tsx:49
 msgctxt "Error"
 msgid "Message"
 msgstr "Message"
@@ -810,7 +810,7 @@ msgstr "Moderate"
 msgid "My Atmosphere Account"
 msgstr "My Atmosphere Account"
 
-#: src/components/utils/error-details.tsx:38
+#: src/components/utils/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
 msgstr "Name"
@@ -846,11 +846,11 @@ msgstr "Only letters, numbers, and hyphens"
 msgid "Password"
 msgstr "Password"
 
-#: src/data/password.ts:22
+#: src/data/password.ts:21
 msgid "Password reset email sent"
 msgstr "Password reset email sent"
 
-#: src/data/password.ts:48
+#: src/data/password.ts:44
 msgid "Password reset successful"
 msgstr "Password reset successful"
 
@@ -874,7 +874,7 @@ msgstr "Password updated!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 
-#: src/components/utils/error-details.tsx:56
+#: src/components/utils/error-details.tsx:55
 msgctxt "Error"
 msgid "Payload"
 msgstr "Payload"
@@ -891,25 +891,25 @@ msgstr "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgid "Please authenticate to continue"
 msgstr "Please authenticate to continue"
 
-#: src/data/password.ts:31
-#: src/data/email.ts:32
+#: src/data/password.ts:28
+#: src/data/email.ts:29
 msgid "Please check the email address and try again."
 msgstr "Please check the email address and try again."
 
-#: src/data/handle.ts:30
+#: src/data/handle.ts:24
 msgid "Please check the username and try again."
 msgstr "Please check the username and try again."
 
-#: src/data/account.ts:111
+#: src/data/account.ts:99
 msgid "Please check your code and password, then try again."
 msgstr "Please check your code and password, then try again."
 
-#: src/data/password.ts:57
-#: src/data/email.ts:58
+#: src/data/password.ts:51
+#: src/data/email.ts:52
 msgid "Please check your reset code and try again."
 msgstr "Please check your reset code and try again."
 
-#: src/data/email.ts:110
+#: src/data/email.ts:98
 msgid "Please check your verification code and try again."
 msgstr "Please check your verification code and try again."
 
@@ -917,10 +917,10 @@ msgstr "Please check your verification code and try again."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Please enter the security code that was sent to your email address."
 
-#: src/data/email.ts:84
-#: src/data/account.ts:33
-#: src/data/account.ts:59
-#: src/data/account.ts:85
+#: src/data/email.ts:75
+#: src/data/account.ts:30
+#: src/data/account.ts:53
+#: src/data/account.ts:76
 msgid "Please try again in a moment."
 msgstr "Please try again in a moment."
 
@@ -981,8 +981,8 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:34
-#: src/pages/account/(authenticated)/apps/page.tsx:32
+#: src/pages/account/(authenticated)/devices/page.tsx:32
+#: src/pages/account/(authenticated)/apps/page.tsx:30
 #: src/components/utils/error-card.tsx:77
 msgid "Retry"
 msgstr "Retry"
@@ -991,7 +991,7 @@ msgstr "Retry"
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:149
+#: src/pages/account/(authenticated)/apps/page.tsx:132
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Revoke access"
@@ -1044,7 +1044,7 @@ msgstr "Sign in as {0}"
 msgid "Sign in as..."
 msgstr "Sign in as..."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:127
+#: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
@@ -1059,7 +1059,7 @@ msgstr "Sign out"
 msgid "Sign up"
 msgstr "Sign up"
 
-#: src/components/utils/error-details.tsx:64
+#: src/components/utils/error-details.tsx:63
 msgctxt "Error"
 msgid "Stack"
 msgstr "Stack"
@@ -1076,11 +1076,11 @@ msgstr "Strong"
 msgid "Submit"
 msgstr "Submit"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:92
+#: src/data/account-sessions.ts:38
 msgid "Successfully removed device"
 msgstr "Successfully removed device"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:110
+#: src/data/oauth-sessions.ts:40
 msgid "Successfully revoked access"
 msgstr "Successfully revoked access"
 
@@ -1150,7 +1150,7 @@ msgstr "The username is invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "There is no time limit for account deactivation, come back any time."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:44
+#: src/pages/account/(authenticated)/apps/page.tsx:42
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
@@ -1213,7 +1213,7 @@ msgstr "Type your domain"
 msgid "Type your username"
 msgstr "Type your username"
 
-#: src/contexts/session.tsx:149
+#: src/contexts/session.tsx:148
 msgid "Unauthorized"
 msgstr "Unauthorized"
 
@@ -1221,7 +1221,7 @@ msgstr "Unauthorized"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:109
+#: src/pages/account/(authenticated)/devices/page.tsx:89
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
@@ -1269,7 +1269,7 @@ msgstr "Username"
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/data/handle.ts:19
+#: src/data/handle.ts:17
 msgid "Username updated"
 msgstr "Username updated"
 
@@ -1286,7 +1286,7 @@ msgstr "Value"
 msgid "Verification code"
 msgstr "Verification code"
 
-#: src/data/email.ts:75
+#: src/data/email.ts:68
 msgid "Verification email sent"
 msgstr "Verification email sent"
 
@@ -1344,7 +1344,7 @@ msgstr "Weak"
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/components/reactivate-account-view.tsx:47
+#: src/components/reactivate-account-view.tsx:22
 msgid "Welcome back!"
 msgstr "Welcome back!"
 
@@ -1368,7 +1368,7 @@ msgstr "Yes, Deactivate"
 msgid "Yes, delete my account"
 msgstr "Yes, delete my account"
 
-#: src/components/reactivate-account-view.tsx:69
+#: src/components/reactivate-account-view.tsx:44
 msgid "Yes, reactivate my account"
 msgstr "Yes, reactivate my account"
 
@@ -1392,16 +1392,16 @@ msgstr "You can change this username to any domain name you control after your a
 msgid "You can deactivate your account again at any time from this page."
 msgstr "You can deactivate your account again at any time from this page."
 
-#: src/data/email.ts:50
+#: src/data/email.ts:46
 msgid "You can now sign in with your new email."
 msgstr "You can now sign in with your new email."
 
-#: src/data/password.ts:49
+#: src/data/password.ts:45
 #: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
-#: src/components/reactivate-account-view.tsx:54
+#: src/components/reactivate-account-view.tsx:29
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 
@@ -1413,27 +1413,27 @@ msgstr "You will receive an email with a \"reset code\". Enter that code here th
 msgid "Your account"
 msgstr "Your account"
 
-#: src/data/account.ts:103
+#: src/data/account.ts:93
 msgid "Your account and all associated data have been deleted."
 msgstr "Your account and all associated data have been deleted."
 
-#: src/components/reactivate-account-view.tsx:30
+#: src/authorization-page.tsx:222
 msgid "Your account has been successfully reactivated."
 msgstr "Your account has been successfully reactivated."
 
-#: src/components/reactivate-account-view.tsx:48
+#: src/components/reactivate-account-view.tsx:23
 msgid "Your account is currently deactivated."
 msgstr "Your account is currently deactivated."
 
-#: src/data/account.ts:25
+#: src/data/account.ts:24
 msgid "Your account is now deactivated."
 msgstr "Your account is now deactivated."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:46
+#: src/pages/account/(authenticated)/devices/page.tsx:44
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
-#: src/data/account.ts:51
+#: src/data/account.ts:47
 msgid "Your account is visible again."
 msgstr "Your account is visible again."
 
@@ -1449,7 +1449,7 @@ msgstr "Your content (profile, posts, feeds, lists, etc.) will be hidden from th
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 
-#: src/data/email.ts:102
+#: src/data/email.ts:92
 msgid "Your email address has been verified."
 msgstr "Your email address has been verified."
 
@@ -1474,10 +1474,10 @@ msgstr "Your profile, posts, feeds, and lists will become visible again across t
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 
-#: src/contexts/session.tsx:150
+#: src/contexts/session.tsx:149
 msgid "Your session has expired. Please sign in again."
 msgstr "Your session has expired. Please sign in again."
 
-#: src/data/handle.ts:20
+#: src/data/handle.ts:18
 msgid "Your username has been updated."
 msgstr "Your username has been updated."
