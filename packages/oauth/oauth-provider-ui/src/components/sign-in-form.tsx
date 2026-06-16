@@ -9,12 +9,12 @@ import { InputText } from '#/components/forms/input-text.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { FormHandler, SmartForm } from '#/components/forms/smart-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
-import { mergeRefs } from '#/lib/merge-refs.ts'
 import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
 import { isValidDomain } from '#/lib/handle.ts'
+import { mergeRefs } from '#/lib/merge-refs.ts'
 import { Override } from '#/lib/util.ts'
 import { FormCardProps } from './forms/form-card.tsx'
 
