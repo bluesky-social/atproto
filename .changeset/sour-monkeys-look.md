@@ -1,8 +1,5 @@
 ---
 '@atproto/common-web': patch
-'@atproto/did-resolver': patch
-'@atproto/identity-resolver': patch
-'@atproto/simple-store-redis': patch
 '@atproto/lex': patch
 '@atproto/lex-builder': patch
 '@atproto/lex-cbor': patch
@@ -17,6 +14,9 @@
 '@atproto/lex-cli': patch
 '@atproto/lexicon': patch
 '@atproto/syntax': patch
+'@atproto-labs/did-resolver': patch
+'@atproto-labs/identity-resolver': patch
+'@atproto-labs/simple-store-redis': patch
 ---
 
 Add extra `typescript` export condition in `package.json` that points to the source code.
