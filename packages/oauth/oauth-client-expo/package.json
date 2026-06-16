@@ -46,7 +46,7 @@
     "react-native": "*"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "type": "module"
 }

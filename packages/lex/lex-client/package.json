@@ -47,7 +47,7 @@
   },
   "scripts": {
     "prebuild": "node ./scripts/lex-build.mjs",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }
 }
