@@ -39,11 +39,11 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
-        const { status } = await ctx.accountManager.getAccountStatus(
-          subject.did,
-        )
-        await ctx.sequencer.sequenceAccount(subject.did, status)
+      // @NOTE accountManager deactivateAccount and activateAccount methods
+      // already sequence the account's status, so there is no need to
+      // re-sequence it from here.
+      if (!deactivated && com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
+        await ctx.accountManager.sequenceAccountStatus(subject.did)
       }
 
       return {

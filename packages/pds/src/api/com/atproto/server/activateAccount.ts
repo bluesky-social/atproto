@@ -1,14 +1,7 @@
-import { INVALID_HANDLE } from '@atproto/syntax'
-import {
-  ForbiddenError,
-  InvalidRequestError,
-  Server,
-} from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager/account-manager.js'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertValidDidDocumentForService } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { entrywayClient } = ctx
@@ -37,36 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     server.add(com.atproto.server.activateAccount, {
       auth,
       handler: async ({ auth }) => {
-        const requester = auth.credentials.did
-
-        await assertValidDidDocumentForService(ctx, requester)
-
-        const account = await ctx.accountManager.getAccount(requester, {
-          includeDeactivated: true,
-        })
-        if (!account) {
-          throw new InvalidRequestError('user not found', 'AccountNotFound')
-        }
-
-        await ctx.accountManager.activateAccount(requester)
-
-        const syncData = await ctx.actorStore.read(requester, (store) => {
-          return store.repo.getSyncEventData()
-        })
-
-        // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
-        const { status } = await ctx.accountManager.getAccountStatus(requester)
-        if (status === AccountStatus.Deleted) {
-          // A concurrent operation deleted the account
-          throw new InvalidRequestError('user not found', 'AccountNotFound')
-        }
-
-        await ctx.sequencer.sequenceAccountActivation(
-          requester,
-          account.handle ?? INVALID_HANDLE,
-          status,
-          syncData,
-        )
+        await ctx.accountManager.activateAccount(auth.credentials.did)
       },
     })
   }

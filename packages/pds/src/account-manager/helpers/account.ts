@@ -302,16 +302,31 @@ export const deactivateAccount = async (
   )
 }
 
-export const activateAccount = async (db: AccountDb, did: DidString) => {
-  await db.executeWithRetry(
+export const activateAccount = async (
+  db: AccountDb,
+  did: DidString,
+  flags?: AvailabilityFlags,
+) => {
+  const { includeTakenDown = false, includeDeactivated = true } = flags ?? {}
+  const { ref } = db.db.dynamic
+
+  const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({
         deactivatedAt: null,
         deleteAfter: null,
       })
-      .where('did', '=', did),
+      .where('did', '=', did)
+      .if(!includeTakenDown, (qb) =>
+        qb.where(notSoftDeletedClause(ref('actor'))),
+      )
+      .if(!includeDeactivated, (qb) =>
+        qb.where('actor.deactivatedAt', 'is not', null),
+      ),
   )
+
+  return res.numUpdatedRows > 0
 }
 
 export const formatAccountStatus = (

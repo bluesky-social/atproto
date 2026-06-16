@@ -48,7 +48,6 @@ import {
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from '@atproto/oauth-provider'
-import { INVALID_HANDLE } from '@atproto/syntax'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
@@ -63,11 +62,7 @@ import { Sequencer } from '../sequencer/index.js'
 import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import {
-  AccountStatus,
-  ActorAccount,
-  UserAlreadyExistsError,
-} from './helpers/account.js'
+import { ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -697,61 +692,30 @@ export class OAuthStore
   }
 
   async deactivateAccount({ did }: DeactivateAccountData): Promise<Account> {
-    // Mirror the XRPC `com.atproto.server.deactivateAccount` flow (no-entryway
-    // path) and additionally revoke every active credential bound to the
-    // account: OAuth sessions, OAuth-authorized clients, and App Passwords.
-    await this.accountManager.deactivateAccount(did, null)
-
+    // We also delete the credentials linked to the account.
     await this.db.transaction(async (db) => {
       await tokenHelper.removeByDid(db, did)
       await authorizedClientHelper.deleteAllAuthorizedClients(db, did)
       await passwordHelper.deleteAllAppPasswords(db, did)
     })
 
-    const { account, status } = await this.accountManager.getAccountStatus(did)
-    await this.sequencer.sequenceAccount(did, status)
-
-    if (
-      !account ||
-      !(status === AccountStatus.Active || status === AccountStatus.Deactivated)
-    ) {
-      throw new InvalidRequestError('Account not found')
-    }
+    const { account } = await this.accountManager.deactivateAccount(did, null)
 
     return this.buildAccount(account)
   }
 
   async reactivateAccount({ did }: ReactivateAccountData): Promise<Account> {
-    // Mirror the XRPC `com.atproto.server.activateAccount` flow (no-entryway
-    // path).
-    const existing = await this.accountManager.getAccount(did, {
-      includeDeactivated: true,
-      includeTakenDown: false,
-    })
-    if (!existing) throw new InvalidRequestError('Account not found')
+    try {
+      const { account } = await this.accountManager.activateAccount(did)
 
-    await this.accountManager.activateAccount(did)
+      return this.buildAccount(account)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        throw new InvalidRequestError(err.message, err)
+      }
 
-    const syncData = await this.actorStore.read(did, (store) => {
-      return store.repo.getSyncEventData()
-    })
-
-    // @NOTE Mirroring the XRPC handler, we over-emit on activation for
-    // backwards compatibility.
-    const { status, account } = await this.accountManager.getAccountStatus(did)
-    if (status !== AccountStatus.Active) {
-      // A concurrent operation deleted the account
-      throw new InvalidRequestError('Account not found')
+      throw err
     }
-
-    await this.sequencer.sequenceAccountActivation(
-      did,
-      existing.handle ?? INVALID_HANDLE,
-      status,
-      syncData,
-    )
-
-    return this.buildAccount(account)
   }
 
   async deleteAccountRequest({

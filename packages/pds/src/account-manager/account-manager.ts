@@ -13,9 +13,16 @@ import {
   isAtIdentifierString,
 } from '@atproto/lex'
 import { Cid } from '@atproto/lex-data'
-import { currentDatetimeString, isValidTld } from '@atproto/syntax'
+import {
+  INVALID_HANDLE,
+  currentDatetimeString,
+  isValidTld,
+} from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { assertValidDidDocumentForService } from '../api/com/atproto/server/util.js'
 import { AuthScope } from '../auth-scope.js'
+import { ServerConfig } from '../config/config.js'
 import { softDeleted } from '../db/index.js'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import {
@@ -28,7 +35,7 @@ import { httpLogger } from '../logger.js'
 import { ServerMailer } from '../mailer/index.js'
 import { Sequencer } from '../sequencer/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
-import * as account from './helpers/account.js'
+import * as accountHelpers from './helpers/account.js'
 import { AccountStatus, ActorAccount } from './helpers/account.js'
 import * as auth from './helpers/auth.js'
 import * as emailToken from './helpers/email-token.js'
@@ -70,17 +77,24 @@ export class AccountManager {
   readonly db: AccountDb
 
   constructor(
+    readonly cfg: ServerConfig,
+    readonly actorStore: ActorStore,
     readonly idResolver: IdResolver,
     readonly jwtKey: KeyObject,
     readonly mailer: ServerMailer,
     readonly sequencer: Sequencer,
     readonly plcClient: PlcClient,
     readonly plcRotationKey: Keypair,
-    readonly serviceDid: DidString,
-    readonly serviceHandleDomains: string[],
-    db: AccountManagerDbConfig,
   ) {
-    this.db = getDb(db.accountDbLoc, db.disableWalAutoCheckpoint)
+    this.db = getDb(cfg.db.accountDbLoc, cfg.db.disableWalAutoCheckpoint)
+  }
+
+  get serviceDid(): DidString {
+    return this.cfg.service.did
+  }
+
+  get serviceHandleDomains(): string[] {
+    return this.cfg.identity.serviceHandleDomains
   }
 
   async migrateOrThrow() {
@@ -97,23 +111,23 @@ export class AccountManager {
 
   async getAccount(
     handleOrDid: AtIdentifierString,
-    flags?: account.AvailabilityFlags,
+    flags?: accountHelpers.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccount(this.db, handleOrDid, flags)
+    return accountHelpers.getAccount(this.db, handleOrDid, flags)
   }
 
   async getAccounts(
     dids: DidString[],
-    flags?: account.AvailabilityFlags,
+    flags?: accountHelpers.AvailabilityFlags,
   ): Promise<Map<string, ActorAccount>> {
-    return account.getAccounts(this.db, dids, flags)
+    return accountHelpers.getAccounts(this.db, dids, flags)
   }
 
   async getAccountByEmail(
     email: string,
-    flags?: account.AvailabilityFlags,
+    flags?: accountHelpers.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccountByEmail(this.db, email, flags)
+    return accountHelpers.getAccountByEmail(this.db, email, flags)
   }
 
   async isAccountActivated(did: DidString): Promise<boolean> {
@@ -124,7 +138,7 @@ export class AccountManager {
 
   async getDidForActor(
     handleOrDid: AtIdentifierString,
-    flags?: account.AvailabilityFlags,
+    flags?: accountHelpers.AvailabilityFlags,
   ): Promise<DidString | null> {
     const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
@@ -137,7 +151,7 @@ export class AccountManager {
     })
 
     const { active, status = active ? AccountStatus.Active : undefined } =
-      account.formatAccountStatus(got)
+      accountHelpers.formatAccountStatus(got)
     assert(status != null)
     return { status, account: got } as
       | { status: AccountStatus.Deleted; account: null }
@@ -235,10 +249,14 @@ export class AccountManager {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
       }
 
-      await account.registerActor(dbTxn, { did, handle, deactivated })
+      await accountHelpers.registerActor(dbTxn, { did, handle, deactivated })
 
       if (email && passwordScrypt) {
-        await account.registerAccount(dbTxn, { did, email, passwordScrypt })
+        await accountHelpers.registerAccount(dbTxn, {
+          did,
+          email,
+          passwordScrypt,
+        })
       }
 
       await invite.recordInviteUse(dbTxn, {
@@ -364,7 +382,7 @@ export class AccountManager {
     did: DidString,
     handle: HandleString,
   ): Promise<void> {
-    await account.updateHandle(this.db, did, handle)
+    await accountHelpers.updateHandle(this.db, did, handle)
 
     try {
       await this.sequencer.sequenceIdentity(did, handle)
@@ -374,7 +392,7 @@ export class AccountManager {
   }
 
   async deleteAccount(did: DidString) {
-    return account.deleteAccount(this.db, did)
+    return accountHelpers.deleteAccount(this.db, did)
   }
 
   async takedownAccount(
@@ -382,14 +400,14 @@ export class AccountManager {
     takedown: com.atproto.admin.defs.StatusAttr,
   ) {
     await this.db.transaction(async (dbTxn) => {
-      await account.updateAccountTakedownStatus(dbTxn, did, takedown)
+      await accountHelpers.updateAccountTakedownStatus(dbTxn, did, takedown)
       await auth.revokeRefreshTokensByDid(dbTxn, did)
       await token.removeByDid(dbTxn, did)
     })
   }
 
   async getAccountAdminStatus(did: DidString) {
-    return account.getAccountAdminStatus(this.db, did)
+    return accountHelpers.getAccountAdminStatus(this.db, did)
   }
 
   async updateRepoRoot(did: DidString, cid: Cid, rev: string) {
@@ -397,11 +415,58 @@ export class AccountManager {
   }
 
   async deactivateAccount(did: DidString, deleteAfter: string | null) {
-    return account.deactivateAccount(this.db, did, deleteAfter)
+    await accountHelpers.deactivateAccount(this.db, did, deleteAfter)
+
+    const accountStatus = await this.getAccountStatus(did)
+
+    await this.sequencer.sequenceAccount(did, accountStatus.status)
+
+    if (accountStatus.status === AccountStatus.Deleted) {
+      throw new InvalidRequestError('Account not found')
+    }
+
+    // @TODO Should we also delete credentials from here?
+
+    return accountStatus
   }
 
   async activateAccount(did: DidString) {
-    return account.activateAccount(this.db, did)
+    await assertValidDidDocumentForService(this, did)
+
+    const found = await accountHelpers.activateAccount(this.db, did, {
+      includeTakenDown: false,
+      includeDeactivated: true,
+    })
+    if (!found) {
+      throw new InvalidRequestError('user not found', 'AccountNotFound')
+    }
+
+    const accountStatus = await this.getAccountStatus(did)
+
+    const { account, status } = accountStatus
+
+    if (status === AccountStatus.Deleted) {
+      // A concurrent operation deleted the account
+      throw new InvalidRequestError('user not found', 'AccountNotFound')
+    }
+
+    const syncData = await this.actorStore.read(did, (store) => {
+      return store.repo.getSyncEventData()
+    })
+
+    await this.sequencer.sequenceAccountActivation(
+      did,
+      account.handle ?? INVALID_HANDLE,
+      status,
+      syncData,
+    )
+
+    return accountStatus
+  }
+
+  async sequenceAccountStatus(did: DidString) {
+    const { status } = await this.getAccountStatus(did)
+    await this.sequencer.sequenceAccount(did, status)
   }
 
   // Auth
@@ -700,7 +765,7 @@ export class AccountManager {
     const now = currentDatetimeString()
     await this.db.transaction(async (dbTxn) => {
       await emailToken.deleteEmailToken(dbTxn, did, 'confirm_email')
-      await account.setEmailConfirmedAt(dbTxn, did, now)
+      await accountHelpers.setEmailConfirmedAt(dbTxn, did, now)
     })
 
     user.emailConfirmedAt = now
@@ -796,7 +861,7 @@ export class AccountManager {
   async updateAccountEmail(opts: { did: DidString; email: string }) {
     const { did, email } = opts
     await this.db.transaction(async (dbTxn) => {
-      await account.updateEmail(dbTxn, did, email)
+      await accountHelpers.updateEmail(dbTxn, did, email)
       await emailToken.deleteAllEmailTokens(dbTxn, did)
     })
   }
