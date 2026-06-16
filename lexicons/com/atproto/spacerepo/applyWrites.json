@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.applyWrites",
+  "id": "com.atproto.spacerepo.applyWrites",
   "defs": {
     "main": {
       "type": "procedure",
@@ -52,10 +52,7 @@
           }
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotAMember" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }]
     },
     "create": {
       "type": "object",

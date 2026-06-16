@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.addMember",
+  "id": "com.atproto.simplespace.removeMember",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a member to a space. Requires auth as the space owner.",
+      "description": "Remove a member from a space's member list. The member list is host-internal state consulted at credential-mint time when the space's mintPolicy is 'member-list'. Requires auth as the space owner.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -19,15 +19,12 @@
             "did": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the member to add."
+              "description": "The DID of the member to remove."
             }
           }
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotSpaceOwner" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotSpaceOwner" }]
     }
   }
 }

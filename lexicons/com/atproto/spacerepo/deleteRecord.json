@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.deleteRecord",
+  "id": "com.atproto.spacerepo.deleteRecord",
   "defs": {
     "main": {
       "type": "procedure",
@@ -41,10 +41,7 @@
           "properties": {}
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotAMember" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }]
     }
   }
 }

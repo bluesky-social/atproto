@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.deleteSpace",
+  "id": "com.atproto.simplespace.deleteSpace",
   "defs": {
     "main": {
       "type": "procedure",
@@ -19,10 +19,7 @@
           }
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotSpaceOwner" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotSpaceOwner" }]
     }
   }
 }

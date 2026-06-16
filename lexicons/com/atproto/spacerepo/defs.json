@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.defs",
+  "id": "com.atproto.spacerepo.defs",
   "defs": {
     "signedCommit": {
       "type": "object",
-      "description": "A signed commitment over the current state of a permissioned repo or member list. The hash is sha256 of the LtHash state. The HMAC binds the hash to a per-call IKM, which is signed by the user's atproto signing key — providing deniability on rebroadcast.",
+      "description": "A signed commitment over the current state of a permissioned repo. The hash is sha256 of the LtHash state. The HMAC binds the hash to a per-call IKM, which is signed by the user's atproto signing key — providing deniability on rebroadcast.",
       "required": ["hash", "hmac", "ikm", "sig", "rev"],
       "properties": {
         "hash": {

@@ -1,0 +1,62 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.spacehost.listRepos",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the repos that hold data in a space. Analogous to com.atproto.sync.listRepos: a space owner is self-interested in helping syncers sync the space, so it enumerates the repos that have written data (the writer set). This is the sync boundary — it is not an access-control list, and it intentionally does not enumerate readers. Must be called on the space owner's PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-uri",
+            "description": "Reference to the space."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of repos to return."
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["repos"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "repos": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#repo"
+              }
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    },
+    "repo": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did",
+          "description": "The DID of a repo that holds data in the space."
+        }
+      }
+    }
+  }
+}

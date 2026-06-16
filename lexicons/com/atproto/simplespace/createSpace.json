@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.createSpace",
+  "id": "com.atproto.simplespace.createSpace",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a new space. The authenticated user becomes the space owner. Requires auth, implemented by PDS.",
+      "description": "Create a new space managed by the simplespace implementation. The authenticated user becomes the space owner. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -26,28 +26,10 @@
               "maxLength": 512,
               "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. If not provided, one will be auto-generated (TID)."
             },
-            "managingApp": {
-              "type": "string",
-              "description": "Service identifier (e.g. did:web:example.com#forum) of the application that manages this space. Used to route application-level requests (join requests, invite flows, etc.)."
-            },
-            "isPublic": {
-              "type": "boolean",
-              "default": false,
-              "description": "If true, the credential mint is open to anyone and the member list is bypassed for read/sync access."
-            },
-            "appAccessMode": {
-              "type": "string",
-              "knownValues": ["allow", "deny"],
-              "default": "allow",
-              "description": "Default app-level access policy. 'allow' means any app may sync (with optional denylist via appExceptions), 'deny' means only apps in appExceptions may sync. Regardless, syncing apps must have a valid member grant to receive a space credentials."
-            },
-            "appExceptions": {
-              "type": "array",
-              "description": "Apps that break from the default appAccessMode. Functions as denylist when appAccessMode is 'allow', allowlist when appAccessMode is 'deny'.",
-              "items": {
-                "type": "string",
-                "description": "OAuth client ID."
-              }
+            "config": {
+              "type": "ref",
+              "ref": "com.atproto.simplespace.defs#spaceConfig",
+              "description": "Initial configuration for the space. If omitted, the host applies its defaults (e.g. mintPolicy 'member-list', appAccessMode 'allow')."
             }
           }
         }

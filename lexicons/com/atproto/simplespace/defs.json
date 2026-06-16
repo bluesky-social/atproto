@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.simplespace.defs",
+  "defs": {
+    "spaceConfig": {
+      "type": "object",
+      "description": "Configuration for a space managed by the simplespace implementation. Surfaced via com.atproto.spacehost.getSpace's open config union, and set via createSpace / updateSpace. The two axes are independent: `mintPolicy` decides whether a given user is authorized, and `appAccessMode` + `appExceptions` decide whether a given app is authorized.",
+      "required": ["mintPolicy"],
+      "properties": {
+        "mintPolicy": {
+          "type": "string",
+          "knownValues": ["public", "member-list", "app-callback"],
+          "description": "How the host decides whether to authorize a credential for a requesting user. 'public' authorizes anyone. 'member-list' consults the host-internal member list (see addMember/removeMember). 'app-callback' asks the configured managingApp at mint time."
+        },
+        "managingApp": {
+          "type": "string",
+          "description": "Service identifier (e.g. did:web:example.com#forum) of the application that manages this space. Used to route application-level requests, and as the callback target when mintPolicy is 'app-callback'. Omitted when not configured."
+        },
+        "appAccessMode": {
+          "type": "string",
+          "knownValues": ["allow", "deny"],
+          "description": "App-level access policy, independent of mintPolicy. 'allow' means any app may sync (with optional denylist via appExceptions), 'deny' means only apps in appExceptions may sync."
+        },
+        "appExceptions": {
+          "type": "array",
+          "description": "Apps that break from the default appAccessMode. Functions as denylist when appAccessMode is 'allow', allowlist when appAccessMode is 'deny'.",
+          "items": {
+            "type": "string",
+            "description": "OAuth client ID."
+          }
+        }
+      }
+    }
+  }
+}

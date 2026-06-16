@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.getMembers",
+  "id": "com.atproto.simplespace.listMembers",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the member list for a space. Must be called on the space owner's PDS.",
+      "description": "List the members in a space's host-internal member list. Must be called on the space owner's PDS, by the space owner. This reflects the simplespace member list, not a protocol-level reader set.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -45,9 +45,7 @@
           }
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotSpaceOwner" }]
     },
     "member": {
       "type": "object",

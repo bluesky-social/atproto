@@ -1,15 +1,15 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.createRecord",
+  "id": "com.atproto.spacerepo.putRecord",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a single new record in a permissioned space. Requires auth, implemented by PDS.",
+      "description": "Write a record in a permissioned space, creating or updating it as needed. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "repo", "collection", "record"],
+          "required": ["space", "repo", "collection", "rkey", "record"],
           "properties": {
             "space": {
               "type": "string",
@@ -38,7 +38,7 @@
             },
             "record": {
               "type": "unknown",
-              "description": "The record itself. Must contain a $type field."
+              "description": "The record to write."
             }
           }
         }
@@ -52,7 +52,7 @@
             "uri": {
               "type": "string",
               "format": "space-uri",
-              "description": "URI of the created record."
+              "description": "URI of the written record."
             },
             "cid": {
               "type": "string",
@@ -65,10 +65,7 @@
           }
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotAMember" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }]
     }
   }
 }

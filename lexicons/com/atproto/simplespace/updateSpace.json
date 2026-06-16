@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.updateSpaceConfig",
+  "id": "com.atproto.simplespace.updateSpace",
   "defs": {
     "main": {
       "type": "procedure",
@@ -16,18 +16,19 @@
               "format": "space-uri",
               "description": "Reference to the space to update."
             },
+            "mintPolicy": {
+              "type": "string",
+              "knownValues": ["public", "member-list", "app-callback"],
+              "description": "How the host decides whether to authorize a credential for a requesting user."
+            },
             "managingApp": {
               "type": "string",
-              "description": "Service identifier (e.g. did:web:example.com#forum) of the application that manages this space. Pass an empty string to clear."
-            },
-            "isPublic": {
-              "type": "boolean",
-              "description": "If true, the credential mint is open to anyone and the member list is bypassed for read/sync access."
+              "description": "Service identifier of the managing application. Pass an empty string to clear."
             },
             "appAccessMode": {
               "type": "string",
               "knownValues": ["allow", "deny"],
-              "description": "Default app-level access policy."
+              "description": "App-level access policy."
             },
             "appExceptions": {
               "type": "array",
@@ -40,10 +41,7 @@
           }
         }
       },
-      "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "NotSpaceOwner" }
-      ]
+      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotSpaceOwner" }]
     }
   }
 }

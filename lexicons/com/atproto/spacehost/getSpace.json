@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.spacehost.getSpace",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get details for a space. Must be called on the space owner's PDS. Returns the space URI and ownership, plus an open-union `config` carrying host-implementation-specific configuration (e.g. com.atproto.simplespace.defs#spaceConfig). Clients that don't recognize the config variant should ignore it.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-uri",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "config"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "space-uri",
+              "description": "URI of the space."
+            },
+            "isOwner": {
+              "type": "boolean",
+              "description": "Whether the authenticated user is the owner of the space."
+            },
+            "config": {
+              "type": "union",
+              "description": "Host-implementation-specific configuration for the space. Open union: a host surfaces its own config variant, and clients ignore variants they don't recognize.",
+              "refs": ["com.atproto.simplespace.defs#spaceConfig"]
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    }
+  }
+}

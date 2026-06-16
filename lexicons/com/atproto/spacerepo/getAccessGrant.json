@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.getMemberGrant",
+  "id": "com.atproto.spacerepo.getAccessGrant",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a member grant token for a space. The grant is a signed token identifying the user and app to the space owner; it can be exchanged with the space owner for a space credential. The owner's PDS decides whether to honor the grant (membership, public access, app policy). Requires OAuth auth.",
+      "description": "Get an access grant token for a space. The grant is a signed token identifying the user and app to the space owner; it can be exchanged with the space owner for a space credential. The owner's PDS decides whether to honor the grant via its configured space-management implementation. The caller's PDS only attests to identity + app, gated by the OAuth scope — it makes no claim that the user is a member of the space. Requires OAuth auth.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -24,7 +24,7 @@
           "properties": {
             "grant": {
               "type": "string",
-              "description": "A signed JWT member grant token."
+              "description": "A signed JWT access grant token."
             }
           }
         }
