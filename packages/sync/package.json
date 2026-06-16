@@ -1,6 +1,6 @@
 {
   "name": "@atproto/sync",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "description": "atproto sync library",
   "keywords": [
@@ -21,7 +21,7 @@
   "scripts": {
     "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
     "prebuild": "pnpm run codegen",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"
   },
   "dependencies": {
@@ -36,8 +36,7 @@
   },
   "devDependencies": {
     "@types/ws": "^8.5.4",
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "type": "module",
   "exports": {

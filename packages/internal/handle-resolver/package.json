@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "engines": {
     "node": ">=22"
   },
@@ -35,11 +35,10 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

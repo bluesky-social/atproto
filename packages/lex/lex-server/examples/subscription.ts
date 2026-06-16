@@ -126,11 +126,8 @@ async function indexHtml() {
 
 /**
  * Simple HTML template tag function to enable syntax highlighting.
- * @param {TemplateStringsArray} parts
- * @param {...never} args
- * @returns {string}
  */
-function html(parts, ...args) {
+function html(parts: TemplateStringsArray, ...args: never[]): string {
   if (args.length) throw new Error('No substitutions allowed in HTML template')
   return parts[0]
 }
