@@ -33,7 +33,7 @@
             },
             "config": {
               "type": "union",
-              "description": "Host-implementation-specific configuration for the space. Open union: a host surfaces its own config variant, and clients ignore variants they don't recognize.",
+              "description": "Implementation-specific configuration for the space.",
               "refs": ["com.atproto.simplespace.defs#spaceConfig"]
             }
           }
