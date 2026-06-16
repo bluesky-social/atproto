@@ -766,7 +766,7 @@ msgstr "パスワード強度表示"
 
 #: src/components/reset-password-view.tsx:96
 msgid "Password Updated"
-msgstr "パスワードが更新されました"
+msgstr "パスワード更新"
 
 #: src/components/reset-password-view.tsx:101
 msgid "Password updated!"
@@ -1073,7 +1073,7 @@ msgstr "トラブルシュート"
 
 #: src/components/forms/input-handle-custom-instructions.tsx:58
 msgid "Type"
-msgstr "入力"
+msgstr "タイプ"
 
 #: src/components/forms/input-handle-custom.tsx:44
 msgid "Type your domain"
@@ -1140,7 +1140,7 @@ msgstr "ユーザー名またはメールアドレス"
 
 #: src/data/handle.ts:21
 msgid "Username updated"
-msgstr "ユーザー名が更新されました"
+msgstr "ユーザー名更新"
 
 #: src/components/forms/input-handle-default.tsx:249
 msgid "Valid"
@@ -1235,7 +1235,7 @@ msgstr "リダイレクトしています…"
 
 #: src/components/sign-up-handle-form.tsx:40
 msgid "You can change this username to any domain name you control after your account is set up."
-msgstr "アカウントのセットアップ後にユーザー名を自分がコントロールしているドメイン名に変更することができます。"
+msgstr "アカウントのセットアップ後にユーザー名をあなたが管理しているドメイン名に変更することができます。"
 
 #: src/data/email.ts:52
 msgid "You can now sign in with your new email."
