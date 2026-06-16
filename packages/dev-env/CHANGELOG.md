@@ -1,5 +1,26 @@
 # @atproto/dev-env
 
+## 0.5.12
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/xrpc-server@0.11.2
+  - @atproto/common-web@0.5.1
+  - @atproto/identity@0.5.1
+  - @atproto/lex@0.1.4
+  - @atproto/lexicon@0.7.2
+  - @atproto/crypto@0.5.1
+  - @atproto/syntax@0.6.2
+  - @atproto/bsync@0.0.28
+  - @atproto/ozone@0.2.4
+  - @atproto/bsky@0.0.242
+  - @atproto/sync@0.3.2
+  - @atproto/api@0.20.16
+  - @atproto/pds@0.5.5
+
 ## 0.5.11
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "engines": {
     "node": ">=22"
   },
