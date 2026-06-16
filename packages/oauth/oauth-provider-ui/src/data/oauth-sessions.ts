@@ -1,9 +1,11 @@
+import { msg } from '@lingui/core/macro'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   ActiveOAuthSession,
   OAuthSessionsInput,
   RevokeOAuthSessionInput,
 } from '@atproto/oauth-provider-api'
+import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
 
 export const oauthSessionsQueryKey = ({ did }: OAuthSessionsInput) =>
@@ -26,16 +28,25 @@ export function useOAuthSessionsQuery({ did }: OAuthSessionsInput) {
 export function useRevokeOAuthSessionMutation() {
   const api = useApi()
   const qc = useQueryClient()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: RevokeOAuthSessionInput) {
-      await api.revokeOAuthSession(data)
+      return api.revokeOAuthSession(data)
     },
-    onError(error, { did }) {
+    onSuccess(_data, { did }, _context) {
       qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ did }) })
+      notify({
+        title: msg`Successfully revoked access`,
+        duration: 2e3,
+      })
     },
-    onSuccess(_, { did }) {
+    onError(error, { did }, _context) {
       qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ did }) })
+      notifyError(error, {
+        title: msg`Failed to revoke access`,
+        duration: 2e3,
+      })
     },
   })
 }

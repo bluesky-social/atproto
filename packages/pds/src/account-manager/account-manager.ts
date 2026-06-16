@@ -381,13 +381,11 @@ export class AccountManager {
     did: DidString,
     takedown: com.atproto.admin.defs.StatusAttr,
   ) {
-    await this.db.transaction(async (dbTxn) =>
-      Promise.all([
-        account.updateAccountTakedownStatus(dbTxn, did, takedown),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-        token.removeByDid(dbTxn, did),
-      ]),
-    )
+    await this.db.transaction(async (dbTxn) => {
+      await account.updateAccountTakedownStatus(dbTxn, did, takedown)
+      await auth.revokeRefreshTokensByDid(dbTxn, did)
+      await token.removeByDid(dbTxn, did)
+    })
   }
 
   async getAccountAdminStatus(did: DidString) {
@@ -562,7 +560,9 @@ export class AccountManager {
     passwordStr: string,
   ): Promise<boolean> {
     if (passwordStr.length > scrypt.OLD_PASSWORD_MAX_LENGTH) {
-      throw new InvalidRequestError('Invalid password length.')
+      throw new InvalidRequestError(
+        'Password too long. Consider resetting your password.',
+      )
     }
 
     return password.verifyAccountPassword(this.db, did, passwordStr)

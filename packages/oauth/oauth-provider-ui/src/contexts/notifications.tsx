@@ -18,18 +18,15 @@ import { parseError } from '#/lib/error-parser.ts'
 type Variant = 'success' | 'warning' | 'error' | 'info'
 
 export type NotificationOptions = {
-  variant: Variant
+  variant?: Variant
   title: string | MessageDescriptor
   description?: string | MessageDescriptor
   duration?: number
 }
 
-export type ErrorNotificationOptions = Partial<
-  Omit<NotificationOptions, 'description'>
->
+export type ErrorNotificationOptions = Partial<NotificationOptions>
 
 export interface NotificationHandler {
-  update(options: Partial<NotificationOptions>): void
   close(): void
 }
 
@@ -82,37 +79,35 @@ export function NotificationsProvider({
     ReadonlyArray<{
       id: number
       handler: NotificationHandler
-      options: NotificationOptions
+      variant: Variant
+      title: string | MessageDescriptor
+      description?: string | MessageDescriptor
     }>
   >([])
 
   const idRef = useRef(0)
 
   const notify = useCallback(
-    (options: NotificationOptions): NotificationHandler => {
+    ({
+      variant = 'success',
+      title,
+      description,
+      duration: dur = duration,
+    }: NotificationOptions): NotificationHandler => {
       const id = idRef.current++
 
       const handler: NotificationHandler = {
-        update(options) {
-          setNotifications((prev) => {
-            return prev.map((d) =>
-              d.id === id ? { ...d, options: { ...d.options, ...options } } : d,
-            )
-          })
-
-          if (options.duration != null) {
-            clearTimeout(timer)
-            timer = setTimeout(handler.close, options.duration)
-          }
-        },
         close: () => {
           clearTimeout(timer)
           setNotifications((prev) => prev.filter((d) => d.id !== id))
         },
       }
 
-      let timer = setTimeout(handler.close, options.duration ?? duration)
-      setNotifications((prev) => [...prev, { id, handler, options }])
+      const timer = setTimeout(handler.close, dur)
+      setNotifications((prev) => [
+        ...prev,
+        { id, handler, variant, title, description },
+      ])
 
       return handler
     },
@@ -126,7 +121,7 @@ export function NotificationsProvider({
         ...options,
         variant: options?.variant ?? 'error',
         title: options?.title ?? msg`An error occurred`,
-        description: description ?? message,
+        description: description ?? options?.description ?? message,
       })
     },
     [notify],
@@ -141,39 +136,37 @@ export function NotificationsProvider({
     <ToastBase.Provider swipeDirection={swipeDirection} duration={0} {...props}>
       <NotificationsContext value={value}>{children}</NotificationsContext>
 
-      {notifications.map(
-        ({ id, handler, options: { description, title, variant } }) => (
-          <ToastBase.Root
-            key={id}
+      {notifications.map(({ id, handler, description, title, variant }) => (
+        <ToastBase.Root
+          key={id}
+          className={clsx(
+            'relative mb-4 rounded-2xl border py-3 pl-6 pr-8 shadow-lg',
+            'shadow-contrast-900/15 dark:shadow-contrast-0/60',
+            borderColors[variant],
+            bgColors[variant],
+          )}
+        >
+          <ToastBase.Title
             className={clsx(
-              'relative mb-4 rounded-2xl border py-3 pl-6 pr-8 shadow-lg',
-              'shadow-contrast-900/15 dark:shadow-contrast-0/60',
-              borderColors[variant],
-              bgColors[variant],
+              'text-sm font-semibold leading-snug',
+              textColors[variant],
             )}
           >
-            <ToastBase.Title
-              className={clsx(
-                'text-sm font-semibold leading-snug',
-                textColors[variant],
-              )}
-            >
-              <Translated message={title} />
-            </ToastBase.Title>
-            {description && (
-              <ToastBase.Description className={clsx(textColors[variant])}>
-                <Translated message={description} />
-              </ToastBase.Description>
-            )}
-            <ToastBase.Close
-              className="absolute right-4 top-1/2 -translate-y-1/2"
-              onClick={handler.close}
-            >
-              <XIcon className={clsx('size-5', textColors[variant])} />
-            </ToastBase.Close>
-          </ToastBase.Root>
-        ),
-      )}
+            <Translated message={title} />
+          </ToastBase.Title>
+          {description && (
+            <ToastBase.Description className={clsx(textColors[variant])}>
+              <Translated message={description} />
+            </ToastBase.Description>
+          )}
+          <ToastBase.Close
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+            onClick={handler.close}
+          >
+            <XIcon className={clsx('size-5', textColors[variant])} />
+          </ToastBase.Close>
+        </ToastBase.Root>
+      ))}
 
       <ToastBase.Viewport className="fixed bottom-0 left-6 right-6 mx-auto max-w-[400px] pt-8" />
     </ToastBase.Provider>

@@ -12,7 +12,7 @@ import { WithOptionalLocale } from '#/lib/api.ts'
 
 export function useDeactivateAccount() {
   const api = useApi()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: DeactivateAccountInput) {
@@ -20,15 +20,12 @@ export function useDeactivateAccount() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
         title: msg`Account deactivated`,
         description: msg`Your account is now deactivated.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to deactivate account', error)
-      notify({
-        variant: 'error',
+      notifyError(error, {
         title: msg`Failed to deactivate account`,
         description: msg`Please try again in a moment.`,
       })
@@ -38,7 +35,7 @@ export function useDeactivateAccount() {
 
 export function useReactivateAccount() {
   const api = useApi()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: ReactivateAccountInput) {
@@ -46,15 +43,12 @@ export function useReactivateAccount() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
         title: msg`Account reactivated`,
         description: msg`Your account is visible again.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to reactivate account', error)
-      notify({
-        variant: 'error',
+      notifyError(error, {
         title: msg`Failed to reactivate account`,
         description: msg`Please try again in a moment.`,
       })
@@ -64,7 +58,7 @@ export function useReactivateAccount() {
 
 export function useDeleteAccountRequest() {
   const api = useApi()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: WithOptionalLocale<InitiateAccountDeletionInput>) {
@@ -72,15 +66,12 @@ export function useDeleteAccountRequest() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
         title: msg`Confirmation email sent`,
         description: msg`Check your inbox for the confirmation code.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to request account deletion', error)
-      notify({
-        variant: 'error',
+      notifyError(error, {
         title: msg`Failed to send confirmation email`,
         description: msg`Please try again in a moment.`,
       })
@@ -90,7 +81,7 @@ export function useDeleteAccountRequest() {
 
 export function useDeleteAccountConfirm() {
   const api = useApi()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: ConfirmAccountDeletionInput) {
@@ -98,15 +89,12 @@ export function useDeleteAccountConfirm() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
         title: msg`Account deleted`,
         description: msg`Your account and all associated data have been deleted.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to delete account', error)
-      notify({
-        variant: 'error',
+      notifyError(error, {
         title: msg`Failed to delete account`,
         description: msg`Please check your code and password, then try again.`,
       })

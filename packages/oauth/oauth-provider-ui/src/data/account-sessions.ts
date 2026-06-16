@@ -1,10 +1,12 @@
+import { msg } from '@lingui/core/macro'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   AccountSessionsInput,
   ActiveAccountSession,
   RevokeAccountSessionInput,
 } from '@atproto/oauth-provider-api'
-import { useApi } from '#/contexts/session'
+import { useNotificationsContext } from '#/contexts/notifications.tsx'
+import { useApi } from '#/contexts/session.tsx'
 
 export const accountSessionsQueryKey = ({ did }: AccountSessionsInput) =>
   ['account-sessions', did] as const
@@ -25,13 +27,18 @@ export function useAccountSessionsQuery({ did }: AccountSessionsInput) {
 export function useRevokeAccountSessionMutation() {
   const api = useApi()
   const qc = useQueryClient()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: RevokeAccountSessionInput) {
-      await api.revokeAccountSession(data)
+      return api.revokeAccountSession(data)
     },
-    onSuccess(_, { did }) {
+    onSuccess(_data, { did }, _context) {
       qc.invalidateQueries({ queryKey: accountSessionsQueryKey({ did }) })
+      notify({ title: msg`Successfully removed device` })
+    },
+    onError(error, _variables, _context) {
+      notifyError(error, { title: msg`Failed to remove device` })
     },
   })
 }

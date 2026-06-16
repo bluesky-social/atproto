@@ -1,4 +1,3 @@
-import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
@@ -6,7 +5,6 @@ import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
-import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import {
   useOAuthSessionsQuery,
   useRevokeOAuthSessionMutation,
@@ -90,7 +88,6 @@ function ApplicationSessionCard({
   did: DidString
 }) {
   const { i18n } = useLingui()
-  const { notify } = useNotificationsContext()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeOAuthSessionMutation()
 
@@ -101,24 +98,6 @@ function ApplicationSessionCard({
     clientId,
     clientMetadata,
   })
-
-  const revoke = async () => {
-    try {
-      await revokeSessions({ did, tokenId })
-      notify({
-        variant: 'success',
-        title: msg`Successfully revoked access`,
-        duration: 2e3,
-      })
-    } catch (err) {
-      console.error('Failed to revoke OAuth session', err)
-      notify({
-        variant: 'error',
-        title: msg`Failed to revoke access`,
-        duration: 2e3,
-      })
-    }
-  }
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
@@ -144,7 +123,11 @@ function ApplicationSessionCard({
         size="sm"
         className="min-w-max shrink-0 grow-0"
         loading={isPending}
-        onClick={revoke}
+        onClick={(_event) => {
+          void revokeSessions({ did, tokenId }).catch((err) => {
+            console.warn('Failed to revoke OAuth session', err)
+          })
+        }}
       >
         <Trans context="OAuthApp">Revoke access</Trans>
       </Button>

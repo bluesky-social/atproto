@@ -9,7 +9,7 @@ import { InputText } from '#/components/forms/input-text.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { FormHandler, SmartForm } from '#/components/forms/smart-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
-import { mergeRefs } from '#/hooks/merge-refs.ts'
+import { mergeRefs } from '#/lib/merge-refs.ts'
 import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,

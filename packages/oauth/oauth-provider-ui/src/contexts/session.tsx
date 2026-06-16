@@ -49,7 +49,7 @@ export function SessionProvider({
 }: SessionProviderProps) {
   const locale = useCurrentLocale()
   const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
-  const { notify } = useNotificationsContext()
+  const { notifyError } = useNotificationsContext()
   const [current, setCurrent] = useState(() => {
     if (initialSelected === InitialSelectedSession.First) {
       return initialSessions[0]?.account.did ?? null
@@ -144,8 +144,7 @@ export function SessionProvider({
         if (err instanceof UnauthorizedError) {
           if (session) removeSession(session.account.did)
 
-          notify({
-            variant: 'error',
+          notifyError(err, {
             title: msg`Unauthorized`,
             description: msg`Your session has expired. Please sign in again.`,
           })
@@ -177,7 +176,7 @@ export function SessionProvider({
     upsertAccount,
     upsertSession,
     removeSession,
-    notify,
+    notifyError,
   ])
 
   const value = useMemo(

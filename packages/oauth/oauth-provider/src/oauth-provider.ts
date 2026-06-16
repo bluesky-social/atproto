@@ -706,10 +706,9 @@ export class OAuthProvider extends OAuthVerifier {
         client,
         parameters,
         requestUri,
-        sessions: sessions.map(({ account, loginRequired }) => ({
-          account,
-          loginRequired,
-        })),
+        sessions: sessions
+          // Strip un-necessary information (like consentRequired)
+          .map(({ account, loginRequired }) => ({ account, loginRequired })),
         selectedDid:
           parameters.prompt == null ||
           parameters.prompt === 'login' ||

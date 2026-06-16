@@ -50,9 +50,9 @@ export default function (server: Server, ctx: AppContext) {
 
         await ctx.accountManager.activateAccount(requester)
 
-        const syncData = await ctx.actorStore.read(requester, (store) =>
-          store.repo.getSyncEventData(),
-        )
+        const syncData = await ctx.actorStore.read(requester, (store) => {
+          return store.repo.getSyncEventData()
+        })
 
         // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
         const { status } = await ctx.accountManager.getAccountStatus(requester)

@@ -1,8 +1,7 @@
 import './style.css'
 
 import { msg } from '@lingui/core/macro'
-import { ReactNode } from '@tanstack/react-router'
-import { StrictMode, useCallback, useState } from 'react'
+import { ReactNode, StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
@@ -72,7 +71,7 @@ createRoot(container).render(
 function App() {
   const loginHint = authorizeData.loginHint || undefined
 
-  const { api, session, setSession } = useSessionContext()
+  const { session, setSession, api } = useSessionContext()
   const { notifyError } = useNotificationsContext()
   const [rejected, setRejected] = useState<null | boolean>(null)
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
@@ -172,9 +171,8 @@ function App() {
       <ActivatedAccountGate
         onCancel={
           // If the account is "forced" through a login hint, cancelling the
-          // re-activation is equivalent to rejecting the consent. If not,
-          // cancelling the re-activation just takes the user back to the
-          // account selection screen.
+          // re-activation is equivalent to rejecting the consent. Otherwise,
+          // cancelling takes the user back to the account selection.
           loginHint ? doRejectAndRedirect : () => setSession(null)
         }
       >
@@ -207,6 +205,7 @@ function ActivatedAccountGate({
   children?: ReactNode
   onCancel?: () => void | PromiseLike<void>
 }) {
+  const { notify, notifyError } = useNotificationsContext()
   const { session, api } = useAuthenticationContext()
 
   if (session.account.deactivated) {
@@ -216,7 +215,15 @@ function ActivatedAccountGate({
         account={session.account}
         onCancel={onCancel}
         onReactivate={async () => {
-          await api.reactivateAccount({ did })
+          try {
+            await api.reactivateAccount({ did })
+            notify({
+              title: msg`Account reactivated`,
+              description: msg`Your account has been successfully reactivated.`,
+            })
+          } catch (err) {
+            notifyError(err)
+          }
         }}
       />
     )

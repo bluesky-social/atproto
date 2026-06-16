@@ -3,9 +3,7 @@ import { Trans } from '@lingui/react/macro'
 import { Account } from '@atproto/oauth-provider-api'
 import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
 import { AccountOverview } from '#/components/utils/account-overview.tsx'
-import { useNotificationsContext } from '#/contexts/notifications.tsx'
-import { useAsyncAction } from '#/hooks/use-async-action.ts'
-import { Button } from './forms/button.tsx'
+import { ButtonCooldown } from './forms/button-cooldown.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 
 export type ReactivateAccountViewProps = {
@@ -19,29 +17,6 @@ export function ReactivateAccountView({
   onReactivate,
   onCancel,
 }: ReactivateAccountViewProps) {
-  const { notify, notifyError } = useNotificationsContext()
-
-  const reactivate = useAsyncAction(async () => {
-    try {
-      await onReactivate()
-      notify({
-        variant: 'success',
-        title: msg`Account reactivated`,
-        description: msg`Your account has been successfully reactivated.`,
-      })
-    } catch (err) {
-      notifyError(err)
-    }
-  })
-
-  const cancel = useAsyncAction(async () => {
-    try {
-      await onCancel?.()
-    } catch (err) {
-      notifyError(err)
-    }
-  })
-
   return (
     <LayoutTitle
       title={msg`Welcome back!`}
@@ -60,24 +35,24 @@ export function ReactivateAccountView({
         </p>
 
         <div className="flex flex-col gap-3">
-          <Button
+          <ButtonCooldown
             color="primary"
             className="w-full"
-            loading={reactivate.loading}
-            onClick={() => void reactivate.run()}
+            action={onReactivate}
+            cooldown={0}
           >
             <Trans>Yes, reactivate my account</Trans>
-          </Button>
+          </ButtonCooldown>
 
           {onCancel && (
-            <Button
+            <ButtonCooldown
               color="darkGrey"
               className="w-full"
-              loading={cancel.loading}
-              onClick={() => void cancel.run()}
+              action={onCancel}
+              cooldown={0}
             >
               <Trans>Cancel</Trans>
-            </Button>
+            </ButtonCooldown>
           )}
         </div>
       </div>

@@ -732,9 +732,9 @@ export class OAuthStore
 
     await this.accountManager.activateAccount(did)
 
-    const syncData = await this.actorStore.read(did, (store) =>
-      store.repo.getSyncEventData(),
-    )
+    const syncData = await this.actorStore.read(did, (store) => {
+      return store.repo.getSyncEventData()
+    })
 
     // @NOTE Mirroring the XRPC handler, we over-emit on activation for
     // backwards compatibility.
