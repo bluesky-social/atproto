@@ -181,7 +181,7 @@ msgid "Authenticate"
 msgstr "Vous authentifier"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:83
+#: src/components/consent-form.tsx:84
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
@@ -218,7 +218,7 @@ msgstr "Services de messagerie Bluesky"
 msgid "Branding"
 msgstr "Personnalisation"
 
-#: src/components/consent-form.tsx:161
+#: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
@@ -282,7 +282,7 @@ msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/authorization-page.tsx:164
+#: src/components/redirecting-view.tsx:54
 msgid "Click here if you are not automatically redirected"
 msgstr "Cliquez ici si vous n'êtes pas automatiquement redirigé"
 
@@ -361,7 +361,7 @@ msgstr "Données"
 msgid "Delete"
 msgstr "Supprimer"
 
-#: src/components/consent-form.tsx:99
+#: src/components/consent-form.tsx:102
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
@@ -648,7 +648,11 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:155
+#: src/authorization-page.tsx:143
+msgid "Login canceled"
+msgstr "Connexion annulée"
+
+#: src/authorization-page.tsx:143
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -974,7 +978,7 @@ msgstr "Accès révoqué"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:134
+#: src/components/consent-form.tsx:137
 msgid "Technical details"
 msgstr "Détails techniques"
 
@@ -1036,7 +1040,7 @@ msgstr "Le nom d'utilisateur est invalide"
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
-#: src/components/consent-form.tsx:139
+#: src/components/consent-form.tsx:142
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
@@ -1194,11 +1198,11 @@ msgstr "Vérifiez que vous êtes humain"
 msgid "Verify your email"
 msgstr "Vérifier votre adresse email"
 
-#: src/components/consent-form.tsx:127
+#: src/components/consent-form.tsx:130
 msgid "wants to access your <0/> account"
 msgstr "veut accéder à votre compte <0/>"
 
-#: src/components/consent-form.tsx:121
+#: src/components/consent-form.tsx:124
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "veut vous identifier de manière unique via votre compte <0/>"
 
@@ -1234,7 +1238,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "yesterday"
 msgstr "hier"
 
-#: src/authorization-page.tsx:156
+#: src/components/redirecting-view.tsx:39
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
 

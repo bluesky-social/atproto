@@ -1,20 +1,18 @@
 import './style.css'
 
 import { msg } from '@lingui/core/macro'
-import { Trans } from '@lingui/react/macro'
 import { StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
 import { errorViewRender } from '#/components/error-view.tsx'
-import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
-import { LayoutTitle } from '#/components/layouts/layout-title'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import { NotificationsProvider } from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
+import { RedirectingView } from './components/redirecting-view'
 
 const {
   __authorizeData: authorizeData,
@@ -63,20 +61,29 @@ function App() {
   const loginHint = authorizeData.loginHint || undefined
 
   const { session, setSession, api } = useSessionContext()
+  const [rejected, setRejected] = useState<null | boolean>(null)
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
-  const [isDone, setIsDone] = useState(false)
+
+  const REDIRECT_DELAY = 500
 
   const redirectTo = useCallback((url: string) => {
     console.debug('Redirecting back to client:', url)
+
     // @NOTE We use `window.location.replace` to prevent the user from coming
     // back. Also note that in the past, this was using `window.location.href =
-    // url` which sometimes failed to perform the navigation.
+    // url` which sometimes failed to perform the navigation. The setTimeout
+    // also seems to be necessary although it is not clear why.
+
     // https://github.com/bluesky-social/atproto/issues/5077
-    window.location.replace(url)
+    setTimeout(() => {
+      window.location.replace(url)
+    }, REDIRECT_DELAY)
   }, [])
 
   const performRedirect = useCallback(
-    (url: string) => {
+    async (url: string, isRejected: boolean) => {
+      setRejected(isRejected)
+
       // @NOTE At this point, the request data is no longer accessible. If the
       // user manages to reload the current page's url (eg. refresh), the
       // server's back-forward cache busting should prevent this page state from
@@ -96,6 +103,14 @@ function App() {
       // We do this by first attempting to automatically redirect the user:
       redirectTo(url)
 
+      // Prevent the rendering of the RedirectingView while the browser is
+      // navigating by delaying the state update. We await here to keep the
+      // form action in a "pending" state in order to prevent another submission
+      // until this function is done.
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, REDIRECT_DELAY + 250),
+      )
+
       // In case automatically redirecting fails, we will also show a link that
       // the user can click to continue. There is a long(ish) pause in between
       // the automatic redirect and the link being clickable, to give the
@@ -109,10 +124,6 @@ function App() {
       // recognizing that the login process has already been completed for that
       // user (through the use of a cookie), or by revoking previous credentials
       // and triggering a new login process.
-
-      // Prevent react from rendering the "redirecting..." view while the
-      // browser is navigating by delaying the state update.
-      setTimeout(() => setIsDone(true), 250)
     },
     [redirectTo],
   )
@@ -120,15 +131,24 @@ function App() {
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string }) => {
       const { url } = await api.consent(session!.account.sub, scope)
-      performRedirect(url)
+      await performRedirect(url, false)
     },
     [api, session, performRedirect],
   )
 
   const doRejectAndRedirect = useCallback(async () => {
     const { url } = await api.reject()
-    performRedirect(url)
+    await performRedirect(url, true)
   }, [api, performRedirect])
+
+  if (redirectUrl) {
+    return (
+      <RedirectingView
+        title={rejected ? msg`Login canceled` : msg`Login complete`}
+        url={redirectUrl}
+      />
+    )
+  }
 
   return (
     <AuthenticationProvider
@@ -136,7 +156,7 @@ function App() {
       forcedIdentifier={loginHint}
       promptMode={authorizeData.promptMode}
     >
-      {session && !isDone ? (
+      {session && (
         <ConsentView
           clientId={authorizeData.clientId}
           clientMetadata={authorizeData.clientMetadata}
@@ -149,20 +169,6 @@ function App() {
           onReject={doRejectAndRedirect}
           onBack={loginHint ? undefined : () => setSession(null)}
         />
-      ) : (
-        <LayoutTitle title={msg`Login complete`}>
-          <Trans>You are being redirected...</Trans>
-          <br />
-          {redirectUrl && (
-            <ButtonCooldown
-              startWithCooldown
-              cooldown={10}
-              action={() => redirectTo(redirectUrl)}
-            >
-              <Trans>Click here if you are not automatically redirected</Trans>
-            </ButtonCooldown>
-          )}
-        </LayoutTitle>
       )}
     </AuthenticationProvider>
   )
