@@ -14,11 +14,9 @@ import httpTerminator from 'http-terminator'
 // eslint-disable-next-line import/no-named-as-default-member
 const { createHttpTerminator } = httpTerminator
 type HttpTerminator = ReturnType<typeof createHttpTerminator>
-import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
+import { DAY, SECOND } from '@atproto/common'
 import {
-  MemoryRateLimiter,
   MethodHandler,
-  RedisRateLimiter,
   ResponseType,
   XRPCError,
   createServer,
@@ -32,6 +30,7 @@ import * as error from './error.js'
 import { app } from './lexicons.js'
 import { loggerMiddleware } from './logger.js'
 import { proxyHandler } from './pipethrough.js'
+import { buildRateLimitsConfig } from './rate-limits.js'
 import compression from './util/compression.js'
 import * as wellKnown from './well-known.js'
 
@@ -113,45 +112,7 @@ export class PDS {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: rateLimits.enabled
-        ? {
-            creator: ctx.redisScratch
-              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
-              : (opts) => new MemoryRateLimiter(opts),
-            bypass: ({ req }) => {
-              const { bypassKey, bypassIps } = rateLimits
-              if (
-                bypassKey &&
-                bypassKey === req.headers['x-ratelimit-bypass']
-              ) {
-                return true
-              }
-              if (bypassIps && bypassIps.includes(req.ip)) {
-                return true
-              }
-              return false
-            },
-            global: [
-              {
-                name: 'global-ip',
-                durationMs: 5 * MINUTE,
-                points: 3000,
-              },
-            ],
-            shared: [
-              {
-                name: 'repo-write-hour',
-                durationMs: HOUR,
-                points: 5000, // creates=3, puts=2, deletes=1
-              },
-              {
-                name: 'repo-write-day',
-                durationMs: DAY,
-                points: 35000, // creates=3, puts=2, deletes=1
-              },
-            ],
-          }
-        : undefined,
+      rateLimits: buildRateLimitsConfig(rateLimits, ctx.redisScratch),
     })
 
     apiRoutes(server, ctx)

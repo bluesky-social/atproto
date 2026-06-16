@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.241
+
+### Patch Changes
+
+- [#5069](https://github.com/bluesky-social/atproto/pull/5069) [`b9ef557`](https://github.com/bluesky-social/atproto/commit/b9ef5576beeb949bbac776dcbe4e4c2c7af60e74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - add internal.bsky.actor.getProfiles endpoint
+
+- Updated dependencies [[`c4bcb12`](https://github.com/bluesky-social/atproto/commit/c4bcb12a21bebb9e83f5c98c7ccdb16b5344ee9e)]:
+  - @atproto/api@0.20.13
+
 ## 0.0.240
 
 ### Patch Changes
