@@ -12,6 +12,11 @@ import * as ToolsOzoneQueueDefs from '../lexicon/types/tools/ozone/queue/defs.js
 import * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
 import { ReportWithEvent } from '../mod-service/report.js'
+import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+} from '../mod-service/subject.js'
+import { ModerationSubjectStatusRowWithHandle } from '../mod-service/types.js'
 import { ParsedLabelers } from '../util.js'
 
 type ReportViews = {
@@ -26,6 +31,12 @@ type ReportViews = {
   getProfiles(
     dids: string[],
   ): Promise<Map<string, AppBskyActorDefs.ProfileViewDetailed>>
+  getSubjectStatus(
+    subjects: string[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>>
+  formatSubjectStatus(
+    status: ModerationSubjectStatusRowWithHandle,
+  ): ToolsOzoneModerationDefs.SubjectStatusView
 }
 
 export type HydratedReport = {
@@ -35,6 +46,7 @@ export type HydratedReport = {
   profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
   queues: Map<number, ToolsOzoneQueueDefs.QueueView>
   memberViews: Map<string, TeamMember>
+  convoStatuses: Map<string, ToolsOzoneModerationDefs.SubjectStatusView>
 }
 
 export async function hydrateReportInfo(
@@ -47,35 +59,61 @@ export async function hydrateReportInfo(
   getTeamMembers: (dids: string[]) => Promise<Map<string, TeamMember>>,
   labelers: ParsedLabelers,
 ): Promise<HydratedReport> {
+  // populate data to fetch
   const dids = new Set<string>()
   const uris = new Set<string>()
+  const convoUris = new Set<string>()
   const queueIds = new Set<number>()
   const assignmentDids: string[] = []
-
   for (const report of reports) {
     dids.add(report.subjectDid)
     dids.add(report.reportedBy)
     if (report.subjectUri) uris.add(report.subjectUri)
+    if (report.subjectConvoId && !report.subjectMessageId) {
+      convoUris.add(
+        `at://${report.subjectDid}/${CHAT_CONVO_COLLECTION}/${report.subjectConvoId}`,
+      )
+    }
     if (report.queueId && report.queueId > 0) queueIds.add(report.queueId)
     if (report.assignedTo) {
       dids.add(report.assignedTo)
       assignmentDids.push(report.assignedTo)
     }
   }
-
   const didsArray = Array.from(dids)
-  const [partialRepos, accountInfo, recordInfo, profiles, queues, memberViews] =
-    await Promise.all([
-      views.repoDetails(didsArray, labelers),
-      getAccountInfos(didsArray),
-      views.recordDetails(
-        Array.from(uris).map((uri) => ({ uri })),
-        labelers,
-      ),
-      views.getProfiles(didsArray),
-      getQueues(Array.from(queueIds)),
-      getTeamMembers(assignmentDids),
-    ])
+
+  // fetch data
+  const getConvoStatuses = async () => {
+    const rows = await views.getSubjectStatus(Array.from(convoUris))
+    const statuses = new Map<
+      string,
+      ToolsOzoneModerationDefs.SubjectStatusView
+    >()
+    for (const [subject, row] of rows) {
+      statuses.set(subject, views.formatSubjectStatus(row))
+    }
+    return statuses
+  }
+  const [
+    partialRepos,
+    accountInfo,
+    recordInfo,
+    profiles,
+    queues,
+    memberViews,
+    convoStatuses,
+  ] = await Promise.all([
+    views.repoDetails(didsArray, labelers),
+    getAccountInfos(didsArray),
+    views.recordDetails(
+      Array.from(uris).map((uri) => ({ uri })),
+      labelers,
+    ),
+    views.getProfiles(didsArray),
+    getQueues(Array.from(queueIds)),
+    getTeamMembers(assignmentDids),
+    getConvoStatuses(),
+  ])
 
   return {
     partialRepos,
@@ -84,6 +122,7 @@ export async function hydrateReportInfo(
     profiles,
     queues,
     memberViews,
+    convoStatuses,
   }
 }
 
@@ -92,7 +131,7 @@ export function buildReportView(
   hydrated: HydratedReport,
   isModerator: boolean,
   actions?: ToolsOzoneModerationDefs.ModEventView[],
-) {
+): ToolsOzoneReportDefs.ReportView {
   const {
     partialRepos,
     accountInfo,
@@ -100,9 +139,17 @@ export function buildReportView(
     profiles,
     queues,
     memberViews,
+    convoStatuses,
   } = hydrated
+
+  // flags
   const isRecord = !!report.subjectUri
+  const isMessage = !!report.subjectMessageId
+  const isConvo = !!report.subjectConvoId && !report.subjectMessageId
+  const isChat = isMessage || isConvo
   const did = report.subjectDid
+
+  // enrich
   const partialRepo = partialRepos.get(did)
   const repo = partialRepo
     ? addAccountInfoToRepoViewDetail(
@@ -113,15 +160,24 @@ export function buildReportView(
     : undefined
   const profile = profiles.get(did)
   const record = isRecord ? recordInfo.get(report.subjectUri!) : undefined
-  const status = isRecord
+
+  // subject
+  const subject = isRecord
+    ? report.subjectUri!
+    : isMessage
+      ? `at://${report.subjectDid}/${CHAT_MESSAGE_COLLECTION}/${report.subjectMessageId}`
+      : isConvo
+        ? `at://${report.subjectDid}/${CHAT_CONVO_COLLECTION}/${report.subjectConvoId}`
+        : report.subjectDid
+  // Convos have their own subject status, keyed by synthetic at-uri. Messages
+  // don't have one of their own and map to the account's subject status.
+  const subjectStatus = isRecord
     ? record?.moderation.subjectStatus
-    : repo?.moderation.subjectStatus
-
-  const reportType = report.meta?.reportType as string
-
-  const subject = isRecord ? report.subjectUri! : report.subjectDid
+    : isConvo
+      ? convoStatuses.get(subject)
+      : repo?.moderation.subjectStatus
   const subjectView = {
-    type: isRecord ? 'record' : 'account',
+    type: isRecord ? 'record' : isChat ? 'chat' : 'account',
     subject,
     repo,
     record,
@@ -131,9 +187,11 @@ export function buildReportView(
           ...profile,
         }
       : undefined,
-    status,
+    status: subjectStatus,
   }
 
+  // report
+  const reportType = report.meta?.reportType as string
   const reporterDid = report.reportedBy
   const reporterPartialRepo = partialRepos.get(reporterDid)
   const reporterRepo = reporterPartialRepo
@@ -145,7 +203,6 @@ export function buildReportView(
     : undefined
   const reporterProfile = profiles.get(reporterDid)
   const reporterStatus = reporterRepo?.moderation.subjectStatus
-
   const reporterView = {
     type: 'account',
     subject: reporterDid,
@@ -159,6 +216,7 @@ export function buildReportView(
     status: reporterStatus,
   }
 
+  // assignment
   const assignmentView =
     report.assignedTo && report.assignedAt
       ? {

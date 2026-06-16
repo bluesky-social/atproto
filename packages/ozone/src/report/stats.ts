@@ -8,6 +8,8 @@ import { dbLogger } from '../logger.js'
 
 /**
  * Grouped report types. Stats are computed per group rather than per individual report type.
+ * Frontend should match for proper stat lookup.
+ * https://github.com/bluesky-social/ozone/blob/main/components/reports/helpers/getType.ts
  */
 export const REPORT_TYPE_GROUPS: Record<string, string[]> = {
   Legacy: [

@@ -29,7 +29,7 @@
           "minLength": 1,
           "items": {
             "type": "string",
-            "knownValues": ["account", "record", "message"]
+            "knownValues": ["account", "record", "message", "conversation"]
           },
           "description": "Subject types this queue accepts."
         },

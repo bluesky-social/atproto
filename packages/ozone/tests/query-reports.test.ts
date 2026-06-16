@@ -15,6 +15,7 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 
 describe('query-reports', () => {
   let network: TestNetwork
@@ -347,6 +348,168 @@ describe('query-reports', () => {
       response.reports.forEach((report) => {
         expect(report.subject.type).toBe('account')
         expect(report.reportType).toBe(REASONSPAM)
+      })
+    })
+  })
+
+  describe('message and conversation subjectType filtering', () => {
+    const convoId = 'query-reports-convo-1'
+    const messageId = 'query-reports-message-1'
+
+    beforeAll(async () => {
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'Report on a conversation',
+        subject: {
+          $type: 'chat.bsky.convo.defs#convoRef',
+          did: sc.dids.carol,
+          convoId,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'Report on a message',
+        subject: {
+          $type: 'chat.bsky.convo.defs#messageRef',
+          did: sc.dids.carol,
+          convoId,
+          messageId,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      // Give carol an account-level subject status, distinct from the
+      // convo-keyed status rows created by the chat reports above.
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: "Report on carol's account",
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.carol,
+        },
+        reportedBy: sc.dids.alice,
+      })
+      // Report rows are inserted asynchronously by the queue-router daemon —
+      // drain it before querying.
+      await network.processAll()
+    })
+
+    it('filters reports by subjectType (conversation)', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'conversation',
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a conversation')
+
+      // Conversation subjects surface as 'chat' with a synthetic at-uri,
+      // matching the addressing convention used by queryEvents.
+      expect(response.reports[0].subject.type).toBe('chat')
+      expect(response.reports[0].subject.subject).toBe(
+        `at://${sc.dids.carol}/chat.bsky.convo/${convoId}`,
+      )
+    })
+
+    it('filters reports by conversation subject at-uri', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subject: `at://${sc.dids.carol}/chat.bsky.convo/${convoId}`,
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a conversation')
+    })
+
+    it('filters reports by subjectType (message)', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'message',
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a message')
+
+      // Message subjects surface as 'chat' with a synthetic at-uri whose
+      // rkey is the messageId.
+      expect(response.reports[0].subject.type).toBe('chat')
+      expect(response.reports[0].subject.subject).toBe(
+        `at://${sc.dids.carol}/chat.bsky.convo.message/${messageId}`,
+      )
+    })
+
+    it('filters reports by message subject at-uri', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subject: `at://${sc.dids.carol}/chat.bsky.convo.message/${messageId}`,
+      })
+
+      expect(response.reports.length).toBe(1)
+      expect(response.reports[0].comment).toBe('Report on a message')
+    })
+
+    it("includes the convo's own subject status on conversation reports", async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'conversation',
+      })
+
+      // The convoRef report created a moderation_subject_status row keyed by
+      // (did, convoId); the report view should surface that status, not the
+      // account's.
+      const status = response.reports[0].subject.status
+      expect(status).toBeDefined()
+      expect(status?.reviewState).toBe(REVIEWOPEN)
+      expect(status?.subject).toMatchObject({
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did: sc.dids.carol,
+        convoId,
+      })
+    })
+
+    it('maps message reports to the account subject status', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'message',
+      })
+
+      // Messages don't have their own subject status; the account's status is
+      // surfaced instead.
+      const status = response.reports[0].subject.status
+      expect(status).toBeDefined()
+      expect(status?.subject).toMatchObject({
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      })
+    })
+
+    it('excludes message and conversation reports from a DID subject query', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subject: sc.dids.carol,
+      })
+
+      // Chat reports are addressed by their synthetic at-uris, not the
+      // owner DID.
+      response.reports.forEach((report) => {
+        expect(report.comment).not.toBe('Report on a conversation')
+        expect(report.comment).not.toBe('Report on a message')
+      })
+    })
+
+    it('excludes message and conversation reports from the account filter', async () => {
+      const response = await modClient.queryReports({
+        status: 'open',
+        subjectType: 'account',
+      })
+
+      // Message and conversation reports also have an empty recordPath; they
+      // must not surface as account reports.
+      expect(response.reports.length).toBeGreaterThan(0)
+      response.reports.forEach((report) => {
+        expect(report.subject.subject).toMatch(/^did:/)
+        expect(report.comment).not.toBe('Report on a conversation')
+        expect(report.comment).not.toBe('Report on a message')
       })
     })
   })

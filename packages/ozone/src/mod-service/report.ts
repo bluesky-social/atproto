@@ -8,6 +8,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from '../report/handle-report-update.js'
+import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
@@ -43,16 +44,29 @@ export async function queryReports(
   builder = builder.where('r.status', '=', params.status)
 
   if (params.subject) {
-    const isRecord = params.subject.startsWith('at://')
-    if (isRecord) {
+    const isAtUri = params.subject.startsWith('at://')
+    if (isAtUri) {
       const uri = new AtUri(params.subject)
-      builder = builder
-        .where('r.did', '=', uri.host)
-        .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
+      if (uri.collection === CHAT_MESSAGE_COLLECTION) {
+        builder = builder
+          .where('r.did', '=', uri.host)
+          .where('r.subjectMessageId', '=', uri.rkey)
+      } else if (uri.collection === CHAT_CONVO_COLLECTION) {
+        builder = builder
+          .where('r.did', '=', uri.host)
+          .where('r.subjectConvoId', '=', uri.rkey)
+          .where('r.subjectMessageId', 'is', null)
+      } else {
+        builder = builder
+          .where('r.did', '=', uri.host)
+          .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
+      }
     } else {
       builder = builder
         .where('r.did', '=', params.subject)
         .where('r.recordPath', '=', '')
+        .where('r.subjectMessageId', 'is', null)
+        .where('r.subjectConvoId', 'is', null)
     }
   }
 
@@ -60,13 +74,19 @@ export async function queryReports(
     builder = builder.where('r.did', '=', params.did)
   }
 
-  if (params.subjectType) {
-    const normalizedType = params.subjectType as 'account' | 'record'
-    if (normalizedType === 'account') {
-      builder = builder.where('r.recordPath', '=', '')
-    } else if (normalizedType === 'record') {
-      builder = builder.where('r.recordPath', '!=', '')
-    }
+  if (params.subjectType === 'account') {
+    builder = builder
+      .where('r.recordPath', '=', '')
+      .where('r.subjectMessageId', 'is', null)
+      .where('r.subjectConvoId', 'is', null)
+  } else if (params.subjectType === 'record') {
+    builder = builder.where('r.recordPath', '!=', '')
+  } else if (params.subjectType === 'message') {
+    builder = builder.where('r.subjectMessageId', 'is not', null)
+  } else if (params.subjectType === 'conversation') {
+    builder = builder
+      .where('r.subjectConvoId', 'is not', null)
+      .where('r.subjectMessageId', 'is', null)
   }
 
   if (params.collections?.length) {
