@@ -41,11 +41,11 @@ export type NotificationsValue = {
 const NotificationsContext = createContext<NotificationsValue>({
   notify: (options) => {
     console.warn('Notification triggered without a provider:', options)
-    return { update() {}, close() {} }
+    return { close() {} }
   },
   notifyError: (err, _options) => {
     console.error('Error notification triggered without a provider:', err)
-    return { update() {}, close() {} }
+    return { close() {} }
   },
 })
 NotificationsContext.displayName = 'NotificationsContext'

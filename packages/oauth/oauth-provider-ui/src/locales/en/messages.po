@@ -183,7 +183,7 @@ msgstr "Apps"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 
-#: src/components/delete-account-dialog.tsx:89
+#: src/components/delete-account-dialog.tsx:86
 msgid "Are you really, really sure?"
 msgstr "Are you really, really sure?"
 
@@ -253,9 +253,9 @@ msgstr "Call"
 
 #: src/contexts/authentication.tsx:189
 #: src/components/reactivate-account-view.tsx:54
-#: src/components/delete-account-dialog.tsx:123
-#: src/components/delete-account-dialog.tsx:157
-#: src/components/delete-account-dialog.tsx:208
+#: src/components/delete-account-dialog.tsx:120
+#: src/components/delete-account-dialog.tsx:154
+#: src/components/delete-account-dialog.tsx:205
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:54
 msgid "Cancel"
@@ -277,7 +277,7 @@ msgstr "Change your password"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/components/delete-account-dialog.tsx:140
+#: src/components/delete-account-dialog.tsx:137
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 
@@ -286,7 +286,7 @@ msgstr "Check <0>{email}</0> for an email with the confirmation code to enter be
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
-#: src/components/delete-account-dialog.tsx:145
+#: src/components/delete-account-dialog.tsx:142
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Check your email for the confirmation code to enter below:"
 
@@ -406,11 +406,11 @@ msgid "Delete"
 msgstr "Delete"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:226
-#: src/components/delete-account-dialog.tsx:79
+#: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Delete account"
 
-#: src/components/delete-account-dialog.tsx:75
+#: src/components/delete-account-dialog.tsx:72
 msgid "Delete account <0/>"
 msgstr "Delete account <0/>"
 
@@ -590,11 +590,11 @@ msgstr "Failed to verify email"
 msgid "File contents"
 msgstr "File contents"
 
-#: src/components/delete-account-dialog.tsx:177
+#: src/components/delete-account-dialog.tsx:174
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:182
+#: src/components/delete-account-dialog.tsx:179
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address."
 
@@ -1016,7 +1016,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/components/delete-account-dialog.tsx:200
+#: src/components/delete-account-dialog.tsx:197
 msgid "Send email"
 msgstr "Send email"
 
@@ -1176,11 +1176,11 @@ msgstr "This sign-in session has expired"
 msgid "This username is reserved"
 msgstr "This username is reserved"
 
-#: src/components/delete-account-dialog.tsx:92
+#: src/components/delete-account-dialog.tsx:89
 msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 msgstr "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 
-#: src/components/delete-account-dialog.tsx:99
+#: src/components/delete-account-dialog.tsx:96
 msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 msgstr "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 
@@ -1364,7 +1364,7 @@ msgstr "Wrong identifier or password"
 msgid "Yes, Deactivate"
 msgstr "Yes, Deactivate"
 
-#: src/components/delete-account-dialog.tsx:115
+#: src/components/delete-account-dialog.tsx:112
 msgid "Yes, delete my account"
 msgstr "Yes, delete my account"
 
@@ -1380,7 +1380,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/delete-account-dialog.tsx:212
+#: src/components/delete-account-dialog.tsx:209
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 

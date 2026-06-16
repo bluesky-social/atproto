@@ -183,7 +183,7 @@ msgstr ""
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:89
+#: src/components/delete-account-dialog.tsx:86
 msgid "Are you really, really sure?"
 msgstr ""
 
@@ -253,9 +253,9 @@ msgstr "呼び出し"
 
 #: src/contexts/authentication.tsx:189
 #: src/components/reactivate-account-view.tsx:54
-#: src/components/delete-account-dialog.tsx:123
-#: src/components/delete-account-dialog.tsx:157
-#: src/components/delete-account-dialog.tsx:208
+#: src/components/delete-account-dialog.tsx:120
+#: src/components/delete-account-dialog.tsx:154
+#: src/components/delete-account-dialog.tsx:205
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:54
 msgid "Cancel"
@@ -277,7 +277,7 @@ msgstr ""
 msgid "Chat"
 msgstr "チャット"
 
-#: src/components/delete-account-dialog.tsx:140
+#: src/components/delete-account-dialog.tsx:137
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr ""
 
@@ -286,7 +286,7 @@ msgstr ""
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
-#: src/components/delete-account-dialog.tsx:145
+#: src/components/delete-account-dialog.tsx:142
 msgid "Check your email for the confirmation code to enter below:"
 msgstr ""
 
@@ -406,11 +406,11 @@ msgid "Delete"
 msgstr "削除"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:226
-#: src/components/delete-account-dialog.tsx:79
+#: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:75
+#: src/components/delete-account-dialog.tsx:72
 msgid "Delete account <0/>"
 msgstr ""
 
@@ -590,11 +590,11 @@ msgstr ""
 msgid "File contents"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:177
+#: src/components/delete-account-dialog.tsx:174
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:182
+#: src/components/delete-account-dialog.tsx:179
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr ""
 
@@ -1006,7 +1006,7 @@ msgstr "ドメインを選択"
 msgid "Select from an existing account"
 msgstr "既存のアカウントから選択"
 
-#: src/components/delete-account-dialog.tsx:200
+#: src/components/delete-account-dialog.tsx:197
 msgid "Send email"
 msgstr ""
 
@@ -1166,11 +1166,11 @@ msgstr "このサインインセッションの有効期限が切れました"
 msgid "This username is reserved"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:92
+#: src/components/delete-account-dialog.tsx:89
 msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:99
+#: src/components/delete-account-dialog.tsx:96
 msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
 msgstr ""
 
@@ -1354,7 +1354,7 @@ msgstr "識別子またはパスワードが間違っています"
 msgid "Yes, Deactivate"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:115
+#: src/components/delete-account-dialog.tsx:112
 msgid "Yes, delete my account"
 msgstr ""
 
@@ -1370,7 +1370,7 @@ msgstr ""
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
-#: src/components/delete-account-dialog.tsx:212
+#: src/components/delete-account-dialog.tsx:209
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr ""
 
