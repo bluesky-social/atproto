@@ -12,7 +12,7 @@ import { NotificationsProvider } from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
-import { RedirectingView } from './components/redirecting-view'
+import { RedirectView } from './components/redirect-view'
 
 const {
   __authorizeData: authorizeData,
@@ -64,88 +64,30 @@ function App() {
   const [rejected, setRejected] = useState<null | boolean>(null)
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
 
-  const REDIRECT_DELAY = 500
-
-  const redirectTo = useCallback((url: string) => {
-    console.debug('Redirecting back to client:', url)
-
-    // @NOTE We use `window.location.replace` to prevent the user from coming
-    // back. Also note that in the past, this was using `window.location.href =
-    // url` which sometimes failed to perform the navigation. The setTimeout
-    // also seems to be necessary although it is not clear why.
-
-    // https://github.com/bluesky-social/atproto/issues/5077
-    setTimeout(() => {
-      window.location.replace(url)
-    }, REDIRECT_DELAY)
-  }, [])
-
-  const performRedirect = useCallback(
-    async (url: string, isRejected: boolean) => {
-      setRejected(isRejected)
-
-      // @NOTE At this point, the request data is no longer accessible. If the
-      // user manages to reload the current page's url (eg. refresh), the
-      // server's back-forward cache busting should prevent this page state from
-      // being restored, and will result in an error page being displayed
-      // ("Unknown request_uri"). If the user is "offline" (eg. network
-      // disconnected), this cache busting by the backend will not work and the
-      // browser may restore the page state.
-      //
-      // On a related note, client processing of the token response should be a
-      // one time operation (because of nonce invalidation). So we should do our
-      // best to prevent the navigation from being interrupted, or happening
-      // more than once.
-      //
-      // This gets tricky as users may have a bad network connection, for which
-      // we should do the best we can to help them complete the login process.
-      //
-      // We do this by first attempting to automatically redirect the user:
-      redirectTo(url)
-
-      // Prevent the rendering of the RedirectingView while the browser is
-      // navigating by delaying the state update. We await here to keep the
-      // form action in a "pending" state in order to prevent another submission
-      // until this function is done.
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, REDIRECT_DELAY + 250),
-      )
-
-      // In case automatically redirecting fails, we will also show a link that
-      // the user can click to continue. There is a long(ish) pause in between
-      // the automatic redirect and the link being clickable, to give the
-      // browser some time to perform the navigation and prevent the user from
-      // clicking the link multiple times and causing multiple navigation
-      // attempts.
-      setRedirectUrl(url)
-
-      // If, despite our best efforts, the client backend receives multiple
-      // redirect requests, it should handle them gracefully: Either by
-      // recognizing that the login process has already been completed for that
-      // user (through the use of a cookie), or by revoking previous credentials
-      // and triggering a new login process.
-    },
-    [redirectTo],
-  )
-
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string }) => {
       const { url } = await api.consent(session!.account.sub, scope)
-      await performRedirect(url, false)
+      setRedirectUrl(url)
+      setRejected(false)
     },
-    [api, session, performRedirect],
+    [api, session],
   )
 
   const doRejectAndRedirect = useCallback(async () => {
     const { url } = await api.reject()
-    await performRedirect(url, true)
-  }, [api, performRedirect])
+    setRedirectUrl(url)
+    setRejected(true)
+  }, [api])
 
   if (redirectUrl) {
     return (
-      <RedirectingView
+      <RedirectView
         title={rejected ? msg`Login canceled` : msg`Login complete`}
         url={redirectUrl}
+        // We don't want the user to be able to click the back button and go
+        // back to the consent screen after consenting/rejecting, so we replace
+        // the history entry instead of pushing a new one.
+        autoRedirect="replace"
       />
     )
   }
