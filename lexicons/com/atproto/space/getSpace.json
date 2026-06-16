@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacehost.getSpace",
+  "id": "com.atproto.space.getSpace",
   "defs": {
     "main": {
       "type": "query",

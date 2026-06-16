@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacerepo.defs",
+  "id": "com.atproto.space.defs",
   "defs": {
     "signedCommit": {
       "type": "object",

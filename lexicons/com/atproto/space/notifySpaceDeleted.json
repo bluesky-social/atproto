@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacehost.notifySpaceDeleted",
+  "id": "com.atproto.space.notifySpaceDeleted",
   "defs": {
     "main": {
       "type": "procedure",

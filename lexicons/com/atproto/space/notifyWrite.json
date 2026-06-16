@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacehost.notifyWrite",
+  "id": "com.atproto.space.notifyWrite",
   "defs": {
     "main": {
       "type": "procedure",

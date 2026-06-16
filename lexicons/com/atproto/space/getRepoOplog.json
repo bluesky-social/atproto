@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacerepo.getRepoOplog",
+  "id": "com.atproto.space.getRepoOplog",
   "defs": {
     "main": {
       "type": "query",
@@ -47,7 +47,7 @@
             },
             "commit": {
               "type": "ref",
-              "ref": "com.atproto.spacerepo.defs#signedCommit",
+              "ref": "com.atproto.space.defs#signedCommit",
               "description": "Signed commitment over the current repo state. Includes the LtHash digest (commit.hash) and the rev. Only returned when the response drains the oplog to head — backfill responses omit it."
             },
             "cursor": {

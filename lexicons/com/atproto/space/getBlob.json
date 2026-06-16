@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacerepo.getBlob",
+  "id": "com.atproto.space.getBlob",
   "defs": {
     "main": {
       "type": "query",

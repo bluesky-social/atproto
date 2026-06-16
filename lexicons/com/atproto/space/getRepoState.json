@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacerepo.getRepoState",
+  "id": "com.atproto.space.getRepoState",
   "defs": {
     "main": {
       "type": "query",
@@ -28,7 +28,7 @@
           "properties": {
             "commit": {
               "type": "ref",
-              "ref": "com.atproto.spacerepo.defs#signedCommit",
+              "ref": "com.atproto.space.defs#signedCommit",
               "description": "Signed commitment over the current repo state. Includes the LtHash digest (commit.hash) and the rev. Absent when the repo has never been written to."
             }
           }

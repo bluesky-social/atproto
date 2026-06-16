@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacerepo.getAccessGrant",
+  "id": "com.atproto.space.getAccessGrant",
   "defs": {
     "main": {
       "type": "query",

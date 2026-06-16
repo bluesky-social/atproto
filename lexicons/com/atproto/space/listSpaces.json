@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.spacerepo.listSpaces",
+  "id": "com.atproto.space.listSpaces",
   "defs": {
     "main": {
       "type": "query",
