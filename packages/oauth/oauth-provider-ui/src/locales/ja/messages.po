@@ -43,7 +43,7 @@ msgstr "<0>このサイト：あなたのアカウントコントロールセン
 
 #: src/pages/account/(authenticated)/about/page.tsx:24
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
-msgstr "<0>複数のアプリで使用</0><1>あなたのAtmosphereアカウントは、<2>Blueskyソーシャルアプリ</2>や同じネットワーク上に構築された他のソーシャルアプリで機能します。</1><3>同じメールアドレスを使って異なるウェブサイトにサインインできるのと同様に、あなたのAtmosphereアカウントを使えば、同じ識別情報、接続、コンテンツを維持しながら、異なるソーシャルアプリにサインインできます。</3><4>他のアプリでAtmosphereアカウントや「インターネットハンドル」を使用してログインするオプションが表示されたら、新しいアカウントを作成する代わりに既存のアカウント <5><6/></5> を使用できます。</4>"
+msgstr "<0>複数のアプリで使用</0><1>あなたのAtmosphereアカウントは、<2>Blueskyソーシャルアプリ</2>や同じATプロトコルネットワーク上に構築された他のソーシャルアプリで機能します。</1><3>同じメールアドレスを使って異なるウェブサイトにサインインできるのと同様に、あなたのAtmosphereアカウントを使えば、同じ識別情報、接続、コンテンツを維持しながら、異なるソーシャルアプリにサインインできます。</3><4>他のアプリでAtmosphereアカウントや「インターネットハンドル」を使用してログインするオプションが表示されたら、新しいアカウントを作成する代わりに既存のアカウント <5><6/></5> を使用できます。</4>"
 
 #: src/pages/account/(authenticated)/about/page.tsx:13
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
@@ -210,13 +210,13 @@ msgstr "認証"
 #: src/components/consent-form.tsx:84
 msgctxt "OAuthConsent"
 msgid "Authorize"
-msgstr "認可"
+msgstr "承認"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
 #: src/pages/account/(authenticated)/apps/page.tsx:108
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
-msgstr "{0} に認可されました"
+msgstr "{0} に承認されました"
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
@@ -246,7 +246,7 @@ msgstr "ブランディング"
 
 #: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "<0>認可</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その利用規約とプライバシーポリシーに従って付与します。"
+msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その利用規約とプライバシーポリシーに従って付与します。"
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
@@ -1229,7 +1229,7 @@ msgstr "ユーザー名を入力"
 
 #: src/contexts/session.tsx:148
 msgid "Unauthorized"
-msgstr "未認可"
+msgstr "未承認"
 
 #: src/lib/json-client.ts:140
 msgid "Unexpected server response"
