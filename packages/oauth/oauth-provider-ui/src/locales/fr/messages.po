@@ -282,7 +282,7 @@ msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/authorization-page.tsx:164
+#: src/authorization-page.tsx:162
 msgid "Click here if you are not automatically redirected"
 msgstr "Cliquez ici si vous n'êtes pas automatiquement redirigé"
 
@@ -648,7 +648,7 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:155
+#: src/authorization-page.tsx:153
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -1234,7 +1234,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "yesterday"
 msgstr "hier"
 
-#: src/authorization-page.tsx:156
+#: src/authorization-page.tsx:154
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
 

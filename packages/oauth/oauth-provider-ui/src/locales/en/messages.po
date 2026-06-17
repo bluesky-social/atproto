@@ -282,7 +282,7 @@ msgstr "Choose a new email address to associate with your account."
 msgid "Choose a username"
 msgstr "Choose a username"
 
-#: src/authorization-page.tsx:164
+#: src/authorization-page.tsx:162
 msgid "Click here if you are not automatically redirected"
 msgstr "Click here if you are not automatically redirected"
 
@@ -648,7 +648,7 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:155
+#: src/authorization-page.tsx:153
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -1234,7 +1234,7 @@ msgstr "Wrong identifier or password"
 msgid "yesterday"
 msgstr "yesterday"
 
-#: src/authorization-page.tsx:156
+#: src/authorization-page.tsx:154
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
