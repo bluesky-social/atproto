@@ -25,7 +25,9 @@
     "node": ">=22"
   },
   "files": [
-    "dist"
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
   ],
   "dependencies": {
     "mime": "^3.0.0"

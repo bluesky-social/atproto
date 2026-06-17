@@ -17,6 +17,14 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/simple-store-redis"
   },
+  "files": [
+    "./dist",
+    "./src",
+    "./tsconfig.build.json",
+    "./tsconfig.test.json",
+    "./tsconfig.json",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
