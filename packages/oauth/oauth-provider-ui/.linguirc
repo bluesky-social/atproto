@@ -5,7 +5,8 @@
     "en",
     "es",
     "fr",
-    "ja"
+    "ja",
+    "ko"
   ],
   "fallbackLocales": {
     "default": "en"
