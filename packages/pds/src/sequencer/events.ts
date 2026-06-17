@@ -83,12 +83,10 @@ export const formatSeqIdentityEvt = async (
   did: DidString,
   handle?: HandleString,
 ): Promise<RepoSeqInsert> => {
-  const evt: IdentityEvt = {
-    did,
-  }
-  if (handle) {
-    evt.handle = handle
-  }
+  const evt: IdentityEvt = handle //
+    ? { did, handle }
+    : { did }
+
   return {
     did,
     eventType: 'identity',
@@ -101,13 +99,10 @@ export const formatSeqAccountEvt = async (
   did: DidString,
   status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
-  const evt: AccountEvt = {
-    did,
-    active: status === 'active',
-  }
-  if (status !== AccountStatus.Active) {
-    evt.status = status
-  }
+  const evt: AccountEvt =
+    status === AccountStatus.Active
+      ? { did, active: true }
+      : { did, active: false, status }
 
   return {
     did,

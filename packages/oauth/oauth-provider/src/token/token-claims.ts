@@ -1,3 +1,4 @@
+import { Did } from '@atproto/did'
 import { OAuthScope } from '@atproto/oauth-types'
 import { ClientId } from '../client/client-id.js'
 import { TokenId } from './token-id.js'
@@ -11,7 +12,7 @@ import { TokenId } from './token-id.js'
  */
 export type TokenClaims = {
   jti: TokenId
-  sub: string
+  sub: Did
   iat: number
   exp: number
   aud: string | [string, ...string[]]
