@@ -66,7 +66,7 @@ msgstr "1 hour ago"
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
-#: src/components/sign-in-form.tsx:243
+#: src/components/sign-in-form.tsx:244
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -259,11 +259,10 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
 
-#: src/contexts/authentication.tsx:189
-#: src/components/reactivate-account-view.tsx:54
+#: src/contexts/authentication.tsx:190
+#: src/components/reactivate-account-view.tsx:44
 #: src/components/delete-account-dialog.tsx:120
-#: src/components/delete-account-dialog.tsx:154
-#: src/components/delete-account-dialog.tsx:205
+#: src/components/delete-account-dialog.tsx:203
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:54
 msgid "Cancel"
@@ -290,7 +289,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:256
+#: src/components/sign-in-form.tsx:257
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -345,7 +344,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "Code"
 
-#: src/components/sign-in-form.tsx:85
+#: src/components/sign-in-form.tsx:86
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirm"
@@ -354,8 +353,8 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/components/sign-in-form.tsx:247
-#: src/components/delete-account-confirm-form.tsx:55
+#: src/components/sign-in-form.tsx:248
+#: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
@@ -422,7 +421,7 @@ msgstr "Delete account"
 msgid "Delete account <0/>"
 msgstr "Delete account <0/>"
 
-#: src/components/delete-account-confirm-form.tsx:37
+#: src/components/delete-account-confirm-form.tsx:33
 msgid "Delete my account"
 msgstr "Delete my account"
 
@@ -439,7 +438,7 @@ msgstr "Details"
 msgid "Devices"
 msgstr "Devices"
 
-#: src/components/forms/input-token.tsx:87
+#: src/components/forms/input-token.tsx:88
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Didn't receive a code? <0>Click here to resend.</0>"
 
@@ -598,11 +597,11 @@ msgstr "Failed to verify email"
 msgid "File contents"
 msgstr "File contents"
 
-#: src/components/delete-account-dialog.tsx:174
+#: src/components/delete-account-dialog.tsx:172
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:179
+#: src/components/delete-account-dialog.tsx:177
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address."
 
@@ -610,7 +609,7 @@ msgstr "For security reasons, we'll need to send a confirmation code to your ema
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/sign-in-form.tsx:209
+#: src/components/sign-in-form.tsx:210
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -668,7 +667,7 @@ msgstr "Host"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:150
+#: src/components/sign-in-form.tsx:151
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -848,8 +847,8 @@ msgstr "Only letters, numbers, and hyphens"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:68
-#: src/components/sign-in-form.tsx:189
-#: src/components/delete-account-confirm-form.tsx:70
+#: src/components/sign-in-form.tsx:190
+#: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 msgid "Password"
 msgstr "Password"
@@ -971,8 +970,8 @@ msgstr "Read your account's email address"
 msgid "Read your private preferences"
 msgstr "Read your private preferences"
 
-#: src/components/sign-in-form.tsx:230
-#: src/components/sign-in-form.tsx:235
+#: src/components/sign-in-form.tsx:231
+#: src/components/sign-in-form.tsx:236
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -989,7 +988,7 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/components/sign-in-form.tsx:207
+#: src/components/sign-in-form.tsx:208
 msgid "Reset your password"
 msgstr "Reset your password"
 
@@ -1028,7 +1027,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/components/delete-account-dialog.tsx:197
+#: src/components/delete-account-dialog.tsx:195
 msgid "Send email"
 msgstr "Send email"
 
@@ -1041,7 +1040,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/components/sign-in-form.tsx:87
+#: src/components/sign-in-form.tsx:88
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
@@ -1193,12 +1192,12 @@ msgid "This username is reserved"
 msgstr "This username is reserved"
 
 #: src/components/delete-account-dialog.tsx:89
-msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
-msgstr "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other AT Protocol services you use with this account."
+msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other Atmosphere services you use with this account."
+msgstr "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other Atmosphere services you use with this account."
 
 #: src/components/delete-account-dialog.tsx:96
-msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
-msgstr "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other AT Protocol services you use with this account."
+msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other Atmosphere services you use with this account."
+msgstr "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other Atmosphere services you use with this account."
 
 #: src/components/update-password-dialog.tsx:51
 msgid "To change your password, you'll need to enter a security code sent to your email."
@@ -1281,7 +1280,7 @@ msgstr "Use a domain name I own"
 msgid "Username"
 msgstr "Username"
 
-#: src/components/sign-in-form.tsx:155
+#: src/components/sign-in-form.tsx:156
 msgid "Username or email address"
 msgstr "Username or email address"
 
@@ -1324,7 +1323,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"
 
-#: src/components/sign-in-form.tsx:221
+#: src/components/sign-in-form.tsx:222
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 
@@ -1344,7 +1343,7 @@ msgstr "wants to access your <0/> account"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
-#: src/components/sign-in-form.tsx:220
+#: src/components/sign-in-form.tsx:221
 msgid "Warning"
 msgstr "Warning"
 
@@ -1384,7 +1383,7 @@ msgstr "Yes, Deactivate"
 msgid "Yes, delete my account"
 msgstr "Yes, delete my account"
 
-#: src/components/reactivate-account-view.tsx:44
+#: src/components/reactivate-account-view.tsx:39
 msgid "Yes, reactivate my account"
 msgstr "Yes, reactivate my account"
 
@@ -1396,7 +1395,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/delete-account-dialog.tsx:209
+#: src/components/delete-account-dialog.tsx:207
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 
@@ -1483,8 +1482,8 @@ msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
 
 #: src/components/reactivate-account-dialog.tsx:24
-msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
-msgstr "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
+msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
+msgstr "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
 
 #: src/components/utils/scope-description.tsx:647
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
