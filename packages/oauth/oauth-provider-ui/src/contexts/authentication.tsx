@@ -87,6 +87,7 @@ export function AuthenticationProvider({
           account.did === forcedIdentifier ||
           account.handle === forcedIdentifier,
       )
+      // @NOTE There is only one session per did
       const matchingSession = currentSession
         ? matchingSessions.find(
             ({ account }) => account.did === currentSession.account.did,

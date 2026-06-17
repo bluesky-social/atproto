@@ -123,9 +123,14 @@ export const findByQB = (
     )
 }
 
-export const removeByDid = async (db: AccountDb, did: Did) =>
-  // uses "token_did_idx" index
-  db.db.deleteFrom('token').where('did', '=', did).execute()
+export const removeByDid = async (db: AccountDb, did: Did) => {
+  await db.executeWithRetry(
+    db.db
+      .deleteFrom('token')
+      // uses "token_did_idx" index
+      .where('did', '=', did),
+  )
+}
 
 export const rotateQB = (
   db: AccountDb,

@@ -89,13 +89,13 @@ export function DeleteAccountDialog({
             <Trans>
               This will irreversibly delete your Bluesky account{' '}
               <Handle handle={handle} className="font-bold" /> and all
-              associated data. Note that this will affect any other AT Protocol
+              associated data. Note that this will affect any other Atmosphere
               services you use with this account.
             </Trans>
           ) : (
             <Trans>
               This will irreversibly delete your Bluesky account and all
-              associated data. Note that this will affect any other AT Protocol
+              associated data. Note that this will affect any other Atmosphere
               services you use with this account.
             </Trans>
           )

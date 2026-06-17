@@ -24,7 +24,7 @@ export function ReactivateAccountDialog({
         <Trans>
           Your profile, posts, feeds, and lists will become visible again across
           the Atmosphere network — that includes the Bluesky app and any other
-          AT Protocol app you use this account on.
+          Atmosphere app you use with this account.
         </Trans>
       }
       open={open}
