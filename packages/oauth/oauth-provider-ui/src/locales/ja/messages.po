@@ -99,7 +99,7 @@ msgstr ""
 msgid "Account"
 msgstr "アカウント"
 
-#: src/components/utils/account-image.tsx:40
+#: src/components/utils/account-image.tsx:41
 msgid "Account avatar"
 msgstr ""
 
@@ -189,7 +189,7 @@ msgid "Authenticate"
 msgstr ""
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:83
+#: src/components/consent-form.tsx:84
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr ""
@@ -226,7 +226,7 @@ msgstr "Blueskyチャットサービス"
 msgid "Branding"
 msgstr ""
 
-#: src/components/consent-form.tsx:161
+#: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
 
@@ -290,8 +290,8 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/authorization-page.tsx:162
-msgid "Click here if you are not automatically redirected"
+#: src/components/redirecting-view.tsx:92
+msgid "Click here if nothing happens"
 msgstr ""
 
 #: src/components/update-email-form.tsx:97
@@ -369,7 +369,7 @@ msgstr ""
 msgid "Delete"
 msgstr "削除"
 
-#: src/components/consent-form.tsx:99
+#: src/components/consent-form.tsx:102
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr ""
@@ -646,7 +646,11 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:153
+#: src/authorization-page.tsx:140
+msgid "Login canceled"
+msgstr ""
+
+#: src/authorization-page.tsx:140
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -976,7 +980,7 @@ msgstr ""
 msgid "Support"
 msgstr "サポート"
 
-#: src/components/consent-form.tsx:134
+#: src/components/consent-form.tsx:137
 msgid "Technical details"
 msgstr "技術的な詳細"
 
@@ -1042,7 +1046,7 @@ msgstr ""
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr ""
 
-#: src/components/consent-form.tsx:139
+#: src/components/consent-form.tsx:142
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr ""
 
@@ -1200,11 +1204,11 @@ msgstr "あなたが人間であることを確認"
 msgid "Verify your email"
 msgstr ""
 
-#: src/components/consent-form.tsx:127
+#: src/components/consent-form.tsx:130
 msgid "wants to access your <0/> account"
 msgstr "あなたの <0/> アカウントにアクセスしようとしています"
 
-#: src/components/consent-form.tsx:121
+#: src/components/consent-form.tsx:124
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
 
@@ -1240,7 +1244,7 @@ msgstr "識別子またはパスワードが間違っています"
 msgid "yesterday"
 msgstr ""
 
-#: src/authorization-page.tsx:154
+#: src/components/redirecting-view.tsx:82
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
