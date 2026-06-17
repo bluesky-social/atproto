@@ -38,6 +38,7 @@ import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
 import * as accountHelpers from './helpers/account.js'
 import { AccountStatus, ActorAccount } from './helpers/account.js'
 import * as auth from './helpers/auth.js'
+import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as emailToken from './helpers/email-token.js'
 import * as invite from './helpers/invite.js'
 import * as password from './helpers/password.js'
@@ -416,8 +417,26 @@ export class AccountManager {
     return repo.updateRoot(this.db, did, cid, rev)
   }
 
-  async deactivateAccount(did: DidString, deleteAfter: string | null) {
-    await accountHelpers.deactivateAccount(this.db, did, deleteAfter)
+  async deactivateAccount(
+    did: DidString,
+    options?: {
+      deleteCredentials?: boolean
+      deleteAfter?: string | null
+    },
+  ) {
+    await this.db.transaction(async (dbTxn) => {
+      await accountHelpers.deactivateAccount(
+        dbTxn,
+        did,
+        options?.deleteAfter ?? null,
+      )
+
+      if (options?.deleteCredentials) {
+        await token.removeByDid(dbTxn, did)
+        await authorizedClientHelper.deleteAllAuthorizedClients(dbTxn, did)
+        await password.deleteAllAppPasswords(dbTxn, did)
+      }
+    })
 
     const accountStatus = await this.getAccountStatus(did)
 

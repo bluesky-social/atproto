@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       if (deactivated) {
         if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
           if (deactivated.applied) {
-            await ctx.accountManager.deactivateAccount(subject.did, null)
+            await ctx.accountManager.deactivateAccount(subject.did)
           } else {
             await ctx.accountManager.activateAccount(subject.did)
           }

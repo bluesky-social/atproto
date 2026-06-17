@@ -67,7 +67,6 @@ import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
 import * as lexiconHelper from './helpers/lexicon.js'
-import * as passwordHelper from './helpers/password.js'
 import * as tokenHelper from './helpers/token.js'
 import * as usedRefreshTokenHelper from './helpers/used-refresh-token.js'
 
@@ -692,14 +691,9 @@ export class OAuthStore
   }
 
   async deactivateAccount({ did }: DeactivateAccountData): Promise<Account> {
-    // We also delete the credentials linked to the account.
-    await this.db.transaction(async (db) => {
-      await tokenHelper.removeByDid(db, did)
-      await authorizedClientHelper.deleteAllAuthorizedClients(db, did)
-      await passwordHelper.deleteAllAppPasswords(db, did)
+    const { account } = await this.accountManager.deactivateAccount(did, {
+      deleteCredentials: true,
     })
-
-    const { account } = await this.accountManager.deactivateAccount(did, null)
 
     return this.buildAccount(account)
   }

@@ -32,10 +32,9 @@ export default function (server: Server, ctx: AppContext) {
     server.add(com.atproto.server.deactivateAccount, {
       auth,
       handler: async ({ input: { body }, auth }) => {
-        await ctx.accountManager.deactivateAccount(
-          auth.credentials.did,
-          body.deleteAfter ?? null,
-        )
+        await ctx.accountManager.deactivateAccount(auth.credentials.did, {
+          deleteAfter: body.deleteAfter ?? null,
+        })
       },
     })
   }
