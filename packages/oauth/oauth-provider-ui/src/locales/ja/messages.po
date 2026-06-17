@@ -282,7 +282,7 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/authorization-page.tsx:164
+#: src/authorization-page.tsx:162
 msgid "Click here if you are not automatically redirected"
 msgstr ""
 
@@ -638,7 +638,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:155
+#: src/authorization-page.tsx:153
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -1224,7 +1224,7 @@ msgstr "識別子またはパスワードが間違っています"
 msgid "yesterday"
 msgstr ""
 
-#: src/authorization-page.tsx:156
+#: src/authorization-page.tsx:154
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
