@@ -94,8 +94,8 @@ msgstr ""
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:266
 #: src/pages/account/(authenticated)/route.tsx:56
+#: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "アカウント"
 
@@ -131,9 +131,9 @@ msgstr ""
 msgid "alice.com"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:61
-#: src/components/update-password-dialog.tsx:77
 #: src/components/verify-email-dialog.tsx:74
+#: src/components/update-password-dialog.tsx:77
+#: src/components/reset-password-view.tsx:61
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
@@ -190,8 +190,6 @@ msgstr ""
 
 #: src/components/consent-view.tsx:39
 #: src/components/consent-form.tsx:84
-#: src/components/consent-form.tsx:83
-#: src/components/consent-view.tsx:39
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr ""
@@ -202,9 +200,9 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr ""
 
-#: src/components/forms/form-card.tsx:55
-#: src/components/forms/wizard-card.tsx:116
 #: src/components/sign-in-picker.tsx:90
+#: src/components/forms/wizard-card.tsx:116
+#: src/components/forms/form-card.tsx:55
 msgid "Back"
 msgstr "戻る"
 
@@ -243,9 +241,9 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
 
+#: src/contexts/authentication.tsx:181
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:52
-#: src/contexts/authentication.tsx:181
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -274,8 +272,8 @@ msgstr "確認コードが記載されたメール {0} を確認し、ここに�
 msgid "Check your inbox for the verification code."
 msgstr ""
 
-#: src/data/email.ts:25
 #: src/data/password.ts:24
+#: src/data/email.ts:25
 msgid "Check your inbox."
 msgstr ""
 
@@ -406,10 +404,10 @@ msgstr ""
 msgid "Email"
 msgstr "メールアドレス"
 
-#: src/components/forms/input-email-address.tsx:34
+#: src/pages/account/(authenticated)/manage/page.tsx:118
 #: src/components/reset-password-request-form.tsx:28
 #: src/components/reset-password-request-form.tsx:32
-#: src/pages/account/(authenticated)/manage/page.tsx:118
+#: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "メールアドレス"
 
@@ -482,8 +480,8 @@ msgstr "最強"
 msgid "Failed to change email"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:35
 #: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr ""
 
@@ -562,8 +560,8 @@ msgstr ""
 msgid "Hide"
 msgstr "隠す"
 
-#: src/components/utils/link-title.tsx:16
 #: src/pages/account/(authenticated)/route.tsx:50
+#: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "ホーム"
 
@@ -726,8 +724,8 @@ msgctxt "Error"
 msgid "Name"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:176
 #: src/components/update-email-form.tsx:52
+#: src/components/update-email-dialog.tsx:176
 msgid "New email address"
 msgstr ""
 
@@ -735,9 +733,9 @@ msgstr ""
 msgid "New password"
 msgstr "新しいパスワード"
 
-#: src/components/forms/wizard-card.tsx:119
 #: src/components/reset-password-view.tsx:50
 #: src/components/reset-password-view.tsx:85
+#: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "次へ"
 
@@ -749,10 +747,10 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
-#: src/components/forms/input-password.tsx:46
-#: src/components/sign-in-form.tsx:186
-#: src/components/sign-up-credentials-form.tsx:68
 #: src/pages/account/(authenticated)/manage/page.tsx:150
+#: src/components/sign-up-credentials-form.tsx:68
+#: src/components/sign-in-form.tsx:186
+#: src/components/forms/input-password.tsx:46
 msgid "Password"
 msgstr "パスワード"
 
@@ -801,8 +799,8 @@ msgstr "あなたに代わって認証されたアクションを <0>任意の�
 msgid "Please authenticate to continue"
 msgstr ""
 
-#: src/data/email.ts:33
 #: src/data/password.ts:32
+#: src/data/email.ts:33
 msgid "Please check the email address and try again."
 msgstr ""
 
@@ -810,8 +808,8 @@ msgstr ""
 msgid "Please check the username and try again."
 msgstr ""
 
-#: src/data/email.ts:60
 #: src/data/password.ts:59
+#: src/data/email.ts:60
 msgid "Please check your reset code and try again."
 msgstr ""
 
@@ -879,9 +877,9 @@ msgstr "パスワードをリセット"
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
-#: src/components/utils/error-card.tsx:75
-#: src/pages/account/(authenticated)/apps/page.tsx:31
 #: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/components/utils/error-card.tsx:75
 msgid "Retry"
 msgstr ""
 
@@ -923,8 +921,8 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr ""
 
-#: src/components/authenticate-welcome-view.tsx:48
 #: src/components/sign-in-form.tsx:84
+#: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
 msgstr "サインイン"
@@ -938,18 +936,18 @@ msgstr "{0} でサインイン"
 msgid "Sign in as..."
 msgstr "アカウントの選択"
 
-#: src/components/utils/account-selector.tsx:55
-msgid "Sign out"
-msgstr ""
-
 #: src/pages/account/(authenticated)/devices/page.tsx:123
 msgctxt "device list"
 msgid "Sign out"
 msgstr ""
 
-#: src/components/sign-in-picker.tsx:85
+#: src/components/utils/account-selector.tsx:55
+msgid "Sign out"
+msgstr ""
+
 #: src/components/sign-up-view.tsx:51
 #: src/components/sign-up-view.tsx:56
+#: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "サインアップ"
 
@@ -1167,8 +1165,8 @@ msgstr "有効"
 msgid "Value"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:84
 #: src/components/verify-email-confirm-form.tsx:19
+#: src/components/update-email-dialog.tsx:84
 msgid "Verification code"
 msgstr ""
 
@@ -1188,8 +1186,8 @@ msgstr ""
 msgid "Verify and Save"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:74
 #: src/pages/account/(authenticated)/manage/page.tsx:73
+#: src/components/update-email-dialog.tsx:74
 msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
@@ -1258,8 +1256,8 @@ msgstr "アカウントのセットアップ後にユーザー名を自分がコ
 msgid "You can now sign in with your new email."
 msgstr ""
 
-#: src/components/reset-password-view.tsx:107
 #: src/data/password.ts:51
+#: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "新しいパスワードでサインインできるようになりました。"
 
