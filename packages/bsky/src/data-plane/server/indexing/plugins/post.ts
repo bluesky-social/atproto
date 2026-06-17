@@ -505,10 +505,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
           replyCount: db
             .selectFrom('post')
             .where('post.replyParent', '=', postIdx.post.replyParent)
-            .where((qb) =>
-              qb
-                .where('post.violatesThreadGate', 'is', null)
-                .orWhere('post.violatesThreadGate', '=', false),
+            .where((eb) =>
+              eb.or([
+                eb('post.violatesThreadGate', 'is', null),
+                eb('post.violatesThreadGate', '=', false),
+              ]),
             )
             .select(countAll.as('count')),
         })
