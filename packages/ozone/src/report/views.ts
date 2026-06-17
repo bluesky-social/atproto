@@ -192,7 +192,7 @@ export function buildReportView(
         ? queues.get(report.queueId)
         : undefined,
     isMuted: report.isMuted,
-    modTool: report.modTool ?? undefined,
+    isAutomated: report.isAutomated,
   }
 }
 

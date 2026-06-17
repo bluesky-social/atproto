@@ -154,6 +154,7 @@ describe('queue-router', () => {
         actionEventIds: null,
         actionNote: null,
         isMuted: false,
+        isAutomated: false,
         status: 'open',
         reportType: REASON_MISLEADING,
         did: carolEvent.subjectDid,

@@ -21,6 +21,9 @@ type ResolvedAssignment = {
   status: 'queued' | 'open'
 }
 
+/**
+ * Find queue to route a report to.
+ */
 function resolveAssignment(
   subjectType: SubjectType,
   collection: string | null,
@@ -29,11 +32,6 @@ function resolveAssignment(
   now: string,
   explicitQueueId?: number,
 ): ResolvedAssignment {
-  // An explicit queue id (e.g. from an Osprey rule via modTool.meta.queueId)
-  // wins over attribute matching. If the id doesn't resolve to an enabled
-  // queue, the report lands unrouted (-1) rather than falling back to
-  // attribute matching — a misconfigured rule should surface visibly, not
-  // land in a wrong queue.
   if (explicitQueueId !== undefined) {
     const target = queues.find((q) => q.id === explicitQueueId)
     if (target) return { queueId: target.id, queuedAt: now, status: 'queued' }
@@ -44,16 +42,20 @@ function resolveAssignment(
   return { queueId: -1, queuedAt: null, status: 'open' }
 }
 
-export function getQueueIdFromModTool(
+/**
+ * Parse routing info from modTool
+ */
+export function parseModTool(
   modTool: { name: string; meta?: { [_ in string]: unknown } } | null,
-): number | undefined {
-  // modTool.meta is untrusted input — accept only a positive integer.
-  const queueId = modTool?.meta?.queueId
-  return typeof queueId === 'number' &&
-    Number.isInteger(queueId) &&
-    queueId > 0
-    ? queueId
-    : undefined
+): { queueId?: number; isAutomated: boolean } {
+  // modTool.meta is untrusted input.
+  const queueId =
+    typeof modTool?.meta?.queueId === 'number'
+      ? modTool.meta.queueId
+      : undefined
+  const isAutomated = modTool?.meta?.isAutomated === true
+
+  return { queueId, isAutomated }
 }
 
 export type QueueServiceCreator = (db: Database) => QueueService
@@ -321,14 +323,14 @@ export class QueueService {
     // report.eventId, so it stays cheap.
     let query = this.db.db
       .selectFrom('report as r')
-      .innerJoin('moderation_event as e', 'e.id', 'r.eventId')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
       .select([
         'r.id',
         'r.status',
         'r.reportType',
         'r.recordPath',
         'r.subjectMessageId',
-        'e.modTool',
+        'me.modTool',
       ])
       .where('r.status', '!=', 'closed')
       .where('r.id', '>=', params.start)
@@ -376,13 +378,15 @@ export class QueueService {
       const collection =
         slashIdx > 0 ? report.recordPath.slice(0, slashIdx) : null
 
+      const tool = parseModTool(report.modTool)
+
       const assignment = resolveAssignment(
         subjectType,
         collection,
         report.reportType,
         queues,
         now,
-        getQueueIdFromModTool(report.modTool),
+        tool.queueId,
       )
 
       if (assignment.queueId !== -1) {
@@ -551,13 +555,15 @@ export class QueueService {
       const reportType =
         (event.meta?.reportType as string | undefined) ?? REASON_OTHER
 
+      const tool = parseModTool(event.modTool)
+
       const assignment = resolveAssignment(
         subjectType,
         collection,
         reportType,
         queues,
         now,
-        getQueueIdFromModTool(event.modTool),
+        tool.queueId,
       )
 
       if (assignment.queueId === -1) unmatched++
@@ -574,6 +580,7 @@ export class QueueService {
         actionEventIds: null,
         actionNote: null,
         isMuted,
+        isAutomated: tool.isAutomated,
         status: assignment.status,
         reportType,
         did: event.subjectDid,
