@@ -24,5 +24,5 @@ export function useStableCallback<T extends (...args: any[]) => any>(fn: T) {
   const ref = useRef(function (this: any, ...args: any[]) {
     return fnRef.current.call(this, ...args)
   })
-  return ref.current
+  return ref.current as T
 }

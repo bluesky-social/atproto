@@ -129,8 +129,8 @@ export class AssignmentService {
 
     if (onlyActive) {
       const now = new Date().toISOString()
-      query = query.where((qb) =>
-        qb.where('endAt', 'is', null).orWhere('endAt', '>', now),
+      query = query.where((eb) =>
+        eb.or([eb('endAt', 'is', null), eb('endAt', '>', now)]),
       )
     }
 
@@ -198,8 +198,8 @@ export class AssignmentService {
 
     if (onlyActive) {
       const now = new Date().toISOString()
-      query = query.where((qb) =>
-        qb.where('endAt', '>', now).orWhere('endAt', 'is', null),
+      query = query.where((eb) =>
+        eb.or([eb('endAt', '>', now), eb('endAt', 'is', null)]),
       )
     }
 
@@ -266,10 +266,8 @@ export class AssignmentService {
         .where('did', '=', did)
         .where('queueId', '=', queueId)
         .where('reportId', 'is', null)
-        .where((qb) =>
-          qb
-            .where('endAt', 'is', null)
-            .orWhere('endAt', '>', now.toISOString()),
+        .where((eb) =>
+          eb.or([eb('endAt', 'is', null), eb('endAt', '>', now.toISOString())]),
         )
         .executeTakeFirst()
       if (existing) {
@@ -338,8 +336,8 @@ export class AssignmentService {
       .where('did', '=', did)
       .where('queueId', '=', queueId)
       .where('reportId', 'is', null)
-      .where((qb) =>
-        qb.where('endAt', 'is', null).orWhere('endAt', '>', now.toISOString()),
+      .where((eb) =>
+        eb.or([eb('endAt', 'is', null), eb('endAt', '>', now.toISOString())]),
       )
       .executeTakeFirst()
 
@@ -447,10 +445,8 @@ export class AssignmentService {
         .selectFrom('moderator_assignment')
         .selectAll()
         .where('reportId', '=', reportId)
-        .where((qb) =>
-          qb
-            .where('endAt', '>', now.toISOString())
-            .orWhere('endAt', 'is', null),
+        .where((eb) =>
+          eb.or([eb('endAt', '>', now.toISOString()), eb('endAt', 'is', null)]),
         )
         .executeTakeFirst()
 
@@ -533,10 +529,11 @@ export class AssignmentService {
           .selectFrom('moderator_assignment')
           .selectAll()
           .where('reportId', '=', reportId)
-          .where((qb) =>
-            qb
-              .where('endAt', '>', now.toISOString())
-              .orWhere('endAt', 'is', null),
+          .where((eb) =>
+            eb.or([
+              eb('endAt', '>', now.toISOString()),
+              eb('endAt', 'is', null),
+            ]),
           )
           .executeTakeFirst()
 

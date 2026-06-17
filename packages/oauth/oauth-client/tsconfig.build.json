@@ -6,6 +6,7 @@
     "outDir": "./dist",
   },
   "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
   "references": [
     { "path": "../../did/tsconfig.build.json" },
     { "path": "../../internal/did-resolver/tsconfig.build.json" },

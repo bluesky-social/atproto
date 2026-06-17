@@ -24,6 +24,3 @@ allowBuilds:
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
-
-patchedDependencies:
-  kysely@0.22.0: patches/kysely@0.22.0.patch

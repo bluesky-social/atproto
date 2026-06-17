@@ -1,5 +1,16 @@
 # @atproto/oauth-client-expo
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/oauth-client-browser@0.4.2
+  - @atproto-labs/simple-store@0.4.1
+  - @atproto/oauth-client@0.7.3
+
 ## 0.1.0
 
 ### Minor Changes
