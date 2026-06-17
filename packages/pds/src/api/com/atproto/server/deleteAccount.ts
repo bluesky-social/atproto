@@ -5,6 +5,7 @@ import {
   MethodRateLimit,
   Server,
 } from '@atproto/xrpc-server'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
@@ -40,6 +41,12 @@ export default function (server: Server, ctx: AppContext) {
       rateLimit,
       handler: async ({ input: { body } }) => {
         const { did, password, token } = body
+
+        if (password.length > OLD_PASSWORD_MAX_LENGTH) {
+          throw new AuthRequiredError(
+            'Password too long. Consider resetting your password.',
+          )
+        }
 
         const account = await ctx.accountManager.getAccount(did, {
           includeDeactivated: true,

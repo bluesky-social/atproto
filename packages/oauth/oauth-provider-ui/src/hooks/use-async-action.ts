@@ -12,10 +12,17 @@ export type UseAsyncActionOptions = {
   onLoadingChange?: (loading: boolean) => void
 }
 
+export type AsyncActionHandler<Args extends unknown[] = []> = {
+  run: (...args: Args) => Promise<void>
+  reset: () => void
+  loading: boolean
+  error?: Error
+}
+
 export function useAsyncAction<Args extends unknown[] = []>(
   fn: (signal: AbortSignal, ...args: Args) => void | PromiseLike<void>,
   options?: UseAsyncActionOptions,
-) {
+): AsyncActionHandler<Args> {
   const [loading, setLoadingState] = useState(false)
   const [error, setError] = useState<Error | undefined>()
   const controllerRef = useRef<AbortController>(null)

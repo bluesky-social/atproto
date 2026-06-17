@@ -147,12 +147,10 @@ export function DeleteAccountDialog({
       >
         <DeleteAccountConfirmForm
           email={email}
-          requestPending={requestPending}
-          confirmPending={confirmPending}
+          // Disables the form while a code is being requested
+          loading={requestPending}
           onResend={onRequest}
           onCancel={() => setOpen(false)}
-          cancelLabel={<Trans>Cancel</Trans>}
-          onLoadingChange={setConfirmSubmitting}
           handler={async (data) => {
             setCredentials(data)
             setStep(Step.FinalConfirm)

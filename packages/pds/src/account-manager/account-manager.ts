@@ -627,9 +627,9 @@ export class AccountManager {
     passwordStr: string,
   ): Promise<boolean> {
     if (passwordStr.length > scrypt.OLD_PASSWORD_MAX_LENGTH) {
-      throw new InvalidRequestError(
-        'Password too long. Consider resetting your password.',
-      )
+      // @NOTE Avoid throwing from here to avoid leaking account email validity
+      // through error messages.
+      return false
     }
 
     return password.verifyAccountPassword(this.db, did, passwordStr)

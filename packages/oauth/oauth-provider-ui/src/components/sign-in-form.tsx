@@ -9,12 +9,12 @@ import { InputText } from '#/components/forms/input-text.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { FormHandler, SmartForm } from '#/components/forms/smart-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
+import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
 import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
 import { isValidDomain } from '#/lib/handle.ts'
-import { mergeRefs } from '#/lib/merge-refs.ts'
 import { Override } from '#/lib/util.ts'
 import { FormCardProps } from './forms/form-card.tsx'
 
@@ -65,21 +65,22 @@ export function SignInForm({
   ...props
 }: SignInFormProps) {
   const { t } = useLingui()
-  const formRef = useRef<FormHandler<SignInData, SignInValues> | null>(null)
+  const ref = useRef<FormHandler<SignInData, SignInValues> | null>(null)
+  const refMerged = useMergedRefs(props.ref, ref)
   const domains = availableDomains.filter(isValidDomain)
 
   const [secondFactorError, setSecondFactorError] =
     useState<null | SecondAuthenticationFactorRequiredError>(null)
 
   const clearSecondFactor = useCallback(() => {
-    formRef.current?.set('otp', null)
+    ref.current?.set('otp', null)
     setSecondFactorError(null)
   }, [])
 
   return (
     <SmartForm
       {...props}
-      ref={mergeRefs(props.ref, formRef)}
+      ref={refMerged}
       submitLabel={
         secondFactorError ? (
           <Trans context="verb">Confirm</Trans>

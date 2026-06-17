@@ -16,15 +16,11 @@ export type DeleteAccountConfirmData = {
 export type DeleteAccountConfirmFormProps =
   WrappedSmartFormProps<DeleteAccountConfirmData> & {
     email?: string
-    requestPending?: boolean
-    confirmPending?: boolean
     onResend: () => void | PromiseLike<void>
   }
 
 export function DeleteAccountConfirmForm({
   email,
-  requestPending,
-  confirmPending,
   onResend,
   ...props
 }: DeleteAccountConfirmFormProps) {
@@ -33,7 +29,7 @@ export function DeleteAccountConfirmForm({
     <SmartForm
       {...props}
       submitColor="error"
-      loading={props.loading || requestPending}
+      loading={props.loading}
       submitLabel={<Trans>Delete my account</Trans>}
       validate={({ token, password }) => {
         if (token && password) return { token, password }

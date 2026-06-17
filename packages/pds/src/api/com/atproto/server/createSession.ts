@@ -6,6 +6,7 @@ import {
   Server,
 } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util.js'
@@ -47,6 +48,12 @@ export default function (server: Server, ctx: AppContext) {
       handler: async ({
         input: { body },
       }): Promise<com.atproto.server.createSession.$Output> => {
+        if (body.password.length > OLD_PASSWORD_MAX_LENGTH) {
+          throw new AuthRequiredError(
+            'Password too long. Consider resetting your password.',
+          )
+        }
+
         const { user, isSoftDeleted, appPassword } =
           await ctx.accountManager.login(body)
 

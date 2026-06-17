@@ -2,7 +2,7 @@ import { Trans } from '@lingui/react/macro'
 import { TicketIcon } from '@phosphor-icons/react'
 import { composeEventHandlers } from '@radix-ui/primitive'
 import { useRef } from 'react'
-import { mergeRefs } from '#/lib/merge-refs.ts'
+import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
 import { Override } from '#/lib/util.ts'
 import { ButtonRequestCode } from './button-request-code.tsx'
 import { useFieldsetContext } from './fieldset-context.tsx'
@@ -46,11 +46,12 @@ export function InputToken({
 }: InputTokenProps) {
   const ctx = useFieldsetContext()
   const ref = useRef<HTMLInputElement>(null)
+  const refMerged = useMergedRefs(ref, props.ref)
 
   return (
     <InputText
       {...props}
-      ref={mergeRefs(ref, props.ref)}
+      ref={refMerged}
       type="text"
       autoFocus={autoFocus}
       autoCapitalize="characters"

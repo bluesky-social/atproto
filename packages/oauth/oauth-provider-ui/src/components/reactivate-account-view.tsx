@@ -3,7 +3,7 @@ import { Trans } from '@lingui/react/macro'
 import { Account } from '@atproto/oauth-provider-api'
 import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
 import { AccountOverview } from '#/components/utils/account-overview.tsx'
-import { ButtonCooldown } from './forms/button-cooldown.tsx'
+import { ButtonAsync } from './forms/button-async.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 
 export type ReactivateAccountViewProps = {
@@ -35,24 +35,14 @@ export function ReactivateAccountView({
         </p>
 
         <div className="flex flex-col gap-3">
-          <ButtonCooldown
-            color="primary"
-            className="w-full"
-            action={onReactivate}
-            cooldown={0}
-          >
+          <ButtonAsync color="primary" className="w-full" action={onReactivate}>
             <Trans>Yes, reactivate my account</Trans>
-          </ButtonCooldown>
+          </ButtonAsync>
 
           {onCancel && (
-            <ButtonCooldown
-              color="darkGrey"
-              className="w-full"
-              action={onCancel}
-              cooldown={0}
-            >
+            <ButtonAsync color="darkGrey" className="w-full" action={onCancel}>
               <Trans>Cancel</Trans>
-            </ButtonCooldown>
+            </ButtonAsync>
           )}
         </div>
       </div>
