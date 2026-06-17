@@ -9,6 +9,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.moderator,
     handler: async ({ input }) => {
       const { subject, takedown, deactivated } = input.body
+
+      if (takedown?.applied && deactivated != null && !deactivated.applied) {
+        throw new InvalidRequestError(
+          `Cannot activate and takedown an account at the same time`,
+        )
+      }
+
       if (takedown) {
         if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
@@ -39,11 +46,14 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      // @NOTE accountManager deactivateAccount and activateAccount methods
-      // already sequence the account's status, so there is no need to
-      // re-sequence it from here.
-      if (!deactivated && com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
-        await ctx.accountManager.sequenceAccountStatus(subject.did)
+      // @NOTE accountManager will sequence an account status when updating the
+      // status, so we don't *need* to sequence the account status here.
+      // However, this endpoint historically has always sequenced the account
+      // status.
+      if (!takedown && !deactivated) {
+        if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
+          await ctx.accountManager.sequenceAccountStatus(subject.did)
+        }
       }
 
       return {

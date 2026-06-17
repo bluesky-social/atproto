@@ -404,6 +404,8 @@ export class AccountManager {
       await auth.revokeRefreshTokensByDid(dbTxn, did)
       await token.removeByDid(dbTxn, did)
     })
+
+    await this.sequenceAccountStatus(did)
   }
 
   async getAccountAdminStatus(did: DidString) {
