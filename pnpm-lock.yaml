@@ -1349,6 +1349,10 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.24.2
+    devDependencies:
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
 
   packages/oauth/oauth-client-browser:
     dependencies:
