@@ -118,8 +118,8 @@ async function dumpTable<T extends keyof DatabaseSchemaType>(
   tableName: T,
   pkeys: (keyof DatabaseSchemaType[T] & string)[],
 ) {
-  const { ref } = db.db.dynamic
-  let builder = db.db.selectFrom(tableName).selectAll()
+  const { ref, table } = db.db.dynamic
+  let builder = db.db.selectFrom(table(tableName).as('t')).selectAll()
   pkeys.forEach((key) => {
     builder = builder.orderBy(ref(key))
   })
