@@ -94,8 +94,8 @@ msgstr "Access specific parts of your Bluesky account"
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr "Access specific parts of your Bluesky account and read your private preferences"
 
-#: src/components/utils/scope-description.tsx:266
 #: src/pages/account/(authenticated)/route.tsx:56
+#: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Account"
 
@@ -131,9 +131,9 @@ msgstr "Add the following record to your domain's DNS configuration."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/reset-password-view.tsx:61
-#: src/components/update-password-dialog.tsx:77
 #: src/components/verify-email-dialog.tsx:74
+#: src/components/update-password-dialog.tsx:77
+#: src/components/reset-password-view.tsx:61
 msgid "Already have a code?"
 msgstr "Already have a code?"
 
@@ -188,8 +188,8 @@ msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Authenticate"
 
-#: src/components/consent-form.tsx:83
 #: src/components/consent-view.tsx:39
+#: src/components/consent-form.tsx:83
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Authorize"
@@ -200,9 +200,9 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
 
-#: src/components/forms/form-card.tsx:55
-#: src/components/forms/wizard-card.tsx:116
 #: src/components/sign-in-picker.tsx:90
+#: src/components/forms/wizard-card.tsx:116
+#: src/components/forms/form-card.tsx:55
 msgid "Back"
 msgstr "Back"
 
@@ -241,9 +241,9 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
 
+#: src/contexts/authentication.tsx:181
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-card.tsx:52
-#: src/contexts/authentication.tsx:181
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -272,8 +272,8 @@ msgstr "Check your {0} email for a login code and enter it here."
 msgid "Check your inbox for the verification code."
 msgstr "Check your inbox for the verification code."
 
-#: src/data/email.ts:25
 #: src/data/password.ts:24
+#: src/data/email.ts:25
 msgid "Check your inbox."
 msgstr "Check your inbox."
 
@@ -404,10 +404,10 @@ msgstr "e.g. <0>alice{0}</0>"
 msgid "Email"
 msgstr "Email"
 
-#: src/components/forms/input-email-address.tsx:34
+#: src/pages/account/(authenticated)/manage/page.tsx:118
 #: src/components/reset-password-request-form.tsx:28
 #: src/components/reset-password-request-form.tsx:32
-#: src/pages/account/(authenticated)/manage/page.tsx:118
+#: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "Email address"
 
@@ -480,8 +480,8 @@ msgstr "Extra"
 msgid "Failed to change email"
 msgstr "Failed to change email"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:35
 #: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr "Failed to load connected apps"
 
@@ -570,8 +570,8 @@ msgstr "Help"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/components/utils/link-title.tsx:16
 #: src/pages/account/(authenticated)/route.tsx:50
+#: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "Home"
 
@@ -730,8 +730,8 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/update-email-dialog.tsx:176
 #: src/components/update-email-form.tsx:52
+#: src/components/update-email-dialog.tsx:176
 msgid "New email address"
 msgstr "New email address"
 
@@ -739,9 +739,9 @@ msgstr "New email address"
 msgid "New password"
 msgstr "New password"
 
-#: src/components/forms/wizard-card.tsx:119
 #: src/components/reset-password-view.tsx:50
 #: src/components/reset-password-view.tsx:85
+#: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "Next"
 
@@ -753,10 +753,10 @@ msgstr "Okay"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
-#: src/components/forms/input-password.tsx:46
-#: src/components/sign-in-form.tsx:186
-#: src/components/sign-up-credentials-form.tsx:68
 #: src/pages/account/(authenticated)/manage/page.tsx:150
+#: src/components/sign-up-credentials-form.tsx:68
+#: src/components/sign-in-form.tsx:186
+#: src/components/forms/input-password.tsx:46
 msgid "Password"
 msgstr "Password"
 
@@ -805,8 +805,8 @@ msgstr "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgid "Please authenticate to continue"
 msgstr "Please authenticate to continue"
 
-#: src/data/email.ts:33
 #: src/data/password.ts:32
+#: src/data/email.ts:33
 msgid "Please check the email address and try again."
 msgstr "Please check the email address and try again."
 
@@ -814,8 +814,8 @@ msgstr "Please check the email address and try again."
 msgid "Please check the username and try again."
 msgstr "Please check the username and try again."
 
-#: src/data/email.ts:60
 #: src/data/password.ts:59
+#: src/data/email.ts:60
 msgid "Please check your reset code and try again."
 msgstr "Please check your reset code and try again."
 
@@ -883,9 +883,9 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/components/utils/error-card.tsx:75
-#: src/pages/account/(authenticated)/apps/page.tsx:31
 #: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/components/utils/error-card.tsx:75
 msgid "Retry"
 msgstr "Retry"
 
@@ -927,8 +927,8 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/components/authenticate-welcome-view.tsx:48
 #: src/components/sign-in-form.tsx:84
+#: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Sign in"
@@ -942,18 +942,18 @@ msgstr "Sign in as {0}"
 msgid "Sign in as..."
 msgstr "Sign in as..."
 
-#: src/components/utils/account-selector.tsx:55
-msgid "Sign out"
-msgstr "Sign out"
-
 #: src/pages/account/(authenticated)/devices/page.tsx:123
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
 
-#: src/components/sign-in-picker.tsx:85
+#: src/components/utils/account-selector.tsx:55
+msgid "Sign out"
+msgstr "Sign out"
+
 #: src/components/sign-up-view.tsx:51
 #: src/components/sign-up-view.tsx:56
+#: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Sign up"
 
@@ -1171,8 +1171,8 @@ msgstr "Valid"
 msgid "Value"
 msgstr "Value"
 
-#: src/components/update-email-dialog.tsx:84
 #: src/components/verify-email-confirm-form.tsx:19
+#: src/components/update-email-dialog.tsx:84
 msgid "Verification code"
 msgstr "Verification code"
 
@@ -1192,8 +1192,8 @@ msgstr "Verification successful!"
 msgid "Verify and Save"
 msgstr "Verify and Save"
 
-#: src/components/update-email-dialog.tsx:74
 #: src/pages/account/(authenticated)/manage/page.tsx:73
+#: src/components/update-email-dialog.tsx:74
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"
@@ -1262,8 +1262,8 @@ msgstr "You can change this username to any domain name you control after your a
 msgid "You can now sign in with your new email."
 msgstr "You can now sign in with your new email."
 
-#: src/components/reset-password-view.tsx:107
 #: src/data/password.ts:51
+#: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
