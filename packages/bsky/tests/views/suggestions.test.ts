@@ -1,7 +1,7 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { stripViewer } from '../_util'
+import { stripViewer } from '../_util.js'
 
 describe('pds user search views', () => {
   let network: TestNetwork
@@ -12,7 +12,7 @@ describe('pds user search views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_suggestions',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

@@ -2,9 +2,9 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
 import * as ui8 from 'uint8arrays'
 import { noUndefinedVals } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { Label } from '../db/tables/label'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import { Label } from '../db/tables/label.js'
 
 type LabelRow = Selectable<Label>
 
@@ -19,8 +19,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('label')
       .where('uri', 'in', subjects)
       .where('src', 'in', issuers)
-      .where((qb) =>
-        qb.where('exp', 'is', null).orWhere(sql`exp::timestamp > now()`),
+      .where((eb) =>
+        eb.or([eb('exp', 'is', null), sql<boolean>`exp::timestamp > now()`]),
       )
       .selectAll()
       .execute()

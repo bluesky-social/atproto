@@ -1,5 +1,43 @@
 # @atproto/oauth-client-browser-example
 
+## 0.1.1
+
+### Patch Changes
+
+- [#4980](https://github.com/bluesky-social/atproto/pull/4980) [`482767c`](https://github.com/bluesky-social/atproto/commit/482767c4bcce95aa390b2992b028fd8e27d162b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve bundle size
+
+## 0.1.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+## 0.0.10
+
+### Patch Changes
+
+- [#4586](https://github.com/bluesky-social/atproto/pull/4586) [`b619ae8`](https://github.com/bluesky-social/atproto/commit/b619ae87a8aff8f0db7785b26b0a3602d6ef6149) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid using the app with an invalid scope that prevents the labelers to be set
+
+## 0.0.9
+
+### Patch Changes
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose bskyClient instance and lexicons on window object
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add support for signup (prompt=create)
+
+- [#4467](https://github.com/bluesky-social/atproto/pull/4467) [`a78380c`](https://github.com/bluesky-social/atproto/commit/a78380c89cb47c348e77eadb0738e7cb1c867a69) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor ui tweak
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite `getSession` and `getRecord` using generic hooks
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add bin script, allowing to run through npx
+
 ## 0.0.8
 
 ### Patch Changes

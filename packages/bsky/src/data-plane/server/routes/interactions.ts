@@ -1,8 +1,8 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { DAY, keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { countAll } from '../db/util'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import { countAll } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {
@@ -49,6 +49,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .whereRef('creator', '=', ref('profile_agg.did'))
           .select(countAll.as('val'))
           .as('starterPacksCount'),
+        db.db
+          .selectFrom('draft')
+          .whereRef('creator', '=', ref('profile_agg.did'))
+          .select(countAll.as('val'))
+          .as('draftsCount'),
       ])
       .execute()
     const byDid = keyBy(res, 'did')
@@ -61,6 +66,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       starterPacks: req.dids.map(
         (uri) => byDid.get(uri)?.starterPacksCount ?? 0,
       ),
+      drafts: req.dids.map((uri) => byDid.get(uri)?.draftsCount ?? 0),
     }
   },
   async getStarterPackCounts(req) {

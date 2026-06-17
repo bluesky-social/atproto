@@ -1,75 +1,81 @@
-# @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
-# see additional reference to this image further down.
-FROM node:20.11-alpine3.18 AS build
+# NOTE there is an additional build stage below that should match
+FROM node:24.15-alpine3.23 AS build
 
-RUN corepack enable
+RUN npm install -g pnpm@11.5.2
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
-RUN corepack prepare --activate
 
 # Move files into the image and install
-COPY ./*.* ./
-# NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
-COPY ./packages/pds ./packages/pds
+COPY ./lexicons ./lexicons
+COPY ./packages/internal ./packages/internal
+COPY ./packages/lex ./packages/lex
+
+# NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+# pnpm list --filter '@atproto/pds...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | grep -v 'packages/pds"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
-COPY ./packages/common ./packages/common
+COPY ./packages/bsky ./packages/bsky
 COPY ./packages/common-web ./packages/common-web
+COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did ./packages/did
-COPY ./packages/syntax ./packages/syntax
 COPY ./packages/identity ./packages/identity
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
-COPY ./packages/lexicon-resolver ./packages/lexicon-resolver
-COPY ./packages/repo ./packages/repo
-COPY ./packages/xrpc ./packages/xrpc
-COPY ./packages/xrpc-server ./packages/xrpc-server
-COPY ./packages/oauth/jwk ./packages/oauth/jwk
 COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
-COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
-COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/oauth/jwk-webcrypto ./packages/oauth/jwk-webcrypto
+COPY ./packages/oauth/jwk ./packages/oauth/jwk
+COPY ./packages/oauth/oauth-client-browser-example ./packages/oauth/oauth-client-browser-example
+COPY ./packages/oauth/oauth-client-browser ./packages/oauth/oauth-client-browser
+COPY ./packages/oauth/oauth-client ./packages/oauth/oauth-client
 COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
 COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
-COPY ./packages/oauth/oauth-provider-frontend ./packages/oauth/oauth-provider-frontend
+COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
 COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
-COPY ./packages/internal/pipe ./packages/internal/pipe
-COPY ./packages/internal/fetch ./packages/internal/fetch
-COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
-COPY ./packages/internal/simple-store ./packages/internal/simple-store
-COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
-COPY ./packages/internal/simple-store-redis ./packages/internal/simple-store-redis
-COPY ./packages/internal/rollup-plugin-bundle-manifest ./packages/internal/rollup-plugin-bundle-manifest
-COPY ./packages/internal/xrpc-utils ./packages/internal/xrpc-utils
+COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
+COPY ./packages/repo ./packages/repo
+COPY ./packages/sync ./packages/sync
+COPY ./packages/syntax ./packages/syntax
+COPY ./packages/ws-client ./packages/ws-client
+COPY ./packages/xrpc-server ./packages/xrpc-server
+COPY ./packages/xrpc ./packages/xrpc
+
+COPY ./packages/pds ./packages/pds
+
+# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
+COPY ./packages/bsync ./packages/bsync
+
 COPY ./services/pds ./services/pds
 
 # install all deps
-RUN pnpm install --frozen-lockfile > /dev/null
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
-RUN pnpm build > /dev/null
-# clean up
-RUN rm -rf node_modules
+RUN pnpm run --recursive --stream --filter '@atproto/pds...' build
 # install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > /dev/null
-
-WORKDIR services/pds
+RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 # Uses assets from build stage to reduce build size
-FROM node:20.11-alpine3.18
+FROM node:24.15-alpine3.23
 
 RUN apk add --update dumb-init
 
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/pds
 COPY --from=build /app /app
-RUN mkdir /app/data && chown node /app/data
+WORKDIR /app/services/pds
 
+RUN mkdir /app/data && chown node /app/data
 VOLUME /app/data
+
 EXPOSE 3000
 ENV PDS_PORT=3000
 ENV NODE_ENV=production
@@ -78,7 +84,7 @@ ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--require=./tracer.js", "index.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"

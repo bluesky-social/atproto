@@ -7,21 +7,21 @@ describe('AccountPermission', () => {
         const scope1 = AccountPermission.fromString('account:email?action=read')
         expect(scope1).not.toBeNull()
         expect(scope1!.attr).toBe('email')
-        expect(scope1!.action).toBe('read')
+        expect(scope1!.action).toEqual(['read'])
 
         const scope2 = AccountPermission.fromString(
           'account:repo?action=manage',
         )
         expect(scope2).not.toBeNull()
         expect(scope2!.attr).toBe('repo')
-        expect(scope2!.action).toBe('manage')
+        expect(scope2!.action).toEqual(['manage'])
       })
 
       it('should parse scope without action (defaults to read)', () => {
         const scope = AccountPermission.fromString('account:status')
         expect(scope).not.toBeNull()
         expect(scope!.attr).toBe('status')
-        expect(scope!.action).toBe('read')
+        expect(scope!.action).toEqual(['read'])
       })
 
       it('should reject invalid attribute names', () => {
@@ -144,26 +144,26 @@ describe('AccountPermission', () => {
 
     describe('toString', () => {
       it('should format scope with explicit action', () => {
-        const scope = new AccountPermission('email', 'manage')
+        const scope = new AccountPermission('email', ['manage'])
         expect(scope.toString()).toBe('account:email?action=manage')
       })
 
       it('should format scope with default action', () => {
-        const scope = new AccountPermission('repo', 'read')
+        const scope = new AccountPermission('repo', ['read'])
         expect(scope.toString()).toBe('account:repo')
       })
 
       it('should format all attributes correctly', () => {
-        expect(new AccountPermission('email', 'read').toString()).toBe(
+        expect(new AccountPermission('email', ['read']).toString()).toBe(
           'account:email',
         )
-        expect(new AccountPermission('repo', 'read').toString()).toBe(
+        expect(new AccountPermission('repo', ['read']).toString()).toBe(
           'account:repo',
         )
-        expect(new AccountPermission('status', 'read').toString()).toBe(
+        expect(new AccountPermission('status', ['read']).toString()).toBe(
           'account:status',
         )
-        expect(new AccountPermission('email', 'manage').toString()).toBe(
+        expect(new AccountPermission('email', ['manage']).toString()).toBe(
           'account:email?action=manage',
         )
       })

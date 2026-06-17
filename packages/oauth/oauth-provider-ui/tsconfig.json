@@ -1,7 +1,11 @@
 {
   "include": [],
+  "compilerOptions": {
+    // Needed by Zed's eslint extension
+    "paths": { "#/*": ["./src/*"] },
+  },
   "references": [
     { "path": "./tsconfig.src.json" },
-    { "path": "./tsconfig.tools.json" }
-  ]
+    { "path": "./tsconfig.tools.json" },
+  ],
 }

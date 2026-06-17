@@ -3,9 +3,9 @@ import AtpAgent, {
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { SettingScope } from '../dist/db/schema/setting'
-import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot } from './_util'
+import { SettingScope } from '../dist/db/schema/setting.js'
+import { ids } from '../src/lexicon/lexicons.js'
+import { forSnapshot } from './_util.js'
 
 describe('ozone-settings', () => {
   let network: TestNetwork
@@ -61,7 +61,7 @@ describe('ozone-settings', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_settings',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

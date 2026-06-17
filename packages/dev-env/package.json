@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.3.189",
+  "version": "0.5.12",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
@@ -12,16 +12,14 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/dev-env"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": "dist/bin.js",
+  "bin": "bin.js",
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "start": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps dist/bin.js",
     "dev": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps --watch dist/bin.js"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -30,6 +28,7 @@
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/ozone": "workspace:^",
     "@atproto/pds": "workspace:^",
@@ -41,12 +40,18 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "get-port": "^5.1.1",
-    "multiformats": "^9.9.0",
-    "uint8arrays": "3.0.0",
+    "multiformats": "^13.0.0",
+    "uint8arrays": "^5.0.0",
     "undici": "^6.14.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.13",
-    "typescript": "^5.6.3"
+    "@types/express": "^4.17.13"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

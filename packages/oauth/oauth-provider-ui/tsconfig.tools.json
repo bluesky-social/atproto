@@ -2,7 +2,8 @@
   "extends": ["../../../tsconfig/nodenext.json"],
   "compilerOptions": {
     "rootDir": ".",
-    "noEmit": true
+    "module": "Node18",
+    "noEmit": true,
   },
-  "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts", "./*.cts", "./*.mts"]
+  "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts", "./*.cts", "./*.mts"],
 }

@@ -1,87 +1,87 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pds follow views fetches followers 1`] = `
-Object {
+exports[`pds follow views > fetches followers 1`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "followers": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "followers": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(2)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(4)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(6)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(7)",
         "following": "record(6)",
@@ -89,21 +89,21 @@ Object {
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-alice",
     "did": "user(8)",
     "displayName": "display-alice",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
@@ -111,66 +111,66 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 2`] = `
-Object {
+exports[`pds follow views > fetches followers 2`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "followers": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "followers": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(0)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-bob",
     "did": "user(4)",
     "displayName": "display-bob",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(3)",
       "following": "record(2)",
@@ -180,87 +180,87 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 3`] = `
-Object {
+exports[`pds follow views > fetches followers 3`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "followers": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "followers": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(2)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-carol",
     "did": "user(6)",
     "displayName": "display-carol",
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(5)",
       "following": "record(4)",
@@ -270,45 +270,45 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 4`] = `
-Object {
+exports[`pds follow views > fetches followers 4`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "followers": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "followers": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(0)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-dan",
     "did": "user(2)",
     "displayName": "display-dan",
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -318,66 +318,66 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 5`] = `
-Object {
+exports[`pds follow views > fetches followers 5`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "followers": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "followers": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(0)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-eve",
     "did": "user(4)",
     "displayName": "display-eve",
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(3)",
       "following": "record(2)",
@@ -387,88 +387,88 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 1`] = `
-Object {
+exports[`pds follow views > fetches follows 1`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "follows": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "follows": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-dan",
       "did": "user(2)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(4)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(6)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(7)",
         "following": "record(6)",
@@ -476,21 +476,21 @@ Object {
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-alice",
     "did": "user(8)",
     "displayName": "display-alice",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "muted": false,
     },
@@ -498,66 +498,66 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 2`] = `
-Object {
+exports[`pds follow views > fetches follows 2`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "follows": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "follows": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(0)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-bob",
     "did": "user(4)",
     "displayName": "display-bob",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(3)",
       "following": "record(2)",
@@ -567,45 +567,45 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 3`] = `
-Object {
+exports[`pds follow views > fetches follows 3`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "follows": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "follows": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(0)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-carol",
     "did": "user(2)",
     "displayName": "display-carol",
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -615,87 +615,87 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 4`] = `
-Object {
+exports[`pds follow views > fetches follows 4`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "follows": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "follows": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-eve",
       "did": "user(0)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-bob",
       "did": "user(2)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-dan",
     "did": "user(6)",
     "displayName": "display-dan",
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(5)",
       "following": "record(4)",
@@ -705,66 +705,66 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 5`] = `
-Object {
+exports[`pds follow views > fetches follows 5`] = `
+{
   "cursor": "0000000000000__bafycid",
-  "follows": Array [
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+  "follows": [
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-carol",
       "did": "user(0)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
       },
     },
-    Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
+      "labels": [],
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
     },
   ],
-  "subject": Object {
-    "associated": Object {
-      "activitySubscription": Object {
+  "subject": {
+    "associated": {
+      "activitySubscription": {
         "allowSubscriptions": "followers",
       },
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "descript-eve",
     "did": "user(4)",
     "displayName": "display-eve",
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
-    "viewer": Object {
+    "labels": [],
+    "viewer": {
       "blockedBy": false,
       "followedBy": "record(3)",
       "following": "record(2)",
@@ -774,21 +774,21 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches relationships between users 1`] = `
-Object {
+exports[`pds follow views > fetches relationships between users 1`] = `
+{
   "actor": "user(0)",
-  "relationships": Array [
-    Object {
+  "relationships": [
+    {
       "$type": "app.bsky.graph.defs#relationship",
       "did": "user(1)",
       "followedBy": "record(1)",
       "following": "record(0)",
     },
-    Object {
+    {
       "$type": "app.bsky.graph.defs#relationship",
       "did": "user(0)",
     },
-    Object {
+    {
       "$type": "app.bsky.graph.defs#relationship",
       "did": "user(2)",
       "following": "record(2)",

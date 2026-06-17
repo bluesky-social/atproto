@@ -1,12 +1,8 @@
 import { sql } from 'kysely'
-import {
-  Record as PostRecord,
-  ReplyRef,
-} from '../../lexicon/types/app/bsky/feed/post'
-import { Record as GateRecord } from '../../lexicon/types/app/bsky/feed/threadgate'
-import { parseThreadGate } from '../../views/util'
-import { DatabaseSchema } from './db/database-schema'
-import { valuesList } from './db/util'
+import { GateRecord, PostRecord, PostReplyRef } from '../../views/types.js'
+import { parseThreadGate } from '../../views/util.js'
+import { DatabaseSchema } from './db/database-schema.js'
+import { valuesList } from './db/util.js'
 
 export const getDescendentsQb = (
   db: DatabaseSchema,
@@ -72,7 +68,7 @@ export const getAncestorsAndSelfQb = (
 }
 
 export const invalidReplyRoot = (
-  reply: ReplyRef,
+  reply: PostReplyRef,
   parent: {
     record: PostRecord
     invalidReplyRoot: boolean | null
@@ -175,7 +171,7 @@ export const parsePostSearchQuery = (
   let quoted = false
   for (const c of qParam) {
     if (c === ' ' && !quoted) {
-      curr.trim() && parts.push(curr)
+      if (curr.trim()) parts.push(curr)
       curr = ''
       continue
     }
@@ -185,7 +181,7 @@ export const parsePostSearchQuery = (
     }
     curr += c
   }
-  curr.trim() && parts.push(curr)
+  if (curr.trim()) parts.push(curr)
 
   const qParts: string[] = []
   for (const p of parts) {

@@ -1,0 +1,67 @@
+{
+  "name": "@atproto/lex-server",
+  "version": "0.1.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "description": "Request router for Atproto Lexicon protocols and schemas",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "router",
+    "typescript"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex/lex-server"
+  },
+  "files": [
+    "./src",
+    "./tsconfig.build.json",
+    "./tsconfig.tests.json",
+    "./tsconfig.json",
+    "./dist",
+    "./nodejs.cjs",
+    "./CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./nodejs": {
+      "types": "./dist/nodejs.d.ts",
+      "require": "./dist/nodejs.js",
+      "default": "./dist/nodejs.js"
+    }
+  },
+  "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:^",
+    "@atproto/crypto": "workspace:^",
+    "@atproto/did": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
+    "http-terminator": "^3.2.0",
+    "tslib": "^2.8.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@atproto/lex": "workspace:^",
+    "@atproto/lex-client": "workspace:^",
+    "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "4.0.16",
+    "vitest": "^4.0.16"
+  },
+  "scripts": {
+    "build": "tsgo --build tsconfig.build.json",
+    "test": "vitest run"
+  }
+}

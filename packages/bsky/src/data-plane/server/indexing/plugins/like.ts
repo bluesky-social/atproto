@@ -1,16 +1,13 @@
 import { Insertable, Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { Notification } from '../../db/tables/notification'
-import { countAll, excluded } from '../../db/util'
-import { RecordProcessor } from '../processor'
-
-const lexId = lex.ids.AppBskyFeedLike
+import { app } from '../../../../lexicons/index.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { Notification } from '../../db/tables/notification.js'
+import { countAll, excluded } from '../../db/util.js'
+import { RecordProcessor } from '../processor.js'
 
 type Notif = Insertable<Notification>
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
@@ -18,8 +15,8 @@ type IndexedLike = Selectable<DatabaseSchemaType['like']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Like.Record,
+  cid: Cid,
+  obj: app.bsky.feed.like.Main,
   timestamp: string,
 ): Promise<IndexedLike | null> => {
   const inserted = await db
@@ -44,7 +41,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Like.Record,
+  obj: app.bsky.feed.like.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('like')
@@ -135,14 +132,10 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
   await likeCountQb.execute()
 }
 
-export type PluginType = RecordProcessor<Like.Record, IndexedLike>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.like.main,
     insertFn,
     findDuplicate,
     deleteFn,

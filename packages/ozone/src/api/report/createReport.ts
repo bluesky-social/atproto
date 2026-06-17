@@ -1,12 +1,12 @@
 import { ForbiddenError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ReasonType } from '../../lexicon/types/com/atproto/moderation/defs'
-import { ModerationService } from '../../mod-service'
-import { subjectFromInput } from '../../mod-service/subject'
-import { TagService } from '../../tag-service'
-import { getTagForReport } from '../../tag-service/util'
-import { isAppealReport } from '../util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { ReasonType } from '../../lexicon/types/com/atproto/moderation/defs.js'
+import { ModerationService } from '../../mod-service/index.js'
+import { subjectFromInput } from '../../mod-service/subject.js'
+import { TagService } from '../../tag-service/index.js'
+import { getTagForReport } from '../../tag-service/util.js'
+import { isAppealReport } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -24,10 +24,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const db = ctx.db
 
-      await Promise.all([
-        assertValidReporter(ctx.modService(db), reasonType, requester),
-        ctx.moderationServiceProfile().validateReasonType(reasonType),
-      ])
+      await ctx.moderationServiceProfile().validateReasonType(reasonType)
+      await assertValidReporter(ctx.modService(db), reasonType, requester)
 
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.modService(dbTxn)

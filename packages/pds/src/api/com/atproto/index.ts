@@ -1,12 +1,12 @@
-import { AppContext } from '../../../context'
-import { Server } from '../../../lexicon'
-import admin from './admin'
-import identity from './identity'
-import moderation from './moderation'
-import repo from './repo'
-import serverMethods from './server'
-import sync from './sync'
-import temp from './temp'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../context.js'
+import admin from './admin/index.js'
+import identity from './identity/index.js'
+import moderation from './moderation/index.js'
+import repo from './repo/index.js'
+import serverMethods from './server/index.js'
+import sync from './sync/index.js'
+import temp from './temp/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)

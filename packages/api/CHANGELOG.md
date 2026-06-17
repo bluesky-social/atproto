@@ -1,5 +1,494 @@
 # @atproto/api
 
+## 0.20.16
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/common-web@0.5.1
+  - @atproto/lexicon@0.7.2
+  - @atproto/syntax@0.6.2
+  - @atproto/xrpc@0.8.1
+
+## 0.20.15
+
+### Patch Changes
+
+- [#5090](https://github.com/bluesky-social/atproto/pull/5090) [`b3c4bc6`](https://github.com/bluesky-social/atproto/commit/b3c4bc6dbcb31340de6c0a0a618a17a8a7bc8a94) Thanks [@ds-boyce](https://github.com/ds-boyce)! - update chat lexicons
+
+## 0.20.14
+
+### Patch Changes
+
+- [#5084](https://github.com/bluesky-social/atproto/pull/5084) [`385c7be`](https://github.com/bluesky-social/atproto/commit/385c7be0f31f11c17f1668f09b5badb6485f9bc3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.13
+
+### Patch Changes
+
+- [#5075](https://github.com/bluesky-social/atproto/pull/5075) [`c4bcb12`](https://github.com/bluesky-social/atproto/commit/c4bcb12a21bebb9e83f5c98c7ccdb16b5344ee9e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.12
+
+### Patch Changes
+
+- [#5066](https://github.com/bluesky-social/atproto/pull/5066) [`24c7311`](https://github.com/bluesky-social/atproto/commit/24c7311427b8ccd5d8529a70ed93b4d77f38a516) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5064](https://github.com/bluesky-social/atproto/pull/5064) [`1f89abb`](https://github.com/bluesky-social/atproto/commit/1f89abb908ce1214638f91c19ef957553b7ebc03) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.11
+
+### Patch Changes
+
+- [#5056](https://github.com/bluesky-social/atproto/pull/5056) [`da8818f`](https://github.com/bluesky-social/atproto/commit/da8818f13577c91a5001a9998279d695fccb7bcf) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.10
+
+### Patch Changes
+
+- [#5046](https://github.com/bluesky-social/atproto/pull/5046) [`77a3861`](https://github.com/bluesky-social/atproto/commit/77a3861561691ea51a94f96de86069c7875772da) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5052](https://github.com/bluesky-social/atproto/pull/5052) [`4280e58`](https://github.com/bluesky-social/atproto/commit/4280e585b63b1e53704fee8c68a8347224f74253) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.9
+
+### Patch Changes
+
+- [#4827](https://github.com/bluesky-social/atproto/pull/4827) [`41a561e`](https://github.com/bluesky-social/atproto/commit/41a561e80a6c906e9a6ec8e29f8ea970ce9fe2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new lexicon for gallery embed type
+
+## 0.20.8
+
+### Patch Changes
+
+- [#5027](https://github.com/bluesky-social/atproto/pull/5027) [`07014df`](https://github.com/bluesky-social/atproto/commit/07014df290b489fe63b10ad5d65d854fe3b6c849) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5028](https://github.com/bluesky-social/atproto/pull/5028) [`b4aa930`](https://github.com/bluesky-social/atproto/commit/b4aa9308386011d85cd17395d5989c026c44f8d8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Revert account-level label behavior change introduced in 0.19.13 and #4769
+
+## 0.20.7
+
+### Patch Changes
+
+- [#5018](https://github.com/bluesky-social/atproto/pull/5018) [`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4941](https://github.com/bluesky-social/atproto/pull/4941) [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow conversations to be reported in ozone
+
+  This change extends ozone's moderation system to handle conversation reporting alongside existing reporting subject types.
+
+- [#5011](https://github.com/bluesky-social/atproto/pull/5011) [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5023](https://github.com/bluesky-social/atproto/pull/5023) [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.6
+
+### Patch Changes
+
+- [#4999](https://github.com/bluesky-social/atproto/pull/4999) [`126ac1e`](https://github.com/bluesky-social/atproto/commit/126ac1ead8c44065e3fa7c02efba7bd20551ee99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.5
+
+### Patch Changes
+
+- [#4998](https://github.com/bluesky-social/atproto/pull/4998) [`4984994`](https://github.com/bluesky-social/atproto/commit/4984994f7d3f0773b03c61dccd68286e42e0c6af) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.4
+
+### Patch Changes
+
+- [#4987](https://github.com/bluesky-social/atproto/pull/4987) [`7fecf13`](https://github.com/bluesky-social/atproto/commit/7fecf13852eff09c0dd55da0258cf779688a36e6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4987](https://github.com/bluesky-social/atproto/pull/4987) [`7fecf13`](https://github.com/bluesky-social/atproto/commit/7fecf13852eff09c0dd55da0258cf779688a36e6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4991](https://github.com/bluesky-social/atproto/pull/4991) [`86bb63e`](https://github.com/bluesky-social/atproto/commit/86bb63ef97d487abe55a5a263261b4af2b5d7664) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.3
+
+### Patch Changes
+
+- [#4985](https://github.com/bluesky-social/atproto/pull/4985) [`604e16d`](https://github.com/bluesky-social/atproto/commit/604e16dda2972f0e17cedefc49dafd4ecbfda8f9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update fields that are always present on `viewExternalSource`
+
+## 0.20.2
+
+### Patch Changes
+
+- [#4975](https://github.com/bluesky-social/atproto/pull/4975) [`5b43753`](https://github.com/bluesky-social/atproto/commit/5b43753aa5e32edfa8aebbcc6f1e8ba777657c07) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4915](https://github.com/bluesky-social/atproto/pull/4915) [`2c958f8`](https://github.com/bluesky-social/atproto/commit/2c958f88219b7c796a884a37da13847bb817c8e6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add rich metadata fields to `app.bsky.embed.external#viewExternal`, and a new
+  query method `app.bsky.embed.getEmbedExternalView`. Also changes
+  `associatedRecords` to `associatedRefs` on the `app.bsky.embed.external` record.
+
+## 0.20.1
+
+### Patch Changes
+
+- [#4963](https://github.com/bluesky-social/atproto/pull/4963) [`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4968](https://github.com/bluesky-social/atproto/pull/4968) [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Run "lexgen" during CI instead of keeping the generated code in Git
+
+## 0.20.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common-web@0.5.0
+  - @atproto/lexicon@0.7.0
+  - @atproto/syntax@0.6.0
+  - @atproto/xrpc@0.8.0
+
+## 0.19.19
+
+### Patch Changes
+
+- [#4945](https://github.com/bluesky-social/atproto/pull/4945) [`cb13878`](https://github.com/bluesky-social/atproto/commit/cb1387899f0b296759ebdf5b8985b6b573091a9a) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4947](https://github.com/bluesky-social/atproto/pull/4947) [`ea4184b`](https://github.com/bluesky-social/atproto/commit/ea4184b9beb9821d806a9540223dab55c2628184) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Updates contract defined in #4912 to replace `associatedRecord: string` with `associatedRecords: StrongRef[]`
+
+- [#4946](https://github.com/bluesky-social/atproto/pull/4946) [`38bc2fa`](https://github.com/bluesky-social/atproto/commit/38bc2faa142d42f95c5b89b5a10bf8ed607fe39f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.18
+
+### Patch Changes
+
+- [#4932](https://github.com/bluesky-social/atproto/pull/4932) [`18d3114`](https://github.com/bluesky-social/atproto/commit/18d311494038b73e3c3429e504ca6cc05bba5f6d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4933](https://github.com/bluesky-social/atproto/pull/4933) [`0533a5f`](https://github.com/bluesky-social/atproto/commit/0533a5f60ecc1f15feb9c4940781bc7e217a3644) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - trigger build after github actions previously disabled
+
+## 0.19.17
+
+### Patch Changes
+
+- [#4924](https://github.com/bluesky-social/atproto/pull/4924) [`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4926](https://github.com/bluesky-social/atproto/pull/4926) [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.16
+
+### Patch Changes
+
+- [#4661](https://github.com/bluesky-social/atproto/pull/4661) [`d05b76c`](https://github.com/bluesky-social/atproto/commit/d05b76cdb59e5bf0af739d1dcbe54df5e7faa7b3) Thanks [@foysalit](https://github.com/foysalit)! - Introduce report based moderation flow in ozone
+
+## 0.19.15
+
+### Patch Changes
+
+- [#4912](https://github.com/bluesky-social/atproto/pull/4912) [`450f26a`](https://github.com/bluesky-social/atproto/commit/450f26ac854cf53484dd887204447c8ead78d3b2) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `associatedRecord` to `app.bsky.embed.external` record.
+
+## 0.19.14
+
+### Patch Changes
+
+- [#4894](https://github.com/bluesky-social/atproto/pull/4894) [`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1) Thanks [@foysalit](https://github.com/foysalit)! - Add expiring tags in ozone
+
+## 0.19.13
+
+### Patch Changes
+
+- [#4906](https://github.com/bluesky-social/atproto/pull/4906) [`2879b56`](https://github.com/bluesky-social/atproto/commit/2879b56a04d37fc93d5afb51cf6131fb7c156b85) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#4769](https://github.com/bluesky-social/atproto/pull/4769) [`02b8b32`](https://github.com/bluesky-social/atproto/commit/02b8b32d2fd57ade330d18fbfc8d0d25ed95e476) Thanks [@whyrusleeping](https://github.com/whyrusleeping)! - Update blur behaviors to be more comprehensive and cover more surfaces.
+
+## 0.19.12
+
+### Patch Changes
+
+- [#4903](https://github.com/bluesky-social/atproto/pull/4903) [`3f1cb53`](https://github.com/bluesky-social/atproto/commit/3f1cb5374cec92b4422bbb9a7d6f06dba77396ae) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.11
+
+### Patch Changes
+
+- [#4876](https://github.com/bluesky-social/atproto/pull/4876) [`03445ee`](https://github.com/bluesky-social/atproto/commit/03445eef45d9fba66d48ea5ca86742685d91faa5) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.19.10
+
+### Patch Changes
+
+- [#4875](https://github.com/bluesky-social/atproto/pull/4875) [`3cb1569`](https://github.com/bluesky-social/atproto/commit/3cb156907a15f3f22a1be734f82b3b0c855b4da0) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Update chat lexicons
+
+- [#4866](https://github.com/bluesky-social/atproto/pull/4866) [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add description fields
+
+- [#4868](https://github.com/bluesky-social/atproto/pull/4868) [`dacb0e8`](https://github.com/bluesky-social/atproto/commit/dacb0e80053e00821408e64e91994fe7d1565f45) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add and hydrate group chat invite declaration
+
+## 0.19.9
+
+### Patch Changes
+
+- [#4854](https://github.com/bluesky-social/atproto/pull/4854) [`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - group chat lexicons
+
+## 0.19.8
+
+### Patch Changes
+
+- [#4841](https://github.com/bluesky-social/atproto/pull/4841) [`55c3986`](https://github.com/bluesky-social/atproto/commit/55c39860c8fbf9747a6edec415f19c67f80c597f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make sure to include did and isMe checks on decideStatus default decision
+
+## 0.19.7
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `moderateStatus` method to eval labels on actor `status` views
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.20
+
+## 0.19.6
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- Updated dependencies [[`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/syntax@0.5.3
+
+## 0.19.5
+
+### Patch Changes
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export internal `ids`
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "codegen" as part of the build
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type `did` and `assertDid` `Agent` properties to be typed as `DidString`
+
+- [#4791](https://github.com/bluesky-social/atproto/pull/4791) [`3aa18f8`](https://github.com/bluesky-social/atproto/commit/3aa18f84ef80a170b572076feeb649906ffcb06c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Codegen updated lexicons
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+
+## 0.19.4
+
+### Patch Changes
+
+- [#4709](https://github.com/bluesky-social/atproto/pull/4709) [`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a purge event to remove ozone's data on age assurance
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+
+## 0.19.3
+
+### Patch Changes
+
+- [#4717](https://github.com/bluesky-social/atproto/pull/4717) [`76ab6ea`](https://github.com/bluesky-social/atproto/commit/76ab6eaa7bfa49fc218299d09446bb339c700bb5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Trust `status` returned from `refreshSession` and do not fall back to a potentially stale value from `this.session`.
+
+## 0.19.2
+
+### Patch Changes
+
+- [#4683](https://github.com/bluesky-social/atproto/pull/4683) [`6634140`](https://github.com/bluesky-social/atproto/commit/66341400d49d1210619b000a040852d87085c32c) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Introduce recIdStr field
+
+- [#4713](https://github.com/bluesky-social/atproto/pull/4713) [`0e5df95`](https://github.com/bluesky-social/atproto/commit/0e5df95e3a8d81931524848d301cd43d1f12fb78) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make sure to always trigger a `refreshSession` when `resumeSession()` is called
+
+## 0.19.1
+
+### Patch Changes
+
+- [#4704](https://github.com/bluesky-social/atproto/pull/4704) [`137065b`](https://github.com/bluesky-social/atproto/commit/137065b333b8c9b97e6b3b2ac6147c7509a1ae42) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add feed to sendInteractions input
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/common-web@0.4.18
+  - @atproto/lexicon@0.6.2
+
+## 0.19.0
+
+### Minor Changes
+
+- [#4631](https://github.com/bluesky-social/atproto/pull/4631) [`450f085`](https://github.com/bluesky-social/atproto/commit/450f0856630fa08c20dc60fef8b5d2a07b9a2552) Thanks [@LotharieSlayer](https://github.com/LotharieSlayer)! - Updating atproto app password based session example in README
+
+## 0.18.21
+
+### Patch Changes
+
+- [#4633](https://github.com/bluesky-social/atproto/pull/4633) [`60f84eb`](https://github.com/bluesky-social/atproto/commit/60f84ebe47016828add07b143c403e331c58ee78) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Increase draft char limit from 300 to 1000
+
+- [#4632](https://github.com/bluesky-social/atproto/pull/4632) [`50dfbec`](https://github.com/bluesky-social/atproto/commit/50dfbec512682d35e8108b952e8f0533da71beef) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getSuggestedOnboardingUser and app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - update germ networks lexicon
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - add `none` to germ declaration record
+
+## 0.18.20
+
+### Patch Changes
+
+- [#4591](https://github.com/bluesky-social/atproto/pull/4591) [`4f5c400`](https://github.com/bluesky-social/atproto/commit/4f5c4001271bbf38b30506efd30ebdabb969878f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `platform` to `deviceName` on `draft` view, add maxLength.
+
+## 0.18.19
+
+### Patch Changes
+
+- [#4590](https://github.com/bluesky-social/atproto/pull/4590) [`25cea46`](https://github.com/bluesky-social/atproto/commit/25cea46aaa3d84521d1e977b67d3ac3581304ba1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `deviceId` and `platform` to drafts as optional props
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.15
+
+## 0.18.18
+
+### Patch Changes
+
+- [#4581](https://github.com/bluesky-social/atproto/pull/4581) [`2830dae`](https://github.com/bluesky-social/atproto/commit/2830daeaa6f580fbf777a0f832d64a6579616dc7) Thanks [@mozzius](https://github.com/mozzius)! - Add `presentation` to video embed as a hint to the client about how to display the video
+
+- Updated dependencies [[`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/common-web@0.4.14
+
+## 0.18.17
+
+### Patch Changes
+
+- [#4565](https://github.com/bluesky-social/atproto/pull/4565) [`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3) Thanks [@cuducos](https://github.com/cuducos)! - Re-add `recId` to suggested users (now, as string)
+
+- [#4547](https://github.com/bluesky-social/atproto/pull/4547) [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c) Thanks [@cuducos](https://github.com/cuducos)! - Removes `recId` from suggested users — we need it as a string, so we're gonna re-add it as string (instead of integer) later.
+
+- [#4415](https://github.com/bluesky-social/atproto/pull/4415) [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114) Thanks [@bnewbold](https://github.com/bnewbold)! - support for Germ Networks chat declaration records
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/common-web@0.4.13
+  - @atproto/lexicon@0.6.1
+
+## 0.18.16
+
+### Patch Changes
+
+- [#4552](https://github.com/bluesky-social/atproto/pull/4552) [`ccd8964`](https://github.com/bluesky-social/atproto/commit/ccd89643313799f47c2f009c5c9dca48540275f1) Thanks [@mozzius](https://github.com/mozzius)! - Add `draft` lexicons
+
+## 0.18.15
+
+### Patch Changes
+
+- [#4543](https://github.com/bluesky-social/atproto/pull/4543) [`f58029b`](https://github.com/bluesky-social/atproto/commit/f58029ba54305bed361c834a42bd96022b5b3c59) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `liveEventPreferences` to user preferences, add `updateLiveEventPreferences` to API SDK
+
+## 0.18.14
+
+### Patch Changes
+
+- [#4539](https://github.com/bluesky-social/atproto/pull/4539) [`3ffebd0`](https://github.com/bluesky-social/atproto/commit/3ffebd0bf25776308e06e4b083dc2d0e156d9ac0) Thanks [@mozzius](https://github.com/mozzius)! - Add $cashtag support to the Rich Text facet detection
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.12
+
+## 0.18.13
+
+### Patch Changes
+
+- [#4520](https://github.com/bluesky-social/atproto/pull/4520) [`d2ed731`](https://github.com/bluesky-social/atproto/commit/d2ed7311a20b8c990003628c932e3e5aa6569086) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `isDisabled` to `#statusView`
+
+## 0.18.12
+
+### Patch Changes
+
+- [#4516](https://github.com/bluesky-social/atproto/pull/4516) [`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `uri` and `cid` to `#statusView`
+
+## 0.18.11
+
+### Patch Changes
+
+- [#4513](https://github.com/bluesky-social/atproto/pull/4513) [`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `minAccessAge` to Age Assurance regional configs.
+
+## 0.18.10
+
+### Patch Changes
+
+- [#4440](https://github.com/bluesky-social/atproto/pull/4440) [`63f97ae`](https://github.com/bluesky-social/atproto/commit/63f97ae9c1f57def2d489ab8ce7f83a84a7d1ba1) Thanks [@iwsmith](https://github.com/iwsmith)! - Add `recID` field to `getSuggestedUsers` and `getSuggestedUsersSkeleton`
+
+## 0.18.9
+
+### Patch Changes
+
+- [#4470](https://github.com/bluesky-social/atproto/pull/4470) [`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use 401 status code as signal that the credentials are invalid and should no longer be used.
+
+- [#4470](https://github.com/bluesky-social/atproto/pull/4470) [`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164) Thanks [@matthieusieben](https://github.com/matthieusieben)! - The `CredentialSession.resumeSession()` method now leverages full session data to restore user sessions in a single HTTP call (instead of up to three before). Servers that do not return `email` and `emailConfirmed` session fields will still be supported, but will cause an additional request to `com.atproto.server.getSession` to fetch the missing data.
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.8
+
+## 0.18.8
+
+### Patch Changes
+
+- [#4452](https://github.com/bluesky-social/atproto/pull/4452) [`2e5a24c`](https://github.com/bluesky-social/atproto/commit/2e5a24cb875650120365e3f5c23a041e61a5f9c4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove WARNING from contact lexicons
+
+- [#4445](https://github.com/bluesky-social/atproto/pull/4445) [`5622bcf`](https://github.com/bluesky-social/atproto/commit/5622bcf02315f9f24940a32aa3a6d9341c646c59) Thanks [@mozzius](https://github.com/mozzius)! - Add XRPC errors for `contact` APIs
+
+## 0.18.7
+
+### Patch Changes
+
+- [#4436](https://github.com/bluesky-social/atproto/pull/4436) [`e266405`](https://github.com/bluesky-social/atproto/commit/e266405a89cd081ff96d36a784a31dd917c60a15) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add "contact-match" to listNotification reasons
+
+## 0.18.6
+
+### Patch Changes
+
+- [#4432](https://github.com/bluesky-social/atproto/pull/4432) [`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new read-only `#declaredAgePref` with computed age flags e.g. `isOverAge18`.
+
+- [#4430](https://github.com/bluesky-social/atproto/pull/4430) [`f4cef84`](https://github.com/bluesky-social/atproto/commit/f4cef84494114ca927c66428920ca3dc24ad2b1e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.contact.sendNotification endpoint
+
+## 0.18.5
+
+### Patch Changes
+
+- [#4393](https://github.com/bluesky-social/atproto/pull/4393) [`380aa3b`](https://github.com/bluesky-social/atproto/commit/380aa3bfe73b5c4e59961c27ae988786b69c129d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.contact.\* lexicons, still without error handling. This is unstable and should not be used at this state.
+
+- [#4418](https://github.com/bluesky-social/atproto/pull/4418) [`308f432`](https://github.com/bluesky-social/atproto/commit/308f432f7aef196b4df0a6dc7c5367ab5a8b8964) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Expand return type of relationships in app.bsky.graph.getRelationships
+
+- [#4423](https://github.com/bluesky-social/atproto/pull/4423) [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763) Thanks [@foysalit](https://github.com/foysalit)! - Add min length for required comment fields in ozone events
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab), [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/lexicon@0.6.0
+  - @atproto/common-web@0.4.7
+  - @atproto/xrpc@0.7.7
+
+## 0.18.4
+
+### Patch Changes
+
+- [#4407](https://github.com/bluesky-social/atproto/pull/4407) [`90f1569`](https://github.com/bluesky-social/atproto/commit/90f15698ee63d9a7374f1206754eda5d530873d7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds ageassurance namespace, methods, and utils for Age Assurance V2
+
+- Updated dependencies [[`bcae2b7`](https://github.com/bluesky-social/atproto/commit/bcae2b77b68da6dc2ec202651c8bf41fd5769f69)]:
+  - @atproto/syntax@0.4.2
+  - @atproto/common-web@0.4.6
+
+## 0.18.3
+
+### Patch Changes
+
+- [#4347](https://github.com/bluesky-social/atproto/pull/4347) [`69f53d6`](https://github.com/bluesky-social/atproto/commit/69f53d632d84f255cafa8b10698184048a71b97b) Thanks [@bnewbold](https://github.com/bnewbold)! - lexicon updates to have fully-qualified token refs in knownValue lists
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.5
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/common-web@0.4.4
+  - @atproto/lexicon@0.5.2
+  - @atproto/xrpc@0.7.6
+
+## 0.18.1
+
+### Patch Changes
+
+- [#4340](https://github.com/bluesky-social/atproto/pull/4340) [`032abf6b5`](https://github.com/bluesky-social/atproto/commit/032abf6b500fd36f3c0fc1af83bf62caae44fa6e) Thanks [@foysalit](https://github.com/foysalit)! - Add optional email data to scheduled action api in ozone
+
+- [#4344](https://github.com/bluesky-social/atproto/pull/4344) [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc) Thanks [@foysalit](https://github.com/foysalit)! - Add targetServices param to takedown events allowing mods to specify which service to apply takedown on
+
 ## 0.18.0
 
 ### Minor Changes
@@ -849,7 +1338,7 @@
   `AtpAgent`.
 
   ```ts
-  import { Agent, AtpAgent } from "@atproto/api";
+  import { Agent, AtpAgent } from '@atproto/api'
 
   async function setupAgent(
     service: string,
@@ -861,30 +1350,30 @@
       persistSession: (evt, session) => {
         // handle session update
       },
-    });
+    })
 
-    await agent.login(username, password);
+    await agent.login(username, password)
 
-    return agent;
+    return agent
   }
   ```
 
   ```ts
-  import { Agent } from "@atproto/api";
+  import { Agent } from '@atproto/api'
 
   async function doStuffWithAgent(agent: Agent, arg: string) {
-    return agent.resolveHandle(arg);
+    return agent.resolveHandle(arg)
   }
   ```
 
   ```ts
-  import { Agent, AtpAgent } from "@atproto/api";
+  import { Agent, AtpAgent } from '@atproto/api'
 
   class MyClass {
-    agent: Agent;
+    agent: Agent
 
     constructor() {
-      this.agent = new AtpAgent();
+      this.agent = new AtpAgent()
     }
   }
   ```
@@ -962,24 +1451,24 @@
   <td>
 
   ```ts
-  import { AtpBaseClient, ComAtprotoSyncSubscribeRepos } from "@atproto/api";
+  import { AtpBaseClient, ComAtprotoSyncSubscribeRepos } from '@atproto/api'
 
-  const baseClient = new AtpBaseClient();
+  const baseClient = new AtpBaseClient()
 
-  baseClient.xrpc.lex.assertValidXrpcMessage("io.example.doStuff", {
+  baseClient.xrpc.lex.assertValidXrpcMessage('io.example.doStuff', {
     // ...
-  });
+  })
   ```
 
   </td>
   <td>
 
   ```ts
-  import { lexicons } from "@atproto/api";
+  import { lexicons } from '@atproto/api'
 
-  lexicons.assertValidXrpcMessage("io.example.doStuff", {
+  lexicons.assertValidXrpcMessage('io.example.doStuff', {
     // ...
-  });
+  })
   ```
 
   </td>
@@ -996,23 +1485,23 @@
   <td>
 
   ```ts
-  import { BskyAgent } from "@atproto/api";
+  import { BskyAgent } from '@atproto/api'
 
   class MyAgent extends BskyAgent {
-    private accessToken?: string;
+    private accessToken?: string
 
     async createOrRefreshSession(identifier: string, password: string) {
       // custom logic here
 
-      this.accessToken = "my-access-jwt";
+      this.accessToken = 'my-access-jwt'
     }
 
     async doStuff() {
-      return this.call("io.example.doStuff", {
+      return this.call('io.example.doStuff', {
         headers: {
           Authorization: this.accessToken && `Bearer ${this.accessToken}`,
         },
-      });
+      })
     }
   }
   ```
@@ -1021,11 +1510,11 @@
   <td>
 
   ```ts
-  import { Agent } from "@atproto/api";
+  import { Agent } from '@atproto/api'
 
   class MyAgent extends Agent {
-    private accessToken?: string;
-    public did?: string;
+    private accessToken?: string
+    public did?: string
 
     constructor(private readonly service: string | URL) {
       super({
@@ -1034,21 +1523,21 @@
           Authorization: () =>
             this.accessToken ? `Bearer ${this.accessToken}` : null,
         },
-      });
+      })
     }
 
     clone(): MyAgent {
-      const agent = new MyAgent(this.service);
-      agent.accessToken = this.accessToken;
-      agent.did = this.did;
-      return this.copyInto(agent);
+      const agent = new MyAgent(this.service)
+      agent.accessToken = this.accessToken
+      agent.did = this.did
+      return this.copyInto(agent)
     }
 
     async createOrRefreshSession(identifier: string, password: string) {
       // custom logic here
 
-      this.did = "did:example:123";
-      this.accessToken = "my-access-jwt";
+      this.did = 'did:example:123'
+      this.accessToken = 'my-access-jwt'
     }
   }
   ```
@@ -1067,38 +1556,38 @@
   <td>
 
   ```ts
-  import { BskyAgent } from "@atproto/api";
-  import { RateLimitThreshold } from "rate-limit-threshold";
+  import { BskyAgent } from '@atproto/api'
+  import { RateLimitThreshold } from 'rate-limit-threshold'
 
-  const agent = new BskyAgent();
-  const limiter = new RateLimitThreshold(3000, 300_000);
+  const agent = new BskyAgent()
+  const limiter = new RateLimitThreshold(3000, 300_000)
 
-  const origCall = agent.api.xrpc.call;
+  const origCall = agent.api.xrpc.call
   agent.api.xrpc.call = async function (...args) {
-    await limiter.wait();
-    return origCall.call(this, ...args);
-  };
+    await limiter.wait()
+    return origCall.call(this, ...args)
+  }
   ```
 
   </td>
   <td>
 
   ```ts
-  import { AtpAgent } from "@atproto/api";
-  import { RateLimitThreshold } from "rate-limit-threshold";
+  import { AtpAgent } from '@atproto/api'
+  import { RateLimitThreshold } from 'rate-limit-threshold'
 
   class LimitedAtpAgent extends AtpAgent {
     constructor(options: AtpAgentOptions) {
-      const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch;
-      const limiter = new RateLimitThreshold(3000, 300_000);
+      const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch
+      const limiter = new RateLimitThreshold(3000, 300_000)
 
       super({
         ...options,
         fetch: async (...args) => {
-          await limiter.wait();
-          return fetch(...args);
+          await limiter.wait()
+          return fetch(...args)
         },
-      });
+      })
     }
   }
   ```
@@ -1119,40 +1608,40 @@
   <td>
 
   ```ts
-  import { BskyAgent, defaultFetchHandler } from "@atproto/api";
+  import { BskyAgent, defaultFetchHandler } from '@atproto/api'
 
   BskyAgent.configure({
     fetch: async (httpUri, httpMethod, httpHeaders, httpReqBody) => {
-      const ua = httpHeaders["User-Agent"];
+      const ua = httpHeaders['User-Agent']
 
-      httpHeaders["User-Agent"] = ua ? `${ua} ${userAgent}` : userAgent;
+      httpHeaders['User-Agent'] = ua ? `${ua} ${userAgent}` : userAgent
 
-      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody);
+      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
     },
-  });
+  })
   ```
 
   </td>
   <td>
 
   ```ts
-  import { AtpAgent } from "@atproto/api";
+  import { AtpAgent } from '@atproto/api'
 
   class MyAtpAgent extends AtpAgent {
     constructor(options: AtpAgentOptions) {
-      const fetch = options.fetch ?? globalThis.fetch;
+      const fetch = options.fetch ?? globalThis.fetch
 
       super({
         ...options,
         fetch: async (url, init) => {
-          const headers = new Headers(init.headers);
+          const headers = new Headers(init.headers)
 
-          const ua = headersList.get("User-Agent");
-          headersList.set("User-Agent", ua ? `${ua} ${userAgent}` : userAgent);
+          const ua = headersList.get('User-Agent')
+          headersList.set('User-Agent', ua ? `${ua} ${userAgent}` : userAgent)
 
-          return fetch(url, { ...init, headers });
+          return fetch(url, { ...init, headers })
         },
-      });
+      })
     }
   }
   ```
@@ -1211,7 +1700,7 @@
      */
     url: string,
     init: RequestInit,
-  ) => Promise<Response>;
+  ) => Promise<Response>
   ```
 
   A noticeable change that has been introduced is that the `uri` field of the
@@ -1249,7 +1738,7 @@
   <td>
 
   ```ts
-  import client, { defaultFetchHandler } from "@atproto/xrpc";
+  import client, { defaultFetchHandler } from '@atproto/xrpc'
 
   client.fetch = function (
     httpUri: string,
@@ -1258,50 +1747,50 @@
     httpReqBody: unknown,
   ) {
     // Custom logic here
-    return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody);
-  };
+    return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
+  }
 
   client.addLexicon({
     lexicon: 1,
-    id: "io.example.doStuff",
+    id: 'io.example.doStuff',
     defs: {},
-  });
+  })
 
-  const instance = client.service("http://my-service.com");
+  const instance = client.service('http://my-service.com')
 
-  instance.setHeader("my-header", "my-value");
+  instance.setHeader('my-header', 'my-value')
 
-  await instance.call("io.example.doStuff");
+  await instance.call('io.example.doStuff')
   ```
 
   </td>
   <td>
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     async (url, init) => {
-      const headers = new Headers(init.headers);
+      const headers = new Headers(init.headers)
 
-      headers.set("my-header", "my-value");
+      headers.set('my-header', 'my-value')
 
       // Custom logic here
 
-      const fullUrl = new URL(url, "http://my-service.com");
+      const fullUrl = new URL(url, 'http://my-service.com')
 
-      return fetch(fullUrl, { ...init, headers });
+      return fetch(fullUrl, { ...init, headers })
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
 
-  await instance.call("io.example.doStuff");
+  await instance.call('io.example.doStuff')
   ```
 
   </td>
@@ -1313,62 +1802,62 @@
   previous example can be simplified to:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
-  const instance = new XrpcClient("http://my-service.com", [
+  const instance = new XrpcClient('http://my-service.com', [
     {
       lexicon: 1,
-      id: "io.example.doStuff",
+      id: 'io.example.doStuff',
       defs: {},
     },
-  ]);
+  ])
   ```
 
   If you need to add static headers to all requests, you can instead instantiate
   the `XrpcClient` as follows:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     {
-      service: "http://my-service.com",
+      service: 'http://my-service.com',
       headers: {
-        "my-header": "my-value",
+        'my-header': 'my-value',
       },
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
   ```
 
   If you need the headers or service url to be dynamic, you can define them using
   functions:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     {
-      service: () => "http://my-service.com",
+      service: () => 'http://my-service.com',
       headers: {
-        "my-header": () => "my-value",
-        "my-ignored-header": () => null, // ignored
+        'my-header': () => 'my-value',
+        'my-ignored-header': () => null, // ignored
       },
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
   ```
 
 - [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the ability to use `fetch()` compatible `BodyInit` body when making XRPC calls.

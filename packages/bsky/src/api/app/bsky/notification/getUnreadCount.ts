@@ -1,16 +1,16 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount'
+import { DidString } from '@atproto/syntax'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import { Hydrator } from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getUnreadCount = createPipeline(
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.notification.getUnreadCount({
+  server.add(app.bsky.notification.getUnreadCount, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const viewer = auth.credentials.iss
@@ -67,15 +67,15 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  viewer: string
+type Params = app.bsky.notification.getUnreadCount.$Params & {
+  viewer: DidString
 }
 
 type SkeletonState = {
   count: number
 }
 
-const getPriority = async (ctx: Context, did: string) => {
+const getPriority = async (ctx: Context, did: DidString) => {
   const actors = await ctx.hydrator.actor.getActors([did], {
     skipCacheForDids: [did],
   })

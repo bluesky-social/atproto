@@ -1,18 +1,21 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/bookmark/getBookmarks'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { BookmarkInfo } from '../../../../proto/bsky_pb'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { BookmarkInfo } from '../../../../proto/bsky_pb.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getBookmarks = createPipeline(
@@ -21,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // Blocks are included and handled on views. Mutes are included.
     presentation,
   )
-  server.app.bsky.bookmark.getBookmarks({
+  server.add(app.bsky.bookmark.getBookmarks, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -31,10 +34,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await getBookmarks(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getBookmarks({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -86,8 +86,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.bookmark.getBookmarks.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

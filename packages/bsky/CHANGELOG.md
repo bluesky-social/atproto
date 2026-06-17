@@ -1,5 +1,568 @@
 # @atproto/bsky
 
+## 0.0.242
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto-labs/fetch-node@0.3.1
+  - @atproto-labs/xrpc-utils@0.1.1
+  - @atproto/xrpc-server@0.11.2
+  - @atproto/identity@0.5.1
+  - @atproto/lex@0.1.4
+  - @atproto/common@0.6.3
+  - @atproto/crypto@0.5.1
+  - @atproto/syntax@0.6.2
+  - @atproto/repo@0.10.1
+  - @atproto/sync@0.3.2
+  - @atproto/api@0.20.16
+  - @atproto/did@0.5.1
+
+## 0.0.241
+
+### Patch Changes
+
+- [#5069](https://github.com/bluesky-social/atproto/pull/5069) [`b9ef557`](https://github.com/bluesky-social/atproto/commit/b9ef5576beeb949bbac776dcbe4e4c2c7af60e74) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - add internal.bsky.actor.getProfiles endpoint
+
+- Updated dependencies [[`c4bcb12`](https://github.com/bluesky-social/atproto/commit/c4bcb12a21bebb9e83f5c98c7ccdb16b5344ee9e)]:
+  - @atproto/api@0.20.13
+
+## 0.0.240
+
+### Patch Changes
+
+- [#5048](https://github.com/bluesky-social/atproto/pull/5048) [`5140be2`](https://github.com/bluesky-social/atproto/commit/5140be267b649288502cd7ace8f07bce4b098bc0) Thanks [@blackmichael](https://github.com/blackmichael)! - Add support for gallery image embeds to data-plane and dev-env
+
+- Updated dependencies [[`24c7311`](https://github.com/bluesky-social/atproto/commit/24c7311427b8ccd5d8529a70ed93b4d77f38a516), [`1f89abb`](https://github.com/bluesky-social/atproto/commit/1f89abb908ce1214638f91c19ef957553b7ebc03)]:
+  - @atproto/api@0.20.12
+
+## 0.0.239
+
+### Patch Changes
+
+- [#5035](https://github.com/bluesky-social/atproto/pull/5035) [`0d62d5b`](https://github.com/bluesky-social/atproto/commit/0d62d5b4c6086189793d3a1e0c51ecd764df6a83) Thanks [@treethought](https://github.com/treethought)! - Route appview search through new V2 dataplane RPCs behind the `search:v2:enable` feature gate.
+
+- [#5039](https://github.com/bluesky-social/atproto/pull/5039) [`16c8a94`](https://github.com/bluesky-social/atproto/commit/16c8a948b71d473568917f33f4d43dbd85b2a599) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Set timeout when getting feed skeletons
+
+- Updated dependencies [[`77a3861`](https://github.com/bluesky-social/atproto/commit/77a3861561691ea51a94f96de86069c7875772da), [`4280e58`](https://github.com/bluesky-social/atproto/commit/4280e585b63b1e53704fee8c68a8347224f74253)]:
+  - @atproto/api@0.20.10
+
+## 0.0.238
+
+### Patch Changes
+
+- [#5037](https://github.com/bluesky-social/atproto/pull/5037) [`7b8ca6e`](https://github.com/bluesky-social/atproto/commit/7b8ca6e0aace79cca38e880429317fde8268ba50) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use the new `atUri()` helper from `@atproto/lex` for safer `AtUriString` construction.
+
+- [#4827](https://github.com/bluesky-social/atproto/pull/4827) [`41a561e`](https://github.com/bluesky-social/atproto/commit/41a561e80a6c906e9a6ec8e29f8ea970ce9fe2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new lexicon for gallery embed type
+
+- Updated dependencies [[`41a561e`](https://github.com/bluesky-social/atproto/commit/41a561e80a6c906e9a6ec8e29f8ea970ce9fe2e9)]:
+  - @atproto/api@0.20.9
+
+## 0.0.237
+
+### Patch Changes
+
+- [#5031](https://github.com/bluesky-social/atproto/pull/5031) [`df57268`](https://github.com/bluesky-social/atproto/commit/df572689465f9836223cc79ad6e106be96e20eda) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Prefer opengraph image, fall back to Standard Site `document.coverImage`
+
+## 0.0.236
+
+### Patch Changes
+
+- [#5016](https://github.com/bluesky-social/atproto/pull/5016) [`cf6a8a5`](https://github.com/bluesky-social/atproto/commit/cf6a8a50a990d8759d076778f0f90800005b48c0) Thanks [@blackmichael](https://github.com/blackmichael)! - Fix `verificationView`'s `displayName` and `handle` to reflect the verification issuer rather than the subject, and rename them to `issuerDisplayName` and `issuerHandle`. These fields were introduced in #5015 to expose the issuer's identity, but were inadvertently being populated with the subject's snapshot stored on the verification record.
+
+- [#5015](https://github.com/bluesky-social/atproto/pull/5015) [`0ac21bb`](https://github.com/bluesky-social/atproto/commit/0ac21bbf6db0bcb745adecf064eded1452be02de) Thanks [@blackmichael](https://github.com/blackmichael)! - add displayName, handle to verification view
+
+- [#5020](https://github.com/bluesky-social/atproto/pull/5020) [`3cb2a41`](https://github.com/bluesky-social/atproto/commit/3cb2a41157a2bd7783f3fc1a06c4c811d9c541e6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Loosen validation for known Standard Site publishers in order to support quote URLs
+
+- Updated dependencies [[`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff), [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d), [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341), [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3)]:
+  - @atproto/api@0.20.7
+
+## 0.0.235
+
+### Patch Changes
+
+- [#5001](https://github.com/bluesky-social/atproto/pull/5001) [`92ed125`](https://github.com/bluesky-social/atproto/commit/92ed125c27178bec1cb737ec15307334170768b7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Ensure `associatedProfiles` is returned for Standard Site external embed views
+
+- [#5004](https://github.com/bluesky-social/atproto/pull/5004) [`1a74fa5`](https://github.com/bluesky-social/atproto/commit/1a74fa559778392683f803e1bed71cd25e672114) Thanks [@blackmichael](https://github.com/blackmichael)! - Fix app.bsky.embed.getEmbedExternalView associatedProfiles duplicate data
+
+- Updated dependencies [[`126ac1e`](https://github.com/bluesky-social/atproto/commit/126ac1ead8c44065e3fa7c02efba7bd20551ee99), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/api@0.20.6
+  - @atproto/lex@0.1.3
+  - @atproto/did@0.5.0
+
+## 0.0.234
+
+### Patch Changes
+
+- [#4993](https://github.com/bluesky-social/atproto/pull/4993) [`9378a82`](https://github.com/bluesky-social/atproto/commit/9378a82740529a7004e280fe71e91c611acc3905) Thanks [@blackmichael](https://github.com/blackmichael)! - Add associatedProfiles to app.bsky.embed.getEmbedExternalView output
+
+- [#4995](https://github.com/bluesky-social/atproto/pull/4995) [`753ac51`](https://github.com/bluesky-social/atproto/commit/753ac51fde9d1feea8128745c049584a995855f7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update Standard Site validation to fix path resolution
+
+- Updated dependencies [[`4984994`](https://github.com/bluesky-social/atproto/commit/4984994f7d3f0773b03c61dccd68286e42e0c6af)]:
+  - @atproto/api@0.20.5
+
+## 0.0.233
+
+### Patch Changes
+
+- [#4983](https://github.com/bluesky-social/atproto/pull/4983) [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41) Thanks [@matthieusieben](https://github.com/matthieusieben)! - remove un-necessary use of `$defs` accessor
+
+- Updated dependencies [[`5bdb4ad`](https://github.com/bluesky-social/atproto/commit/5bdb4addd6a3798bf6c8c391c74044b3e251008a), [`57ecbda`](https://github.com/bluesky-social/atproto/commit/57ecbdac3eb14fdbc853456371e84a5098e91c4b), [`314df62`](https://github.com/bluesky-social/atproto/commit/314df62537bb519231aa375dd3a38360afc79ce0), [`604e16d`](https://github.com/bluesky-social/atproto/commit/604e16dda2972f0e17cedefc49dafd4ecbfda8f9), [`1259646`](https://github.com/bluesky-social/atproto/commit/125964673962a86282a05bf22f410fad8ad06b41)]:
+  - @atproto/lex@0.1.2
+  - @atproto/xrpc-server@0.11.1
+  - @atproto/api@0.20.3
+
+## 0.0.232
+
+### Patch Changes
+
+- [#4964](https://github.com/bluesky-social/atproto/pull/4964) [`571582e`](https://github.com/bluesky-social/atproto/commit/571582ea9b1aea56938b8f24daaf49e197a987ef) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove proto buf generated code from version control
+
+- [#4960](https://github.com/bluesky-social/atproto/pull/4960) [`53b1e07`](https://github.com/bluesky-social/atproto/commit/53b1e0731ee0d13c350dd96cbcab88447eaad441) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update protobuf to add `.js` extension
+
+- Updated dependencies [[`37c6fe6`](https://github.com/bluesky-social/atproto/commit/37c6fe6caeaf1b6ca598d6147e74c954c5a24854), [`4801600`](https://github.com/bluesky-social/atproto/commit/48016005155c9cecabf3fa9d5e9b3555e84e2dca), [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1), [`8eb0662`](https://github.com/bluesky-social/atproto/commit/8eb0662ac38a915c7a0c669e739fc8afc3ed7e7b), [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86)]:
+  - @atproto/api@0.20.1
+  - @atproto/sync@0.3.1
+  - @atproto/common@0.6.1
+  - @atproto/lex@0.1.1
+
+## 0.0.231
+
+### Patch Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+- Updated dependencies [[`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common@0.6.0
+  - @atproto/api@0.20.0
+  - @atproto/crypto@0.5.0
+  - @atproto/did@0.4.0
+  - @atproto/identity@0.5.0
+  - @atproto/lex@0.1.0
+  - @atproto/repo@0.10.0
+  - @atproto/sync@0.3.0
+  - @atproto/syntax@0.6.0
+  - @atproto/xrpc-server@0.11.0
+  - @atproto-labs/fetch-node@0.3.0
+  - @atproto-labs/xrpc-utils@0.1.0
+
+## 0.0.230
+
+### Patch Changes
+
+- Updated dependencies [[`cb13878`](https://github.com/bluesky-social/atproto/commit/cb1387899f0b296759ebdf5b8985b6b573091a9a), [`ea4184b`](https://github.com/bluesky-social/atproto/commit/ea4184b9beb9821d806a9540223dab55c2628184), [`38bc2fa`](https://github.com/bluesky-social/atproto/commit/38bc2faa142d42f95c5b89b5a10bf8ed607fe39f)]:
+  - @atproto/api@0.19.19
+  - @atproto/lex@0.0.27
+  - @atproto/xrpc-server@0.10.22
+  - @atproto/sync@0.2.4
+
+## 0.0.229
+
+### Patch Changes
+
+- [#4919](https://github.com/bluesky-social/atproto/pull/4919) [`733d557`](https://github.com/bluesky-social/atproto/commit/733d557d8314265d2c9bdee8d77ba49941dc5d81) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update courier proto
+
+- Updated dependencies [[`8ffae17`](https://github.com/bluesky-social/atproto/commit/8ffae17323df37f2be1dd7286bb9443fa1aa5b42), [`4502df1`](https://github.com/bluesky-social/atproto/commit/4502df140600fc74ef5b69db84ff4529797f3ca3)]:
+  - @atproto/api@0.19.17
+  - @atproto/lex@0.0.26
+  - @atproto/xrpc-server@0.10.21
+  - @atproto/sync@0.2.3
+
+## 0.0.228
+
+### Patch Changes
+
+- [#4908](https://github.com/bluesky-social/atproto/pull/4908) [`5f37211`](https://github.com/bluesky-social/atproto/commit/5f37211cf550b31a693cb174f1fe1d0cfee78294) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update Age Assurance config
+
+- Updated dependencies [[`65a4b31`](https://github.com/bluesky-social/atproto/commit/65a4b31e67c786c06ce7d48d46b7c6c9d55fcec1)]:
+  - @atproto/api@0.19.14
+
+## 0.0.227
+
+### Patch Changes
+
+- [#4868](https://github.com/bluesky-social/atproto/pull/4868) [`dacb0e8`](https://github.com/bluesky-social/atproto/commit/dacb0e80053e00821408e64e91994fe7d1565f45) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add and hydrate group chat invite declaration
+
+- Updated dependencies [[`3cb1569`](https://github.com/bluesky-social/atproto/commit/3cb156907a15f3f22a1be734f82b3b0c855b4da0), [`750cfe9`](https://github.com/bluesky-social/atproto/commit/750cfe9020a11c5de1ce6b2e3647d52939a3e284), [`dacb0e8`](https://github.com/bluesky-social/atproto/commit/dacb0e80053e00821408e64e91994fe7d1565f45)]:
+  - @atproto/api@0.19.10
+
+## 0.0.226
+
+### Patch Changes
+
+- [#4852](https://github.com/bluesky-social/atproto/pull/4852) [`b704c52`](https://github.com/bluesky-social/atproto/commit/b704c523270e82075e2ed4f38ee54d84a9baed88) Thanks [@jcalabro](https://github.com/jcalabro)! - Add interceptor to dataplane GRPC client
+
+- [#4849](https://github.com/bluesky-social/atproto/pull/4849) [`7c61f19`](https://github.com/bluesky-social/atproto/commit/7c61f196c374a8a0d54c055722c501467ffaca4f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Refactor hydrationCtx type
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+  - @atproto/lex@0.0.25
+  - @atproto/xrpc-server@0.10.20
+  - @atproto/sync@0.2.2
+
+## 0.0.225
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4837](https://github.com/bluesky-social/atproto/pull/4837) [`7000746`](https://github.com/bluesky-social/atproto/commit/700074694157718e33c974b666f4563f9647a50c) Thanks [@devinivy](https://github.com/devinivy)! - Permit appview's mod service to see through blocks.
+
+- [#4835](https://github.com/bluesky-social/atproto/pull/4835) [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use "parse" mode when validating chat and notification declarations, as well as labels, lexicon data.
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- Updated dependencies [[`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17), [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950)]:
+  - @atproto/api@0.19.7
+  - @atproto/lex@0.0.24
+  - @atproto/common@0.5.16
+  - @atproto/repo@0.9.1
+  - @atproto/xrpc-server@0.10.19
+  - @atproto/sync@0.2.1
+
+## 0.0.224
+
+### Patch Changes
+
+- [#4830](https://github.com/bluesky-social/atproto/pull/4830) [`42232c7`](https://github.com/bluesky-social/atproto/commit/42232c7f3622f1d4a4ebe78eb1321817a8df1c96) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Register new suggested user endpoints with the router
+
+## 0.0.223
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- [#4810](https://github.com/bluesky-social/atproto/pull/4810) [`34f9ae1`](https://github.com/bluesky-social/atproto/commit/34f9ae1f6824bdd7f66c94c57e41cec757e267df) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Show suggestions to logged out users
+
+- Updated dependencies [[`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13), [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/api@0.19.6
+  - @atproto/syntax@0.5.3
+
+## 0.0.222
+
+### Patch Changes
+
+- [#4793](https://github.com/bluesky-social/atproto/pull/4793) [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Temporarily allow use of legacy `[]` syntaxt for array params
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "codegen" as part of the build
+
+- [#4756](https://github.com/bluesky-social/atproto/pull/4756) [`db795be`](https://github.com/bluesky-social/atproto/commit/db795be786ba613aa9d244cdf27a557797c7669c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Refactor `FeatureGatesClient` to add `scope()` method and docs.
+
+- [#4775](https://github.com/bluesky-social/atproto/pull/4775) [`b86dbfc`](https://github.com/bluesky-social/atproto/commit/b86dbfcbe32b80984f7049fcc3ddc3086b6feb2a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove feature gate for new user onboarding
+
+- [#4780](https://github.com/bluesky-social/atproto/pull/4780) [`37b2f49`](https://github.com/bluesky-social/atproto/commit/37b2f492bb5c8c20b98e241d4a2e6e47052a9dab) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Ensure scoped `checkGates` merges outer context
+
+- [#4796](https://github.com/bluesky-social/atproto/pull/4796) [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable strict parsing of records
+
+- [#4790](https://github.com/bluesky-social/atproto/pull/4790) [`ae22362`](https://github.com/bluesky-social/atproto/commit/ae22362c595b94f3f491d344c0a3346403395eb2) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add temp A/A test to getPostThreadV2 endpoint
+
+- [#4804](https://github.com/bluesky-social/atproto/pull/4804) [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Set loose query param parsing for `app.bsky.feed.getFeedGenerators`
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`3aa18f8`](https://github.com/bluesky-social/atproto/commit/3aa18f84ef80a170b572076feeb649906ffcb06c)]:
+  - @atproto/syntax@0.5.2
+  - @atproto/repo@0.9.0
+  - @atproto/api@0.19.5
+  - @atproto/sync@0.2.0
+  - @atproto/xrpc-server@0.10.18
+  - @atproto/lex@0.0.23
+
+## 0.0.221
+
+### Patch Changes
+
+- [#4747](https://github.com/bluesky-social/atproto/pull/4747) [`3b41b81`](https://github.com/bluesky-social/atproto/commit/3b41b81e27e0aba55406642c07da01c290281647) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove deprecated handling from `getSuggestedFollowsByActor`
+
+- [#4767](https://github.com/bluesky-social/atproto/pull/4767) [`4ecde48`](https://github.com/bluesky-social/atproto/commit/4ecde4879ffd769fe2c7a0f1d4e3275c776114f4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add feature gate to enable social proof on `getSuggestedFollowsByActor`
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.10.17
+  - @atproto/common@0.5.15
+
+## 0.0.220
+
+### Patch Changes
+
+- [#4712](https://github.com/bluesky-social/atproto/pull/4712) [`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33) Thanks [@devinivy](https://github.com/devinivy)! - remove format from img urls by default
+
+- [#4723](https://github.com/bluesky-social/atproto/pull/4723) [`7ed5704`](https://github.com/bluesky-social/atproto/commit/7ed57043c12aedb0faf6b7dc947adfcfff570b6d) Thanks [@devinivy](https://github.com/devinivy)! - switch default image format to jpeg temporarily
+
+- [#4746](https://github.com/bluesky-social/atproto/pull/4746) [`eaee3d4`](https://github.com/bluesky-social/atproto/commit/eaee3d430554436964d45f38bbeb1132ae9b8862) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Serialize `pagerank` float values in `debug` field on profiles.
+
+- [#4753](https://github.com/bluesky-social/atproto/pull/4753) [`ff42a3a`](https://github.com/bluesky-social/atproto/commit/ff42a3afc3a0d4146a6618a910fa612c7e878ea7) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Prefer returning `undefined` over year 0001 dates on bsky views
+
+- [#4762](https://github.com/bluesky-social/atproto/pull/4762) [`bc69b03`](https://github.com/bluesky-social/atproto/commit/bc69b03f53da3ec52bc3eed0738308f320386e75) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Improve zero-date handling
+
+- [#4755](https://github.com/bluesky-social/atproto/pull/4755) [`139b294`](https://github.com/bluesky-social/atproto/commit/139b2941d640bafa1e7d3a56e0608dc42bb0006c) Thanks [@devinivy](https://github.com/devinivy)! - Remove feature gate for including format in image URLs.
+
+- Updated dependencies [[`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa), [`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f), [`192685f`](https://github.com/bluesky-social/atproto/commit/192685fca75a68c9c50a94817d3f27da7fc02f56)]:
+  - @atproto/api@0.19.4
+  - @atproto/syntax@0.5.1
+  - @atproto/repo@0.8.13
+  - @atproto/xrpc-server@0.10.16
+
+## 0.0.219
+
+### Patch Changes
+
+- [#4683](https://github.com/bluesky-social/atproto/pull/4683) [`6634140`](https://github.com/bluesky-social/atproto/commit/66341400d49d1210619b000a040852d87085c32c) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Introduce recIdStr field
+
+- Updated dependencies [[`6634140`](https://github.com/bluesky-social/atproto/commit/66341400d49d1210619b000a040852d87085c32c), [`0e5df95`](https://github.com/bluesky-social/atproto/commit/0e5df95e3a8d81931524848d301cd43d1f12fb78)]:
+  - @atproto/api@0.19.2
+
+## 0.0.218
+
+### Patch Changes
+
+- [#4704](https://github.com/bluesky-social/atproto/pull/4704) [`137065b`](https://github.com/bluesky-social/atproto/commit/137065b333b8c9b97e6b3b2ac6147c7509a1ae42) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add feed to sendInteractions input
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`138f0a0`](https://github.com/bluesky-social/atproto/commit/138f0a0b374c0d78372d5095237061d46db75a32), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`e8969b6`](https://github.com/bluesky-social/atproto/commit/e8969b6b3d3fed8912be53fd72b4d5288ca34766), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`137065b`](https://github.com/bluesky-social/atproto/commit/137065b333b8c9b97e6b3b2ac6147c7509a1ae42), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/common@0.5.14
+  - @atproto/sync@0.1.40
+  - @atproto/xrpc-server@0.10.15
+  - @atproto/api@0.19.1
+  - @atproto/lexicon@0.6.2
+
+## 0.0.217
+
+### Patch Changes
+
+- Updated dependencies [[`450f085`](https://github.com/bluesky-social/atproto/commit/450f0856630fa08c20dc60fef8b5d2a07b9a2552)]:
+  - @atproto/api@0.19.0
+
+## 0.0.216
+
+### Patch Changes
+
+- [#4647](https://github.com/bluesky-social/atproto/pull/4647) [`978a99e`](https://github.com/bluesky-social/atproto/commit/978a99efad8393247449bebd88af1ac5b602842e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use correct `suggestionsAgent` method `getOnboardingSuggestedUsersSkeleton`
+
+## 0.0.215
+
+### Patch Changes
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - update germ networks lexicon
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - add `none` to germ declaration record
+
+- Updated dependencies [[`60f84eb`](https://github.com/bluesky-social/atproto/commit/60f84ebe47016828add07b143c403e331c58ee78), [`50dfbec`](https://github.com/bluesky-social/atproto/commit/50dfbec512682d35e8108b952e8f0533da71beef), [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317), [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317)]:
+  - @atproto/api@0.18.21
+
+## 0.0.214
+
+### Patch Changes
+
+- [#4591](https://github.com/bluesky-social/atproto/pull/4591) [`4f5c400`](https://github.com/bluesky-social/atproto/commit/4f5c4001271bbf38b30506efd30ebdabb969878f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `platform` to `deviceName` on `draft` view, add maxLength.
+
+- Updated dependencies [[`4f5c400`](https://github.com/bluesky-social/atproto/commit/4f5c4001271bbf38b30506efd30ebdabb969878f)]:
+  - @atproto/api@0.18.20
+
+## 0.0.213
+
+### Patch Changes
+
+- [#4590](https://github.com/bluesky-social/atproto/pull/4590) [`25cea46`](https://github.com/bluesky-social/atproto/commit/25cea46aaa3d84521d1e977b67d3ac3581304ba1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `deviceId` and `platform` to drafts as optional props
+
+- Updated dependencies [[`25cea46`](https://github.com/bluesky-social/atproto/commit/25cea46aaa3d84521d1e977b67d3ac3581304ba1), [`49b3806`](https://github.com/bluesky-social/atproto/commit/49b38069ed4b5bd1ef71e967c78e5123b1c1f6f1)]:
+  - @atproto/api@0.18.19
+  - @atproto/common@0.5.10
+  - @atproto/xrpc-server@0.10.11
+
+## 0.0.212
+
+### Patch Changes
+
+- [#4581](https://github.com/bluesky-social/atproto/pull/4581) [`2830dae`](https://github.com/bluesky-social/atproto/commit/2830daeaa6f580fbf777a0f832d64a6579616dc7) Thanks [@mozzius](https://github.com/mozzius)! - Add `presentation` to video embed as a hint to the client about how to display the video
+
+- Updated dependencies [[`2830dae`](https://github.com/bluesky-social/atproto/commit/2830daeaa6f580fbf777a0f832d64a6579616dc7), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/api@0.18.18
+  - @atproto/did@0.3.0
+
+## 0.0.211
+
+### Patch Changes
+
+- [#4565](https://github.com/bluesky-social/atproto/pull/4565) [`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3) Thanks [@cuducos](https://github.com/cuducos)! - Re-add `recId` to suggested users (now, as string)
+
+- [#4547](https://github.com/bluesky-social/atproto/pull/4547) [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c) Thanks [@cuducos](https://github.com/cuducos)! - Removes `recId` from suggested users — we need it as a string, so we're gonna re-add it as string (instead of integer) later.
+
+- [#4415](https://github.com/bluesky-social/atproto/pull/4415) [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114) Thanks [@bnewbold](https://github.com/bnewbold)! - support for Germ Networks chat declaration records
+
+- [#4526](https://github.com/bluesky-social/atproto/pull/4526) [`e6e43f3`](https://github.com/bluesky-social/atproto/commit/e6e43f3ad3594e7cb24e2f3effe5ef4b1696c8ff) Thanks [@cuducos](https://github.com/cuducos)! - Swaps StatSig for GrowthBook in AppView
+
+- [#4576](https://github.com/bluesky-social/atproto/pull/4576) [`ce356cd`](https://github.com/bluesky-social/atproto/commit/ce356cde55c9ff46758d0a6f39397d6710509b40) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use requester DID to accurately perform personalized suggestions
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of `noUndefinedVals` utility
+
+- Updated dependencies [[`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/api@0.18.17
+  - @atproto/syntax@0.4.3
+  - @atproto/lexicon@0.6.1
+  - @atproto/common@0.5.9
+  - @atproto/xrpc-server@0.10.10
+
+## 0.0.210
+
+### Patch Changes
+
+- [#4524](https://github.com/bluesky-social/atproto/pull/4524) [`6752056`](https://github.com/bluesky-social/atproto/commit/6752056f4666f1f85149d1c6821aed1ad8d88442) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `unregisterPush` to appview server routes.
+
+## 0.0.209
+
+### Patch Changes
+
+- [#4520](https://github.com/bluesky-social/atproto/pull/4520) [`d2ed731`](https://github.com/bluesky-social/atproto/commit/d2ed7311a20b8c990003628c932e3e5aa6569086) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `isDisabled` to `#statusView`
+
+- Updated dependencies [[`d2ed731`](https://github.com/bluesky-social/atproto/commit/d2ed7311a20b8c990003628c932e3e5aa6569086)]:
+  - @atproto/api@0.18.13
+
+## 0.0.208
+
+### Patch Changes
+
+- [`b329266`](https://github.com/bluesky-social/atproto/commit/b329266853b4867fbbcafc8845e479c888f8ac36) Thanks [@mary-ext](https://github.com/mary-ext)! - properly convert did:web to service endpoints in `.well-known/did.json`
+
+- Updated dependencies []:
+  - @atproto/common@0.5.7
+  - @atproto/xrpc-server@0.10.8
+
+## 0.0.207
+
+### Patch Changes
+
+- [#4516](https://github.com/bluesky-social/atproto/pull/4516) [`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `uri` and `cid` to `#statusView`
+
+- Updated dependencies [[`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a)]:
+  - @atproto/api@0.18.12
+
+## 0.0.206
+
+### Patch Changes
+
+- [#4513](https://github.com/bluesky-social/atproto/pull/4513) [`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `minAccessAge` to Age Assurance regional configs.
+
+- Updated dependencies [[`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53)]:
+  - @atproto/api@0.18.11
+
+## 0.0.205
+
+### Patch Changes
+
+- [#4440](https://github.com/bluesky-social/atproto/pull/4440) [`63f97ae`](https://github.com/bluesky-social/atproto/commit/63f97ae9c1f57def2d489ab8ce7f83a84a7d1ba1) Thanks [@iwsmith](https://github.com/iwsmith)! - Add `recID` field to `getSuggestedUsers` and `getSuggestedUsersSkeleton`
+
+- Updated dependencies [[`63f97ae`](https://github.com/bluesky-social/atproto/commit/63f97ae9c1f57def2d489ab8ce7f83a84a7d1ba1)]:
+  - @atproto/api@0.18.10
+
+## 0.0.204
+
+### Patch Changes
+
+- [#4426](https://github.com/bluesky-social/atproto/pull/4426) [`ce497e8`](https://github.com/bluesky-social/atproto/commit/ce497e85437c7ced3147691fb877e1f76f6ff472) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add Age Assurance config for Virginia
+
+- Updated dependencies [[`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164), [`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164)]:
+  - @atproto/api@0.18.9
+  - @atproto/common@0.5.4
+  - @atproto/xrpc-server@0.10.5
+
+## 0.0.203
+
+### Patch Changes
+
+- [#4460](https://github.com/bluesky-social/atproto/pull/4460) [`dd0fe8d`](https://github.com/bluesky-social/atproto/commit/dd0fe8d5e74e19b2cb37aa6a307b88f1f6bd1c9c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add Age Assurance config for Tennessee
+
+## 0.0.202
+
+### Patch Changes
+
+- [#4441](https://github.com/bluesky-social/atproto/pull/4441) [`45928bf`](https://github.com/bluesky-social/atproto/commit/45928bfcd6d220216078d5106f134fc3a81f564b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix optimistic response from `ageassurance.begin()`, retain existing `status` and `access` values if they exist.
+
+## 0.0.201
+
+### Patch Changes
+
+- [#4428](https://github.com/bluesky-social/atproto/pull/4428) [`6fab394`](https://github.com/bluesky-social/atproto/commit/6fab3940f6d09b4e9888e6c4140a70d3e4ebcb00) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Allow users to re-initiate Age Assurance so long as they're not in a `blocked` state.
+
+- Updated dependencies [[`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41), [`f4cef84`](https://github.com/bluesky-social/atproto/commit/f4cef84494114ca927c66428920ca3dc24ad2b1e)]:
+  - @atproto/api@0.18.6
+
+## 0.0.200
+
+### Patch Changes
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab), [`380aa3b`](https://github.com/bluesky-social/atproto/commit/380aa3bfe73b5c4e59961c27ae988786b69c129d), [`308f432`](https://github.com/bluesky-social/atproto/commit/308f432f7aef196b4df0a6dc7c5367ab5a8b8964), [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763)]:
+  - @atproto/lexicon@0.6.0
+  - @atproto/api@0.18.5
+  - @atproto/common@0.5.3
+  - @atproto/xrpc-server@0.10.3
+  - @atproto/repo@0.8.12
+  - @atproto/sync@0.1.39
+
+## 0.0.199
+
+### Patch Changes
+
+- [#4407](https://github.com/bluesky-social/atproto/pull/4407) [`90f1569`](https://github.com/bluesky-social/atproto/commit/90f15698ee63d9a7374f1206754eda5d530873d7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds ageassurance namespace, methods, and utils for Age Assurance V2
+
+- Updated dependencies [[`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e), [`bcae2b7`](https://github.com/bluesky-social/atproto/commit/bcae2b77b68da6dc2ec202651c8bf41fd5769f69), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea), [`90f1569`](https://github.com/bluesky-social/atproto/commit/90f15698ee63d9a7374f1206754eda5d530873d7), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea)]:
+  - @atproto/did@0.2.3
+  - @atproto/syntax@0.4.2
+  - @atproto/crypto@0.4.5
+  - @atproto/api@0.18.4
+  - @atproto/common@0.5.2
+  - @atproto/xrpc-server@0.10.2
+
+## 0.0.198
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/xrpc-server@0.10.0
+  - @atproto/common@0.5.0
+  - @atproto/did@0.2.2
+  - @atproto/api@0.18.2
+  - @atproto/identity@0.4.10
+  - @atproto/lexicon@0.5.2
+  - @atproto/repo@0.8.11
+  - @atproto-labs/xrpc-utils@0.0.24
+  - @atproto/sync@0.1.38
+  - @atproto/crypto@0.4.4
+
+## 0.0.197
+
+### Patch Changes
+
+- [#4344](https://github.com/bluesky-social/atproto/pull/4344) [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc) Thanks [@foysalit](https://github.com/foysalit)! - Add targetServices param to takedown events allowing mods to specify which service to apply takedown on
+
+- Updated dependencies [[`032abf6b5`](https://github.com/bluesky-social/atproto/commit/032abf6b500fd36f3c0fc1af83bf62caae44fa6e), [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc), [`1dd20d3a8`](https://github.com/bluesky-social/atproto/commit/1dd20d3a81cda29392d8d63d13082254ec5f68a8)]:
+  - @atproto/api@0.18.1
+  - @atproto/xrpc-server@0.9.6
+  - @atproto-labs/xrpc-utils@0.0.23
+  - @atproto/sync@0.1.37
+
+## 0.0.196
+
+### Patch Changes
+
+- [#4333](https://github.com/bluesky-social/atproto/pull/4333) [`f8e56b387`](https://github.com/bluesky-social/atproto/commit/f8e56b387fcd3bc8405225c1bbdef66ca5dc1591) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Prevent usage of DPoP bound access tokens with bsky.social
+
+  Using DPoP bound access tokens against the bsky server would already fail, but
+  it would fail with a rather misleading error: "InvalidToken: Bad token scope",
+  because the `scope` on a DPoP bound access token is the actual OAuth scopes, not
+  the expected `com.atproto.access` string.
+
+  This change means the entryway explicit checks if the token is a DPoP bound
+  access token, and if it is, then it fails with an error "Malformed token: DPoP
+  not supported". A similar check is also done with Bearer tokens in the PDS.
+
+- [#4330](https://github.com/bluesky-social/atproto/pull/4330) [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302) Thanks [@mistydemeo](https://github.com/mistydemeo)! - adjust explicit-slurs regex
+
 ## 0.0.195
 
 ### Patch Changes

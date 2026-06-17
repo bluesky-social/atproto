@@ -1,14 +1,14 @@
-import { CID } from 'multiformats/cid'
-import { TID, dataToCborBlock } from '@atproto/common'
+import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
-import { lexToIpld } from '@atproto/lexicon'
-import { BlockMap } from './block-map'
-import { CidSet } from './cid-set'
-import { DataDiff } from './data-diff'
-import log from './logger'
-import { MST } from './mst'
-import { ReadableRepo } from './readable-repo'
-import { RepoStorage } from './storage'
+import { encode } from '@atproto/lex-cbor'
+import { Cid, cidForCbor } from '@atproto/lex-data'
+import { BlockMap } from './block-map.js'
+import { CidSet } from './cid-set.js'
+import { DataDiff } from './data-diff.js'
+import log from './logger.js'
+import { MST } from './mst/index.js'
+import { ReadableRepo } from './readable-repo.js'
+import { RepoStorage } from './storage/index.js'
 import {
   Commit,
   CommitData,
@@ -16,14 +16,14 @@ import {
   RecordWriteOp,
   WriteOpAction,
   def,
-} from './types'
-import * as util from './util'
+} from './types.js'
+import * as util from './util.js'
 
 type Params = {
   storage: RepoStorage
   data: MST
   commit: Commit
-  cid: CID
+  cid: Cid
 }
 
 export class Repo extends ReadableRepo {
@@ -99,7 +99,7 @@ export class Repo extends ReadableRepo {
     return Repo.createFromCommit(storage, commit)
   }
 
-  static async load(storage: RepoStorage, cid?: CID) {
+  static async load(storage: RepoStorage, cid?: Cid) {
     const commitCid = cid || (await storage.getRoot())
     if (!commitCid) {
       throw new Error('No cid provided and none in storage')
@@ -169,15 +169,18 @@ export class Repo extends ReadableRepo {
       },
       keypair,
     )
-    const commitBlock = await dataToCborBlock(lexToIpld(commit))
-    if (!commitBlock.cid.equals(this.cid)) {
-      newBlocks.set(commitBlock.cid, commitBlock.bytes)
-      relevantBlocks.set(commitBlock.cid, commitBlock.bytes)
+
+    const commitBytes = encode(commit)
+    const commitCid = await cidForCbor(commitBytes)
+
+    if (!commitCid.equals(this.cid)) {
+      newBlocks.set(commitCid, commitBytes)
+      relevantBlocks.set(commitCid, commitBytes)
       removedCids.add(this.cid)
     }
 
     return {
-      cid: commitBlock.cid,
+      cid: commitCid,
       rev,
       since: this.commit.rev,
       prev: this.cid,

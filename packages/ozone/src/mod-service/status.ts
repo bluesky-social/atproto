@@ -2,17 +2,17 @@
 
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { isAppealReport } from '../api/util'
-import { Database } from '../db'
-import { DatabaseSchema } from '../db/schema'
-import { jsonb } from '../db/types'
+import { isAppealReport } from '../api/util.js'
+import { Database } from '../db/index.js'
+import { DatabaseSchema } from '../db/schema/index.js'
+import { jsonb } from '../db/types.js'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
   REVIEWOPEN,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
@@ -125,6 +125,7 @@ const getSubjectStatusForModerationEvent = ({
       }
     case 'tools.ozone.moderation.defs#ageAssuranceEvent':
     case 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent':
+    case 'tools.ozone.moderation.defs#ageAssurancePurgeEvent':
       return {
         reviewState: defaultReviewState,
       }
@@ -282,6 +283,7 @@ export const adjustModerationSubjectStatus = async (
     subjectDid,
     subjectUri,
     subjectCid,
+    subjectConvoId,
     createdBy,
     meta,
     addedTags,
@@ -291,7 +293,10 @@ export const adjustModerationSubjectStatus = async (
   } = moderationEvent
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
-  const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)
+  const identifier = getStatusIdentifierFromSubject(
+    subjectUri || subjectDid,
+    subjectConvoId,
+  )
 
   db.assertTransaction()
 
@@ -300,6 +305,7 @@ export const adjustModerationSubjectStatus = async (
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
     .where('recordPath', '=', identifier.recordPath)
+    .where('convoId', '=', identifier.convoId)
     // Make sure we respect other updates that may be happening at the same time
     .forUpdate()
     .selectAll()
@@ -469,6 +475,13 @@ export const adjustModerationSubjectStatus = async (
     }
   }
 
+  if (action === 'tools.ozone.moderation.defs#ageAssurancePurgeEvent') {
+    newStatus.ageAssuranceState = 'unknown'
+    subjectStatus.ageAssuranceState = 'unknown'
+    newStatus.ageAssuranceUpdatedBy = null
+    subjectStatus.ageAssuranceUpdatedBy = null
+  }
+
   if (blobCids?.length) {
     const newBlobCids = jsonb(
       blobCids,
@@ -496,14 +509,20 @@ export const adjustModerationSubjectStatus = async (
   return status || null
 }
 
+/**
+ * Get moderation_subject_status identifier (did, recordPath, convoId).
+ * @note Supports addressing conversations explicitly (via convoId) and implicitly (via properly formed at-uri)
+ */
 export const getStatusIdentifierFromSubject = (
   subject: string | AtUri,
-): { did: string; recordPath: string } => {
+  convoId?: string | null,
+): { did: string; recordPath: string; convoId: string } => {
   const isSubjectString = typeof subject === 'string'
   if (isSubjectString && subject.startsWith('did:')) {
     return {
       did: subject,
       recordPath: '',
+      convoId: convoId || '',
     }
   }
 
@@ -512,8 +531,19 @@ export const getStatusIdentifierFromSubject = (
   }
 
   const uri = isSubjectString ? new AtUri(subject) : subject
+
+  // Handle conversation URIs
+  if (uri.collection === 'chat.bsky.convo') {
+    return {
+      did: uri.host,
+      recordPath: '',
+      convoId: uri.rkey,
+    }
+  }
+
   return {
     did: uri.host,
     recordPath: `${uri.collection}/${uri.rkey}`,
+    convoId: '',
   }
 }

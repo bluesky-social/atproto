@@ -5,17 +5,17 @@ import { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
-import { AppContext } from '../src'
 import {
   Account,
   AppPassword,
   EmailToken,
   RefreshToken,
   RepoRoot,
-} from '../src/account-manager/db'
-import { ServerMailer } from '../src/mailer'
-import { RepoSeq } from '../src/sequencer/db'
-import basicSeed from './seeds/basic'
+} from '../src/account-manager/db/index.js'
+import { AppContext } from '../src/index.js'
+import { ServerMailer } from '../src/mailer/index.js'
+import { RepoSeq } from '../src/sequencer/db/index.js'
+import basicSeed from './seeds/basic.js'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView
@@ -39,7 +39,7 @@ describe('account deletion', () => {
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     mailer = ctx.mailer
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]

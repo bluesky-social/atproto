@@ -1,15 +1,16 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AtpAgent, ids } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { DidString } from '@atproto/syntax'
 
 describe('handle invalidation', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   const mockHandles = {}
 
@@ -17,8 +18,8 @@ describe('handle invalidation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_handle_invalidation',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -37,7 +38,7 @@ describe('handle invalidation', () => {
       }
       return origResolve(handle)
     }
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()
@@ -115,7 +116,8 @@ describe('handle invalidation', () => {
 
   it('deals with handle contention', async () => {
     await backdateIndexedAt(bob)
-    // update alices handle so that the pds will let bob take her old handle
+    // make alice lose her handle so that the pds will let bob take her old handle
+    mockHandles['not-alice.test'] = null
     await network.pds.ctx.accountManager.updateHandle(alice, 'not-alice.test')
 
     await pdsAgent.api.com.atproto.identity.updateHandle(

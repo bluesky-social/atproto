@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "com.example.union",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["unionOpen", "unionClosed"],
+        "properties": {
+          "unionOpen": {
+            "type": "union",
+            "refs": [
+              "com.example.kitchenSink#object",
+              "com.example.kitchenSink#subobject"
+            ]
+          },
+          "unionClosed": {
+            "type": "union",
+            "closed": true,
+            "refs": [
+              "com.example.kitchenSink#object",
+              "com.example.kitchenSink#subobject"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

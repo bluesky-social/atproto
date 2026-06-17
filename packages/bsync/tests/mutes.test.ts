@@ -8,8 +8,8 @@ import {
   authWithApiKey,
   createClient,
   envToCfg,
-} from '../src'
-import { MuteOperation, MuteOperation_Type } from '../src/proto/bsync_pb'
+} from '../src/index.js'
+import { MuteOperation, MuteOperation_Type } from '../src/proto/bsync_pb.js'
 
 describe('mutes', () => {
   let bsync: BsyncService

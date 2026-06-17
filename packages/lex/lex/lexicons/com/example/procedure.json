@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "com.example.procedure",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "A procedure",
+      "parameters": {
+        "type": "params",
+        "required": ["boolean", "integer"],
+        "properties": {
+          "boolean": { "type": "boolean" },
+          "integer": { "type": "integer" },
+          "string": { "type": "string" },
+          "array": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "input": {
+        "encoding": "application/json",
+        "schema": { "type": "ref", "ref": "com.example.kitchenSink#object" }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": { "type": "ref", "ref": "com.example.kitchenSink#object" }
+      }
+    }
+  }
+}

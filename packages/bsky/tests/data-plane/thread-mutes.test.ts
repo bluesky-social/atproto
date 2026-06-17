@@ -1,6 +1,6 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('thread mutes', () => {
   let network: TestNetwork
@@ -18,14 +18,14 @@ describe('thread mutes', () => {
       dbPostgresSchema: 'bsky_thread_mutes',
     })
     sc = network.getSeedClient()
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     await usersSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     rootPost = (await sc.post(alice, 'root post')).ref
     replyPost = (await sc.reply(alice, rootPost, rootPost, 'first reply')).ref
     await network.processAll()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

@@ -1,19 +1,17 @@
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import { chat } from '../../../../lexicons/index.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
-
-const lexId = lex.ids.ChatBskyActorDeclaration
 
 const insertFn = async (
   _db: DatabaseSchema,
   uri: AtUri,
-  _cid: CID,
+  _cid: Cid,
   _obj: unknown,
   _timestamp: string,
 ): Promise<unknown | null> => {
@@ -41,14 +39,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<unknown, unknown>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   const processor = new RecordProcessor(db, background, {
-    lexId,
+    schema: chat.bsky.actor.declaration.main,
     insertFn,
     findDuplicate,
     deleteFn,

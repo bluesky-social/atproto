@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons.js'
+import { forSnapshot } from './_util.js'
 
 describe('safelink management', () => {
   let network: TestNetwork
@@ -20,9 +20,9 @@ describe('safelink management', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_safelink_test',
     })
-    adminAgent = network.ozone.getClient()
-    modAgent = network.ozone.getClient()
-    triageAgent = network.ozone.getClient()
+    adminAgent = network.ozone.getAgent()
+    modAgent = network.ozone.getAgent()
+    triageAgent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

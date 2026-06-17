@@ -1,59 +1,79 @@
-FROM node:20.11-alpine as build
+FROM node:24.15-alpine3.23 AS build
 
-RUN corepack enable
+RUN npm install -g pnpm@11.5.2
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
-RUN corepack prepare --activate
 
 # Move files into the image and install
-COPY ./*.* ./
-# NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
-COPY ./packages/bsky ./packages/bsky
+COPY ./lexicons ./lexicons
+COPY ./packages/internal ./packages/internal
+COPY ./packages/lex ./packages/lex
+
+# NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
+# pnpm list --filter '@atproto/bsky...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | grep -v 'packages/bsky"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
-COPY ./packages/common ./packages/common
+COPY ./packages/aws ./packages/aws
 COPY ./packages/common-web ./packages/common-web
+COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did ./packages/did
 COPY ./packages/identity ./packages/identity
+COPY ./packages/lex-cli ./packages/lex-cli
+COPY ./packages/lexicon ./packages/lexicon
+COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
+COPY ./packages/oauth/jwk-webcrypto ./packages/oauth/jwk-webcrypto
+COPY ./packages/oauth/jwk ./packages/oauth/jwk
+COPY ./packages/oauth/oauth-client-browser-example ./packages/oauth/oauth-client-browser-example
+COPY ./packages/oauth/oauth-client-browser ./packages/oauth/oauth-client-browser
+COPY ./packages/oauth/oauth-client ./packages/oauth/oauth-client
+COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
+COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
+COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
+COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
+COPY ./packages/pds ./packages/pds
+COPY ./packages/repo ./packages/repo
 COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
-COPY ./packages/lexicon ./packages/lexicon
-COPY ./packages/repo ./packages/repo
-COPY ./packages/xrpc ./packages/xrpc
+COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
-COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
-COPY ./packages/internal/fetch ./packages/internal/fetch
-COPY ./packages/internal/pipe ./packages/internal/pipe
-COPY ./packages/internal/xrpc-utils ./packages/internal/xrpc-utils
+COPY ./packages/xrpc ./packages/xrpc
+
+COPY ./packages/bsky ./packages/bsky
+
+# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
+COPY ./packages/bsync ./packages/bsync
+
 COPY ./services/bsky ./services/bsky
 
 # install all deps
-RUN pnpm install --frozen-lockfile > /dev/null
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
-RUN pnpm build > /dev/null
-# clean up
-RUN rm -rf node_modules
+RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
+RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > /dev/null
-
-WORKDIR services/bsky
+RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 # Uses assets from build stage to reduce build size
-FROM node:20.11-alpine
+FROM node:24.15-alpine3.23
 
 # dumb-init is used to handle signals properly.
 # runit is installed so it can be (optionally) used for logging via svlogd.
 RUN apk add --update dumb-init runit
 
-
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/bsky
 COPY --from=build /app /app
+WORKDIR /app/services/bsky
 
 EXPOSE 3000
 ENV PORT=3000
@@ -61,7 +81,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "api.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "api.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"

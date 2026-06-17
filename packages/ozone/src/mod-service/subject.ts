@@ -1,12 +1,12 @@
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from '../lexicon/types/chat/bsky/convo/defs'
-import { RepoRef, isRepoRef } from '../lexicon/types/com/atproto/admin/defs'
-import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
-import * as ComAtprotoRepoStrongRef from '../lexicon/types/com/atproto/repo/strongRef'
-import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent'
-import { $Typed, asPredicate } from '../lexicon/util'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+import * as ChatBskyConvoDefs from '../lexicon/types/chat/bsky/convo/defs.js'
+import { RepoRef, isRepoRef } from '../lexicon/types/com/atproto/admin/defs.js'
+import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport.js'
+import * as ComAtprotoRepoStrongRef from '../lexicon/types/com/atproto/repo/strongRef.js'
+import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import { $Typed, asPredicate } from '../lexicon/util.js'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
@@ -16,6 +16,9 @@ const isStrongRef = asPredicate(ComAtprotoRepoStrongRef.validateMain)
 type MessageRef = ChatBskyConvoDefs.MessageRef
 const isValidMessageRef = asPredicate(ChatBskyConvoDefs.validateMessageRef)
 
+type ConvoRef = ChatBskyConvoDefs.ConvoRef
+const isValidConvoRef = asPredicate(ChatBskyConvoDefs.validateConvoRef)
+
 const isMessageRefWithoutConvoId = (
   subject: unknown,
 ): subject is $Typed<Omit<MessageRef, 'convoId'> & { convoId?: string }> =>
@@ -23,6 +26,11 @@ const isMessageRefWithoutConvoId = (
   typeof subject === 'object' &&
   isValidMessageRef({ convoId: '', ...subject })
 
+/**
+ * Cast subject input into ModSubject.
+ * @description Represents the subject types that can appear in the moderation event stream.
+ * NOTE: Downstream services should be updated to handle new subject types including appview.
+ */
 export const subjectFromInput = (
   subject: SubjectInput,
   blobs?: string[],
@@ -40,6 +48,11 @@ export const subjectFromInput = (
   // we are taking advantage of the open union in order for bsky.chat to interoperate here.
   if (isValidMessageRef(subject)) {
     return new MessageSubject(subject.did, subject.convoId, subject.messageId)
+  }
+  // @NOTE #convoRef is a new type for reporting entire conversations.
+  // Similar to messageRef, we take advantage of the open union to support this.
+  if (isValidConvoRef(subject)) {
+    return new ConvoSubject(subject.did, subject.convoId)
   }
   // @TODO we should start to require subject.convoId is a string in order to properly validate
   // the #messageRef. temporarily allowing it to be optional as a stopgap for rollout.
@@ -73,6 +86,11 @@ export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
     const convoId =
       typeof row.meta?.['convoId'] === 'string' ? row.meta['convoId'] : ''
     return new MessageSubject(row.subjectDid, convoId, row.subjectMessageId)
+  } else if (
+    row.subjectType === 'chat.bsky.convo.defs#convoRef' &&
+    row.subjectConvoId
+  ) {
+    return new ConvoSubject(row.subjectDid, row.subjectConvoId)
   } else {
     return new RepoSubject(row.subjectDid)
   }
@@ -86,6 +104,9 @@ export const subjectFromStatusRow = (
     // which is what the last 2 params of .make() arguments are
     const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
     return new RecordSubject(uri.toString(), row.recordCid, row.blobCids ?? [])
+  } else if (row.convoId) {
+    // Conversation subject - restore from subject status row
+    return new ConvoSubject(row.did, row.convoId)
   } else {
     return new RepoSubject(row.did)
   }
@@ -96,28 +117,37 @@ type SubjectInfo = {
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'
     | 'chat.bsky.convo.defs#messageRef'
+    | 'chat.bsky.convo.defs#convoRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   subjectBlobCids: string[] | null
   subjectMessageId: string | null
+  subjectConvoId: string | null
   meta: Record<string, string | undefined> | null
 }
 
 export interface ModSubject {
   did: string
   recordPath: string | undefined
+  convoId: string | undefined
   blobCids?: string[]
   isRepo(): this is RepoSubject
   isRecord(): this is RecordSubject
   isMessage(): this is MessageSubject
+  isConvo(): this is ConvoSubject
   info(): SubjectInfo
-  lex(): $Typed<RepoRef> | $Typed<StrongRef> | $Typed<MessageRef>
+  lex():
+    | $Typed<RepoRef>
+    | $Typed<StrongRef>
+    | $Typed<MessageRef>
+    | $Typed<ConvoRef>
 }
 
 export class RepoSubject implements ModSubject {
   blobCids = undefined
   recordPath = undefined
+  convoId = undefined
   constructor(public did: string) {}
   isRepo(): this is RepoSubject {
     return true
@@ -128,6 +158,9 @@ export class RepoSubject implements ModSubject {
   isMessage(): this is MessageSubject {
     return false
   }
+  isConvo(): this is ConvoSubject {
+    return false
+  }
   info() {
     return {
       subjectType: 'com.atproto.admin.defs#repoRef' as const,
@@ -136,6 +169,7 @@ export class RepoSubject implements ModSubject {
       subjectCid: null,
       subjectBlobCids: null,
       subjectMessageId: null,
+      subjectConvoId: null,
       meta: null,
     }
   }
@@ -151,6 +185,7 @@ export class RecordSubject implements ModSubject {
   parsedUri: AtUri
   did: string
   recordPath: string
+  convoId = undefined
   constructor(
     public uri: string,
     public cid: string,
@@ -169,6 +204,9 @@ export class RecordSubject implements ModSubject {
   isMessage(): this is MessageSubject {
     return false
   }
+  isConvo(): this is ConvoSubject {
+    return false
+  }
   info() {
     return {
       subjectType: 'com.atproto.repo.strongRef' as const,
@@ -177,6 +215,7 @@ export class RecordSubject implements ModSubject {
       subjectCid: this.cid,
       subjectBlobCids: this.blobCids ?? [],
       subjectMessageId: null,
+      subjectConvoId: null,
       meta: null,
     }
   }
@@ -206,6 +245,9 @@ export class MessageSubject implements ModSubject {
   isMessage(): this is MessageSubject {
     return true
   }
+  isConvo(): this is ConvoSubject {
+    return false
+  }
   info() {
     return {
       subjectType: 'chat.bsky.convo.defs#messageRef' as const,
@@ -214,6 +256,7 @@ export class MessageSubject implements ModSubject {
       subjectCid: null,
       subjectBlobCids: null,
       subjectMessageId: this.messageId,
+      subjectConvoId: this.convoId,
       meta: { convoId: this.convoId || undefined },
     }
   }
@@ -223,6 +266,46 @@ export class MessageSubject implements ModSubject {
       did: this.did,
       convoId: this.convoId,
       messageId: this.messageId,
+    }
+  }
+}
+
+export class ConvoSubject implements ModSubject {
+  blobCids = undefined
+  recordPath = undefined
+  constructor(
+    public did: string,
+    public convoId: string,
+  ) {}
+  isRepo(): this is RepoSubject {
+    return false
+  }
+  isRecord(): this is RecordSubject {
+    return false
+  }
+  isMessage(): this is MessageSubject {
+    return false
+  }
+  isConvo(): this is ConvoSubject {
+    return true
+  }
+  info() {
+    return {
+      subjectType: 'chat.bsky.convo.defs#convoRef' as const,
+      subjectDid: this.did,
+      subjectUri: null,
+      subjectCid: null,
+      subjectBlobCids: null,
+      subjectMessageId: null,
+      subjectConvoId: this.convoId,
+      meta: { convoId: this.convoId || undefined },
+    }
+  }
+  lex(): $Typed<ConvoRef> {
+    return {
+      $type: 'chat.bsky.convo.defs#convoRef',
+      did: this.did,
+      convoId: this.convoId,
     }
   }
 }

@@ -1,16 +1,19 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import {
+  AppBskyFeedDefs,
+  AppBskyFeedGetTimeline,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
 import {
   EXAMPLE_LABELER,
   SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { Database } from '../../src'
-import { ids } from '../../src/lexicon/lexicons'
-import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { OutputSchema as GetTimelineOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getTimeline'
-import { forSnapshot, getOriginator, paginateAll } from '../_util'
+import { Database } from '../../src/index.js'
+import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
@@ -29,7 +32,7 @@ describe('timeline views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_home_feed',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -59,13 +62,14 @@ describe('timeline views', () => {
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
-    const expectOriginatorFollowedBy = (did) => (item: FeedViewPost) => {
-      const originator = getOriginator(item)
-      // The user expects to see posts & reposts from themselves and follows
-      if (did !== originator) {
-        expect(sc.follows[did]).toHaveProperty(originator)
+    const expectOriginatorFollowedBy =
+      (did: string) => (item: AppBskyFeedDefs.FeedViewPost) => {
+        const originator = getOriginator(item as any)
+        // The user expects to see posts & reposts from themselves and follows
+        if (did !== originator) {
+          expect(sc.follows[did]).toHaveProperty(originator)
+        }
       }
-    }
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
@@ -137,7 +141,7 @@ describe('timeline views', () => {
   })
 
   it('paginates reverse-chronological feed', async () => {
-    const results = (results: GetTimelineOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetTimeline.OutputSchema[]) =>
       results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getTimeline(

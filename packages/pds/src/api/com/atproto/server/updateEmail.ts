@@ -1,76 +1,52 @@
-import { isEmailValid } from '@hapi/address'
-import { isDisposableEmail } from 'disposable-email-domains-js'
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
-import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
-import { ACCESS_FULL } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account.js'
+import { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
+import { requestEmailUpdateAuth } from './requestEmailUpdate.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.updateEmail({
-    auth: ctx.authVerifier.authorization({
-      checkTakedown: true,
-      scopes: ACCESS_FULL,
-      authorize: () => {
-        throw new ForbiddenError(
-          'OAuth credentials are not supported for this endpoint',
+  const { entrywayClient } = ctx
+
+  // @NOTE Ensure that both endpoints use the same authentication logic
+  const auth = requestEmailUpdateAuth(ctx)
+
+  if (entrywayClient) {
+    server.add(com.atproto.server.updateEmail, {
+      auth,
+      handler: async ({ auth, input: { body }, req }) => {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.updateEmail.$lxm,
         )
+
+        await entrywayClient.xrpc(com.atproto.server.updateEmail, {
+          headers,
+          body,
+        })
       },
-    }),
-    handler: async ({ auth, input, req }) => {
-      const did = auth.credentials.did
-      const { token, email } = input.body
-      if (!isEmailValid(email) || isDisposableEmail(email)) {
-        throw new InvalidRequestError(
-          'This email address is not supported, please use a different email.',
-        )
-      }
-      const account = await ctx.accountManager.getAccount(did, {
-        includeDeactivated: true,
-      })
-      if (!account) {
-        throw new InvalidRequestError('account not found')
-      }
+    })
+  } else {
+    server.add(com.atproto.server.updateEmail, {
+      auth,
+      handler: async ({ auth, input: { body } }) => {
+        const did = auth.credentials.did
+        const { token, email } = body
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.updateEmail(
-          input.body,
-          await ctx.entrywayAuthHeaders(
-            req,
-            auth.credentials.did,
-            ids.ComAtprotoServerUpdateEmail,
-          ),
-        )
-        return
-      }
+        // @TODO get the locale somehow (either by adding a field in the request
+        // body, or by using the `Accept-Language` header).
+        const locale = undefined
 
-      // require valid token if account email is confirmed
-      if (account.emailConfirmedAt) {
-        if (!token) {
-          throw new InvalidRequestError(
-            'confirmation token required',
-            'TokenRequired',
-          )
+        try {
+          await ctx.accountManager.updateEmail(did, email, token, { locale })
+        } catch (cause) {
+          if (cause instanceof UserAlreadyExistsError) {
+            throw new InvalidRequestError(cause.message, undefined, { cause })
+          }
+
+          throw cause
         }
-        await ctx.accountManager.assertValidEmailToken(
-          did,
-          'update_email',
-          token,
-        )
-      }
-
-      try {
-        await ctx.accountManager.updateEmail({ did, email })
-      } catch (err) {
-        if (err instanceof UserAlreadyExistsError) {
-          throw new InvalidRequestError(
-            'This email address is already in use, please use a different email.',
-          )
-        } else {
-          throw err
-        }
-      }
-    },
-  })
+      },
+    })
+  }
 }

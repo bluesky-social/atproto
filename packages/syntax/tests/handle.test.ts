@@ -1,11 +1,12 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
+import { describe, expect, it } from 'vitest'
 import {
   InvalidHandleError,
   ensureValidHandle,
   ensureValidHandleRegex,
   normalizeAndEnsureValidHandle,
-} from '../src'
+} from '../src/index.js'
 
 describe('handle validation', () => {
   const expectValid = (h: string) => {

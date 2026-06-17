@@ -1,5 +1,5 @@
-import { AppBskyActorDefs } from './client'
-import { ModerationPrefs } from './moderation/types'
+import { AppBskyActorDefs } from './client/index.js'
+import { ModerationPrefs } from './moderation/types.js'
 
 export type UnknownServiceType = string & NonNullable<unknown>
 export type AtprotoServiceType = 'atproto_labeler' | UnknownServiceType
@@ -144,6 +144,12 @@ export interface BskyPreferences {
   threadViewPrefs: BskyThreadViewPreference
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
+  /**
+   * Read-only preference containing value(s) inferred from the user's declared
+   * birthdate. Absence of this preference object in the response indicates
+   * that the user has not made a declaration.
+   */
+  declaredAge?: AppBskyActorDefs.DeclaredAgePref
   interests: BskyInterestsPreference
   bskyAppState: {
     queuedNudges: string[]
@@ -152,4 +158,8 @@ export interface BskyPreferences {
   }
   postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
   verificationPrefs: AppBskyActorDefs.VerificationPrefs
+  liveEventPreferences: {
+    hiddenFeedIds: string[]
+    hideAllFeeds: boolean
+  }
 }

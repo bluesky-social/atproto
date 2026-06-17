@@ -1,8 +1,8 @@
-import * as ui8 from 'uint8arrays'
 import * as common from '@atproto/common'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { AuthRequiredError } from './errors'
+import { DidString, isDidString } from '@atproto/lex-schema'
+import { AuthRequiredError } from './errors.js'
 
 type ServiceJwtParams = {
   iss: string
@@ -18,7 +18,7 @@ type ServiceJwtHeaders = {
 } & Record<string, unknown>
 
 type ServiceJwtPayload = {
-  iss: string
+  iss: DidString | `${DidString}#${string}`
   aud: string
   exp: number
   lxm?: string
@@ -46,9 +46,9 @@ export const createServiceJwt = async (
     jti,
   })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
-  const toSign = ui8.fromString(toSignStr, 'utf8')
-  const sig = await keypair.sign(toSign)
-  return `${toSignStr}.${ui8.toString(sig, 'base64url')}`
+  const toSign = Buffer.from(toSignStr, 'utf8')
+  const sig = Buffer.from(await keypair.sign(toSign))
+  return `${toSignStr}.${sig.toString('base64url')}`
 }
 
 export const createServiceAuthHeaders = async (params: ServiceJwtParams) => {
@@ -59,7 +59,7 @@ export const createServiceAuthHeaders = async (params: ServiceJwtParams) => {
 }
 
 const jsonToB64Url = (json: Record<string, unknown>): string => {
-  return common.utf8ToB64Url(JSON.stringify(json))
+  return Buffer.from(JSON.stringify(json)).toString('base64url')
 }
 
 export type VerifySignatureWithKeyFn = (
@@ -73,7 +73,10 @@ export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
   lxm: string | null, // null indicates to skip the lxm check
-  getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
+  getSigningKey: (
+    iss: DidString | `${DidString}#${string}`,
+    forceRefresh: boolean,
+  ) => Promise<string>,
   verifySignatureWithKey: VerifySignatureWithKeyFn = cryptoVerifySignatureWithKey,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
@@ -121,9 +124,12 @@ export const verifyJwt = async (
       'BadJwtLexiconMethod',
     )
   }
+  if (!payload.iss || !isDidStringOrService(payload.iss)) {
+    throw new AuthRequiredError('jwt iss is not a valid did', 'BadJwtIss')
+  }
 
-  const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
-  const sigBytes = ui8.fromString(sig, 'base64url')
+  const msgBytes = Buffer.from(parts.slice(0, 2).join('.'), 'utf8')
+  const sigBytes = Buffer.from(sig, 'base64url')
 
   const signingKey = await getSigningKey(payload.iss, false)
   const { alg } = header
@@ -182,7 +188,7 @@ export const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
 }
 
 const parseB64UrlToJson = (b64: string) => {
-  return JSON.parse(common.b64UrlToUtf8(b64))
+  return JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'))
 }
 
 const parseHeader = (b64: string): ServiceJwtHeaders => {
@@ -207,4 +213,23 @@ const parsePayload = (b64: string): ServiceJwtPayload => {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   return payload
+}
+
+function isDidStringOrService(
+  value: string,
+): value is DidString | `${DidString}#${string}` {
+  const hashIdx = value.indexOf('#')
+  if (hashIdx === -1) {
+    return isDidString(value)
+  }
+
+  // basic validation of the fragment part
+  const fragmentLen = value.length - hashIdx - 1
+  if (fragmentLen < 1 || value.includes('#', hashIdx + 1)) {
+    return false
+  }
+
+  // Validate the did part
+  const didPart = value.slice(0, hashIdx)
+  return isDidString(didPart)
 }

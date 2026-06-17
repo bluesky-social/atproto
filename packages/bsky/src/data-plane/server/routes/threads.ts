@@ -1,7 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { getAncestorsAndSelfQb, getDescendentsQb } from '../util'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import { getAncestorsAndSelfQb, getDescendentsQb } from '../util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getThread(req) {

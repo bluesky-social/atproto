@@ -1,19 +1,22 @@
-import { AccountStatus } from '../../../../account-manager/account-manager'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.deleteAccount({
+  server.add(com.atproto.admin.deleteAccount, {
     auth: ctx.authVerifier.adminToken,
     handler: async ({ input }) => {
       const { did } = input.body
-      await ctx.actorStore.destroy(did)
+
+      // @NOTE Order matters here: first "unlink" the account by removing it
+      // from the account manager database ("source of truth"), then notify the
+      // sequencer, and finally cleanup files from the file system.
       await ctx.accountManager.deleteAccount(did)
-      const accountSeq = await ctx.sequencer.sequenceAccountEvt(
-        did,
-        AccountStatus.Deleted,
-      )
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
+      try {
+        await ctx.sequencer.sequenceAccountDeletion(did)
+      } finally {
+        await ctx.actorStore.destroy(did)
+      }
     },
   })
 }

@@ -21,7 +21,7 @@ describe('account deactivation', () => {
     })
 
     sc = network.getSeedClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
 
     await basicSeed(sc)
     alice = sc.dids.alice

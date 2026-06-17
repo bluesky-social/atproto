@@ -1,12 +1,12 @@
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { httpLogger as log } from '../../../../logger'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
+import { httpLogger as log } from '../../../../logger.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.submitPlcOperation({
+  server.add(com.atproto.identity.submitPlcOperation, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions) => {
         permissions.assertIdentity({ attr: '*' })
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.plcClient.sendOperation(requester, op)
-      await ctx.sequencer.sequenceIdentityEvt(requester)
+      await ctx.sequencer.sequenceIdentity(requester)
 
       try {
         await ctx.idResolver.did.resolve(requester, true)

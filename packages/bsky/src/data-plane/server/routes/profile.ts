@@ -1,17 +1,14 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
-import {
-  AppBskyNotificationDeclaration,
-  ChatBskyActorDeclaration,
-} from '@atproto/api'
 import { keyBy } from '@atproto/common'
-import { parseRecordBytes } from '../../../hydration/util'
-import { Service } from '../../../proto/bsky_connect'
-import { VerificationMeta } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { Verification } from '../db/tables/verification'
-import { getRecords } from './records'
+import { parseJsonBytes } from '../../../hydration/util.js'
+import { app, chat } from '../../../lexicons/index.js'
+import { Service } from '../../../proto/bsky_connect.js'
+import { VerificationMeta } from '../../../proto/bsky_pb.js'
+import { Database } from '../db/index.js'
+import { Verification } from '../db/tables/verification.js'
+import { getRecords } from './records.js'
 
 type VerifiedBy = {
   [handle: string]: Pick<
@@ -38,6 +35,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const notifDeclarationUris = dids.map(
       (did) => `at://${did}/app.bsky.notification.declaration/self`,
     )
+    const germDeclarationUris = dids.map(
+      (did) => `at://${did}/com.germnetwork.declaration/self`,
+    )
     const { ref } = db.db.dynamic
     const [
       handlesRes,
@@ -46,6 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       statuses,
       chatDeclarations,
       notifDeclarations,
+      germDeclarations,
     ] = await Promise.all([
       db.db
         .selectFrom('actor')
@@ -73,6 +74,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       getRecords(db)({ uris: statusUris }),
       getRecords(db)({ uris: chatDeclarationUris }),
       getRecords(db)({ uris: notifDeclarationUris }),
+      getRecords(db)({ uris: germDeclarationUris }),
     ])
 
     const verificationsBySubjectDid = verificationsReceived.reduce(
@@ -91,9 +93,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const status = statuses.records[i]
 
-      const chatDeclaration = parseRecordBytes<ChatBskyActorDeclaration.Record>(
+      const chatDeclaration = parseJsonBytes(
+        chat.bsky.actor.declaration.main,
         chatDeclarations.records[i].record,
       )
+
+      const germDeclaration = germDeclarations.records[i]
 
       const verifications = verificationsBySubjectDid.get(did) ?? []
       const verifiedBy: VerifiedBy = verifications.reduce((acc, cur) => {
@@ -108,7 +113,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const ageAssuranceForDids = new Set(returnAgeAssuranceForDids)
 
       const activitySubscription = () => {
-        const record = parseRecordBytes<AppBskyNotificationDeclaration.Record>(
+        const record = parseJsonBytes(
+          app.bsky.notification.declaration.main,
           notifDeclarations.records[i].record,
         )
 
@@ -134,11 +140,24 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           return undefined
         }
 
+        const status = row?.ageAssuranceStatus ?? 'unknown'
+        let access = row?.ageAssuranceAccess
+        if (!access || access === 'unknown') {
+          if (status === 'assured') {
+            access = 'full'
+          } else if (status === 'blocked') {
+            access = 'none'
+          } else {
+            access = 'unknown'
+          }
+        }
+
         return {
-          status: row?.ageAssuranceStatus ?? 'unknown',
           lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
             ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
             : undefined,
+          status,
+          access,
         }
       }
 
@@ -154,12 +173,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
+        allowGroupChatInvitesFrom:
+          typeof chatDeclaration?.['allowGroupInvites'] === 'string'
+            ? chatDeclaration['allowGroupInvites']
+            : undefined,
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
         priorityNotifications: row?.priorityNotifs ?? false,
         trustedVerifier: row?.trustedVerifier ?? false,
         verifiedBy,
         statusRecord: status,
+        germRecord: germDeclaration,
         tags: [],
         profileTags: [],
         allowActivitySubscriptionsFrom: activitySubscription(),

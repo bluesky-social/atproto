@@ -1,20 +1,23 @@
 import assert from 'node:assert'
-import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
-import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
-  OutputSchema as OutputSchemaThread,
-  QueryParams as QueryParamsThread,
-} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
+  AppBskyUnspeccedDefs,
+  AppBskyUnspeccedGetPostThreadOtherV2,
+  AppBskyUnspeccedGetPostThreadV2,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
+import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
 import {
   ThreadItemValuePost,
   ThreadOtherItemValuePost,
-} from '../../src/views/threads-v2'
-import { forSnapshot } from '../_util'
+} from '../../src/views/threads-v2.js'
+import { forSnapshot } from '../_util.js'
 
-type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
+type PostProps = Pick<
+  AppBskyUnspeccedDefs.ThreadItemPost,
+  'moreReplies' | 'opThread'
+>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({
   moreReplies: 0,
   opThread: false,
@@ -22,7 +25,7 @@ const props = (overrides: Partial<PostProps> = {}): PostProps => ({
 })
 
 type PostPropsHidden = Pick<
-  ThreadItemPost,
+  AppBskyUnspeccedDefs.ThreadItemPost,
   'hiddenByThreadgate' | 'mutedByViewer'
 >
 const propsHidden = (
@@ -48,7 +51,7 @@ describe('appview thread views v2', () => {
       },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     labelerDid = network.bsky.ctx.cfg.modServiceDid
     await network.processAll()
@@ -440,12 +443,12 @@ describe('appview thread views v2', () => {
     type Case =
       | {
           branchingFactor: number
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           postKeys: string[]
         }
       | {
           branchingFactor: number
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           // For higher branching factors it gets too verbose to write all posts.
           length: number
         }
@@ -782,7 +785,7 @@ describe('appview thread views v2', () => {
 
         assertPosts(t)
         expect(hasOtherReplies).toBe(false)
-        const opThreadPostsUris = new Set(
+        const opThreadPostsUris = new Set<string>(
           opThreadPosts.map((k) =>
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
           ),
@@ -806,7 +809,7 @@ describe('appview thread views v2', () => {
       })
 
       type Case = {
-        sort: QueryParamsThread['sort']
+        sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
         postKeys: string[]
       }
 
@@ -905,7 +908,7 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           postKeys: string[]
         }
 
@@ -957,7 +960,7 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           postKeys: string[]
         }
 
@@ -1982,7 +1985,7 @@ describe('appview thread views v2', () => {
 })
 
 function assertPosts(
-  t: OutputSchemaThread['thread'],
+  t: AppBskyUnspeccedGetPostThreadV2.OutputSchema['thread'],
 ): asserts t is ThreadItemValuePost[] {
   t.forEach((i) => {
     assert(
@@ -1993,7 +1996,7 @@ function assertPosts(
 }
 
 function assertHiddenPosts(
-  t: OutputSchemaHiddenThread['thread'],
+  t: AppBskyUnspeccedGetPostThreadOtherV2.OutputSchema['thread'],
 ): asserts t is ThreadOtherItemValuePost[] {
   t.forEach((i) => {
     assert(

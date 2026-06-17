@@ -1,10 +1,10 @@
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import getActorLikes from './getActorLikes'
-import getAuthorFeed from './getAuthorFeed'
-import getFeed from './getFeed'
-import getPostThread from './getPostThread'
-import getTimeline from './getTimeline'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import getActorLikes from './getActorLikes.js'
+import getAuthorFeed from './getAuthorFeed.js'
+import getFeed from './getFeed.js'
+import getPostThread from './getPostThread.js'
+import getTimeline from './getTimeline.js'
 
 export default function (server: Server, ctx: AppContext) {
   getActorLikes(server, ctx)

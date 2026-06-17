@@ -1,11 +1,11 @@
 import { once } from 'node:events'
 import { ServiceImpl } from '@connectrpc/connect'
-import { AppContext } from '../context'
-import { createMuteOpChannel } from '../db/schema/mute_op'
-import { Service } from '../proto/bsync_connect'
-import { ScanMuteOperationsResponse } from '../proto/bsync_pb'
-import { authWithApiKey } from './auth'
-import { combineSignals, validCursor } from './util'
+import { AppContext } from '../context.js'
+import { createMuteOpChannel } from '../db/schema/mute_op.js'
+import { Service } from '../proto/bsync_connect.js'
+import { ScanMuteOperationsResponse } from '../proto/bsync_pb.js'
+import { authWithApiKey } from './auth.js'
+import { combineSignals, validCursor } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async scanMuteOperations(req, handlerCtx) {

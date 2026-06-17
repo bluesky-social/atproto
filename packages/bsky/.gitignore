@@ -1,0 +1,4 @@
+# @atproto/lex
+src/lexicons
+# @bufbuild/buf
+src/proto

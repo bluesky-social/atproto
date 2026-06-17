@@ -9,16 +9,16 @@ import {
 import { useClickOutside } from '../lib/use-click-outside.ts'
 import { useEscapeKey } from '../lib/use-escape-key.ts'
 import { useRandomString } from '../lib/use-random-string.ts'
-import { Button, ButtonProps } from './_button.tsx'
+import { Button, ButtonProps } from './Button.tsx'
 
 export type Item = {
   label?: ReactNode
   onClick?: MouseEventHandler<HTMLButtonElement>
-  items?: readonly Item[]
+  items?: readonly (Item | null | undefined | false)[]
 }
 
 export type DropdownProps = ButtonProps & {
-  menu: readonly Item[]
+  menu: readonly (Item | null | undefined | false)[]
 }
 export function ButtonDropdown({
   menu,
@@ -56,22 +56,24 @@ export function ButtonDropdown({
         <div
           key="menu"
           id={dropdownId}
-          className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-gray-300 focus:outline-none"
           onClick={(event) => {
             if (!event.defaultPrevented) setOpen(false)
           }}
           role="menu"
           aria-labelledby={id}
         >
-          {menu.map((item, index) => (
-            <Item
-              key={`item-${index}`}
-              item={item}
-              className={
-                index > 0 ? 'mt-1 border-t border-gray-200 pt-1' : undefined
-              }
-            />
-          ))}
+          {menu
+            .filter((item) => !!item)
+            .map((item, index) => (
+              <Item
+                key={`item-${index}`}
+                item={item}
+                className={
+                  index > 0 ? 'mt-1 border-t border-gray-200 pt-1' : undefined
+                }
+              />
+            ))}
         </div>
       )}
     </div>
@@ -91,6 +93,7 @@ function Item({ item: { label, onClick, items }, ...props }: ItemProps) {
           type="button"
           role="menuitem"
           className={[
+            'flex items-center gap-2',
             'block w-full px-4 py-2 text-left text-sm text-gray-700 focus:outline-none',
             onClick ? 'hover:bg-gray-100 focus:bg-gray-100' : 'cursor-default',
           ].join(' ')}
@@ -100,7 +103,9 @@ function Item({ item: { label, onClick, items }, ...props }: ItemProps) {
         </button>
       )}
 
-      {items?.map((item, index) => <Item key={index} item={item} />)}
+      {items
+        ?.filter((item) => !!item)
+        .map((item, index) => <Item key={index} item={item} />)}
     </div>
   )
 }

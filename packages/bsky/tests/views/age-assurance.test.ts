@@ -3,18 +3,27 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
-import { AtpAgent } from '@atproto/api'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
   KwsExternalPayload,
   KwsVerificationQuery,
   KwsWebhookBody,
-} from '../../src/api/kws/types'
+} from '../../src/api/kws/types.js'
 import {
   parseExternalPayload,
   serializeExternalPayload,
-} from '../../src/api/kws/util'
-import { ids } from '../../src/lexicon/lexicons'
+} from '../../src/api/kws/util.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -32,8 +41,8 @@ describe('age assurance views', () => {
   let actorDid: string
 
   let kwsServer: MockKwsServer
-  const authMock = jest.fn()
-  const sendEmailMock = jest.fn()
+  const authMock = vi.fn<MockHandler>()
+  const sendEmailMock = vi.fn<MockHandler>()
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
@@ -47,8 +56,6 @@ describe('age assurance views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_age_assurance',
       bsky: {
-        statsigEnv: 'test',
-        statsigKey: 'secret-key',
         kws: {
           apiKey: 'apiKey',
           apiOrigin: kwsServer.url,
@@ -58,11 +65,13 @@ describe('age assurance views', () => {
           userAgent: 'userAgent',
           verificationSecret,
           webhookSecret,
+          ageVerifiedWebhookSecret: 'ageVerifiedWebhookSecret',
+          ageVerifiedRedirectSecret: 'ageVerifiedRedirectSecret',
         },
       },
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -88,7 +97,7 @@ describe('age assurance views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -225,7 +234,7 @@ describe('age assurance views', () => {
       lastInitiatedAt: expect.any(String),
     })
 
-    await expect(initAgeAssurance(actor)).rejects.toThrowError(
+    await expect(initAgeAssurance(actor)).rejects.toThrow(
       `Cannot initiate age assurance flow from current state: assured`,
     )
   })
@@ -363,6 +372,8 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
+type MockHandler = (req: express.Request, res: express.Response) => void
+
 class MockKwsServer {
   private verificationSecret: string
   private webhookSecret: string
@@ -377,8 +388,8 @@ class MockKwsServer {
   }: {
     verificationSecret: string
     webhookSecret: string
-    authMock: jest.Mock
-    sendEmailMock: jest.Mock
+    authMock: ReturnType<typeof vi.fn<MockHandler>>
+    sendEmailMock: ReturnType<typeof vi.fn<MockHandler>>
   }) {
     this.verificationSecret = verificationSecret
     this.webhookSecret = webhookSecret

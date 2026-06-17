@@ -1,13 +1,13 @@
 import { EventEmitter, once } from 'node:events'
-import Mail from 'nodemailer/lib/mailer'
+import { SendMailOptions } from 'nodemailer'
 import {
   AtpAgent,
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { ServerMailer } from '../src/mailer'
-import userSeed from './seeds/users'
+import { ServerMailer } from '../src/mailer/index.js'
+import userSeed from './seeds/users.js'
 
 describe('email confirmation', () => {
   let network: TestNetworkNoAppView
@@ -26,7 +26,7 @@ describe('email confirmation', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     mailer = network.pds.ctx.mailer
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]
@@ -45,12 +45,12 @@ describe('email confirmation', () => {
     await network.close()
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
+  const getMailFrom = async (promise): Promise<SendMailOptions> => {
     const result = await Promise.all([once(mailCatcher, 'mail'), promise])
     return result[0][0]
   }
 
-  const getTokenFromMail = (mail: Mail.Options) =>
+  const getTokenFromMail = (mail: SendMailOptions) =>
     mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   it('starts a user out unverified', async () => {

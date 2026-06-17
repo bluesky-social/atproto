@@ -4,85 +4,89 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react'
-import type {
-  BrowserOAuthClient,
-  OAuthSession,
-} from '@atproto/oauth-client-browser'
+import { type OAuthSession } from '@atproto/oauth-client-browser'
+import { useAbortableEffect } from '../lib/use-abortable-effect.js'
+import { initPromise, oauthClient, oauthEvents } from '../oauthClient.js'
 
-const OAuthContext = createContext<null | {
+export type SignInFunction = (
+  input: string,
+  options?: { display?: 'popup' },
+) => Promise<void>
+export type SignUpFunction = (
+  input: string,
+  options?: { display?: 'popup' },
+) => Promise<void>
+export type SignOutFunction = () => Promise<void>
+
+export const OAuthContext = createContext<null | {
   session: null | OAuthSession
   isLoading: boolean
   isSignedIn: boolean
-  signIn: (input: string) => Promise<void>
-  signOut: () => Promise<void>
+  signIn: SignInFunction
+  signUp: SignUpFunction
+  signOut: SignOutFunction
 }>(null)
 
-export function OAuthProvider({
-  client,
-  children,
-}: PropsWithChildren<{
-  client: BrowserOAuthClient
-}>) {
+export function OAuthProvider({ children }: PropsWithChildren) {
   const [initialized, setInitialized] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [session, setSession] = useState<null | OAuthSession>(null)
 
-  const clientInitRef = useRef<typeof client>(null)
+  useAbortableEffect(
+    (signal) => {
+      setInitialized(false)
+      setSession(null)
 
-  // Initialize by restoring the previously loaded session, if any.
-  useEffect(() => {
-    // In strict mode, we don't want to re-init() the client if it's the same
-    if (clientInitRef.current === client) return
-    clientInitRef.current = client
+      void initPromise
+        .then(async (result) => {
+          if (signal.aborted) return
 
-    setInitialized(false)
-    setSession(null)
+          if (result) setSession(result.session)
+        })
+        .finally(() => {
+          if (signal.aborted) return
 
-    void client
-      .init(false)
-      .then(async (result) => {
-        if (clientInitRef.current !== client) return
-        if (!result) return
+          setInitialized(true)
+        })
+    },
+    [initPromise],
+  )
 
-        const { session } = result
-
-        setSession(session)
-
-        // If we are not back from a redirect, force an async refresh here,
-        // which will cause the session to be deleted by the "deleted" event
-        // handler if the refresh token was revoked
-        if (result.state === undefined) void session.getTokenInfo(true)
-      })
-      .catch((_err) => {
-        if (clientInitRef.current !== client) return
-      })
-      .finally(() => {
-        if (clientInitRef.current !== client) return
-
-        setInitialized(true)
-        setLoading(false)
-      })
-  }, [client])
-
-  // If the current session gets deleted (e.g. from another browser tab, or
-  // because a refresh token was revoked), clear it
-  useEffect(() => {
-    if (!session) return
-
-    const handleDelete = (event: CustomEvent<{ sub: string }>) => {
-      if (event.detail.sub === session.did) {
-        setSession(null)
+  // Keep tabs in sync by listening to the oauth client's events and updating
+  // the session state accordingly. The deletion part is needed because the
+  // oauth client internal data is shared across tabs, so if a session is
+  // deleted in one tab, the other tabs should reflect that change as well. The
+  // update part is optional.
+  useAbortableEffect(
+    (signal) => {
+      // If the session is removed from another tab, we should update the state
+      // in this tab as well.
+      if (session) {
+        oauthEvents.addEventListener(
+          'deleted',
+          (evt) => {
+            if (evt.detail.sub === session.sub) setSession(null)
+          },
+          { signal },
+        )
+      } else {
+        // If we don't have a session, and one is refreshed in another tab,
+        // let's load it in the current tab as well.
+        oauthEvents.addEventListener(
+          'updated',
+          (evt) => {
+            void oauthClient.restore(evt.detail.sub, false).then((session) => {
+              if (!signal.aborted) setSession(session)
+            })
+          },
+          { signal },
+        )
       }
-    }
-
-    client.addEventListener('deleted', handleDelete)
-    return () => {
-      client.removeEventListener('deleted', handleDelete)
-    }
-  }, [client, session])
+    },
+    [oauthEvents, session],
+  )
 
   // When initializing the AuthProvider, we used "false" as restore's refresh
   // argument so that the app can work off-line. The following effect will
@@ -103,24 +107,24 @@ export function OAuthProvider({
     return () => clearInterval(interval)
   }, [session])
 
-  const signIn = useCallback(
-    async (input: string) => {
+  const signIn = useCallback<SignInFunction>(
+    async (input, options) => {
       setLoading(true)
 
       try {
-        const session = await client
+        const session = await oauthClient
           .restore(input, true)
-          .catch(async (_err) => client.signIn(input))
+          .catch(async (_err) => oauthClient.signIn(input, options))
 
         setSession(session)
       } finally {
         setLoading(false)
       }
     },
-    [client],
+    [oauthClient],
   )
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback<SignOutFunction>(async () => {
     if (session) {
       setSession(null)
       setLoading(true)
@@ -132,6 +136,23 @@ export function OAuthProvider({
     }
   }, [session])
 
+  const signUp = useCallback<SignUpFunction>(
+    async (input, options) => {
+      setLoading(true)
+      try {
+        const session = await oauthClient.signIn(input, {
+          ...options,
+          prompt: 'create',
+        })
+
+        setSession(session)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [oauthClient],
+  )
+
   return (
     <OAuthContext.Provider
       value={{
@@ -141,6 +162,7 @@ export function OAuthProvider({
         isSignedIn: !!session,
 
         signIn,
+        signUp,
         signOut,
       }}
     >

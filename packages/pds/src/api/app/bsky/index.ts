@@ -1,8 +1,8 @@
-import { AppContext } from '../../../context'
-import { Server } from '../../../lexicon'
-import actor from './actor'
-import feed from './feed'
-import notification from './notification'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../context.js'
+import actor from './actor/index.js'
+import feed from './feed/index.js'
+import notification from './notification/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   actor(server, ctx)

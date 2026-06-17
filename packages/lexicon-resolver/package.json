@@ -1,7 +1,10 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.2.3",
-  "type": "commonjs",
+  "version": "0.4.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
@@ -9,9 +12,10 @@
     "lexicon"
   ],
   "scripts": {
-    "test": "jest",
-    "build": "tsc --build tsconfig.build.json",
-    "codegen": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/sync/getRecord.json"
+    "test": "vitest run",
+    "build": "tsgo --build tsconfig.build.json",
+    "prebuild": "pnpm run codegen",
+    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
   },
   "homepage": "https://atproto.com",
   "repository": {
@@ -19,8 +23,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon-resolver"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -30,16 +32,13 @@
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex": "workspace:^",
+    "@atproto/lex-document": "workspace:^",
     "@atproto/repo": "workspace:^",
-    "@atproto/syntax": "workspace:^",
-    "@atproto/xrpc": "workspace:^",
-    "multiformats": "^9.9.0"
+    "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "@atproto/common": "workspace:^",
-    "@atproto/lex-cli": "workspace:^",
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "@atproto/lex-cbor": "workspace:^",
+    "vitest": "^4.0.16"
   }
 }

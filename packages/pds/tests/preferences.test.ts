@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import usersSeed from './seeds/users'
+import type { Unknown$Type } from '@atproto/lex'
+import usersSeed from './seeds/users.js'
 
 describe('user preferences', () => {
   let network: TestNetworkNoAppView
@@ -12,7 +13,7 @@ describe('user preferences', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'preferences',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     const appPass = await network.pds.ctx.accountManager.createAppPassword(
@@ -25,7 +26,7 @@ describe('user preferences', () => {
       password: appPass.password,
     })
     appPassHeaders = { authorization: `Bearer ${res.data.accessJwt}` }
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()
@@ -55,7 +56,7 @@ describe('user preferences', () => {
   it('only gets preferences in app.bsky namespace.', async () => {
     await network.pds.ctx.actorStore.transact(sc.dids.alice, (store) =>
       store.pref.putPreferences(
-        [{ $type: 'com.atproto.server.defs#unknown' }],
+        [{ $type: 'com.atproto.server.defs#unknown' as Unknown$Type }],
         'com.atproto',
         {
           hasAccessFull: true,
@@ -193,9 +194,12 @@ describe('user preferences', () => {
       },
       { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
     )
-    await expect(tryPut).rejects.toThrow(
-      'Input/preferences/1 must be an object which includes the "$type" property',
-    )
+    await expect(tryPut).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining(
+        'object which includes the "$type" property',
+      ),
+    })
   })
 
   it('does not read permissioned preferences with an app password', async () => {
@@ -214,7 +218,14 @@ describe('user preferences', () => {
       {},
       { headers: appPassHeaders },
     )
-    expect(res.data.preferences).toEqual([])
+    expect(res.data.preferences).toEqual([
+      {
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isOverAge13: false,
+        isOverAge16: false,
+        isOverAge18: false,
+      },
+    ])
   })
 
   it('does not write permissioned preferences with an app password', async () => {
@@ -249,5 +260,93 @@ describe('user preferences', () => {
       (pref) => pref.$type === 'app.bsky.actor.defs#personalDetailsPref',
     )
     expect(scopedPref).toBeDefined()
+  })
+
+  describe('personalDetailsPref and declaredAgePref', () => {
+    const birthDate = new Date(1970, 0, 1).toISOString()
+
+    it('declaredAgePref is computed and returned for authed user', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#personalDetailsPref',
+              birthDate,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const res = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+      expect(res.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isOverAge13: true,
+        isOverAge16: true,
+        isOverAge18: true,
+      })
+    })
+
+    it('declaredAgePref is computed and returned for app password', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#personalDetailsPref',
+              birthDate,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const res = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: appPassHeaders },
+      )
+      expect(res.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isOverAge13: true,
+        isOverAge16: true,
+        isOverAge18: true,
+      })
+    })
+
+    it('user cannot set declaredAgePref', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#personalDetailsPref',
+              birthDate,
+            },
+            {
+              $type: 'app.bsky.actor.defs#declaredAgePref',
+              isOverAge13: false,
+              isOverAge16: false,
+              isOverAge18: false,
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const res = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+      expect(res.data.preferences).toEqual([
+        {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate,
+        },
+        {
+          $type: 'app.bsky.actor.defs#declaredAgePref',
+          isOverAge13: true,
+          isOverAge16: true,
+          isOverAge18: true,
+        },
+      ])
+    })
   })
 })

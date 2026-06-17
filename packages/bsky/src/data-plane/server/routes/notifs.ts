@@ -2,14 +2,9 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { jsonStringToLex } from '@atproto/lexicon'
-import {
-  ChatPreference,
-  FilterablePreference,
-  Preference,
-  Preferences,
-} from '../../../lexicon/types/app/bsky/notification/defs'
-import { Service } from '../../../proto/bsky_connect'
+import { lexParse } from '@atproto/lex'
+import { app } from '../../../lexicons/index.js'
+import { Service } from '../../../proto/bsky_connect.js'
 import {
   ChatNotificationInclude,
   ChatNotificationPreference,
@@ -17,11 +12,11 @@ import {
   NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
-} from '../../../proto/bsky_pb'
-import { Namespaces } from '../../../stash'
-import { Database } from '../db'
-import { IsoSortAtKey } from '../db/pagination'
-import { countAll, notSoftDeletedClause } from '../db/util'
+} from '../../../proto/bsky_pb.js'
+import { Namespaces } from '../../../stash.js'
+import { Database } from '../db/index.js'
+import { IsoSortAtKey } from '../db/pagination.js'
+import { countAll, notSoftDeletedClause } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getNotifications(req) {
@@ -37,17 +32,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     let builder = db.db
       .selectFrom('notification as notif')
       .where('notif.did', '=', actorDid)
-      .where((clause) =>
-        clause
-          .where('reasonSubject', 'is', null)
-          .orWhereExists(
+      .where((eb) =>
+        eb.or([
+          eb('reasonSubject', 'is', null),
+          eb.exists(
             db.db
               .selectFrom('record as subject')
               .selectAll()
               .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
           ),
+        ]),
       )
-      .if(priority, (qb) => qb.whereExists(priorityFollowQb))
+      .$if(priority, (qb) => qb.where(({ exists }) => exists(priorityFollowQb)))
       .select([
         'notif.author as authorDid',
         'notif.recordUri as uri',
@@ -122,13 +118,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
       .where('notification.did', '=', actorDid)
       .where('notification.sortAt', '>', lastSeen ?? '')
-      .if(priority, (qb) =>
-        qb.whereExists(
-          db.db
-            .selectFrom('follow')
-            .select(sql<boolean>`${true}`.as('val'))
-            .where('creator', '=', actorDid)
-            .whereRef('subjectDid', '=', ref('notification.author')),
+      .$if(priority, (qb) =>
+        qb.where(({ exists }) =>
+          exists(
+            db.db
+              .selectFrom('follow')
+              .select(sql<boolean>`${true}`.as('val'))
+              .where('creator', '=', actorDid)
+              .whereRef('subjectDid', '=', ref('notification.author')),
+          ),
         ),
       )
       .executeTakeFirst()
@@ -179,7 +177,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('private_data')
       .selectAll()
       .where('actorDid', 'in', dids)
-      .where('namespace', '=', Namespaces.AppBskyNotificationDefsPreferences)
+      .where(
+        'namespace',
+        '=',
+        Namespaces.AppBskyNotificationDefsPreferences.$type,
+      )
       .where('key', '=', 'self')
       .execute()
 
@@ -189,7 +191,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       if (!row) {
         return {}
       }
-      const p = jsonStringToLex(row.payload) as Preferences
+      const p = lexParse<app.bsky.notification.defs.Preferences>(row.payload)
       return notificationPreferencesLexToProtobuf(p, row.payload)
     })
 
@@ -198,11 +200,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 })
 
 export const notificationPreferencesLexToProtobuf = (
-  p: Preferences,
+  p: app.bsky.notification.defs.Preferences,
   json: string,
 ): NotificationPreferences => {
   const lexChatPreferenceToProtobuf = (
-    p: ChatPreference,
+    p: app.bsky.notification.defs.ChatPreference,
   ): ChatNotificationPreference =>
     new ChatNotificationPreference({
       include:
@@ -213,7 +215,7 @@ export const notificationPreferencesLexToProtobuf = (
     })
 
   const lexFilterablePreferenceToProtobuf = (
-    p: FilterablePreference,
+    p: app.bsky.notification.defs.FilterablePreference,
   ): FilterableNotificationPreference =>
     new FilterableNotificationPreference({
       include:
@@ -224,7 +226,9 @@ export const notificationPreferencesLexToProtobuf = (
       push: { enabled: p.push ?? true },
     })
 
-  const lexPreferenceToProtobuf = (p: Preference): NotificationPreference =>
+  const lexPreferenceToProtobuf = (
+    p: app.bsky.notification.defs.Preference,
+  ): NotificationPreference =>
     new NotificationPreference({
       list: { enabled: p.list ?? true },
       push: { enabled: p.push ?? true },

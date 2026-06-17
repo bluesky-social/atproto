@@ -3,16 +3,16 @@
 import path from 'node:path'
 import { Command } from 'commander'
 import yesno from 'yesno'
-import { genClientApi } from './codegen/client'
-import { genServerApi } from './codegen/server'
-import * as mdGen from './mdgen'
+import { genClientApi } from './codegen/client.js'
+import { genServerApi } from './codegen/server.js'
+import * as mdGen from './mdgen/index.js'
 import {
   applyFileDiff,
   genFileDiff,
   genTsObj,
   printFileDiff,
   readAllLexicons,
-} from './util'
+} from './util.js'
 
 const program = new Command()
 program.name('lex').description('Lexicon CLI').version('0.0.0')

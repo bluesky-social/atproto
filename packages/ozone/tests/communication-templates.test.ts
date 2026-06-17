@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 
 describe('communication-templates', () => {
   let network: TestNetwork
@@ -11,7 +11,7 @@ describe('communication-templates', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_communication_templates',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

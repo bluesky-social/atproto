@@ -1,16 +1,23 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyEmbedExternal, AtpAgent } from '@atproto/api'
+import { Timestamp } from '@bufbuild/protobuf'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  AppBskyEmbedExternal,
+  AtpAgent,
+  ComGermnetworkDeclaration,
+  ids,
+} from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { forSnapshot, stripViewer } from '../_util'
+import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
+  let labelerDid: string
 
   // account dids, for convenience
   let alice: string
@@ -18,14 +25,16 @@ describe('pds profile views', () => {
   let dan: string
   let eve: string
   let frank: string
+  let noprofile: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_profile',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
+    labelerDid = network.bsky.ctx.cfg.labelsFromIssuerDids[0]
     await basicSeed(sc)
 
     await sc.createAccount('eve', {
@@ -62,12 +71,19 @@ describe('pds profile views', () => {
       },
     )
 
+    await sc.createAccount('noprofile', {
+      handle: 'noprofile.test',
+      email: 'noprofile@test.com',
+      password: 'noprofile-pass',
+    })
+
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
     eve = sc.dids.eve
     frank = sc.dids.frank
+    noprofile = sc.dids.noprofile
   })
 
   afterAll(async () => {
@@ -88,6 +104,37 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('returns empty profile if actor exists but has no profile', async () => {
+    const res = await agent.app.bsky.actor.getProfile(
+      { actor: noprofile },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
+    )
+
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('returns empty profile for actor that exists but has no profile', async () => {
+    const res = await agent.app.bsky.actor.getProfiles(
+      { actors: [bob, noprofile] },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfiles,
+        ),
+      },
+    )
+
+    expect(res.data.profiles).toHaveLength(2)
+    expect(res.data.profiles[0].did).toBe(bob)
+    expect(res.data.profiles[1].did).toBe(noprofile)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
   it('reflects self-labels', async () => {
@@ -402,20 +449,12 @@ describe('pds profile views', () => {
       const nowPlus15M = '2021-01-01T01:15:00.000Z'
 
       beforeAll(() => {
-        jest.useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'performance',
-            'setImmediate',
-            'setInterval',
-            'setTimeout',
-          ],
-        })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       it('returns inactive status', async () => {
@@ -438,7 +477,7 @@ describe('pds profile views', () => {
         )
         await network.processAll()
 
-        jest.setSystemTime(new Date(nowPlus15M))
+        vi.setSystemTime(new Date(nowPlus15M))
 
         const { data } = await agent.api.app.bsky.actor.getProfile(
           { actor: alice },
@@ -451,9 +490,264 @@ describe('pds profile views', () => {
         )
 
         // Doesn't need `forSnapshot` because the dates are already mocked.
-        expect(data.status).toMatchSnapshot()
+        expect(forSnapshot(data.status)).toMatchSnapshot()
       })
     })
+
+    describe('labeled', () => {
+      beforeAll(async () => {
+        const res = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        await createLabel({
+          src: labelerDid,
+          uri: res.data.uri,
+          cid: res.data.cid,
+          val: 'spam',
+        })
+        await network.processAll()
+      })
+
+      it('returns labels on statusView', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: {
+              'atproto-accept-labelers': labelerDid,
+              ...(await network.serviceHeaders(
+                bob,
+                ids.AppBskyActorGetProfile,
+              )),
+            },
+          },
+        )
+
+        expect(data.status?.labels).toBeDefined()
+        expect(data.status?.labels?.length).toBe(1)
+        expect(data.status?.labels?.at(0)?.val).toBe('spam')
+      })
+    })
+
+    /*
+     * THIS ONE MUST BE LAST, since a takedown of a `self` rkey record prevents
+     * subsequent hydrations of that record.
+     */
+    describe('when taken down', () => {
+      beforeAll(async () => {
+        const res = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        await network.bsky.ctx.dataplane.takedownRecord({
+          recordUri: res.data.uri,
+        })
+        await network.processAll()
+      })
+
+      it('it returns the live status with isDisabled=true for status owner', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        expect(data.status?.isDisabled).toBe(true)
+        expect(forSnapshot(data.status)).toMatchSnapshot()
+      })
+
+      it('it does not return the live status for non-owner', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              bob,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        expect(forSnapshot(data.status)).toBeUndefined()
+      })
+    })
+  })
+
+  describe('chat', () => {
+    it('omits chat if no declaration exists', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toBeUndefined()
+    })
+
+    it('returns allowIncoming when only that field is set', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'none',
+      })
+    })
+
+    it('returns both allowIncoming and allowGroupInvites when both are set', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: eve,
+          collection: ids.ChatBskyActorDeclaration,
+          rkey: 'self',
+          record: {
+            $type: ids.ChatBskyActorDeclaration,
+            allowIncoming: 'following',
+            allowGroupInvites: 'all',
+          },
+        },
+        {
+          headers: sc.getHeaders(eve),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: eve },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'following',
+        allowGroupInvites: 'all',
+      })
+    })
+  })
+
+  describe('germ', () => {
+    const germDeclaration: ComGermnetworkDeclaration.Main = {
+      $type: ids.ComGermnetworkDeclaration,
+      version: '0.1.0',
+      currentKey: new Uint8Array([0o01, 0o02, 0o03]),
+      messageMe: {
+        messageMeUrl: 'https://chat.example.com/start-conversation',
+        showButtonTo: 'everyone',
+      },
+    }
+
+    it(`omits germ record if doesn't exist`, async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.germ).toBeUndefined()
+    })
+
+    it('returns germ record if it does exist', async () => {
+      await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: bob,
+          collection: ids.ComGermnetworkDeclaration,
+          rkey: 'self',
+          record: germDeclaration,
+        },
+        {
+          headers: sc.getHeaders(bob),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: bob },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.germ?.showButtonTo).toEqual('everyone')
+      expect(forSnapshot(data.associated?.germ)).toMatchSnapshot()
+    })
+  })
+
+  it('filters out Go zero-value dates from dataplane', async () => {
+    using getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
+
+    getActorsSpy.mockImplementationOnce(async (req) => {
+      const result = await network.bsky.ctx.dataplane.getActors(req)
+
+      // Inject a Go zero-value date (0001-01-01 00:00:00 UTC)
+      if (result.actors.length > 0 && result.actors[0]) {
+        const actor = result.actors[0]
+        const goZeroDate = new Date(-62135596800000)
+        actor.createdAt = Timestamp.fromDate(goZeroDate)
+      }
+
+      return result
+    })
+
+    const { data } = await agent.app.bsky.actor.getProfile(
+      { actor: alice },
+      {
+        headers: await network.serviceHeaders(bob, ids.AppBskyActorGetProfile),
+      },
+    )
+
+    // The hydration layer filters Go zero-values out
+    expect(data.createdAt).toBeUndefined()
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {
@@ -466,5 +760,26 @@ describe('pds profile views', () => {
       },
       { headers: sc.getHeaders(did), encoding: 'application/json' },
     )
+  }
+
+  const createLabel = async (opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  }) => {
+    await network.bsky.db.db
+      .insertInto('label')
+      .values({
+        uri: opts.uri,
+        cid: opts.cid,
+        val: opts.val,
+        cts: new Date().toISOString(),
+        exp: opts.exp ?? null,
+        neg: false,
+        src: opts.src ?? labelerDid,
+      })
+      .execute()
   }
 })

@@ -1,7 +1,7 @@
-import { AtUri, AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AtUri, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { forSnapshot } from '../_util'
+import { forSnapshot } from '../_util.js'
 
 describe('pds views with blocking from block lists', () => {
   let network: TestNetwork
@@ -19,8 +19,8 @@ describe('pds views with blocking from block lists', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'views_block_lists',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

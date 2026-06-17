@@ -1,4 +1,3 @@
-import { streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import {
   CidSet,
@@ -8,10 +7,10 @@ import {
   getAndParseRecord,
   readCar,
   readCarWithRoot,
-} from '../src'
-import { MemoryBlockstore } from '../src/storage'
-import * as sync from '../src/sync'
-import * as util from './_util'
+} from '../src/index.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
+import * as sync from '../src/sync/index.js'
+import * as util from './_util.js'
 
 describe('Repo Sync', () => {
   let storage: MemoryBlockstore
@@ -31,7 +30,7 @@ describe('Repo Sync', () => {
   })
 
   it('sync a full repo', async () => {
-    const carBytes = await streamToBuffer(sync.getFullRepo(storage, repo.cid))
+    const carBytes = await util.toBuffer(sync.getFullRepo(storage, repo.cid))
     const car = await readCarWithRoot(carBytes)
     const verified = await sync.verifyRepo(
       car.blocks,
@@ -54,7 +53,7 @@ describe('Repo Sync', () => {
   })
 
   it('does not sync duplicate blocks', async () => {
-    const carBytes = await streamToBuffer(sync.getFullRepo(storage, repo.cid))
+    const carBytes = await util.toBuffer(sync.getFullRepo(storage, repo.cid))
     const car = await readCar(carBytes)
     const cids = new CidSet()
     car.blocks.forEach((_, cid) => {
@@ -87,9 +86,7 @@ describe('Repo Sync', () => {
 
   it('throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
-    const carBytes = await streamToBuffer(
-      sync.getFullRepo(storage, badRepo.cid),
-    )
+    const carBytes = await util.toBuffer(sync.getFullRepo(storage, badRepo.cid))
     const car = await readCarWithRoot(carBytes)
     await expect(
       sync.verifyRepo(car.blocks, car.root, repoDid, keypair.did()),

@@ -6,9 +6,9 @@ import {
   ToolsOzoneModerationDefs,
   ToolsOzoneVerificationDefs,
 } from '@atproto/api'
-import { Database } from '../db'
-import { CreatedAtUriKeyset, paginate } from '../db/pagination'
-import { Verification } from '../db/schema/verification'
+import { Database } from '../db/index.js'
+import { CreatedAtUriKeyset, paginate } from '../db/pagination.js'
+import { Verification } from '../db/schema/verification.js'
 
 export type VerificationServiceCreator = (db: Database) => VerificationService
 
@@ -197,8 +197,8 @@ export class VerificationService {
       .updateTable('firehose_cursor')
       .set({ cursor })
       .where('service', '=', 'verification')
-      .where((qb) =>
-        qb.where('cursor', '<', cursor).orWhere('cursor', 'is', null),
+      .where((eb) =>
+        eb.or([eb('cursor', '<', cursor), eb('cursor', 'is', null)]),
       )
       .returningAll()
       .executeTakeFirst()

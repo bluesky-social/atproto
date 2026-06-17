@@ -1,8 +1,7 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AppBskyFeedDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { isThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('bsky needs-review labels', () => {
   let network: TestNetwork
@@ -13,7 +12,7 @@ describe('bsky needs-review labels', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_needs_review_labels',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
 
@@ -78,11 +77,12 @@ describe('bsky needs-review labels', () => {
       } = await agent.app.bsky.feed.getPostThread({
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       })
-      assert(isThreadViewPost(thread))
+      assert(AppBskyFeedDefs.isThreadViewPost(thread))
       expect(
         thread.replies?.some((reply) => {
           return (
-            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+            AppBskyFeedDefs.isThreadViewPost(reply) &&
+            reply.post.author.did === sc.dids.geoff
           )
         }),
       ).toBe(false)
@@ -146,11 +146,12 @@ describe('bsky needs-review labels', () => {
           ),
         },
       )
-      assert(isThreadViewPost(thread))
+      assert(AppBskyFeedDefs.isThreadViewPost(thread))
       expect(
         thread.replies?.some((reply) => {
           return (
-            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+            AppBskyFeedDefs.isThreadViewPost(reply) &&
+            reply.post.author.did === sc.dids.geoff
           )
         }),
       ).toBe(true)
@@ -170,11 +171,12 @@ describe('bsky needs-review labels', () => {
           ),
         },
       )
-      assert(isThreadViewPost(thread))
+      assert(AppBskyFeedDefs.isThreadViewPost(thread))
       expect(
         thread.replies?.some((reply) => {
           return (
-            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+            AppBskyFeedDefs.isThreadViewPost(reply) &&
+            reply.post.author.did === sc.dids.geoff
           )
         }),
       ).toBe(true)
@@ -209,11 +211,12 @@ describe('bsky needs-review labels', () => {
       } = await agent.app.bsky.feed.getPostThread({
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       })
-      assert(isThreadViewPost(thread))
+      assert(AppBskyFeedDefs.isThreadViewPost(thread))
       expect(
         thread.replies?.some((reply) => {
           return (
-            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+            AppBskyFeedDefs.isThreadViewPost(reply) &&
+            reply.post.author.did === sc.dids.geoff
           )
         }),
       ).toBe(false)
@@ -277,11 +280,12 @@ describe('bsky needs-review labels', () => {
           ),
         },
       )
-      assert(isThreadViewPost(thread))
+      assert(AppBskyFeedDefs.isThreadViewPost(thread))
       expect(
         thread.replies?.some((reply) => {
           return (
-            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+            AppBskyFeedDefs.isThreadViewPost(reply) &&
+            reply.post.author.did === sc.dids.geoff
           )
         }),
       ).toBe(true)
@@ -301,11 +305,12 @@ describe('bsky needs-review labels', () => {
           ),
         },
       )
-      assert(isThreadViewPost(thread))
+      assert(AppBskyFeedDefs.isThreadViewPost(thread))
       expect(
         thread.replies?.some((reply) => {
           return (
-            isThreadViewPost(reply) && reply.post.author.did === sc.dids.geoff
+            AppBskyFeedDefs.isThreadViewPost(reply) &&
+            reply.post.author.did === sc.dids.geoff
           )
         }),
       ).toBe(true)

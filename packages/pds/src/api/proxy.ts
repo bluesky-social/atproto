@@ -1,15 +1,6 @@
 import { IncomingMessage } from 'node:http'
 import express from 'express'
-import { Headers } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
-export const resultPassthru = <T>(result: { headers: Headers; data: T }) => {
-  // @TODO pass through any headers that we always want to forward along
-  return {
-    encoding: 'application/json' as const,
-    body: result.data,
-  }
-}
 
 export function authPassthru(req: IncomingMessage) {
   const { authorization } = req.headers

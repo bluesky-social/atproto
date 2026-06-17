@@ -8,3 +8,6 @@ export * from './atproto-handle-resolver.js'
 
 // Handle Resolver Caching utility
 export * from './cached-handle-resolver.js'
+
+// utils
+export * from './create-handle-resolver.js'

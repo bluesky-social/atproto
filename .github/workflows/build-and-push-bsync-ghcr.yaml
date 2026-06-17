@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+      - msi/ts-7
+
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

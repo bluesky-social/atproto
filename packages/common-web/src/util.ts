@@ -1,11 +1,11 @@
 export const noUndefinedVals = <T>(
   obj: Record<string, T | undefined>,
 ): Record<string, T> => {
-  Object.keys(obj).forEach((k) => {
+  for (const k of Object.keys(obj)) {
     if (obj[k] === undefined) {
       delete obj[k]
     }
-  })
+  }
   return obj as Record<string, T>
 }
 
@@ -167,7 +167,7 @@ export const range = (num: number): number[] => {
   return nums
 }
 
-export const dedupeStrs = (strs: string[]): string[] => {
+export const dedupeStrs = <T extends string>(strs: Iterable<T>): T[] => {
   return [...new Set(strs)]
 }
 

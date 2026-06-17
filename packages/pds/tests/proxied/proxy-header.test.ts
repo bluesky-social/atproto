@@ -7,7 +7,7 @@ import express from 'express'
 import { Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough'
+import { parseProxyHeader } from '../../src/pipethrough.js'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -32,7 +32,7 @@ describe('proxy header', () => {
 
     alice = sc.dids.alice
     await network.processAll()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await proxyServer.close()
@@ -56,6 +56,18 @@ describe('proxy header', () => {
       parseProxyHeader(network.pds.ctx, ` ${proxyServer.did}#atproto_test`),
     ).rejects.toThrow('proxy header cannot contain spaces')
 
+    expect(parseProxyHeader(network.pds.ctx, `did:foo#bar`)).rejects.toThrow(
+      'Poorly formatted DID: did:foo',
+    )
+
+    expect(
+      parseProxyHeader(network.pds.ctx, `did:foo:bar#baz`),
+    ).rejects.toThrow('Unsupported DID method: did:foo:bar')
+
+    expect(
+      parseProxyHeader(network.pds.ctx, `did:toString:foo#bar`),
+    ).rejects.toThrow('Unsupported DID method: did:toString:foo')
+
     expect(parseProxyHeader(network.pds.ctx, `foo#bar`)).rejects.toThrow(
       'Poorly formatted DID: foo',
     )
@@ -65,6 +77,7 @@ describe('proxy header', () => {
     ).resolves.toEqual({
       did: proxyServer.did,
       url: proxyServer.url,
+      serviceId: 'atproto_test',
     })
   })
 

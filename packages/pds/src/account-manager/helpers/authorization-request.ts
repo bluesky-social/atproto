@@ -7,8 +7,8 @@ import {
   RequestId,
   UpdateRequestData,
 } from '@atproto/oauth-provider'
-import { fromDateISO, fromJson, toDateISO, toJson } from '../../db'
-import { AccountDb, AuthorizationRequest } from '../db'
+import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
+import { AccountDb, AuthorizationRequest } from '../db/index.js'
 
 export const rowToRequestData = (
   row: Selectable<AuthorizationRequest>,
@@ -58,11 +58,15 @@ export const updateQB = (
   assert(!Object.keys(rest).length, 'Unexpected fields in UpdateRequestData')
   return db.db
     .updateTable('authorization_request')
-    .if(code !== undefined, (qb) => qb.set({ code }))
-    .if(sub !== undefined, (qb) => qb.set({ did: sub }))
-    .if(deviceId !== undefined, (qb) => qb.set({ deviceId }))
-    .if(expiresAt != null, (qb) => qb.set({ expiresAt: toDateISO(expiresAt!) }))
-    .if(parameters != null, (qb) => qb.set({ parameters: toJson(parameters!) }))
+    .$if(code !== undefined, (qb) => qb.set({ code }))
+    .$if(sub !== undefined, (qb) => qb.set({ did: sub }))
+    .$if(deviceId !== undefined, (qb) => qb.set({ deviceId }))
+    .$if(expiresAt != null, (qb) =>
+      qb.set({ expiresAt: toDateISO(expiresAt!) }),
+    )
+    .$if(parameters != null, (qb) =>
+      qb.set({ parameters: toJson(parameters!) }),
+    )
     .where('id', '=', id)
 }
 

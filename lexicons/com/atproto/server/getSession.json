@@ -13,10 +13,10 @@
           "properties": {
             "handle": { "type": "string", "format": "handle" },
             "did": { "type": "string", "format": "did" },
+            "didDoc": { "type": "unknown" },
             "email": { "type": "string" },
             "emailConfirmed": { "type": "boolean" },
             "emailAuthFactor": { "type": "boolean" },
-            "didDoc": { "type": "unknown" },
             "active": { "type": "boolean" },
             "status": {
               "type": "string",

@@ -1,9 +1,25 @@
 import { DAY } from '@atproto/common'
-import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-import { AccountDb, ActorEntry } from '../db'
+import {
+  AtIdentifierString,
+  DatetimeString,
+  DidString,
+  HandleString,
+  currentDatetimeString,
+  isDidIdentifier,
+} from '@atproto/lex'
+import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
+import { com } from '../../lexicons/index.js'
+import { AccountDb, ActorEntry } from '../db/index.js'
 
-export class UserAlreadyExistsError extends Error {}
+export class UserAlreadyExistsError extends Error {
+  name = 'UserAlreadyExistsError'
+  constructor(
+    message = 'This email address is already in use, please use a different email.',
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
+  }
+}
 
 export type ActorAccount = ActorEntry & {
   email: string | null
@@ -30,8 +46,10 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
-    .if(!includeTakenDown, (qb) => qb.where(notSoftDeletedClause(ref('actor'))))
-    .if(!includeDeactivated, (qb) =>
+    .$if(!includeTakenDown, (qb) =>
+      qb.where(notSoftDeletedClause(ref('actor'))),
+    )
+    .$if(!includeDeactivated, (qb) =>
       qb.where('actor.deactivatedAt', 'is', null),
     )
     .select([
@@ -49,15 +67,15 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
 
 export const getAccount = async (
   db: AccountDb,
-  handleOrDid: string,
+  handleOrDid: AtIdentifierString,
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
   const found = await selectAccountQB(db, flags)
-    .where((qb) => {
-      if (handleOrDid.startsWith('did:')) {
-        return qb.where('actor.did', '=', handleOrDid)
+    .where((eb) => {
+      if (isDidIdentifier(handleOrDid)) {
+        return eb('actor.did', '=', handleOrDid)
       } else {
-        return qb.where('actor.handle', '=', handleOrDid)
+        return eb('actor.handle', '=', handleOrDid)
       }
     })
     .executeTakeFirst()
@@ -66,7 +84,7 @@ export const getAccount = async (
 
 export const getAccounts = async (
   db: AccountDb,
-  dids: string[],
+  dids: DidString[],
   flags?: AvailabilityFlags,
 ): Promise<Map<string, ActorAccount>> => {
   const results = new Map<string, ActorAccount>()
@@ -100,8 +118,8 @@ export const getAccountByEmail = async (
 export const registerActor = async (
   db: AccountDb,
   opts: {
-    did: string
-    handle: string
+    did: DidString
+    handle: HandleString
     deactivated?: boolean
   },
 ) => {
@@ -153,7 +171,7 @@ export const registerAccount = async (
 
 export const deleteAccount = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
 ): Promise<void> => {
   // Not done in transaction because it would be too long, prone to contention.
   // Also, this can safely be run multiple times if it fails.
@@ -176,26 +194,38 @@ export const deleteAccount = async (
 
 export const updateHandle = async (
   db: AccountDb,
-  did: string,
-  handle: string,
+  did: DidString,
+  handle: HandleString,
 ) => {
+  // No-op if the handle is the same, but still returns 1 row affected, so that
+  // it can be used to check for existence of the account.
   const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({ handle })
       .where('did', '=', did)
-      .whereNotExists(
-        db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
+      .where(({ not, exists }) =>
+        not(
+          exists(
+            db.db
+              .selectFrom('actor')
+              .where('handle', '=', handle)
+              .where('did', '!=', did)
+              .selectAll(),
+          ),
+        ),
       ),
   )
   if (res.numUpdatedRows < 1) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 
 export const updateEmail = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   email: string,
 ) => {
   try {
@@ -218,8 +248,8 @@ export const updateEmail = async (
 
 export const setEmailConfirmedAt = async (
   db: AccountDb,
-  did: string,
-  emailConfirmedAt: string,
+  did: DidString,
+  emailConfirmedAt: DatetimeString,
 ) => {
   await db.executeWithRetry(
     db.db
@@ -231,8 +261,11 @@ export const setEmailConfirmedAt = async (
 
 export const getAccountAdminStatus = async (
   db: AccountDb,
-  did: string,
-): Promise<{ takedown: StatusAttr; deactivated: StatusAttr } | null> => {
+  did: DidString,
+): Promise<{
+  takedown: com.atproto.admin.defs.StatusAttr
+  deactivated: com.atproto.admin.defs.StatusAttr
+} | null> => {
   const res = await db.db
     .selectFrom('actor')
     .select(['takedownRef', 'deactivatedAt'])
@@ -248,11 +281,11 @@ export const getAccountAdminStatus = async (
 
 export const updateAccountTakedownStatus = async (
   db: AccountDb,
-  did: string,
-  takedown: StatusAttr,
+  did: DidString,
+  takedown: com.atproto.admin.defs.StatusAttr,
 ) => {
   const takedownRef = takedown.applied
-    ? takedown.ref ?? new Date().toISOString()
+    ? takedown.ref ?? currentDatetimeString()
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),
@@ -261,21 +294,21 @@ export const updateAccountTakedownStatus = async (
 
 export const deactivateAccount = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   deleteAfter: string | null,
 ) => {
   await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({
-        deactivatedAt: new Date().toISOString(),
+        deactivatedAt: currentDatetimeString(),
         deleteAfter,
       })
       .where('did', '=', did),
   )
 }
 
-export const activateAccount = async (db: AccountDb, did: string) => {
+export const activateAccount = async (db: AccountDb, did: DidString) => {
   await db.executeWithRetry(
     db.db
       .updateTable('actor')

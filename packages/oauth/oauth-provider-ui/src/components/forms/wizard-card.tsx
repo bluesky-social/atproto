@@ -1,12 +1,10 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useCallback } from 'react'
-import { DisabledStep, Step, useStepper } from '../../hooks/use-stepper.ts'
-import { Override } from '../../lib/util.ts'
+import { JSX, ReactNode, useCallback, useState } from 'react'
+import { DisabledStep, useStepper } from '#/hooks/use-stepper.ts'
+import { Override } from '#/lib/util.ts'
 
-export type DoneFn = (...a: any) => unknown
-
-export type WizardRenderProps<TDone extends DoneFn> = {
+export type WizardRenderProps<TStepData> = {
   /**
    * Indicates wether the render function being invoked corresponds to the step
    * currently active. The steps titles could, for example, be rendered in a
@@ -17,42 +15,46 @@ export type WizardRenderProps<TDone extends DoneFn> = {
    * be used to disable any form interaction with the form transitioning in/out.
    */
   current: boolean
-  invalid: boolean
 
   prev?: () => void
   prevLabel: ReactNode
 
-  // On the last step, the "next()" function will actually be the done function
-  next: (() => void) | TDone
+  next: (data: TStepData) => Promise<void>
   nextLabel: ReactNode
 }
 
-export type WizardRenderFn<TDone extends DoneFn> = (
-  data: WizardRenderProps<TDone>,
+export type WizardRenderFn<TStepData> = (
+  data: WizardRenderProps<TStepData>,
 ) => ReactNode
 
-export type WizardStep<TDone extends DoneFn> = Step & {
-  titleRender?: WizardRenderFn<TDone>
-  contentRender: WizardRenderFn<TDone>
+export type WizardStep<TStepData = any> = {
+  titleRender?: WizardRenderFn<TStepData>
+  contentRender: WizardRenderFn<TStepData>
 }
 
-export type WizardCardProps<TDone extends DoneFn> = Override<
-  Omit<JSX.IntrinsicElements['div'], 'children'>,
+export type WizardCardProps<TWizardData extends readonly any[]> = Override<
+  JSX.IntrinsicElements['div'],
   {
+    children?: never
+
     prevLabel?: ReactNode
     nextLabel?: ReactNode
 
     onBack?: () => void
     backLabel?: ReactNode
 
-    onDone: TDone
+    onDone: (data: TWizardData) => void | PromiseLike<void>
     doneLabel?: ReactNode
 
-    steps: readonly (WizardStep<TDone> | DisabledStep)[]
+    steps: {
+      [K in keyof TWizardData]: null extends TWizardData[K]
+        ? WizardStep<TWizardData[K]> | DisabledStep
+        : WizardStep<TWizardData[K]>
+    }
   }
 >
 
-export function WizardCard<TDone extends DoneFn>({
+export function WizardCard<const T extends readonly any[]>({
   prevLabel,
   nextLabel,
 
@@ -65,44 +67,88 @@ export function WizardCard<TDone extends DoneFn>({
   steps,
   className,
 
+  // div
   ...props
-}: WizardCardProps<TDone>) {
+}: WizardCardProps<T>) {
+  const [data, setData] = useState(
+    () => steps.map(() => null) as { [K in keyof T]: T[K] | null },
+  )
+
   const {
     atFirst,
     atLast,
     count,
     current,
     currentPosition,
-    completed,
+    othersCompleted,
     toNext,
     toPrev,
     toRequired,
-  } = useStepper(steps)
+  } = useStepper(
+    steps.map((step, index) =>
+      step
+        ? { index, step, invalid: !!step && data[index] == null }
+        : undefined,
+    ),
+  )
 
-  // Memoized to avoid re-renders in child (rendered) components
-  const onNext = useCallback(() => {
-    // If already at last step, go to the first incomplete (required) step
-    if (!toNext()) toRequired()
-  }, [toNext, toRequired])
+  const index = current?.index
 
-  const data: WizardRenderProps<TDone> = {
+  const setCurrentStepData = useCallback(
+    (stepData: any) => {
+      if (index != null) {
+        setData((prevData) => {
+          const nextData = [...prevData] as {
+            -readonly [K in keyof T]: T[K] | null
+          }
+          nextData[index] = stepData
+          return nextData
+        })
+      }
+    },
+    [index],
+  )
+
+  const stepProps: WizardRenderProps<any> = {
     // The current UI only displays the current title & content.
     current: true,
-    invalid: current ? current.invalid : false,
 
     prevLabel: (atFirst && backLabel) || prevLabel || <Trans>Back</Trans>,
     prev: atFirst ? onBack : toPrev,
 
     nextLabel: (atLast && doneLabel) || nextLabel || <Trans>Next</Trans>,
-    next: atLast && completed ? onDone : onNext,
+    next: async (stepData) => {
+      setCurrentStepData(stepData)
+
+      // Every other step (than the current one) must be completed (ie. not be
+      // defined, or have non-null data) in order to call `onDone`.
+      if (atLast && othersCompleted) {
+        const doneData: any = steps.map((step, i) =>
+          step ? (i === current?.index ? stepData : data[i]) : null,
+        )
+
+        await onDone(doneData)
+      } else {
+        // If already at last step, go to the first incomplete (required) step
+        if (!toNext()) toRequired()
+      }
+    },
   }
 
-  const stepTitle = current?.titleRender?.(data)
-  const stepContent = current?.contentRender?.(data)
+  const stepTitle = current?.step?.titleRender?.(stepProps)
+  const stepContent = current?.step?.contentRender?.(stepProps)
 
   return (
-    <div className={clsx(className, 'flex flex-col')} {...props}>
-      <p className="text-slate-500 dark:text-slate-400">
+    <div
+      // Force re-render of the child component when the step changes, to ensure
+      // any internal state is reset. This is especially useful since most step
+      // will tends to have the same component for their content (just with
+      // different props).
+      key={currentPosition}
+      className={clsx(className, 'flex flex-col')}
+      {...props}
+    >
+      <p className="text-contrast-500">
         <Trans>
           Step {currentPosition} of {count}
         </Trans>

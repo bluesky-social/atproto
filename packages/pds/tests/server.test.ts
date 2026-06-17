@@ -4,9 +4,9 @@ import { request } from 'undici'
 import { AtUri, AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { handler as errorHandler } from '../src/error'
-import { startServer } from './_util'
-import basicSeed from './seeds/basic'
+import { handler as errorHandler } from '../src/error.js'
+import { startServer } from './_util.js'
+import basicSeed from './seeds/basic.js'
 
 describe('server', () => {
   let network: TestNetworkNoAppView
@@ -21,7 +21,7 @@ describe('server', () => {
         version: '0.0.0',
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -58,7 +58,7 @@ describe('server', () => {
 
   it('limits size of json input.', async () => {
     const res = await fetch(
-      `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
+      `${network.pds.url}/xrpc/com.atproto.identity.updateHandle`,
       {
         method: 'POST',
         body: '"' + 'x'.repeat(150 * 1024) + '"', // ~150kb
@@ -95,12 +95,14 @@ describe('server', () => {
     )
     const uri = new AtUri(createRes.data.uri)
 
-    const res = await request(
-      `${network.pds.url}/xrpc/com.atproto.repo.getRecord?repo=${uri.host}&collection=${uri.collection}&rkey=${uri.rkey}`,
-      {
-        headers: { ...sc.getHeaders(alice), 'accept-encoding': 'gzip' },
-      },
-    )
+    const url = new URL(`/xrpc/com.atproto.repo.getRecord`, network.pds.url)
+    url.searchParams.set('repo', uri.host)
+    url.searchParams.set('collection', uri.collectionSafe)
+    url.searchParams.set('rkey', uri.rkeySafe)
+
+    const res = await request(url, {
+      headers: { ...sc.getHeaders(alice), 'accept-encoding': 'gzip' },
+    })
 
     await finished(res.body.resume())
 
@@ -108,10 +110,12 @@ describe('server', () => {
   })
 
   it('compresses large car file responses', async () => {
-    const res = await request(
-      `${network.pds.url}/xrpc/com.atproto.sync.getRepo?did=${alice}`,
-      { headers: { 'accept-encoding': 'gzip' } },
-    )
+    const url = new URL(`/xrpc/com.atproto.sync.getRepo`, network.pds.url)
+    url.searchParams.set('did', alice)
+
+    const res = await request(url, {
+      headers: { 'accept-encoding': 'gzip' },
+    })
 
     await finished(res.body.resume())
 
@@ -119,7 +123,8 @@ describe('server', () => {
   })
 
   it('does not compress small payloads', async () => {
-    const res = await request(`${network.pds.url}/xrpc/_health`, {
+    const url = new URL(`/xrpc/_health`, network.pds.url)
+    const res = await request(url, {
       headers: { 'accept-encoding': 'gzip' },
     })
 

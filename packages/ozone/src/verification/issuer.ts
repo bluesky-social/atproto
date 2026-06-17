@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { Agent, AtUri, CredentialSession } from '@atproto/api'
-import { VerifierConfig } from '../config'
-import { Verification } from '../db/schema/verification'
+import { VerifierConfig } from '../config/index.js'
+import { Verification } from '../db/schema/verification.js'
 
 export type VerificationInput = {
   displayName: string
@@ -13,6 +13,8 @@ export type VerificationInput = {
 export type VerificationIssuerCreator = (
   verifierConfig: VerifierConfig,
 ) => VerificationIssuer
+
+const HANDLE_INVALID = 'handle.invalid'
 
 export class VerificationIssuer {
   private session = new CredentialSession(new URL(this.verifierConfig.url))
@@ -58,6 +60,15 @@ export class VerificationIssuer {
     const agent = await this.getAgent()
     await Promise.allSettled(
       verifications.map(async ({ displayName, handle, subject, createdAt }) => {
+        if (handle.toLowerCase() === HANDLE_INVALID) {
+          failedVerifications.push({
+            $type: 'tools.ozone.verification.grantVerifications#grantError',
+            error: 'Cannot verify with invalid handle',
+            subject,
+          })
+          return
+        }
+
         try {
           const verificationRecord = {
             createdAt: createdAt || now,

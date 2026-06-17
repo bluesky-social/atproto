@@ -1,9 +1,10 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import { AtIdentifierString, DidString, isDidString } from '@atproto/lex'
 import {
   OAuthError,
   OAuthVerifier,
@@ -26,8 +27,8 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager/account-manager'
-import { ActorAccount } from './account-manager/helpers/account'
+import { AccountManager } from './account-manager/account-manager.js'
+import { ActorAccount } from './account-manager/helpers/account.js'
 import {
   AccessOutput,
   AdminTokenOutput,
@@ -36,11 +37,14 @@ import {
   RefreshOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
-} from './auth-output'
-import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
-import { softDeleted } from './db'
-import { appendVary } from './util/http'
-import { WithRequired } from './util/types'
+} from './auth-output.js'
+import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
+import { softDeleted } from './db/index.js'
+import { appendVary } from './util/http.js'
+import { WithRequired } from './util/types.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 export type VerifiedOptions = {
   checkTakedown?: boolean
@@ -82,7 +86,7 @@ export type VerifyBearerJwtOptions<S extends AuthScope = AuthScope> =
   >
 
 export type VerifyBearerJwtResult<S extends AuthScope = AuthScope> = {
-  sub: string
+  sub: DidString
   aud: string
   jti: string | undefined
   scope: S
@@ -382,7 +386,7 @@ export class AuthVerifier {
           throw err
         })
 
-      if (typeof did !== 'string' || !did.startsWith('did:')) {
+      if (!isDidString(did)) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
@@ -411,7 +415,7 @@ export class AuthVerifier {
   }
 
   protected async verifyStatus(
-    did: string,
+    did: DidString,
     options: VerifiedOptions,
   ): Promise<void> {
     if (options.checkDeactivated || options.checkTakedown) {
@@ -425,7 +429,7 @@ export class AuthVerifier {
    * `options.checkTakedown` are set to true, respectively).
    */
   public async findAccount(
-    handleOrDid: string,
+    handleOrDid: AtIdentifierString,
     options: VerifiedOptions,
   ): Promise<ActorAccount> {
     const account = await this.accountManager.getAccount(handleOrDid, {
@@ -464,8 +468,8 @@ export class AuthVerifier {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
 
-    const { payload, protectedHeader } = await jose
-      .jwtVerify(token, this._jwtKey, { ...options, typ: undefined })
+    const { payload } = await jose
+      .jwtVerify(token, this._jwtKey, options)
       .catch((cause) => {
         if (cause instanceof jose.errors.JWTExpired) {
           throw new InvalidRequestError('Token has expired', 'ExpiredToken', {
@@ -479,14 +483,6 @@ export class AuthVerifier {
           )
         }
       })
-
-    // @NOTE: the "typ" is now set in production environments, so we should be
-    // able to safely check it through jose.jwtVerify(). However, tests depend
-    // on @atproto/pds-entryway which does not set "typ" in the access tokens.
-    // For that reason, we still allow it to be missing.
-    if (protectedHeader.typ && options.typ !== protectedHeader.typ) {
-      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
-    }
 
     const { sub, aud, scope, lxm, cnf, jti } = payload
 
@@ -503,7 +499,7 @@ export class AuthVerifier {
       // https://www.rfc-editor.org/rfc/rfc7800.html
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+    if (typeof sub !== 'string' || !isDidString(sub)) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (typeof aud !== 'string' || !aud.startsWith('did:')) {
@@ -523,37 +519,38 @@ export class AuthVerifier {
     req: IncomingMessage,
     opts?: { iss?: string[] },
   ) {
-    const getSigningKey = async (
-      iss: string,
-      forceRefresh: boolean,
-    ): Promise<string> => {
-      if (opts?.iss && !opts.iss.includes(iss)) {
-        throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
-      }
-      const [did, serviceId] = iss.split('#')
-      const keyId =
-        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
-      const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
-      if (!didDoc) {
-        throw new AuthRequiredError('could not resolve iss did')
-      }
-      const parsedKey = getVerificationMaterial(didDoc, keyId)
-      if (!parsedKey) {
-        throw new AuthRequiredError('missing or bad key in did doc')
-      }
-      const didKey = getDidKeyFromMultibase(parsedKey)
-      if (!didKey) {
-        throw new AuthRequiredError('missing or bad key in did doc')
-      }
-      return didKey
-    }
-
     const jwtStr = bearerTokenFromReq(req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+
     const nsid = parseReqNsid(req)
-    const payload = await verifyServiceJwt(jwtStr, null, nsid, getSigningKey)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      null,
+      nsid,
+      async (iss, forceRefresh) => {
+        if (opts?.iss && !opts.iss.includes(iss)) {
+          throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+        }
+        const [did, serviceId] = iss.split('#')
+        const keyId =
+          serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+        const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
+        if (!didDoc) {
+          throw new AuthRequiredError('could not resolve iss did')
+        }
+        const parsedKey = getVerificationMaterial(didDoc, keyId)
+        if (!parsedKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        const didKey = getDidKeyFromMultibase(parsedKey)
+        if (!didKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        return didKey
+      },
+    )
     if (
       payload.aud !== this.dids.pds &&
       (!this.dids.entryway || payload.aud !== this.dids.entryway)
@@ -632,7 +629,7 @@ const extractAuthType = (req: IncomingMessage): AuthType | null => {
   return type
 }
 
-const bearerTokenFromReq = (req: IncomingMessage) => {
+export const bearerTokenFromReq = (req: IncomingMessage) => {
   const [type, token] = parseAuthorizationHeader(req)
   return type === AuthType.BEARER ? token : null
 }

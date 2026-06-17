@@ -1,10 +1,10 @@
 import { SkeletonHandler } from '@atproto/pds'
-import { TestFeedGen } from './feed-gen'
-import { TestPds } from './pds'
-import { TestPlc } from './plc'
-import { SeedClient } from './seed/client'
-import { TestServerParams } from './types'
-import { mockNetworkUtilities } from './util'
+import { TestFeedGen } from './feed-gen.js'
+import { TestPds } from './pds.js'
+import { TestPlc } from './plc.js'
+import { SeedClient } from './seed/client.js'
+import { TestServerParams } from './types.js'
+import { mockNetworkUtilities } from './util.js'
 
 export class TestNetworkNoAppView {
   feedGens: TestFeedGen[] = []
@@ -36,8 +36,9 @@ export class TestNetworkNoAppView {
   }
 
   getSeedClient(): SeedClient<typeof this> {
-    const agent = this.pds.getClient()
-    return new SeedClient(this, agent)
+    const agent = this.pds.getAgent()
+    const client = this.pds.getClient()
+    return new SeedClient(this, agent, client)
   }
 
   async processAll() {

@@ -121,6 +121,14 @@ message GetNotificationDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetGermDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetGermDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetStatusRecordsRequest {
   repeated string uris = 1;
 }
@@ -378,6 +386,7 @@ message GetCountsForUsersResponse {
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
   repeated int32 starter_packs = 7;
+  repeated int32 drafts = 8;
 }
 
 message GetStarterPackCountsRequest {
@@ -487,12 +496,16 @@ message ActorInfo {
   Record status_record = 17;
   string allow_activity_subscriptions_from = 18;
   optional AgeAssuranceStatus age_assurance_status = 19;
+  reserved 20; // DO NOT REMOVE - see dataplane repo
+  Record germ_record = 21;
+  string allow_group_chat_invites_from = 22;
 }
 
 message AgeAssuranceStatus {
   string status = 1;
   google.protobuf.Timestamp last_initiated_at = 2;
   bool override_applied = 3;
+  string access = 4;
 }
 
 message GetActorsResponse {
@@ -1073,7 +1086,7 @@ message GetThreadResponse {
 }
 
 //
-// Search
+// Search V1
 //
 
 // - Return DIDs of actors matching term, paginated
@@ -1113,6 +1126,163 @@ message SearchStarterPacksRequest {
 message SearchStarterPacksResponse {
   repeated string uris = 1;
   string cursor = 2;
+}
+
+//
+// Search V2
+//
+
+enum SearchSortOrder {
+  SEARCH_SORT_ORDER_UNSPECIFIED = 0;
+  SEARCH_SORT_ORDER_RECENT = 1;
+  SEARCH_SORT_ORDER_TOP = 2;
+}
+
+enum SearchQueryLanguage {
+  SEARCH_QUERY_LANGUAGE_UNSPECIFIED = 0;
+  SEARCH_QUERY_LANGUAGE_JA = 1; // Japanese (Kuromoji)
+  SEARCH_QUERY_LANGUAGE_ZH = 2; // Chinese (smartcn)
+  SEARCH_QUERY_LANGUAGE_KO = 3; // Korean (nori)
+  SEARCH_QUERY_LANGUAGE_TH = 4; // Thai
+}
+
+// Shared request params
+
+message SearchParams {
+  string query = 1;
+  string viewer = 2;
+
+  // Pagination
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+// Shared result types
+
+// SearchRecordResult represents a generic result hit corresponding to a record.
+message SearchRecordResult {
+  // AT URI of the record, e.g. "at://did:example:alice/app.bsky.feed.post/12345"
+  string uri = 1;
+  double score = 2;
+}
+
+message SearchActorResult {
+  string did = 1;
+  double score = 2;
+}
+
+message PageInfo {
+  string cursor = 1;
+  int64 hits_total = 2;
+}
+
+// Search queries
+
+// PostFilters are logical filters that should be used to match or exclude posts.
+// Each repeated field is applied as OR within the field with all fields applied together as AND.
+// example:
+//  filters: {
+//    authors: [alice, bob]
+//    mentions: [carol]
+//  }
+// => (author is alice OR bob) AND (mentions carol)
+//
+message PostsFilters {
+  // Author/mention filters
+  repeated string authors = 1;
+  repeated string mentions = 2;
+
+  // Content filters
+  repeated string domains = 3;
+  repeated string urls = 4;
+  repeated string embed_uris = 5;
+  repeated string hashtags = 6;
+}
+
+message SearchPostsV2Request {
+  // Required fields
+  SearchParams params = 1;
+  SearchSortOrder sort = 2;
+
+  // Logical filters and exclude fields applied together as AND
+  //
+  // filters: include posts matching the filters
+  PostsFilters filters = 3;
+
+  // Exclude filters: exclude posts matching the filters
+  PostsFilters exclude = 4;
+
+  // Date range filters
+  optional google.protobuf.Timestamp since = 5;
+  optional google.protobuf.Timestamp until = 6; // defaults to "now"
+  // If false, will only query against last 30 days of posts
+  // so `since` and `until` will silently be capped
+  optional bool all_time = 7;
+
+  // Language filter - match posts in this language
+  // Supports 2-char ISO prefixes ("en", "ja, "fr", etc")
+  // and compares against the 2-char prefix of any `langs` field values of the post record
+  // e.g. a post with langs=["en-US", "fr"] would match "en" or "fr" but not "ja"
+  optional string language = 8;
+
+  // Media filters
+  optional bool has_media = 9;
+  optional bool has_video = 10;
+
+  // Reply filters
+  optional string reply_parent_uri = 11;
+  optional string thread_root_uri = 12;
+  optional bool exclude_replies = 13;
+  optional bool replies_only = 14;
+
+  // Social filters
+  optional bool following = 15;
+
+  // Query analysis hint — forces a specific language analyzer.
+  // Auto-detects from query text when unset.
+  optional SearchQueryLanguage query_language = 16;
+}
+
+message SearchPostsV2Response {
+  repeated SearchRecordResult posts = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchActorsV2Request {
+  SearchParams params = 1;
+}
+
+message SearchActorsV2Response {
+  repeated SearchActorResult actors = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchActorsTypeaheadRequest {
+  string viewer = 1;
+  string query = 2;
+  int32 limit = 3;
+}
+
+message SearchActorsTypeaheadResponse {
+  repeated SearchActorResult actors = 1;
+}
+
+message SearchFeedGeneratorsV2Request {
+  SearchParams params = 1;
+}
+
+message SearchFeedGeneratorsV2Response {
+  repeated SearchRecordResult feed_generators = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchStarterPacksV2Request {
+  SearchParams params = 1;
+}
+
+message SearchStarterPacksV2Response {
+  repeated SearchRecordResult starter_packs = 1;
+  PageInfo page_info = 2;
 }
 
 //
@@ -1289,6 +1459,29 @@ message GetActorBookmarksResponse {
   string cursor = 2;
 }
 
+//
+// Drafts
+//
+
+
+message GetActorDraftsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message DraftInfo {
+  string key = 1; // stash key
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  bytes payload = 4;
+}
+
+message GetActorDraftsResponse {
+  repeated DraftInfo drafts = 1;
+  string cursor = 2;
+}
+
 
 // Polo-backed Graph Endpoints
 
@@ -1309,6 +1502,33 @@ message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
 
+message GetSitemapIndexRequest {
+  SitemapPageType type = 1;
+}
+
+message GetSitemapIndexResponse {
+  // GZIP compressed XML sitemap
+  bytes sitemap = 1;
+}
+
+// Sitemap HTTP paths are typically of the form `/type/yyyy-mm-dd/N.xml.gz`, i.e. `/users/2025-01-01/1.xml.gz`
+message GetSitemapPageRequest {
+  SitemapPageType type = 1;
+  google.protobuf.Timestamp date = 2;
+  // One-indexed
+  int32 bucket = 3;
+}
+
+enum SitemapPageType {
+  SITEMAP_PAGE_TYPE_UNSPECIFIED = 0;
+  SITEMAP_PAGE_TYPE_USER = 1;
+}
+
+message GetSitemapPageResponse {
+  // GZIP compressed XML sitemap
+  bytes sitemap = 1;
+}
+
 // Ping
 message PingRequest {}
 message PingResponse {}
@@ -1317,6 +1537,42 @@ message StashRef {
   string actor_did = 1;
   string namespace = 2;
   string key = 3;
+}
+
+// Standard.site records
+message GetSiteStandardRecordsByURIRequest {
+  // Mixed list of site.standard.document and site.standard.publication AT-URIs.
+  // URIs of other collections (or unparseable strings) are silently skipped.
+  repeated string uris = 1;
+}
+message GetSiteStandardRecordsByURIResponse {
+  // Latest indexed version of each requested document.
+  repeated SiteStandardRecord documents = 1;
+  // Latest indexed version of each requested publication AND each publication
+  // resolved from a document's `site` field. Each publication appears at most
+  // once across the two sources.
+  repeated SiteStandardRecord publications = 2;
+}
+message GetSiteStandardRecordsByRefRequest {
+  // Mixed list of site.standard.document and site.standard.publication refs
+  // (uri + cid). Refs whose URI is not a SiteStandard collection (or doesn't
+  // parse) are silently skipped.
+  repeated RecordRef refs = 1;
+}
+message GetSiteStandardRecordsByRefResponse {
+  // Document version exactly matching each requested doc ref.
+  repeated SiteStandardRecord documents = 1;
+  // Publication version exactly matching each requested pub ref. This RPC
+  // does NOT auto-resolve publications referenced by documents — callers who
+  // want a paired publication should pass its ref explicitly.
+  repeated SiteStandardRecord publications = 2;
+}
+
+// SiteStandardRecord pairs a record with its addressing ref so callers can
+// build a uri- or (uri,cid)-keyed lookup without server-side encoding.
+message SiteStandardRecord {
+  RecordRef ref = 1;
+  Record record = 2;
 }
 
 service Service {
@@ -1336,6 +1592,7 @@ service Service {
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
+  rpc GetGermDeclarationRecords(GetGermDeclarationRecordsRequest) returns (GetGermDeclarationRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
@@ -1432,10 +1689,17 @@ service Service {
   // Threads
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
 
-  // Search
+  // Search (V1)
   rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
   rpc SearchPosts(SearchPostsRequest) returns (SearchPostsResponse);
   rpc SearchStarterPacks(SearchStarterPacksRequest) returns (SearchStarterPacksResponse);
+
+  // Search V2
+  rpc SearchPostsV2(SearchPostsV2Request) returns (SearchPostsV2Response);
+  rpc SearchActorsV2(SearchActorsV2Request) returns (SearchActorsV2Response);
+  rpc SearchActorsTypeahead(SearchActorsTypeaheadRequest) returns (SearchActorsTypeaheadResponse);
+  rpc SearchFeedGeneratorsV2(SearchFeedGeneratorsV2Request) returns (SearchFeedGeneratorsV2Response);
+  rpc SearchStarterPacksV2(SearchStarterPacksV2Request) returns (SearchStarterPacksV2Response);
 
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
@@ -1462,12 +1726,20 @@ service Service {
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
 
+  // Drafts
+  // Returns a page of drafts for a user.
+  rpc GetActorDrafts(GetActorDraftsRequest) returns (GetActorDraftsResponse);
+
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
   rpc GetIdentityByHandle(GetIdentityByHandleRequest) returns (GetIdentityByHandleResponse);
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
+
+  // Sitemaps
+  rpc GetSitemapIndex(GetSitemapIndexRequest) returns (GetSitemapIndexResponse);
+  rpc GetSitemapPage(GetSitemapPageRequest) returns (GetSitemapPageResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
@@ -1501,6 +1773,10 @@ service Service {
   rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
+
+  // Standard.site records
+  rpc GetSiteStandardRecordsByURI(GetSiteStandardRecordsByURIRequest) returns (GetSiteStandardRecordsByURIResponse);
+  rpc GetSiteStandardRecordsByRef(GetSiteStandardRecordsByRefRequest) returns (GetSiteStandardRecordsByRefResponse);
 }
 
 

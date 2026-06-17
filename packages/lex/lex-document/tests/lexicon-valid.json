@@ -1,0 +1,69 @@
+[
+  {
+    "name": "minimal",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon",
+      "defs": {
+        "demo": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  {
+    "name": "minimal record",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon.record",
+      "defs": {
+        "main": {
+          "type": "record",
+          "key": "any",
+          "record": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "basic permission-set",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon.perms",
+      "defs": {
+        "main": {
+          "type": "permission-set",
+          "title": "test case",
+          "permissions": [
+            {
+              "type": "permission",
+              "resource": "repo",
+              "collection": ["com.example.calendar.event"],
+              "action": ["delete", "create"]
+            },
+            {
+              "type": "permission",
+              "resource": "repo",
+              "collection": ["com.example.calendar.rsvp"]
+            },
+            {
+              "type": "permission",
+              "resource": "rpc",
+              "lxm": ["com.example.lexicon.endpoint"],
+              "aud": "*"
+            },
+            {
+              "type": "permission",
+              "resource": "rpc",
+              "lxm": ["com.example.lexicon.endpointTwo"],
+              "inheritAud": true
+            }
+          ]
+        }
+      }
+    }
+  }
+]

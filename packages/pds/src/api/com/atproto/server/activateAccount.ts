@@ -1,12 +1,16 @@
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
-import { ACCESS_FULL } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { assertValidDidDocumentForService } from './util'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
+import { com } from '../../../../lexicons/index.js'
+import { assertValidDidDocumentForService } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.activateAccount({
+  server.add(com.atproto.server.activateAccount, {
     auth: ctx.authVerifier.authorization({
       scopes: ACCESS_FULL,
       authorize: () => {
@@ -17,11 +21,11 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ req, auth }) => {
       // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.activateAccount(
-          undefined,
-          ctx.entrywayPassthruHeaders(req),
-        )
+      if (ctx.entrywayClient) {
+        const { headers } = ctx.entrywayPassthruHeaders(req)
+        await ctx.entrywayClient.xrpc(com.atproto.server.activateAccount, {
+          headers,
+        })
         return
       }
 
@@ -44,12 +48,12 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
       const status = await ctx.accountManager.getAccountStatus(requester)
-      await ctx.sequencer.sequenceAccountEvt(requester, status)
-      await ctx.sequencer.sequenceIdentityEvt(
+      await ctx.sequencer.sequenceAccountActivation(
         requester,
         account.handle ?? INVALID_HANDLE,
+        status,
+        syncData,
       )
-      await ctx.sequencer.sequenceSyncEvt(requester, syncData)
     },
   })
 }

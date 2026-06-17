@@ -1,17 +1,21 @@
 import { mapDefined } from '@atproto/common'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listActivitySubscriptions'
+import { DidString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listActivitySubscriptions = createPipeline(
@@ -20,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.notification.listActivitySubscriptions({
+  server.add(app.bsky.notification.listActivitySubscriptions, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -31,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const result = await listActivitySubscriptions(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        { ...params, hydrateCtx },
         ctx,
       )
 
@@ -44,7 +48,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actorDid = params.hydrateCtx.viewer
   if (clearlyBadCursor(params.cursor)) {
@@ -58,7 +64,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     })
   return {
     actorDid,
-    dids,
+    dids: dids as DidString[],
     cursor: cursor || undefined,
   }
 }
@@ -99,12 +105,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+type Params = app.bsky.notification.listActivitySubscriptions.$Params & {
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {
-  actorDid: string
-  dids: string[]
+  actorDid: DidString
+  dids: DidString[]
   cursor?: string
 }

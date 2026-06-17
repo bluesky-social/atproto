@@ -1,7 +1,7 @@
 import { DidDocument } from '@atproto/did'
 import { Key } from '@atproto/jwk'
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'
-import { InternalStateData, Session, TokenSet } from '@atproto/oauth-client'
+import { InternalStateData, Session } from '@atproto/oauth-client'
 import {
   OAuthAuthorizationServerMetadata,
   OAuthProtectedResourceMetadata,
@@ -36,24 +36,13 @@ async function decodeKey(encoded: EncodedKey): Promise<Key> {
 }
 
 export type Schema = {
-  state: Item<{
-    dpopKey: EncodedKey
-
-    iss: string
-    verifier?: string
-    appState?: string
-  }>
-  session: Item<{
-    dpopKey: EncodedKey
-
-    tokenSet: TokenSet
-  }>
-
+  state: Item<Omit<InternalStateData, 'dpopKey'> & { dpopKey: EncodedKey }>
+  session: Item<Omit<Session, 'dpopKey'> & { dpopKey: EncodedKey }>
   didCache: Item<DidDocument>
   dpopNonceCache: Item<string>
   handleCache: Item<ResolvedHandle>
   authorizationServerMetadataCache: Item<OAuthAuthorizationServerMetadata>
-  protectedResourceMetadataCache: Item<OAuthProtectedResourceMetadata>
+  protectedResourceMetadataCache: Item<OAuthProtectedResourceMetadata | null>
 }
 
 export type DatabaseStore<V extends Value> = SimpleStore<string, V>
@@ -188,7 +177,7 @@ export class BrowserOAuthDatabase {
     })
   }
 
-  getDpopNonceCache(): undefined | DatabaseStore<string> {
+  getDpopNonceCache(): DatabaseStore<string> {
     return this.createStore('dpopNonceCache', {
       expiresAt: (_value) => new Date(Date.now() + 600e3),
       encode: (value) => value,
@@ -196,7 +185,7 @@ export class BrowserOAuthDatabase {
     })
   }
 
-  getDidCache(): undefined | DatabaseStore<DidDocument> {
+  getDidCache(): DatabaseStore<DidDocument> {
     return this.createStore('didCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
@@ -204,7 +193,7 @@ export class BrowserOAuthDatabase {
     })
   }
 
-  getHandleCache(): undefined | DatabaseStore<ResolvedHandle> {
+  getHandleCache(): DatabaseStore<ResolvedHandle> {
     return this.createStore('handleCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
@@ -224,7 +213,7 @@ export class BrowserOAuthDatabase {
 
   getProtectedResourceMetadataCache():
     | undefined
-    | DatabaseStore<OAuthProtectedResourceMetadata> {
+    | DatabaseStore<OAuthProtectedResourceMetadata | null> {
     return this.createStore('protectedResourceMetadataCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,

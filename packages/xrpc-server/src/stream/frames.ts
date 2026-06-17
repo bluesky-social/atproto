@@ -1,5 +1,6 @@
-import * as uint8arrays from 'uint8arrays'
-import { cborDecodeMulti, cborEncode } from '@atproto/common'
+import { decodeAll, encode } from '@atproto/lex-cbor'
+import { LexValue, isPlainObject } from '@atproto/lex-data'
+import { XRPCError } from '../errors.js'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -8,51 +9,49 @@ import {
   MessageFrameHeader,
   errorFrameBody,
   frameHeader,
-} from './types'
+} from './types.js'
 
-export abstract class Frame {
+export abstract class Frame<T extends LexValue = LexValue> {
   abstract header: FrameHeader
-  body: unknown
+  abstract body: T
+
   get op(): FrameType {
     return this.header.op
   }
   toBytes(): Uint8Array {
-    return uint8arrays.concat([cborEncode(this.header), cborEncode(this.body)])
+    return Buffer.concat([encode(this.header), encode(this.body)])
   }
-  isMessage(): this is MessageFrame<unknown> {
+  isMessage(): this is MessageFrame {
     return this.op === FrameType.Message
   }
   isError(): this is ErrorFrame {
     return this.op === FrameType.Error
   }
   static fromBytes(bytes: Uint8Array) {
-    const decoded = cborDecodeMulti(bytes)
-    if (decoded.length > 2) {
+    const [header, body, ...rest] = decodeAll(bytes)
+    if (rest.length) {
       throw new Error('Too many CBOR data items in frame')
-    }
-    const header = decoded[0]
-    let body: unknown = kUnset
-    if (decoded.length > 1) {
-      body = decoded[1]
-    }
-    const parsedHeader = frameHeader.safeParse(header)
-    if (!parsedHeader.success) {
-      throw new Error(`Invalid frame header: ${parsedHeader.error.message}`)
-    }
-    if (body === kUnset) {
+    } else if (body === undefined) {
       throw new Error('Missing frame body')
     }
-    const frameOp = parsedHeader.data.op
+
+    const parsedHeader = frameHeader.safeParse(header)
+    if (!parsedHeader.success) {
+      throw new Error(`Invalid frame header: ${parsedHeader.reason.message}`)
+    }
+    const frameOp = parsedHeader.value.op
     if (frameOp === FrameType.Message) {
       return new MessageFrame(body, {
-        type: parsedHeader.data.t,
+        type: parsedHeader.value.t,
       })
     } else if (frameOp === FrameType.Error) {
       const parsedBody = errorFrameBody.safeParse(body)
       if (!parsedBody.success) {
-        throw new Error(`Invalid error frame body: ${parsedBody.error.message}`)
+        throw new Error(
+          `Invalid error frame body: ${parsedBody.reason.message}`,
+        )
       }
-      return new ErrorFrame(parsedBody.data)
+      return new ErrorFrame(parsedBody.value)
     } else {
       const exhaustiveCheck: never = frameOp
       throw new Error(`Unknown frame op: ${exhaustiveCheck}`)
@@ -60,9 +59,10 @@ export abstract class Frame {
   }
 }
 
-export class MessageFrame<T = Record<string, unknown>> extends Frame {
+export class MessageFrame<T extends LexValue = LexValue> extends Frame<T> {
   header: MessageFrameHeader
   body: T
+
   constructor(body: T, opts?: { type?: string }) {
     super()
     this.header =
@@ -74,11 +74,37 @@ export class MessageFrame<T = Record<string, unknown>> extends Frame {
   get type() {
     return this.header.t
   }
+
+  static fromLexValue(data: LexValue, nsid: string) {
+    if (!isPlainObject(data)) {
+      return new MessageFrame(data)
+    }
+
+    const $type = data?.['$type']
+    if (typeof $type !== 'string') {
+      return new MessageFrame(data)
+    }
+
+    let type: string
+
+    const split = $type.split('#')
+    if (split.length === 2 && (split[0] === '' || split[0] === nsid)) {
+      type = `#${split[1]}`
+    } else {
+      type = $type
+    }
+
+    const { $type: _, ...clone } = data
+    return new MessageFrame(clone, { type })
+  }
 }
 
-export class ErrorFrame<T extends string = string> extends Frame {
+export class ErrorFrame<T extends string = string> extends Frame<
+  ErrorFrameBody<T>
+> {
   header: ErrorFrameHeader
   body: ErrorFrameBody<T>
+
   constructor(body: ErrorFrameBody<T>) {
     super()
     this.header = { op: FrameType.Error }
@@ -90,6 +116,10 @@ export class ErrorFrame<T extends string = string> extends Frame {
   get message() {
     return this.body.message
   }
-}
 
-const kUnset = Symbol('unset')
+  static fromError(err: unknown): ErrorFrame {
+    if (err instanceof ErrorFrame) return err
+    const { error = 'Unknown', message } = XRPCError.fromError(err).payload
+    return new ErrorFrame({ error, message })
+  }
+}

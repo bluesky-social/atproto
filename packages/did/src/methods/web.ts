@@ -1,18 +1,8 @@
 import { InvalidDidError } from '../did-error.js'
 import { Did, assertDidMsid } from '../did.js'
+import { canParse } from '../lib/uri.js'
 
 export const DID_WEB_PREFIX = `did:web:` satisfies Did<'web'>
-
-const canParse =
-  URL.canParse?.bind(URL) ??
-  ((url, base) => {
-    try {
-      new URL(url, base)
-      return true
-    } catch {
-      return false
-    }
-  })
 
 /**
  * This function checks if the input is a valid Web DID, as per DID spec.

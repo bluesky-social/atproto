@@ -35,6 +35,9 @@ const didRelativeUriSchema = z.union([
     }),
 ])
 
+/**
+ * @see {@link https://www.w3.org/TR/did-1.0/#verification-material Verification Material}
+ */
 const didVerificationMethodSchema = z.object({
   id: didRelativeUriSchema,
   type: z.string().min(1),
@@ -90,7 +93,10 @@ const didServiceSchema = z.object({
 
 export type DidService = z.infer<typeof didServiceSchema>
 
-const didAuthenticationSchema = z.union([
+/**
+ * @see {@link https://www.w3.org/TR/did-1.0/#referring-to-verification-methods Referring to Verification Methods}
+ */
+const verificationMethodReference = z.union([
   //
   didRelativeUriSchema,
   didVerificationMethodSchema,
@@ -101,23 +107,24 @@ const didAuthenticationSchema = z.union([
  * @see {@link https://www.w3.org/TR/did-core/#production-0}
  */
 export const didDocumentSchema = z.object({
-  '@context': z.union([
-    z.literal('https://www.w3.org/ns/did/v1'),
-    z
-      .array(z.string().url())
-      .nonempty()
-      .refine((data) => data[0] === 'https://www.w3.org/ns/did/v1', {
-        message: 'First @context must be https://www.w3.org/ns/did/v1',
-      }),
-  ]),
+  '@context': z
+    .union([
+      z.literal('https://www.w3.org/ns/did/v1'),
+      z
+        .array(z.string().url())
+        .nonempty()
+        .refine((data) => data[0] === 'https://www.w3.org/ns/did/v1', {
+          message: 'First @context must be https://www.w3.org/ns/did/v1',
+        }),
+    ])
+    // @NOTE @context is required by producers, but optional for consumers.
+    .optional(),
   id: didSchema,
   controller: didControllerSchema.optional(),
   alsoKnownAs: z.array(rfc3968UriSchema).optional(),
   service: z.array(didServiceSchema).optional(),
-  authentication: z.array(didAuthenticationSchema).optional(),
-  verificationMethod: z
-    .array(z.union([didVerificationMethodSchema, didRelativeUriSchema]))
-    .optional(),
+  authentication: z.array(verificationMethodReference).optional(),
+  verificationMethod: z.array(didVerificationMethodSchema).optional(),
 })
 
 export type DidDocument<Method extends string = string> = z.infer<

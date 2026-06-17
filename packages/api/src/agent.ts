@@ -1,6 +1,6 @@
 import AwaitLock from 'await-lock'
 import { TID, retry } from '@atproto/common-web'
-import { AtUri, ensureValidDid } from '@atproto/syntax'
+import { AtUri, DidString, ensureValidDidRegex } from '@atproto/syntax'
 import {
   FetchHandler,
   FetchHandlerOptions,
@@ -17,20 +17,20 @@ import {
   ComAtprotoRepoPutRecord,
   ComNS,
   ToolsNS,
-} from './client/index'
-import { schemas } from './client/lexicons'
-import { MutedWord, Nux } from './client/types/app/bsky/actor/defs'
-import { $Typed, Un$Typed } from './client/util'
-import { BSKY_LABELER_DID } from './const'
-import { interpretLabelValueDefinitions } from './moderation'
-import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
+} from './client/index.js'
+import { schemas } from './client/lexicons.js'
+import { MutedWord, Nux } from './client/types/app/bsky/actor/defs.js'
+import { $Typed, Un$Typed } from './client/util.js'
+import { BSKY_LABELER_DID } from './const.js'
+import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels.js'
+import { interpretLabelValueDefinitions } from './moderation/index.js'
 import {
   InterpretedLabelValueDefinition,
   LabelPreference,
   ModerationPrefs,
-} from './moderation/types'
-import * as predicate from './predicate'
-import { SessionManager } from './session-manager'
+} from './moderation/types.js'
+import * as predicate from './predicate.js'
+import { SessionManager } from './session-manager.js'
 import {
   AtpAgentGlobalOpts,
   AtprotoProxy,
@@ -42,14 +42,14 @@ import {
   asAtprotoProxy,
   asDid,
   isDid,
-} from './types'
+} from './types.js'
 import {
   getSavedFeedType,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateNux,
   validateSavedFeed,
-} from './util'
+} from './util.js'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -63,7 +63,7 @@ const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
 }
 
-export type { FetchHandler }
+export type { DidString, FetchHandler }
 
 /**
  * An {@link Agent} is an {@link AtpBaseClient} with the following
@@ -207,8 +207,11 @@ export class Agent extends XrpcClient {
   /**
    * Get the authenticated user's DID, if any.
    */
-  get did() {
-    return this.sessionManager.did
+  get did(): DidString | undefined {
+    const { did } = this.sessionManager
+    if (!did) return undefined
+    ensureValidDidRegex(did)
+    return did
   }
 
   /** @deprecated Use {@link Agent.assertDid} instead */
@@ -219,7 +222,7 @@ export class Agent extends XrpcClient {
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.
    */
-  get assertDid(): string {
+  get assertDid(): DidString {
     this.assertAuthenticated()
     return this.did
   }
@@ -227,7 +230,7 @@ export class Agent extends XrpcClient {
   /**
    * Assert that the user is authenticated.
    */
-  public assertAuthenticated(): asserts this is { did: string } {
+  public assertAuthenticated(): asserts this is { did: DidString } {
     if (!this.did) throw new Error('Not logged in')
   }
 
@@ -587,6 +590,10 @@ export class Agent extends XrpcClient {
       verificationPrefs: {
         hideBadges: false,
       },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -619,6 +626,9 @@ export class Agent extends XrpcClient {
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
+      } else if (predicate.isValidDeclaredAgePref(pref)) {
+        const { $type: _, ...declaredAgePref } = pref
+        prefs.declaredAge = declaredAgePref
       } else if (predicate.isValidFeedViewPref(pref)) {
         // feed view preferences
         const { $type: _, feed, ...v } = pref
@@ -654,6 +664,11 @@ export class Agent extends XrpcClient {
       } else if (predicate.isValidVerificationPrefs(pref)) {
         prefs.verificationPrefs = {
           hideBadges: pref.hideBadges,
+        }
+      } else if (predicate.isValidLiveEventPreferences(pref)) {
+        prefs.liveEventPreferences = {
+          hiddenFeedIds: pref.hiddenFeedIds || [],
+          hideAllFeeds: pref.hideAllFeeds ?? false,
         }
       }
     }
@@ -878,7 +893,7 @@ export class Agent extends XrpcClient {
     labelerDid?: string,
   ) {
     if (labelerDid) {
-      ensureValidDid(labelerDid)
+      ensureValidDidRegex(labelerDid)
     }
     await this.updatePreferences((prefs) => {
       const labelPref = prefs
@@ -1358,6 +1373,41 @@ export class Agent extends XrpcClient {
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isVerificationPrefs(p))
+        .concat(pref)
+    })
+  }
+
+  async updateLiveEventPreferences(
+    action:
+      | { type: 'hideFeed'; id: string }
+      | { type: 'unhideFeed'; id: string }
+      | { type: 'toggleHideAllFeeds' },
+  ) {
+    return this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidLiveEventPreferences) || {
+        $type: 'app.bsky.actor.defs#liveEventPreferences',
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      }
+
+      const hiddenFeedIds = new Set(pref.hiddenFeedIds || [])
+
+      switch (action.type) {
+        case 'hideFeed':
+          hiddenFeedIds.add(action.id)
+          break
+        case 'unhideFeed':
+          hiddenFeedIds.delete(action.id)
+          break
+        case 'toggleHideAllFeeds':
+          pref.hideAllFeeds = !pref.hideAllFeeds
+          break
+      }
+
+      pref.hiddenFeedIds = [...hiddenFeedIds]
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isLiveEventPreferences(p))
         .concat(pref)
     })
   }

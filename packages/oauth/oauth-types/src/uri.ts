@@ -208,7 +208,8 @@ export const privateUseUriSchema = dangerousUriSchema.superRefine(
     ) {
       ctx.addIssue({
         code: ZodIssueCode.custom,
-        message: `Private-Use URI Scheme must be in the form ${url.protocol}/<path> (as per RFC 8252)`,
+        message:
+          'Private-Use URI Scheme must be in the form <scheme>:/{path} (notice the single slash!) as per RFC 8252',
       })
       return false
     }

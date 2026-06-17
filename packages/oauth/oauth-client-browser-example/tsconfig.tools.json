@@ -2,8 +2,10 @@
   "extends": "../../../tsconfig/node.json",
   "compilerOptions": {
     "rootDir": ".",
-    "noEmit": true
+    "moduleResolution": "node16",
+    "module": "node18",
+    "noEmit": true,
   },
-  "include": ["./*.js", "./*.ts"],
-  "exclude": []
+  "include": ["./*.js", "./*.mjs", "./*.cjs", "./*.ts"],
+  "exclude": [],
 }

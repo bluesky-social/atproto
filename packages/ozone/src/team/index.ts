@@ -2,13 +2,13 @@ import { Selectable } from 'kysely'
 import AtpAgent from '@atproto/api'
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db'
-import { Member } from '../db/schema/member'
-import { ids } from '../lexicon/lexicons'
-import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { httpLogger } from '../logger'
-import { AuthHeaders } from '../mod-service/views'
+import { Database } from '../db/index.js'
+import { Member } from '../db/schema/member.js'
+import { ids } from '../lexicon/lexicons.js'
+import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs.js'
+import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
+import { httpLogger } from '../logger.js'
+import { AuthHeaders } from '../mod-service/views.js'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 
@@ -67,10 +67,11 @@ export class TeamService {
       builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
     }
     if (q) {
-      builder = builder.where((qb) =>
-        qb
-          .orWhere('handle', 'ilike', `%${q}%`)
-          .orWhere('displayName', 'ilike', `%${q}%`),
+      builder = builder.where((eb) =>
+        eb.or([
+          eb('handle', 'ilike', `%${q}%`),
+          eb('displayName', 'ilike', `%${q}%`),
+        ]),
       )
     }
 
@@ -245,7 +246,7 @@ export class TeamService {
         .selectFrom('member')
         .select(['did'])
         .limit(25)
-        .if(!!lastDid, (q) => q.where('did', '>', lastDid))
+        .$if(!!lastDid, (q) => q.where('did', '>', lastDid))
         .orderBy('did', 'asc')
         .execute()
 
@@ -265,6 +266,17 @@ export class TeamService {
 
       lastDid = dids.at(-1) || ''
     } while (lastDid)
+  }
+
+  async viewByDids(dids: string[]): Promise<Map<string, TeamMember>> {
+    if (!dids.length) return new Map()
+    const members = await this.db.db
+      .selectFrom('member')
+      .selectAll()
+      .where('did', 'in', dids)
+      .execute()
+    const memberViews = await this.view(members)
+    return new Map(memberViews.map((m) => [m.did, m]))
   }
 
   async view(members: Selectable<Member>[]): Promise<TeamMember[]> {

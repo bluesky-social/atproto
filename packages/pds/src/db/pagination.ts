@@ -1,6 +1,6 @@
-import { sql } from 'kysely'
+import { SqlBool, sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AnyQb, DbRef } from './util'
+import { AnyQb, DbRef } from './util.js'
 
 export type Cursor = { primary: string; secondary: string }
 export type LabeledResult = {
@@ -66,16 +66,16 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
     if (tryIndex) {
       // The tryIndex param will likely disappear and become the default implementation: here for now for gradual rollout query-by-query.
       if (direction === 'asc') {
-        return sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
       } else {
-        return sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
       }
     } else {
       // @NOTE this implementation can struggle to use an index on (primary, secondary) for pagination due to the "or" usage.
       if (direction === 'asc') {
-        return sql`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
       } else {
-        return sql`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
       }
     }
   }
@@ -125,8 +125,8 @@ export const paginate = <
   const { limit, cursor, keyset, direction = 'desc', tryIndex } = opts
   const keysetSql = keyset.getSql(keyset.unpack(cursor), direction, tryIndex)
   return qb
-    .if(!!limit, (q) => q.limit(limit as number))
+    .$if(!!limit, (q) => q.limit(limit as number))
     .orderBy(keyset.primary, direction)
     .orderBy(keyset.secondary, direction)
-    .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+    .$if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
 }

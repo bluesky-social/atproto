@@ -3,7 +3,6 @@ import EventEmitter from 'node:events'
 import {
   Kysely,
   KyselyPlugin,
-  Migrator,
   PluginTransformQueryArgs,
   PluginTransformResultArgs,
   PostgresDialect,
@@ -11,13 +10,18 @@ import {
   RootOperationNode,
   UnknownRow,
 } from 'kysely'
-import { Pool as PgPool, types as pgTypes } from 'pg'
-import TypedEmitter from 'typed-emitter'
-import { dbLogger } from '../../../logger'
-import { DatabaseSchema, DatabaseSchemaType } from './database-schema'
-import * as migrations from './migrations'
-import { CtxMigrationProvider } from './migrations/provider'
-import { PgOptions } from './types'
+import { Migrator } from 'kysely/migration'
+// eslint-disable-next-line import/default
+import pg from 'pg'
+// eslint-disable-next-line import/no-named-as-default-member
+const { Pool: PgPool, types: pgTypes } = pg
+type PgPool = InstanceType<typeof PgPool>
+import type TypedEmitter from 'typed-emitter'
+import { dbLogger } from '../../../logger.js'
+import { DatabaseSchema, DatabaseSchemaType } from './database-schema.js'
+import * as migrations from './migrations/index.js'
+import { CtxMigrationProvider } from './migrations/provider.js'
+import { PgOptions } from './types.js'
 
 export type { DatabaseSchema }
 
@@ -191,7 +195,7 @@ class LeakyTxPlugin implements KyselyPlugin {
   }
 }
 
-type TxnEmitter = TypedEmitter<TxnEvents>
+type TxnEmitter = TypedEmitter.default<TxnEvents>
 
 type TxnEvents = {
   commit: () => void

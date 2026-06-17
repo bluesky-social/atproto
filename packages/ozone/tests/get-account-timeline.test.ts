@@ -5,9 +5,9 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs'
-import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot } from './_util'
+import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
+import { ids } from '../src/lexicon/lexicons.js'
+import { forSnapshot } from './_util.js'
 
 describe('account timeline', () => {
   let network: TestNetwork
@@ -20,7 +20,7 @@ describe('account timeline', () => {
       dbPostgresSchema: 'ozone_account_timeline_test',
     })
     sc = network.getSeedClient()
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
 

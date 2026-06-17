@@ -25,15 +25,18 @@ export interface ModerationEvent {
     | 'tools.ozone.moderation.defs#modEventPriorityScore'
     | 'tools.ozone.moderation.defs#ageAssuranceEvent'
     | 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
+    | 'tools.ozone.moderation.defs#ageAssurancePurgeEvent'
     | 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
   subjectType:
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'
     | 'chat.bsky.convo.defs#messageRef'
+    | 'chat.bsky.convo.defs#convoRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   subjectBlobCids: string[] | null
+  subjectConvoId: string | null
   subjectMessageId: string | null
   createLabelVals: string | null
   negateLabelVals: string | null

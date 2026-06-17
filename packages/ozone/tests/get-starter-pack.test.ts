@@ -6,9 +6,9 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons.js'
+import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
+import { forSnapshot } from './_util.js'
 
 describe('admin get starter pack view', () => {
   let network: TestNetwork
@@ -23,7 +23,7 @@ describe('admin get starter pack view', () => {
     })
     ozone = network.ozone
     AtpAgent.configure({ appLabelers: [ozone.ctx.cfg.service.did] })
-    agent = ozone.getClient()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -59,7 +59,7 @@ describe('admin get starter pack view', () => {
 
     it('gets a starterpack while taken down', async () => {
       // Validate that appview returns starterpacks before takedown
-      const appviewAgent = network.bsky.getClient()
+      const appviewAgent = network.bsky.getAgent()
       const beforeTakedownFromAppview =
         await appviewAgent.api.app.bsky.graph.getStarterPack(
           { starterPack: sp1.uriStr },

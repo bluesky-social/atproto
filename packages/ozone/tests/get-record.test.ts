@@ -7,12 +7,12 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { forSnapshot } from './_util.js'
 
 describe('admin get record view', () => {
   let network: TestNetwork
@@ -26,7 +26,7 @@ describe('admin get record view', () => {
       dbPostgresSchema: 'ozone_admin_get_record',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

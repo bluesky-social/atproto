@@ -1,5 +1,7 @@
+import assert from 'node:assert'
 import readline from 'node:readline/promises'
 import { TID } from '@atproto/common'
+import { DidString, isDidString } from '@atproto/lex'
 import {
   BlockMap,
   CidSet,
@@ -7,9 +9,9 @@ import {
   MemoryBlockstore,
   signCommit,
 } from '@atproto/repo'
-import { AccountManager } from '../account-manager/account-manager'
-import { ActorStore } from '../actor-store/actor-store'
-import { Sequencer } from '../sequencer'
+import { AccountManager } from '../account-manager/account-manager.js'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { Sequencer } from '../sequencer/index.js'
 
 export interface RebuildContext {
   sequencer: Sequencer
@@ -22,15 +24,13 @@ export const rebuildRepoScript = async (
   args: string[],
 ) => {
   const did = args[0]
-  if (!did || !did.startsWith('did:')) {
-    throw new Error('Expected DID as argument')
-  }
+  assert(isDidString(did), 'Expected DID as argument')
   return rebuildRepo(ctx, did, true)
 }
 
 export const rebuildRepo = async (
   ctx: RebuildContext,
-  did: string,
+  did: DidString,
   promptUser: boolean,
 ) => {
   const memoryStore = new MemoryBlockstore()
@@ -106,7 +106,7 @@ export const rebuildRepo = async (
   const syncData = await ctx.actorStore.read(did, (store) =>
     store.repo.getSyncEventData(),
   )
-  await ctx.sequencer.sequenceSyncEvt(did, syncData)
+  await ctx.sequencer.sequenceSync(did, syncData)
 }
 
 const promptContinue = async (): Promise<boolean> => {

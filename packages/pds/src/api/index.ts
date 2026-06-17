@@ -1,7 +1,7 @@
-import { AppContext } from '../context'
-import { Server } from '../lexicon'
-import appBsky from './app/bsky'
-import comAtproto from './com/atproto'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../context.js'
+import appBsky from './app/bsky/index.js'
+import comAtproto from './com/atproto/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   comAtproto(server, ctx)

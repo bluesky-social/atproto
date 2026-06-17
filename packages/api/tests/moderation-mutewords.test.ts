@@ -1,5 +1,60 @@
-import { RichText, mock, moderatePost } from '../src/'
-import { matchMuteWords } from '../src/moderation/mutewords'
+import { $Typed } from '../src/client/util.js'
+import {
+  AppBskyEmbedGallery,
+  AppBskyEmbedRecord,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyFeedPost,
+  BlobRef,
+  RichText,
+  mock,
+  moderatePost,
+} from '../src/index.js'
+import { matchMuteWords } from '../src/moderation/mutewords.js'
+import { ModerationOpts } from '../src/moderation/types.js'
+
+const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
+
+const fakeBlob = (): BlobRef =>
+  new BlobRef({ '/': FAKE_CID } as any, 'image/jpeg', 1234)
+
+const galleryRecord = (alts: string[]): $Typed<AppBskyEmbedGallery.Main> => ({
+  $type: 'app.bsky.embed.gallery',
+  items: alts.map(
+    (alt): $Typed<AppBskyEmbedGallery.Image> => ({
+      $type: 'app.bsky.embed.gallery#image',
+      image: fakeBlob(),
+      alt,
+      aspectRatio: { width: 4, height: 3 },
+    }),
+  ),
+})
+
+const galleryView = (alts: string[]): $Typed<AppBskyEmbedGallery.View> => ({
+  $type: 'app.bsky.embed.gallery#view',
+  items: alts.map(
+    (alt): $Typed<AppBskyEmbedGallery.ViewImage> => ({
+      $type: 'app.bsky.embed.gallery#viewImage',
+      thumbnail: 'https://example.test/thumb.jpg',
+      fullsize: 'https://example.test/full.jpg',
+      alt,
+      aspectRatio: { width: 4, height: 3 },
+    }),
+  ),
+})
+
+const galleryMuteOpts = (): ModerationOpts => ({
+  userDid: 'did:web:alice.test',
+  prefs: {
+    adultContentEnabled: false,
+    labels: {},
+    labelers: [],
+    mutedWords: [
+      { value: 'badword', targets: ['content'], actorTarget: 'all' },
+    ],
+    hiddenPosts: [],
+  },
+  labelDefs: {},
+})
 
 describe(`matchMuteWords`, () => {
   describe(`tags`, () => {
@@ -1117,6 +1172,128 @@ describe(`matchMuteWords`, () => {
         { word: muteWord1, predicate: muteWord1.value },
         { word: muteWord2, predicate: muteWord2.value },
       ])
+    })
+  })
+
+  describe(`gallery embed alt text`, () => {
+    const bob = mock.profileViewBasic({
+      handle: 'bob.test',
+      displayName: 'Bob',
+    })
+    const carol = mock.profileViewBasic({
+      handle: 'carol.test',
+      displayName: 'Carol',
+    })
+
+    it(`matches alt text on a directly-attached gallery embed`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'innocent text',
+            embed: galleryRecord(['fine', 'this contains badword here']),
+          }),
+          author: bob,
+          labels: [],
+        }),
+        galleryMuteOpts(),
+      )
+      expect(res.causes.find((c) => c.type === 'mute-word')).toBeDefined()
+    })
+
+    it(`does not match when no item alt contains a muted word`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'innocent text',
+            embed: galleryRecord(['nothing here', 'still nothing']),
+          }),
+          author: bob,
+          labels: [],
+        }),
+        galleryMuteOpts(),
+      )
+      expect(res.causes.find((c) => c.type === 'mute-word')).toBeUndefined()
+    })
+
+    it(`matches alt text inside a quoted record's gallery`, () => {
+      const quoted: AppBskyFeedPost.Record = mock.post({
+        text: 'inside quoted',
+        embed: galleryRecord(['contains badword inside']),
+      })
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({ text: 'outer post' }),
+          embed: mock.embedRecordView({
+            record: quoted,
+            author: carol,
+            labels: [],
+          }),
+          author: bob,
+          labels: [],
+        }),
+        galleryMuteOpts(),
+      )
+      expect(res.causes.find((c) => c.type === 'mute-word')).toBeDefined()
+    })
+
+    it(`matches alt text on a quoted record's recordWithMedia gallery`, () => {
+      const quotedRecord: AppBskyFeedPost.Record = mock.post({
+        text: 'inside quoted record-with-media',
+        embed: {
+          $type: 'app.bsky.embed.recordWithMedia',
+          record: {
+            $type: 'app.bsky.embed.record',
+            record: {
+              uri: 'at://did:web:dave.test/app.bsky.feed.post/inner',
+              cid: FAKE_CID,
+            },
+          } satisfies $Typed<AppBskyEmbedRecord.Main>,
+          media: galleryRecord(['contains badword in nested gallery']),
+        } satisfies $Typed<AppBskyEmbedRecordWithMedia.Main>,
+      })
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({ text: 'outer post' }),
+          embed: mock.embedRecordView({
+            record: quotedRecord,
+            author: carol,
+            labels: [],
+          }),
+          author: bob,
+          labels: [],
+        }),
+        galleryMuteOpts(),
+      )
+      expect(res.causes.find((c) => c.type === 'mute-word')).toBeDefined()
+    })
+
+    it(`matches alt text on the view-side recordWithMedia gallery`, () => {
+      const recordWithMediaView: $Typed<AppBskyEmbedRecordWithMedia.View> = {
+        $type: 'app.bsky.embed.recordWithMedia#view',
+        record: {
+          $type: 'app.bsky.embed.record#view',
+          record: {
+            $type: 'app.bsky.embed.record#viewRecord',
+            uri: 'at://did:web:dave.test/app.bsky.feed.post/inner',
+            cid: FAKE_CID,
+            author: carol,
+            value: mock.post({ text: 'inner content' }),
+            labels: [],
+            indexedAt: new Date().toISOString(),
+          },
+        },
+        media: galleryView(['contains badword on view side']),
+      }
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({ text: 'outer post' }),
+          embed: recordWithMediaView,
+          author: bob,
+          labels: [],
+        }),
+        galleryMuteOpts(),
+      )
+      expect(res.causes.find((c) => c.type === 'mute-word')).toBeDefined()
     })
   })
 })

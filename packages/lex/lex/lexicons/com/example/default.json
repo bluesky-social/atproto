@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "com.example.default",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": ["boolean"],
+        "properties": {
+          "boolean": { "type": "boolean", "default": false },
+          "integer": { "type": "integer", "default": 0 },
+          "string": { "type": "string", "default": "" },
+          "object": { "type": "ref", "ref": "#object" }
+        }
+      }
+    },
+    "object": {
+      "type": "object",
+      "properties": {
+        "boolean": { "type": "boolean", "default": true },
+        "integer": { "type": "integer", "default": 1 },
+        "string": { "type": "string", "default": "x" }
+      }
+    }
+  }
+}

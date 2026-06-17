@@ -6,8 +6,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { SeverityLevelSettingKey } from '../src/setting/constants'
+import { ids } from '../src/lexicon/lexicons.js'
+import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 
 const strikeConfig = {
   'sev-1': {
@@ -59,7 +59,7 @@ describe('strike expiry processor', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_strike_expiry_processor',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)

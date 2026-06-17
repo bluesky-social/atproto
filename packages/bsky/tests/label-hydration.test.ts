@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -18,7 +19,7 @@ describe('label hydration', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_label_hydration',
     })
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

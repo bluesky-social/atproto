@@ -1,13 +1,12 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AppBskyFeedGetListFeed, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetListFeedOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getListFeed'
 import {
   forSnapshot,
   paginateAll,
   stripViewer,
   stripViewerFromPost,
-} from '../_util'
+} from '../_util.js'
 
 describe('list feed views', () => {
   let network: TestNetwork
@@ -25,7 +24,7 @@ describe('list feed views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_list_feed',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -60,7 +59,7 @@ describe('list feed views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: GetListFeedOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetListFeed.OutputSchema[]) =>
       results.flatMap((res) => res.feed)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getListFeed(

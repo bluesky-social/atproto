@@ -1,24 +1,37 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../context'
-import { Member } from '../db/schema/member'
-import { ModerationEvent } from '../db/schema/moderation_event'
-import { ids } from '../lexicon/lexicons'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
+import { AdminTokenOutput, ModeratorOutput } from '../auth-verifier.js'
+import { AppContext } from '../context.js'
+import { Member } from '../db/schema/member.js'
+import { ModerationEvent } from '../db/schema/moderation_event.js'
+import { ids } from '../lexicon/lexicons.js'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
+import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs.js'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
+  REVIEWNONE,
   REVIEWOPEN,
   RepoView,
   RepoViewDetail,
-} from '../lexicon/types/tools/ozone/moderation/defs'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
   ROLETRIAGE,
   ROLEVERIFIER,
-} from '../lexicon/types/tools/ozone/team/defs'
-import { ModerationSubjectStatusRow } from '../mod-service/types'
+} from '../lexicon/types/tools/ozone/team/defs.js'
+import { ModerationSubjectStatusRow } from '../mod-service/types.js'
+
+export const getAuthDid = (
+  auth: ModeratorOutput | AdminTokenOutput,
+  serviceDid: string,
+): string | undefined => {
+  return auth.credentials.type === 'moderator'
+    ? auth.credentials.iss
+    : auth.credentials.type === 'admin_token'
+      ? serviceDid
+      : undefined
+}
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,
@@ -127,7 +140,12 @@ export const getReviewState = (reviewState?: string) => {
   throw new InvalidRequestError('Invalid review state')
 }
 
-const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
+const reviewStates = new Set([
+  REVIEWCLOSED,
+  REVIEWESCALATED,
+  REVIEWOPEN,
+  REVIEWNONE,
+])
 
 const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventTakedown',
@@ -151,6 +169,7 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventPriorityScore',
   'tools.ozone.moderation.defs#ageAssuranceEvent',
   'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+  'tools.ozone.moderation.defs#ageAssurancePurgeEvent',
   'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
   'tools.ozone.moderation.defs#scheduleTakedownEvent',
   'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',

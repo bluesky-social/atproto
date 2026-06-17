@@ -1,9 +1,9 @@
-import { TestBsky } from '../bsky'
-import { EXAMPLE_LABELER } from '../const'
-import { TestNetwork } from '../network'
-import { TestNetworkNoAppView } from '../network-no-appview'
-import { SeedClient } from './client'
-import usersSeed from './users'
+import { TestBsky } from '../bsky.js'
+import { EXAMPLE_LABELER } from '../const.js'
+import { TestNetworkNoAppView } from '../network-no-appview.js'
+import { TestNetwork } from '../network.js'
+import { SeedClient } from './client.js'
+import usersSeed from './users.js'
 
 export default async (
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,

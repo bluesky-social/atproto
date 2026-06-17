@@ -12,9 +12,9 @@ describe('app_passwords', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'app_passwords',
     })
-    accntAgent = network.pds.getClient()
-    appAgent = network.pds.getClient()
-    priviAgent = network.pds.getClient()
+    accntAgent = network.pds.getAgent()
+    appAgent = network.pds.getAgent()
+    priviAgent = network.pds.getAgent()
 
     await accntAgent.createAccount({
       handle: 'alice.test',
@@ -113,18 +113,28 @@ describe('app_passwords', () => {
   })
 
   it('restricts service auth token methods for non-privileged access tokens', async () => {
-    const attempt = appAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
-      lxm: 'com.atproto.server.createAccount',
-    })
-    await expect(attempt).rejects.toThrow(
+    const attemptCaseSensitive = appAgent.api.com.atproto.server.getServiceAuth(
+      {
+        aud: network.pds.ctx.cfg.service.did,
+        lxm: 'com.atproto.server.createAccount',
+      },
+    )
+    await expect(attemptCaseSensitive).rejects.toThrow(
+      /insufficient access to request a service auth token for the following method/,
+    )
+    const attemptCaseInsensitive =
+      appAgent.api.com.atproto.server.getServiceAuth({
+        aud: network.pds.ctx.cfg.service.did,
+        lxm: 'com.atproto.server.createaccount',
+      })
+    await expect(attemptCaseInsensitive).rejects.toThrow(
       /insufficient access to request a service auth token for the following method/,
     )
   })
 
   it('allows privileged service auth token scopes for privileged access tokens', async () => {
     await priviAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
+      aud: network.pds.ctx.cfg.service.did,
       lxm: 'com.atproto.server.createAccount',
     })
   })
@@ -155,7 +165,7 @@ describe('app_passwords', () => {
 
     // allows privileged app passwords or higher
     const priviAttempt = appAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
+      aud: network.pds.ctx.cfg.service.did,
       lxm: 'com.atproto.server.createAccount',
     })
     await expect(priviAttempt).rejects.toThrow(
@@ -201,7 +211,7 @@ describe('app_passwords', () => {
 
     // allows privileged app passwords or higher
     await priviAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
+      aud: network.pds.ctx.cfg.service.did,
     })
 
     // allows only full access auth
@@ -242,7 +252,7 @@ describe('app_passwords', () => {
   })
 
   it('no longer allows session creation after revocation', async () => {
-    const newAgent = network.pds.getClient()
+    const newAgent = network.pds.getAgent()
     const attempt = newAgent.login({
       identifier: 'alice.test',
       password: appPass,

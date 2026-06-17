@@ -1,0 +1,19 @@
+{
+  "lexicon": 1,
+  "id": "com.example.unknown",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["unknown"],
+        "properties": {
+          "unknown": { "type": "unknown" },
+          "optUnknown": { "type": "unknown" }
+        }
+      }
+    }
+  }
+}

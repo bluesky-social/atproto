@@ -1,10 +1,10 @@
 import PQueue from 'p-queue'
-import { dbLogger } from './logger'
+import { dbLogger } from './logger.js'
 
 // A simple queue for in-process, out-of-band/backgrounded work
 
 export class BackgroundQueue {
-  queue = new PQueue({ concurrency: 5 })
+  queue: InstanceType<typeof PQueue> = new PQueue({ concurrency: 5 })
   destroyed = false
   constructor() {}
 

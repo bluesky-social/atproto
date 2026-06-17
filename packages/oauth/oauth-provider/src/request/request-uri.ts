@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { formatError } from '../lib/util/error.js'
 import { RequestId, requestIdSchema } from './request-id.js'
 
 export const REQUEST_URI_PREFIX = 'urn:ietf:params:oauth:request_uri:'
@@ -24,4 +26,17 @@ export function encodeRequestUri(requestId: RequestId): RequestUri {
 export function decodeRequestUri(requestUri: RequestUri): RequestId {
   const requestIdEnc = requestUri.slice(REQUEST_URI_PREFIX.length)
   return decodeURIComponent(requestIdEnc) as RequestId
+}
+
+export function parseRequestUri(
+  requestUri: string,
+  parseParams?: { path?: (string | number)[] },
+): RequestUri {
+  const parseResult = requestUriSchema.safeParse(requestUri, parseParams)
+  if (!parseResult.success) {
+    const err = parseResult.error
+    const msg = formatError(err, 'Invalid "request_uri" query parameter')
+    throw new InvalidRequestError(msg, err)
+  }
+  return parseResult.data
 }

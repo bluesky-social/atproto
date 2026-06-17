@@ -1,0 +1,50 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.routeReports",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Route reports within an ID range to matching queues based.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["startReportId", "endReportId"],
+          "properties": {
+            "startReportId": {
+              "type": "integer",
+              "description": "Start of report ID range (inclusive)."
+            },
+            "endReportId": {
+              "type": "integer",
+              "description": "End of report ID range (inclusive). Difference between start and end must be less than 5,000."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["assigned", "unmatched"],
+          "properties": {
+            "assigned": {
+              "type": "integer",
+              "description": "The number of reports assigned to a queue."
+            },
+            "unmatched": {
+              "type": "integer",
+              "description": "The number of reports with no matching queue."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "OutOfRange",
+          "description": "The request is invalid, such as missing required fields or invalid field values."
+        }
+      ]
+    }
+  }
+}

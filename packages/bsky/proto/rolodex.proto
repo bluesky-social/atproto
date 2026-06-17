@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package rolodex;
+option go_package = "./;rolodex";
+
+import "google/protobuf/timestamp.proto";
+
+//
+// Messages
+//
+
+// Ping
+message PingRequest {}
+
+message PingResponse {}
+
+// GetSyncStatus
+message GetSyncStatusRequest {
+  string actor = 1;
+}
+
+message SyncStatus {
+  google.protobuf.Timestamp synced_at = 1;
+  int32 matches_count = 2;
+}
+
+message GetSyncStatusResponse {
+  SyncStatus status = 1;
+}
+
+// StartPhoneVerification
+message StartPhoneVerificationRequest {
+  string actor = 1;
+  string phone = 2;
+}
+
+message StartPhoneVerificationResponse {}
+
+// VerifyPhone
+message VerifyPhoneRequest {
+  string actor = 1;
+  string phone = 2;
+  string verification_code = 3;
+}
+
+message VerifyPhoneResponse {
+  string token = 1;
+}
+
+// ImportContacts
+message ImportContactsRequest {
+  string actor = 1;
+  string token = 2;
+  repeated string contacts = 3;
+}
+
+message ImportContactsMatch {
+  // To which index of the input contacts this contact corresponds.
+  int32 input_index = 1;
+  string subject = 2;
+}
+
+message ImportContactsResponse {
+  repeated ImportContactsMatch matches = 1;
+}
+
+// GetMatches
+message GetMatchesRequest {
+  string actor = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetMatchesResponse {
+  repeated string subjects = 1;
+  string cursor = 2;
+}
+
+// DismissMatch
+message DismissMatchRequest {
+  string actor = 1;
+  string subject = 2;
+}
+
+message DismissMatchResponse {
+  int32 matches_count = 1;
+}
+
+// RemoveData
+message RemoveDataRequest {
+  string actor = 1;
+}
+
+message RemoveDataResponse {
+  int32 contacts_count = 1;
+  int32 matches_count = 2;
+}
+
+//
+// Service
+//
+
+service RolodexService {
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  rpc GetSyncStatus(GetSyncStatusRequest) returns (GetSyncStatusResponse);
+
+  rpc StartPhoneVerification(StartPhoneVerificationRequest) returns (StartPhoneVerificationResponse);
+  rpc VerifyPhone(VerifyPhoneRequest) returns (VerifyPhoneResponse);
+  rpc ImportContacts(ImportContactsRequest) returns (ImportContactsResponse);
+
+  rpc GetMatches(GetMatchesRequest) returns (GetMatchesResponse);
+  rpc DismissMatch(DismissMatchRequest) returns (DismissMatchResponse);
+
+  rpc RemoveData(RemoveDataRequest) returns (RemoveDataResponse);
+}

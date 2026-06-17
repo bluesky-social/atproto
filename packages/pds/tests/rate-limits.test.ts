@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import userSeed from './seeds/basic'
+import userSeed from './seeds/basic.js'
 
 describe('rate limits', () => {
   let network: TestNetworkNoAppView
@@ -19,7 +19,7 @@ describe('rate limits', () => {
         rateLimitsEnabled: true,
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.dids.alice

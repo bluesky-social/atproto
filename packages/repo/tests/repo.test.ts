@@ -1,10 +1,10 @@
-import { TID } from '@atproto/common'
+import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { RepoContents, WriteOpAction, verifyCommitSig } from '../src'
-import { Repo } from '../src/repo'
-import { MemoryBlockstore } from '../src/storage'
-import * as util from './_util'
+import { RepoContents, WriteOpAction, verifyCommitSig } from '../src/index.js'
+import { Repo } from '../src/repo.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
+import * as util from './_util.js'
 
 describe('Repo', () => {
   const collName = 'com.example.posts'

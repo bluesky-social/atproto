@@ -1,11 +1,11 @@
 import { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Setting } from '../db/schema/setting'
+import { Setting } from '../db/schema/setting.js'
 import {
   PolicyListSettingKey,
   ProtectedTagSettingKey,
   SeverityLevelSettingKey,
-} from './constants'
+} from './constants.js'
 
 export const settingValidators = new Map<
   string,
@@ -196,6 +196,21 @@ export const settingValidators = new Map<
                   )
                 }
                 hasDefault = true
+              }
+            }
+
+            if (severityVal['targetServices'] !== undefined) {
+              if (!Array.isArray(severityVal['targetServices'])) {
+                throw new InvalidRequestError(
+                  `targetServices must be an array for severity level ${severityKey} in policy ${key}`,
+                )
+              }
+              for (const service of severityVal['targetServices']) {
+                if (typeof service !== 'string') {
+                  throw new InvalidRequestError(
+                    `Each target service must be a string for severity level ${severityKey} in policy ${key}`,
+                  )
+                }
               }
             }
           }

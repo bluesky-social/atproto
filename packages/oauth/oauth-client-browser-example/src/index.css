@@ -1,3 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Styles applies on be <body> tag by the oauth provider */
+@source inline("min-h-screen");
+@source inline("bg-slate-100");
+@source inline("dark:bg-slate-800");

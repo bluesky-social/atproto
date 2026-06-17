@@ -1,7 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
-import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const'
-import { plugins } from './plugins'
-import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils'
+import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const.js'
+import { plugins } from './plugins.js'
+import { extractMultikey, extractPrefixedBytes, hasPrefix } from './utils.js'
 
 export type ParsedMultikey = {
   jwtAlg: string
@@ -45,6 +45,9 @@ export const parseDidKey = (did: string): ParsedMultikey => {
   return parseMultikey(multikey)
 }
 
-export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
-  return DID_KEY_PREFIX + formatMultikey(jwtAlg, keyBytes)
+export function formatDidKey(
+  jwtAlg: string,
+  keyBytes: Uint8Array,
+): `did:key:${string}` {
+  return `${DID_KEY_PREFIX}${formatMultikey(jwtAlg, keyBytes)}` as const
 }

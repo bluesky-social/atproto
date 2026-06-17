@@ -8,70 +8,38 @@ export function contentMime(headers: Headers): string | undefined {
 }
 
 /**
- * Ponyfill for `CustomEvent` constructor.
+ * Returns an {@link AbortSignal} that aborts after `ms` milliseconds.
+ *
+ * Uses the native {@link AbortSignal.timeout} when available, and otherwise
+ * falls back to an {@link AbortController} + `setTimeout`. The static
+ * `AbortSignal.timeout` method is not implemented in every runtime this package
+ * targets (notably React Native / Expo), so relying on it directly throws a
+ * `TypeError: AbortSignal.timeout is not a function` at runtime.
+ *
+ * @see {@link https://github.com/facebook/react-native/issues/42042}
  */
-export const CustomEvent: typeof globalThis.CustomEvent =
-  globalThis.CustomEvent ??
-  (() => {
-    class CustomEvent<T> extends Event {
-      #detail: T | null
-      constructor(type: string, options?: CustomEventInit<T>) {
-        if (!arguments.length) throw new TypeError('type argument is required')
-        super(type, options)
-        this.#detail = options?.detail ?? null
-      }
-      get detail() {
-        return this.#detail
-      }
-    }
-
-    Object.defineProperties(CustomEvent.prototype, {
-      [Symbol.toStringTag]: {
-        writable: false,
-        enumerable: false,
-        configurable: true,
-        value: 'CustomEvent',
-      },
-      detail: {
-        enumerable: true,
-      },
-    })
-
-    return CustomEvent
-  })()
-
-export class CustomEventTarget<EventDetailMap extends Record<string, unknown>> {
-  readonly eventTarget = new EventTarget()
-
-  addEventListener<T extends Extract<keyof EventDetailMap, string>>(
-    type: T,
-    callback: (event: CustomEvent<EventDetailMap[T]>) => void,
-    options?: AddEventListenerOptions | boolean,
-  ): void {
-    this.eventTarget.addEventListener(type, callback as EventListener, options)
+export function timeoutSignal(ms: number): AbortSignal {
+  if (typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms)
   }
 
-  removeEventListener<T extends Extract<keyof EventDetailMap, string>>(
-    type: T,
-    callback: (event: CustomEvent<EventDetailMap[T]>) => void,
-    options?: EventListenerOptions | boolean,
-  ): void {
-    this.eventTarget.removeEventListener(
-      type,
-      callback as EventListener,
-      options,
-    )
-  }
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(timeoutError(ms)), ms)
+  return controller.signal
+}
 
-  dispatchCustomEvent<T extends Extract<keyof EventDetailMap, string>>(
-    type: T,
-    detail: EventDetailMap[T],
-    init?: EventInit,
-  ): boolean {
-    return this.eventTarget.dispatchEvent(
-      new CustomEvent(type, { ...init, detail }),
-    )
+/**
+ * Builds the reason used to abort a {@link timeoutSignal} fallback. Mirrors the
+ * native `AbortSignal.timeout` behaviour (a `TimeoutError` `DOMException`) when
+ * `DOMException` is available, and degrades to a plain `Error` in runtimes that
+ * lack it.
+ */
+function timeoutError(ms: number): unknown {
+  const message = `The operation timed out after ${ms} ms`
+  if (typeof DOMException === 'function') {
+    return new DOMException(message, 'TimeoutError')
   }
+  return new Error(message)
 }
 
 export function combineSignals(

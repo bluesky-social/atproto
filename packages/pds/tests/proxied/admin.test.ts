@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { forSnapshot } from '../_util.js'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork
@@ -17,7 +17,7 @@ describe('proxies admin requests', () => {
         inviteRequired: true,
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     const { data: invite } =
       await agent.api.com.atproto.server.createInviteCode(

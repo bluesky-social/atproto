@@ -1,9 +1,10 @@
 import crypto, { KeyObject } from 'node:crypto'
 import express from 'express'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
+import { DidString, isDidString } from '@atproto/lex'
 import {
   AuthRequiredError,
   VerifySignatureWithKeyFn,
@@ -17,8 +18,11 @@ import {
   getKeyAsDidKey,
   isDataplaneError,
   unpackIdentityKeys,
-} from './data-plane'
-import { GetIdentityByDidResponse } from './proto/bsky_pb'
+} from './data-plane/index.js'
+import { GetIdentityByDidResponse } from './proto/bsky_pb.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 type ReqCtx = {
   req: express.Request
@@ -46,7 +50,7 @@ type StandardOutput = {
   credentials: {
     type: 'standard'
     aud: string
-    iss: string
+    iss: DidString | `${DidString}#${string}`
   }
 }
 
@@ -108,7 +112,7 @@ export class AuthVerifier {
       if (isBasicToken(ctx.req)) {
         const aud = this.ownDid
         const iss = ctx.req.headers['appview-as-did']
-        if (typeof iss !== 'string' || !iss.startsWith('did:')) {
+        if (typeof iss !== 'string' || !isDidString(iss)) {
           throw new AuthRequiredError('bad issuer')
         }
         if (!this.parseRoleCreds(ctx.req).admin) {
@@ -234,7 +238,15 @@ export class AuthVerifier {
         )
       })
 
-    const { sub, aud, scope } = res.payload
+    const { sub, aud, scope, cnf } = res.payload
+    if (typeof cnf !== 'undefined') {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
+      throw new AuthRequiredError(
+        'Malformed token: DPoP not supported',
+        'InvalidToken',
+      )
+    }
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new AuthRequiredError('Malformed token', 'InvalidToken')
     } else if (
@@ -251,7 +263,7 @@ export class AuthVerifier {
       credentials: {
         type: 'standard',
         aud: this.ownDid,
-        iss: sub,
+        iss: sub as DidString | `${DidString}#${string}`,
       },
     }
   }
@@ -294,7 +306,10 @@ export class AuthVerifier {
       aud: string | null
       lxmCheck?: (method?: string) => boolean
     },
-  ) {
+  ): Promise<{
+    iss: DidString | `${DidString}#${string}`
+    aud: string
+  }> {
     const getSigningKey = async (
       iss: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
@@ -399,6 +414,7 @@ export class AuthVerifier {
       include3pBlocks: includeTakedownsAnd3pBlocks,
       canPerformTakedown,
       isModService,
+      skipViewerBlocks: isModService && viewer !== null,
     }
   }
 }

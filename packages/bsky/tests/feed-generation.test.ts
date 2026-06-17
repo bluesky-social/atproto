@@ -1,5 +1,14 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import {
+  AppBskyFeedDefs,
+  AppBskyFeedGetActorFeeds,
+  AppBskyFeedGetFeed,
+  AtUri,
+  AtpAgent,
+  XRPCError,
+  ids,
+} from '@atproto/api'
 import { TID } from '@atproto/common'
 import {
   RecordRef,
@@ -8,17 +17,9 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError, MethodHandler } from '@atproto/xrpc-server'
-import { ids } from '../src/lexicon/lexicons'
-import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
-import { OutputSchema as GetActorFeedsOutputSchema } from '../src/lexicon/types/app/bsky/feed/getActorFeeds'
-import { OutputSchema as GetFeedOutputSchema } from '../src/lexicon/types/app/bsky/feed/getFeed'
-import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { forSnapshot, paginateAll } from './_util'
+import { SkeletonHandler, app } from '@atproto/pds'
+import { AuthRequiredError } from '@atproto/xrpc-server'
+import { forSnapshot, paginateAll } from './_util.js'
 
 describe('feed generation', () => {
   let network: TestNetwork
@@ -45,8 +46,8 @@ describe('feed generation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -250,7 +251,7 @@ describe('feed generation', () => {
     await sc.like(sc.dids.carol, feedUriAllRef)
     await network.processAll()
 
-    const results = (results: GetActorFeedsOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetActorFeeds.OutputSchema[]) =>
       results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
@@ -673,7 +674,7 @@ describe('feed generation', () => {
     })
 
     it('paginates, handling replies and reposts.', async () => {
-      const results = (results: GetFeedOutputSchema[]) =>
+      const results = (results: AppBskyFeedGetFeed.OutputSchema[]) =>
         results.flatMap((res) => res.feed)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.getFeed(
@@ -689,7 +690,9 @@ describe('feed generation', () => {
         return res.data
       }
 
-      const paginatedAll: FeedViewPost[] = results(await paginateAll(paginator))
+      const paginatedAll: AppBskyFeedDefs.FeedViewPost[] = results(
+        await paginateAll(paginator),
+      )
 
       // Unknown post uri is omitted
       expect(paginatedAll.map((item) => item.post.uri)).toEqual([
@@ -835,18 +838,13 @@ describe('feed generation', () => {
         | 'bad-pagination-cursor'
         | 'needs-auth'
         | 'accepts-interactions',
-    ): MethodHandler<
-      void,
-      AppBskyFeedGetFeedSkeleton.QueryParams,
-      AppBskyFeedGetFeedSkeleton.HandlerInput,
-      AppBskyFeedGetFeedSkeleton.HandlerOutput
-    > =>
+    ): SkeletonHandler =>
     async ({ req, params }) => {
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')
       }
       const { limit, cursor } = params
-      const candidates: SkeletonFeedPost[] = [
+      const candidates: app.bsky.feed.defs.SkeletonFeedPost[] = [
         { post: sc.posts[sc.dids.alice][0].ref.uriStr },
         { post: sc.posts[sc.dids.bob][0].ref.uriStr },
         { post: sc.posts[sc.dids.carol][0].ref.uriStr },
@@ -868,9 +866,15 @@ describe('feed generation', () => {
             repost: sc.reposts[sc.dids.carol][0].uriStr,
           },
         },
-      ].map((item, i) => ({ ...item, feedContext: `item-${i}` })) // add a deterministic context to test passthrough
+      ]
+
+      const candidatesWithContext = candidates.map(<I>(item: I, i: number) => ({
+        ...item,
+        feedContext: `item-${i}` as const,
+      })) // add a deterministic context to test passthrough
+
       const offset = cursor ? parseInt(cursor, 10) : 0
-      const fullFeed = candidates.filter((_, i) => {
+      const fullFeed = candidatesWithContext.filter((_, i) => {
         if (feedName === 'even') {
           return i % 2 === 0
         }
@@ -897,8 +901,9 @@ describe('feed generation', () => {
           feed: feedResults,
           cursor: cursorResult,
           reqId: 'req-id-abc-def-ghi',
-          $auth: jwtBody(req.headers.authorization), // for testing purposes
-        },
+          // @ts-expect-error for testing purposes
+          $auth: jwtBody(req.headers.authorization),
+        } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
       }
     }
 })

@@ -1,13 +1,14 @@
 import {
   InvalidRequestError,
   MethodNotImplementedError,
+  Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { assertLexPlatform, lexPlatformToProtoPlatform } from './util'
+import { AppContext } from '../../../../context.js'
+import { app } from '../../../../lexicons/index.js'
+import { assertLexPlatform, lexPlatformToProtoPlatform } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.unregisterPush({
+  server.add(app.bsky.notification.unregisterPush, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       if (!ctx.courierClient) {

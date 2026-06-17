@@ -11,7 +11,7 @@ help: ## Print info about all commands
 	@echo "NOTE: dependencies between commands are not automatic. Eg, you must run 'deps' and 'build' first, and after any changes"
 
 .PHONY: build
-build: ## Compile all modules
+build: codegen ## Compile all modules
 	pnpm build
 
 .PHONY: test
@@ -46,8 +46,13 @@ fmt-lexicons: ## Run syntax re-formatting, just on .json files
 deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile
 
+.PHONY: clean
+clean: ## Deletes all 'dist' and 'node_modules' directories (including nested)
+	find . -type d \( -name "dist" -o -name "node_modules" \) -prune -exec rm -rf {} +
+
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
-	nvm install 18
-	nvm use 18
+	nvm install
+	nvm use
 	corepack enable
+	corepack install

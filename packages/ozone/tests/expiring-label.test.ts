@@ -5,7 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 
 describe('expiring label', () => {
   let network: TestNetwork
@@ -18,7 +18,7 @@ describe('expiring label', () => {
       dbPostgresSchema: 'ozone_expiring_label_test',
     })
     sc = network.getSeedClient()
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()

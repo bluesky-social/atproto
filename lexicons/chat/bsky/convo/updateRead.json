@@ -4,6 +4,8 @@
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Updates the read state of a conversation from, optionally specifying the last read message.",
+      "errors": [{ "name": "InvalidConvo" }],
       "input": {
         "encoding": "application/json",
         "schema": {

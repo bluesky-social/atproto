@@ -3,11 +3,12 @@ import {
   AuthorizeOptions,
   OAuthClient,
   OAuthSession,
+  RuntimeImplementation,
 } from '@atproto/oauth-client'
-import { default as NativeModule } from './ExpoAtprotoOAuthClientModule'
-import { ExpoOAuthClientInterface } from './expo-oauth-client-interface'
-import { ExpoOAuthClientOptions } from './expo-oauth-client-options'
-import { ExpoKey } from './utils/expo-key'
+import { default as NativeModule } from './ExpoAtprotoOAuthClientModule.js'
+import { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
+import { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
+import { ExpoKey } from './utils/expo-key.js'
 import {
   AuthorizationServerMetadataCache,
   DidCache,
@@ -16,10 +17,17 @@ import {
   ProtectedResourceMetadataCache,
   SessionStore,
   StateStore,
-} from './utils/stores'
+} from './utils/stores.js'
 
 export const CUSTOM_URI_SCHEME_REGEX = /^(?:[^.]+(?:\.[^.]+)+):\/(?:[^/].*)?$/
 const isCustomUriScheme = (uri: string) => CUSTOM_URI_SCHEME_REGEX.test(uri)
+
+const runtimeImplementation: RuntimeImplementation = {
+  createKey: async (algs) => ExpoKey.generate(algs),
+  digest: async (bytes, { name }) =>
+    NativeModule.digest(bytes, name) as Promise<Uint8Array<ArrayBuffer>>,
+  getRandomValues: async (length) => NativeModule.getRandomValues(length),
+}
 
 export class ExpoOAuthClient
   extends OAuthClient
@@ -34,11 +42,7 @@ export class ExpoOAuthClient
       ...options,
       responseMode: options.responseMode ?? 'query',
       keyset: undefined,
-      runtimeImplementation: {
-        createKey: async (algs) => ExpoKey.generate(algs),
-        digest: async (bytes, { name }) => NativeModule.digest(bytes, name),
-        getRandomValues: async (length) => NativeModule.getRandomValues(length),
-      },
+      runtimeImplementation,
       sessionStore: stack.use(new SessionStore()),
       stateStore: stack.use(new StateStore()),
       didCache: stack.use(new DidCache()),
@@ -51,8 +55,6 @@ export class ExpoOAuthClient
         new ProtectedResourceMetadataCache(),
       ),
     })
-
-    stack.defer(() => super[Symbol.dispose]?.())
 
     this.#disposables = stack.move()
   }
@@ -81,11 +83,10 @@ export class ExpoOAuthClient
       display: options?.display ?? 'touch',
     })
 
-    console.debug('openAuthSessionAsync', { url, redirectUri })
-
-    const result = await openAuthSessionAsync(url.toString(), redirectUri)
-
-    console.debug('AUTH SESSION RESULT', result)
+    const result = await openAuthSessionAsync(url.toString(), redirectUri, {
+      dismissButtonStyle: 'cancel', // iOS only
+      preferEphemeralSession: false, // iOS only
+    })
 
     if (result.type === 'success') {
       const callbackUrl = new URL(result.url)
@@ -103,7 +104,7 @@ export class ExpoOAuthClient
     }
   }
 
-  [Symbol.dispose]() {
+  async [Symbol.asyncDispose]() {
     this.#disposables.dispose()
   }
 }

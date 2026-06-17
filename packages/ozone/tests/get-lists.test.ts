@@ -7,8 +7,8 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { ids } from '../src/lexicon/lexicons.js'
+import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
 
 describe('admin get lists', () => {
   let network: TestNetwork
@@ -24,8 +24,8 @@ describe('admin get lists', () => {
       dbPostgresSchema: 'ozone_admin_get_lists',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
-    appviewAgent = network.bsky.getClient()
+    agent = ozone.getAgent()
+    appviewAgent = network.bsky.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

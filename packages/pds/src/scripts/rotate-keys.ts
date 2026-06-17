@@ -1,14 +1,16 @@
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import * as plc from '@did-plc/lib'
 import PQueue from 'p-queue'
 import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { ActorStore } from '../actor-store/actor-store'
-import { SyncEvtData } from '../repo'
-import { Sequencer } from '../sequencer'
-import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db'
-import { parseIntArg } from './util'
+import { DidString, isDidString } from '@atproto/lex'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { SyncEvtData } from '../repo/index.js'
+import { Sequencer } from '../sequencer/index.js'
+import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db.js'
+import { parseIntArg } from './util.js'
 
 export type RotateKeysContext = {
   sequencer: Sequencer
@@ -21,6 +23,7 @@ export type RotateKeysContext = {
 
 export const rotateKeys = async (ctx: RotateKeysContext, args: string[]) => {
   const dids = args
+  assert(dids.every(isDidString), 'All arguments must be DIDs')
   await rotateKeysForRepos(ctx, dids, 10)
 }
 
@@ -40,6 +43,8 @@ export const rotateKeysFromFile = async (
     .map((did) => did.trim())
     .filter((did) => did.startsWith('did:plc'))
 
+  assert(dids.every(isDidString), 'File contains invalid DIDs')
+
   await rotateKeysForRepos(ctx, dids, concurrency)
 }
 
@@ -57,7 +62,7 @@ export const rotateKeysRecovery = async (
     .select('did')
     .where('new_account.published', '=', 0)
     .execute()
-  const dids = rows.map((r) => r.did)
+  const dids = rows.map((r) => r.did as DidString)
 
   await rotateKeysForRepos(ctx, dids, concurrency, async (did) => {
     await recoveryDb.db
@@ -70,9 +75,9 @@ export const rotateKeysRecovery = async (
 
 const rotateKeysForRepos = async (
   ctx: RotateKeysContext,
-  dids: string[],
+  dids: DidString[],
   concurrency: number,
-  onSuccess?: (did: string) => Promise<void>,
+  onSuccess?: (did: DidString) => Promise<void>,
 ) => {
   const queue = new PQueue({ concurrency })
   let completed = 0
@@ -95,13 +100,13 @@ const rotateKeysForRepos = async (
         return
       }
       try {
-        await ctx.sequencer.sequenceIdentityEvt(did)
+        await ctx.sequencer.sequenceIdentity(did)
       } catch (err) {
         console.error(`failed to sequence new identity evt for ${did}: ${err}`)
         return
       }
       try {
-        await ctx.sequencer.sequenceSyncEvt(did, syncData)
+        await ctx.sequencer.sequenceSync(did, syncData)
       } catch (err) {
         console.error(`failed to sequence for ${did}: ${err}`)
         return
@@ -119,7 +124,7 @@ const rotateKeysForRepos = async (
   console.log('DONE')
 }
 
-const updatePlcSigningKey = async (ctx: RotateKeysContext, did: string) => {
+const updatePlcSigningKey = async (ctx: RotateKeysContext, did: DidString) => {
   const updateTo = await ctx.actorStore.keypair(did)
   const currSigningKey = await ctx.idResolver.did.resolveAtprotoKey(did, true)
   if (updateTo.did() === currSigningKey) {

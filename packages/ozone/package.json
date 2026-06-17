@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.1.154",
+  "version": "0.2.4",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -13,19 +13,18 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/ozone"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
-    "build": "tsc --build tsconfig.build.json",
+    "codegen:lex": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "prebuild": "[ -f ./src/lexicon/index.ts ] && [ -z \"$(find ../../lexicons -newer ./src/lexicon/index.ts -type f -print -quit)\" ] || pnpm run codegen:lex",
+    "build": "tsgo --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-redis-and-db.sh jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "jest --updateSnapshot",
+    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -34,6 +33,7 @@
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
+    "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
@@ -41,15 +41,15 @@
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
-    "kysely": "^0.22.0",
+    "kysely": "^0.29.2",
     "lande": "^1.0.10",
-    "multiformats": "^9.9.0",
-    "p-queue": "^6.6.2",
+    "multiformats": "^13.0.0",
+    "p-queue": "^8.0.0",
     "pg": "^8.10.0",
     "pino-http": "^8.2.1",
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
-    "uint8arrays": "3.0.0",
+    "uint8arrays": "^5.0.0",
     "undici": "^6.14.1",
     "ws": "^8.12.0"
   },
@@ -57,13 +57,20 @@
     "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",
+    "@jest/globals": "^30.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
-    "@types/pg": "^8.6.6",
+    "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
-    "jest": "^28.1.2",
-    "ts-node": "^10.8.2",
-    "typescript": "^5.6.3"
+    "jest": "^30.0.0",
+    "ts-node": "^10.8.2"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

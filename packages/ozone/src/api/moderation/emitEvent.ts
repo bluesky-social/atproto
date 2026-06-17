@@ -1,14 +1,19 @@
-import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { ids } from '../../lexicon/lexicons'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
+import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { ids } from '../../lexicon/lexicons.js'
 import {
   ModEventTag,
   isAgeAssuranceEvent,
   isAgeAssuranceOverrideEvent,
+  isAgeAssurancePurgeEvent,
   isModEventAcknowledge,
+  isModEventDivert,
   isModEventEmail,
   isModEventLabel,
   isModEventMuteReporter,
@@ -18,15 +23,17 @@ import {
   isModEventTakedown,
   isModEventUnmuteReporter,
   isRevokeAccountCredentialsEvent,
-} from '../../lexicon/types/tools/ozone/moderation/defs'
-import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
-import { subjectFromInput } from '../../mod-service/subject'
-import { SettingService } from '../../setting/service'
-import { TagService } from '../../tag-service'
-import { getTagForReport } from '../../tag-service/util'
-import { retryHttp } from '../../util'
-import { getEventType } from '../util'
-import { assertProtectedTagAction, getProtectedTags } from './util'
+} from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import { httpLogger } from '../../logger.js'
+import { processReportAction } from '../../mod-service/report.js'
+import { subjectFromInput } from '../../mod-service/subject.js'
+import { SettingService } from '../../setting/service.js'
+import { TagService } from '../../tag-service/index.js'
+import { getTagForReport } from '../../tag-service/util.js'
+import { retryHttp } from '../../util.js'
+import { getEventType } from '../util.js'
+import { assertProtectedTagAction, getProtectedTags } from './util.js'
 
 const handleModerationEvent = async ({
   ctx,
@@ -66,6 +73,17 @@ const handleModerationEvent = async ({
     if (!auth.credentials.isModerator) {
       throw new AuthRequiredError(
         'Must be a full moderator to override age assurance',
+      )
+    }
+  }
+
+  if (isAgeAssurancePurgeEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new ForbiddenError(
+        'Must be a moderator to purge age assurance events',
       )
     }
   }
@@ -165,13 +183,20 @@ const handleModerationEvent = async ({
       throw new InvalidRequestError('Email can only be sent to a repo subject')
     }
     const { content, subjectLine } = event
-    await retryHttp(() =>
-      ctx.modService(db).sendEmail({
-        subject: subjectLine,
-        content,
-        recipientDid: subject.did,
-      }),
-    )
+    // on error, don't fail the whole event. instead, log the event data with isDelivered false
+    try {
+      await retryHttp(() =>
+        ctx.modService(db).sendEmail({
+          subject: subjectLine,
+          content,
+          recipientDid: subject.did,
+        }),
+      )
+      event.isDelivered = true
+    } catch (err) {
+      event.isDelivered = false
+      httpLogger.error({ err, event }, 'failed to send mod event email')
+    }
   }
 
   if (isModEventDivert(event) && subject.isRecord()) {
@@ -216,6 +241,21 @@ const handleModerationEvent = async ({
       }
     }
 
+    // Validate reportAction if provided (actual processing happens after event is logged)
+    if (input.body.reportAction) {
+      // Validate that at least one targeting criteria is provided
+      const { reportAction } = input.body
+      if (
+        !reportAction.ids?.length &&
+        !reportAction.types?.length &&
+        !reportAction.all
+      ) {
+        throw new InvalidRequestError(
+          'reportAction must specify ids, types, or all',
+        )
+      }
+    }
+
     const result = await moderationTxn.logEvent({
       event,
       subject,
@@ -223,6 +263,28 @@ const handleModerationEvent = async ({
       modTool: input.body.modTool,
       externalId,
     })
+
+    // Update reports if reportAction was provided
+    if (input.body.reportAction) {
+      const subjectUri = subject.isRecord() ? subject.uri : null
+      try {
+        await processReportAction({
+          db: dbTxn,
+          reportAction: input.body.reportAction,
+          subjectDid: subject.did,
+          subjectUri,
+          eventId: result.event.id,
+          eventType: event.$type,
+          createdBy,
+        })
+      } catch (err) {
+        throw new InvalidRequestError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to process report action',
+        )
+      }
+    }
 
     const tagService = new TagService(
       subject,
@@ -239,7 +301,16 @@ const handleModerationEvent = async ({
     if (subject.isRepo()) {
       if (isTakedownEvent) {
         const isSuspend = !!result.event.durationInHours
-        await moderationTxn.takedownRepo(subject, result.event.id, isSuspend)
+        await moderationTxn.takedownRepo(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+          isSuspend,
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRepo(subject)
       }
@@ -247,7 +318,15 @@ const handleModerationEvent = async ({
 
     if (subject.isRecord()) {
       if (isTakedownEvent) {
-        await moderationTxn.takedownRecord(subject, result.event.id)
+        await moderationTxn.takedownRecord(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRecord(subject)
       }
@@ -290,36 +369,44 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.emitEvent({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
-      const moderationEvent = await handleModerationEvent({
-        input,
-        auth,
-        ctx,
-      })
-
-      // On divert events, we need to automatically take down the blobs
-      if (isModEventDivert(input.body.event)) {
-        await handleModerationEvent({
+      try {
+        const moderationEvent = await handleModerationEvent({
+          input,
           auth,
           ctx,
-          input: {
-            ...input,
-            body: {
-              ...input.body,
-              event: {
-                ...input.body.event,
-                $type: 'tools.ozone.moderation.defs#modEventTakedown',
-                comment:
-                  '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
-              },
-              modTool: input.body.modTool,
-            },
-          },
         })
-      }
 
-      return {
-        encoding: 'application/json',
-        body: moderationEvent,
+        // On divert events, we need to automatically take down the blobs
+        if (isModEventDivert(input.body.event)) {
+          await handleModerationEvent({
+            auth,
+            ctx,
+            input: {
+              ...input,
+              body: {
+                ...input.body,
+                event: {
+                  ...input.body.event,
+                  $type: 'tools.ozone.moderation.defs#modEventTakedown',
+                  comment:
+                    '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
+                },
+                modTool: input.body.modTool,
+              },
+            },
+          })
+        }
+
+        return {
+          encoding: 'application/json',
+          body: moderationEvent,
+        }
+      } catch (err) {
+        httpLogger.error(
+          { err, body: input.body },
+          'failed to emit moderation event',
+        )
+        throw err
       }
     },
   })

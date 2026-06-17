@@ -5,9 +5,9 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { SeverityLevelSettingKey } from '../src/setting/constants'
-import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons.js'
+import { SeverityLevelSettingKey } from '../src/setting/constants.js'
+import { forSnapshot } from './_util.js'
 
 const strikeConfig = {
   'sev-0': { strikeCount: 0 },
@@ -56,7 +56,7 @@ describe('account-strikes', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_account_strikes',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)

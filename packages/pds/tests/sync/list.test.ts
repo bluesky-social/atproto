@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import basicSeed from '../seeds/basic.js'
 
 describe('sync listing', () => {
   let network: TestNetworkNoAppView
@@ -11,7 +11,7 @@ describe('sync listing', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sync_list',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
   })

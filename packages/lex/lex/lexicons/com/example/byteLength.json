@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.example.byteLength",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "bytes",
+            "minLength": 2,
+            "maxLength": 4
+          }
+        }
+      }
+    }
+  }
+}

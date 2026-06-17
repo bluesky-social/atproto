@@ -9,46 +9,55 @@ import http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
+// eslint-disable-next-line import/no-named-as-default-member
+const { createHttpTerminator } = httpTerminator
+type HttpTerminator = ReturnType<typeof createHttpTerminator>
+import { DAY, SECOND } from '@atproto/common'
 import {
-  MemoryRateLimiter,
   MethodHandler,
-  RedisRateLimiter,
   ResponseType,
   XRPCError,
+  createServer,
 } from '@atproto/xrpc-server'
-import apiRoutes from './api'
-import * as authRoutes from './auth-routes'
-import * as basicRoutes from './basic-routes'
-import { ServerConfig, ServerSecrets } from './config'
-import { AppContext, AppContextOptions } from './context'
-import * as error from './error'
-import { createServer } from './lexicon'
-import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { loggerMiddleware } from './logger'
-import { proxyHandler } from './pipethrough'
-import compression from './util/compression'
-import * as wellKnown from './well-known'
+import apiRoutes from './api/index.js'
+import * as authRoutes from './auth-routes.js'
+import * as basicRoutes from './basic-routes.js'
+import { ServerConfig, ServerSecrets } from './config/index.js'
+import { AppContext, AppContextOptions } from './context.js'
+import * as error from './error.js'
+import { app } from './lexicons.js'
+import { loggerMiddleware } from './logger.js'
+import { proxyHandler } from './pipethrough.js'
+import { buildRateLimitsConfig } from './rate-limits.js'
+import compression from './util/compression.js'
+import * as wellKnown from './well-known.js'
 
-export { createSecretKeyObject } from './auth-verifier'
-export * from './config'
-export { AppContext } from './context'
-export { Database } from './db'
-export { DiskBlobStore } from './disk-blobstore'
-export { createServer as createLexiconServer } from './lexicon'
-export { httpLogger } from './logger'
-export { type CommitDataWithOps, type PreparedWrite } from './repo'
-export * as repoPrepare from './repo/prepare'
-export { scripts } from './scripts'
-export * as sequencer from './sequencer'
+export * from './lexicons.js'
+export {
+  bearerTokenFromReq,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier.js'
+export * from './config/index.js'
+export { AppContext } from './context.js'
+export { Database } from './db/index.js'
+export { DiskBlobStore } from './disk-blobstore.js'
+export { httpLogger } from './logger.js'
+export { type CommitDataWithOps, type PreparedWrite } from './repo/index.js'
+export * as repoPrepare from './repo/prepare.js'
+export { scripts } from './scripts/index.js'
+export * as sequencer from './sequencer/index.js'
 
-// Legacy export for backwards compatibility
+/**
+ * @deprecated Legacy export for backwards compatibility
+ */
 export type SkeletonHandler = MethodHandler<
   void,
-  AppBskyFeedGetFeedSkeleton.QueryParams,
-  AppBskyFeedGetFeedSkeleton.HandlerInput,
-  AppBskyFeedGetFeedSkeleton.HandlerOutput
+  app.bsky.feed.getFeedSkeleton.$Params,
+  void,
+  app.bsky.feed.getFeedSkeleton.$Output
 >
 
 export class PDS {
@@ -73,8 +82,8 @@ export class PDS {
 
     const { rateLimits } = ctx.cfg
 
-    const server = createServer({
-      validateResponse: false,
+    const server = createServer([], {
+      validateResponse: cfg.service.devMode,
       payload: {
         jsonLimit: 150 * 1024, // 150kb
         textLimit: 100 * 1024, // 100kb
@@ -103,45 +112,7 @@ export class PDS {
 
         return XRPCError.fromError(err)
       },
-      rateLimits: rateLimits.enabled
-        ? {
-            creator: ctx.redisScratch
-              ? (opts) => new RedisRateLimiter(ctx.redisScratch, opts)
-              : (opts) => new MemoryRateLimiter(opts),
-            bypass: ({ req }) => {
-              const { bypassKey, bypassIps } = rateLimits
-              if (
-                bypassKey &&
-                bypassKey === req.headers['x-ratelimit-bypass']
-              ) {
-                return true
-              }
-              if (bypassIps && bypassIps.includes(req.ip)) {
-                return true
-              }
-              return false
-            },
-            global: [
-              {
-                name: 'global-ip',
-                durationMs: 5 * MINUTE,
-                points: 3000,
-              },
-            ],
-            shared: [
-              {
-                name: 'repo-write-hour',
-                durationMs: HOUR,
-                points: 5000, // creates=3, puts=2, deletes=1
-              },
-              {
-                name: 'repo-write-day',
-                durationMs: DAY,
-                points: 35000, // creates=3, puts=2, deletes=1
-              },
-            ],
-          }
-        : undefined,
+      rateLimits: buildRateLimitsConfig(rateLimits, ctx.redisScratch),
     })
 
     apiRoutes(server, ctx)
@@ -161,7 +132,7 @@ export class PDS {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    app.use(server.xrpc.router)
+    app.use(server.router)
     app.use(error.handler)
 
     return new PDS({

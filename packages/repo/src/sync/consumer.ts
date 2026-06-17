@@ -1,18 +1,22 @@
-import { CID } from 'multiformats/cid'
-import { BlockMap } from '../block-map'
-import { readCarWithRoot } from '../car'
-import { DataDiff } from '../data-diff'
-import { MST } from '../mst'
-import { ReadableRepo } from '../readable-repo'
-import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
+import { Cid } from '@atproto/lex-data'
+import { BlockMap } from '../block-map.js'
+import { readCarWithRoot } from '../car.js'
+import { DataDiff } from '../data-diff.js'
+import { MST } from '../mst/index.js'
+import { ReadableRepo } from '../readable-repo.js'
+import {
+  MemoryBlockstore,
+  ReadableBlockstore,
+  SyncStorage,
+} from '../storage/index.js'
 import {
   RecordCidClaim,
   RecordClaim,
   VerifiedDiff,
   VerifiedRepo,
   def,
-} from '../types'
-import * as util from '../util'
+} from '../types.js'
+import * as util from '../util.js'
 
 export const verifyRepoCar = async (
   carBytes: Uint8Array,
@@ -25,7 +29,7 @@ export const verifyRepoCar = async (
 
 export const verifyRepo = async (
   blocks: BlockMap,
-  head: CID,
+  head: Cid,
   did?: string,
   signingKey?: string,
   opts?: { ensureLeaves?: boolean },
@@ -52,7 +56,7 @@ export const verifyDiffCar = async (
 export const verifyDiff = async (
   repo: ReadableRepo | null,
   updateBlocks: BlockMap,
-  updateRoot: CID,
+  updateRoot: Cid,
   did?: string,
   signingKey?: string,
   opts?: { ensureLeaves?: boolean },
@@ -103,7 +107,7 @@ export const verifyDiff = async (
 // @NOTE only verifies the root, not the repo contents
 const verifyRepoRoot = async (
   storage: ReadableBlockstore,
-  head: CID,
+  head: Cid,
   did?: string,
   signingKey?: string,
 ): Promise<ReadableRepo> => {
@@ -155,7 +159,7 @@ export const verifyProofs = async (
         unverified.push(claim)
       }
     } else {
-      if (claim.cid.equals(found)) {
+      if (found?.equals(claim.cid)) {
         verified.push(claim)
       } else {
         unverified.push(claim)

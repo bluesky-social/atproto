@@ -3,17 +3,19 @@ import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { renameIfExists, rmIfExists } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
+// import package to avoid type errors from circular dep with dev-env
+import { type AppContext, scripts } from '@atproto/pds'
 import { verifyRepoCar } from '@atproto/repo'
-import { AppContext, scripts } from '../dist'
+import { DidString } from '@atproto/syntax'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let sc: SeedClient
   let agent: AtpAgent
-  let alice: string
-  let bob: string
-  let elli: string
+  let alice: DidString
+  let bob: DidString
+  let elli: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -21,7 +23,7 @@ describe('recovery', () => {
     })
     ctx = network.pds.ctx
     sc = network.getSeedClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob

@@ -1,6 +1,6 @@
-import { CID } from 'multiformats/cid'
-import { BlockMap } from '../block-map'
-import { ReadableBlockstore } from './readable-blockstore'
+import { Cid } from '@atproto/lex-data'
+import { BlockMap } from '../block-map.js'
+import { ReadableBlockstore } from './readable-blockstore.js'
 
 export class SyncStorage extends ReadableBlockstore {
   constructor(
@@ -10,13 +10,13 @@ export class SyncStorage extends ReadableBlockstore {
     super()
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array | null> {
+  async getBytes(cid: Cid): Promise<Uint8Array | null> {
     const got = await this.staged.getBytes(cid)
     if (got) return got
     return this.saved.getBytes(cid)
   }
 
-  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
     const fromStaged = await this.staged.getBlocks(cids)
     const fromSaved = await this.saved.getBlocks(fromStaged.missing)
     const blocks = fromStaged.blocks
@@ -27,7 +27,7 @@ export class SyncStorage extends ReadableBlockstore {
     }
   }
 
-  async has(cid: CID): Promise<boolean> {
+  async has(cid: Cid): Promise<boolean> {
     return (await this.staged.has(cid)) || (await this.saved.has(cid))
   }
 }

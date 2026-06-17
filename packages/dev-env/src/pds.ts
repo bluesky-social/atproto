@@ -5,10 +5,11 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
+import { Client } from '@atproto/lex'
 import * as pds from '@atproto/pds'
 import { createSecretKeyObject } from '@atproto/pds'
-import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const'
-import { PdsConfig } from './types'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const.js'
+import { PdsConfig } from './types.js'
 
 export class TestPds {
   constructor(
@@ -77,10 +78,16 @@ export class TestPds {
     return this.server.ctx
   }
 
-  getClient(): AtpAgent {
+  getAgent(): AtpAgent {
     const agent = new AtpAgent({ service: this.url })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
+  }
+
+  getClient(): Client {
+    const client = new Client({ service: this.url })
+    client.setLabelers([EXAMPLE_LABELER])
+    return client
   }
 
   adminAuth(): string {

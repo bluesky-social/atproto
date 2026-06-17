@@ -1,8 +1,7 @@
-import { AtpAgent } from '@atproto/api'
-import { QueryParams as SearchPostsQueryParams } from '@atproto/api/src/client/types/app/bsky/feed/searchPosts'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AppBskyFeedSearchPosts, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { DatabaseSchema } from '../../src'
-import { ids } from '../../src/lexicon/lexicons'
+import { DatabaseSchema } from '../../src/index.js'
 
 const TAG_HIDE = 'hide'
 
@@ -29,9 +28,9 @@ describe('appview search', () => {
         searchTagsHide: new Set([TAG_HIDE]),
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
-    ozoneAgent = network.ozone.getClient()
+    ozoneAgent = network.ozone.getAgent()
     await basicSeed(sc)
 
     alice = sc.dids.alice
@@ -64,7 +63,7 @@ describe('appview search', () => {
     type TestCase = {
       name: string
       viewer: () => string
-      queryParams: () => SearchPostsQueryParams
+      queryParams: () => AppBskyFeedSearchPosts.QueryParams
       expectedPostUris: () => string[]
     }
 

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
-import { InvalidTidError, ensureValidTid } from '../src'
+import { describe, expect, it } from 'vitest'
+import { InvalidTidError, ensureValidTid } from '../src/index.js'
 
 describe('tid validation', () => {
   const expectValid = (t: string) => {

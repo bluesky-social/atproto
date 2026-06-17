@@ -1,9 +1,8 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { AppBskyActorSearchActors, AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as SearchActorsOutputSchema } from '../../src/lexicon/types/app/bsky/actor/searchActors'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface
@@ -12,12 +11,13 @@ describe.skip('pds actor search views', () => {
   let agent: AtpAgent
   let sc: SeedClient
   let headers: { [s: string]: string }
+  let headersTypeahead: { [s: string]: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_search',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
@@ -44,9 +44,13 @@ describe.skip('pds actor search views', () => {
     await network.processAll(50000)
     headers = await network.serviceHeaders(
       Object.values(sc.dids)[0],
+      ids.AppBskyActorSearchActors,
+    )
+    headersTypeahead = await network.serviceHeaders(
+      Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActorsTypeahead,
     )
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()
@@ -55,7 +59,7 @@ describe.skip('pds actor search views', () => {
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
@@ -93,7 +97,7 @@ describe.skip('pds actor search views', () => {
   it('typeahead gives empty result set when provided empty term', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: '' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     expect(result.data.actors).toEqual([])
@@ -102,14 +106,14 @@ describe.skip('pds actor search views', () => {
   it('typeahead applies limit', async () => {
     const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
 
     const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p', limit: 5 },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
@@ -131,7 +135,7 @@ describe.skip('pds actor search views', () => {
     const { data: authed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead(
         { term: 'car' },
-        { headers },
+        { headers: headersTypeahead },
       )
     const { data: unauthed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead({
@@ -189,7 +193,7 @@ describe.skip('pds actor search views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: SearchActorsOutputSchema[]) =>
+    const results = (results: AppBskyActorSearchActors.OutputSchema[]) =>
       results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.searchActors(
@@ -248,7 +252,7 @@ describe.skip('pds actor search views', () => {
     })
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
-      { headers },
+      { headers: headersTypeahead },
     )
     const handles = result.data.actors.map((u) => u.handle)
     expect(handles).toContain('carlos6.test')

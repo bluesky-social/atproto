@@ -8,8 +8,8 @@ import {
   basicSeed,
   createOzoneDid,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { LABELER_HEADER_NAME } from '../src/util'
+import { ids } from '../src/lexicon/lexicons.js'
+import { LABELER_HEADER_NAME } from '../src/util.js'
 
 describe('labels from 3p labelers', () => {
   let network: TestNetwork
@@ -43,8 +43,8 @@ describe('labels from 3p labelers', () => {
       pdsDid: network.pds.ctx.cfg.service.did,
     })
 
-    thirdPartyAgent = thirdPartyLabeler.getClient()
-    agent = ozone.getClient()
+    thirdPartyAgent = thirdPartyLabeler.getAgent()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     thirdPartyModClient = thirdPartyLabeler.getModClient()

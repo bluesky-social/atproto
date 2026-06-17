@@ -1,11 +1,11 @@
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import getRecommendedDidCredentials from './getRecommendedDidCredentials'
-import requestPlcOperationSignature from './requestPlcOperationSignature'
-import resolveHandle from './resolveHandle'
-import signPlcOperation from './signPlcOperation'
-import submitPlcOperation from './submitPlcOperation'
-import updateHandle from './updateHandle'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import getRecommendedDidCredentials from './getRecommendedDidCredentials.js'
+import requestPlcOperationSignature from './requestPlcOperationSignature.js'
+import resolveHandle from './resolveHandle.js'
+import signPlcOperation from './signPlcOperation.js'
+import submitPlcOperation from './submitPlcOperation.js'
+import updateHandle from './updateHandle.js'
 
 export default function (server: Server, ctx: AppContext) {
   resolveHandle(server, ctx)

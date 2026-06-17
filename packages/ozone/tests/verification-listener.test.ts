@@ -1,7 +1,7 @@
 import { Sender, WebSocketServer } from 'ws'
 import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('verification-listener', () => {
   let network: TestNetwork
@@ -30,7 +30,7 @@ describe('verification-listener', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
 
-    adminAgent = network.pds.getClient()
+    adminAgent = network.pds.getAgent()
     await adminAgent.login({
       identifier: sc.accounts[sc.dids.alice].handle,
       password: sc.accounts[sc.dids.alice].password,

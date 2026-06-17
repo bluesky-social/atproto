@@ -65,3 +65,14 @@ export function isHexDigit(code: number): boolean {
     (code >= 97 && code <= 102) // a-f
   )
 }
+
+export const canParse =
+  URL.canParse?.bind(URL) ??
+  ((url, base) => {
+    try {
+      new URL(url, base)
+      return true
+    } catch {
+      return false
+    }
+  })

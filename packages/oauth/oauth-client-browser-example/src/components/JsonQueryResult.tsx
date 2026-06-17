@@ -1,7 +1,13 @@
 import { UseQueryResult } from '@tanstack/react-query'
 import ReactJson from 'react-json-view'
 
-export function JsonQueryResult({ result }: { result: UseQueryResult }) {
+export function JsonQueryResult<T>({
+  result,
+  transform,
+}: {
+  result: UseQueryResult<T>
+  transform?: (data: T) => object
+}) {
   return (
     <div className="overflow-auto">
       {result.data !== undefined ? (
@@ -9,7 +15,7 @@ export function JsonQueryResult({ result }: { result: UseQueryResult }) {
           'null'
         ) : (
           <ReactJson
-            src={result.data}
+            src={transform ? transform(result.data) : result.data}
             indentWidth={2}
             displayDataTypes={false}
             name={false}

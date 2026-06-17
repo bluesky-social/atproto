@@ -4,9 +4,9 @@ import AtpAgent from '@atproto/api'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { LabelRow } from '../db/schema/label'
-import { DbRef } from '../db/types'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
+import { LabelRow } from '../db/schema/label.js'
+import { DbRef } from '../db/types.js'
+import { Label } from '../lexicon/types/com/atproto/label/defs.js'
 
 export type SignedLabel = Label & { sig: Uint8Array }
 
@@ -46,6 +46,9 @@ export const signLabel = async (
   signingKey: Keypair,
 ): Promise<SignedLabel> => {
   const { ver, src, uri, cid, val, neg, cts, exp } = label
+  // @TODO cborEncode now ignores undefined properties, so we might not need to
+  // reformat the label here. We might want to consider this if we ever re-visit
+  // the logic below:
   const reformatted = noUndefinedVals({
     ver: ver ?? 1,
     src,

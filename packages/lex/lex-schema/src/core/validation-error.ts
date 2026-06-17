@@ -1,0 +1,134 @@
+import { LexError } from '@atproto/lex-data'
+import { arrayAgg } from '../util/array-agg.js'
+import { ResultFailure } from './result.js'
+import {
+  Issue,
+  IssueInvalidType,
+  IssueInvalidValue,
+} from './validation-issue.js'
+
+/**
+ * Error thrown when validation fails.
+ *
+ * Contains detailed information about all validation issues encountered,
+ * including the path to each invalid value and descriptions of what was
+ * expected vs what was received.
+ *
+ * Extends {@link LexError} with the error name "InvalidRequest" for
+ * consistency with the AT Protocol error handling conventions.
+ *
+ * @example
+ * ```typescript
+ * const error = new LexValidationError([
+ *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
+ * ])
+ * console.log(error.message)
+ * // "Expected integer value type (got "some-string") at $.user.age"
+ *
+ * console.log(error.issues.length) // 1
+ * console.log(error.toJSON())
+ * // { error: 'InvalidRequest', message: '...', issues: [...] }
+ * ```
+ *
+ * @note this class implements {@link ResultFailure} to allow it to be used
+ * directly as a failure reason in validation results, avoiding the need for
+ * wrapping it in an additional object.
+ */
+export class LexValidationError
+  extends LexError<'InvalidRequest'>
+  implements ResultFailure<LexValidationError>
+{
+  name = 'LexValidationError'
+
+  /**
+   * The list of validation issues that caused this error.
+   *
+   * Issues are aggregated when possible (e.g., multiple invalid type issues
+   * at the same path are combined into a single issue listing all expected types).
+   */
+  readonly issues: readonly Issue[]
+
+  /**
+   * Creates a new validation error from a list of issues.
+   *
+   * Issues are automatically aggregated to combine related issues at the same
+   * path (e.g., multiple type expectations from a union schema).
+   *
+   * @param issues - The validation issues that caused this error
+   * @param options - Standard Error options (e.g., `cause`)
+   */
+  constructor(issues: Issue[], options?: ErrorOptions) {
+    const issuesAgg = aggregateIssues(issues)
+    super('InvalidRequest', issuesAgg.join(', '), options)
+    this.issues = issuesAgg
+  }
+
+  /** @see {ResultFailure.success} */
+  readonly success = false as const
+
+  /** @see {ResultFailure.reason} */
+  get reason() {
+    return this
+  }
+
+  /**
+   * Converts the error to a JSON-serializable object.
+   *
+   * @returns An object containing the error details and issues details
+   */
+  override toJSON() {
+    return {
+      ...super.toJSON(),
+      issues: this.issues.map((issue) => issue.toJSON()),
+    }
+  }
+}
+
+function aggregateIssues(issues: Issue[]): Issue[] {
+  // Quick path for common cases
+  if (issues.length <= 1) return issues
+  if (issues.length === 2 && issues[0].code !== issues[1].code) return issues
+
+  return [
+    // Aggregate invalid_type with identical paths
+    ...arrayAgg(
+      issues.filter((issue) => issue instanceof IssueInvalidType),
+      (a, b) => comparePropertyPaths(a.path, b.path),
+      (issues) =>
+        new IssueInvalidType(
+          issues[0].path,
+          issues[0].input,
+          Array.from(new Set(issues.flatMap((iss) => iss.expected))),
+        ),
+    ),
+    // Aggregate invalid_value with identical paths
+    ...arrayAgg(
+      issues.filter((issue) => issue instanceof IssueInvalidValue),
+      (a, b) => comparePropertyPaths(a.path, b.path),
+      (issues) =>
+        new IssueInvalidValue(
+          issues[0].path,
+          issues[0].input,
+          Array.from(new Set(issues.flatMap((iss) => iss.values))),
+        ),
+    ),
+    // Pass through other issues
+    ...issues.filter(
+      (issue) =>
+        !(issue instanceof IssueInvalidType) &&
+        !(issue instanceof IssueInvalidValue),
+    ),
+  ]
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+function comparePropertyPaths(
+  a: readonly PropertyKey[],
+  b: readonly PropertyKey[],
+) {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
+}

@@ -3,10 +3,6 @@ import { type Readable, pipeline } from 'node:stream'
 import createHttpError from 'http-errors'
 import { Awaitable } from '../util/type.js'
 import { negotiateResponseContent } from './request.js'
-import {
-  SecurityHeadersOptions,
-  setSecurityHeaders,
-} from './security-headers.js'
 import type { Handler, Middleware } from './types.js'
 
 export function writeRedirect(
@@ -79,18 +75,6 @@ export function staticJsonMiddleware(
   return function (req, res) {
     writeBuffer(res, buffer, staticOptions)
   }
-}
-
-export type WriteHtmlOptions = WriteResponseOptions & SecurityHeadersOptions
-
-export function writeHtml(
-  res: ServerResponse,
-  html: Buffer | string,
-  { contentType = 'text/html', ...options }: WriteHtmlOptions = {},
-): void {
-  // HTML pages should always be served with safety protection headers
-  setSecurityHeaders(res, options)
-  writeBuffer(res, html, { ...options, contentType })
 }
 
 export function cacheControlMiddleware(maxAge: number): Middleware<void> {

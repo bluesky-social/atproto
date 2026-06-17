@@ -4,6 +4,8 @@
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Mutes a conversation, preventing notifications related to it.",
+      "errors": [{ "name": "InvalidConvo" }],
       "input": {
         "encoding": "application/json",
         "schema": {

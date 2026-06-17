@@ -1,6 +1,6 @@
-import { AtpAgent } from '@atproto/api'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('profile views w/ debug field', () => {
   let network: TestNetwork
@@ -11,7 +11,7 @@ describe('profile views w/ debug field', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_profile_debug',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
   })

@@ -6,12 +6,12 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { forSnapshot } from './_util.js'
 
 describe('admin get multiple subjects with all relevant details', () => {
   let network: TestNetwork
@@ -25,7 +25,7 @@ describe('admin get multiple subjects with all relevant details', () => {
       dbPostgresSchema: 'ozone_admin_get_subjects',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

@@ -1,4 +1,23 @@
-export * from './aturi_validation'
+import {
+  AtIdentifierString,
+  ensureValidAtIdentifier,
+  isDidIdentifier,
+} from './at-identifier.js'
+import { AtUriString } from './aturi_validation.js'
+import { DidString, InvalidDidError } from './did.js'
+import { NsidString, ensureValidNsid } from './nsid.js'
+import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
+
+export * from './aturi_validation.js'
+
+// Re-export types used in public interface
+export type {
+  AtIdentifierString,
+  AtUriString,
+  DidString,
+  NsidString,
+  RecordKeyString,
+}
 
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
@@ -8,32 +27,23 @@ const RELATIVE_REGEX = /^(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 
 export class AtUri {
   hash: string
-  host: string
+  host: AtIdentifierString
   pathname: string
   searchParams: URLSearchParams
 
-  constructor(uri: string, base?: string) {
-    let parsed
-    if (base) {
-      parsed = parse(base)
-      if (!parsed) {
-        throw new Error(`Invalid at uri: ${base}`)
-      }
-      const relativep = parseRelative(uri)
-      if (!relativep) {
-        throw new Error(`Invalid path: ${uri}`)
-      }
-      Object.assign(parsed, relativep)
-    } else {
-      parsed = parse(uri)
-      if (!parsed) {
-        throw new Error(`Invalid at uri: ${uri}`)
-      }
-    }
+  constructor(uri: string, base?: string | AtUri) {
+    const parsed =
+      base !== undefined
+        ? typeof base === 'string'
+          ? Object.assign(parse(base), parseRelative(uri))
+          : Object.assign({ host: base.host }, parseRelative(uri))
+        : parse(uri)
 
-    this.hash = parsed.hash
+    ensureValidAtIdentifier(parsed.host)
+
+    this.hash = parsed.hash ?? ''
     this.host = parsed.host
-    this.pathname = parsed.pathname
+    this.pathname = parsed.pathname ?? ''
     this.searchParams = parsed.searchParams
   }
 
@@ -49,14 +59,21 @@ export class AtUri {
   }
 
   get origin() {
-    return `at://${this.host}`
+    return `at://${this.host}` as const
   }
 
-  get hostname() {
+  get did(): DidString {
+    const { host } = this
+    if (isDidIdentifier(host)) return host
+    throw new InvalidDidError(`AtUri "${this}" does not have a DID hostname`)
+  }
+
+  get hostname(): AtIdentifierString {
     return this.host
   }
 
   set hostname(v: string) {
+    ensureValidAtIdentifier(v)
     this.host = v
   }
 
@@ -72,7 +89,18 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[0] || ''
   }
 
+  get collectionSafe(): NsidString {
+    const { collection } = this
+    ensureValidNsid(collection)
+    return collection
+  }
+
   set collection(v: string) {
+    ensureValidNsid(v)
+    this.unsafelySetCollection(v)
+  }
+
+  unsafelySetCollection(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     parts[0] = v
     this.pathname = parts.join('/')
@@ -82,9 +110,20 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[1] || ''
   }
 
+  get rkeySafe(): RecordKeyString {
+    const { rkey } = this
+    ensureValidRecordKey(rkey)
+    return rkey
+  }
+
   set rkey(v: string) {
+    ensureValidRecordKey(v)
+    this.unsafelySetRkey(v)
+  }
+
+  unsafelySetRkey(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
-    if (!parts[0]) parts[0] = 'undefined'
+    parts[0] ||= 'undefined'
     parts[1] = v
     this.pathname = parts.join('/')
   }
@@ -93,44 +132,66 @@ export class AtUri {
     return this.toString()
   }
 
-  toString() {
-    let path = this.pathname || '/'
-    if (!path.startsWith('/')) {
-      path = `/${path}`
+  toString(): AtUriString {
+    let pathname = this.pathname
+    if (pathname && !pathname.startsWith('/')) {
+      pathname = `/${pathname}`
     }
-    let qs = this.searchParams.toString()
-    if (qs && !qs.startsWith('?')) {
-      qs = `?${qs}`
+    while (pathname.endsWith('/')) {
+      pathname = pathname.slice(0, -1)
     }
-    let hash = this.hash
-    if (hash && !hash.startsWith('#')) {
-      hash = `#${hash}`
+    let qs = ''
+    if (this.searchParams.size) {
+      qs = `?${this.searchParams.toString()}`
     }
-    return `at://${this.host}${path}${qs}${hash}`
+    // @NOTE We keep the hash as-is, even if it doesn't start with a '/'.
+    let fragment = this.hash
+    if (fragment === '#') {
+      fragment = ''
+    } else if (fragment && !fragment.startsWith('#')) {
+      fragment = `#${fragment}`
+    }
+    return `at://${this.host}${pathname}${qs}${fragment}` as AtUriString
   }
 }
 
 function parse(str: string) {
-  const match = ATP_URI_REGEX.exec(str)
-  if (match) {
-    return {
-      hash: match[5] || '',
-      host: match[2] || '',
-      pathname: match[3] || '',
-      searchParams: new URLSearchParams(match[4] || ''),
-    }
+  const match = str.match(ATP_URI_REGEX) as null | {
+    0: string
+    1: string | undefined // proto
+    2: string // host
+    3: string | undefined // path
+    4: string | undefined // query
+    5: string | undefined // hash
   }
-  return undefined
+
+  if (!match) {
+    throw new Error(`Invalid AT uri: ${str}`)
+  }
+
+  return {
+    host: match[2],
+    hash: match[5],
+    pathname: match[3],
+    searchParams: new URLSearchParams(match[4]),
+  }
 }
 
 function parseRelative(str: string) {
-  const match = RELATIVE_REGEX.exec(str)
-  if (match) {
-    return {
-      hash: match[3] || '',
-      pathname: match[1] || '',
-      searchParams: new URLSearchParams(match[2] || ''),
-    }
+  const match = str.match(RELATIVE_REGEX) as null | {
+    0: string
+    1: string | undefined // path
+    2: string | undefined // query
+    3: string | undefined // hash
   }
-  return undefined
+
+  if (!match) {
+    throw new Error(`Invalid path: ${str}`)
+  }
+
+  return {
+    hash: match[3],
+    pathname: match[1],
+    searchParams: new URLSearchParams(match[2]),
+  }
 }

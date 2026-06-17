@@ -1,10 +1,12 @@
 import { Struct, Timestamp } from '@bufbuild/protobuf'
-import { v3 as murmurV3 } from 'murmurhash'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+// eslint-disable-next-line import/no-named-as-default-member
+import murmur from 'murmurhash'
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.updateSeen({
+  server.add(app.bsky.notification.updateSeen, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const viewer = auth.credentials.iss
@@ -45,5 +47,6 @@ function getNotifId(viewer: string, seenAt: Date) {
   const key = ['mark-read-generic', viewer, seenAt.getTime().toString()].join(
     '::',
   )
-  return murmurV3(key).toString(16)
+  // eslint-disable-next-line import/no-named-as-default-member
+  return murmur.v3(key).toString(16)
 }

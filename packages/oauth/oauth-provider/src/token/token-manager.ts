@@ -1,5 +1,5 @@
 import { SignedJwt, isSignedJwt } from '@atproto/jwk'
-import { LexiconResolutionError } from '@atproto/lexicon-resolver'
+import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   OAuthAccessToken,
@@ -113,7 +113,7 @@ export class TokenManager {
       .buildTokenScope(parameters.scope!)
       .catch((err) => {
         // Parse expected errors
-        if (err instanceof LexiconResolutionError) {
+        if (err instanceof LexResolverError) {
           throw new InvalidRequestError(err.message, err)
         }
 

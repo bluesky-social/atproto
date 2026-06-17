@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { TOOLS_OZONE_TEAM } from '../src/lexicon'
-import { ids } from '../src/lexicon/lexicons'
+import { TOOLS_OZONE_TEAM } from '../src/lexicon/index.js'
+import { ids } from '../src/lexicon/lexicons.js'
 
 describe('get-config', () => {
   let network: TestNetwork
@@ -12,7 +12,7 @@ describe('get-config', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_server_config',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

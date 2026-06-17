@@ -1,6 +1,6 @@
 import { useGetTokenInfoQuery } from '../queries/use-get-token-info-query.ts'
+import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
-import { Button } from './_button.tsx'
 
 export function TokenInfo() {
   const result = useGetTokenInfoQuery()
@@ -10,7 +10,7 @@ export function TokenInfo() {
       <h2>
         Token info
         <Button
-          onClick={() => result.refetch({ throwOnError: false })}
+          action={async () => result.refetch({ throwOnError: false })}
           className="ml-1"
           size="small"
           transparent

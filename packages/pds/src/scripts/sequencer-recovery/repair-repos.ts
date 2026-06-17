@@ -1,11 +1,12 @@
-import { parseRepoSeqRows } from '../../sequencer'
-import { rebuildRepo } from '../rebuild-repo'
+import { DidString } from '@atproto/syntax'
+import { parseRepoSeqRows } from '../../sequencer/index.js'
+import { rebuildRepo } from '../rebuild-repo.js'
 import {
   RecovererContext,
   RecovererContextNoDb,
   processSeqEvt,
-} from './recoverer'
-import { getRecoveryDbFromSequencerLoc } from './recovery-db'
+} from './recoverer.js'
+import { getRecoveryDbFromSequencerLoc } from './recovery-db.js'
 
 export const repairRepos = async (ctx: RecovererContextNoDb) => {
   const recoveryDb = await getRecoveryDbFromSequencerLoc(
@@ -26,7 +27,7 @@ export const repairRepos = async (ctx: RecovererContextNoDb) => {
   }
 }
 
-const recoverFromSequencer = async (ctx: RecovererContext, did: string) => {
+const recoverFromSequencer = async (ctx: RecovererContext, did: DidString) => {
   const didEvts = await ctx.sequencer.db.db
     .selectFrom('repo_seq')
     .selectAll()

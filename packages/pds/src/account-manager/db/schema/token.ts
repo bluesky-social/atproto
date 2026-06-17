@@ -11,7 +11,7 @@ import {
   Sub,
   TokenId,
 } from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded } from '../../../db/cast'
+import { DateISO, JsonEncoded } from '../../../db/cast.js'
 
 export interface Token {
   id: Generated<number>

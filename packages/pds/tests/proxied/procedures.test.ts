@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxies appview procedures', () => {
   let network: TestNetwork
@@ -15,7 +15,7 @@ describe('proxies appview procedures', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_procedures',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()

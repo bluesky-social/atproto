@@ -7,8 +7,8 @@ import {
   AtpSessionData,
   AtpSessionEvent,
   BSKY_LABELER_DID,
-} from '../src'
-import { createHeaderEchoServer } from './util/echo-server'
+} from '../src/index.js'
+import { createHeaderEchoServer } from './util/echo-server.js'
 
 const getPdsEndpointUrl = (...args: Parameters<typeof getPdsEndpoint>) => {
   const endpoint = getPdsEndpoint(...args)
@@ -355,12 +355,13 @@ describe('AtpAgent', () => {
     expect(typeof sessions[1]).toEqual('undefined')
   })
 
-  it('does not modify or persist the session on a failed refresh', async () => {
-    const events: string[] = []
-    const sessions: (AtpSessionData | undefined)[] = []
-    const persistSession = (evt: AtpSessionEvent, sess?: AtpSessionData) => {
-      events.push(evt)
-      sessions.push(sess)
+  it('does not modify the session on a failed refresh', async () => {
+    const events: { event: string; session: AtpSessionData | undefined }[] = []
+    const persistSession = (
+      event: AtpSessionEvent,
+      session?: AtpSessionData,
+    ) => {
+      events.push({ event, session: session && { ...session } })
     }
 
     const agent = new AtpAgent({ service: network.pds.url, persistSession })
@@ -407,10 +408,12 @@ describe('AtpAgent', () => {
     // still has session because it wasn't invalidated
     expect(agent.hasSession).toEqual(true)
 
-    expect(events.length).toEqual(1)
-    expect(events[0]).toEqual('create')
-    expect(sessions.length).toEqual(1)
-    expect(sessions[0]?.accessJwt).toEqual(origAccessJwt)
+    expect(events.length).toEqual(2)
+
+    expect(events[0].event).toEqual('create')
+    expect(events[0].session?.accessJwt).toEqual(origAccessJwt)
+    expect(events[1].event).toEqual('network-error')
+    expect(events[1].session?.accessJwt).toEqual(origAccessJwt)
   })
 
   describe('createAccount', () => {

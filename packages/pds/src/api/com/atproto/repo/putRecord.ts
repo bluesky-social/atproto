@@ -1,13 +1,20 @@
-import { CID } from 'multiformats/cid'
-import { BlobRef } from '@atproto/lexicon'
-import { AtUri } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
-import { dbLogger } from '../../../../logger'
+import { atUri } from '@atproto/lex'
+import {
+  LegacyBlobRef,
+  LexMap,
+  TypedBlobRef,
+  isLegacyBlobRef,
+  parseCid,
+} from '@atproto/lex-data'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor.js'
+import { AppContext } from '../../../../context.js'
+import { app, com } from '../../../../lexicons/index.js'
+import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
@@ -16,10 +23,10 @@ import {
   PreparedUpdate,
   prepareCreate,
   prepareUpdate,
-} from '../../../../repo'
+} from '../../../../repo/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.putRecord({
+  server.add(com.atproto.repo.putRecord, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -46,6 +53,9 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 2,
       },
     ],
+    opts: {
+      jsonLimit: 1_000_000,
+    },
     handler: async ({ auth, input }) => {
       const {
         repo,
@@ -80,10 +90,10 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const uri = AtUri.make(did, collection, rkey)
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const uri = atUri(did, collection, rkey)
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
       const swapRecordCid =
-        typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
+        typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord
 
       const { commit, write } = await ctx.actorStore.transact(
         did,
@@ -92,9 +102,10 @@ export default function (server: Server, ctx: AppContext) {
           const isUpdate = current !== null
 
           // @TODO temporaray hack for legacy blob refs in profiles - remove after migrating legacy blobs
-          if (isUpdate && collection === ids.AppBskyActorProfile) {
+          if (isUpdate && collection === app.bsky.actor.profile.$type) {
             await updateProfileLegacyBlobRef(actorTxn, record)
           }
+
           const writeInfo = {
             did,
             collection,
@@ -173,24 +184,28 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 // WARNING: mutates object
-const updateProfileLegacyBlobRef = async (
+async function updateProfileLegacyBlobRef(
   actorStore: ActorStoreTransactor,
-  record: Partial<ProfileRecord>,
-) => {
-  if (record.avatar && !record.avatar.original['$type']) {
-    const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)
-    record.avatar = new BlobRef(
-      record.avatar.ref,
-      record.avatar.mimeType,
-      blob.size,
-    )
+  record: LexMap,
+): Promise<void> {
+  if (isLegacyBlobRef(record.avatar)) {
+    record.avatar = await upgradeLegacyBlob(actorStore, record.avatar)
   }
-  if (record.banner && !record.banner.original['$type']) {
-    const blob = await actorStore.repo.blob.getBlobMetadata(record.banner.ref)
-    record.banner = new BlobRef(
-      record.banner.ref,
-      record.banner.mimeType,
-      blob.size,
-    )
+  if (isLegacyBlobRef(record.banner)) {
+    record.banner = await upgradeLegacyBlob(actorStore, record.banner)
+  }
+}
+
+async function upgradeLegacyBlob(
+  actorStore: ActorStoreTransactor,
+  legacyBlob: LegacyBlobRef,
+): Promise<TypedBlobRef> {
+  const ref = parseCid(legacyBlob.cid)
+  const blob = await actorStore.repo.blob.getBlobMetadata(ref)
+  return {
+    $type: 'blob',
+    mimeType: legacyBlob.mimeType,
+    ref,
+    size: blob.size,
   }
 }

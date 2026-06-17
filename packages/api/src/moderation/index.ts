@@ -1,10 +1,11 @@
-import { ModerationDecision } from './decision'
-import { decideAccount } from './subjects/account'
-import { decideFeedGenerator } from './subjects/feed-generator'
-import { decideNotification } from './subjects/notification'
-import { decidePost } from './subjects/post'
-import { decideProfile } from './subjects/profile'
-import { decideUserList } from './subjects/user-list'
+import { ModerationDecision } from './decision.js'
+import { decideAccount } from './subjects/account.js'
+import { decideFeedGenerator } from './subjects/feed-generator.js'
+import { decideNotification } from './subjects/notification.js'
+import { decidePost } from './subjects/post.js'
+import { decideProfile } from './subjects/profile.js'
+import { decideStatus } from './subjects/status.js'
+import { decideUserList } from './subjects/user-list.js'
 import {
   ModerationOpts,
   ModerationSubjectFeedGenerator,
@@ -12,15 +13,15 @@ import {
   ModerationSubjectPost,
   ModerationSubjectProfile,
   ModerationSubjectUserList,
-} from './types'
+} from './types.js'
 
-export { ModerationUI } from './ui'
-export { ModerationDecision } from './decision'
-export { hasMutedWord, matchMuteWords } from './mutewords'
+export { ModerationUI } from './ui.js'
+export { ModerationDecision } from './decision.js'
+export { hasMutedWord, matchMuteWords } from './mutewords.js'
 export {
   interpretLabelValueDefinition,
   interpretLabelValueDefinitions,
-} from './util'
+} from './util.js'
 
 export function moderateProfile(
   subject: ModerationSubjectProfile,
@@ -58,4 +59,11 @@ export function moderateUserList(
   opts: ModerationOpts,
 ): ModerationDecision {
   return decideUserList(subject, opts)
+}
+
+export function moderateStatus(
+  subject: ModerationSubjectProfile,
+  opts: ModerationOpts,
+): ModerationDecision {
+  return decideStatus(subject, opts)
 }

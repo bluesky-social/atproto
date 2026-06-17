@@ -1,17 +1,19 @@
 import EventEmitter from 'node:events'
-import TypedEmitter from 'typed-emitter'
-import { SECOND, cborDecode, wait } from '@atproto/common'
-import { AccountStatus } from '../account-manager/helpers/account'
-import { Crawlers } from '../crawlers'
-import { seqLogger as log } from '../logger'
-import { CommitDataWithOps, SyncEvtData } from '../repo'
+import type TypedEmitter from 'typed-emitter'
+import { SECOND, wait } from '@atproto/common'
+import { decode as cborDecode } from '@atproto/lex-cbor'
+import { DatetimeString, DidString, HandleString } from '@atproto/syntax'
+import { AccountStatus } from '../account-manager/helpers/account.js'
+import { Crawlers } from '../crawlers.js'
+import { seqLogger as log } from '../logger.js'
+import { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
 import {
   RepoSeqEntry,
   RepoSeqInsert,
   SequencerDb,
   getDb,
   getMigrator,
-} from './db'
+} from './db/index.js'
 import {
   AccountEvt,
   CommitEvt,
@@ -22,9 +24,10 @@ import {
   formatSeqCommit,
   formatSeqIdentityEvt,
   formatSeqSyncEvt,
-} from './events'
+  syncEvtDataFromCommit,
+} from './events.js'
 
-export * from './events'
+export * from './events.js'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   db: SequencerDb
@@ -159,48 +162,79 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await wait(waitTime)
   }
 
-  async sequenceEvt(evt: RepoSeqInsert): Promise<number> {
-    const [{ seq }] = await this.db.executeWithRetry(
-      this.db.db.insertInto('repo_seq').values(evt).returning('seq'),
+  protected async sequenceEvts(
+    events: readonly RepoSeqInsert[],
+  ): Promise<number[]> {
+    if (!events.length) return []
+    const rows = await this.db.executeWithRetry(
+      this.db.db.insertInto('repo_seq').values(events).returning('seq'),
     )
     this.crawlers.notifyOfUpdate()
-    return seq
+    return rows.map((row) => row.seq)
   }
 
-  async sequenceCommit(
-    did: string,
+  public async sequenceCommit(
+    did: DidString,
     commitData: CommitDataWithOps,
-  ): Promise<number> {
-    const evt = await formatSeqCommit(did, commitData)
-    return await this.sequenceEvt(evt)
+  ): Promise<void> {
+    await this.sequenceEvts([await formatSeqCommit(did, commitData)])
   }
 
-  async sequenceSyncEvt(did: string, data: SyncEvtData) {
-    const evt = await formatSeqSyncEvt(did, data)
-    return await this.sequenceEvt(evt)
+  public async sequenceSync(did: DidString, data: SyncEvtData): Promise<void> {
+    await this.sequenceEvts([await formatSeqSyncEvt(did, data)])
   }
 
-  async sequenceIdentityEvt(did: string, handle?: string): Promise<number> {
-    const evt = await formatSeqIdentityEvt(did, handle)
-    return await this.sequenceEvt(evt)
+  public async sequenceIdentity(
+    did: DidString,
+    handle?: HandleString,
+  ): Promise<void> {
+    await this.sequenceEvts([await formatSeqIdentityEvt(did, handle)])
   }
 
-  async sequenceAccountEvt(
-    did: string,
+  public async sequenceAccount(
+    did: DidString,
     status: AccountStatus,
-  ): Promise<number> {
-    const evt = await formatSeqAccountEvt(did, status)
-    return await this.sequenceEvt(evt)
+  ): Promise<void> {
+    await this.sequenceEvts([await formatSeqAccountEvt(did, status)])
   }
 
-  async deleteAllForUser(did: string, excludingSeqs: number[] = []) {
+  public async sequenceAccountCreation(
+    did: DidString,
+    handle: HandleString,
+    commit: CommitDataWithOps,
+  ): Promise<void> {
+    // Atomically sequence all events
+    await this.sequenceEvts([
+      await formatSeqIdentityEvt(did, handle),
+      await formatSeqAccountEvt(did, AccountStatus.Active),
+      await formatSeqCommit(did, commit),
+      await formatSeqSyncEvt(did, syncEvtDataFromCommit(commit)),
+    ])
+  }
+
+  public async sequenceAccountActivation(
+    did: DidString,
+    handle: HandleString,
+    status: AccountStatus,
+    syncData: SyncEvtData,
+  ): Promise<void> {
+    // Atomically sequence all events
+    await this.sequenceEvts([
+      await formatSeqAccountEvt(did, status),
+      await formatSeqIdentityEvt(did, handle),
+      await formatSeqSyncEvt(did, syncData),
+    ])
+  }
+
+  public async sequenceAccountDeletion(did: DidString) {
+    const [seq] = await this.sequenceEvts([
+      await formatSeqAccountEvt(did, AccountStatus.Deleted),
+    ])
     await this.db.executeWithRetry(
       this.db.db
         .deleteFrom('repo_seq')
         .where('did', '=', did)
-        .if(excludingSeqs.length > 0, (qb) =>
-          qb.where('seq', 'not in', excludingSeqs),
-        ),
+        .where('seq', '!=', seq),
     )
   }
 }
@@ -217,28 +251,28 @@ export const parseRepoSeqRows = (rows: RepoSeqEntry[]): SeqEvt[] => {
       seqEvts.push({
         type: 'commit',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as CommitEvt,
       })
     } else if (row.eventType === 'sync') {
       seqEvts.push({
         type: 'sync',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as SyncEvt,
       })
     } else if (row.eventType === 'identity') {
       seqEvts.push({
         type: 'identity',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as IdentityEvt,
       })
     } else if (row.eventType === 'account') {
       seqEvts.push({
         type: 'account',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as AccountEvt,
       })
     }
@@ -253,6 +287,6 @@ type SequencerEvents = {
   close: () => void
 }
 
-export type SequencerEmitter = TypedEmitter<SequencerEvents>
+export type SequencerEmitter = TypedEmitter.default<SequencerEvents>
 
 export default Sequencer

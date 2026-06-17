@@ -1,7 +1,7 @@
 import { AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { forSnapshot } from '../_util.js'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxies view requests', () => {
   let network: TestNetwork
@@ -17,7 +17,7 @@ describe('proxies view requests', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_views',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
     alice = sc.dids.alice

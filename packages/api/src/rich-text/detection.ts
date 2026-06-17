@@ -1,12 +1,13 @@
-import TLDs from 'tlds'
-import { AppBskyRichtextFacet } from '../client'
-import { UnicodeString } from './unicode'
+import TLDs from 'tlds' with { type: 'json' }
+import { AppBskyRichtextFacet } from '../client/index.js'
+import { UnicodeString } from './unicode.js'
 import {
+  CASHTAG_REGEX,
   MENTION_REGEX,
   TAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
   URL_REGEX,
-} from './util'
+} from './util.js'
 
 export type Facet = AppBskyRichtextFacet.Main
 
@@ -98,6 +99,34 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
           {
             $type: 'app.bsky.richtext.facet#tag',
             tag: tag,
+          },
+        ],
+      })
+    }
+  }
+  {
+    // cashtags
+    const re = CASHTAG_REGEX
+    while ((match = re.exec(text.utf16))) {
+      const leading = match[1]
+      let ticker = match[2]
+
+      if (!ticker) continue
+
+      // Normalize to uppercase
+      ticker = ticker.toUpperCase()
+
+      const index = match.index + leading.length
+
+      facets.push({
+        index: {
+          byteStart: text.utf16IndexToUtf8Index(index),
+          byteEnd: text.utf16IndexToUtf8Index(index + 1 + ticker.length), // +1 for $
+        },
+        features: [
+          {
+            $type: 'app.bsky.richtext.facet#tag',
+            tag: '$' + ticker, // Store with $ prefix
           },
         ],
       })

@@ -1,0 +1,87 @@
+[
+  {
+    "name": "invalid lexicon field",
+    "lexicon": {
+      "lexicon": "one",
+      "id": "com.example.lexicon",
+      "defs": {
+        "demo": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  {
+    "name": "invalid id field",
+    "lexicon": {
+      "lexicon": 1,
+      "id": 2,
+      "defs": {
+        "demo": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  {
+    "name": "defined unknown",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon",
+      "defs": {
+        "demo": {
+          "type": "unknown"
+        }
+      }
+    }
+  },
+  {
+    "name": "defined ref",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon",
+      "defs": {
+        "demo": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef"
+        }
+      }
+    }
+  },
+  {
+    "name": "non-main primary",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon",
+      "defs": {
+        "demo": {
+          "type": "record",
+          "key": "any",
+          "record": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "record missing type object",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.lexicon",
+      "defs": {
+        "main": {
+          "type": "record",
+          "key": "any",
+          "record": {
+            "properties": {
+              "b": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]
