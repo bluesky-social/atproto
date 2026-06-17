@@ -24,6 +24,8 @@ import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
 import { resHeaders } from '../../../util.js'
 
+const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-passthru'
+
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
     skeleton,
@@ -49,8 +51,20 @@ export default function (server: Server, ctx: AppContext) {
           }),
         ),
       })
+      const overrideHeader = Array.isArray(
+        req.headers[SEARCH_V2_OVERRIDE_HEADER],
+      )
+        ? req.headers[SEARCH_V2_OVERRIDE_HEADER].join(',')
+        : req.headers[SEARCH_V2_OVERRIDE_HEADER]
       const results = await searchPosts(
-        { ...params, hydrateCtx, isModService },
+        {
+          ...params,
+          hydrateCtx,
+          isModService,
+          isV2Override:
+            !!ctx.cfg.searchV2OverrideHeader &&
+            overrideHeader === ctx.cfg.searchV2OverrideHeader,
+        },
         ctx,
       )
       return {
@@ -146,9 +160,10 @@ const skeletonV2 = async (
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useV2 = input.params.hydrateCtx.features.checkGate(
-    input.params.hydrateCtx.features.Gate.SearchV2Enable,
-  )
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
   const skeletonFn = useV2 ? skeletonV2 : skeletonV1
   return skeletonFn(input)
 }
@@ -237,6 +252,7 @@ type Context = {
 type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
   isModService: boolean
+  isV2Override: boolean
 }
 
 type Skeleton = {
