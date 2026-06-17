@@ -1,5 +1,37 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.0
+
+### Minor Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `Account` properties to contain strongly typed `did`
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to deactivate and delete account from the account manager interface
+
+### Patch Changes
+
+- [#5106](https://github.com/bluesky-social/atproto/pull/5106) [`6fcf9b2`](https://github.com/bluesky-social/atproto/commit/6fcf9b20d8ed4b30d63f97b9311e81c25f12b684) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use setTimeout and an HTML anchor as redirect strategy
+
+- [#4537](https://github.com/bluesky-social/atproto/pull/4537) [`61c0066`](https://github.com/bluesky-social/atproto/commit/61c006651b874558c1b24110b01806067b93b49a) Thanks [@quiple](https://github.com/quiple)! - Add Corean (ko) translations
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix credentials error not being displayed in sign-in form
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Keep notifications message in sync with the current locale
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `consentRequired` logic from OAuth consent flow UI
+
+- [#5059](https://github.com/bluesky-social/atproto/pull/5059) [`dd77cdd`](https://github.com/bluesky-social/atproto/commit/dd77cdd4d728c6d9fa0429629cb66266ec88ca96) Thanks [@dolciss](https://github.com/dolciss)! - Add Japanese (ja) translations
+
+- [#4331](https://github.com/bluesky-social/atproto/pull/4331) [`22b0c43`](https://github.com/bluesky-social/atproto/commit/22b0c43401d8c6b8e622e1737333671e8847674f) Thanks [@tdelgado00](https://github.com/tdelgado00)! - Add Spanish (es) translations
+
+- [#5103](https://github.com/bluesky-social/atproto/pull/5103) [`55172ab`](https://github.com/bluesky-social/atproto/commit/55172aba771b54d5eed73e5b314bf7c3a2f7364a) Thanks [@ryanda9910](https://github.com/ryanda9910)! - Fix the OAuth consent screen overstating what an application can do. A request
+  scoped to a few specific `app.bsky.*` collections (e.g. only creating
+  `app.bsky.feed.post` records) no longer claims the app can "Manage your profile,
+  posts, likes and follows". The blanket wording is now reserved for requests that
+  actually grant broad write access (any collection or `transition:generic`);
+  narrowly scoped Bluesky requests are described as accessing specific parts of the
+  account and surface the exact per-collection breakdown instead.
+
 ## 0.7.4
 
 ### Patch Changes

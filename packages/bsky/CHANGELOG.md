@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.0.243
+
+### Patch Changes
+
+- [#5086](https://github.com/bluesky-social/atproto/pull/5086) [`20665c1`](https://github.com/bluesky-social/atproto/commit/20665c18322effe648f73d70fc1a8dcc7e312992) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade kysely from 0.22 to 0.29
+
+- [#5109](https://github.com/bluesky-social/atproto/pull/5109) [`45ddeba`](https://github.com/bluesky-social/atproto/commit/45ddebac1a519ab64e0606eb17bd455f5d9ac411) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add temporary search v2 override header
+
 ## 0.0.242
 
 ### Patch Changes
