@@ -2,14 +2,7 @@ import assert from 'node:assert'
 import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import {
-  DidString,
-  HandleString,
-  asAtIdentifierString,
-  getBlobCidString,
-  isDidString,
-  isHandleString,
-} from '@atproto/lex'
+import { DidString, HandleString, getBlobCidString } from '@atproto/lex'
 import {
   Account,
   AccountStore,
@@ -18,10 +11,14 @@ import {
   AuthorizedClients,
   ClientId,
   Code,
+  DeactivateAccountData,
+  DeleteAccountConfirmInput,
+  DeleteAccountRequestInput,
   DeviceAccount,
   DeviceData,
   DeviceId,
   DeviceStore,
+  Did,
   FoundRequestResult,
   HandleUnavailableError,
   HandleUnavailableReason,
@@ -31,6 +28,7 @@ import {
   LexiconData,
   LexiconStore,
   NewTokenData,
+  ReactivateAccountData,
   RefreshToken,
   RequestData,
   RequestId,
@@ -38,7 +36,6 @@ import {
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
-  Sub,
   TokenData,
   TokenId,
   TokenInfo,
@@ -139,8 +136,6 @@ export class OAuthStore
   }: SignUpData): Promise<Account> {
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
     // @NOTE Password strength & length already enforced by the OAuthProvider
-
-    assert(isHandleString(handle), 'Handle must be a valid HandleString')
 
     await Promise.all([
       this.verifyEmailAvailability(email),
@@ -281,32 +276,28 @@ export class OAuthStore
   }
 
   async setAuthorizedClient(
-    sub: Sub,
+    did: Did,
     clientId: ClientId,
     data: AuthorizedClientData,
   ): Promise<void> {
-    await authorizedClientHelper.upsert(this.db, sub, clientId, data)
+    await authorizedClientHelper.upsert(this.db, did, clientId, data)
   }
 
-  async getAccount(sub: Sub): Promise<{
+  async getAccount(did: Did): Promise<{
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await this.accountManager.getAccount(
-      // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
-      asAtIdentifierString(sub),
-      {
-        includeDeactivated: true,
-        includeTakenDown: false,
-      },
-    )
+    const accountRow = await this.accountManager.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: false,
+    })
 
     assert(accountRow, 'Account not found')
 
     const account = await this.buildAccount(accountRow)
     const authorizedClients = await authorizedClientHelper.getAuthorizedClients(
       this.db,
-      sub,
+      did,
     )
 
     return { account, authorizedClients }
@@ -320,10 +311,10 @@ export class OAuthStore
 
   async getDeviceAccount(
     deviceId: DeviceId,
-    sub: string,
+    did: Did,
   ): Promise<DeviceAccount | null> {
     const row = await accountDeviceHelper
-      .selectQB(this.db, { deviceId, sub })
+      .selectQB(this.db, { deviceId, did })
       .executeTakeFirst()
 
     if (!row) return null
@@ -334,30 +325,30 @@ export class OAuthStore
       account: await this.buildAccount(row),
       authorizedClients: await authorizedClientHelper.getAuthorizedClients(
         this.db,
-        sub,
+        did,
       ),
       createdAt: fromDateISO(row.adCreatedAt),
       updatedAt: fromDateISO(row.adUpdatedAt),
     }
   }
 
-  async removeDeviceAccount(deviceId: DeviceId, sub: Sub): Promise<void> {
+  async removeDeviceAccount(deviceId: DeviceId, did: Did): Promise<void> {
     await this.db.executeWithRetry(
-      accountDeviceHelper.removeQB(this.db, deviceId, sub),
+      accountDeviceHelper.removeQB(this.db, deviceId, did),
     )
   }
 
   async listDeviceAccounts(
-    filter: { sub: Sub } | { deviceId: DeviceId },
+    filter: { did: Did } | { deviceId: DeviceId },
   ): Promise<DeviceAccount[]> {
     const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
 
-    const uniqueDids: string[] = [...new Set(rows.map((row) => row.did))]
+    const uniqueDids = [...new Set(rows.map((row) => row.did))]
 
     // Enrich all distinct account with their profile data
     const accounts = new Map(
       await Promise.all(
-        Array.from(uniqueDids, async (did): Promise<[Sub, Account]> => {
+        Array.from(uniqueDids, async (did): Promise<[Did, Account]> => {
           const row = rows.find((r) => r.did === did)!
           return [did, await this.buildAccount(row)]
         }),
@@ -381,8 +372,8 @@ export class OAuthStore
   }
 
   async resetPasswordRequest({
-    locale: _locale,
     email,
+    locale,
   }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
@@ -397,9 +388,8 @@ export class OAuthStore
       'reset_password',
     )
 
-    // @TODO Use the locale to send the email in the right language
     await this.mailer.sendResetPassword(
-      { handle, token },
+      { handle, token, locale },
       { to: account.email },
     )
 
@@ -557,8 +547,8 @@ export class OAuthStore
     })
   }
 
-  async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
-    const rows = await tokenHelper.findByQB(this.db, { did: sub }).execute()
+  async listAccountTokens(did: Did): Promise<TokenInfo[]> {
+    const rows = await tokenHelper.findByQB(this.db, { did }).execute()
     return Promise.all(rows.map((row) => this.toTokenInfo(row)))
   }
 
@@ -629,12 +619,9 @@ export class OAuthStore
   }
 
   async verifyEmailRequest({
-    sub: did,
+    did,
     locale,
   }: VerifyEmailRequestInput): Promise<void> {
-    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
-    assert(isDidString(did), 'sub must be a valid DID string')
-
     try {
       await this.accountManager.requestEmailConfirmation(did, { locale })
     } catch (err) {
@@ -647,13 +634,10 @@ export class OAuthStore
   }
 
   async verifyEmailConfirm({
-    sub: did,
+    did,
     email,
     token,
   }: VerifyEmailConfirmInput): Promise<Account | null> {
-    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
-    assert(isDidString(did), 'sub must be a valid DID string')
-
     try {
       const account = await this.accountManager.confirmEmail(did, email, token)
 
@@ -668,24 +652,18 @@ export class OAuthStore
   }
 
   async updateEmailRequest({
-    sub: did,
+    did,
     locale,
   }: UpdateEmailRequestInput): Promise<UpdateEmailRequestOutput> {
-    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
-    assert(isDidString(did), 'sub must be a valid DID string')
-
     return this.accountManager.requestEmailUpdate(did, { locale })
   }
 
   async updateEmailConfirm({
-    sub: did,
+    did,
     token,
     email,
     locale,
   }: UpdateEmailConfirmInput): Promise<Account | null> {
-    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
-    assert(isDidString(did), 'sub must be a valid DID string')
-
     try {
       const account = await this.accountManager.updateEmail(did, email, token, {
         sendConfirmationEmail: true,
@@ -702,16 +680,105 @@ export class OAuthStore
     }
   }
 
-  async updateHandle({ sub: did, handle }: UpdateHandleData): Promise<Account> {
-    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
-    assert(isDidString(did), 'sub must be a valid DID string')
-
+  async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {
     try {
       const account = await this.accountManager.updateHandle(did, handle)
 
       return this.buildAccount(account)
     } catch (err) {
       throw toHandleUnavailableError(err)
+    }
+  }
+
+  async deactivateAccount({ did }: DeactivateAccountData): Promise<Account> {
+    const { account } = await this.accountManager.deactivateAccount(did, {
+      deleteCredentials: true,
+    })
+
+    return this.buildAccount(account)
+  }
+
+  async reactivateAccount({ did }: ReactivateAccountData): Promise<Account> {
+    try {
+      const { account } = await this.accountManager.activateAccount(did)
+
+      return this.buildAccount(account)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        throw new InvalidRequestError(err.message, err)
+      }
+
+      throw err
+    }
+  }
+
+  async deleteAccountRequest({
+    did,
+    locale,
+  }: DeleteAccountRequestInput): Promise<void> {
+    // Mirror the XRPC `com.atproto.server.requestAccountDelete` flow
+    // (no-entryway path): generate an email confirmation token and dispatch
+    // it to the account's email address.
+    const account = await this.accountManager.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+    if (!account) {
+      throw new InvalidRequestError('Account not found')
+    }
+    if (!account.email) {
+      throw new InvalidRequestError('Account does not have an email address')
+    }
+
+    const token = await this.accountManager.createEmailToken(
+      did,
+      'delete_account',
+    )
+    await this.mailer.sendAccountDelete(
+      { token, locale },
+      { to: account.email },
+    )
+  }
+
+  async deleteAccountConfirm({
+    did,
+    token,
+    password,
+  }: DeleteAccountConfirmInput): Promise<void> {
+    // Mirror the XRPC `com.atproto.server.deleteAccount` flow (no-entryway
+    // path): verify the password, validate the email confirmation token,
+    // destroy the actor store, delete the account row, and emit the
+    // tombstone account event.
+    const account = await this.accountManager.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+    if (!account) {
+      throw new InvalidRequestError('Account not found')
+    }
+
+    const validPass = await this.accountManager.verifyAccountPassword(
+      did,
+      password,
+    )
+    if (!validPass) {
+      throw new InvalidCredentialsError('Invalid did or password', did)
+    }
+
+    await this.accountManager.assertValidEmailToken(
+      did,
+      'delete_account',
+      token,
+    )
+
+    // @NOTE Order matters here: first "unlink" the account by removing it
+    // from the account manager database ("source of truth"), then notify the
+    // sequencer, and finally cleanup files from the file system.
+    await this.accountManager.deleteAccount(did)
+    try {
+      await this.sequencer.sequenceAccountDeletion(did)
+    } finally {
+      await this.actorStore.destroy(did)
     }
   }
 
@@ -728,15 +795,16 @@ export class OAuthStore
 
   private async buildAccount(row: ActorAccount): Promise<Account> {
     const account: Account = {
-      sub: row.did,
-      aud: this.serviceDid,
+      did: row.did,
+      pds: this.serviceDid,
       email: row.email || undefined,
-      email_verified: row.email ? row.emailConfirmedAt != null : undefined,
-      preferred_username: row.handle || undefined,
+      emailVerified: row.email ? row.emailConfirmedAt != null : undefined,
+      handle: row.handle || undefined,
+      deactivated: row.deactivatedAt != null,
     }
 
     if (!account.name || !account.picture) {
-      const did = account.sub
+      const { did } = account
 
       const profile = await this.actorStore
         .read(did, async (store) => {

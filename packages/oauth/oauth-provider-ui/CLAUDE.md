@@ -47,6 +47,17 @@ Three layers of primitives live under [src/components/forms/](src/components/for
 
 When authoring a `SmartForm`-based component, type its props as `WrappedSmartFormProps<TData>` (also exported from `smart-form.tsx`) — that omits `fields` and `validate` so callers only pass the outer `FormCard` props plus any feature-specific extras.
 
+**`*-form.tsx` MUST be built on `SmartForm`** — never hand-roll `<form>` + `useAsyncAction` + `useState` even when the form has unusual extras (extra inputs, a resend button, custom error rendering, an error-colored submit). Pass-throughs that already exist on `FormCardProps` cover almost every case:
+
+- Custom submit label or color: `submitLabel` / pass through `submitColor` (or override the row via `actions`).
+- Cancel / back: `onCancel` + `cancelLabel`, `onBack` + `backLabel` — the parent dialog/page provides them.
+- Wider button styling (e.g. stacked full-width buttons): supply your own row via `actions` and set `submitLabel={null}` if needed; do NOT rebuild the form to get a different layout.
+- Extra pending state from outside the form (e.g. an in-flight resend): merge it into `props.loading` (`loading={props.loading || requestPending}`).
+- Error display: `FormCard` already renders `error` via `errorRender` / `errorParser` — don't call `errorCardRender` yourself.
+- Loading-state mirroring to the parent: pass `onLoadingChange` straight through (it's a `SmartFormProps` prop already).
+
+If a constraint genuinely cannot be expressed through these props, extend `FormCard`/`SmartForm` itself rather than forking the form. See [reset-password-confirm-form.tsx](src/components/reset-password-confirm-form.tsx) and [update-email-form.tsx](src/components/update-email-form.tsx) for the canonical shapes — including a form that already mixes a SmartForm with a `ButtonRequestCode` resend link inside the `fields` render-prop.
+
 ## Input components (`input-*.tsx`)
 
 Low-level input wrappers (`InputText`, `InputEmailAddress`, `InputPassword`, `InputToken`, `InputHandleCustom`, `InputCheckbox`, …) are thin layers over a native `<input>`. They MUST NOT force the input into controlled or uncontrolled mode — pass both `value` and `defaultValue` straight through to the underlying `<input>` (typically by spreading `...props` into `InputText`) and let the parent pick.

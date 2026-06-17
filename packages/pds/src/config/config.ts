@@ -5,7 +5,7 @@ import {
   BrandingInput as BrandingConfig,
   HcaptchaConfig,
 } from '@atproto/oauth-provider'
-import { ensureValidDid } from '@atproto/syntax'
+import { DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
 import { ServerEnvironment } from './env.js'
 
 export type { BrandingConfig }
@@ -21,6 +21,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       ? `http://localhost:${port}`
       : `https://${hostname}`
   const did = env.serviceDid ?? `did:web:${hostname}`
+
+  if (!isValidDid(did)) {
+    throw new Error(`Invalid service DID: ${did}`)
+  }
+
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
@@ -400,7 +405,7 @@ export type ServiceConfig = {
   port: number
   hostname: string
   publicUrl: string
-  did: string
+  did: DidString
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string

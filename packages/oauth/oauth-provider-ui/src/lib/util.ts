@@ -25,3 +25,12 @@ export function toJsonSafe(value: unknown): string | undefined {
     return undefined
   }
 }
+
+export function isAbortReason(signal: AbortSignal, error: unknown): boolean {
+  return (
+    signal.aborted &&
+    signal.reason != null &&
+    error instanceof Error &&
+    (error === signal.reason || error.cause === signal.reason)
+  )
+}

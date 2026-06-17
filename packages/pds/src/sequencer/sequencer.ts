@@ -162,9 +162,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await wait(waitTime)
   }
 
-  protected async sequenceEvts(
-    events: readonly RepoSeqInsert[],
-  ): Promise<number[]> {
+  async sequenceEvts(events: readonly RepoSeqInsert[]): Promise<number[]> {
     if (!events.length) return []
     const rows = await this.db.executeWithRetry(
       this.db.db.insertInto('repo_seq').values(events).returning('seq'),

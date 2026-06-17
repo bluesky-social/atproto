@@ -1594,6 +1594,9 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:^
         version: link:../oauth-types
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../../syntax
 
   packages/oauth/oauth-provider-ui:
     devDependencies:

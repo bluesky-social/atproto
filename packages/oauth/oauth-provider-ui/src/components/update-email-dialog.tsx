@@ -12,9 +12,10 @@ export type UpdateEmailDialogProps = {
   email?: string
   requestPending?: boolean
   confirmPending?: boolean
-  onRequest: () => Promise<{ tokenRequired: boolean }>
-  onConfirm: (data: { email: string; token?: string }) => Promise<void>
-  onVerify?: (data: { email: string; token: string }) => Promise<void>
+  onUpdateRequest: () => Promise<{ tokenRequired: boolean }>
+  onUpdateConfirm: (data: { email: string; token?: string }) => Promise<void>
+  onVerifyRequest?: () => Promise<void>
+  onVerifyConfirm?: (data: { email: string; token: string }) => Promise<void>
   children: Exclude<ReactNode, false | null | undefined>
   introMessage?: ReactNode
 }
@@ -29,9 +30,10 @@ export function UpdateEmailDialog({
   email: emailCurrent,
   requestPending,
   confirmPending,
-  onRequest,
-  onConfirm,
-  onVerify,
+  onUpdateRequest,
+  onUpdateConfirm,
+  onVerifyRequest,
+  onVerifyConfirm,
   children,
   introMessage,
 }: UpdateEmailDialogProps) {
@@ -47,7 +49,7 @@ export function UpdateEmailDialog({
 
   const dismissable = !submitting
 
-  if (step === Step.Verify && email && onVerify) {
+  if (step === Step.Verify && email && onVerifyConfirm) {
     return (
       <DialogSimple
         trigger={children}
@@ -56,7 +58,7 @@ export function UpdateEmailDialog({
         dismissable={dismissable}
         title={
           <>
-            <CheckIcon className="text-success inline" weight="bold" />{' '}
+            <CheckIcon className="text-success mr-2 inline" weight="bold" />
             <Trans>Email address successfully updated</Trans>
           </>
         }
@@ -77,7 +79,7 @@ export function UpdateEmailDialog({
             token ? { token, email } : undefined
           }
           handler={async (data) => {
-            await onVerify(data)
+            await onVerifyConfirm(data)
             setOpen(false)
           }}
           fields={({ values, set }) => (
@@ -88,6 +90,7 @@ export function UpdateEmailDialog({
                 autoFocus
                 defaultValue={values.token ?? undefined}
                 onToken={(value) => set('token', value ?? undefined)}
+                onResend={onVerifyRequest}
               />
             </FormField>
           )}
@@ -116,15 +119,16 @@ export function UpdateEmailDialog({
           confirmPending={confirmPending}
           values={{ email }}
           onLoadingChange={setSubmitting}
+          onCancel={() => setOpen(false)}
           onResend={async () => {
-            await onRequest()
+            await onUpdateRequest()
           }}
           handler={async (data) => {
-            await onConfirm(data)
+            await onUpdateConfirm(data)
 
             setEmail(data.email)
 
-            if (onVerify) setStep(Step.Verify)
+            if (onVerifyConfirm) setStep(Step.Verify)
             else setOpen(false)
           }}
         />
@@ -150,22 +154,23 @@ export function UpdateEmailDialog({
         values={{ email }}
         onLoadingChange={setSubmitting}
         validate={({ email }) => (email ? { email } : undefined)}
+        onCancel={() => setOpen(false)}
         handler={async (data: { email: string; token?: string }) => {
-          const { tokenRequired } = await onRequest()
+          const { tokenRequired } = await onUpdateRequest()
 
           setEmail(data.email)
 
           // If the previous email was not verified, we can skip asking for a
           // token to confirm ownership of that old email (since it was not
           // verified in the first place). In that case, we can directly go to
-          // confirming the new email, and optionally verifying it if `onVerify`
+          // confirming the new email, and optionally verifying it if `onVerifyConfirm`
           // is provided.
 
           if (tokenRequired) setStep(Step.Token)
           else {
-            await onConfirm(data)
+            await onUpdateConfirm(data)
 
-            if (onVerify) setStep(Step.Verify)
+            if (onVerifyConfirm) setStep(Step.Verify)
             else setOpen(false)
           }
         }}
