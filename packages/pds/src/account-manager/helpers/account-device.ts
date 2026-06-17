@@ -1,6 +1,5 @@
 import assert from 'node:assert'
-import { DeviceId } from '@atproto/oauth-provider'
-import { DidString } from '@atproto/syntax'
+import { DeviceId, Did } from '@atproto/oauth-provider'
 import { toDateISO } from '../../db/index.js'
 import { AccountDb } from '../db/index.js'
 import { selectAccountQB } from './account.js'
@@ -26,13 +25,10 @@ export function upsertQB(db: AccountDb, deviceId: DeviceId, did: string) {
 
 export function selectQB(
   db: AccountDb,
-  filter: {
-    sub?: string
-    deviceId?: DeviceId
-  },
+  filter: { did?: Did; deviceId?: DeviceId },
 ) {
   assert(
-    filter.sub != null || filter.deviceId != null,
+    filter.did != null || filter.deviceId != null,
     'Either sub or deviceId must be provided',
   )
 
@@ -52,10 +48,8 @@ export function selectQB(
         'device.ipAddress',
         'device.lastSeenAt',
       ])
-      .if(filter.sub != null, (qb) =>
-        qb.where('actor.did', '=', filter.sub! as DidString),
-      )
-      .if(filter.deviceId != null, (qb) =>
+      .$if(filter.did != null, (qb) => qb.where('actor.did', '=', filter.did!))
+      .$if(filter.deviceId != null, (qb) =>
         qb.where('account_device.deviceId', '=', filter.deviceId!),
       )
   )

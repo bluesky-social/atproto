@@ -1,4 +1,4 @@
-import { Insertable, RawBuilder, sql } from 'kysely'
+import { Expression, Insertable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
@@ -267,21 +267,24 @@ export class ModerationService {
 
     // If subjectType is set to 'account' let that take priority and ignore collections filter
     if (collections.length && subjectType !== 'account') {
-      builder = builder.where('subjectUri', 'is not', null).where((qb) => {
-        collections.forEach((collection) => {
-          qb = qb.orWhere('subjectUri', 'like', `%/${collection}/%`)
-        })
-        return qb
-      })
+      builder = builder
+        .where('subjectUri', 'is not', null)
+        .where((eb) =>
+          eb.or(
+            collections.map((collection) =>
+              eb('subjectUri', 'like', `%/${collection}/%`),
+            ),
+          ),
+        )
     }
 
     if (types.length) {
-      builder = builder.where((qb) => {
+      builder = builder.where((eb) => {
         if (types.length === 1) {
-          return qb.where('action', '=', types[0])
+          return eb('action', '=', types[0])
         }
 
-        return qb.where('action', 'in', types)
+        return eb('action', 'in', types)
       })
     }
     if (createdBy) {
@@ -298,12 +301,11 @@ export class ModerationService {
       // the input may end in || in which case, there may be item in the array which is just '' and we want to ignore those
       const keywords = comment.split('||').filter((keyword) => !!keyword.trim())
       if (keywords.length > 1) {
-        builder = builder.where((qb) => {
-          keywords.forEach((keyword) => {
-            qb = qb.orWhere('comment', 'ilike', `%${keyword}%`)
-          })
-          return qb
-        })
+        builder = builder.where((eb) =>
+          eb.or(
+            keywords.map((keyword) => eb('comment', 'ilike', `%${keyword}%`)),
+          ),
+        )
       } else if (keywords.length === 1) {
         builder = builder.where('comment', 'ilike', `%${keywords[0]}%`)
       }
@@ -324,23 +326,26 @@ export class ModerationService {
       })
     }
     if (addedTags.length) {
-      builder = builder.where(sql`${ref('addedTags')} @> ${jsonb(addedTags)}`)
+      builder = builder.where(
+        sql<boolean>`${ref('addedTags')} @> ${jsonb(addedTags)}`,
+      )
     }
     if (removedTags.length) {
       builder = builder.where(
-        sql`${ref('removedTags')} @> ${jsonb(removedTags)}`,
+        sql<boolean>`${ref('removedTags')} @> ${jsonb(removedTags)}`,
       )
     }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
     if (policies?.length) {
-      builder = builder.where((qb) => {
-        policies.forEach((policy) => {
-          qb = qb.orWhere(sql`meta->>'policies'`, 'ilike', `%${policy}%`)
-        })
-        return qb
-      })
+      builder = builder.where((eb) =>
+        eb.or(
+          policies.map((policy) =>
+            eb(sql`meta->>'policies'`, 'ilike', `%${policy}%`),
+          ),
+        ),
+      )
     }
     if (modTool?.length) {
       builder = builder
@@ -446,8 +451,8 @@ export class ModerationService {
     const subjectsToBeResolved = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
-      .where((qb) =>
-        qb.where('recordPath', '!=', '').orWhere('convoId', '!=', ''),
+      .where((eb) =>
+        eb.or([eb('recordPath', '!=', ''), eb('convoId', '!=', '')]),
       )
       .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
       .selectAll()
@@ -816,8 +821,9 @@ export class ModerationService {
     const now = new Date().toISOString()
     const subjects = await this.db.db
       .selectFrom('moderation_subject_status')
-      .where('suspendUntil', '<', now)
-      .orWhere('muteUntil', '<', now)
+      .where((eb) =>
+        eb.or([eb('suspendUntil', '<', now), eb('muteUntil', '<', now)]),
+      )
       .selectAll()
       .execute()
 
@@ -1206,16 +1212,17 @@ export class ModerationService {
     if (subjectType !== 'account' && collections?.length) {
       builder = builder
         .where('moderation_subject_status.recordPath', '!=', '')
-        .where((qb) => {
-          for (const collection of collections) {
-            qb = qb.orWhere(
-              'moderation_subject_status.recordPath',
-              'like',
-              `${collection}/%`,
-            )
-          }
-          return qb
-        })
+        .where((eb) =>
+          eb.or(
+            collections.map((collection) =>
+              eb(
+                'moderation_subject_status.recordPath',
+                'like',
+                `${collection}/%`,
+              ),
+            ),
+          ),
+        )
     }
 
     if (ignoreSubjects?.length) {
@@ -1325,30 +1332,32 @@ export class ModerationService {
     }
 
     if (!includeMuted) {
-      builder = builder.where((qb) =>
-        qb
-          .where(
+      builder = builder.where((eb) =>
+        eb.or([
+          eb(
             'moderation_subject_status.muteUntil',
             '<',
             new Date().toISOString(),
-          )
-          .orWhere('moderation_subject_status.muteUntil', 'is', null),
+          ),
+          eb('moderation_subject_status.muteUntil', 'is', null),
+        ]),
       )
     }
 
     if (onlyMuted) {
-      builder = builder.where((qb) =>
-        qb
-          .where(
+      builder = builder.where((eb) =>
+        eb.or([
+          eb(
             'moderation_subject_status.muteUntil',
             '>',
             new Date().toISOString(),
-          )
-          .orWhere(
+          ),
+          eb(
             'moderation_subject_status.muteReportingUntil',
             '>',
             new Date().toISOString(),
           ),
+        ]),
       )
     }
 
@@ -1356,30 +1365,28 @@ export class ModerationService {
     const conditions = parseTags(tags)
     if (conditions?.length) {
       // [["tag1"], ["tag2", "tag3"], ["tag4"]] => (tags ? 'tag1') OR (tags ? 'tag2' AND tags ? 'tag3') OR (tags ? 'tag4')
-      builder = builder.where((qb) => {
-        for (const subTags of conditions) {
-          // OR between every conditions items (subTags)
-          qb = qb.orWhere((qb) => {
+      builder = builder.where((eb) =>
+        // OR between every conditions items (subTags)
+        eb.or(
+          conditions.map((subTags) =>
             // AND between every subTags items (subTag)
-            for (const subTag of subTags) {
-              qb = qb.where(
-                sql`${ref('moderation_subject_status.tags')} ? ${subTag}`,
-              )
-            }
-            return qb
-          })
-        }
-        return qb
-      })
+            eb.and(
+              subTags.map(
+                (subTag) =>
+                  sql<boolean>`${ref('moderation_subject_status.tags')} ? ${subTag}`,
+              ),
+            ),
+          ),
+        ),
+      )
     }
 
     if (excludeTags?.length) {
-      builder = builder.where((qb) =>
-        qb
-          .where(
-            sql`NOT(${ref('moderation_subject_status.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
-          )
-          .orWhere('tags', 'is', null),
+      builder = builder.where((eb) =>
+        eb.or([
+          sql<boolean>`NOT(${ref('moderation_subject_status.tags')} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
+          eb('tags', 'is', null),
+        ]),
       )
     }
 
@@ -1620,15 +1627,15 @@ export class ModerationService {
     const countAll = () => {
       return sql<number>`COUNT(*)`
     }
-    const countAllDistinctBy = (ref: RawBuilder) => {
+    const countAllDistinctBy = (ref: Expression<unknown>) => {
       return sql<number>`COUNT(DISTINCT ${ref})`
     }
-    const countTakedownsDistinctBy = (ref: RawBuilder) => {
+    const countTakedownsDistinctBy = (ref: Expression<unknown>) => {
       return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
         WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
       )`
     }
-    const countLabelsDistinctBy = (ref: RawBuilder) => {
+    const countLabelsDistinctBy = (ref: Expression<unknown>) => {
       return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
         WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
       )`

@@ -1,5 +1,35 @@
 # @atproto/api
 
+## 0.20.16
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/common-web@0.5.1
+  - @atproto/lexicon@0.7.2
+  - @atproto/syntax@0.6.2
+  - @atproto/xrpc@0.8.1
+
+## 0.20.15
+
+### Patch Changes
+
+- [#5090](https://github.com/bluesky-social/atproto/pull/5090) [`b3c4bc6`](https://github.com/bluesky-social/atproto/commit/b3c4bc6dbcb31340de6c0a0a618a17a8a7bc8a94) Thanks [@ds-boyce](https://github.com/ds-boyce)! - update chat lexicons
+
+## 0.20.14
+
+### Patch Changes
+
+- [#5084](https://github.com/bluesky-social/atproto/pull/5084) [`385c7be`](https://github.com/bluesky-social/atproto/commit/385c7be0f31f11c17f1668f09b5badb6485f9bc3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.13
+
+### Patch Changes
+
+- [#5075](https://github.com/bluesky-social/atproto/pull/5075) [`c4bcb12`](https://github.com/bluesky-social/atproto/commit/c4bcb12a21bebb9e83f5c98c7ccdb16b5344ee9e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.12
 
 ### Patch Changes

@@ -1,6 +1,7 @@
 import { Selectable } from 'kysely'
 import {
   Code,
+  Did,
   NewTokenData,
   RefreshToken,
   TokenData,
@@ -18,7 +19,7 @@ export function toTokenData(row: Selectable<Token>): TokenData {
     clientId: row.clientId,
     clientAuth: fromJson(row.clientAuth),
     deviceId: row.deviceId,
-    sub: row.did,
+    did: row.did,
     parameters: fromJson(row.parameters),
     code: row.code,
     scope: row.scope,
@@ -60,7 +61,7 @@ export const createQB = (
     clientId: data.clientId,
     clientAuth: toJson(data.clientAuth),
     deviceId: data.deviceId,
-    did: data.sub,
+    did: data.did,
     parameters: toJson(data.parameters),
     details: data.details ? toJson(data.details) : null,
     code: data.code,
@@ -80,7 +81,7 @@ export const findByQB = (
   db: AccountDb,
   search: {
     id?: number
-    did?: string
+    did?: Did
     code?: Code
     tokenId?: TokenId
     currentRefreshToken?: RefreshToken
@@ -98,33 +99,38 @@ export const findByQB = (
   }
 
   return selectTokenInfoQB(db)
-    .if(search.id !== undefined, (qb) =>
+    .$if(search.id !== undefined, (qb) =>
       // uses primary key index
       qb.where('token.id', '=', search.id!),
     )
-    .if(search.did !== undefined, (qb) =>
+    .$if(search.did !== undefined, (qb) =>
       // uses "token_did_idx" index
       qb.where('token.did', '=', search.did!),
     )
-    .if(search.code !== undefined, (qb) =>
+    .$if(search.code !== undefined, (qb) =>
       // uses "token_code_idx" partial index (hence the null check)
       qb
         .where('token.code', '=', search.code!)
         .where('token.code', 'is not', null),
     )
-    .if(search.tokenId !== undefined, (qb) =>
+    .$if(search.tokenId !== undefined, (qb) =>
       // uses "token_token_id_idx"
       qb.where('token.tokenId', '=', search.tokenId!),
     )
-    .if(search.currentRefreshToken !== undefined, (qb) =>
+    .$if(search.currentRefreshToken !== undefined, (qb) =>
       // uses "token_refresh_token_unique_idx"
       qb.where('token.currentRefreshToken', '=', search.currentRefreshToken!),
     )
 }
 
-export const removeByDidQB = (db: AccountDb, did: string) =>
-  // uses "token_did_idx" index
-  db.db.deleteFrom('token').where('did', '=', did)
+export const removeByDid = async (db: AccountDb, did: Did) => {
+  await db.executeWithRetry(
+    db.db
+      .deleteFrom('token')
+      // uses "token_did_idx" index
+      .where('did', '=', did),
+  )
+}
 
 export const rotateQB = (
   db: AccountDb,

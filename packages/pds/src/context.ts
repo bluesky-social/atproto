@@ -277,15 +277,14 @@ export class AppContext {
           )
 
     const accountManager = new AccountManager(
+      cfg,
+      actorStore,
       idResolver,
       jwtSecretKey,
       mailer,
       sequencer,
       plcClient,
       plcRotationKey,
-      cfg.service.did,
-      cfg.identity.serviceHandleDomains,
-      cfg.db,
     )
     await accountManager.migrateOrThrow()
 

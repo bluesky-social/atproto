@@ -642,6 +642,10 @@ export class OAuthProvider extends OAuthVerifier {
         throw new AccountSelectionRequiredError(parameters)
       }
 
+      const ssoSessions = sessions
+        .filter(hasActiveAccount)
+        .filter(matchesHint, parameters)
+
       // prompt=none
       //
       // > The Authorization Server MUST NOT display any authentication or
@@ -653,7 +657,6 @@ export class OAuthProvider extends OAuthVerifier {
       // > Section 3.1.2.6. This can be used as a method to check for existing
       // > authentication and/or consent.
       if (parameters.prompt === 'none') {
-        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length > 1) {
           throw new AccountSelectionRequiredError(parameters)
         }
@@ -682,7 +685,6 @@ export class OAuthProvider extends OAuthVerifier {
 
       // Automatic SSO when a hint was provided that matches a single session
       if (parameters.prompt == null && parameters.login_hint != null) {
-        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
@@ -704,12 +706,14 @@ export class OAuthProvider extends OAuthVerifier {
         client,
         parameters,
         requestUri,
-        sessions,
-        selectedSub:
+        sessions: sessions
+          // Strip un-necessary information (like consentRequired)
+          .map(({ account, loginRequired }) => ({ account, loginRequired })),
+        selectedDid:
           parameters.prompt == null ||
           parameters.prompt === 'login' ||
           parameters.prompt === 'consent'
-            ? sessions.find(matchesHint, parameters)?.account.sub
+            ? sessions.find(matchesHint, parameters)?.account.did
             : undefined,
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
@@ -884,9 +888,9 @@ export class OAuthProvider extends OAuthVerifier {
             // As an additional security measure, we also sign the device out,
             // so that the device cannot be used to access the account anymore
             // without a new authentication.
-            const { deviceId, sub } = tokenInfo.data
+            const { deviceId, did } = tokenInfo.data
             if (deviceId) {
-              await this.accountManager.removeDeviceAccount(deviceId, sub)
+              await this.accountManager.removeDeviceAccount(deviceId, did)
             }
           }
         }
@@ -912,7 +916,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     await this.validateCodeGrant(parameters, input)
 
-    const { account } = await this.accountManager.getAccount(data.sub)
+    const { account } = await this.accountManager.getAccount(data.did)
 
     return this.tokenManager.createToken(
       client,
@@ -1098,5 +1102,9 @@ function matchesHint(
   const hint = this.login_hint
   if (!hint) return false
 
-  return account.sub === hint || account.preferred_username === hint
+  return account.did === hint || account.handle === hint
+}
+
+function hasActiveAccount({ account }: { account: Account }): boolean {
+  return !account.deactivated
 }

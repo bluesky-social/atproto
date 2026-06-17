@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.20.12",
+  "version": "0.20.16",
   "engines": {
     "node": ">=22"
   },
@@ -21,7 +21,7 @@
     "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
     "codegen:code": "node ./scripts/generate-code.mjs",
     "prebuild": "pnpm run codegen:code && if [ ! -f ./src/client/index.ts ] || [ -n \"$(find ../../lexicons -name '*.json' -newer ./src/client/index.ts -type f -print -quit)\" ]; then pnpm run codegen:lex; fi",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
@@ -38,8 +38,7 @@
     "@atproto/lex-cli": "workspace:^",
     "@jest/globals": "^28.1.3",
     "jest": "^30.0.0",
-    "prettier": "^3.2.5",
-    "typescript": "^6.0.3"
+    "prettier": "^3.2.5"
   },
   "type": "module",
   "exports": {

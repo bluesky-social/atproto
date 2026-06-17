@@ -16,8 +16,8 @@ export async function callAsync<F extends (...args: any[]) => unknown>(
 export async function callAsync<F extends (...args: any[]) => unknown>(
   fn?: F,
   ...args: Parameters<F>
-): Promise<Awaited<ReturnType<F>> | undefined> {
-  return (await fn?.(...args)) as Awaited<ReturnType<F>> | undefined
+): Promise<unknown> {
+  return fn?.(...args)
 }
 
 export function invokeOnce<T extends (this: any, ...a: any[]) => any>(

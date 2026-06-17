@@ -1,5 +1,21 @@
 # @atproto/oauth-provider-ui
 
+## 0.7.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- [#5105](https://github.com/bluesky-social/atproto/pull/5105) [`1d0f332`](https://github.com/bluesky-social/atproto/commit/1d0f3325e09460586ec2d728410f9cdca9e09714) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Always show consent screen at the end of oauth flows
+
+## 0.7.3
+
+### Patch Changes
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve UX when the browser fails to redirect the user after the OAuth flow ends
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix error page no longer showing "This request has expired" when navigating back to the authorization page
+
 ## 0.7.2
 
 ### Patch Changes

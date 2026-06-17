@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "engines": {
     "node": ">=22"
   },
@@ -17,15 +17,13 @@
     "directory": "packages/xrpc"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/lexicon": "workspace:^",
     "zod": "^3.23.8"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "type": "module",
   "exports": {
     ".": {

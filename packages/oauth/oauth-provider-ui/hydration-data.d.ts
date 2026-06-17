@@ -18,7 +18,7 @@ export type AuthorizeData = {
   clientTrusted: boolean
   clientFirstParty: boolean
 
-  selectedSub?: Account['sub']
+  selectedDid?: Account['did']
   scope?: string
   loginHint?: string
   uiLocales?: string

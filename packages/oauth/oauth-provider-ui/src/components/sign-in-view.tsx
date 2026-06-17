@@ -60,9 +60,7 @@ export function SignInView({
           onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={clearSession}
-          usernameDefault={
-            session.account.preferred_username || session.account.sub
-          }
+          usernameDefault={session.account.handle || session.account.did}
           usernameReadonly={true}
           rememberDefault={true}
         />
