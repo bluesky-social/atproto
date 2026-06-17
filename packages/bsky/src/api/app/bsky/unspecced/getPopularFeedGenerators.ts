@@ -6,6 +6,8 @@ import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
+const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-passthru'
+
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
 // In the future may take into consideration popularity via likes w/ its own dataplane endpoint.
@@ -37,9 +39,19 @@ export default function (server: Server, ctx: AppContext) {
       let uris: AtUriString[]
       let cursor: string | undefined
 
+      const overrideHeader = Array.isArray(
+        req.headers[SEARCH_V2_OVERRIDE_HEADER],
+      )
+        ? req.headers[SEARCH_V2_OVERRIDE_HEADER].join(',')
+        : req.headers[SEARCH_V2_OVERRIDE_HEADER]
+      const isV2Override =
+        ctx.cfg.searchV2OverrideHeader !== undefined &&
+        overrideHeader === ctx.cfg.searchV2OverrideHeader
+
       const query = params.query?.trim() ?? ''
       if (query) {
-        const useV2 = features.checkGate(features.Gate.SearchV2Enable)
+        const useV2 =
+          features.checkGate(features.Gate.SearchV2Enable) || isV2Override
         if (useV2) {
           const res = await ctx.dataplane.searchFeedGeneratorsV2({
             params: {
