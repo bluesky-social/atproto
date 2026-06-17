@@ -11,7 +11,6 @@ COPY ./package.json ./
 # Move files into the image and install
 COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
-COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
