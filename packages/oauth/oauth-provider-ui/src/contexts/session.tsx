@@ -8,20 +8,11 @@ import {
   useState,
 } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
-import type {
-  Account,
-  ConfirmResetPasswordInput,
-  InitiatePasswordResetInput,
-  Session,
-  SignInInput,
-  SignOutInput,
-  SignUpInput,
-  VerifyHandleAvailabilityInput,
-} from '@atproto/oauth-provider-api'
+import type { Account, Session } from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
 import { upsert } from '#/lib/util.ts'
-import { useCurrentLocale } from '#/locales/locale-provider'
-import { useNotificationsContext } from './notifications'
+import { useCurrentLocale } from '#/locales/locale-provider.jsx'
+import { useNotificationsContext } from './notifications.js'
 
 export type { Session }
 
@@ -35,23 +26,10 @@ export type SessionContextType = {
   setSession: (session: Pick<Session, 'account'> | null) => void
 
   api: Api
-
-  doSignIn: (data: Omit<SignInInput, 'locale'>) => Promise<void>
-  doSignOut: (data: SignOutInput) => Promise<void>
-  doInitiatePasswordReset: (
-    data: Omit<InitiatePasswordResetInput, 'locale'>,
-  ) => Promise<void>
-  doConfirmResetPassword: (data: ConfirmResetPasswordInput) => Promise<void>
-  doValidateNewHandle: (data: VerifyHandleAvailabilityInput) => Promise<void>
-  doSignUp: (data: Omit<SignUpInput, 'locale'>) => Promise<void>
-  doConsent: (
-    sub: string,
-    scope?: string | undefined,
-  ) => Promise<{ url: string }>
-  doReject: () => Promise<{ url: string }>
 }
 
 const SessionContext = createContext<null | SessionContextType>(null)
+SessionContext.displayName = 'SessionContext'
 
 export enum InitialSelectedSession {
   First,
@@ -135,13 +113,39 @@ export function SessionProvider({
     [setCurrent, setSessions],
   )
 
-  const removeSession = useCallback((sub: string) => {
-    setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
-    setCurrent((current) => (current === sub ? null : current))
-  }, [])
+  const updateAccount = useCallback(
+    (sub: string, changes: Partial<Omit<Account, 'sub'>>) => {
+      setSessions((sessions) =>
+        sessions.map((s) =>
+          s.account.sub === sub
+            ? { ...s, account: { ...s.account, ...changes } }
+            : s,
+        ),
+      )
+    },
+    [setSessions],
+  )
+
+  const removeSession = useCallback(
+    (sub: string | string[]) => {
+      if (Array.isArray(sub)) {
+        setSessions((sessions) =>
+          sessions.filter((s) => !sub.includes(s.account.sub)),
+        )
+        setCurrent((current) =>
+          current != null && sub.includes(current) ? null : current,
+        )
+      } else {
+        setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
+        setCurrent((current) => (current === sub ? null : current))
+      }
+    },
+    [setSessions, setCurrent],
+  )
 
   const api = useMemo(() => {
     return new Api({
+      locale,
       onFetchError(err) {
         if (err instanceof UnknownRequestUriError) showBoundary(err)
         if (err instanceof UnauthorizedError) {
@@ -155,100 +159,44 @@ export function SessionProvider({
         }
         throw err
       },
+      onFetchSuccess: {
+        '/sign-in': ({ payload }) => upsertSession(payload),
+        '/sign-up': ({ payload }) => upsertSession(payload),
+        '/sign-out': ({ input }) => removeSession(input.sub),
+        '/update-email-confirm': ({ input }) =>
+          updateAccount(input.sub, {
+            email: input.email,
+            // The store sends a new verification email on change.
+            email_verified: false,
+          }),
+        '/verify-email-confirm': ({ input }) =>
+          updateAccount(input.sub, {
+            email: input.email,
+            email_verified: true,
+          }),
+        '/update-handle': ({ input }) =>
+          updateAccount(input.sub, {
+            preferred_username: input.handle,
+          }),
+      },
       headers: session?.ephemeralToken
         ? () => ({ Authorization: `Bearer ${session.ephemeralToken}` })
         : undefined,
     })
-  }, [session, showBoundary, setCurrent, notify, t])
+  }, [
+    locale,
+    session,
+    showBoundary,
+    removeSession,
+    upsertSession,
+    updateAccount,
+    notify,
+    t,
+  ])
 
-  const doSignIn = useCallback(
-    async (data: Omit<SignInInput, 'locale'>) => {
-      const response = await api.fetch('POST', '/sign-in', { ...data, locale })
-      upsertSession(response)
-    },
-    [api, locale, upsertSession],
-  )
-
-  const doInitiatePasswordReset = useCallback(
-    async (data: Omit<InitiatePasswordResetInput, 'locale'>) => {
-      await api.fetch('POST', '/reset-password-request', { ...data, locale })
-    },
-    [api, locale],
-  )
-
-  const doConfirmResetPassword = useCallback(
-    async (data: ConfirmResetPasswordInput) => {
-      await api.fetch('POST', '/reset-password-confirm', data)
-    },
-    [api],
-  )
-
-  const doValidateNewHandle = useCallback(
-    async (data: VerifyHandleAvailabilityInput) => {
-      await api.fetch('POST', '/verify-handle-availability', data)
-    },
-    [api],
-  )
-
-  const doSignUp = useCallback(
-    async (data: Omit<SignUpInput, 'locale'>) => {
-      const response = await api.fetch('POST', '/sign-up', { ...data, locale })
-      upsertSession(response)
-    },
-    [api, locale, upsertSession],
-  )
-
-  const doSignOut = useCallback(
-    async ({ sub }: SignOutInput) => {
-      await api.fetch('POST', '/sign-out', { sub })
-      setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
-      setCurrent((sessions) => (sessions === sub ? null : sessions))
-    },
-    [api],
-  )
-
-  const doConsent = useCallback(
-    async (sub: string, scope?: string) => {
-      return api.fetch('POST', '/consent', { sub, scope })
-    },
-    [api, sessions],
-  )
-
-  const doReject = useCallback(async () => {
-    return api.fetch('POST', '/reject', {})
-  }, [api])
-
-  const value = useMemo<SessionContextType>(
-    () => ({
-      api,
-
-      sessions,
-      session,
-      setSession,
-
-      doSignIn,
-      doSignOut,
-      doInitiatePasswordReset,
-      doConfirmResetPassword,
-      doValidateNewHandle,
-      doSignUp,
-      doConsent,
-      doReject,
-    }),
-    [
-      api,
-      sessions,
-      session,
-      setSession,
-      doSignIn,
-      doSignOut,
-      doInitiatePasswordReset,
-      doConfirmResetPassword,
-      doValidateNewHandle,
-      doSignUp,
-      doConsent,
-      doReject,
-    ],
+  const value = useMemo(
+    (): SessionContextType => ({ api, sessions, session, setSession }),
+    [api, sessions, session, setSession],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

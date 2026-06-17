@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyGraphGetFollowers,
   AppBskyGraphGetFollows,
@@ -5,7 +6,7 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, followsSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 describe('pds follow views', () => {
   let agent: AtpAgent
@@ -24,7 +25,7 @@ describe('pds follow views', () => {
     await followsSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

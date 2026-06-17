@@ -1,5 +1,6 @@
+import events from 'node:events'
 import { PassThrough, Readable } from 'node:stream'
-import * as streams from '../src/streams'
+import * as streams from '../src/streams.js'
 
 describe('streams', () => {
   describe('forwardStreamErrors', () => {
@@ -113,6 +114,105 @@ describe('streams', () => {
         expect(chunk[0]).toBe(0xa)
         expect(chunk[1]).toBe(0xb)
       }
+    })
+  })
+
+  describe('coalesceByteStream', () => {
+    it('coalesces chunks without changing bytes', async () => {
+      const stream = streams.coalesceByteStream(
+        Readable.from([
+          new Uint8Array([0x1]),
+          new Uint8Array([0x2, 0x3]),
+          new Uint8Array([0x4, 0x5, 0x6]),
+          new Uint8Array([0x7]),
+          new Uint8Array([0x8]),
+          new Uint8Array([0x9]),
+        ]),
+        4,
+      )
+
+      const chunks = await stream.toArray()
+
+      expect(Buffer.concat(chunks)).toEqual(
+        Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9]),
+      )
+
+      for (let i = 0; i < chunks.length; i++) {
+        expect(chunks[i]).toBeInstanceOf(Uint8Array)
+        if (i < chunks.length - 1) {
+          expect(chunks[i].length).toBeGreaterThanOrEqual(4)
+        }
+      }
+    })
+
+    it('yields chunks as they come when target size is 1', async () => {
+      const stream = streams.coalesceByteStream(
+        Readable.from([
+          new Uint8Array([0x1]),
+          new Uint8Array([0x2, 0x3]),
+          new Uint8Array([0x4, 0x5, 0x6]),
+        ]),
+        1,
+      )
+
+      const chunks = await stream.toArray()
+
+      expect(chunks).toEqual([
+        new Uint8Array([0x1]),
+        new Uint8Array([0x2, 0x3]),
+        new Uint8Array([0x4, 0x5, 0x6]),
+      ])
+    })
+
+    it('coalesces into a single chunk when target size exceeds total', async () => {
+      const stream = streams.coalesceByteStream(
+        Readable.from([
+          new Uint8Array([0x1]),
+          new Uint8Array([0x2, 0x3]),
+          new Uint8Array([0x4, 0x5, 0x6]),
+        ]),
+        1000,
+      )
+
+      const chunks = await stream.toArray()
+
+      expect(chunks.length).toBe(1)
+      expect(Buffer.concat(chunks)).toEqual(
+        Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6]),
+      )
+    })
+
+    it('forwards source stream errors', async () => {
+      const source = new PassThrough()
+      const stream = streams.coalesceByteStream(source, 4)
+      const err = new Error('source failed')
+
+      const gotError = events.once(stream, 'error')
+      source.emit('error', err)
+
+      expect(await gotError).toEqual([err])
+    })
+
+    it('destroying the coalesced stream destroys the source', async () => {
+      let finalized = false
+      async function* gen() {
+        try {
+          while (true) {
+            yield new Uint8Array(1024)
+          }
+        } finally {
+          finalized = true
+        }
+      }
+      const source = Readable.from(gen(), { objectMode: false })
+      const stream = streams.coalesceByteStream(source, 4096)
+
+      await events.once(stream, 'data')
+      stream.destroy()
+      await new Promise((resolve) => source.once('close', resolve))
+
+      expect(source.destroyed).toBe(true)
+      expect(finalized).toBe(true)
     })
   })
 

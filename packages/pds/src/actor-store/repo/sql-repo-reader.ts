@@ -8,8 +8,8 @@ import {
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
-import { countAll } from '../../db'
-import { ActorDb } from '../db'
+import { countAll } from '../../db/index.js'
+import { ActorDb } from '../db/index.js'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()
@@ -118,7 +118,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     if (cursor) {
       // use this syntax to ensure we hit the index
       builder = builder.where(
-        sql`((${ref('repoRev')}, ${ref('cid')}) < (${
+        sql<boolean>`((${ref('repoRev')}, ${ref('cid')}) < (${
           cursor.rev
         }, ${cursor.cid.toString()}))`,
       )

@@ -1,10 +1,10 @@
 import { mapDefined } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+import { AppContext } from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -12,9 +12,9 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActors = createPipeline(
@@ -34,6 +34,12 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         includeTakedowns,
         skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
       })
       const results = await searchActors({ ...params, hydrateCtx }, ctx)
       return {
@@ -45,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -80,6 +86,34 @@ const skeleton = async (
     dids: res.dids as DidString[],
     cursor: parseString(res.cursor),
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  const res = await ctx.dataplane.searchActorsV2({
+    params: {
+      query: term,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      limit: params.limit,
+      cursor: params.cursor,
+    },
+  })
+  return {
+    dids: res.actors.map(({ did }) => did as DidString),
+    cursor: parseString(res.pageInfo?.cursor),
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate.SearchV2Enable,
+  )
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (

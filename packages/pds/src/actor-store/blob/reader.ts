@@ -3,9 +3,9 @@ import { Cid, parseCid } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
+import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util.js'
 import { com } from '../../lexicons/index.js'
-import { ActorDb } from '../db'
+import { ActorDb } from '../db/index.js'
 
 export class BlobReader {
   constructor(
@@ -130,11 +130,14 @@ export class BlobReader {
     const { cursor, limit } = opts
     let builder = this.db.db
       .selectFrom('record_blob')
-      .whereNotExists((qb) =>
-        qb
-          .selectFrom('blob')
-          .selectAll()
-          .whereRef('blob.cid', '=', 'record_blob.blobCid'),
+      .where(({ not, exists, selectFrom }) =>
+        not(
+          exists(
+            selectFrom('blob')
+              .selectAll()
+              .whereRef('blob.cid', '=', 'record_blob.blobCid'),
+          ),
+        ),
       )
       .selectAll()
       .orderBy('blobCid', 'asc')

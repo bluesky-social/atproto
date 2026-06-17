@@ -1,7 +1,10 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtxWithViewer, Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import {
+  HydrateCtxWithViewer,
+  Hydrator,
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -9,10 +12,10 @@ import {
   SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { BookmarkInfo } from '../../../../proto/bsky_pb'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { BookmarkInfo } from '../../../../proto/bsky_pb.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getBookmarks = createPipeline(

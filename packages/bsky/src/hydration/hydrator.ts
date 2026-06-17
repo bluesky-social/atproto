@@ -1,20 +1,29 @@
 import assert from 'node:assert'
-import { mapDefined } from '@atproto/common'
+import { dedupeStrs, mapDefined } from '@atproto/common'
+import { atUri } from '@atproto/lex'
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
-import { FeatureGatesClient, ScopedFeatureGatesClient } from '../feature-gates'
+import { DataPlaneClient } from '../data-plane/client/index.js'
+import {
+  FeatureGatesClient,
+  ScopedFeatureGatesClient,
+} from '../feature-gates/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { hydrationLogger } from '../logger'
+import { hydrationLogger } from '../logger.js'
 import {
   Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
   RecordRef,
-} from '../proto/bsky_pb'
-import { ParsedLabelers } from '../util'
-import { uriToDid, uriToDid as didFromUri } from '../util/uris'
+} from '../proto/bsky_pb.js'
+import {
+  SITE_STANDARD_NSID_PREFIX,
+  parseSiteStandardRecordKey,
+} from '../util/standard-site.js'
+import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
+import { ParsedLabelers } from '../util.js'
 import {
   ProfileRecord,
+  isExternalEmbedType,
   isListRuleType,
   isRecordEmbedType,
   isRecordWithMediaType,
@@ -27,7 +36,12 @@ import {
   ProfileAggs,
   ProfileViewerState,
   ProfileViewerStates,
-} from './actor'
+} from './actor.js'
+import {
+  ExternalHydrator,
+  SiteStandardDocuments,
+  SiteStandardPublications,
+} from './external.js'
 import {
   FeedGenAggs,
   FeedGenViewerStates,
@@ -45,7 +59,7 @@ import {
   ThreadContexts,
   ThreadRef,
   Threadgates,
-} from './feed'
+} from './feed.js'
 import {
   BlockEntry,
   Follows,
@@ -60,14 +74,14 @@ import {
   StarterPackAggs,
   StarterPacks,
   Verifications,
-} from './graph'
+} from './graph.js'
 import {
   LabelHydrator,
   LabelerAggs,
   LabelerViewerStates,
   Labelers,
   Labels,
-} from './label'
+} from './label.js'
 import {
   HydrationMap,
   ItemRef,
@@ -77,7 +91,7 @@ import {
   mergeNestedMaps,
   parseDate,
   urisByCollection,
-} from './util'
+} from './util.js'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
@@ -148,6 +162,8 @@ export type HydrationState = {
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
   bookmarks?: Bookmarks
+  siteStandardDocuments?: SiteStandardDocuments
+  siteStandardPublications?: SiteStandardPublications
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -190,6 +206,7 @@ export type HydratorConfig = {
 
 export class Hydrator {
   actor: ActorHydrator
+  external: ExternalHydrator
   feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
@@ -203,6 +220,7 @@ export class Hydrator {
   ) {
     this.config = config
     this.actor = new ActorHydrator(dataplane)
+    this.external = new ExternalHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
@@ -260,6 +278,30 @@ export class Hydrator {
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
+    // Hydrate verification issuer actors so the verification view can expose
+    // the issuer's current handle and displayName. Skipped when no hydrated
+    // actor has any verifications, which is the common case.
+    const issuerDids: DidString[] = []
+    const issuerDidSet = new Set<DidString>()
+    for (const actor of actors.values()) {
+      if (!actor) continue
+      for (const verification of actor.verifications) {
+        const issuer = verification.issuer
+        if (actors.has(issuer) || issuerDidSet.has(issuer)) continue
+        issuerDidSet.add(issuer)
+        issuerDids.push(issuer)
+      }
+    }
+    if (issuerDids.length > 0) {
+      const issuerActors = await this.actor.getActors(issuerDids, {
+        includeTakedowns,
+      })
+      // Merge into actors without overwriting existing entries (the original
+      // dids may have been fetched with skipCacheForDids, etc.).
+      for (const [did, actor] of issuerActors) {
+        if (!actors.has(did)) actors.set(did, actor)
+      }
+    }
     if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
@@ -292,29 +334,31 @@ export class Hydrator {
   async hydrateProfilesDetailed(
     dids: DidString[],
     ctx: HydrateCtx,
+    opts?: {
+      // when set, restricts known followers hydration to this subset of dids
+      knownFollowersDids?: DidString[]
+    },
   ): Promise<HydrationState> {
-    let knownFollowers: KnownFollowersStates = new HydrationMap()
-    try {
-      knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get known followers for profiles',
-      )
-    }
-
-    let activitySubscriptions: ActivitySubscriptionStates = new HydrationMap()
-    try {
-      activitySubscriptions = await this.actor.getActivitySubscriptions(
-        dids,
-        ctx.viewer,
-      )
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get activity subscriptions state for profiles',
-      )
-    }
+    const [knownFollowers, activitySubscriptions] = await Promise.all([
+      this.actor
+        .getKnownFollowers(opts?.knownFollowersDids ?? dids, ctx.viewer)
+        .catch((err): KnownFollowersStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get known followers for profiles',
+          )
+          return new HydrationMap()
+        }),
+      this.actor
+        .getActivitySubscriptions(dids, ctx.viewer)
+        .catch((err): ActivitySubscriptionStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get activity subscriptions state for profiles',
+          )
+          return new HydrationMap()
+        }),
+    ])
 
     const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
 
@@ -587,6 +631,24 @@ export class Hydrator {
       }
     }
 
+    const siteStandardRefs = siteStandardRefsFromPosts(
+      postsLayer0,
+      postsLayer1,
+      postsLayer2,
+    )
+    const siteStandardLabelSubjects = dedupeStrs(
+      siteStandardRefs.map((ref) => ref.uri),
+    )
+    // Site-standard record owners need profile basics so we can populate
+    // `associatedProfiles` on the external embed view. Include them in the
+    // post-author profile fetch below; any DIDs surfaced later by the
+    // dataplane are picked up by the top-up after the parallel batch.
+    const ssRefDids = siteStandardRefs.map((ref) => uriToDid(ref.uri))
+    const knownProfileDids = dedupeStrs([
+      ...allPostUris.map(didFromUri),
+      ...ssRefDids,
+    ])
+
     const [
       postAggs,
       postViewers,
@@ -598,26 +660,61 @@ export class Hydrator {
       labelerState,
       starterPackState,
       postgates,
+      {
+        documents: siteStandardDocuments,
+        publications: siteStandardPublications,
+      },
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs, ctx.viewer),
       ctx.viewer
         ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
         : undefined,
-      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
+      this.label.getLabelsForSubjects(
+        [...allPostUris, ...siteStandardLabelSubjects],
+        ctx.labelers,
+      ),
       this.hydratePostBlocks(posts, ctx),
-      this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
+      this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
+      this.external.getSiteStandardRecordsByRef(
+        siteStandardRefs,
+        ctx.includeTakedowns,
+      ),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
+      actionSiteStandardTakedownLabels(
+        siteStandardDocuments,
+        siteStandardPublications,
+        labels,
+      )
     }
+
+    // Defensive top-up: in the unlikely case the dataplane returned a
+    // publication owned by a DID not present in the post-author or
+    // pinned-ref sets, fetch its profile serially and fold it in.
+    const knownProfileDidsSet = new Set(knownProfileDids)
+    const extraSsDids: DidString[] = []
+    for (const key of siteStandardPublications.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownProfileDidsSet.has(did)) {
+        knownProfileDidsSet.add(did)
+        extraSsDids.push(did)
+      }
+    }
+    const mergedProfileState = extraSsDids.length
+      ? mergeStates(
+          profileState,
+          await this.hydrateProfilesBasic(extraSsDids, ctx),
+        )
+      : profileState
     // combine all hydration state
     return mergeManyStates(
-      profileState,
+      mergedProfileState,
       listState,
       feedGenState,
       labelerState,
@@ -630,6 +727,8 @@ export class Hydrator {
         labels,
         threadgates,
         postgates,
+        siteStandardDocuments,
+        siteStandardPublications,
         ctx,
       },
     )
@@ -747,6 +846,58 @@ export class Hydrator {
     return mergeManyStates(postState, repostProfileState, {
       reposts,
       ctx,
+    })
+  }
+
+  /**
+   * Hydrate the state needed to build an `app.bsky.embed.external#view` for
+   * a set of `site.standard.*` AT-URIs at compose-time. Filters input URIs to
+   * SS collections, fetches latest indexed versions plus labels, and gates
+   * taken-down records.
+   */
+  async hydrateEmbedExternalViewFromUris(
+    uris: AtUriString[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const ssUris = dedupeStrs(
+      uris.filter((u) =>
+        new AtUri(u).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+      ),
+    ) as AtUriString[]
+    if (!ssUris.length) return { ctx }
+    const dids = dedupeStrs(ssUris.map((uri) => uriToDid(uri)))
+
+    const [{ documents, publications }, labels, profiles] = await Promise.all([
+      this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
+      this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+      this.hydrateProfilesBasic(dids, ctx),
+    ])
+    if (!ctx.includeTakedowns) {
+      actionSiteStandardTakedownLabels(documents, publications, labels)
+    }
+    // Edge case: a document's `site` may resolve to a publication owned by a
+    // different repo than any of the input URIs (the dataplane returns it
+    // even though it wasn't requested directly). Top up profile coverage for
+    // any such DIDs with a serial second hydration so `associatedProfiles`
+    // is complete.
+    const knownDids = new Set<string>(dids)
+    const extraDids: DidString[] = []
+    for (const key of publications.keys()) {
+      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      if (!knownDids.has(did)) {
+        knownDids.add(did)
+        extraDids.push(did)
+      }
+    }
+    const profilesState = extraDids.length
+      ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
+      : profiles
+
+    return mergeStates(profilesState, {
+      ctx,
+      labels,
+      siteStandardDocuments: documents,
+      siteStandardPublications: publications,
     })
   }
 
@@ -902,12 +1053,11 @@ export class Hydrator {
         )
       },
     )
-    const blocks = await this.hydrateBidirectionalBlocks(
-      pairsToMap(listCreatorMemberPairs),
-      ctx,
-    )
-    // sample top list items per starter pack based on their follows
-    const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
+    const [blocks, listMemberAggs] = await Promise.all([
+      this.hydrateBidirectionalBlocks(pairsToMap(listCreatorMemberPairs), ctx),
+      // sample top list items per starter pack based on their follows
+      this.actor.getProfileAggregates(listMemberDids),
+    ])
     const listItemUris: AtUriString[] = []
     uris.forEach((uri) => {
       const sp = starterPackState.starterPacks?.get(uri)
@@ -1427,12 +1577,8 @@ const isModList = (
 const labelSubjectsForDid = (dids: DidString[]) => {
   return [
     ...dids,
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
-    ),
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.status.$type, 'self').toString(),
-    ),
+    ...dids.map((did) => atUri(did, app.bsky.actor.profile)),
+    ...dids.map((did) => atUri(did, app.bsky.actor.status)),
   ]
 }
 
@@ -1475,6 +1621,55 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
     uris.push(post.embed.record.record.uri)
   }
   return uris
+}
+
+/**
+ * Returns every strongRef the post embedded as `external.associatedRefs`,
+ * regardless of collection. Callers are responsible for filtering to NSIDs
+ * they care about.
+ */
+const externalAssociatedRefs = (
+  post: Post['record'],
+): { uri: AtUriString; cid: string }[] => {
+  const embed = post?.embed
+  if (!embed) return []
+  if (isExternalEmbedType(embed)) {
+    return embed.external.associatedRefs ?? []
+  }
+  if (isRecordWithMediaType(embed) && isExternalEmbedType(embed.media)) {
+    return embed.media.external.associatedRefs ?? []
+  }
+  return []
+}
+
+/**
+ * Collects standard.site refs across all post layers, deduped by `uri+cid` so
+ * the dataplane batch is minimal even if multiple posts in the layer reference
+ * the same exact version of an SS record. The same `${uri}@${cid}` keys are
+ * what `getSiteStandardRecordsByRef` uses on the resulting hydration maps,
+ * which lets `lookupAssociatedSiteStandardRecords` do an O(1) version-exact
+ * lookup at view time.
+ */
+const siteStandardRefsFromPosts = (...postLayers: Posts[]): ItemRef[] => {
+  const seen = new Set<string>()
+  const out: ItemRef[] = []
+  for (const layer of postLayers) {
+    for (const item of layer.values()) {
+      if (!item) continue
+      for (const ref of externalAssociatedRefs(item.record)) {
+        if (
+          !new AtUri(ref.uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX)
+        ) {
+          continue
+        }
+        const key = `${ref.uri}@${ref.cid}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ uri: ref.uri, cid: ref.cid })
+      }
+    }
+  }
+  return out
 }
 
 const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
@@ -1557,6 +1752,14 @@ export const mergeStates = (
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
     bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
+    siteStandardDocuments: mergeMaps(
+      stateA.siteStandardDocuments,
+      stateB.siteStandardDocuments,
+    ),
+    siteStandardPublications: mergeMaps(
+      stateA.siteStandardPublications,
+      stateB.siteStandardPublications,
+    ),
   }
 }
 
@@ -1573,6 +1776,57 @@ const actionTakedownLabels = (
     if (labels.get(key)?.isTakendown) {
       hydrationMap.set(key, null)
     }
+  }
+}
+
+/**
+ * Apply takedown labels to the site.standard hydration maps. Per-record
+ * takedowns null any entry whose subject URI is taken down; pair takedowns
+ * propagate that null across doc/publication pairs so we never render half
+ * of a moderated embed. Pairs are discovered via `doc.record.site`; orphan
+ * docs and orphan publications are subject only to the per-record sweep.
+ */
+const actionSiteStandardTakedownLabels = (
+  documents: SiteStandardDocuments,
+  publications: SiteStandardPublications,
+  labels: Labels,
+) => {
+  // Pairings have to be captured before nulling — the doc record carries
+  // the publication URI in its `site` field, and we lose it once we null.
+  const pairings: { docKey: string; pubKey: string }[] = []
+  if (documents.size > 0 && publications.size > 0) {
+    const pubKeysByUri = new Map<string, string[]>()
+    for (const key of publications.keys()) {
+      const { uri } = parseSiteStandardRecordKey(key)
+      const list = pubKeysByUri.get(uri)
+      if (list) list.push(key)
+      else pubKeysByUri.set(uri, [key])
+    }
+    for (const [docKey, doc] of documents) {
+      const site = doc?.record.site
+      if (!site || !site.startsWith('at://')) continue
+      for (const pubKey of pubKeysByUri.get(site) ?? []) {
+        pairings.push({ docKey, pubKey })
+      }
+    }
+  }
+
+  // Per-record takedowns: null any entry whose subject URI is taken down.
+  for (const key of documents.keys()) {
+    const { uri } = parseSiteStandardRecordKey(key)
+    if (labels.get(uri)?.isTakendown) documents.set(key, null)
+  }
+  for (const key of publications.keys()) {
+    const { uri } = parseSiteStandardRecordKey(key)
+    if (labels.get(uri)?.isTakendown) publications.set(key, null)
+  }
+
+  // Pair takedowns: if exactly one side of a pair was nulled above, mirror.
+  for (const { docKey, pubKey } of pairings) {
+    const doc = documents.get(docKey)
+    const pub = publications.get(pubKey)
+    if (doc === null && pub !== null) publications.set(pubKey, null)
+    if (pub === null && doc !== null) documents.set(docKey, null)
   }
 }
 

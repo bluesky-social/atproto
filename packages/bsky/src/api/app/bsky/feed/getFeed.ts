@@ -13,15 +13,15 @@ import {
   XRPCError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane'
-import { FeedItem } from '../../../../hydration/feed'
-import { HydrateCtx } from '../../../../hydration/hydrator'
+} from '../../../../data-plane/index.js'
+import { FeedItem } from '../../../../hydration/feed.js'
+import { HydrateCtx } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -29,9 +29,9 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import { BSKY_USER_AGENT, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -210,6 +210,7 @@ const skeletonFromFeedGen = async (
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
     strictResponseProcessing: false,
+    signal: AbortSignal.timeout(10_000),
     headers,
     params: {
       feed: params.feed,

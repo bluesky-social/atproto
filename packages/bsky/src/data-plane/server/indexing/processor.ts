@@ -2,10 +2,10 @@ import { Insertable } from 'kysely'
 import { chunkArray } from '@atproto/common'
 import { Cid, l, lexParse, lexStringify, parseCid } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { BackgroundQueue } from '../background'
-import { Database } from '../db'
-import { DatabaseSchema } from '../db/database-schema'
-import { Notification } from '../db/tables/notification'
+import { BackgroundQueue } from '../background.js'
+import { DatabaseSchema } from '../db/database-schema.js'
+import { Database } from '../db/index.js'
+import { Notification } from '../db/tables/notification.js'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).

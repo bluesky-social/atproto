@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lexicon",
-  "version": "0.6.2",
+  "version": "0.7.2",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "atproto Lexicon schema language library",
   "keywords": [
@@ -13,21 +16,24 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "tsc --build tsconfig.build.json"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/syntax": "workspace:^",
-    "iso-datestring-validator": "^2.2.2",
-    "multiformats": "^9.9.0",
+    "multiformats": "^13.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "jest": "^30.0.0"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

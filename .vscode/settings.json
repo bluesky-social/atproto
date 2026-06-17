@@ -34,20 +34,27 @@
     "undici",
     "webcrypto",
     "whatwg",
-    "xrpc"
+    "xrpc",
   ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
-    "source.sortImports": "never"
-  },
-  "files.associations": {
-    "**/tsconfig/*.json": "jsonc"
+    "source.sortImports": "never",
   },
   "files.defaultLanguage": "ts",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "prettier.semi": false,
-  "prettier.singleQuote": true,
-  "prettier.trailingComma": "es5",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "json.schemas": [
+    {
+      "fileMatch": ["**/tsconfig/*.json", "**/tsconfig.*.json"],
+      "url": "https://json.schemastore.org/tsconfig",
+      "schema": { "allowComments": true, "allowTrailingCommas": true },
+    },
+    {
+      "fileMatch": [".zed/settings.json"],
+      "schema": { "allowComments": true, "allowTrailingCommas": true },
+    },
+  ],
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.experimental.useTsgo": true,
+  "markdown.extension.toc.levels": "2..6",
 }

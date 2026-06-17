@@ -1,9 +1,12 @@
 import type { Account } from '@atproto/oauth-provider-api'
-import type { Override } from '#/lib/util'
-import { InputContainer, InputContainerProps } from '../forms/input-container'
-import { AccountIdentifier } from './account-identifier'
-import { AccountImage } from './account-image'
-import { AccountName } from './account-name'
+import {
+  InputContainer,
+  InputContainerProps,
+} from '#/components/forms/input-container.tsx'
+import type { Override } from '#/lib/util.ts'
+import { AccountIdentifier } from './account-identifier.tsx'
+import { AccountImage } from './account-image.tsx'
+import { AccountName } from './account-name.tsx'
 
 export type AccountCardProps = Override<
   InputContainerProps,

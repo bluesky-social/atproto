@@ -1,4 +1,5 @@
-import { Kysely, Migration, Migrator as KyselyMigrator } from 'kysely'
+import { Kysely } from 'kysely'
+import { Migration, Migrator as KyselyMigrator } from 'kysely/migration'
 
 export class Migrator<T> extends KyselyMigrator {
   constructor(

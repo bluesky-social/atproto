@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { AppContext } from '../context'
-import * as aaApi from './age-assurance'
-import * as kwsApi from './kws'
+import { AppContext } from '../context.js'
+import * as aaApi from './age-assurance/index.js'
+import * as kwsApi from './kws/index.js'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()

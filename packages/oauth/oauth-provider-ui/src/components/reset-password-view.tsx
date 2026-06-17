@@ -1,25 +1,19 @@
 import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
-import { Button } from './forms/button.tsx'
-import { LayoutTitle } from './layouts/layout-title.tsx'
+import { Button } from '#/components/forms/button.tsx'
+import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
 import { ResetPasswordConfirmForm } from './reset-password-confirm-form.tsx'
 import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
 
 export type ResetPasswordViewProps = {
   emailDefault?: string
-  onResetPasswordRequest: (
-    data: { email: string },
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-  onResetPasswordConfirm: (
-    data: {
-      token: string
-      password: string
-    },
-    signal: AbortSignal,
-  ) => void | PromiseLike<void>
-  onBack: () => void
+  onResetPasswordRequest: (data: { email: string }) => void | PromiseLike<void>
+  onResetPasswordConfirm: (data: {
+    token: string
+    password: string
+  }) => void | PromiseLike<void>
+  onBack?: () => void
 }
 
 enum View {
@@ -36,6 +30,7 @@ export function ResetPasswordView({
 }: ResetPasswordViewProps) {
   const { t } = useLingui()
   const [view, setView] = useState<View>(View.RequestReset)
+  const [email, setEmail] = useState(emailDefault)
 
   if (view === View.RequestReset) {
     return (
@@ -53,12 +48,12 @@ export function ResetPasswordView({
         <ResetPasswordRequestForm
           emailDefault={emailDefault}
           submitLabel={<Trans>Next</Trans>}
-          onSubmit={async (data, signal) => {
-            await onResetPasswordRequest(data, signal)
-            if (!signal.aborted) setView(View.ConfirmReset)
+          handler={async (data) => {
+            await onResetPasswordRequest(data)
+            setEmail(data.email)
+            setView(View.ConfirmReset)
           }}
-          cancelLabel={<Trans>Back</Trans>}
-          onCancel={onBack}
+          onBack={onBack}
         />
         <hr className="my-5 border-gray-300 dark:border-gray-700" />
         <center>
@@ -86,13 +81,13 @@ export function ResetPasswordView({
         </p>
 
         <ResetPasswordConfirmForm
+          email={email}
           submitLabel={<Trans>Next</Trans>}
-          onSubmit={async (data, signal) => {
-            await onResetPasswordConfirm(data, signal)
-            if (!signal.aborted) setView(View.PasswordUpdated)
+          handler={async (data) => {
+            await onResetPasswordConfirm(data)
+            setView(View.PasswordUpdated)
           }}
-          cancelLabel={<Trans>Back</Trans>}
-          onCancel={onBack}
+          onBack={() => setView(View.RequestReset)}
         />
       </LayoutTitle>
     )
@@ -111,9 +106,11 @@ export function ResetPasswordView({
           <p className="pb-4">
             <Trans>You can now sign in with your new password.</Trans>
           </p>
-          <Button color="primary" onClick={onBack}>
-            <Trans>Okay</Trans>
-          </Button>
+          {onBack && (
+            <Button color="primary" onClick={() => onBack()}>
+              <Trans>Okay</Trans>
+            </Button>
+          )}
         </center>
       </LayoutTitle>
     )

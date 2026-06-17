@@ -1,6 +1,8 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
+  AppBskyEmbedGallery,
   AppBskyEmbedImages,
   AppBskyEmbedRecordWithMedia,
   AppBskyEmbedVideo,
@@ -12,13 +14,13 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
-import { uriToDid } from '../../src/util/uris'
+import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
   paginateAll,
   stripViewer,
   stripViewerFromPost,
-} from '../_util'
+} from '../_util.js'
 
 const isValidReplyRef = asPredicate(AppBskyFeedPost.validateReplyRef)
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
@@ -50,7 +52,7 @@ describe('pds author feed views', () => {
     carol = sc.dids.carol
     dan = sc.dids.dan
     eve = sc.dids.eve
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()
@@ -392,6 +394,52 @@ describe('pds author feed views', () => {
     })
 
     expect(danFeed.feed.length).toEqual(0)
+  })
+
+  it('includes gallery posts in posts_with_media', async () => {
+    const { data: blob1 } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      Buffer.from('gallery-image-1'),
+      {
+        headers: sc.getHeaders(sc.dids.dan),
+        encoding: 'image/jpeg',
+      },
+    )
+    const { data: blob2 } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      Buffer.from('gallery-image-2'),
+      {
+        headers: sc.getHeaders(sc.dids.dan),
+        encoding: 'image/jpeg',
+      },
+    )
+
+    await sc.post(dan, 'gallery post', undefined, undefined, undefined, {
+      embed: {
+        $type: 'app.bsky.embed.gallery',
+        items: [
+          {
+            $type: 'app.bsky.embed.gallery#image',
+            image: blob1.blob,
+            alt: 'first',
+            aspectRatio: { height: 1, width: 1 },
+          },
+          {
+            $type: 'app.bsky.embed.gallery#image',
+            image: blob2.blob,
+            alt: 'second',
+            aspectRatio: { height: 1, width: 1 },
+          },
+        ],
+      },
+    })
+    await network.processAll()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: dan,
+      filter: 'posts_with_media',
+    })
+
+    expect(danFeed.feed.length).toEqual(1)
+    assert(AppBskyEmbedGallery.isView(danFeed.feed[0].post.embed))
   })
 
   it('filters by posts_no_replies', async () => {

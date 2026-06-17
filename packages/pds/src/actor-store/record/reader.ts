@@ -8,10 +8,10 @@ import {
   ensureValidAtUri,
   ensureValidDid,
 } from '@atproto/syntax'
-import { countAll, notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util.js'
 import { app, com } from '../../lexicons/index.js'
-import { LocalRecords } from '../../read-after-write/types'
-import { ActorDb, Backlink } from '../db'
+import { LocalRecords } from '../../read-after-write/types.js'
+import { ActorDb, Backlink } from '../db/index.js'
 
 export type RecordDescript = {
   uri: string
@@ -88,7 +88,7 @@ export class RecordReader {
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.collection', '=', collection)
-      .if(!includeSoftDeleted, (qb) =>
+      .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
       .orderBy('record.rkey', reverse ? 'asc' : 'desc')
@@ -119,7 +119,7 @@ export class RecordReader {
   }
 
   async getRecord(
-    uri: AtUri,
+    uri: AtUri | AtUriString,
     cid: string | null,
     includeSoftDeleted = false,
   ): Promise<{
@@ -135,7 +135,7 @@ export class RecordReader {
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.uri', '=', uri.toString())
       .selectAll()
-      .if(!includeSoftDeleted, (qb) =>
+      .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
     if (cid) {
@@ -162,7 +162,7 @@ export class RecordReader {
       .selectFrom('record')
       .select('uri')
       .where('record.uri', '=', uri.toString())
-      .if(!includeSoftDeleted, (qb) =>
+      .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
     if (cid) {

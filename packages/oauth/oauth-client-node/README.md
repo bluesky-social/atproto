@@ -263,7 +263,8 @@ after a short period of time (one hour should be more than enough).
 #### `requestLock`
 
 When multiple instances of the client are running, this lock will prevent
-concurrent refreshes of the same session.
+concurrent refreshes of the same session. If the lock fails to be acquired an
+error should be thrown.
 
 Here is an example implementation based on [`redlock`](https://www.npmjs.com/package/redlock):
 

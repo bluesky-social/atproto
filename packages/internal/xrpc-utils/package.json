@@ -1,6 +1,9 @@
 {
   "name": "@atproto-labs/xrpc-utils",
-  "version": "0.0.24",
+  "version": "0.1.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "XRPC server utilities for Node.JS",
   "keywords": [
@@ -18,9 +21,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/xrpc-utils"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -35,10 +36,8 @@
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

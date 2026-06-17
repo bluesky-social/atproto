@@ -3,22 +3,26 @@ import { allFulfilled } from '@atproto/common'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../background'
-import { OzoneConfig, OzoneSecrets } from '../config'
-import { Database } from '../db'
-import { ModerationService } from '../mod-service'
-import { StrikeService } from '../mod-service/strike'
-import { ScheduledActionService } from '../scheduled-action/service'
-import { SettingService } from '../setting/service'
-import { TeamService } from '../team'
-import { getSigningKeyId } from '../util'
-import { EventPusher } from './event-pusher'
-import { EventReverser } from './event-reverser'
-import { MaterializedViewRefresher } from './materialized-view-refresher'
-import { ScheduledActionProcessor } from './scheduled-action-processor'
-import { StrikeExpiryProcessor } from './strike-expiry-processor'
-import { TeamProfileSynchronizer } from './team-profile-synchronizer'
-import { VerificationListener } from './verification-listener'
+import { BackgroundQueue } from '../background.js'
+import { OzoneConfig, OzoneSecrets } from '../config/index.js'
+import { Database } from '../db/index.js'
+import { ModerationService } from '../mod-service/index.js'
+import { StrikeService } from '../mod-service/strike.js'
+import { QueueService } from '../queue/service.js'
+import { ReportStatsService } from '../report/stats.js'
+import { ScheduledActionService } from '../scheduled-action/service.js'
+import { SettingService } from '../setting/service.js'
+import { TeamService } from '../team/index.js'
+import { getSigningKeyId } from '../util.js'
+import { EventPusher } from './event-pusher.js'
+import { EventReverser } from './event-reverser.js'
+import { MaterializedViewRefresher } from './materialized-view-refresher.js'
+import { QueueRouter } from './queue-router.js'
+import { ScheduledActionProcessor } from './scheduled-action-processor.js'
+import { StatsComputer } from './stats-computer.js'
+import { StrikeExpiryProcessor } from './strike-expiry-processor.js'
+import { TeamProfileSynchronizer } from './team-profile-synchronizer.js'
+import { VerificationListener } from './verification-listener.js'
 
 export type DaemonContextOptions = {
   db: Database
@@ -31,7 +35,9 @@ export type DaemonContextOptions = {
   teamProfileSynchronizer: TeamProfileSynchronizer
   scheduledActionProcessor: ScheduledActionProcessor
   strikeExpiryProcessor: StrikeExpiryProcessor
+  queueRouter: QueueRouter
   verificationListener?: VerificationListener
+  statsComputer?: StatsComputer
 }
 
 export class DaemonContext {
@@ -111,6 +117,16 @@ export class DaemonContext {
 
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
+    const queueService = QueueService.creator()
+    const queueRouter = new QueueRouter(db, queueService)
+
+    const reportStatsService = ReportStatsService.creator()
+    const statsComputer = new StatsComputer(
+      db,
+      reportStatsService,
+      cfg.stats.computerIntervalMinutes,
+    )
+
     // Only spawn the listener if verifier config exists and a jetstream URL is provided
     const verificationListener =
       cfg.verifier && cfg.jetstreamUrl
@@ -132,7 +148,9 @@ export class DaemonContext {
       teamProfileSynchronizer,
       scheduledActionProcessor,
       strikeExpiryProcessor,
+      queueRouter,
       verificationListener,
+      statsComputer,
       ...(overrides ?? {}),
     })
   }
@@ -173,8 +191,16 @@ export class DaemonContext {
     return this.opts.strikeExpiryProcessor
   }
 
+  get queueRouter(): QueueRouter {
+    return this.opts.queueRouter
+  }
+
   get verificationListener(): VerificationListener | undefined {
     return this.opts.verificationListener
+  }
+
+  get statsComputer(): StatsComputer | undefined {
+    return this.opts.statsComputer
   }
 
   async start() {
@@ -184,12 +210,18 @@ export class DaemonContext {
     this.teamProfileSynchronizer.start()
     this.scheduledActionProcessor.start()
     this.strikeExpiryProcessor.start()
+    this.queueRouter.start()
     this.verificationListener?.start()
+    this.statsComputer?.start()
   }
 
   async processAll() {
     // Sequential because the materialized view values depend on the events.
     await this.eventPusher.processAll()
+    // Drain pending modEventReport rows into the report table so test code
+    // that calls processAll() after creating reports sees the report rows
+    // immediately (in production this happens via the 1-min poll).
+    await this.queueRouter.routeReports()
     await this.materializedViewRefresher.run()
     await this.teamProfileSynchronizer.run()
   }
@@ -203,7 +235,9 @@ export class DaemonContext {
         this.teamProfileSynchronizer.destroy(),
         this.scheduledActionProcessor.destroy(),
         this.strikeExpiryProcessor.destroy(),
+        this.queueRouter.destroy(),
         this.verificationListener?.stop(),
+        this.statsComputer?.destroy(),
       ])
     } finally {
       await this.backgroundQueue.destroy()

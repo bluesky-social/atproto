@@ -1,19 +1,21 @@
-FROM node:18-alpine AS build
+FROM node:24.15-alpine3.23 AS build
 
-RUN corepack enable
+RUN npm install -g pnpm@11.5.2
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
-RUN corepack prepare --activate
 
 # Move files into the image and install
-COPY ./*.* ./
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path' | sort -u
-COPY ./packages/bsync ./packages/bsync
+# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path' | grep -v 'packages/bsync"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/lex/lex-cbor ./packages/lex/lex-cbor
@@ -30,18 +32,16 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsync...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
-WORKDIR services/bsync
-
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:24.15-alpine3.23
 
 RUN apk add --update dumb-init
 
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/bsync
 COPY --from=build /app /app
+WORKDIR /app/services/bsync
 
 EXPOSE 3000
 ENV BSYNC_PORT=3000
@@ -49,7 +49,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "index.js"]
+CMD ["node", "--enable-source-maps", "--import=./tracer.ts", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsync"

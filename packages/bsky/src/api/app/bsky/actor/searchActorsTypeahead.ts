@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { AppContext } from '../../../../context.js'
+import { DataPlaneClient } from '../../../../data-plane/index.js'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -11,9 +11,9 @@ import {
   RulesFnInput,
   SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActorsTypeahead = createPipeline(
@@ -27,7 +27,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
+      })
       const results = await searchActorsTypeahead(
         { ...params, hydrateCtx },
         ctx,
@@ -41,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -73,6 +82,30 @@ const skeleton = async (
   return {
     dids: res.dids as DidString[],
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  const res = await ctx.dataplane.searchActorsTypeahead({
+    viewer: params.hydrateCtx.viewer ?? undefined,
+    query: term,
+    limit: params.limit,
+  })
+  return {
+    dids: res.actors.map(({ did }) => did as DidString),
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate.SearchV2Enable,
+  )
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (

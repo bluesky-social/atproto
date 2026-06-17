@@ -1,8 +1,8 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { subjectFromInput } from '../../mod-service/subject'
-import { ScheduledTakedownTag } from './util'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
+import { subjectFromInput } from '../../mod-service/subject.js'
+import { ScheduledTakedownTag } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.cancelScheduledActions({

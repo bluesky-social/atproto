@@ -1,6 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetRepostedBy, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, repostsSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 describe('pds repost views', () => {
   let network: TestNetwork
@@ -21,7 +22,7 @@ describe('pds repost views', () => {
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

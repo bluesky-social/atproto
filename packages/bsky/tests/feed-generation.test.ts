@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetActorFeeds,
@@ -18,7 +19,7 @@ import {
 } from '@atproto/dev-env'
 import { SkeletonHandler, app } from '@atproto/pds'
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { forSnapshot, paginateAll } from './_util'
+import { forSnapshot, paginateAll } from './_util.js'
 
 describe('feed generation', () => {
   let network: TestNetwork

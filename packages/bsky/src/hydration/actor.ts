@@ -9,9 +9,9 @@ import {
   isHandleIdentifier,
   normalizeHandle,
 } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client'
+import { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
+import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb.js'
 import {
   ChatDeclarationRecord,
   GermDeclarationRecord,
@@ -27,7 +27,7 @@ import {
   parseRecord,
   parseString,
   safeTakedownRef,
-} from './util'
+} from './util.js'
 
 type AllowActivitySubscriptions = Extract<
   app.bsky.notification.declaration.Main['allowSubscriptions'],
@@ -45,6 +45,7 @@ export type Actor = {
   takedownRef?: string
   isLabeler: boolean
   allowIncomingChatsFrom?: string
+  allowGroupChatInvitesFrom?: string
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
@@ -298,6 +299,7 @@ export class ActorHydrator {
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
+        allowGroupChatInvitesFrom: actor.allowGroupChatInvitesFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: parseDate(actor.createdAt),
         priorityNotifications: actor.priorityNotifications,

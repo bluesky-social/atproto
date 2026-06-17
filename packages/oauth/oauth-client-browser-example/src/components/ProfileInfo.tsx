@@ -16,7 +16,7 @@ export function ProfileInfo({
   // @NOTE for more detailed profile info, we should be using the
   // app.bsky.actor.getProfile query. This example uses the record for
   // demonstration purposes.
-  const profileQuery = useLexRecord(app.bsky.actor.profile)
+  const profileQuery = useLexRecord(app.bsky.actor.profile.main)
 
   const avatarUrl = useBlobRefUrl(profileQuery.data?.value?.avatar)
   const bannerUrl = useBlobRefUrl(profileQuery.data?.value?.banner)
@@ -65,7 +65,9 @@ function useBlobRefUrl(ref: l.BlobRef | null | undefined) {
   )
   const blob = useMemo(() => {
     return blobQuery.data
-      ? new Blob([blobQuery.data.body], { type: blobQuery.data.encoding })
+      ? new Blob([blobQuery.data.body as BlobPart], {
+          type: blobQuery.data.encoding,
+        })
       : null
   }, [blobQuery.data])
   const url = useBlobUrl(blob)

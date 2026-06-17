@@ -1,17 +1,18 @@
 import {
   AppBskyActorDefs,
   AppBskyEmbedExternal,
+  AppBskyEmbedGallery,
   AppBskyEmbedImages,
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedPost,
-} from '../../client'
-import { $Typed } from '../../client/util'
-import { ModerationDecision } from '../decision'
-import { MuteWordMatch, matchMuteWords } from '../mutewords'
-import { ModerationOpts, ModerationSubjectPost } from '../types'
-import { decideAccount } from './account'
-import { decideProfile } from './profile'
+} from '../../client/index.js'
+import { $Typed } from '../../client/util.js'
+import { ModerationDecision } from '../decision.js'
+import { MuteWordMatch, matchMuteWords } from '../mutewords.js'
+import { ModerationOpts, ModerationSubjectPost } from '../types.js'
+import { decideAccount } from './account.js'
+import { decideProfile } from './profile.js'
 
 export function decidePost(
   subject: ModerationSubjectPost,
@@ -200,6 +201,23 @@ function matchAllMuteWords(
         }
       }
     }
+
+    if (post.embed && AppBskyEmbedGallery.isMain(post.embed)) {
+      // post gallery items
+      for (const item of post.embed.items) {
+        if (AppBskyEmbedGallery.isImage(item)) {
+          const matches = matchMuteWords({
+            mutedWords,
+            text: item.alt,
+            languages: post.langs,
+            actor: postAuthor,
+          })
+          if (matches) {
+            return matches
+          }
+        }
+      }
+    }
   }
 
   const { embed } = subject
@@ -238,6 +256,23 @@ function matchAllMuteWords(
             })
             if (matches) {
               return matches
+            }
+          }
+        }
+
+        // quoted post's gallery
+        if (AppBskyEmbedGallery.isMain(embeddedPost.embed)) {
+          for (const item of embeddedPost.embed.items) {
+            if (AppBskyEmbedGallery.isImage(item)) {
+              const matches = matchMuteWords({
+                mutedWords,
+                text: item.alt,
+                languages: embeddedPost.langs,
+                actor: embedAuthor,
+              })
+              if (matches) {
+                return matches
+              }
             }
           }
         }
@@ -284,6 +319,25 @@ function matchAllMuteWords(
               })
               if (matches) {
                 return matches
+              }
+            }
+          }
+
+          // quoted post's gallery when it did a quote + media
+          if (AppBskyEmbedGallery.isMain(embeddedPost.embed.media)) {
+            for (const item of embeddedPost.embed.media.items) {
+              if (AppBskyEmbedGallery.isImage(item)) {
+                const matches = matchMuteWords({
+                  mutedWords,
+                  text: item.alt,
+                  languages: AppBskyFeedPost.isRecord(embeddedPost.record)
+                    ? embeddedPost.langs
+                    : [],
+                  actor: embedAuthor,
+                })
+                if (matches) {
+                  return matches
+                }
               }
             }
           }
@@ -339,6 +393,25 @@ function matchAllMuteWords(
           })
           if (matches) {
             return matches
+          }
+        }
+      }
+
+      // quoted post gallery
+      if (AppBskyEmbedGallery.isView(embed.media)) {
+        for (const item of embed.media.items) {
+          if (AppBskyEmbedGallery.isViewImage(item)) {
+            const matches = matchMuteWords({
+              mutedWords,
+              text: item.alt,
+              languages: AppBskyFeedPost.isRecord(subject.record)
+                ? (subject.record as AppBskyFeedPost.Record).langs
+                : [],
+              actor: embedAuthor,
+            })
+            if (matches) {
+              return matches
+            }
           }
         }
       }

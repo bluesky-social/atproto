@@ -1,4 +1,4 @@
-import { app, chat, com } from '../lexicons/index.js'
+import { app, chat, com, site } from '../lexicons/index.js'
 
 // app.bsky.actor
 
@@ -9,6 +9,7 @@ export type ProfileViewer = app.bsky.actor.defs.ViewerState
 export type KnownFollowers = app.bsky.actor.defs.KnownFollowers
 export type ProfileAssociatedActivitySubscription =
   app.bsky.actor.defs.ProfileAssociatedActivitySubscription
+export type ProfileAssociatedChat = app.bsky.actor.defs.ProfileAssociatedChat
 export type ProfileView = app.bsky.actor.defs.ProfileView
 export type ProfileViewBasic = app.bsky.actor.defs.ProfileViewBasic
 export type ProfileViewDetailed = app.bsky.actor.defs.ProfileViewDetailed
@@ -32,9 +33,20 @@ export const isVideoEmbedType = app.bsky.embed.video.$isTypeOf
 export type VideoEmbed = app.bsky.embed.video.Main
 export type VideoEmbedView = app.bsky.embed.video.View
 
+export const isGalleryEmbedType = app.bsky.embed.gallery.$isTypeOf
+export type GalleryEmbed = app.bsky.embed.gallery.Main
+export type GalleryEmbedView = app.bsky.embed.gallery.View
+export const isGalleryImageEmbedType = app.bsky.embed.gallery.image.$isTypeOf
+export type GalleryImageEmbed = app.bsky.embed.gallery.Image
+export type GalleryImageEmbedView = app.bsky.embed.gallery.ViewImage
+
 export const isExternalEmbedType = app.bsky.embed.external.$isTypeOf
 export type ExternalEmbed = app.bsky.embed.external.Main
 export type ExternalEmbedView = app.bsky.embed.external.View
+export type ExternalEmbedSourceView = app.bsky.embed.external.ViewExternalSource
+export type ExternalEmbedSourceThemeView =
+  app.bsky.embed.external.ViewExternalSourceTheme
+export type ExternalEmbedColorRgb = app.bsky.embed.external.ColorRgb
 
 export const isRecordEmbedType = app.bsky.embed.record.$isTypeOf
 export type RecordEmbed = app.bsky.embed.record.Main
@@ -52,6 +64,7 @@ export type RecordWithMediaEmbedView = app.bsky.embed.recordWithMedia.View
 export type Embed =
   | ImagesEmbed
   | VideoEmbed
+  | GalleryEmbed
   | ExternalEmbed
   | RecordEmbed
   | RecordWithMedia
@@ -59,6 +72,7 @@ export type Embed =
 export type EmbedView =
   | ImagesEmbedView
   | VideoEmbedView
+  | GalleryEmbedView
   | ExternalEmbedView
   | RecordEmbedView
   | RecordWithMediaView
@@ -172,3 +186,8 @@ export const validateStrongRef = com.atproto.repo.strongRef.$safeValidate
 // com.germnetwork.declaration
 
 export type GermDeclarationRecord = com.germnetwork.declaration.Main
+
+// site.standard
+
+export type SiteStandardDocumentRecord = site.standard.document.Main
+export type SiteStandardPublicationRecord = site.standard.publication.Main

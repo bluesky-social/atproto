@@ -4,8 +4,8 @@ import { AddressInfo } from 'node:net'
 import { CID } from 'multiformats/cid'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
-import * as xrpcServer from '../src'
-import { closeServer, createServer } from './_util'
+import * as xrpcServer from '../src/index.js'
+import { closeServer, createServer } from './_util.js'
 
 const LEXICONS: LexiconDoc[] = [
   {

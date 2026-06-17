@@ -1,4 +1,4 @@
-import { InvalidRequestError } from './invalid-request-error'
+import { InvalidRequestError } from './invalid-request-error.js'
 
 export class InvalidInviteCodeError extends InvalidRequestError {
   constructor(details?: string, cause?: unknown) {

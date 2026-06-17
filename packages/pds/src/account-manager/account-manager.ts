@@ -1,5 +1,9 @@
 import { KeyObject } from 'node:crypto'
+import { Client as PlcClient } from '@did-plc/lib'
+import { isEmailValid } from '@hapi/address'
+import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
   AtIdentifierString,
@@ -10,27 +14,51 @@ import {
 import { Cid } from '@atproto/lex-data'
 import { currentDatetimeString, isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../auth-scope'
-import { softDeleted } from '../db'
-import { hasExplicitSlur } from '../handle/explicit-slurs'
+import { AuthScope } from '../auth-scope.js'
+import { softDeleted } from '../db/index.js'
+import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import {
   baseNormalizeAndValidate,
   ensureHandleServiceConstraints,
   isServiceDomain,
-} from '../handle/index'
+} from '../handle/index.js'
 import { com } from '../lexicons/index.js'
-import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
-import * as account from './helpers/account'
-import { AccountStatus, ActorAccount } from './helpers/account'
-import * as auth from './helpers/auth'
-import * as emailToken from './helpers/email-token'
-import * as invite from './helpers/invite'
-import * as password from './helpers/password'
-import * as repo from './helpers/repo'
-import * as scrypt from './helpers/scrypt'
-import * as token from './helpers/token'
+import { httpLogger } from '../logger.js'
+import { ServerMailer } from '../mailer/index.js'
+import { Sequencer } from '../sequencer/index.js'
+import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
+import * as account from './helpers/account.js'
+import { AccountStatus, ActorAccount } from './helpers/account.js'
+import * as auth from './helpers/auth.js'
+import * as emailToken from './helpers/email-token.js'
+import * as invite from './helpers/invite.js'
+import * as password from './helpers/password.js'
+import * as repo from './helpers/repo.js'
+import * as scrypt from './helpers/scrypt.js'
+import * as token from './helpers/token.js'
 
-export { AccountStatus, formatAccountStatus } from './helpers/account'
+export { AccountStatus, formatAccountStatus } from './helpers/account.js'
+
+/**
+ * Thrown by {@link AccountManager.login} when the identifier resolved to a
+ * known account but the supplied credentials (account password / app
+ * password) did not match. The matched `did` is attached so downstream
+ * callers can distinguish "identifier known, credentials wrong" from
+ * "identifier unknown" (which continues to throw a plain
+ * {@link AuthRequiredError}).
+ *
+ * Callers should take care that remote clients *cannot* distinguish the above,
+ * to prevent enumeration attacks. (Tested for in
+ * packages/pds/tests/auth.test.ts)
+ */
+export class InvalidPasswordError extends AuthRequiredError {
+  constructor(
+    public readonly did: string,
+    errorMessage = 'Invalid identifier or password',
+  ) {
+    super(errorMessage)
+  }
+}
 
 export type AccountManagerDbConfig = {
   accountDbLoc: string
@@ -43,6 +71,10 @@ export class AccountManager {
   constructor(
     readonly idResolver: IdResolver,
     readonly jwtKey: KeyObject,
+    readonly mailer: ServerMailer,
+    readonly sequencer: Sequencer,
+    readonly plcClient: PlcClient,
+    readonly plcRotationKey: Keypair,
     readonly serviceDid: string,
     readonly serviceHandleDomains: string[],
     db: AccountManagerDbConfig,
@@ -92,7 +124,7 @@ export class AccountManager {
   async getDidForActor(
     handleOrDid: AtIdentifierString,
     flags?: account.AvailabilityFlags,
-  ): Promise<string | null> {
+  ): Promise<DidString | null> {
     const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
   }
@@ -113,7 +145,7 @@ export class AccountManager {
     handle: string,
     {
       did,
-      allowAnyValid,
+      allowAnyValid = false,
     }: {
       did?: string
       allowAnyValid?: boolean
@@ -143,15 +175,20 @@ export class AccountManager {
         allowAnyValid,
       )
     } else {
+      // When creating an account (no did yet), we require the handle to be a
+      // local service domain. Updating to a custom handle will be possible once
+      // the account was created.
       if (did == null) {
         throw new InvalidRequestError(
           'Not a supported handle domain',
           'UnsupportedDomain',
         )
       }
+
       // verify resolution of a non-service domain
       const resolvedDid = await this.idResolver.handle.resolve(normalized)
       if (resolvedDid !== did) {
+        // @TODO This should use a distinct error code
         throw new InvalidRequestError('External handle did not resolve to DID')
       }
     }
@@ -184,33 +221,36 @@ export class AccountManager {
       throw new InvalidRequestError('Password too long')
     }
 
-    const passwordScrypt = password
-      ? await scrypt.genSaltAndHash(password)
-      : undefined
+    const passwordScrypt =
+      email && password ? await scrypt.genSaltAndHash(password) : undefined
 
     const now = currentDatetimeString()
-    await this.db.transaction(async (dbTxn) => {
+    return this.db.transaction(async (dbTxn) => {
       if (inviteCode) {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
       }
-      await Promise.all([
-        account.registerActor(dbTxn, { did, handle, deactivated }),
-        email && passwordScrypt
-          ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
-          : Promise.resolve(),
-        invite.recordInviteUse(dbTxn, {
-          did,
-          inviteCode,
-          now,
-        }),
-        refreshJwt &&
-          auth.storeRefreshToken(
-            dbTxn,
-            auth.decodeRefreshToken(refreshJwt),
-            null,
-          ),
-        repo.updateRoot(dbTxn, did, repoCid, repoRev),
-      ])
+
+      await account.registerActor(dbTxn, { did, handle, deactivated })
+
+      if (email && passwordScrypt) {
+        await account.registerAccount(dbTxn, { did, email, passwordScrypt })
+      }
+
+      await invite.recordInviteUse(dbTxn, {
+        did,
+        inviteCode,
+        now,
+      })
+
+      if (refreshJwt) {
+        await auth.storeRefreshToken(
+          dbTxn,
+          auth.decodeRefreshToken(refreshJwt),
+          null,
+        )
+      }
+
+      await repo.updateRoot(dbTxn, did, repoCid, repoRev)
     })
   }
 
@@ -236,10 +276,96 @@ export class AccountManager {
     return { accessJwt, refreshJwt }
   }
 
-  // @NOTE should always be paired with a sequenceHandle().
-  // the token output from this method should be passed to sequenceHandle().
-  async updateHandle(did: DidString, handle: HandleString) {
-    return account.updateHandle(this.db, did, handle)
+  /**
+   * Validates the requested handle, updates the PLC document if needed, persists
+   * the new handle locally, and emits an identity event.
+   *
+   * @throws {InvalidRequestError} when the handle is invalid, taken by another
+   * account, or cannot be resolved for non-service domains.
+   *
+   * @see {@link AccountManager.updateAccountHandle} for behavior when the PLC update fails.
+   */
+  async updateHandle(
+    did: DidString,
+    newHandle: string,
+    options?: { allowAnyValid?: boolean },
+  ): Promise<ActorAccount & { handle: HandleString }> {
+    const { account, handle } = await this.validateHandleUpdate(
+      did,
+      newHandle,
+      options,
+    )
+
+    if (did.startsWith('did:plc:')) {
+      // @TODO We should verify the status before issuing a PLC update.
+      await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
+    } else {
+      const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
+      if (resolved.handle !== handle) {
+        throw new InvalidRequestError(
+          'DID is not properly configured for handle',
+        )
+      }
+    }
+
+    // @NOTE If the next line fails (for any reason), we don't "rollback" the
+    // PLC update above. The caller can just call this method again.
+    await this.updateAccountHandle(did, handle)
+
+    return { ...account, handle }
+  }
+
+  async validateHandleUpdate(
+    did: DidString,
+    newHandle: string,
+    options?: { allowAnyValid?: boolean },
+  ): Promise<{
+    did: DidString
+    handle: HandleString
+    // Returned for convenience
+    account: ActorAccount
+  }> {
+    const account = await this.getAccount(did, { includeDeactivated: true })
+    if (!account) {
+      throw new InvalidRequestError('Account not found')
+    }
+
+    const handle = await this.normalizeAndValidateHandle(newHandle, {
+      allowAnyValid: options?.allowAnyValid,
+      did,
+    })
+
+    // Pessimistic check to handle spam: also enforced by updateAccountHandle() and the db.
+    const existing = await this.getAccount(handle, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (existing && existing.did !== did) {
+      throw new InvalidRequestError(
+        `Handle already taken: ${handle}`,
+        'HandleNotAvailable',
+      )
+    }
+
+    return { did, handle, account }
+  }
+
+  /**
+   * @note Failure to emit the identity event will silently be ignored. Users
+   * can emit the event again by updating their handle to the same value.
+   */
+  async updateAccountHandle(
+    did: DidString,
+    handle: HandleString,
+  ): Promise<void> {
+    await account.updateHandle(this.db, did, handle)
+
+    try {
+      await this.sequencer.sequenceIdentity(did, handle)
+    } catch (err) {
+      httpLogger.error({ err, did, handle }, 'failed to sequence handle update')
+    }
   }
 
   async deleteAccount(did: DidString) {
@@ -400,11 +526,11 @@ export class AccountManager {
       if (!validAccountPass) {
         // takendown/suspended accounts cannot login with app password
         if (isSoftDeleted) {
-          throw new AuthRequiredError('Invalid identifier or password')
+          throw new InvalidPasswordError(user.did)
         }
         appPassword = await this.verifyAppPassword(user.did, password)
         if (appPassword === null) {
-          throw new AuthRequiredError('Invalid identifier or password')
+          throw new InvalidPasswordError(user.did)
         }
       }
 
@@ -527,26 +653,143 @@ export class AccountManager {
     await emailToken.deleteEmailToken(this.db, did, purpose)
   }
 
-  async confirmEmail(opts: { did: DidString; token: string }) {
-    const { did, token } = opts
-    await emailToken.assertValidToken(this.db, did, 'confirm_email', token)
-    const now = currentDatetimeString()
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        emailToken.deleteEmailToken(dbTxn, did, 'confirm_email'),
-        account.setEmailConfirmedAt(dbTxn, did, now),
-      ]),
-    )
+  async requestEmailConfirmation(did: DidString, opts?: { locale?: string }) {
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    if (!account.email) {
+      throw new InvalidRequestError('account does not have an email address')
+    }
+
+    const locale = opts?.locale
+    const token = await this.createEmailToken(did, 'confirm_email')
+
+    await this.mailer.sendConfirmEmail({ token, locale }, { to: account.email })
   }
 
-  async updateEmail(opts: { did: DidString; email: string }) {
+  async confirmEmail(did: DidString, email: string, token: string) {
+    const user = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!user) {
+      throw new InvalidRequestError('user not found', 'AccountNotFound')
+    }
+
+    if (user.email !== email.toLowerCase()) {
+      throw new InvalidRequestError('invalid email', 'InvalidEmail')
+    }
+
+    await emailToken.assertValidToken(this.db, did, 'confirm_email', token)
+    const now = currentDatetimeString()
+    await this.db.transaction(async (dbTxn) => {
+      await emailToken.deleteEmailToken(dbTxn, did, 'confirm_email')
+      await account.setEmailConfirmedAt(dbTxn, did, now)
+    })
+
+    user.emailConfirmedAt = now
+
+    return user
+  }
+
+  async requestEmailUpdate(
+    did: DidString,
+    opts?: { locale?: string },
+  ): Promise<{ tokenRequired: boolean }> {
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    if (!account.email) {
+      throw new InvalidRequestError('account does not have an email address')
+    }
+
+    const token = account.emailConfirmedAt
+      ? await this.createEmailToken(did, 'update_email')
+      : null
+
+    if (token) {
+      await this.mailer.sendUpdateEmail(
+        { token, locale: opts?.locale },
+        { to: account.email },
+      )
+    }
+
+    return { tokenRequired: !!token }
+  }
+
+  /**
+   * @throws UserAlreadyExistsError if the new email is already in use by another account
+   */
+  async updateEmail(
+    did: DidString,
+    email: string,
+    token?: string,
+    opts?: { locale?: string; sendConfirmationEmail?: boolean },
+  ): Promise<ActorAccount> {
+    if (!isEmailValid(email) || isDisposableEmail(email)) {
+      throw new InvalidRequestError(
+        'This email address is not supported, please use a different email.',
+      )
+    }
+
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    const tokenRequired = !!account.emailConfirmedAt
+
+    // require a token if account email is confirmed
+    if (!token && tokenRequired) {
+      throw new InvalidRequestError(
+        'confirmation token required',
+        'TokenRequired',
+      )
+    }
+
+    if (token) {
+      await this.assertValidEmailToken(did, 'update_email', token)
+    }
+
+    await this.updateAccountEmail({ did, email })
+
+    account.email = email
+    account.emailConfirmedAt = null
+
+    // Proactively send a confirmation email so that the user can confirm the
+    // new email immediately.
+    if (opts?.sendConfirmationEmail) {
+      const token = await this.createEmailToken(did, 'confirm_email')
+      const locale = opts.locale
+      await this.mailer.sendConfirmEmail({ token, locale }, { to: email })
+    }
+
+    return account
+  }
+
+  async updateAccountEmail(opts: { did: DidString; email: string }) {
     const { did, email } = opts
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        account.updateEmail(dbTxn, did, email),
-        emailToken.deleteAllEmailTokens(dbTxn, did),
-      ]),
-    )
+    await this.db.transaction(async (dbTxn) => {
+      await account.updateEmail(dbTxn, did, email)
+      await emailToken.deleteAllEmailTokens(dbTxn, did)
+    })
   }
 
   async resetPassword(opts: { password: string; token: string }) {

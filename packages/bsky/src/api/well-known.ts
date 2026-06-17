@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { didWebToUrl, isDidWeb } from '@atproto/did'
-import { AppContext } from '../context'
+import { AppContext } from '../context.js'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()

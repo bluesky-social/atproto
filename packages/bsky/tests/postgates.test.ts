@@ -1,6 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppBskyEmbedRecord, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { Users, postgatesSeed } from './seed/postgates'
+import { Users, postgatesSeed } from './seed/postgates.js'
 
 describe('postgates', () => {
   let network: TestNetwork

@@ -4,10 +4,10 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { ACCESS_FULL } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertValidDidDocumentForService } from './util'
+import { assertValidDidDocumentForService } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.activateAccount, {
@@ -48,12 +48,12 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
       const status = await ctx.accountManager.getAccountStatus(requester)
-      await ctx.sequencer.sequenceAccountEvt(requester, status)
-      await ctx.sequencer.sequenceIdentityEvt(
+      await ctx.sequencer.sequenceAccountActivation(
         requester,
         account.handle ?? INVALID_HANDLE,
+        status,
+        syncData,
       )
-      await ctx.sequencer.sequenceSyncEvt(requester, syncData)
     },
   })
 }

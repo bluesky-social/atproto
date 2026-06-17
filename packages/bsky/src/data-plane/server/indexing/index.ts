@@ -10,31 +10,31 @@ import {
   verifyRepo,
 } from '@atproto/repo'
 import { AtUri, DidString } from '@atproto/syntax'
-import { com } from '../../../lexicons'
-import { subLogger } from '../../../logger'
-import { retryXrpc } from '../../../util/retry'
-import { BackgroundQueue } from '../background'
-import { Database } from '../db'
-import { Actor } from '../db/tables/actor'
-import * as Block from './plugins/block'
-import * as ChatDeclaration from './plugins/chat-declaration'
-import * as FeedGenerator from './plugins/feed-generator'
-import * as Follow from './plugins/follow'
-import * as GermDeclaration from './plugins/germ-declaration'
-import * as Labeler from './plugins/labeler'
-import * as Like from './plugins/like'
-import * as List from './plugins/list'
-import * as ListBlock from './plugins/list-block'
-import * as ListItem from './plugins/list-item'
-import * as NotifDeclaration from './plugins/notif-declaration'
-import * as Post from './plugins/post'
-import * as Postgate from './plugins/post-gate'
-import * as Profile from './plugins/profile'
-import * as Repost from './plugins/repost'
-import * as StarterPack from './plugins/starter-pack'
-import * as Status from './plugins/status'
-import * as Threadgate from './plugins/thread-gate'
-import * as Verification from './plugins/verification'
+import { com } from '../../../lexicons/index.js'
+import { subLogger } from '../../../logger.js'
+import { retryXrpc } from '../../../util/retry.js'
+import { BackgroundQueue } from '../background.js'
+import { Database } from '../db/index.js'
+import { Actor } from '../db/tables/actor.js'
+import * as Block from './plugins/block.js'
+import * as ChatDeclaration from './plugins/chat-declaration.js'
+import * as FeedGenerator from './plugins/feed-generator.js'
+import * as Follow from './plugins/follow.js'
+import * as GermDeclaration from './plugins/germ-declaration.js'
+import * as Labeler from './plugins/labeler.js'
+import * as Like from './plugins/like.js'
+import * as ListBlock from './plugins/list-block.js'
+import * as ListItem from './plugins/list-item.js'
+import * as List from './plugins/list.js'
+import * as NotifDeclaration from './plugins/notif-declaration.js'
+import * as Postgate from './plugins/post-gate.js'
+import * as Post from './plugins/post.js'
+import * as Profile from './plugins/profile.js'
+import * as Repost from './plugins/repost.js'
+import * as StarterPack from './plugins/starter-pack.js'
+import * as Status from './plugins/status.js'
+import * as Threadgate from './plugins/thread-gate.js'
+import * as Verification from './plugins/verification.js'
 
 export class IndexingService {
   records: {
@@ -354,6 +354,14 @@ export class IndexingService {
     await this.db.db
       .deleteFrom('post_embed_record')
       .where('post_embed_record.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_video')
+      .where('post_embed_video.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_gallery_image')
+      .where('post_embed_gallery_image.postUri', 'in', postByUser)
       .execute()
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
     await this.db.db

@@ -1,5 +1,5 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      await ctx.accountManager.updateEmail({
+      await ctx.accountManager.updateAccountEmail({
         did: account.did,
         email: body.email,
       })

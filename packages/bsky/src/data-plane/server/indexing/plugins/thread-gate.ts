@@ -1,11 +1,11 @@
 import { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { app } from '../../../../lexicons'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import { app } from '../../../../lexicons/index.js'
+import { BackgroundQueue } from '../../background.js'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
+import { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
 type IndexedGate = DatabaseSchemaType['thread_gate']
 

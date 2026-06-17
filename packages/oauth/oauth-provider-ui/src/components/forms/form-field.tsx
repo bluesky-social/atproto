@@ -1,16 +1,8 @@
-import { JSX, ReactNode, createContext, useMemo } from 'react'
+import { JSX, ReactNode, useMemo } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Override } from '#/lib/util.ts'
-
-export type FieldsetContextValue = {
-  disabled: boolean
-  labelId?: string
-}
-
-export const FieldsetContext = createContext<FieldsetContextValue>({
-  disabled: false,
-})
-FieldsetContext.displayName = 'FieldsetContext'
+import { FieldsetContext, FieldsetContextValue } from './fieldset-context.js'
+import { useFormContext } from './form-context.js'
 
 export type FormFieldProps = Override<
   Omit<JSX.IntrinsicElements['fieldset'], 'aria-labelledby'>,
@@ -22,14 +14,17 @@ export type FormFieldProps = Override<
 export function FormField({
   label,
   children,
-  disabled,
+  disabled: disabledProp = false,
   ...props
 }: FormFieldProps) {
   const labelId = useRandomString({ prefix: 'form-field-' })
+  const formContext = useFormContext()
 
-  const contextValue = useMemo(
+  const disabled = formContext.disabled || disabledProp
+
+  const contextValue = useMemo<FieldsetContextValue>(
     () => ({
-      disabled: disabled ?? false,
+      disabled,
       labelId: label ? labelId : undefined,
     }),
     [disabled, label, labelId],

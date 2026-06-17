@@ -1,24 +1,26 @@
-FROM node:20.20-alpine AS build
+FROM node:24.15-alpine3.23 AS build
 
-RUN corepack enable
+RUN npm install -g pnpm@11.5.2
 
 WORKDIR /app
 
+COPY ./.npmrc ./
+COPY ./.nvmrc ./
 COPY ./package.json ./
-RUN corepack prepare --activate
 
 # Move files into the image and install
-COPY ./*.* ./
+COPY ./pnpm-lock.yaml ./
+COPY ./pnpm-workspace.yaml ./
+COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
 COPY ./packages/lex ./packages/lex
 
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter '@atproto/bsky...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | sort -u
+# pnpm list --filter '@atproto/bsky...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | grep -v 'packages/bsky"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
-COPY ./packages/bsky ./packages/bsky
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -45,6 +47,11 @@ COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
+COPY ./packages/bsky ./packages/bsky
+
+# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
+COPY ./packages/bsync ./packages/bsync
+
 COPY ./services/bsky ./services/bsky
 
 # install all deps
@@ -55,21 +62,18 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
-WORKDIR services/bsky
-
 # Uses assets from build stage to reduce build size
-FROM node:20.20-alpine
+FROM node:24.15-alpine3.23
 
 # dumb-init is used to handle signals properly.
 # runit is installed so it can be (optionally) used for logging via svlogd.
 RUN apk add --update dumb-init runit
 
-
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/services/bsky
 COPY --from=build /app /app
+WORKDIR /app/services/bsky
 
 EXPOSE 3000
 ENV PORT=3000
@@ -77,7 +81,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "api.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "api.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"

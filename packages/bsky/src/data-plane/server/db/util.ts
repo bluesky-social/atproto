@@ -4,12 +4,13 @@ import {
   ExpressionBuilder,
   RawBuilder,
   SelectQueryBuilder,
+  SqlBool,
   SqliteAdapter,
   SqliteIntrospector,
   SqliteQueryCompiler,
   sql,
 } from 'kysely'
-import { DatabaseSchema, DatabaseSchemaType } from './database-schema'
+import { DatabaseSchema, DatabaseSchemaType } from './database-schema.js'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
@@ -21,7 +22,7 @@ export const actorWhereClause = (actor: string) => {
 
 // Applies to actor or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
-  return sql`${alias}."takedownRef" is null`
+  return sql<SqlBool>`${alias}."takedownRef" is null`
 }
 
 export const softDeleted = (actorOrRecord: { takedownRef: string | null }) => {
@@ -35,11 +36,11 @@ export const excluded = <T>(db: DatabaseSchema, col) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`
 }
 
-export const noMatch = sql`1 = 0`
+export const noMatch = sql<SqlBool>`1 = 0`
 
 // Can be useful for large where-in clauses, to get the db to use a hash lookup on the list
-export const valuesList = (vals: unknown[]) => {
-  return sql`(values (${sql.join(vals, sql`), (`)}))`
+export const valuesList = <T = unknown>(vals: unknown[]) => {
+  return sql<T>`(values (${sql.join(vals, sql`), (`)}))`
 }
 
 export const dummyDialect = {
@@ -57,7 +58,9 @@ export const dummyDialect = {
   },
 }
 
-export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
+export type DbRef =
+  | RawBuilder<unknown>
+  | ReturnType<DynamicModule<unknown>['ref']>
 
 export type Subquery = ExpressionBuilder<DatabaseSchemaType, any>
 

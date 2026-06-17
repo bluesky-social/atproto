@@ -1,5 +1,5 @@
 import { ZodError } from 'zod'
-import { check } from '../src/index'
+import { check } from '../src/index.js'
 
 describe('check', () => {
   describe('is', () => {

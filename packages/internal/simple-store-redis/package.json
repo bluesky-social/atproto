@@ -1,6 +1,9 @@
 {
   "name": "@atproto-labs/simple-store-redis",
-  "version": "0.0.1",
+  "version": "0.1.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Redis based simple-store implementation",
   "keywords": [
@@ -14,9 +17,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/simple-store-redis"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,13 +27,11 @@
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
+  "devDependencies": {},
   "peerDependencies": {
     "ioredis": "^5.3.2"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

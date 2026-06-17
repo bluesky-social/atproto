@@ -4,6 +4,8 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Returns a page of messages from a conversation.",
+      "errors": [{ "name": "InvalidConvo" }],
       "parameters": {
         "type": "params",
         "required": ["convoId"],
@@ -31,8 +33,17 @@
                 "type": "union",
                 "refs": [
                   "chat.bsky.convo.defs#messageView",
-                  "chat.bsky.convo.defs#deletedMessageView"
+                  "chat.bsky.convo.defs#deletedMessageView",
+                  "chat.bsky.convo.defs#systemMessageView"
                 ]
+              }
+            },
+            "relatedProfiles": {
+              "description": "Set of all members who authored or reacted to the returned messages. Members referred to by system messages are also included.",
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "chat.bsky.actor.defs#profileViewBasic"
               }
             }
           }

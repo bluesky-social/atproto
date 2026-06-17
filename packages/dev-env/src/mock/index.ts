@@ -1,10 +1,14 @@
-import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
+import {
+  AtpAgent,
+  COM_ATPROTO_MODERATION,
+  ToolsOzoneQueueCreateQueue,
+} from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { AtUri, AtUriString } from '@atproto/syntax'
-import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
-import { postTexts, replyTexts } from './data'
-import blurHashB64 from './img/blur-hash-avatar-b64'
-import labeledImgB64 from './img/labeled-img-b64'
+import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index.js'
+import { postTexts, replyTexts } from './data.js'
+import blurHashB64 from './img/blur-hash-avatar-b64.js'
+import labeledImgB64 from './img/labeled-img-b64.js'
 
 // NOTE
 // deterministic date generator
@@ -109,7 +113,49 @@ export async function generateMockSetup(env: TestNetwork) {
   await env.ozone.addModeratorDid(mod.did)
   await env.ozone.addAdminDid(adminMod.did)
 
-  // Report one user
+  // Create report queues
+  const ozoneAgent = env.ozone.getAgent()
+  const adminHeaders = async (nsid: string) =>
+    env.ozone.modHeaders(nsid, 'admin')
+
+  const createQueue = async (input: {
+    name: string
+    subjectTypes: string[]
+    reportTypes: string[]
+    collection?: string
+  }): Promise<void> => {
+    try {
+      await ozoneAgent.tools.ozone.queue.createQueue(input, {
+        encoding: 'application/json',
+        headers: await adminHeaders('tools.ozone.queue.createQueue'),
+      })
+    } catch (err) {
+      if (!(err instanceof ToolsOzoneQueueCreateQueue.ConflictingQueueError)) {
+        throw err
+      }
+    }
+  }
+
+  await Promise.all([
+    createQueue({
+      name: 'Spammy Accounts',
+      subjectTypes: ['account'],
+      reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
+    }),
+    createQueue({
+      name: 'Threatening Accounts',
+      subjectTypes: ['account'],
+      reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
+    }),
+    createQueue({
+      name: 'Spammy Posts',
+      subjectTypes: ['record'],
+      reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
+      collection: 'app.bsky.feed.post',
+    }),
+  ])
+
+  // Report one user (random)
   const reporter = picka(userAgents)
   await reporter.com.atproto.moderation.createReport({
     reasonType: picka([
@@ -120,6 +166,21 @@ export async function generateMockSetup(env: TestNetwork) {
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
       did: picka(userAgents).did,
+    },
+  })
+
+  // Reports that target queues
+  await alice.com.atproto.moderation.createReport({
+    reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
+    reason: 'This account is spamming',
+    subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.did },
+  })
+  await bob.com.atproto.moderation.createReport({
+    reasonType: 'tools.ozone.report.defs#reasonViolenceThreats',
+    reason: 'Threatened me',
+    subject: {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: carla.did,
     },
   })
 
@@ -179,6 +240,22 @@ export async function generateMockSetup(env: TestNetwork) {
     }
   }
 
+  // Spam post report
+  if (posts.length > 0) {
+    await carla.com.atproto.moderation.createReport({
+      reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
+      reason: 'This post is spam',
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: posts[0].uri,
+        cid: posts[0].cid,
+      },
+    })
+  }
+
+  // Route all reports to queues
+  await env.ozone.daemon.ctx.queueRouter.routeReports()
+
   // make some naughty posts & label them
   const file = Buffer.from(labeledImgB64, 'base64')
   const uploadedImg = await bob.com.atproto.repo.uploadBlob(file, {
@@ -220,6 +297,33 @@ export async function generateMockSetup(env: TestNetwork) {
     val: 'dmca-violation',
   })
 
+  // post with a gallery of images
+  const galleryItems: Array<any> = []
+  for (let i = 0; i < 10; i++) {
+    galleryItems.push({
+      $type: 'app.bsky.embed.gallery#image',
+      image: uploadedImg.data.blob,
+      alt: 'naughty ' + (i + 1),
+      aspectRatio: {
+        $type: 'app.bsky.embed.defs#aspectRatio',
+        width: 10,
+        height: 10,
+      },
+    })
+  }
+  const galleryPost = await bob.app.bsky.feed.post.create(
+    { repo: bob.assertDid },
+    {
+      text: 'look at my cool pics',
+      embed: {
+        $type: 'app.bsky.embed.gallery',
+        items: galleryItems,
+      },
+      createdAt: date.next().value,
+    },
+  )
+  posts.push(galleryPost)
+
   // a set of replies
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
@@ -229,19 +333,24 @@ export async function generateMockSetup(env: TestNetwork) {
       rkey: urip.rkey,
     })
     const author = picka(userAgents)
-    posts.push(
-      await author.app.bsky.feed.post.create(
+    try {
+      const post = await author.app.bsky.feed.post.create(
         { repo: author.did },
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply ? target.value.reply.root : target,
+            root: target.value.reply?.root ?? target,
             parent: target,
           },
           createdAt: date.next().value,
         },
-      ),
-    )
+      )
+
+      posts.push(post)
+    } catch (err) {
+      // @TODO Investigate why this sometimes fails.
+      console.error('Failed to create reply', err)
+    }
   }
 
   // a set of likes
@@ -549,7 +658,7 @@ export async function generateMockSetup(env: TestNetwork) {
   await setVerifier(env.bsky.db, alice.assertDid)
 
   // @TODO These are useful when testing complex threads, but don't need to be enabled all the time. We could make it configurable.
-  // import * as seedThreadV2 from '../seed/thread-v2'
+  // import * as seedThreadV2 from '../seed/thread-v2.js'
   // const sc = env.getSeedClient()
   // await seedThreadV2.simple(sc)
   // await seedThreadV2.long(sc)

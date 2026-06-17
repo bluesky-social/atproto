@@ -1,7 +1,7 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import { IncomingMessage, ServerResponse } from 'node:http'
 import * as jose from 'jose'
-import KeyEncoder from 'key-encoder'
+import KeyEncoderModule from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import { AtIdentifierString, DidString, isDidString } from '@atproto/lex'
@@ -27,8 +27,8 @@ import {
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager/account-manager'
-import { ActorAccount } from './account-manager/helpers/account'
+import { AccountManager } from './account-manager/account-manager.js'
+import { ActorAccount } from './account-manager/helpers/account.js'
 import {
   AccessOutput,
   AdminTokenOutput,
@@ -37,11 +37,14 @@ import {
   RefreshOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
-} from './auth-output'
-import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope'
-import { softDeleted } from './db'
-import { appendVary } from './util/http'
-import { WithRequired } from './util/types'
+} from './auth-output.js'
+import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
+import { softDeleted } from './db/index.js'
+import { appendVary } from './util/http.js'
+import { WithRequired } from './util/types.js'
+
+// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
+const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 export type VerifiedOptions = {
   checkTakedown?: boolean
@@ -465,8 +468,8 @@ export class AuthVerifier {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
 
-    const { payload, protectedHeader } = await jose
-      .jwtVerify(token, this._jwtKey, { ...options, typ: undefined })
+    const { payload } = await jose
+      .jwtVerify(token, this._jwtKey, options)
       .catch((cause) => {
         if (cause instanceof jose.errors.JWTExpired) {
           throw new InvalidRequestError('Token has expired', 'ExpiredToken', {
@@ -480,14 +483,6 @@ export class AuthVerifier {
           )
         }
       })
-
-    // @NOTE: the "typ" is now set in production environments, so we should be
-    // able to safely check it through jose.jwtVerify(). However, tests depend
-    // on @atproto/pds-entryway which does not set "typ" in the access tokens.
-    // For that reason, we still allow it to be missing.
-    if (protectedHeader.typ && options.typ !== protectedHeader.typ) {
-      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
-    }
 
     const { sub, aud, scope, lxm, cnf, jti } = payload
 
@@ -634,7 +629,7 @@ const extractAuthType = (req: IncomingMessage): AuthType | null => {
   return type
 }
 
-const bearerTokenFromReq = (req: IncomingMessage) => {
+export const bearerTokenFromReq = (req: IncomingMessage) => {
   const [type, token] = parseAuthorizationHeader(req)
   return type === AuthType.BEARER ? token : null
 }

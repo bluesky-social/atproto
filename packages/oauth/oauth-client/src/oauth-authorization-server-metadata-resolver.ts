@@ -49,10 +49,10 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
   }
 
   async get(
-    input: string,
+    input: URL | string,
     options?: GetCachedOptions,
   ): Promise<OAuthAuthorizationServerMetadata> {
-    const issuer = oauthIssuerIdentifierSchema.parse(input)
+    const issuer = oauthIssuerIdentifierSchema.parse(String(input))
     if (!this.allowHttpIssuer && issuer.startsWith('http:')) {
       throw new TypeError(
         'Unsecure issuer URL protocol only allowed in development and test environments',

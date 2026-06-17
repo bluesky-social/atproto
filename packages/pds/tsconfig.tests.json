@@ -2,7 +2,7 @@
   "extends": "../../tsconfig/tests.json",
   "compilerOptions": {
     "rootDir": ".",
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
   },
-  "include": ["./tests"]
+  "include": ["./tests/**/*.ts"],
 }

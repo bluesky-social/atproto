@@ -2,8 +2,8 @@ import { randomStr } from '@atproto/crypto'
 import { DatetimeString, currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { com } from '../../lexicons/index.js'
-import { AccountDb } from '../db'
-import * as scrypt from './scrypt'
+import { AccountDb } from '../db/index.js'
+import * as scrypt from './scrypt.js'
 
 export type AppPassDescript = {
   name: string

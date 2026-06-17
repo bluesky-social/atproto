@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex-document",
-  "version": "0.0.19",
+  "version": "0.1.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Lexicon document validation tools for AT",
   "keywords": [
@@ -24,14 +27,10 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": "./dist/index.js",
-      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -45,7 +44,7 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

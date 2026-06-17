@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ProtectedTagSettingKey } from '../../setting/constants'
-import { SettingService } from '../../setting/service'
-import { ProtectedTagSetting } from '../../setting/types'
+import { ProtectedTagSettingKey } from '../../setting/constants.js'
+import { SettingService } from '../../setting/service.js'
+import { ProtectedTagSetting } from '../../setting/types.js'
 
 export const getProtectedTags = async (
   settingService: SettingService,

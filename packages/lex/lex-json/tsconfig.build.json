@@ -6,6 +6,6 @@
     "noImplicitAny": true,
     "importHelpers": true,
     "rootDir": "./src",
-    "outDir": "./dist"
-  }
+    "outDir": "./dist",
+  },
 }

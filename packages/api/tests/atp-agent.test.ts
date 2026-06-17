@@ -1,18 +1,18 @@
 import { TID } from '@atproto/common-web'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { asPredicate } from '../src/client/util.js'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
   AtpAgent,
   ComAtprotoRepoPutRecord,
   DEFAULT_LABEL_SETTINGS,
-} from '../src'
-import { asPredicate } from '../src/client/util'
+} from '../src/index.js'
 import {
   getSavedFeedType,
   savedFeedsToUriArrays,
   validateSavedFeed,
-} from '../src/util'
+} from '../src/util.js'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView

@@ -1,5 +1,43 @@
 # @atproto/syntax
 
+## 0.6.2
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+## 0.6.1
+
+### Patch Changes
+
+- [#4955](https://github.com/bluesky-social/atproto/pull/4955) [`20c5cc1`](https://github.com/bluesky-social/atproto/commit/20c5cc187aab538435c669c6e19a2d2f658af5f8) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `isDatetimeStringLenient` datetime validation utility
+
+## 0.6.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+## 0.5.4
+
+### Patch Changes
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid trailing slashes when stringifying an AtUri
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Align implementation of `ensureValidAtUri` and `ensureValidAtUriRegex`: consistently apply length and fragment charset restrictions
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of `AtUriString` validation
+
+- [#4760](https://github.com/bluesky-social/atproto/pull/4760) [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes a bug where `normalizeDatetime` would return different results for the same input depending on the timezone of the machine it was run on. This caused tests to fail when run in different environments. The fix consists of attempting more consistent parsing strategies first (appending "Z" or " UTC" to the input) before falling back to parsing "as is", which can yield different results depending on the local timezone. The function's documentation has also been updated to reflect this behavior.
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing fragment to `AtUriString` template literal type
+
 ## 0.5.3
 
 ### Patch Changes

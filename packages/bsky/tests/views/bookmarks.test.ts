@@ -1,5 +1,14 @@
 import assert from 'node:assert'
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
   $Typed,
   AppBskyBookmarkCreateBookmark,
   AppBskyBookmarkDefs,
@@ -10,7 +19,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
+import { forSnapshot, paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -43,7 +52,7 @@ describe('appview bookmarks views', () => {
   })
 
   afterEach(async () => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     await clearPrivateData(db)
     await clearBookmarks(db)
   })

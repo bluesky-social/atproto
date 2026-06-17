@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetListFeed, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
@@ -5,7 +6,7 @@ import {
   paginateAll,
   stripViewer,
   stripViewerFromPost,
-} from '../_util'
+} from '../_util.js'
 
 describe('list feed views', () => {
   let network: TestNetwork

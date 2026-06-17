@@ -7,10 +7,14 @@ import {
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot } from '@atproto/repo'
-import { sequencer } from '../../pds'
-import { SeqEvt, Sequencer, formatSeqSyncEvt } from '../src/sequencer'
-import { Outbox } from '../src/sequencer/outbox'
-import userSeed from './seeds/users'
+import {
+  SeqEvt,
+  Sequencer,
+  SyncEvt,
+  formatSeqSyncEvt,
+} from '../src/sequencer/index.js'
+import { Outbox } from '../src/sequencer/outbox.js'
+import userSeed from './seeds/users.js'
 
 describe('sequencer', () => {
   let network: TestNetworkNoAppView
@@ -234,7 +238,7 @@ describe('sequencer', () => {
     )
 
     const dbEvt = await formatSeqSyncEvt(sc.dids.alice, syncData)
-    const evt = cborDecode<sequencer.SyncEvt>(dbEvt.event)
+    const evt = cborDecode<SyncEvt>(dbEvt.event)
     expect(evt.did).toBe(sc.dids.alice)
     const car = await readCarWithRoot(evt.blocks)
     expect(car.root.toString()).toBe(syncData.cid.toString())

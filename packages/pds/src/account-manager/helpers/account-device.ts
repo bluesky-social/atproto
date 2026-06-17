@@ -1,9 +1,9 @@
 import assert from 'node:assert'
 import { DeviceId } from '@atproto/oauth-provider'
 import { DidString } from '@atproto/syntax'
-import { toDateISO } from '../../db'
-import { AccountDb } from '../db'
-import { selectAccountQB } from './account'
+import { toDateISO } from '../../db/index.js'
+import { AccountDb } from '../db/index.js'
+import { selectAccountQB } from './account.js'
 
 export function upsertQB(db: AccountDb, deviceId: DeviceId, did: string) {
   const now = new Date()
@@ -52,10 +52,10 @@ export function selectQB(
         'device.ipAddress',
         'device.lastSeenAt',
       ])
-      .if(filter.sub != null, (qb) =>
+      .$if(filter.sub != null, (qb) =>
         qb.where('actor.did', '=', filter.sub! as DidString),
       )
-      .if(filter.deviceId != null, (qb) =>
+      .$if(filter.deviceId != null, (qb) =>
         qb.where('account_device.deviceId', '=', filter.deviceId!),
       )
   )

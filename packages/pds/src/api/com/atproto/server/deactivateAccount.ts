@@ -1,6 +1,6 @@
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
-import { ACCESS_FULL, AuthScope } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import { ACCESS_FULL, AuthScope } from '../../../../auth-scope.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
           body.deleteAfter ?? null,
         )
         const status = await ctx.accountManager.getAccountStatus(requester)
-        await ctx.sequencer.sequenceAccountEvt(requester, status)
+        await ctx.sequencer.sequenceAccount(requester, status)
       },
     })
   }

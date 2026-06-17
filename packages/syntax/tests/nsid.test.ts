@@ -1,5 +1,5 @@
 import * as fs from 'node:fs'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import {
   InvalidNsidError,
   NSID,
@@ -8,7 +8,7 @@ import {
   parseNsid,
   validateNsid,
   validateNsidRegex,
-} from '../src'
+} from '../src/index.js'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {
@@ -92,7 +92,7 @@ describe('NSID validation', () => {
   })
 
   describe('valid NSIDs', () => {
-    for (const validNsid of [
+    test.each([
       'com.example.foo',
       'o'.repeat(63) + '.foo.bar',
       'com.' + 'o'.repeat(63) + '.foo',
@@ -119,15 +119,11 @@ describe('NSID validation', () => {
       'org.4chan.lex.getThing',
       'test.12345.record',
       'xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two',
-    ]) {
-      it(validNsid, () => {
-        expectValid(validNsid)
-      })
-    }
+    ])('%s', expectValid)
   })
 
   describe('invalid NSIDs', () => {
-    for (const invalidNsid of [
+    test.each([
       'o'.repeat(64) + '.foo.bar',
       'com.' + 'o'.repeat(64) + '.foo',
       'com.example.' + 'o'.repeat(64),
@@ -157,43 +153,22 @@ describe('NSID validation', () => {
       'com.-example.foo',
       'com.example.0foo',
       'com.example.f-o',
-    ]) {
-      it(invalidNsid, () => {
-        expect(validateNsid(invalidNsid)).toMatchObject({
-          success: false,
-          message: expect.any(String),
-        })
-      })
-    }
+    ])('%s', expectInvalid)
   })
 
   describe('conforms to interop valid NSIDs', () => {
-    for (const line of fs
-      .readFileSync(`${__dirname}/interop-files/nsid_syntax_valid.txt`)
-      .toString()
-      .split('\n')) {
-      if (line.startsWith('#') || line.length === 0) {
-        continue
-      }
-
-      it(line, () => {
-        expectValid(line)
-      })
-    }
+    test.each(readInteropLines('nsid_syntax_valid.txt'))('%s', expectValid)
   })
 
   describe('conforms to interop invalid NSIDs', () => {
-    for (const line of fs
-      .readFileSync(`${__dirname}/interop-files/nsid_syntax_invalid.txt`)
-      .toString()
-      .split('\n')) {
-      if (line.startsWith('#') || line.length === 0) {
-        continue
-      }
-
-      it(line, () => {
-        expectInvalid(line)
-      })
-    }
+    test.each(readInteropLines('nsid_syntax_invalid.txt'))('%s', expectInvalid)
   })
 })
+
+function readInteropLines(filename: string): string[] {
+  return fs
+    .readFileSync(`${__dirname}/interop-files/${filename}`)
+    .toString()
+    .split('\n')
+    .filter((line) => line.length > 0 && !line.startsWith('#'))
+}

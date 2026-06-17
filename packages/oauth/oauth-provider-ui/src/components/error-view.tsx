@@ -1,4 +1,5 @@
 import { msg } from '@lingui/core/macro'
+import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import { Override } from '#/lib/util.ts'
 import { LayoutApp, LayoutAppProps } from './layouts/layout-app.tsx'
 import { ErrorCard } from './utils/error-card.tsx'
@@ -20,13 +21,21 @@ export function ErrorView({
   title = msg`An error occurred`,
   ...props
 }: ErrorViewProps) {
+  // @TODO improve error page
   return (
     <LayoutApp title={title} {...props}>
-      <ErrorCard error={error} reset={reset} />
+      <div className="w-[500px] max-w-full">
+        <ErrorCard
+          className="mx-5"
+          error={error}
+          reset={reset}
+          parser={apiErrorParser}
+        />
+      </div>
     </LayoutApp>
   )
 }
 
-export function errorViewRender(props: ErrorViewProps) {
-  return <ErrorView {...props} />
-}
+export const errorViewRender = (props: ErrorViewProps) => (
+  <ErrorView {...props} />
+)

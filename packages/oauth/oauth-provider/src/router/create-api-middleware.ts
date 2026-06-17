@@ -145,10 +145,17 @@ export function createApiMiddleware<
         // Remember when not in the context of a request by default
         const { remember = requestUri == null, ...input } = this.input
 
+        // Look up the client identifier associated with the pending OAuth
+        // request, if any, so it can be surfaced to the sign-in hooks.
+        const clientId = requestUri
+          ? await server.requestManager.peekClientId(requestUri)
+          : undefined
+
         const account = await server.accountManager.authenticateAccount(
           deviceId,
           deviceMetadata,
           input,
+          clientId,
         )
 
         if (remember) {
@@ -257,6 +264,135 @@ export function createApiMiddleware<
           this.deviceMetadata,
           this.input,
         )
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/update-email-request',
+      schema: z
+        .object({
+          sub: subSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        const { tokenRequired } =
+          await server.accountManager.updateEmailRequest(
+            this.deviceId,
+            this.deviceMetadata,
+            this.input,
+            account,
+          )
+
+        return { json: { tokenRequired } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/update-email-confirm',
+      schema: z
+        .object({
+          sub: subSchema,
+          email: emailSchema,
+          token: emailOtpSchema.optional(),
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.updateEmailConfirm(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/verify-email-request',
+      schema: z
+        .object({
+          sub: subSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.verifyEmailRequest(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/verify-email-confirm',
+      schema: z
+        .object({
+          sub: subSchema,
+          token: emailOtpSchema,
+          email: emailSchema,
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.verifyEmailConfirm(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { success: true } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/update-handle',
+      schema: z
+        .object({
+          sub: subSchema,
+          handle: handleSchema,
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        await server.accountManager.updateHandle(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
         return { json: { success: true } }
       },
     }),

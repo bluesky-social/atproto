@@ -1,7 +1,7 @@
 import { parseCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
         const status = await ctx.accountManager.getAccountStatus(subject.did)
-        await ctx.sequencer.sequenceAccountEvt(subject.did, status)
+        await ctx.sequencer.sequenceAccount(subject.did, status)
       }
 
       return {

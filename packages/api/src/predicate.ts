@@ -1,5 +1,5 @@
-import { AppBskyActorDefs, AppBskyActorProfile } from './client/index'
-import { asPredicate } from './client/util'
+import { AppBskyActorDefs, AppBskyActorProfile } from './client/index.js'
+import { asPredicate } from './client/util.js'
 
 export const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 export const isValidAdultContentPref = asPredicate(

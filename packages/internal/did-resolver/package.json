@@ -1,6 +1,9 @@
 {
   "name": "@atproto-labs/did-resolver",
-  "version": "0.2.6",
+  "version": "0.3.2",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [
@@ -14,9 +17,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/did-resolver"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -31,10 +32,8 @@
     "@atproto/did": "workspace:^",
     "zod": "^3.23.8"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

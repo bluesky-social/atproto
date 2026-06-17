@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.225",
+  "version": "0.0.242",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -13,21 +13,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "lex build --override --indexFile --lexicons ../../lexicons",
-    "prebuild": "pnpm run codegen",
-    "build": "tsc --build tsconfig.build.json",
+    "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsgo --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-redis-and-db.sh jest",
+    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
     "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
+    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
@@ -60,17 +59,17 @@
     "ioredis": "^5.3.2",
     "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
-    "kysely": "^0.22.0",
+    "kysely": "^0.29.2",
     "leo-profanity": "^1.8.0",
     "murmurhash": "^2.0.1",
-    "p-queue": "^6.6.2",
+    "p-queue": "^8.0.0",
     "pg": "^8.10.0",
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
     "sharp": "^0.33.5",
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
-    "uint8arrays": "3.0.0",
+    "uint8arrays": "^5.0.0",
     "undici": "^6.19.8",
     "zod": "3.23.8"
   },
@@ -80,14 +79,19 @@
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@did-plc/server": "^0.0.1",
-    "@jest/globals": "28",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
-    "@types/pg": "^8.6.6",
+    "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
-    "jest": "^28.1.2",
     "ts-node": "^10.8.2",
-    "typescript": "^5.6.3"
+    "vitest": "^4.0.16"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

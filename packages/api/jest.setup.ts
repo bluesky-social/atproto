@@ -1,5 +1,5 @@
-import { ModerationUI } from './src'
-import { ModerationTestSuiteResultFlag } from './tests/util/moderation-behavior'
+import { ModerationUI } from './src/index.js'
+import { ModerationTestSuiteResultFlag } from './tests/util/moderation-behavior.js'
 
 expect.extend({
   toBeModerationResult(

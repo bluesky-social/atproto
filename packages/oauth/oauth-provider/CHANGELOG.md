@@ -1,5 +1,156 @@
 # @atproto/oauth-provider
 
+## 0.18.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5), [`1d0f332`](https://github.com/bluesky-social/atproto/commit/1d0f3325e09460586ec2d728410f9cdca9e09714)]:
+  - @atproto-labs/simple-store-memory@0.2.1
+  - @atproto/oauth-provider-api@0.6.2
+  - @atproto/oauth-provider-ui@0.7.4
+  - @atproto-labs/simple-store@0.4.1
+  - @atproto-labs/fetch-node@0.3.1
+  - @atproto/oauth-scopes@0.5.1
+  - @atproto/oauth-types@0.7.2
+  - @atproto/lex-document@0.1.1
+  - @atproto/lex-resolver@0.1.1
+  - @atproto-labs/fetch@0.3.1
+  - @atproto/jwk-jose@0.2.1
+  - @atproto-labs/pipe@0.2.1
+  - @atproto/jwk@0.7.1
+  - @atproto/common@0.6.3
+  - @atproto/syntax@0.6.2
+  - @atproto/did@0.5.1
+
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies [[`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe), [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe)]:
+  - @atproto/oauth-provider-ui@0.7.3
+
+## 0.18.2
+
+### Patch Changes
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to change the user handle through the account manager interface
+
+- Updated dependencies [[`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372), [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372), [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372), [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372), [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372)]:
+  - @atproto/oauth-provider-ui@0.7.2
+  - @atproto/oauth-provider-api@0.6.1
+
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies [[`30ccc25`](https://github.com/bluesky-social/atproto/commit/30ccc25adfa8ef3b5393c65ab8af9b827e1e2c80), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc), [`622d365`](https://github.com/bluesky-social/atproto/commit/622d365aeb240133f40763a3b1c43981112837fc)]:
+  - @atproto/oauth-provider-ui@0.7.1
+  - @atproto/oauth-scopes@0.5.0
+  - @atproto/did@0.5.0
+  - @atproto/oauth-types@0.7.1
+
+## 0.18.0
+
+### Minor Changes
+
+- [#4883](https://github.com/bluesky-social/atproto/pull/4883) [`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for email verification and management in the account management interface
+
+### Patch Changes
+
+- Updated dependencies [[`64f5148`](https://github.com/bluesky-social/atproto/commit/64f5148ad8dcd669f77a9e022bd2622b2e594e0d)]:
+  - @atproto/oauth-provider-api@0.6.0
+  - @atproto/oauth-provider-ui@0.7.0
+
+## 0.17.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common@0.6.0
+  - @atproto/did@0.4.0
+  - @atproto/jwk@0.7.0
+  - @atproto/jwk-jose@0.2.0
+  - @atproto/lex-document@0.1.0
+  - @atproto/lex-resolver@0.1.0
+  - @atproto/oauth-provider-api@0.5.0
+  - @atproto/oauth-provider-ui@0.6.0
+  - @atproto/oauth-scopes@0.4.0
+  - @atproto/oauth-types@0.7.0
+  - @atproto/syntax@0.6.0
+  - @atproto-labs/fetch@0.3.0
+  - @atproto-labs/fetch-node@0.3.0
+  - @atproto-labs/pipe@0.2.0
+  - @atproto-labs/simple-store@0.4.0
+  - @atproto-labs/simple-store-memory@0.2.0
+
+## 0.16.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.0.24
+
+## 0.16.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-document@0.0.21
+  - @atproto/lex-resolver@0.0.23
+
+## 0.16.3
+
+### Patch Changes
+
+- [#4880](https://github.com/bluesky-social/atproto/pull/4880) [`5d3e248`](https://github.com/bluesky-social/atproto/commit/5d3e248c262f45e3ca471d8d2381830a4cd896ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `/.well-known/change-password` page
+
+- Updated dependencies [[`5d3e248`](https://github.com/bluesky-social/atproto/commit/5d3e248c262f45e3ca471d8d2381830a4cd896ae)]:
+  - @atproto/oauth-provider-ui@0.5.2
+
+## 0.16.2
+
+### Patch Changes
+
+- Updated dependencies [[`84eb5ed`](https://github.com/bluesky-social/atproto/commit/84eb5ed95d145870a85ea380df3edf6c591c6310)]:
+  - @atproto/oauth-provider-ui@0.5.1
+
+## 0.16.1
+
+### Patch Changes
+
+- [#4857](https://github.com/bluesky-social/atproto/pull/4857) [`c531144`](https://github.com/bluesky-social/atproto/commit/c531144d248f3b88b417fe2bf99b3260225a8cbe) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Add new onSignInFailed hook, plumb clientId through to existing sign-in hooks
+
+## 0.16.0
+
+### Minor Changes
+
+- [#4820](https://github.com/bluesky-social/atproto/pull/4820) [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Unify account management and authorization pages into a signle package
+
+### Patch Changes
+
+- [#4820](https://github.com/bluesky-social/atproto/pull/4820) [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Account management interface improvements
+
+- [#4855](https://github.com/bluesky-social/atproto/pull/4855) [`0cfb16b`](https://github.com/bluesky-social/atproto/commit/0cfb16b2bfead81284317f2f893838384070d219) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable COEP headers when hCaptcha is enabled
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+  - @atproto/oauth-provider-api@0.4.0
+  - @atproto/oauth-provider-ui@0.5.0
+  - @atproto/lex-resolver@0.0.22
+  - @atproto/lex-document@0.0.20
+
 ## 0.15.16
 
 ### Patch Changes

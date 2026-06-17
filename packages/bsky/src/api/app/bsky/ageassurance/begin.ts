@@ -7,24 +7,24 @@ import {
   MethodNotImplementedError,
   Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import { AppContext } from '../../../../context.js'
 type InputSchema = app.bsky.ageassurance.begin.$InputBody
 import { app } from '../../../../lexicons/index.js'
-import { httpLogger as log } from '../../../../logger'
-import { ActorInfo } from '../../../../proto/bsky_pb'
-import { AGE_ASSURANCE_CONFIG } from '../../../age-assurance/const'
+import { httpLogger as log } from '../../../../logger.js'
+import { ActorInfo } from '../../../../proto/bsky_pb.js'
+import { AGE_ASSURANCE_CONFIG } from '../../../age-assurance/const.js'
 import {
   KWS_SUPPORTED_LANGUAGES,
   KWS_V2_COUNTRIES,
-} from '../../../age-assurance/kws/const'
+} from '../../../age-assurance/kws/const.js'
 import {
   KWSExternalPayloadTooLargeError,
   KWSExternalPayloadVersion,
   serializeKWSExternalPayloadV2,
-} from '../../../age-assurance/kws/external-payload'
-import { createEvent } from '../../../age-assurance/stash'
-import { createLocationString } from '../../../age-assurance/util'
-import { getClientUa } from '../../../kws/util'
+} from '../../../age-assurance/kws/external-payload.js'
+import { createEvent } from '../../../age-assurance/stash.js'
+import { createLocationString } from '../../../age-assurance/util.js'
+import { getClientUa } from '../../../kws/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.ageassurance.begin, {

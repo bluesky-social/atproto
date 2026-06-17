@@ -1,0 +1,65 @@
+{
+  "defs": {
+    "main": {
+      "description": "A publication record representing a blog, website, or content platform. Publications serve as containers for documents and define the overall branding and settings.",
+      "key": "tid",
+      "record": {
+        "properties": {
+          "basicTheme": {
+            "description": "Simplified publication theme for tools and apps to utilize when displaying content.",
+            "ref": "site.standard.theme.basic",
+            "type": "ref"
+          },
+          "description": {
+            "description": "Brief description of the publication.",
+            "maxGraphemes": 3000,
+            "maxLength": 30000,
+            "type": "string"
+          },
+          "icon": {
+            "accept": ["image/*"],
+            "description": "Square image to identify the publication. Should be at least 256x256.",
+            "maxSize": 1000000,
+            "type": "blob"
+          },
+          "labels": {
+            "description": "Self-label values for this publication. Effectively content warnings.",
+            "refs": ["com.atproto.label.defs#selfLabels"],
+            "type": "union"
+          },
+          "name": {
+            "description": "Name of the publication.",
+            "maxGraphemes": 500,
+            "maxLength": 5000,
+            "type": "string"
+          },
+          "preferences": {
+            "description": "Object containing platform specific preferences (with a few shared properties).",
+            "ref": "#preferences",
+            "type": "ref"
+          },
+          "url": {
+            "description": "Base publication url (ex: https://standard.site). The canonical document URL is formed by combining this value with the document path.",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": ["url", "name"],
+        "type": "object"
+      },
+      "type": "record"
+    },
+    "preferences": {
+      "properties": {
+        "showInDiscover": {
+          "default": true,
+          "description": "Boolean which decides whether the publication should appear in discovery feeds.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "id": "site.standard.publication",
+  "lexicon": 1
+}

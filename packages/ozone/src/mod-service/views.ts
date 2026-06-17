@@ -9,17 +9,17 @@ import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { Database } from '../db'
-import { LabelRow } from '../db/schema/label'
-import { ids } from '../lexicon/lexicons'
-import { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs'
-import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
+import { Database } from '../db/index.js'
+import { LabelRow } from '../db/schema/label.js'
+import { ids } from '../lexicon/lexicons.js'
+import { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs.js'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
 import {
   Label,
   validateSelfLabels,
-} from '../lexicon/types/com/atproto/label/defs'
-import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
+} from '../lexicon/types/com/atproto/label/defs.js'
+import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport.js'
+import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs.js'
 import {
   BlobView,
   ModEventView,
@@ -46,17 +46,21 @@ import {
   isModEventTakedown,
   isRecordEvent,
   isScheduleTakedownEvent,
-} from '../lexicon/types/tools/ozone/moderation/defs'
-import { Un$Typed, asPredicate } from '../lexicon/util'
-import { dbLogger, httpLogger } from '../logger'
-import { ParsedLabelers } from '../util'
-import { moderationSubjectStatusQueryBuilder } from './status'
-import { subjectFromEventRow, subjectFromStatusRow } from './subject'
+} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { Un$Typed, asPredicate } from '../lexicon/util.js'
+import { dbLogger, httpLogger } from '../logger.js'
+import { ParsedLabelers } from '../util.js'
+import { moderationSubjectStatusQueryBuilder } from './status.js'
+import {
+  ModSubject,
+  subjectFromEventRow,
+  subjectFromStatusRow,
+} from './subject.js'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
-} from './types'
-import { formatLabel, getPdsAgentForRepo, signLabel } from './util'
+} from './types.js'
+import { formatLabel, getPdsAgentForRepo, signLabel } from './util.js'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 
@@ -148,7 +152,9 @@ export class ModerationViews {
       modTool: row.modTool
         ? {
             name: row.modTool.name,
-            meta: row.modTool.meta,
+            meta: sanitizeUnsafeIntegers(row.modTool.meta) as
+              | Record<string, unknown>
+              | undefined,
           }
         : undefined,
     }
@@ -297,14 +303,8 @@ export class ModerationViews {
   async eventDetail(
     result: ModerationEventRowWithHandle,
   ): Promise<ModEventViewDetail> {
-    const subjectId =
-      result.subjectType === 'com.atproto.admin.defs#repoRef'
-        ? result.subjectDid
-        : result.subjectUri
-    if (!subjectId) {
-      throw new Error(`Bad subject: ${result.id}`)
-    }
-    const subject = await this.subject(subjectId)
+    const modSubject = subjectFromEventRow(result)
+    const subject = await this.subject(modSubject)
     const eventView = this.formatEvent(result)
     const allBlobs = 'value' in subject ? findBlobRefs(subject.value) : []
     const subjectBlobs = await this.blob(
@@ -555,10 +555,16 @@ export class ModerationViews {
   }
   // Partial view for subjects
 
-  async subject(subject: string): Promise<SubjectView> {
-    if (subject.startsWith('did:')) {
-      const repos = await this.repos([subject])
-      const repo = repos.get(subject)
+  async subject(subject: ModSubject): Promise<SubjectView> {
+    if (subject.isConvo()) {
+      return {
+        $type: 'tools.ozone.moderation.defs#convoView',
+        did: subject.did,
+        convoId: subject.convoId,
+      }
+    } else if (subject.isRepo()) {
+      const repos = await this.repos([subject.did])
+      const repo = repos.get(subject.did)
       if (repo) {
         return {
           ...repo,
@@ -567,23 +573,23 @@ export class ModerationViews {
       } else {
         return {
           $type: 'tools.ozone.moderation.defs#repoViewNotFound',
-          did: subject,
+          did: subject.did,
         }
       }
-    } else {
-      const records = await this.records([{ uri: subject }])
-      const record = records.get(subject)
+    } else if (subject.isRecord()) {
+      const uri = subject.uri
+      const records = await this.records([{ uri }])
+      const record = records.get(uri)
       if (record) {
         return {
           ...record,
           $type: 'tools.ozone.moderation.defs#recordView',
         }
-      } else {
-        return {
-          $type: 'tools.ozone.moderation.defs#recordViewNotFound',
-          uri: subject,
-        }
       }
+    }
+    return {
+      $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+      did: subject.did,
     }
   }
 
@@ -596,7 +602,7 @@ export class ModerationViews {
       this.db.db,
     )
       .where(
-        sql<string>`${ref(
+        sql<boolean>`${ref(
           'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
@@ -636,10 +642,10 @@ export class ModerationViews {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
-      .where((qb) =>
-        qb.where('label.exp', 'is', null).orWhere('label.exp', '>', now),
+      .where((eb) =>
+        eb.or([eb('label.exp', 'is', null), eb('label.exp', '>', now)]),
       )
-      .if(!includeNeg, (qb) => qb.where('neg', '=', false))
+      .$if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
 
@@ -682,20 +688,21 @@ export class ModerationViews {
 
     const builder = moderationSubjectStatusQueryBuilder(this.db.db)
       //
-      .where((qb) => {
-        for (const sub of parsedSubjects) {
-          qb = qb.orWhere((qb) =>
-            qb
-              .where('moderation_subject_status.did', '=', sub.did)
-              .where(
+      .where((eb) =>
+        eb.or(
+          parsedSubjects.map((sub) =>
+            eb.and([
+              eb('moderation_subject_status.did', '=', sub.did),
+              eb(
                 'moderation_subject_status.recordPath',
                 '=',
                 sub.recordPath ?? '',
               ),
-          )
-        }
-        return qb
-      })
+              eb('moderation_subject_status.convoId', '=', ''),
+            ]),
+          ),
+        ),
+      )
 
     const [statusRes, accountsByDid] = await Promise.all([
       builder.execute(),
@@ -881,4 +888,25 @@ export function getSelfLabels(details: {
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts }
   })
+}
+
+// The atproto data model requires all integers to fit within 53 bits
+// (Number.MAX_SAFE_INTEGER). External tools may write larger numbers into
+// "unknown"-typed fields like modTool.meta, which causes lex-json parse
+// failures on the client side. This helper converts unsafe integers to strings.
+function sanitizeUnsafeIntegers(value: unknown): unknown {
+  if (typeof value === 'number') {
+    return Number.isSafeInteger(value) ? value : String(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeUnsafeIntegers)
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = sanitizeUnsafeIntegers(v)
+    }
+    return out
+  }
+  return value
 }

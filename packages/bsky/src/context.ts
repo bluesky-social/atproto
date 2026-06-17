@@ -5,23 +5,23 @@ import { Dispatcher } from 'undici'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
-import { AuthVerifier } from './auth-verifier'
-import { BsyncClient } from './bsync'
-import { ServerConfig } from './config'
-import { CourierClient } from './courier'
-import { DataPlaneClient, HostList } from './data-plane/client'
-import { FeatureGatesClient } from './feature-gates'
-import { Hydrator } from './hydration/hydrator'
-import { KwsClient } from './kws'
-import { httpLogger as log } from './logger'
-import { RolodexClient } from './rolodex'
-import { StashClient } from './stash'
+import { AuthVerifier } from './auth-verifier.js'
+import { BsyncClient } from './bsync.js'
+import { ServerConfig } from './config.js'
+import { CourierClient } from './courier.js'
+import { DataPlaneClient, HostList } from './data-plane/client/index.js'
+import { FeatureGatesClient } from './feature-gates/index.js'
+import { Hydrator } from './hydration/hydrator.js'
+import { KwsClient } from './kws.js'
+import { httpLogger as log } from './logger.js'
+import { RolodexClient } from './rolodex.js'
+import { StashClient } from './stash.js'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
   parseLabelerHeader,
-} from './util'
-import { Views } from './views'
+} from './util.js'
+import { Views } from './views/index.js'
 
 export class AppContext {
   constructor(

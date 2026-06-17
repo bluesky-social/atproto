@@ -1,6 +1,6 @@
 import { LexError } from '@atproto/lex-data'
 import { arrayAgg } from '../util/array-agg.js'
-import { ResultFailure, failureReason } from './result.js'
+import { ResultFailure } from './result.js'
 import {
   Issue,
   IssueInvalidType,
@@ -82,38 +82,6 @@ export class LexValidationError
       issues: this.issues.map((issue) => issue.toJSON()),
     }
   }
-
-  /**
-   * Creates a validation error by combining multiple validation failures.
-   *
-   * This is useful when validating against multiple possible schemas (e.g., unions)
-   * and all branches fail. The resulting error contains issues from all failures.
-   *
-   * @param failures - The validation failures to combine
-   * @returns A single validation error containing all issues from the failures
-   *
-   * @example
-   * ```typescript
-   * const failures = schemas.map(s => s.safeValidate(data)).filter(r => !r.success)
-   * if (failures.length === schemas.length) {
-   *   throw LexValidationError.fromFailures(failures)
-   * }
-   * ```
-   */
-  static fromFailures(
-    failures: readonly ResultFailure<LexValidationError>[],
-  ): LexValidationError {
-    if (failures.length === 1) return failureReason(failures[0])
-    const issues = failures.flatMap(extractFailureIssues)
-    return new LexValidationError(issues, {
-      // Keep the original errors as the cause chain
-      cause: failures.map(failureReason),
-    })
-  }
-}
-
-function extractFailureIssues(result: ResultFailure<LexValidationError>) {
-  return result.reason.issues
 }
 
 function aggregateIssues(issues: Issue[]): Issue[] {

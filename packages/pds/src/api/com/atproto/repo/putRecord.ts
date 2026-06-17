@@ -1,3 +1,4 @@
+import { atUri } from '@atproto/lex'
 import {
   LegacyBlobRef,
   LexMap,
@@ -5,16 +6,15 @@ import {
   isLegacyBlobRef,
   parseCid,
 } from '@atproto/lex-data'
-import { AtUri } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
-import { AppContext } from '../../../../context'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor.js'
+import { AppContext } from '../../../../context.js'
 import { app, com } from '../../../../lexicons/index.js'
-import { dbLogger } from '../../../../logger'
+import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
@@ -23,7 +23,7 @@ import {
   PreparedUpdate,
   prepareCreate,
   prepareUpdate,
-} from '../../../../repo'
+} from '../../../../repo/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.repo.putRecord, {
@@ -53,6 +53,9 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 2,
       },
     ],
+    opts: {
+      jsonLimit: 1_000_000,
+    },
     handler: async ({ auth, input }) => {
       const {
         repo,
@@ -87,7 +90,7 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const uri = AtUri.make(did, collection, rkey)
+      const uri = atUri(did, collection, rkey)
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
       const swapRecordCid =
         typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord

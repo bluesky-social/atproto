@@ -1,9 +1,9 @@
-import { AtpAgent, RichText, RichTextSegment } from '../src'
 import {
   isLink,
   isMention,
   isTag,
-} from '../src/client/types/app/bsky/richtext/facet'
+} from '../src/client/types/app/bsky/richtext/facet.js'
+import { AtpAgent, RichText, RichTextSegment } from '../src/index.js'
 
 describe('detectFacets', () => {
   const agent = new AtpAgent({ service: 'http://localhost' })

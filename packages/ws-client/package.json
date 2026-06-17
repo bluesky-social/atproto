@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ws-client",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Websocket client library",
   "keywords": [
@@ -14,13 +14,11 @@
     "directory": "packages/ws-client"
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "tsc --build tsconfig.build.json"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -29,7 +27,13 @@
   "devDependencies": {
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "jest": "^30.0.0"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

@@ -5,8 +5,8 @@ import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client } from '@atproto/lex'
-import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
-import { BskyConfig } from './types'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
+import { BskyConfig } from './types.js'
 export * from '@atproto/bsky'
 
 export class TestBsky {

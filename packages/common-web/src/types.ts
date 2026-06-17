@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CID } from '@atproto/lex-data'
-import { Def } from './check'
+import { Def } from './check.js'
 
 const cidSchema = z.unknown().transform((obj, ctx): CID => {
   const cid = CID.asCID(obj)
@@ -25,7 +25,7 @@ export type CarHeader = z.infer<typeof carHeader>
 export const schema = {
   cid: cidSchema,
   carHeader,
-  bytes: z.instanceof(Uint8Array),
+  bytes: z.instanceof(Uint8Array<ArrayBufferLike>),
   string: z.string(),
   array: z.array(z.unknown()),
   map: z.record(z.string(), z.unknown()),

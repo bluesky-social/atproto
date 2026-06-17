@@ -1,6 +1,7 @@
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
+import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { oauthClientAssetsMiddleware } from './_oauth_client_assets_middleware.js'
@@ -24,7 +25,7 @@ describe('oauth', () => {
       // For debugging:
       // headless: false,
       // devtools: true,
-      // slowMo: 250,
+      // slowMo: 25,
     })
 
     network = await TestNetworkNoAppView.create({
@@ -70,7 +71,7 @@ describe('oauth', () => {
 
     await page.navigationClick(`Sign up with ${new URL(network.pds.url).host}`)
 
-    await page.assertTitle("S'inscrire")
+    await page.assertTitle('Inscription')
 
     await page.typeInInput('handle', 'bob')
 
@@ -79,10 +80,10 @@ describe('oauth', () => {
     await page.typeInInput('email', 'bob@test.com')
     await page.typeInInput('password', 'bob-pass')
 
-    await page.clickOnText("S'inscrire")
+    await page.clickOnText('Inscription')
 
     await page.ensureTextVisibility(
-      `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
+      `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'autorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
     )
 
     // Make sure the new account is propagated to the PLC directory, allowing
@@ -111,7 +112,7 @@ describe('oauth', () => {
 
     await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
 
-    await page.assertTitle("S'identifier")
+    await page.assertTitle('Se connecter')
 
     // Cancel the OAuth flow:
     await page.navigationClick('Annuler')
@@ -156,7 +157,7 @@ describe('oauth', () => {
 
     expect(sendTemplateMock).toHaveBeenCalledTimes(1)
 
-    const [params] = sendTemplateMock.mock.lastCall
+    const [params] = sendTemplateMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'alice.test',
       token: expect.any(String),

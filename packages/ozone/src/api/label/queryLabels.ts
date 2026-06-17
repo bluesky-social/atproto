@@ -1,7 +1,6 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
+import { AppContext } from '../../context.js'
+import { Server } from '../../lexicon/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ params }) => {
@@ -9,14 +8,13 @@ export default function (server: Server, ctx: AppContext) {
     let builder = ctx.db.db.selectFrom('label').selectAll().limit(limit)
     // if includes '*', then we don't need a where clause
     if (!uriPatterns.includes('*')) {
-      builder = builder.where((qb) => {
-        // starter where clause that is always false so that we can chain `orWhere`s
-        qb = qb.where(sql`1 = 0`)
-        for (const pattern of uriPatterns) {
-          // if no '*', then we're looking for an exact match
-          if (!pattern.includes('*')) {
-            qb = qb.orWhere('uri', '=', pattern)
-          } else {
+      builder = builder.where((eb) =>
+        eb.or(
+          uriPatterns.map((pattern) => {
+            // if no '*', then we're looking for an exact match
+            if (!pattern.includes('*')) {
+              return eb('uri', '=', pattern)
+            }
             if (pattern.indexOf('*') < pattern.length - 1) {
               throw new InvalidRequestError(`invalid pattern: ${pattern}`)
             }
@@ -24,11 +22,10 @@ export default function (server: Server, ctx: AppContext) {
               .slice(0, -1)
               .replaceAll('%', '') // sanitize search pattern
               .replaceAll('_', '\\_') // escape any underscores
-            qb = qb.orWhere('uri', 'like', `${searchPattern}%`)
-          }
-        }
-        return qb
-      })
+            return eb('uri', 'like', `${searchPattern}%`)
+          }),
+        ),
+      )
     }
     if (sources && sources.length > 0) {
       builder = builder.where('src', 'in', sources)

@@ -5,12 +5,11 @@ import { Trans } from '@lingui/react/macro'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Button } from '#/components/forms/button.tsx'
-import { FormCard } from '#/components/forms/form-card.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
-import { LayoutApp } from './components/layouts/layout-app'
+import { LayoutApp } from './components/layouts/layout-app.js'
 
 const {
   //
@@ -35,20 +34,20 @@ function CookieErrorView() {
 
   return (
     <LayoutApp title={msg`Cookie Error`}>
-      <FormCard
+      <form
         action={url.origin}
         method="GET"
-        actions={
-          <Button type="submit" color="primary">
-            <Trans>Continue</Trans>
-          </Button>
-        }
-        className="w-xl"
+        className="w-xl flex flex-col gap-4"
       >
         {Array.from(new Map(url.searchParams)).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
-        <Admonition role="status">
+
+        <Admonition
+          role="alert"
+          variant="warning"
+          title={<Trans>Cookie Error</Trans>}
+        >
           <Trans>
             It seems that your browser is not accepting cookies. Press
             "Continue" to try again. If the error persists, please ensure that
@@ -56,7 +55,13 @@ function CookieErrorView() {
             website.
           </Trans>
         </Admonition>
-      </FormCard>
+
+        <div className="flex flex-wrap items-center justify-end">
+          <Button type="submit" color="primary">
+            <Trans>Continue</Trans>
+          </Button>
+        </div>
+      </form>
     </LayoutApp>
   )
 }

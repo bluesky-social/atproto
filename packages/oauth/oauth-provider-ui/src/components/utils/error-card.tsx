@@ -1,82 +1,87 @@
+import { msg } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
+import { composeEventHandlers } from '@radix-ui/primitive'
 import { useEffect, useMemo, useState } from 'react'
-import { useErrorMessage } from '#/hooks/use-error-message.ts'
-import { Api } from '#/lib/api.ts'
-import { JsonErrorResponse } from '#/lib/json-client.ts'
-import { Admonition } from './admonition.tsx'
+import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
+import { Override } from '#/lib/util.ts'
+import { Admonition, AdmonitionAction, AdmonitionProps } from './admonition.tsx'
+import { ErrorDetails } from './error-details.tsx'
 
-export type ErrorCardProps = {
-  error: unknown
-  reset?: () => void
-}
+export type { ErrorParser, ParsedError }
 
-export function ErrorCard({ error, reset }: ErrorCardProps) {
-  const [inputCount, setInputCount] = useState(0)
-  // Every 5th input will toggle showing the details
-  const showDetails = ((inputCount / 5) | 0) % 2 === 1
+export type ErrorCardProps = Override<
+  Omit<AdmonitionProps, 'role' | 'append' | 'action'>,
+  {
+    error: unknown
+    reset?: () => void
+    parser?: ErrorParser
+  }
+>
 
-  const errorMessage = useErrorMessage(error)
+export function ErrorCard({
+  error,
+  reset,
+  parser,
 
-  const parsedError = useMemo(
-    () =>
-      error instanceof JsonErrorResponse
-        ? // Already parsed:
-          error
-        : // If "error" is a json object, try parsing it as a JsonErrorResponse:
-          Api.parseError(error) ?? error,
-    [error],
+  // Admonition
+  children,
+  onClick,
+  ...props
+}: ErrorCardProps) {
+  const { _ } = useLingui()
+  const [clickCount, setClickCount] = useState(0)
+
+  // Every 5th click; toggle showing the details
+  const showDetails = ((clickCount / 5) | 0) % 2 === 1
+
+  const parsed = useMemo<ParsedError>(
+    () => parser?.(error) ?? parseError(error),
+    [parser, error],
   )
 
   useEffect(() => {
     // For debugging purposes
-    console.warn('Displayed error details:', parsedError)
+    console.warn('Displayed error:', parsed)
 
-    // Reset the input count when the error changes
-    setInputCount(0)
-  }, [parsedError])
+    // Reset the click count when the error changes
+    setClickCount(0)
+  }, [parsed])
 
   return (
     <Admonition
-      onClick={(event) => {
-        if (!event.defaultPrevented) {
-          setInputCount((c) => c + 1)
-        }
-      }}
+      {...props}
       role="alert"
-      title={errorMessage}
-      action={
-        reset != null
-          ? {
-              children: <Trans>Retry</Trans>,
-              onClick: (event) => {
-                if (!event.defaultPrevented) {
-                  event.preventDefault()
-                  reset()
-                }
-              },
-            }
-          : undefined
-      }
+      onClick={composeEventHandlers(onClick, () => {
+        setClickCount((c) => c + 1)
+      })}
       append={
-        showDetails &&
-        (parsedError instanceof JsonErrorResponse ? (
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
-            <dt className="font-semibold">
-              <Trans>Code</Trans>
-            </dt>
-            <dd>
-              <code>{parsedError.error}</code>
-            </dd>
-
-            <dt className="font-semibold">
-              <Trans>Description</Trans>
-            </dt>
-            <dd>{parsedError.description}</dd>
-          </dl>
-        ) : (
-          <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
-        ))
+        <>
+          {children}
+          {showDetails && (
+            <ErrorDetails
+              name={parsed.name}
+              code={parsed.code}
+              message={parsed.message}
+              payload={parsed.payload}
+              stack={parsed.stack}
+            />
+          )}
+        </>
       }
-    />
+      action={
+        reset != null && (
+          <AdmonitionAction onClick={() => reset()}>
+            <Trans>Retry</Trans>
+          </AdmonitionAction>
+        )
+      }
+    >
+      {_(parsed.description ?? msg`An unknown error occurred`)}
+    </Admonition>
   )
 }
+
+export const errorCardRender = (props: ErrorCardProps) => (
+  <ErrorCard {...props} />
+)

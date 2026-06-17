@@ -1,6 +1,9 @@
 {
   "name": "@atproto/oauth-client-expo",
-  "version": "0.0.10",
+  "version": "0.1.1",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [
@@ -23,8 +26,6 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-expo"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -45,6 +46,7 @@
     "react-native": "*"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
-  }
+    "build": "tsgo --build tsconfig.build.json"
+  },
+  "type": "module"
 }

@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { CID } from 'multiformats/cid'
 import {
+  $Typed,
   AppBskyActorProfile,
   AppBskyFeedLike,
   AppBskyFeedPost,
@@ -12,12 +14,15 @@ import {
   AppBskyGraphVerification,
   AppBskyRichtextFacet,
   AtpAgent,
+  ChatBskyConvoDefs,
+  ComAtprotoAdminDefs,
   ComAtprotoModerationCreateReport,
+  ComAtprotoRepoStrongRef,
 } from '@atproto/api'
 import { CidString, Client } from '@atproto/lex'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, AtUriString, DidString } from '@atproto/syntax'
-import { TestNetworkNoAppView } from '../network-no-appview'
+import { TestNetworkNoAppView } from '../network-no-appview.js'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -26,6 +31,7 @@ let AVATAR_IMG: Uint8Array | undefined
 
 // AVATAR_PATH is defined in a non-CWD-dependant way, so this works
 // for any consumer of this package, even outside the atproto repo.
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const AVATAR_PATH = path.resolve(
   __dirname,
   '../../assets/key-portrait-small.jpg',
@@ -575,12 +581,27 @@ export class SeedClient<
     delete foundList.items[subject]
   }
 
+  // override public signature to add support for convos and messages
   async createReport(opts: {
     reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
-    subject: ComAtprotoModerationCreateReport.InputSchema['subject']
+    subject:
+      | $Typed<ComAtprotoAdminDefs.RepoRef>
+      | $Typed<ComAtprotoRepoStrongRef.Main>
+      | $Typed<ChatBskyConvoDefs.MessageRef>
+      | $Typed<ChatBskyConvoDefs.ConvoRef>
+      | { $type: string }
     reason?: string
     reportedBy: string
-  }) {
+  }): Promise<
+    ComAtprotoModerationCreateReport.OutputSchema & {
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
+    }
+  > {
     const { reasonType, subject, reason, reportedBy } = opts
     const result = await this.agent.com.atproto.moderation.createReport(
       { reasonType, subject, reason },

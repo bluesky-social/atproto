@@ -4,9 +4,8 @@ import {
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
-import { AccountStatus } from '../../../../account-manager/account-manager'
-import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
-import { AppContext } from '../../../../context'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
+import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -54,13 +53,16 @@ export default function (server: Server, ctx: AppContext) {
         'delete_account',
         token,
       )
-      await ctx.actorStore.destroy(did)
+
+      // @NOTE Order matters here: first "unlink" the account by removing it
+      // from the account manager database ("source of truth"), then notify the
+      // sequencer, and finally cleanup files from the file system.
       await ctx.accountManager.deleteAccount(did)
-      const accountSeq = await ctx.sequencer.sequenceAccountEvt(
-        did,
-        AccountStatus.Deleted,
-      )
-      await ctx.sequencer.deleteAllForUser(did, [accountSeq])
+      try {
+        await ctx.sequencer.sequenceAccountDeletion(did)
+      } finally {
+        await ctx.actorStore.destroy(did)
+      }
     },
   })
 }

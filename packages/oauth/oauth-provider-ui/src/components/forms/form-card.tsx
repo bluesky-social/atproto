@@ -1,55 +1,135 @@
+import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX, ReactNode } from 'react'
+import { FormEvent, JSX, MouseEventHandler, ReactNode, useMemo } from 'react'
+import { errorCardRender } from '#/components/utils/error-card.tsx'
+import { apiErrorParser } from '#/lib/api-error-parser.ts'
+import { ErrorParser } from '#/lib/error-parser.ts'
 import { Override } from '#/lib/util.ts'
+import { Button } from './button.tsx'
+import { FormContext, FormContextValue } from './form-context.tsx'
+
+export type ErrorRenderer = (props: {
+  error: unknown
+  parser: ErrorParser
+}) => ReactNode
+
+export { errorCardRender }
+export type { ErrorParser }
 
 export type FormCardProps = Override<
   JSX.IntrinsicElements['form'],
   {
     disabled?: boolean
-    append?: ReactNode
-    prepend?: ReactNode
-    cancel?: ReactNode
+    loading?: boolean
     actions?: ReactNode
+
+    onSubmit?: (event: FormEvent<HTMLFormElement>) => void
+    submitLabel?: ReactNode
+    submittable?: boolean
+
+    onCancel?: MouseEventHandler<HTMLButtonElement>
+    cancelLabel?: ReactNode
+
+    onBack?: () => void
+    backLabel?: ReactNode
+
+    error?: Error
+    hideError?: boolean
+    errorParser?: ErrorParser
+    errorRender?: ErrorRenderer
   }
 >
 
 export function FormCard({
+  disabled: disabledProp = false,
+  loading = false,
   actions,
-  cancel,
-  append,
-  children,
-  prepend,
-  disabled,
+
+  submitLabel = <Trans>Submit</Trans>,
+  submittable = true,
+
+  onCancel = undefined,
+  cancelLabel = <Trans>Cancel</Trans>,
+
+  onBack,
+  backLabel = <Trans>Back</Trans>,
+
+  error,
+  hideError = false,
+  // @TODO decouple this component from "api" by injecting this as a prop where relevant.
+  errorParser = apiErrorParser,
+  errorRender = errorCardRender,
 
   // form
-  inert = disabled,
+  inert,
+  children,
+  onSubmit,
   className,
   ...props
 }: FormCardProps) {
+  // The form is disabled when either the `disabled` or `inert` prop is true.
+  const disabled = Boolean(inert || disabledProp || loading)
+
+  const contextValue = useMemo<FormContextValue>(
+    () => ({ disabled }),
+    [disabled],
+  )
+
+  const errorNode =
+    error != null && !hideError
+      ? errorRender({ error, parser: errorParser })
+      : null
+
   return (
     <form
-      inert={inert}
-      className={clsx('flex flex-col gap-4', className)}
       {...props}
+      action={undefined}
+      inert={disabled}
+      className={clsx('flex flex-col gap-4', className)}
+      onSubmit={(event) => {
+        if (!event.defaultPrevented) {
+          // Perform native HTML5 validation.
+          const isValid = event.currentTarget.reportValidity()
+
+          if (disabled || !isValid || !submittable) {
+            event.preventDefault()
+          } else {
+            onSubmit?.(event)
+          }
+        }
+      }}
     >
-      {prepend && <div key="prepend">{prepend}</div>}
+      <FormContext value={contextValue}>
+        <div key="children" className="space-y-4">
+          {children}
+        </div>
 
-      <div key="children" className="space-y-4">
-        {children}
-      </div>
+        {errorNode && <div key="error">{errorNode}</div>}
 
-      {append && <div key="append">{append}</div>}
-
-      {(actions || cancel) && (
         <div
-          key="buttons"
-          className="flex flex-row-reverse flex-wrap items-center justify-end space-x-2 space-x-reverse"
+          key="actions"
+          className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
         >
+          {submitLabel && (
+            <Button
+              color="primary"
+              type="submit"
+              loading={loading}
+              disabled={disabled || !submittable}
+            >
+              {submitLabel}
+            </Button>
+          )}
           {actions}
           <div className="flex-auto" />
-          {cancel}
+          {onCancel && cancelLabel ? (
+            <Button onClick={onCancel}>{cancelLabel}</Button>
+          ) : null}
+          {onBack && backLabel ? (
+            <Button onClick={onBack}>{backLabel}</Button>
+          ) : null}
         </div>
-      )}
+      </FormContext>
     </form>
   )
 }

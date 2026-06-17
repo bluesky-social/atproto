@@ -6,7 +6,13 @@ import {
 } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import { DidString } from '@atproto/syntax'
-import { Create, Event, Firehose, FirehoseOptions, MemoryRunner } from '..'
+import {
+  Create,
+  Event,
+  Firehose,
+  FirehoseOptions,
+  MemoryRunner,
+} from '../src/index.js'
 
 describe('firehose', () => {
   let network: TestNetworkNoAppView
@@ -124,10 +130,7 @@ describe('firehose', () => {
   it('does not naively pass through invalid handle evts', async () => {
     const evtsPromise = createAndReadFirehose(1)
     await wait(10) // give the websocket just a second to spin up
-    await network.pds.ctx.sequencer.sequenceIdentityEvt(
-      alice,
-      'bad-handle.test',
-    )
+    await network.pds.ctx.sequencer.sequenceIdentity(alice, 'bad-handle.test')
     const evts = await evtsPromise
     expect(evts.at(0)).toMatchObject({ handle: 'alice.test' })
   })

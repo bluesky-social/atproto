@@ -1,11 +1,11 @@
 import { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ScheduledActionStatus, ScheduledActionType } from '../api/util'
-import { Database } from '../db'
-import { ScheduledAction } from '../db/schema/scheduled-action'
-import { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs'
-import { dbLogger } from '../logger'
-import { SchedulingParams } from './types'
+import { ScheduledActionStatus, ScheduledActionType } from '../api/util.js'
+import { Database } from '../db/index.js'
+import { ScheduledAction } from '../db/schema/scheduled-action.js'
+import { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { dbLogger } from '../logger.js'
+import { SchedulingParams } from './types.js'
 
 export type ScheduledActionServiceCreator = (
   db: Database,
@@ -151,24 +151,25 @@ export class ScheduledActionService {
     }
 
     if (startTime) {
-      query = query.where((qb) => {
-        return qb
-          .orWhere('executeAt', '>=', startTime.toISOString())
-          .orWhere('executeAfter', '>=', startTime.toISOString())
-      })
+      query = query.where((eb) =>
+        eb.or([
+          eb('executeAt', '>=', startTime.toISOString()),
+          eb('executeAfter', '>=', startTime.toISOString()),
+        ]),
+      )
     }
 
     if (endTime) {
-      query = query.where((qb) => {
-        return qb
-          .orWhere('executeAt', '<=', endTime.toISOString())
-          .orWhere('executeUntil', '<=', endTime.toISOString())
-          .orWhere((sqb) => {
-            return sqb
-              .where('executeUntil', 'is', null)
-              .where('executeAfter', '<=', endTime.toISOString())
-          })
-      })
+      query = query.where((eb) =>
+        eb.or([
+          eb('executeAt', '<=', endTime.toISOString()),
+          eb('executeUntil', '<=', endTime.toISOString()),
+          eb.and([
+            eb('executeUntil', 'is', null),
+            eb('executeAfter', '<=', endTime.toISOString()),
+          ]),
+        ]),
+      )
     }
 
     if (cursor) {
@@ -235,11 +236,12 @@ export class ScheduledActionService {
       .selectFrom('scheduled_action')
       .selectAll()
       .where('status', '=', 'pending')
-      .where((qb) => {
-        return qb
-          .orWhere('executeAfter', '<=', now.toISOString())
-          .orWhere('executeAt', '<=', now.toISOString())
-      })
+      .where((eb) =>
+        eb.or([
+          eb('executeAfter', '<=', now.toISOString()),
+          eb('executeAt', '<=', now.toISOString()),
+        ]),
+      )
       .execute()
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-node",
-  "version": "0.3.17",
+  "version": "0.4.2",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the NodeJS",
   "keywords": [
@@ -15,9 +15,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-node"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -25,7 +23,7 @@
     }
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "files": [
     "dist"
@@ -41,10 +39,8 @@
     "@atproto/oauth-client": "workspace:^",
     "@atproto/oauth-types": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

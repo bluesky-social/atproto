@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { Kysely } from 'kysely'
 import { DidString } from '@atproto/syntax'
-import { Database, Migrator } from '../../db'
+import { Database, Migrator } from '../../db/index.js'
 
 export interface NewAccount {
   did: DidString
@@ -35,7 +35,7 @@ export const getAndMigrateRecoveryDb = async (
   const pragmas: Record<string, string> = disableWalAutoCheckpoint
     ? { wal_autocheckpoint: '0' }
     : {}
-  const db = Database.sqlite(location, pragmas)
+  const db = Database.sqlite<RecoveryDbSchema>(location, pragmas)
   const migrator = new Migrator(db.db, migrations)
   await migrator.migrateToLatestOrThrow()
   return db

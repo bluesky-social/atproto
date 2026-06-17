@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
 import { errorViewRender } from '#/components/error-view.tsx'
+import { ButtonCooldown } from '#/components/forms/button-cooldown.tsx'
 import { LayoutTitle } from '#/components/layouts/layout-title'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
@@ -61,39 +62,73 @@ createRoot(container).render(
 function App() {
   const loginHint = authorizeData.loginHint || undefined
 
-  const { session, setSession, doConsent, doReject } = useSessionContext()
-  const [isDone, setIsDone] = useState(
-    session != null && session.consentRequired === false,
-  )
+  const { session, setSession, api } = useSessionContext()
+  const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
+  const [isDone, setIsDone] = useState(false)
 
-  const performRedirect = useCallback((url: string) => {
-    // @TODO At this point, the request cannot be accepted/rejected anymore.
-    // We should probably change the app's state to something that indicates
-    // that in order to improve UX in case the user comes back to the app.
-    // This is currently ensured by the backend (through back-forward cache
-    // busting) but handling it here would provide a better UX since the
-    // backend will remove (and prevent access) to accepted/rejected requests
-    // data, while the back-forward cache remembers them.
-
-    window.location.href = url
-    setTimeout(() => setIsDone(true))
+  const redirectTo = useCallback((url: string) => {
+    console.debug('Redirecting back to client:', url)
+    // @NOTE We use `window.location.replace` to prevent the user from coming
+    // back. Also note that in the past, this was using `window.location.href =
+    // url` which sometimes failed to perform the navigation.
+    // https://github.com/bluesky-social/atproto/issues/5077
+    window.location.replace(url)
   }, [])
 
-  const doConsentAndRedirect = useCallback(
-    async (...args: Parameters<typeof doConsent>) => {
-      const { url } = await doConsent(...args)
-      performRedirect(url)
+  const performRedirect = useCallback(
+    (url: string) => {
+      // @NOTE At this point, the request data is no longer accessible. If the
+      // user manages to reload the current page's url (eg. refresh), the
+      // server's back-forward cache busting should prevent this page state from
+      // being restored, and will result in an error page being displayed
+      // ("Unknown request_uri"). If the user is "offline" (eg. network
+      // disconnected), this cache busting by the backend will not work and the
+      // browser may restore the page state.
+      //
+      // On a related note, client processing of the token response should be a
+      // one time operation (because of nonce invalidation). So we should do our
+      // best to prevent the navigation from being interrupted, or happening
+      // more than once.
+      //
+      // This gets tricky as users may have a bad network connection, for which
+      // we should do the best we can to help them complete the login process.
+      //
+      // We do this by first attempting to automatically redirect the user:
+      redirectTo(url)
+
+      // In case automatically redirecting fails, we will also show a link that
+      // the user can click to continue. There is a long(ish) pause in between
+      // the automatic redirect and the link being clickable, to give the
+      // browser some time to perform the navigation and prevent the user from
+      // clicking the link multiple times and causing multiple navigation
+      // attempts.
+      setRedirectUrl(url)
+
+      // If, despite our best efforts, the client backend receives multiple
+      // redirect requests, it should handle them gracefully: Either by
+      // recognizing that the login process has already been completed for that
+      // user (through the use of a cookie), or by revoking previous credentials
+      // and triggering a new login process.
+
+      // Prevent react from rendering the "redirecting..." view while the
+      // browser is navigating by delaying the state update.
+      setTimeout(() => setIsDone(true), 250)
     },
-    [doConsent, performRedirect],
+    [redirectTo],
   )
 
-  const doRejectAndRedirect = useCallback(
-    async (...args: Parameters<typeof doReject>) => {
-      const { url } = await doReject(...args)
+  const doConsentAndRedirect = useCallback(
+    async ({ scope }: { scope?: string }) => {
+      const { url } = await api.consent(session!.account.sub, scope)
       performRedirect(url)
     },
-    [doReject, performRedirect],
+    [api, session, performRedirect],
   )
+
+  const doRejectAndRedirect = useCallback(async () => {
+    const { url } = await api.reject()
+    performRedirect(url)
+  }, [api, performRedirect])
 
   return (
     <AuthenticationProvider
@@ -110,15 +145,23 @@ function App() {
           permissionSets={authorizeData.permissionSets}
           account={session.account}
           scope={authorizeData.scope}
-          onConsent={(scope) =>
-            doConsentAndRedirect(session.account.sub, scope)
-          }
+          onConsent={doConsentAndRedirect}
           onReject={doRejectAndRedirect}
           onBack={loginHint ? undefined : () => setSession(null)}
         />
       ) : (
         <LayoutTitle title={msg`Login complete`}>
           <Trans>You are being redirected...</Trans>
+          <br />
+          {redirectUrl && (
+            <ButtonCooldown
+              startWithCooldown
+              cooldown={10}
+              action={() => redirectTo(redirectUrl)}
+            >
+              <Trans>Click here if you are not automatically redirected</Trans>
+            </ButtonCooldown>
+          )}
         </LayoutTitle>
       )}
     </AuthenticationProvider>

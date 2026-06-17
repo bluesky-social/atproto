@@ -1,22 +1,24 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
-import { TimeCidKeyset, paginate } from '../db/pagination'
+import { Service } from '../../../proto/bsky_connect.js'
+import { Database } from '../db/index.js'
+import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getBidirectionalBlock(req) {
     const { actorDid, targetDid } = req
     const res = await db.db
       .selectFrom('actor_block')
-      .where((qb) =>
-        qb
-          .where('actor_block.creator', '=', actorDid)
-          .where('actor_block.subjectDid', '=', targetDid),
-      )
-      .orWhere((qb) =>
-        qb
-          .where('actor_block.creator', '=', targetDid)
-          .where('actor_block.subjectDid', '=', actorDid),
+      .where((eb) =>
+        eb.or([
+          eb.and([
+            eb('actor_block.creator', '=', actorDid),
+            eb('actor_block.subjectDid', '=', targetDid),
+          ]),
+          eb.and([
+            eb('actor_block.creator', '=', targetDid),
+            eb('actor_block.subjectDid', '=', actorDid),
+          ]),
+        ]),
       )
       .limit(1)
       .selectAll()
@@ -58,15 +60,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const res = await db.db
       .selectFrom('list_block')
       .innerJoin('list_item', 'list_item.listUri', 'list_block.subjectUri')
-      .where((qb) =>
-        qb
-          .where('list_block.creator', '=', actorDid)
-          .where('list_item.subjectDid', '=', targetDid),
-      )
-      .orWhere((qb) =>
-        qb
-          .where('list_block.creator', '=', targetDid)
-          .where('list_item.subjectDid', '=', actorDid),
+      .where((eb) =>
+        eb.or([
+          eb.and([
+            eb('list_block.creator', '=', actorDid),
+            eb('list_item.subjectDid', '=', targetDid),
+          ]),
+          eb.and([
+            eb('list_block.creator', '=', targetDid),
+            eb('list_item.subjectDid', '=', actorDid),
+          ]),
+        ]),
       )
       .limit(1)
       .selectAll('list_block')
@@ -96,12 +100,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const { ref } = db.db.dynamic
     let builder = db.db
       .selectFrom('list')
-      .whereExists(
-        db.db
-          .selectFrom('list_block')
-          .where('list_block.creator', '=', actorDid)
-          .whereRef('list_block.subjectUri', '=', ref('list.uri'))
-          .selectAll(),
+      .where(({ exists }) =>
+        exists(
+          db.db
+            .selectFrom('list_block')
+            .where('list_block.creator', '=', actorDid)
+            .whereRef('list_block.subjectUri', '=', ref('list.uri'))
+            .selectAll(),
+        ),
       )
       .selectAll('list')
 

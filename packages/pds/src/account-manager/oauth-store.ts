@@ -3,6 +3,7 @@ import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
+  DidString,
   HandleString,
   asAtIdentifierString,
   getBlobCidString,
@@ -23,6 +24,8 @@ import {
   DeviceStore,
   FoundRequestResult,
   HandleUnavailableError,
+  HandleUnavailableReason,
+  InvalidCredentialsError,
   InvalidInviteCodeError,
   InvalidRequestError,
   LexiconData,
@@ -40,30 +43,35 @@ import {
   TokenId,
   TokenInfo,
   TokenStore,
+  UpdateEmailConfirmInput,
+  UpdateEmailRequestInput,
+  UpdateEmailRequestOutput,
+  UpdateHandleData,
   UpdateRequestData,
+  VerifyEmailConfirmInput,
+  VerifyEmailRequestInput,
 } from '@atproto/oauth-provider'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
 } from '@atproto/xrpc-server'
-import { ActorStore } from '../actor-store/actor-store'
-import { BackgroundQueue } from '../background'
-import { fromDateISO } from '../db'
-import { ImageUrlBuilder } from '../image/image-url-builder'
-import { dbLogger } from '../logger'
-import { ServerMailer } from '../mailer'
-import { Sequencer, syncEvtDataFromCommit } from '../sequencer'
-import { AccountManager } from './account-manager'
-import * as schemas from './db/schema'
-import * as accountHelper from './helpers/account'
-import { AccountStatus } from './helpers/account'
-import * as accountDeviceHelper from './helpers/account-device'
-import * as authRequestHelper from './helpers/authorization-request'
-import * as authorizedClientHelper from './helpers/authorized-client'
-import * as deviceHelper from './helpers/device'
-import * as lexiconHelper from './helpers/lexicon'
-import * as tokenHelper from './helpers/token'
-import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
+import { ActorStore } from '../actor-store/actor-store.js'
+import { BackgroundQueue } from '../background.js'
+import { fromDateISO } from '../db/index.js'
+import { ImageUrlBuilder } from '../image/image-url-builder.js'
+import { dbLogger } from '../logger.js'
+import { ServerMailer } from '../mailer/index.js'
+import { Sequencer } from '../sequencer/index.js'
+import { AccountManager, InvalidPasswordError } from './account-manager.js'
+import * as schemas from './db/schema/index.js'
+import * as accountDeviceHelper from './helpers/account-device.js'
+import { ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
+import * as authRequestHelper from './helpers/authorization-request.js'
+import * as authorizedClientHelper from './helpers/authorized-client.js'
+import * as deviceHelper from './helpers/device.js'
+import * as lexiconHelper from './helpers/lexicon.js'
+import * as tokenHelper from './helpers/token.js'
+import * as usedRefreshTokenHelper from './helpers/used-refresh-token.js'
 
 /**
  * This class' purpose is to implement the interface needed by the OAuthProvider
@@ -146,7 +154,13 @@ export class OAuthStore
     const signingKey = await Secp256k1Keypair.create({ exportable: true })
     const signingKeyDid = signingKey.did()
 
-    const plcCreate = await createPlcOp({
+    const canTombstone =
+      // @NOTE IMPORTANT We don't support "bring your own DID" here (yet?). If
+      // we ever do, make sure to update the computation of canTombstone so that
+      // the user's did don't get tombstoned.
+      true
+
+    const plc = await createPlcOp({
       signingKey: signingKeyDid,
       rotationKeys: this.recoveryDidKey
         ? [this.recoveryDidKey, this.plcRotationKey.did()]
@@ -156,44 +170,60 @@ export class OAuthStore
       signer: this.plcRotationKey,
     })
 
-    const { did, op } = plcCreate
-    assert(isDidString(did), 'Generated DID is not a valid DidString')
+    const did = plc.did as DidString
 
     try {
       await this.actorStore.create(did, signingKey)
+
       try {
-        const commit = await this.actorStore.transact(did, (actorTxn) =>
-          actorTxn.repo.createRepo([]),
-        )
-
-        await this.plcClient.sendOperation(did, op)
-
-        await this.accountManager.createAccount({
-          did,
-          handle,
-          email,
-          password,
-          inviteCode,
-          repoCid: commit.cid,
-          repoRev: commit.rev,
+        const commit = await this.actorStore.transact(did, (actorTxn) => {
+          return actorTxn.repo.createRepo([])
         })
+
+        await this.plcClient.sendOperation(did, plc.op)
+
         try {
-          await this.sequencer.sequenceIdentityEvt(did, handle)
-          await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-          await this.sequencer.sequenceCommit(did, commit)
-          await this.sequencer.sequenceSyncEvt(
+          await this.accountManager.createAccount({
             did,
-            syncEvtDataFromCommit(commit),
-          )
-          await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-          await this.actorStore.clearReservedKeypair(signingKeyDid, did)
+            handle,
+            email,
+            password,
+            inviteCode,
+            repoCid: commit.cid,
+            repoRev: commit.rev,
+          })
 
-          const account = await this.accountManager.getAccount(did)
-          if (!account) throw new Error('Account not found')
+          try {
+            await this.sequencer.sequenceAccountCreation(did, handle, commit)
 
-          return await this.buildAccount(account)
+            try {
+              await this.actorStore
+                .clearReservedKeypair(signingKeyDid, did)
+                .catch((err) => {
+                  // @NOTE This is a cleanup operation so we won't fail the
+                  // whole flow if it fails, but we log it just in case
+                  dbLogger.error(
+                    { did, signingKeyDid, err },
+                    'Failed to clear reserved keypair',
+                  )
+                })
+
+              const account = await this.accountManager.getAccount(did)
+              assert(account, 'Account not found after creation')
+
+              return await this.buildAccount(account)
+            } catch (err) {
+              await this.sequencer.sequenceAccountDeletion(did)
+              throw err
+            }
+          } catch (err) {
+            await this.accountManager.deleteAccount(did)
+            throw err
+          }
         } catch (err) {
-          this.accountManager.deleteAccount(did)
+          if (canTombstone) {
+            await this.plcClient.tombstone(did, this.plcRotationKey)
+          }
           throw err
         }
       } catch (err) {
@@ -236,8 +266,15 @@ export class OAuthStore
 
       return this.buildAccount(user)
     } catch (err) {
+      // `InvalidPasswordError` is a subclass of `XrpcAuthRequiredError`,
+      // so it must be checked first. Surfacing the matched `did` as the
+      // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
+      // "identifier known, credentials wrong" from "identifier unknown".
+      if (err instanceof InvalidPasswordError) {
+        throw new InvalidCredentialsError(err.message, err.did, err)
+      }
       if (err instanceof XrpcAuthRequiredError) {
-        throw new InvalidRequestError(err.message, err)
+        throw new InvalidCredentialsError(err.message, undefined, err)
       }
       throw err
     }
@@ -255,11 +292,13 @@ export class OAuthStore
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await accountHelper.getAccount(
-      this.db,
+    const accountRow = await this.accountManager.getAccount(
       // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
       asAtIdentifierString(sub),
-      { includeDeactivated: true },
+      {
+        includeDeactivated: true,
+        includeTakenDown: false,
+      },
     )
 
     assert(accountRow, 'Account not found')
@@ -313,7 +352,7 @@ export class OAuthStore
   ): Promise<DeviceAccount[]> {
     const rows = await accountDeviceHelper.selectQB(this.db, filter).execute()
 
-    const uniqueDids = [...new Set(rows.map((row) => row.did))]
+    const uniqueDids: string[] = [...new Set(rows.map((row) => row.did))]
 
     // Enrich all distinct account with their profile data
     const accounts = new Map(
@@ -347,7 +386,7 @@ export class OAuthStore
   }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
-      includeTakenDown: true,
+      includeTakenDown: false,
     })
 
     if (!account?.email || !account?.handle) return null
@@ -374,7 +413,7 @@ export class OAuthStore
       const did = await this.accountManager.resetPassword(data)
       const account = await this.accountManager.getAccount(did, {
         includeDeactivated: true,
-        includeTakenDown: true,
+        includeTakenDown: false,
       })
 
       return account ? this.buildAccount(account) : null
@@ -409,13 +448,7 @@ export class OAuthStore
         throw new HandleUnavailableError('taken')
       }
     } catch (err) {
-      if (err instanceof XrpcInvalidRequestError) {
-        throw err.customErrorName === 'HandleNotAvailable'
-          ? new HandleUnavailableError('taken', err.message)
-          : new HandleUnavailableError('syntax', err.message)
-      }
-
-      throw err
+      throw toHandleUnavailableError(err)
     }
   }
 
@@ -595,8 +628,95 @@ export class OAuthStore
     return row ? this.toTokenInfo(row) : null
   }
 
+  async verifyEmailRequest({
+    sub: did,
+    locale,
+  }: VerifyEmailRequestInput): Promise<void> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      await this.accountManager.requestEmailConfirmation(did, { locale })
+    } catch (err) {
+      if (err instanceof XrpcAuthRequiredError) {
+        throw new InvalidRequestError(err.message, err)
+      }
+
+      throw err
+    }
+  }
+
+  async verifyEmailConfirm({
+    sub: did,
+    email,
+    token,
+  }: VerifyEmailConfirmInput): Promise<Account | null> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      const account = await this.accountManager.confirmEmail(did, email, token)
+
+      return this.buildAccount(account)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        return null
+      }
+
+      throw err
+    }
+  }
+
+  async updateEmailRequest({
+    sub: did,
+    locale,
+  }: UpdateEmailRequestInput): Promise<UpdateEmailRequestOutput> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    return this.accountManager.requestEmailUpdate(did, { locale })
+  }
+
+  async updateEmailConfirm({
+    sub: did,
+    token,
+    email,
+    locale,
+  }: UpdateEmailConfirmInput): Promise<Account | null> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      const account = await this.accountManager.updateEmail(did, email, token, {
+        sendConfirmationEmail: true,
+        locale,
+      })
+
+      return this.buildAccount(account)
+    } catch (cause) {
+      if (cause instanceof UserAlreadyExistsError) {
+        throw new InvalidRequestError(cause.message, cause)
+      }
+
+      throw cause
+    }
+  }
+
+  async updateHandle({ sub: did, handle }: UpdateHandleData): Promise<Account> {
+    // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+    assert(isDidString(did), 'sub must be a valid DID string')
+
+    try {
+      const account = await this.accountManager.updateHandle(did, handle)
+
+      return this.buildAccount(account)
+    } catch (err) {
+      throw toHandleUnavailableError(err)
+    }
+  }
+
   private async toTokenInfo(
-    row: accountHelper.ActorAccount & Selectable<schemas.Token>,
+    row: ActorAccount & Selectable<schemas.Token>,
   ): Promise<TokenInfo> {
     return {
       id: row.tokenId,
@@ -606,9 +726,7 @@ export class OAuthStore
     }
   }
 
-  private async buildAccount(
-    row: accountHelper.ActorAccount,
-  ): Promise<Account> {
+  private async buildAccount(row: ActorAccount): Promise<Account> {
     const account: Account = {
       sub: row.did,
       aud: this.serviceDid,
@@ -640,5 +758,51 @@ export class OAuthStore
     }
 
     return account
+  }
+}
+
+function toHandleUnavailableError(err: unknown): unknown {
+  if (err instanceof XrpcInvalidRequestError) {
+    const reason = toHandleUnavailableReason(err)
+    if (reason) throw new HandleUnavailableError(reason, err.message, err)
+
+    return new InvalidRequestError(err.message, err)
+  }
+
+  return err
+}
+
+/**
+ * This function maps specific `XrpcInvalidRequestError`, thrown by the
+ * `AccountManager` when validating a handle, to a more specific
+ * `HandleUnavailableError` with a reason. This allows the OAuthProvider to
+ * provide properly localized and specific error messages to the user when a
+ * handle is not available.
+ */
+function toHandleUnavailableReason(
+  err: XrpcInvalidRequestError,
+): HandleUnavailableReason | undefined {
+  switch (err.error) {
+    case 'HandleNotAvailable': {
+      if (err.message === 'Reserved handle') return 'reserved'
+      return 'taken'
+    }
+
+    case 'UnsupportedDomain': {
+      return 'unsupported'
+    }
+
+    case 'InvalidHandle': {
+      if (err.message === 'Inappropriate language in handle') return 'slur'
+      if (err.message === 'Handle TLD is invalid or disallowed') return 'domain'
+      return 'syntax'
+    }
+
+    case 'InvalidRequest': {
+      if (err.message === 'External handle did not resolve to DID') {
+        return 'resolution'
+      }
+      return undefined
+    }
   }
 }

@@ -4,8 +4,6 @@
   "compilerOptions": {
     "lib": ["ES2023", "ScriptHost"],
     "types": ["node"],
-    "module": "Node16",
     "target": "ES2023",
-    "moduleResolution": "Node16"
-  }
+  },
 }

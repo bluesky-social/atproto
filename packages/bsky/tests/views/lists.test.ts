@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyGraphGetLists,
   AppBskyGraphGetListsWithMembership,
@@ -5,7 +6,7 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
+import { forSnapshot, paginateAll } from '../_util.js'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork

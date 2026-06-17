@@ -1,28 +1,20 @@
+import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useContext, useRef } from 'react'
+import { JSX, useRef } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
-import { mergeRefs } from '#/lib/ref.ts'
-import { Override } from '#/lib/util.ts'
 import { Checkbox } from './checkbox.tsx'
-import { FieldsetContext } from './form-field.tsx'
+import { useFieldsetContext } from './fieldset-context.tsx'
 import { InputContainer } from './input-container.tsx'
 
-export type InputCheckboxProps = Override<
-  Omit<JSX.IntrinsicElements['input'], 'className' | 'type' | 'children'>,
-  {
-    className?: string
-    children?: ReactNode
-  }
->
+export type InputCheckboxProps = Omit<JSX.IntrinsicElements['input'], 'type'>
 
 export function InputCheckbox({
+  // input
   className,
   children,
-
-  // input
   id,
   ref,
-  disabled,
+  disabled: disabledProp,
   title,
   'aria-label': ariaLabel = title,
   'aria-labelledby': ariaLabelledBy,
@@ -31,9 +23,10 @@ export function InputCheckbox({
   const htmlFor = useRandomString('input-checkbox-')
   const labelRef = useRef<HTMLLabelElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const ctx = useContext(FieldsetContext)
+  const ctx = useFieldsetContext()
 
   const inputId = id ?? htmlFor
+  const disabled = disabledProp ?? ctx.disabled
 
   return (
     <InputContainer
@@ -41,7 +34,8 @@ export function InputCheckbox({
       icon={
         <Checkbox
           {...props}
-          disabled={disabled ?? ctx.disabled}
+          className="size-4"
+          disabled={disabled}
           title={title}
           aria-label={ariaLabel}
           aria-labelledby={
@@ -50,7 +44,7 @@ export function InputCheckbox({
                 undefined
               : ariaLabelledBy ?? ctx.labelId
           }
-          ref={mergeRefs([ref, inputRef])}
+          ref={composeRefs(ref, inputRef)}
           id={inputId}
         />
       }

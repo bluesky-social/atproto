@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { DeviceData, DeviceId } from '@atproto/oauth-provider'
-import { fromDateISO, toDateISO } from '../../db'
-import { AccountDb, Device } from '../db'
+import { fromDateISO, toDateISO } from '../../db/index.js'
+import { AccountDb, Device } from '../db/index.js'
 
 export const rowToDeviceData = (
   row: Omit<Selectable<Device>, 'id'>,
@@ -35,10 +35,10 @@ export const updateQB = (
 ) =>
   db.db
     .updateTable('device')
-    .if(sessionId != null, (qb) => qb.set({ sessionId }))
-    .if(userAgent != null, (qb) => qb.set({ userAgent }))
-    .if(ipAddress != null, (qb) => qb.set({ ipAddress }))
-    .if(lastSeenAt != null, (qb) =>
+    .$if(sessionId != null, (qb) => qb.set({ sessionId }))
+    .$if(userAgent != null, (qb) => qb.set({ userAgent }))
+    .$if(ipAddress != null, (qb) => qb.set({ ipAddress }))
+    .$if(lastSeenAt != null, (qb) =>
       qb.set({ lastSeenAt: toDateISO(lastSeenAt!) }),
     )
     .where('id', '=', deviceId)

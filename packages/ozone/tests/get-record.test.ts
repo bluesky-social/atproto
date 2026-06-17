@@ -7,12 +7,12 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { forSnapshot } from './_util.js'
 
 describe('admin get record view', () => {
   let network: TestNetwork

@@ -1,6 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
+import { forSnapshot } from '../_util.js'
 
 describe('pds quote views', () => {
   let network: TestNetwork
@@ -25,7 +26,7 @@ describe('pds quote views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     eve = sc.dids.eve
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network.close()

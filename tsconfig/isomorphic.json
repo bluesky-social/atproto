@@ -9,6 +9,6 @@
     // https://github.com/microsoft/TypeScript/issues/31535
     // https://github.com/microsoft/TypeScript/issues/41727
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["node"]
-  }
+    "types": ["node"],
+  },
 }

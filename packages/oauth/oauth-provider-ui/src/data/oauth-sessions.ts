@@ -18,7 +18,7 @@ export function useOAuthSessionsQuery({ sub }: OAuthSessionsInput) {
     retry: 0,
     staleTime: 5e3,
     queryFn: async (options) => {
-      return await api.fetch('GET', '/oauth-sessions', { sub }, options)
+      return await api.oauthSessions({ sub }, options)
     },
   })
 }
@@ -28,8 +28,8 @@ export function useRevokeOAuthSessionMutation() {
   const qc = useQueryClient()
 
   return useMutation({
-    async mutationFn({ sub, tokenId }: RevokeOAuthSessionInput) {
-      await api.fetch('POST', '/revoke-oauth-session', { sub, tokenId })
+    async mutationFn(data: RevokeOAuthSessionInput) {
+      await api.revokeOAuthSession(data)
     },
     onError(error, { sub }) {
       qc.invalidateQueries({ queryKey: oauthSessionsQueryKey({ sub }) })

@@ -1,9 +1,10 @@
-import { HOUR, MINUTE, mapDefined } from '@atproto/common'
+import { HOUR, MINUTE, dedupeStrs, mapDefined } from '@atproto/common'
 import {
   $Typed,
   Un$Typed,
   Unknown$TypedObject,
   UriString,
+  atUri,
   getBlobCidString,
 } from '@atproto/lex'
 import {
@@ -14,22 +15,33 @@ import {
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
-import { Actor, ProfileViewerState } from '../hydration/actor'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed'
-import { Follow, Verification } from '../hydration/graph'
-import { HydrationState } from '../hydration/hydrator'
-import { Label } from '../hydration/label'
-import { RecordInfo, parseString } from '../hydration/util'
-import { ImageUriBuilder } from '../image/uri'
-import { app } from '../lexicons/index.js'
-import { Notification } from '../proto/bsky_pb'
+import { Actor, ProfileViewerState } from '../hydration/actor.js'
+import {
+  AssociatedSiteStandardRecord,
+  SiteStandardDocument,
+  SiteStandardPublication,
+  getSiteStandardRecordsFromHydrationMapsByRefs,
+} from '../hydration/external.js'
+import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
+import { Follow, Verification } from '../hydration/graph.js'
+import { HydrationState } from '../hydration/hydrator.js'
+import { Label } from '../hydration/label.js'
+import { RecordInfo, parseString } from '../hydration/util.js'
+import { ImageUriBuilder } from '../image/uri.js'
+import { app, site } from '../lexicons/index.js'
+import { viewsLogger } from '../logger.js'
+import { Notification } from '../proto/bsky_pb.js'
+import {
+  estimateReadingTimeMinutes,
+  validateStandardSiteForUrl,
+} from '../util/standard-site.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   safePinnedPost,
   uriToDid,
   uriToDid as creatorFromUri,
-} from '../util/uris'
+} from '../util/uris.js'
 import {
   ThreadItemValueBlocked,
   ThreadItemValueNoUnauthenticated,
@@ -41,7 +53,7 @@ import {
   ThreadTree,
   ThreadTreeVisible,
   sortTrimFlattenThreadTree,
-} from './threads-v2'
+} from './threads-v2.js'
 import {
   ActivitySubscription,
   BlockedPost,
@@ -49,9 +61,16 @@ import {
   Embed,
   EmbedView,
   ExternalEmbed,
+  ExternalEmbedColorRgb,
+  ExternalEmbedSourceThemeView,
+  ExternalEmbedSourceView,
   ExternalEmbedView,
   FeedViewPost,
   FollowRecord,
+  GalleryEmbed,
+  GalleryEmbedView,
+  GalleryImageEmbed,
+  GalleryImageEmbedView,
   GeneratorView,
   GetPostThreadV2QueryParams,
   ImagesEmbed,
@@ -72,6 +91,7 @@ import {
   PostRecord,
   PostView,
   ProfileAssociatedActivitySubscription,
+  ProfileAssociatedChat,
   ProfileRecord,
   ProfileView,
   ProfileViewBasic,
@@ -86,6 +106,7 @@ import {
   RecordWithMediaView,
   ReplyRef,
   RepostRecord,
+  SiteStandardPublicationRecord,
   StarterPackView,
   StarterPackViewBasic,
   StatusView,
@@ -99,6 +120,8 @@ import {
   VideoEmbed,
   VideoEmbedView,
   isExternalEmbedType,
+  isGalleryEmbedType,
+  isGalleryImageEmbedType,
   isImagesEmbedType,
   isLabelerRecordType,
   isListRuleType,
@@ -110,7 +133,7 @@ import {
   isSelfLabelsType,
   isVideoEmbedType,
 } from './types.js'
-import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util'
+import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util.js'
 
 const notificationDeletedRecord =
   app.bsky.notification.defs.recordDeleted.$build({})
@@ -118,6 +141,11 @@ const notificationDeletedRecord =
 // Pre-computed CID for the `notificationDeletedRecord`.
 const notificationDeletedRecordCid =
   'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim'
+
+// Soft-limit for `app.bsky.embed.gallery#main.items`. The lexicon's
+// schema-level cap is 20, but clients are expected to enforce a soft limit
+// of 10 today. The AppView trims defensively at the view boundary.
+const GALLERY_SOFT_LIMIT = 10
 
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
@@ -290,10 +318,7 @@ export class Views {
         feedgens: profileAggs?.feeds,
         starterPacks: profileAggs?.starterPacks,
         labeler: actor.isLabeler,
-        // @TODO apply default chat policy?
-        chat: actor.allowIncomingChatsFrom
-          ? { allowIncoming: actor.allowIncomingChatsFrom }
-          : undefined,
+        chat: this.profileAssociatedChat(actor),
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
         germ: actor.germ?.record.messageMe
           ? {
@@ -335,11 +360,7 @@ export class Views {
   ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const profileUri = AtUri.make(
-      did,
-      app.bsky.actor.profile.$nsid,
-      'self',
-    ).toString()
+    const profileUri = atUri(did, app.bsky.actor.profile)
     const labels = [
       ...(state.labels?.getBySubject(did) ?? []),
       ...(state.labels?.getBySubject(profileUri) ?? []),
@@ -365,10 +386,7 @@ export class Views {
       // on profile and profile-basic views, but should be on profile-detailed.
       associated: {
         labeler: actor.isLabeler ? true : undefined,
-        // @TODO apply default chat policy?
-        chat: actor.allowIncomingChatsFrom
-          ? { allowIncoming: actor.allowIncomingChatsFrom }
-          : undefined,
+        chat: this.profileAssociatedChat(actor),
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
         germ: actor.germ?.record.messageMe
           ? {
@@ -385,6 +403,14 @@ export class Views {
       verification: this.verification(did, state),
       status: this.status(did, state),
       debug: state.ctx?.includeDebugField ? actor.debug : undefined,
+    }
+  }
+
+  profileAssociatedChat(actor: Actor): ProfileAssociatedChat | undefined {
+    if (!actor.allowIncomingChatsFrom) return undefined
+    return {
+      allowIncoming: actor.allowIncomingChatsFrom,
+      allowGroupInvites: actor.allowGroupChatInvitesFrom,
     }
   }
 
@@ -517,14 +543,22 @@ export class Views {
       ({ issuer, uri, displayName, handle, createdAt }): VerificationView => {
         // @NOTE: We don't factor-in impersonation when evaluating the validity of each verification,
         // only in the overall profile verification validity.
+        // The verification record's `displayName`/`handle` are the *subject's* snapshot at
+        // verification time; we compare them to the subject's current values to determine validity.
         const isValid =
           !!displayName &&
           displayName === actor.profile?.displayName &&
           !!handle &&
           handle === actor.handle
 
+        // Expose the *issuer's* current handle/displayName, sourced from the
+        // issuer's hydrated actor record (see `Hydrator.hydrateProfiles`).
+        const issuerActor = state.actors?.get(issuer)
+
         return {
           issuer,
+          issuerDisplayName: issuerActor?.profile?.displayName,
+          issuerHandle: issuerActor?.handle,
           uri,
           isValid,
           createdAt,
@@ -577,7 +611,7 @@ export class Views {
       return undefined
     }
 
-    const uri = AtUri.make(did, app.bsky.actor.status.$nsid, 'self').toString()
+    const uri = atUri(did, app.bsky.actor.status)
     const labels = state.labels?.getBySubject(uri)
 
     const minDuration = 5 * MINUTE
@@ -603,7 +637,7 @@ export class Views {
       status: record.status,
       embed:
         record.embed && isExternalEmbedType(record.embed)
-          ? this.externalEmbed(did, record.embed)
+          ? this.externalEmbed(did, record.embed, state)
           : undefined,
       labels,
       expiresAt,
@@ -812,11 +846,7 @@ export class Views {
     const viewer = state.labelerViewers?.get(did)
     const aggs = state.labelerAggs?.get(did)
 
-    const uri = AtUri.make(
-      did,
-      app.bsky.labeler.service.$type,
-      'self',
-    ).toString()
+    const uri = atUri(did, app.bsky.labeler.service)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
@@ -2064,8 +2094,10 @@ export class Views {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbedType(embed)) {
       return this.videoEmbed(creatorFromUri(postUri), embed)
+    } else if (isGalleryEmbedType(embed)) {
+      return this.galleryEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbedType(embed)) {
-      return this.externalEmbed(creatorFromUri(postUri), embed)
+      return this.externalEmbed(creatorFromUri(postUri), embed, state)
     } else if (isRecordEmbedType(embed)) {
       return this.recordEmbed(postUri, embed, state, depth)
     } else if (isRecordWithMediaType(embed)) {
@@ -2107,24 +2139,287 @@ export class Views {
     })
   }
 
+  galleryEmbed(did: DidString, embed: GalleryEmbed): $Typed<GalleryEmbedView> {
+    // The lexicon's schema-level cap is 20, but clients are expected to
+    // enforce a soft limit of 10. Trim defensively at the view boundary so
+    // viewers see at most 10 items regardless of what was authored.
+    const items = embed.items.slice(0, GALLERY_SOFT_LIMIT).flatMap((item) => {
+      const view = this.galleryItemView(did, item)
+      return view ? [view] : []
+    })
+    return app.bsky.embed.gallery.view.$build({ items })
+  }
+
+  private galleryItemView(
+    did: DidString,
+    item: GalleryEmbed['items'][number],
+  ): $Typed<GalleryImageEmbedView> | undefined {
+    if (isGalleryImageEmbedType(item)) {
+      return this.galleryImageView(did, item)
+    }
+    return undefined
+  }
+
+  private galleryImageView(
+    did: DidString,
+    item: GalleryImageEmbed,
+  ): $Typed<GalleryImageEmbedView> {
+    return app.bsky.embed.gallery.viewImage.$build({
+      thumbnail: this.imgUriBuilder.getPresetUri(
+        'feed_thumbnail',
+        did,
+        getBlobCidString(item.image),
+      ),
+      fullsize: this.imgUriBuilder.getPresetUri(
+        'feed_fullsize',
+        did,
+        getBlobCidString(item.image),
+      ),
+      alt: item.alt,
+      aspectRatio: item.aspectRatio,
+    })
+  }
+
   externalEmbed(
     did: DidString,
     embed: ExternalEmbed,
+    state: HydrationState,
   ): $Typed<ExternalEmbedView> {
-    const { uri, title, description, thumb } = embed.external
+    // Start from the post-author-supplied embed values, then spread the
+    // SS-derived view on top so any field the hydrated doc/publication
+    // supplies wins (title, description, thumb, source, etc). When no SS
+    // records were hydrated `ssView` is `undefined` and the spread is a
+    // no-op, leaving the base values in place. `associatedRefs` is set
+    // last because the post is authoritative about what was pinned.
+    const ssView = this.externalEmbedFromStandardSite({
+      associatedRefs: embed.external.associatedRefs,
+      state,
+      assumedUrl: embed.external.uri,
+    })
+    // The author-supplied (scraped) thumbnail always wins when present —
+    // it's the per-article OG image. Only when the embed has no thumb do
+    // we fall back to whatever the SS overlay provides (the document's
+    // `coverImage`). `thumb` is set after the `...ssView` spread so the
+    // overlay's `coverImage`-derived thumb can't clobber the embed's.
+    const embeddedThumb = embed.external.thumb
+      ? this.imgUriBuilder.getPresetUri(
+          'feed_thumbnail',
+          did,
+          getBlobCidString(embed.external.thumb),
+        )
+      : undefined
     return app.bsky.embed.external.view.$build({
       external: {
-        uri,
-        title,
-        description,
-        thumb: thumb
-          ? this.imgUriBuilder.getPresetUri(
-              'feed_thumbnail',
-              did,
-              getBlobCidString(thumb),
-            )
-          : undefined,
+        uri: embed.external.uri,
+        title: embed.external.title,
+        description: embed.external.description,
+        ...ssView,
+        thumb: embeddedThumb ?? ssView?.thumb,
+        associatedRefs: embed.external.associatedRefs,
       },
+    })
+  }
+
+  /**
+   * Read-path entry point: caller has the post's `external.associatedRefs[]`
+   * and the global hydration state, and we resolve the matching SS records
+   * by ref. Used by `externalEmbed`.
+   *
+   * Returns a fully-populated `viewExternal['external']` shape (including
+   * the required `uri`/`title`/`description`), or `undefined` if the
+   * records didn't hydrate, didn't pass URL validation, or couldn't
+   * supply the required fields. Callers spread the result over a base
+   * view to layer SS-derived fields on top of post-author-supplied ones.
+   *
+   * `assumedUrl` is the canonical web URL the embed claims to represent
+   * (the post's `external.uri` on the read path, the request's `url` on
+   * compose). Validation logic uses it to confirm the SS records actually
+   * back that URL, and the same value is echoed back as `uri` on the
+   * returned overlay.
+   */
+  externalEmbedFromStandardSite({
+    associatedRefs,
+    state,
+    assumedUrl,
+  }: {
+    associatedRefs: ExternalEmbed['external']['associatedRefs']
+    state: HydrationState
+    assumedUrl: string
+  }): ExternalEmbedView['external'] | undefined {
+    const { document, publication } =
+      getSiteStandardRecordsFromHydrationMapsByRefs(
+        associatedRefs,
+        state.siteStandardDocuments,
+        state.siteStandardPublications,
+      )
+    return this.externalEmbedFromStandardSiteRecords({
+      document,
+      publication,
+      state,
+      assumedUrl,
+    })
+  }
+
+  /**
+   * Compose-path entry point: caller already knows which document and
+   * publication backed the request and has them in hand (e.g. from
+   * iterating the SS hydration maps directly). Skips the by-ref lookup
+   * that `externalEmbedFromStandardSite` does. Used by
+   * `getEmbedExternalView`.
+   *
+   * Returns a fully-populated `viewExternal['external']` shape (including
+   * the required `uri`/`title`/`description`), or `undefined` if any of
+   * the validation gates rejected the pair or the records couldn't
+   * supply the required fields.
+   *
+   * `state` is still needed for label hydration. `assumedUrl` is the
+   * canonical web URL the embed claims to represent (the post's
+   * `external.uri` on the read path, the request's `url` on compose);
+   * validation logic uses it to confirm the SS records actually back that
+   * URL, and the same value is echoed back as `uri` on the returned
+   * overlay.
+   */
+  externalEmbedFromStandardSiteRecords({
+    document,
+    publication,
+    state,
+    assumedUrl,
+  }: {
+    document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
+    publication:
+      | AssociatedSiteStandardRecord<SiteStandardPublication>
+      | undefined
+    state: HydrationState
+    assumedUrl: string
+  }): ExternalEmbedView['external'] | undefined {
+    // Three layers of validation gate this overlay:
+    //
+    //  1. Hydrator nulls taken-down records and mirrors the null across
+    //     doc/pub pairs (see `actionSiteStandardTakedownLabels` in
+    //     `hydration/hydrator.ts`).
+    //  2. The lookups guarantee structural agreement between doc and pub
+    //     — matching `site`/`uri`, no orphan doc claiming a missing
+    //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
+    //     and `…ByDocumentUri` in `hydration/external.ts`).
+    //  3. `validateStandardSiteForUrl` below checks that the records back
+    //     the URL the embed claims (see `util/standard-site.ts`).
+    //
+    // If any layer rejected, callers see `undefined` and fall back to the
+    // bare embed rather than render partial / disagreeing enrichment.
+    if (!document && !publication) return undefined
+    if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
+      viewsLogger.warn(
+        {
+          documentUri: document?.ref.uri,
+          publicationUri: publication?.ref.uri,
+        },
+        'site.standard URL validation failed',
+      )
+      return undefined
+    }
+
+    // viewExternal requires `title` and `description`. If neither side of
+    // the pair supplies usable values for both, there's no enrichment to
+    // render — return undefined and let the caller fall back.
+    let title: string
+    let description: string
+    if (document?.info.record) {
+      // Treat the document as authoritative for both fields as a unit, so
+      // we never blend a doc's title with a publication's description.
+      title = document.info.record.title
+      description = document.info.record.description ?? ''
+    } else if (publication) {
+      title = publication.info.record.name
+      description = publication.info.record.description ?? ''
+    } else {
+      return undefined
+    }
+
+    // if we don't have a title at this point, something is wrong with the SS
+    // record (it's a required field) and therefore the enrichment isn't worth
+    // showing
+    if (!title) return undefined
+
+    const overlay: ExternalEmbedView['external'] = {
+      // @ts-ignore this is mis-typed
+      uri: assumedUrl,
+      title,
+      description,
+    }
+
+    const docCover = document?.info.record.coverImage
+    if (docCover) {
+      overlay.thumb = this.imgUriBuilder.getPresetUri(
+        'feed_thumbnail',
+        creatorFromUri(document.ref.uri),
+        getBlobCidString(docCover),
+      )
+    }
+
+    if (document?.info.record.publishedAt) {
+      overlay.createdAt = document.info.record.publishedAt
+    }
+    if (document?.info.record.updatedAt) {
+      overlay.updatedAt = document.info.record.updatedAt
+    }
+    const readingTime = document?.info.record.textContent
+      ? estimateReadingTimeMinutes(document.info.record.textContent)
+      : undefined
+    if (readingTime !== undefined) overlay.readingTime = readingTime
+
+    // Merge labels applied to either the document or the publication onto the
+    // same `viewExternal.labels` array — clients moderate the embed as single
+    // unit, so doc-scoped and publication-scoped labels end up in the same
+    // bucket.
+    const labels = [
+      ...(document ? state.labels?.getBySubject(document.ref.uri) ?? [] : []),
+      ...(publication
+        ? state.labels?.getBySubject(publication.ref.uri) ?? []
+        : []),
+    ]
+    if (labels.length) overlay.labels = labels
+
+    if (publication) {
+      overlay.source = this.externalEmbedSource(publication)
+    }
+
+    // Profiles of the owners of the records backing this embed. Hydrator
+    // covers these DIDs alongside post-author profiles, so misses here
+    // only happen when an actor is unavailable (suspended, deleted, etc.)
+    // — drop those rather than emit `undefined` slots.
+    const uniqueDids = dedupeStrs(
+      mapDefined([document?.ref.uri, publication?.ref.uri], (uri) =>
+        uri ? uriToDid(uri) : undefined,
+      ) as DidString[],
+    )
+    const associatedProfiles = mapDefined(uniqueDids, (did) =>
+      this.profileBasic(did, state),
+    ) as ProfileViewBasic[]
+    if (associatedProfiles.length)
+      overlay.associatedProfiles = associatedProfiles
+
+    return overlay
+  }
+
+  externalEmbedSource(
+    publication: AssociatedSiteStandardRecord<SiteStandardPublication>,
+  ): $Typed<ExternalEmbedSourceView> {
+    const { record } = publication.info
+    const pubDid = creatorFromUri(publication.ref.uri)
+    return app.bsky.embed.external.viewExternalSource.$build({
+      uri: record.url,
+      icon: record.icon
+        ? this.imgUriBuilder.getPresetUri(
+            'avatar',
+            pubDid,
+            getBlobCidString(record.icon),
+          )
+        : undefined,
+      title: record.name,
+      description: record.description,
+      theme: record.basicTheme
+        ? externalEmbedSourceTheme(record.basicTheme)
+        : undefined,
     })
   }
 
@@ -2280,13 +2575,16 @@ export class Views {
     let mediaEmbed:
       | $Typed<ImagesEmbedView>
       | $Typed<VideoEmbedView>
+      | $Typed<GalleryEmbedView>
       | $Typed<ExternalEmbedView>
     if (isImagesEmbedType(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isVideoEmbedType(embed.media)) {
       mediaEmbed = this.videoEmbed(creator, embed.media)
+    } else if (isGalleryEmbedType(embed.media)) {
+      mediaEmbed = this.galleryEmbed(creator, embed.media)
     } else if (isExternalEmbedType(embed.media)) {
-      mediaEmbed = this.externalEmbed(creator, embed.media)
+      mediaEmbed = this.externalEmbed(creator, embed.media, state)
     } else {
       return
     }
@@ -2454,4 +2752,32 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
+}
+
+const externalEmbedSourceTheme = (
+  theme: SiteStandardPublicationRecord['basicTheme'],
+): ExternalEmbedSourceThemeView | undefined => {
+  if (!theme) return undefined
+  const view: ExternalEmbedSourceThemeView = {}
+  const background = colorRGB(theme.background)
+  const foreground = colorRGB(theme.foreground)
+  const accent = colorRGB(theme.accent)
+  const accentForeground = colorRGB(theme.accentForeground)
+  if (background) view.backgroundRGB = background
+  if (foreground) view.foregroundRGB = foreground
+  if (accent) view.accentRGB = accent
+  if (accentForeground) view.accentForegroundRGB = accentForeground
+  // No fields set -> don't decorate the view at all.
+  return Object.keys(view).length === 0 ? undefined : view
+}
+
+const colorRGB = (
+  color: { $type?: unknown } | undefined,
+): ExternalEmbedColorRgb | undefined => {
+  if (!color || !site.standard.theme.color.rgb.isTypeOf(color)) return undefined
+  // `isTypeOf` narrows $type but not the shape; pull rgb fields off the
+  // unchecked input. Records that fail full validation are dropped above
+  // by the SS record parser, so by the time we get here the shape matches.
+  const { r, g, b } = color as unknown as { r: number; g: number; b: number }
+  return app.bsky.embed.external.colorRGB.$build({ r, g, b })
 }

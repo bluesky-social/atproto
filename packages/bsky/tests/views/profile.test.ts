@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   AppBskyEmbedExternal,
   AtpAgent,
@@ -9,7 +10,7 @@ import {
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewer } from '../_util'
+import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
   let network: TestNetwork
@@ -448,20 +449,12 @@ describe('pds profile views', () => {
       const nowPlus15M = '2021-01-01T01:15:00.000Z'
 
       beforeAll(() => {
-        jest.useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'performance',
-            'setImmediate',
-            'setInterval',
-            'setTimeout',
-          ],
-        })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       it('returns inactive status', async () => {
@@ -484,7 +477,7 @@ describe('pds profile views', () => {
         )
         await network.processAll()
 
-        jest.setSystemTime(new Date(nowPlus15M))
+        vi.setSystemTime(new Date(nowPlus15M))
 
         const { data } = await agent.api.app.bsky.actor.getProfile(
           { actor: alice },
@@ -613,6 +606,70 @@ describe('pds profile views', () => {
     })
   })
 
+  describe('chat', () => {
+    it('omits chat if no declaration exists', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toBeUndefined()
+    })
+
+    it('returns allowIncoming when only that field is set', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'none',
+      })
+    })
+
+    it('returns both allowIncoming and allowGroupInvites when both are set', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: eve,
+          collection: ids.ChatBskyActorDeclaration,
+          rkey: 'self',
+          record: {
+            $type: ids.ChatBskyActorDeclaration,
+            allowIncoming: 'following',
+            allowGroupInvites: 'all',
+          },
+        },
+        {
+          headers: sc.getHeaders(eve),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: eve },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'following',
+        allowGroupInvites: 'all',
+      })
+    })
+  })
+
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: ids.ComGermnetworkDeclaration,
@@ -667,18 +724,14 @@ describe('pds profile views', () => {
   })
 
   it('filters out Go zero-value dates from dataplane', async () => {
-    // Spy on the dataplane getActors method
-    const getActorsSpy = jest.spyOn(network.bsky.ctx.dataplane, 'getActors')
+    using getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
 
-    // Call the original implementation but modify the result
     getActorsSpy.mockImplementationOnce(async (req) => {
-      // Call the real method
       const result = await network.bsky.ctx.dataplane.getActors(req)
 
-      // Modify the result to inject a Go zero-value date
+      // Inject a Go zero-value date (0001-01-01 00:00:00 UTC)
       if (result.actors.length > 0 && result.actors[0]) {
         const actor = result.actors[0]
-        // Create a Timestamp with Go zero-value (0001-01-01 00:00:00 UTC)
         const goZeroDate = new Date(-62135596800000)
         actor.createdAt = Timestamp.fromDate(goZeroDate)
       }
@@ -693,11 +746,8 @@ describe('pds profile views', () => {
       },
     )
 
-    // The createdAt should be undefined because the hydration layer filters it out
+    // The hydration layer filters Go zero-values out
     expect(data.createdAt).toBeUndefined()
-
-    // Clean up
-    getActorsSpy.mockRestore()
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {

@@ -27,29 +27,29 @@ import {
   safeFetchWrap,
   unicastLookup,
 } from '@atproto-labs/fetch-node'
-import { AccountManager } from './account-manager/account-manager'
-import { OAuthStore } from './account-manager/oauth-store'
-import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
-import { ActorStore } from './actor-store/actor-store'
-import { authPassthru, forwardedFor } from './api/proxy'
+import { AccountManager } from './account-manager/account-manager.js'
+import { OAuthStore } from './account-manager/oauth-store.js'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
+import { ActorStore } from './actor-store/actor-store.js'
+import { authPassthru, forwardedFor } from './api/proxy.js'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
-} from './auth-verifier'
-import { BackgroundQueue } from './background'
-import { BskyAppView } from './bsky-app-view'
-import { ServerConfig, ServerSecrets } from './config'
-import { Crawlers } from './crawlers'
-import { DidSqliteCache } from './did-cache'
-import { DiskBlobStore } from './disk-blobstore'
-import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
-import { ServerMailer } from './mailer'
-import { ModerationMailer } from './mailer/moderation'
-import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
-import { getRedisClient } from './redis'
-import { Sequencer } from './sequencer'
+} from './auth-verifier.js'
+import { BackgroundQueue } from './background.js'
+import { BskyAppView } from './bsky-app-view.js'
+import { ServerConfig, ServerSecrets } from './config/index.js'
+import { Crawlers } from './crawlers.js'
+import { DidSqliteCache } from './did-cache/index.js'
+import { DiskBlobStore } from './disk-blobstore.js'
+import { ImageUrlBuilder } from './image/image-url-builder.js'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
+import { ServerMailer } from './mailer/index.js'
+import { ModerationMailer } from './mailer/moderation.js'
+import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer.js'
+import { getRedisClient } from './redis.js'
+import { Sequencer } from './sequencer/index.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -156,7 +156,7 @@ export class AppContext {
         ? nodemailer.createTransport(cfg.email.smtpUrl)
         : nodemailer.createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, cfg)
+    const mailer = new ServerMailer(mailTransport, cfg.email, cfg.branding)
 
     const modMailTransport =
       cfg.moderationEmail !== null
@@ -267,15 +267,6 @@ export class AppContext {
       backgroundQueue,
     })
 
-    const accountManager = new AccountManager(
-      idResolver,
-      jwtSecretKey,
-      cfg.service.did,
-      cfg.identity.serviceHandleDomains,
-      cfg.db,
-    )
-    await accountManager.migrateOrThrow()
-
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
@@ -284,6 +275,19 @@ export class AppContext {
         : await crypto.Secp256k1Keypair.import(
             secrets.plcRotationKey.privateKeyHex,
           )
+
+    const accountManager = new AccountManager(
+      idResolver,
+      jwtSecretKey,
+      mailer,
+      sequencer,
+      plcClient,
+      plcRotationKey,
+      cfg.service.did,
+      cfg.identity.serviceHandleDomains,
+      cfg.db,
+    )
+    await accountManager.migrateOrThrow()
 
     const localViewer = LocalViewer.creator(
       accountManager,
@@ -338,15 +342,6 @@ export class AppContext {
       responseMaxSize: cfg.fetch.maxResponseSize,
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
 
-      // @NOTE Since we are using NodeJS <= 20, unicastFetchWrap would normally
-      // *not* be using a keep-alive agent if it we are providing a fetch
-      // function that is different from `globalThis.fetch`. However, since the
-      // fetch function below is indeed calling `globalThis.fetch` without
-      // altering any argument, we can safely force the use of the keep-alive
-      // agent. This would not be the case if we used "loggedFetch" as that
-      // function does wrap the input & init arguments into a Request object,
-      // which, on NodeJS<=20, results in init.dispatcher *not* being used.
-      dangerouslyForceKeepAliveAgent: true,
       fetch: function (input, init) {
         const method =
           init?.method ?? (input instanceof Request ? input.method : 'GET')
