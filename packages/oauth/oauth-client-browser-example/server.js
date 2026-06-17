@@ -1,14 +1,16 @@
-/* eslint-env node, commonjs */
+import console from 'node:console'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import { argv, env } from 'node:process'
+import files from './dist/files.json' with { type: 'json' }
 
-'use strict'
-
-const { once } = require('node:events')
-const { createServer } = require('node:http')
-// @ts-expect-error
-const files = require('.')
-
-exports.middleware = middleware
-function middleware(
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ * @param {(err?: Error) => void} [next]
+ * @returns {void}
+ */
+export function middleware(
   req,
   res,
   next = (err) => {
@@ -29,25 +31,24 @@ function middleware(
   if (file) {
     res
       .writeHead(200, 'OK', { 'content-type': file.mime })
-      .end(Buffer.from(file.data, 'base64'))
+      .end(file.data, 'base64')
   } else {
     next()
   }
 }
 
-exports.start = start
-async function start(port = 0) {
+export async function start(port = 0) {
   const server = createServer(middleware)
   server.listen(port)
   await once(server, 'listening')
   return server
 }
 
-if (require.main === module) {
-  const port = Number(process.argv[2] || process.env.PORT || 0)
+if (import.meta.main) {
+  const port = Number(argv[2] || env.PORT || 0)
   start(port).then((server) => {
     const address = server.address()
-    const port = typeof address === 'string' ? address : address && address.port
+    const port = typeof address === 'string' ? address : address?.port
     console.log(`Listening on http://127.0.0.1:${port}/`)
   })
 }
