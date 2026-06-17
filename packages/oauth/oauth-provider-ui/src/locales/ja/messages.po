@@ -91,7 +91,7 @@ msgstr ""
 msgid "Account"
 msgstr "アカウント"
 
-#: src/components/utils/account-image.tsx:40
+#: src/components/utils/account-image.tsx:41
 msgid "Account avatar"
 msgstr ""
 
@@ -282,8 +282,8 @@ msgstr ""
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/components/redirecting-view.tsx:54
-msgid "Click here if you are not automatically redirected"
+#: src/components/redirecting-view.tsx:92
+msgid "Click here if nothing happens"
 msgstr ""
 
 #: src/components/update-email-form.tsx:97
@@ -638,11 +638,11 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:143
+#: src/authorization-page.tsx:140
 msgid "Login canceled"
 msgstr ""
 
-#: src/authorization-page.tsx:143
+#: src/authorization-page.tsx:140
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -1228,7 +1228,7 @@ msgstr "識別子またはパスワードが間違っています"
 msgid "yesterday"
 msgstr ""
 
-#: src/components/redirecting-view.tsx:39
+#: src/components/redirecting-view.tsx:82
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
