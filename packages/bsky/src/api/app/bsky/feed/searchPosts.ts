@@ -22,9 +22,7 @@ import {
 import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
-import { resHeaders } from '../../../util.js'
-
-const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-v2-override'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -51,19 +49,12 @@ export default function (server: Server, ctx: AppContext) {
           }),
         ),
       })
-      const overrideHeader = Array.isArray(
-        req.headers[SEARCH_V2_OVERRIDE_HEADER],
-      )
-        ? req.headers[SEARCH_V2_OVERRIDE_HEADER].join(',')
-        : req.headers[SEARCH_V2_OVERRIDE_HEADER]
       const results = await searchPosts(
         {
           ...params,
           hydrateCtx,
           isModService,
-          isV2Override:
-            !!ctx.cfg.searchV2OverrideHeader &&
-            overrideHeader === ctx.cfg.searchV2OverrideHeader,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
         },
         ctx,
       )

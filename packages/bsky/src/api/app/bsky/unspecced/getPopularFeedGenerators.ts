@@ -4,9 +4,11 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
-
-const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-v2-override'
+import {
+  clearlyBadCursor,
+  resHeaders,
+  resolveSearchV2Override,
+} from '../../../util.js'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
@@ -39,14 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       let uris: AtUriString[]
       let cursor: string | undefined
 
-      const overrideHeader = Array.isArray(
-        req.headers[SEARCH_V2_OVERRIDE_HEADER],
-      )
-        ? req.headers[SEARCH_V2_OVERRIDE_HEADER].join(',')
-        : req.headers[SEARCH_V2_OVERRIDE_HEADER]
-      const isV2Override =
-        ctx.cfg.searchV2OverrideHeader !== undefined &&
-        overrideHeader === ctx.cfg.searchV2OverrideHeader
+      const isV2Override = resolveSearchV2Override(req, ctx.cfg)
 
       const query = params.query?.trim() ?? ''
       if (query) {
