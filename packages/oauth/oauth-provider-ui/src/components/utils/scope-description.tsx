@@ -273,7 +273,43 @@ function AccountPermissions({
 }
 
 /**
- * Will display detailed rep and rpc permissions unless the app only has
+ * True when every repo/rpc permission in the request targets Bluesky-specific
+ * collections or methods (app.bsky.*, chat.bsky.*, com.atproto.moderation.
+ * createReport), in which case <BlueskyAppviewPermissions /> /
+ * <BlueskyChatPermissions /> cover them and the generic per-collection details
+ * below are redundant.
+ */
+function hasOnlyBskyAppSpecificPermissions(
+  permissions: ScopePermissionsTransition,
+): boolean {
+  if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
+    return false
+  }
+
+  let foundOne = false
+
+  for (const s of permissions.scopes) {
+    const rpc = RpcPermission.fromString(s)
+    if (rpc) {
+      foundOne = true
+      if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
+      if (rpc.lxm.every(isBlueskySpecificNsid)) continue
+      return false
+    }
+
+    const repo = RepoPermission.fromString(s)
+    if (repo) {
+      foundOne = true
+      if (repo.collection.every(isBlueskySpecificNsid)) continue
+      return false
+    }
+  }
+
+  return foundOne
+}
+
+/**
+ * Will display detailed repo and rpc permissions unless the app only has
  * app.bsky or chat.bsky specific permissions, in which case the
  * <BlueskyAppviewPermissions /> and <BlueskyChatPermissions /> components cover
  * them.
@@ -283,34 +319,11 @@ function FineGrainedPermissions({
 }: {
   permissions: ScopePermissionsTransition
 }) {
-  const hasOnlyBskyAppSpecificPermissions = useMemo(() => {
-    if (permissions.allowsAccount({ attr: 'repo', action: 'manage' })) {
-      return false
-    }
-
-    let foundOne = false
-
-    for (const s of permissions.scopes) {
-      const rpc = RpcPermission.fromString(s)
-      if (rpc) {
-        foundOne = true
-        if (isOfficialBlueskyAppviewServiceId(rpc.aud)) continue
-        if (rpc.lxm.every(isBlueskySpecificNsid)) continue
-        return false
-      }
-
-      const repo = RepoPermission.fromString(s)
-      if (repo) {
-        foundOne = true
-        if (repo.collection.every(isBlueskySpecificNsid)) continue
-        return false
-      }
-    }
-
-    return foundOne
+  const hasOnlyBskySpecific = useMemo(() => {
+    return hasOnlyBskyAppSpecificPermissions(permissions)
   }, [permissions])
 
-  if (hasOnlyBskyAppSpecificPermissions) return null
+  if (hasOnlyBskySpecific) return null
 
   return (
     <>
@@ -333,6 +346,31 @@ function BlueskyAppviewPermissions({
     return permissions.scopes.some(scopeEnablesPrivateBskyAppMethods)
   }, [permissions])
 
+  // Whether the request grants broad write access to the account's repository
+  // (any collection / "transition:generic"), as opposed to a handful of
+  // specific app.bsky.* collections. Only broad access warrants the blanket
+  // "profile, posts, likes and follows" wording — narrowly scoped requests
+  // must not overstate what the application can do (see #4424).
+  const hasBroadBskyAppRepo = useMemo(() => {
+    return (
+      permissions.hasTransitionGeneric ||
+      permissions.allowsRepo({ collection: '*', action: 'create' }) ||
+      permissions.allowsRepo({ collection: '*', action: 'update' }) ||
+      permissions.allowsRepo({ collection: '*', action: 'delete' })
+    )
+  }, [permissions])
+
+  // When the request only targets Bluesky-specific collections/methods, the
+  // generic <RepoPermissions /> / <RpcMethodsDetails /> tables below are
+  // suppressed (see <FineGrainedPermissions />). In that case the accurate
+  // per-collection breakdown is surfaced here instead, so a narrowly scoped
+  // request is described precisely rather than with a blanket summary.
+  const hasOnlyBskySpecific = useMemo(() => {
+    return hasOnlyBskyAppSpecificPermissions(permissions)
+  }, [permissions])
+
+  const showDetails = !hasBroadBskyAppRepo && hasOnlyBskySpecific
+
   if (hasBskyAppRepo || hasBskyAppRpc) {
     return (
       <DescriptionCard
@@ -340,16 +378,40 @@ function BlueskyAppviewPermissions({
         image={<ButterflyIcon className="size-6" />}
         title={'Bluesky'}
         description={
-          hasBskyAppRepo && hasBskyAppRpc ? (
+          hasBroadBskyAppRepo && hasBskyAppRpc ? (
             <Trans>
               Manage your profile, posts, likes and follows as well as read your
               private preferences
             </Trans>
-          ) : (
+          ) : hasBroadBskyAppRepo ? (
             <Trans>Manage your profile, posts, likes and follows</Trans>
+          ) : hasBskyAppRepo && hasBskyAppRpc ? (
+            <Trans>
+              Access specific parts of your Bluesky account and read your
+              private preferences
+            </Trans>
+          ) : hasBskyAppRepo ? (
+            <Trans>Access specific parts of your Bluesky account</Trans>
+          ) : (
+            <Trans>Read your private preferences</Trans>
           )
         }
-      />
+        extra={
+          showDetails ? (
+            <>
+              <RpcMethodsTable className="mt-2" permissions={permissions} />
+              <RepoTable className="mt-2" permissions={permissions} />
+            </>
+          ) : null
+        }
+      >
+        {showDetails && (
+          <Trans>
+            The application requests the permissions necessary to perform the
+            following actions on your Bluesky account:
+          </Trans>
+        )}
+      </DescriptionCard>
     )
   }
 
