@@ -13,6 +13,9 @@ export type ButtonColor =
 
 export type ButtonColoring = 'transparent' | 'bordered' | 'default'
 
+export type ButtonShape = 'padded' | 'rounded' | 'circle'
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
+
 export type ButtonProps = Override<
   JSX.IntrinsicElements['button'],
   {
@@ -23,12 +26,13 @@ export type ButtonProps = Override<
     /** Alias for `coloring="bordered"` */
     bordered?: boolean
     coloring?: ButtonColoring
-    shape?: 'padded' | 'rounded' | 'circle'
-    size?: 'sm' | 'md' | 'lg'
+    shape?: ButtonShape
+    size?: ButtonSize
   }
 >
 
 const TEXT_SIZES = {
+  xs: 'text-xs',
   sm: 'text-sm',
   md: 'text-md',
   lg: 'text-lg',
@@ -36,16 +40,19 @@ const TEXT_SIZES = {
 
 const PADDING_SIZES = {
   rounded: {
+    xs: 'px-2 py-0',
     sm: 'px-4 py-1',
     md: 'px-6 py-2',
     lg: 'px-8 py-3',
   },
   padded: {
+    xs: 'py-0.5 px-1',
     sm: 'py-1 px-2',
     md: 'py-2 px-3',
     lg: 'py-3 px-4',
   },
   circle: {
+    xs: 'size-4',
     sm: 'size-6',
     md: 'size-8',
     lg: 'size-10',
@@ -105,6 +112,46 @@ const COLORING: Record<
   },
 }
 
+export function buttonClassName({
+  color = 'gray',
+  coloring = 'default',
+  shape = 'rounded',
+  size = 'md',
+  actionable = true,
+  disabled = false,
+  className,
+}: {
+  color?: ButtonColor
+  coloring?: ButtonColoring
+  shape?: ButtonShape
+  size?: ButtonSize
+  actionable?: boolean
+  disabled?: boolean
+  className?: string
+} = {}) {
+  return clsx(
+    'touch-manipulation overflow-hidden',
+    'truncate tracking-wide',
+    actionable && 'cursor-pointer',
+    shape === 'circle' ? 'rounded-full' : 'rounded-md',
+    'flex items-center justify-center',
+    'box-border',
+    PADDING_SIZES[shape][size],
+    TEXT_SIZES[size],
+    COLORING[color][coloring],
+
+    // Transition
+    'transition duration-300 ease-in-out',
+
+    // Outline
+    'outline-none',
+    'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
+
+    disabled ? 'opacity-50' : 'disabled:opacity-50',
+    className,
+  )
+}
+
 export function Button({
   color = 'gray',
   transparent = false,
@@ -120,38 +167,28 @@ export function Button({
   type = 'button',
   role = 'Button',
   disabled = false,
+  'aria-disabled': ariaDisabled,
   ...props
 }: ButtonProps) {
   const actionable = type === 'submit' || props.onClick != null
+  const isDisabled = disabled || loading === true
 
   return (
     <button
+      {...props}
       role={role}
       type={type}
-      disabled={disabled || loading === true}
+      disabled={isDisabled}
       tabIndex={props?.tabIndex ?? (actionable ? 0 : -1)}
-      {...props}
-      className={clsx(
-        'touch-manipulation overflow-hidden',
-        'truncate tracking-wide',
-        actionable ? 'cursor-pointer' : null,
-        shape === 'circle' ? 'rounded-full' : 'rounded-md',
-        'flex items-center justify-center',
-        'box-border',
-        PADDING_SIZES[shape][size],
-        TEXT_SIZES[size],
-        COLORING[color][coloring],
-
-        // Transition
-        'transition duration-300 ease-in-out',
-
-        // Outline
-        'outline-none',
-        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-
-        'disabled:opacity-50',
+      aria-disabled={ariaDisabled ?? isDisabled}
+      className={buttonClassName({
+        color,
+        coloring,
+        shape,
+        size,
+        actionable,
         className,
-      )}
+      })}
     >
       {children}
     </button>

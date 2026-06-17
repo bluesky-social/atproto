@@ -1,5 +1,55 @@
 # @atproto/pds
 
+## 0.5.5
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto-labs/simple-store-memory@0.2.1
+  - @atproto-labs/simple-store-redis@0.1.1
+  - @atproto-labs/simple-store@0.4.1
+  - @atproto/oauth-provider@0.18.4
+  - @atproto-labs/fetch-node@0.3.1
+  - @atproto-labs/xrpc-utils@0.1.1
+  - @atproto/oauth-scopes@0.5.1
+  - @atproto/lex-cbor@0.1.1
+  - @atproto/lex-data@0.1.2
+  - @atproto/lex-json@0.1.1
+  - @atproto/xrpc-server@0.11.2
+  - @atproto/identity@0.5.1
+  - @atproto/lex@0.1.4
+  - @atproto/common@0.6.3
+  - @atproto/crypto@0.5.1
+  - @atproto/syntax@0.6.2
+  - @atproto/repo@0.10.1
+  - @atproto/xrpc@0.8.1
+  - @atproto/aws@0.3.1
+  - @atproto/did@0.5.1
+
+## 0.5.4
+
+### Patch Changes
+
+- [#5082](https://github.com/bluesky-social/atproto/pull/5082) [`7b8a240`](https://github.com/bluesky-social/atproto/commit/7b8a240bcfd91df3465d374d86259477490a0ff4) Thanks [@jcalabro](https://github.com/jcalabro)! - Increase rate limit rules on com.atproto.sync.getRepo
+
+- [#5070](https://github.com/bluesky-social/atproto/pull/5070) [`3247279`](https://github.com/bluesky-social/atproto/commit/324727933699bee63a1db3b1fba040e067511ad4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make account creation and deletion more resilient
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.18.3
+
+## 0.5.3
+
+### Patch Changes
+
+- [#5080](https://github.com/bluesky-social/atproto/pull/5080) [`b2c098f`](https://github.com/bluesky-social/atproto/commit/b2c098fdfa26137bb6f7d092ef89757e39748353) Thanks [@devinivy](https://github.com/devinivy)! - Make account deletion more robust to partial failures of file operations.
+
+- [#5078](https://github.com/bluesky-social/atproto/pull/5078) [`cc329bf`](https://github.com/bluesky-social/atproto/commit/cc329bf55c658752675d561dba792fedbe9c2626) Thanks [@jcalabro](https://github.com/jcalabro)! - Improve gzip streaming performance for com.atproto.sync.getRepo by coalescing in larger chunks before compression.
+
+- Updated dependencies [[`b2c098f`](https://github.com/bluesky-social/atproto/commit/b2c098fdfa26137bb6f7d092ef89757e39748353), [`cc329bf`](https://github.com/bluesky-social/atproto/commit/cc329bf55c658752675d561dba792fedbe9c2626)]:
+  - @atproto/common@0.6.2
+
 ## 0.5.2
 
 ### Patch Changes

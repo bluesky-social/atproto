@@ -1,5 +1,36 @@
 # @atproto/oauth-provider
 
+## 0.18.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5), [`1d0f332`](https://github.com/bluesky-social/atproto/commit/1d0f3325e09460586ec2d728410f9cdca9e09714)]:
+  - @atproto-labs/simple-store-memory@0.2.1
+  - @atproto/oauth-provider-api@0.6.2
+  - @atproto/oauth-provider-ui@0.7.4
+  - @atproto-labs/simple-store@0.4.1
+  - @atproto-labs/fetch-node@0.3.1
+  - @atproto/oauth-scopes@0.5.1
+  - @atproto/oauth-types@0.7.2
+  - @atproto/lex-document@0.1.1
+  - @atproto/lex-resolver@0.1.1
+  - @atproto-labs/fetch@0.3.1
+  - @atproto/jwk-jose@0.2.1
+  - @atproto-labs/pipe@0.2.1
+  - @atproto/jwk@0.7.1
+  - @atproto/common@0.6.3
+  - @atproto/syntax@0.6.2
+  - @atproto/did@0.5.1
+
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies [[`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe), [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe)]:
+  - @atproto/oauth-provider-ui@0.7.3
+
 ## 0.18.2
 
 ### Patch Changes

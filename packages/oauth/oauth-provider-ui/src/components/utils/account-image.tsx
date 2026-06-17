@@ -11,6 +11,7 @@ export type AccountImageProps = {
 }
 
 const sizeMap = {
+  xs: 'size-3',
   sm: 'size-5',
   md: 'size-6',
   lg: 'size-8',

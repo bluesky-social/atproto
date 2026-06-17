@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engines": {
     "node": ">=22"
   },
@@ -61,7 +61,7 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

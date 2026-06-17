@@ -52,10 +52,10 @@ export function selectQB(
         'device.ipAddress',
         'device.lastSeenAt',
       ])
-      .if(filter.sub != null, (qb) =>
+      .$if(filter.sub != null, (qb) =>
         qb.where('actor.did', '=', filter.sub! as DidString),
       )
-      .if(filter.deviceId != null, (qb) =>
+      .$if(filter.deviceId != null, (qb) =>
         qb.where('account_device.deviceId', '=', filter.deviceId!),
       )
   )

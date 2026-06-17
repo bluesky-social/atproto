@@ -3,6 +3,7 @@ import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
+  DidString,
   HandleString,
   asAtIdentifierString,
   getBlobCidString,
@@ -60,15 +61,11 @@ import { fromDateISO } from '../db/index.js'
 import { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import { ServerMailer } from '../mailer/index.js'
-import { Sequencer, syncEvtDataFromCommit } from '../sequencer/index.js'
+import { Sequencer } from '../sequencer/index.js'
 import { AccountManager, InvalidPasswordError } from './account-manager.js'
 import * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import {
-  AccountStatus,
-  ActorAccount,
-  UserAlreadyExistsError,
-} from './helpers/account.js'
+import { ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -157,7 +154,13 @@ export class OAuthStore
     const signingKey = await Secp256k1Keypair.create({ exportable: true })
     const signingKeyDid = signingKey.did()
 
-    const plcCreate = await createPlcOp({
+    const canTombstone =
+      // @NOTE IMPORTANT We don't support "bring your own DID" here (yet?). If
+      // we ever do, make sure to update the computation of canTombstone so that
+      // the user's did don't get tombstoned.
+      true
+
+    const plc = await createPlcOp({
       signingKey: signingKeyDid,
       rotationKeys: this.recoveryDidKey
         ? [this.recoveryDidKey, this.plcRotationKey.did()]
@@ -167,44 +170,60 @@ export class OAuthStore
       signer: this.plcRotationKey,
     })
 
-    const { did, op } = plcCreate
-    assert(isDidString(did), 'Generated DID is not a valid DidString')
+    const did = plc.did as DidString
 
     try {
       await this.actorStore.create(did, signingKey)
+
       try {
-        const commit = await this.actorStore.transact(did, (actorTxn) =>
-          actorTxn.repo.createRepo([]),
-        )
-
-        await this.plcClient.sendOperation(did, op)
-
-        await this.accountManager.createAccount({
-          did,
-          handle,
-          email,
-          password,
-          inviteCode,
-          repoCid: commit.cid,
-          repoRev: commit.rev,
+        const commit = await this.actorStore.transact(did, (actorTxn) => {
+          return actorTxn.repo.createRepo([])
         })
+
+        await this.plcClient.sendOperation(did, plc.op)
+
         try {
-          await this.sequencer.sequenceIdentityEvt(did, handle)
-          await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-          await this.sequencer.sequenceCommit(did, commit)
-          await this.sequencer.sequenceSyncEvt(
+          await this.accountManager.createAccount({
             did,
-            syncEvtDataFromCommit(commit),
-          )
-          await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-          await this.actorStore.clearReservedKeypair(signingKeyDid, did)
+            handle,
+            email,
+            password,
+            inviteCode,
+            repoCid: commit.cid,
+            repoRev: commit.rev,
+          })
 
-          const account = await this.accountManager.getAccount(did)
-          if (!account) throw new Error('Account not found')
+          try {
+            await this.sequencer.sequenceAccountCreation(did, handle, commit)
 
-          return await this.buildAccount(account)
+            try {
+              await this.actorStore
+                .clearReservedKeypair(signingKeyDid, did)
+                .catch((err) => {
+                  // @NOTE This is a cleanup operation so we won't fail the
+                  // whole flow if it fails, but we log it just in case
+                  dbLogger.error(
+                    { did, signingKeyDid, err },
+                    'Failed to clear reserved keypair',
+                  )
+                })
+
+              const account = await this.accountManager.getAccount(did)
+              assert(account, 'Account not found after creation')
+
+              return await this.buildAccount(account)
+            } catch (err) {
+              await this.sequencer.sequenceAccountDeletion(did)
+              throw err
+            }
+          } catch (err) {
+            await this.accountManager.deleteAccount(did)
+            throw err
+          }
         } catch (err) {
-          this.accountManager.deleteAccount(did)
+          if (canTombstone) {
+            await this.plcClient.tombstone(did, this.plcRotationKey)
+          }
           throw err
         }
       } catch (err) {

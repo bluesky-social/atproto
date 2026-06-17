@@ -35,10 +35,10 @@ export const updateQB = (
 ) =>
   db.db
     .updateTable('device')
-    .if(sessionId != null, (qb) => qb.set({ sessionId }))
-    .if(userAgent != null, (qb) => qb.set({ userAgent }))
-    .if(ipAddress != null, (qb) => qb.set({ ipAddress }))
-    .if(lastSeenAt != null, (qb) =>
+    .$if(sessionId != null, (qb) => qb.set({ sessionId }))
+    .$if(userAgent != null, (qb) => qb.set({ userAgent }))
+    .$if(ipAddress != null, (qb) => qb.set({ ipAddress }))
+    .$if(lastSeenAt != null, (qb) =>
       qb.set({ lastSeenAt: toDateISO(lastSeenAt!) }),
     )
     .where('id', '=', deviceId)

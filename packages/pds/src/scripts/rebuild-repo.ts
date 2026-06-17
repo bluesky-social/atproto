@@ -106,7 +106,7 @@ export const rebuildRepo = async (
   const syncData = await ctx.actorStore.read(did, (store) =>
     store.repo.getSyncEventData(),
   )
-  await ctx.sequencer.sequenceSyncEvt(did, syncData)
+  await ctx.sequencer.sequenceSync(did, syncData)
 }
 
 const promptContinue = async (): Promise<boolean> => {

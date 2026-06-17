@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "engines": {
     "node": ">=22"
   },
@@ -42,10 +42,8 @@
     "@atproto/oauth-types": "workspace:^",
     "core-js": "^3"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

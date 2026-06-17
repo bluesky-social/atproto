@@ -55,5 +55,6 @@
     },
   ],
   "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.experimental.useTsgo": true,
   "markdown.extension.toc.levels": "2..6",
 }

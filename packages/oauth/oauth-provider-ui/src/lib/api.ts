@@ -234,32 +234,36 @@ export class Api extends JsonClient<ApiEndpoints> {
 
   // and transform them into instances of the corresponding error classes.
   protected override parseError(response: Response, payload: Json): Error {
-    if (isOAuthErrorPayload(payload)) {
-      for (const ErrorClass of [
-        // @NOTE Most specific errors must come first!
-        SecondAuthenticationFactorRequiredError,
-        InvalidCredentialsError,
-        InvalidInviteCodeError,
-        HandleUnavailableError,
-        EmailTakenError,
-        UnknownRequestUriError,
-        RequestExpiredError,
-        UnauthorizedError,
-        InvalidRequestError,
-        AccessDeniedError,
-      ] as Array<{
-        is(payload: OAuthErrorPayload): boolean
-        new (payload: any): Error
-      }>) {
-        if (ErrorClass.is(payload)) {
-          return new ErrorClass(payload)
-        }
-      }
+    return parseApiErrorPayload(payload) ?? super.parseError(response, payload)
+  }
+}
 
-      return new OAuthErrorResponse(payload)
+export function parseApiErrorPayload(
+  payload: unknown,
+): OAuthErrorResponse | undefined {
+  if (isOAuthErrorPayload(payload)) {
+    for (const ErrorClass of [
+      // @NOTE Most specific errors must come first!
+      UnknownRequestUriError,
+      SecondAuthenticationFactorRequiredError,
+      InvalidCredentialsError,
+      InvalidInviteCodeError,
+      HandleUnavailableError,
+      EmailTakenError,
+      RequestExpiredError,
+      UnauthorizedError,
+      InvalidRequestError,
+      AccessDeniedError,
+    ] as Array<{
+      is(payload: OAuthErrorPayload): boolean
+      new (payload: any): OAuthErrorResponse
+    }>) {
+      if (ErrorClass.is(payload)) {
+        return new ErrorClass(payload)
+      }
     }
 
-    return super.parseError(response, payload)
+    return new OAuthErrorResponse(payload)
   }
 }
 
