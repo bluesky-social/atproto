@@ -136,7 +136,7 @@ function App() {
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string }) => {
       try {
-        const { url } = await api.consent(session!.account.sub, scope)
+        const { url } = await api.consent(session!.account.did, scope)
         await initiateRedirect(url, false)
       } catch (err) {
         notifyError(err)
