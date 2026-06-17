@@ -31,12 +31,6 @@
       "default": "./server.cjs"
     }
   },
-  "imports": {
-    "#/files": {
-      "types": "./files.d.ts",
-      "default": "./dist/files.json"
-    }
-  },
   "files": [
     "server.cjs",
     "dist"

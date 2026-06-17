@@ -1,4 +1,7 @@
 {
+  // @NOTE This tsconfig is used for TypeScript files that, when compiled, can
+  // run in NodeJS 22 environments, and that needs to be executable by NodeJS 24
+  // without being compiled.
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./node.tsconfig.json",
   "compilerOptions": {

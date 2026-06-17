@@ -2,9 +2,7 @@ import console from 'node:console'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import { argv, env } from 'node:process'
-// @ts-expect-error The file might not exist at build (typecheck) time
-// eslint-disable-next-line
-import files from '#/files' with { type: 'json' }
+import files from './dist/files.json' with { type: 'json' }
 
 /**
  * @param {import('http').IncomingMessage} req
