@@ -99,7 +99,7 @@ msgstr ""
 msgid "Account"
 msgstr "アカウント"
 
-#: src/components/utils/account-image.tsx:41
+#: src/components/utils/account-image.tsx:60
 msgid "Account avatar"
 msgstr ""
 
@@ -123,7 +123,7 @@ msgstr ""
 msgid "Account overview"
 msgstr ""
 
-#: src/authorization-page.tsx:221
+#: src/authorization-page.tsx:228
 #: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr ""
@@ -400,9 +400,31 @@ msgstr ""
 msgid "Data"
 msgstr ""
 
+#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/components/deactivate-account-dialog.tsx:22
+msgid "Deactivate account"
+msgstr ""
+
+#: src/components/utils/account-image.tsx:82
+msgid "Deactivated account"
+msgstr ""
+
 #: src/components/utils/scope-description.tsx:728
 msgid "Delete"
 msgstr "削除"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/components/delete-account-dialog.tsx:76
+msgid "Delete account"
+msgstr ""
+
+#: src/components/delete-account-dialog.tsx:72
+msgid "Delete account <0/>"
+msgstr ""
+
+#: src/components/delete-account-confirm-form.tsx:37
+msgid "Delete my account"
+msgstr ""
 
 #: src/components/consent-form.tsx:102
 msgctxt "OAuthConsent"
@@ -713,11 +735,11 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:140
+#: src/authorization-page.tsx:162
 msgid "Login canceled"
 msgstr ""
 
-#: src/authorization-page.tsx:140
+#: src/authorization-page.tsx:162
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -914,6 +936,15 @@ msgstr "プライバシーポリシー"
 msgid "Publish changes"
 msgstr "公開された変更"
 
+#: src/components/reactivate-account-dialog.tsx:36
+msgid "Reactivate"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/components/reactivate-account-dialog.tsx:22
+msgid "Reactivate account"
+msgstr ""
+
 #: src/components/utils/scope-description.tsx:441
 msgid "Read and send messages"
 msgstr "メッセージの読み取りと送信"
@@ -930,8 +961,8 @@ msgstr "あなたのアカウントのメールアドレスを読み取る"
 msgid "Read your private preferences"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:227
-#: src/components/sign-in-form.tsx:232
+#: src/components/sign-in-form.tsx:230
+#: src/components/sign-in-form.tsx:235
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
@@ -1392,7 +1423,7 @@ msgstr "あなたのアカウント"
 msgid "Your account and all associated data have been deleted."
 msgstr ""
 
-#: src/authorization-page.tsx:222
+#: src/authorization-page.tsx:229
 msgid "Your account has been successfully reactivated."
 msgstr ""
 
@@ -1440,6 +1471,10 @@ msgstr "あなたのフルユーザー名： {0}"
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
+
+#: src/components/reactivate-account-dialog.tsx:24
+msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:647
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"

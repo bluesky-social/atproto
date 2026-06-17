@@ -99,7 +99,7 @@ msgstr "Accéder à certaines parties de votre compte Bluesky et lire vos préf�
 msgid "Account"
 msgstr "Compte utilisateur"
 
-#: src/components/utils/account-image.tsx:41
+#: src/components/utils/account-image.tsx:60
 msgid "Account avatar"
 msgstr "Avatar du compte"
 
@@ -123,7 +123,7 @@ msgstr "Nom du compte"
 msgid "Account overview"
 msgstr "Aperçu du compte"
 
-#: src/authorization-page.tsx:221
+#: src/authorization-page.tsx:228
 #: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Compte réactivé"
@@ -324,10 +324,6 @@ msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/components/redirecting-view.tsx:43
-msgid "Click here if you are not automatically redirected"
-msgstr "Cliquez ici si vous n'êtes pas automatiquement redirigé"
-
 #: src/components/redirecting-view.tsx:92
 msgid "Click here if nothing happens"
 msgstr "Cliquez ici si rien ne se passe"
@@ -413,7 +409,7 @@ msgstr "Désactiver le compte"
 msgid "Deactivated account"
 msgstr "Compte désactivé"
 
-#: src/components/utils/scope-description.tsx:666
+#: src/components/utils/scope-description.tsx:728
 msgid "Delete"
 msgstr "Supprimer"
 
@@ -429,11 +425,6 @@ msgstr "Supprimer le compte <0/>"
 #: src/components/delete-account-confirm-form.tsx:37
 msgid "Delete my account"
 msgstr "Supprimer mon compte"
-
-#: src/components/consent-form.tsx:99
-#: src/components/utils/scope-description.tsx:728
-msgid "Delete"
-msgstr "Supprimer"
 
 #: src/components/consent-form.tsx:102
 msgctxt "OAuthConsent"
@@ -754,16 +745,11 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:159
+#: src/authorization-page.tsx:162
 msgid "Login canceled"
 msgstr "Connexion annulée"
 
-#: src/authorization-page.tsx:159
-#: src/authorization-page.tsx:140
-msgid "Login canceled"
-msgstr "Connexion annulée"
-
-#: src/authorization-page.tsx:140
+#: src/authorization-page.tsx:162
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -969,7 +955,6 @@ msgstr "Réactiver"
 msgid "Reactivate account"
 msgstr "Réactiver le compte"
 
-#: src/components/utils/scope-description.tsx:379
 #: src/components/utils/scope-description.tsx:441
 msgid "Read and send messages"
 msgstr "Lire et envoyer des messages"
@@ -982,14 +967,12 @@ msgstr "Lire et mettre à jour l'adresse email de votre compte"
 msgid "Read your account's email address"
 msgstr "Lire l'adresse email de votre compte"
 
-#: src/components/sign-in-form.tsx:230
-#: src/components/sign-in-form.tsx:235
 #: src/components/utils/scope-description.tsx:396
 msgid "Read your private preferences"
 msgstr "Lire vos préférences privées"
 
-#: src/components/sign-in-form.tsx:227
-#: src/components/sign-in-form.tsx:232
+#: src/components/sign-in-form.tsx:230
+#: src/components/sign-in-form.tsx:235
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
@@ -1409,7 +1392,6 @@ msgstr "Oui, réactiver mon compte"
 msgid "yesterday"
 msgstr "hier"
 
-#: src/components/redirecting-view.tsx:31
 #: src/components/redirecting-view.tsx:82
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
@@ -1451,7 +1433,7 @@ msgstr "Votre compte"
 msgid "Your account and all associated data have been deleted."
 msgstr "Votre compte et toutes les données associées ont été supprimés."
 
-#: src/authorization-page.tsx:222
+#: src/authorization-page.tsx:229
 msgid "Your account has been successfully reactivated."
 msgstr "Votre compte a été réactivé avec succès."
 
@@ -1504,7 +1486,6 @@ msgstr "Votre mot de passe a été mis à jour !"
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
 msgstr "Votre profil, vos publications, vos feeds et vos listes redeviendront visibles sur le réseau Atmosphère — cela inclut l'application Bluesky et toute autre application AT Protocol sur laquelle vous utilisez ce compte."
 
-#: src/components/utils/scope-description.tsx:585
 #: src/components/utils/scope-description.tsx:647
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau AT Protocol, telles que les posts, les likes et les follows de Bluesky. Il contient également les données créées via d'autres applications utilisées avec ce compte. L'application demande les autorisations nécessaires pour publier les modifications suivantes sur votre dépôt :"

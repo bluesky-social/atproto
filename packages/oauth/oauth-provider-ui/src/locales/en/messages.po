@@ -99,7 +99,7 @@ msgstr "Access specific parts of your Bluesky account and read your private pref
 msgid "Account"
 msgstr "Account"
 
-#: src/components/utils/account-image.tsx:41
+#: src/components/utils/account-image.tsx:60
 msgid "Account avatar"
 msgstr "Account avatar"
 
@@ -123,7 +123,7 @@ msgstr "Account name"
 msgid "Account overview"
 msgstr "Account overview"
 
-#: src/authorization-page.tsx:221
+#: src/authorization-page.tsx:228
 #: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Account reactivated"
@@ -400,9 +400,31 @@ msgstr "Custom domains are not supported"
 msgid "Data"
 msgstr "Data"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/components/deactivate-account-dialog.tsx:22
+msgid "Deactivate account"
+msgstr "Deactivate account"
+
+#: src/components/utils/account-image.tsx:82
+msgid "Deactivated account"
+msgstr "Deactivated account"
+
 #: src/components/utils/scope-description.tsx:728
 msgid "Delete"
 msgstr "Delete"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/components/delete-account-dialog.tsx:76
+msgid "Delete account"
+msgstr "Delete account"
+
+#: src/components/delete-account-dialog.tsx:72
+msgid "Delete account <0/>"
+msgstr "Delete account <0/>"
+
+#: src/components/delete-account-confirm-form.tsx:37
+msgid "Delete my account"
+msgstr "Delete my account"
 
 #: src/components/consent-form.tsx:102
 msgctxt "OAuthConsent"
@@ -723,11 +745,11 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:140
+#: src/authorization-page.tsx:162
 msgid "Login canceled"
 msgstr "Login canceled"
 
-#: src/authorization-page.tsx:140
+#: src/authorization-page.tsx:162
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -924,6 +946,15 @@ msgstr "Privacy Policy"
 msgid "Publish changes"
 msgstr "Publish changes"
 
+#: src/components/reactivate-account-dialog.tsx:36
+msgid "Reactivate"
+msgstr "Reactivate"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/components/reactivate-account-dialog.tsx:22
+msgid "Reactivate account"
+msgstr "Reactivate account"
+
 #: src/components/utils/scope-description.tsx:441
 msgid "Read and send messages"
 msgstr "Read and send messages"
@@ -940,8 +971,8 @@ msgstr "Read your account's email address"
 msgid "Read your private preferences"
 msgstr "Read your private preferences"
 
-#: src/components/sign-in-form.tsx:227
-#: src/components/sign-in-form.tsx:232
+#: src/components/sign-in-form.tsx:230
+#: src/components/sign-in-form.tsx:235
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -1402,7 +1433,7 @@ msgstr "Your account"
 msgid "Your account and all associated data have been deleted."
 msgstr "Your account and all associated data have been deleted."
 
-#: src/authorization-page.tsx:222
+#: src/authorization-page.tsx:229
 msgid "Your account has been successfully reactivated."
 msgstr "Your account has been successfully reactivated."
 
@@ -1450,6 +1481,10 @@ msgstr "Your full username will be: {0}"
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
+
+#: src/components/reactivate-account-dialog.tsx:24
+msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
+msgstr "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other AT Protocol app you use this account on."
 
 #: src/components/utils/scope-description.tsx:647
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
