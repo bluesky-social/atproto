@@ -13,7 +13,7 @@ export type ResetPasswordRequestFormProps =
 export function ResetPasswordRequestForm({
   emailDefault,
 
-  // AsyncFormProps
+  // SmartFormProps
   ...props
 }: ResetPasswordRequestFormProps) {
   const { t } = useLingui()

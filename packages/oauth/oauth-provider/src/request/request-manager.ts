@@ -78,7 +78,7 @@ export class RequestManager {
       parameters,
       expiresAt,
       deviceId,
-      sub: null,
+      did: null,
       code: null,
     })
 
@@ -337,7 +337,7 @@ export class RequestManager {
     const updates: UpdateRequestData = {}
 
     try {
-      if (data.sub || data.code) {
+      if (data.did || data.code) {
         // If an account was linked to the request, the next step is to exchange
         // the code for a token.
         throw new AccessDeniedError(
@@ -404,6 +404,13 @@ export class RequestManager {
     let { parameters } = data
 
     try {
+      if (account.deactivated) {
+        throw new AccessDeniedError(
+          parameters,
+          'This account has been deactivated',
+        )
+      }
+
       if (data.expiresAt < new Date()) {
         throw new AccessDeniedError(parameters, 'This request has expired')
       }
@@ -419,7 +426,7 @@ export class RequestManager {
           'This request was initiated from another device',
         )
       }
-      if (data.sub || data.code) {
+      if (data.did || data.code) {
         throw new AccessDeniedError(
           parameters,
           'This request was already authorized',
@@ -453,7 +460,7 @@ export class RequestManager {
 
       // Bind the request to the account, preventing it from being used again.
       await this.store.updateRequest(requestId, {
-        sub: account.sub,
+        did: account.did,
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),

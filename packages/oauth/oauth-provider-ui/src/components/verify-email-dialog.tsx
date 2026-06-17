@@ -82,6 +82,7 @@ export function VerifyEmailDialog({
             await onConfirm(data)
             setOpen(false)
           }}
+          onResend={onRequest}
         />
       )}
     </DialogSimple>

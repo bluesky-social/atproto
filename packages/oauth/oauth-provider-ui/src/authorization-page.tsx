@@ -1,15 +1,22 @@
 import './style.css'
 
 import { msg } from '@lingui/core/macro'
-import { StrictMode, useCallback, useState } from 'react'
+import { ReactNode, StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
-import { errorViewRender } from '#/components/error-view.tsx'
+import { ErrorView } from '#/components/error-view.tsx'
+import { ReactivateAccountView } from '#/components/reactivate-account-view'
 import { RedirectingView } from '#/components/redirecting-view'
-import { AuthenticationProvider } from '#/contexts/authentication.tsx'
+import {
+  AuthenticationProvider,
+  useAuthenticationContext,
+} from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
-import { NotificationsProvider } from '#/contexts/notifications.tsx'
+import {
+  NotificationsProvider,
+  useNotificationsContext,
+} from '#/contexts/notifications.tsx'
 import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { sleep } from '#/lib/util.ts'
@@ -42,10 +49,14 @@ createRoot(container).render(
     <CustomizationProvider value={customizationData}>
       <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
         <NotificationsProvider>
-          <ErrorBoundary fallbackRender={errorViewRender}>
+          <ErrorBoundary
+            fallbackRender={({ error, resetErrorBoundary }) => (
+              <ErrorView error={error} retry={resetErrorBoundary} />
+            )}
+          >
             <SessionProvider
               initialSessions={initialSessions}
-              initialSelected={authorizeData.selectedSub}
+              initialSelected={authorizeData.selectedDid}
             >
               <App />
             </SessionProvider>
@@ -61,6 +72,7 @@ createRoot(container).render(
 function App() {
   const loginHint = authorizeData.loginHint || undefined
 
+  const { notifyError } = useNotificationsContext()
   const { session, setSession, api } = useSessionContext()
   const [rejected, setRejected] = useState<null | boolean>(null)
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
@@ -123,15 +135,25 @@ function App() {
 
   const doConsentAndRedirect = useCallback(
     async ({ scope }: { scope?: string }) => {
-      const { url } = await api.consent(session!.account.sub, scope)
-      await initiateRedirect(url, false)
+      try {
+        const { url } = await api.consent(session!.account.did, scope)
+        await initiateRedirect(url, false)
+      } catch (err) {
+        notifyError(err)
+        throw err
+      }
     },
     [initiateRedirect, api, session],
   )
 
   const doRejectAndRedirect = useCallback(async () => {
-    const { url } = await api.reject()
-    await initiateRedirect(url, true)
+    try {
+      const { url } = await api.reject()
+      await initiateRedirect(url, true)
+    } catch (err) {
+      notifyError(err)
+      throw err
+    }
   }, [initiateRedirect, api])
 
   if (redirectUrl) {
@@ -153,20 +175,66 @@ function App() {
       forcedIdentifier={loginHint}
       promptMode={authorizeData.promptMode}
     >
-      {session && (
-        <ConsentView
-          clientId={authorizeData.clientId}
-          clientMetadata={authorizeData.clientMetadata}
-          clientTrusted={authorizeData.clientTrusted}
-          clientFirstParty={authorizeData.clientFirstParty}
-          permissionSets={authorizeData.permissionSets}
-          account={session.account}
-          scope={authorizeData.scope}
-          onConsent={doConsentAndRedirect}
-          onReject={doRejectAndRedirect}
-          onBack={loginHint ? undefined : () => setSession(null)}
-        />
-      )}
+      <ActivatedAccountGate
+        onCancel={
+          // If the account is "forced" through a login hint, cancelling the
+          // re-activation is equivalent to rejecting the consent. Otherwise,
+          // cancelling takes the user back to the account selection.
+          loginHint ? doRejectAndRedirect : () => setSession(null)
+        }
+      >
+        {session && (
+          // Note that the AuthenticationProvider acts as a gate that will
+          // ensure that a "session" is available when its children are
+          // rendered.
+          <ConsentView
+            clientId={authorizeData.clientId}
+            clientMetadata={authorizeData.clientMetadata}
+            clientTrusted={authorizeData.clientTrusted}
+            clientFirstParty={authorizeData.clientFirstParty}
+            permissionSets={authorizeData.permissionSets}
+            account={session.account}
+            scope={authorizeData.scope}
+            onConsent={doConsentAndRedirect}
+            onReject={doRejectAndRedirect}
+            onBack={loginHint ? undefined : () => setSession(null)}
+          />
+        )}
+      </ActivatedAccountGate>
     </AuthenticationProvider>
   )
+}
+
+function ActivatedAccountGate({
+  children,
+  onCancel,
+}: {
+  children?: ReactNode
+  onCancel?: () => void | PromiseLike<void>
+}) {
+  const { notify, notifyError } = useNotificationsContext()
+  const { session, api } = useAuthenticationContext()
+
+  if (session.account.deactivated) {
+    const { did } = session.account
+    return (
+      <ReactivateAccountView
+        account={session.account}
+        onCancel={onCancel}
+        onReactivate={async () => {
+          try {
+            await api.reactivateAccount({ did })
+            notify({
+              title: msg`Account reactivated`,
+              description: msg`Your account has been successfully reactivated.`,
+            })
+          } catch (err) {
+            notifyError(err)
+          }
+        }}
+      />
+    )
+  }
+
+  return <>{children}</>
 }
