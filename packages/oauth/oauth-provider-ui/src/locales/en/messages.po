@@ -78,7 +78,7 @@ msgstr "A local app"
 msgid "A second authentication factor is required ({hint})"
 msgstr "A second authentication factor is required ({hint})"
 
-#: src/components/utils/scope-description.tsx:801
+#: src/components/utils/scope-description.tsx:863
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "A service controlled by <0>{domain}</0>"
 
@@ -86,12 +86,20 @@ msgstr "A service controlled by <0>{domain}</0>"
 msgid "About"
 msgstr "About"
 
+#: src/components/utils/scope-description.tsx:394
+msgid "Access specific parts of your Bluesky account"
+msgstr "Access specific parts of your Bluesky account"
+
+#: src/components/utils/scope-description.tsx:389
+msgid "Access specific parts of your Bluesky account and read your private preferences"
+msgstr "Access specific parts of your Bluesky account and read your private preferences"
+
 #: src/pages/account/(authenticated)/route.tsx:56
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Account"
 
-#: src/components/utils/account-image.tsx:40
+#: src/components/utils/account-image.tsx:41
 msgid "Account avatar"
 msgstr "Account avatar"
 
@@ -149,15 +157,15 @@ msgstr "An unknown error occurred"
 msgid "Another account"
 msgstr "Another account"
 
-#: src/components/utils/scope-description.tsx:829
+#: src/components/utils/scope-description.tsx:891
 msgid "Any collection"
 msgstr "Any collection"
 
-#: src/components/utils/scope-description.tsx:771
+#: src/components/utils/scope-description.tsx:833
 msgid "Any method"
 msgstr "Any method"
 
-#: src/components/utils/scope-description.tsx:810
+#: src/components/utils/scope-description.tsx:872
 msgid "Any service"
 msgstr "Any service"
 
@@ -174,14 +182,14 @@ msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "Authenticate"
 
-#: src/components/utils/scope-description.tsx:442
-#: src/components/utils/scope-description.tsx:458
+#: src/components/utils/scope-description.tsx:504
+#: src/components/utils/scope-description.tsx:520
 msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Authenticate"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:83
+#: src/components/consent-form.tsx:84
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Authorize"
@@ -202,15 +210,15 @@ msgstr "Back"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
-#: src/components/utils/scope-description.tsx:695
+#: src/components/utils/scope-description.tsx:757
 msgid "Blob storage"
 msgstr "Blob storage"
 
-#: src/components/utils/scope-description.tsx:786
+#: src/components/utils/scope-description.tsx:848
 msgid "Bluesky App services"
 msgstr "Bluesky App services"
 
-#: src/components/utils/scope-description.tsx:793
+#: src/components/utils/scope-description.tsx:855
 msgid "Bluesky Chat services"
 msgstr "Bluesky Chat services"
 
@@ -218,7 +226,7 @@ msgstr "Bluesky Chat services"
 msgid "Branding"
 msgstr "Branding"
 
-#: src/components/consent-form.tsx:161
+#: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 
@@ -228,7 +236,7 @@ msgstr "By clicking <0>Authorize</0>, you will grant this application access to 
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "By creating an account you agree to the {0} and the {1} of this service."
 
-#: src/components/utils/scope-description.tsx:521
+#: src/components/utils/scope-description.tsx:583
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
@@ -243,7 +251,7 @@ msgstr "Cancel"
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
-#: src/components/utils/scope-description.tsx:418
+#: src/components/utils/scope-description.tsx:480
 msgid "Change your <0>@handle</0>"
 msgstr "Change your <0>@handle</0>"
 
@@ -251,7 +259,7 @@ msgstr "Change your <0>@handle</0>"
 msgid "Change your password"
 msgstr "Change your password"
 
-#: src/components/utils/scope-description.tsx:378
+#: src/components/utils/scope-description.tsx:440
 msgid "Chat"
 msgstr "Chat"
 
@@ -282,9 +290,9 @@ msgstr "Choose a new email address to associate with your account."
 msgid "Choose a username"
 msgstr "Choose a username"
 
-#: src/authorization-page.tsx:162
-msgid "Click here if you are not automatically redirected"
-msgstr "Click here if you are not automatically redirected"
+#: src/components/redirecting-view.tsx:92
+msgid "Click here if nothing happens"
+msgstr "Click here if nothing happens"
 
 #: src/components/update-email-form.tsx:97
 msgid "Click here to resend."
@@ -337,7 +345,7 @@ msgstr "Copied"
 msgid "Copy to clipboard"
 msgstr "Copy to clipboard"
 
-#: src/components/utils/scope-description.tsx:664
+#: src/components/utils/scope-description.tsx:726
 msgid "Create"
 msgstr "Create"
 
@@ -345,7 +353,7 @@ msgstr "Create"
 msgid "Create a new account"
 msgstr "Create a new account"
 
-#: src/components/utils/scope-description.tsx:568
+#: src/components/utils/scope-description.tsx:630
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Create, update, and delete any public data linked to your account"
 
@@ -353,15 +361,15 @@ msgstr "Create, update, and delete any public data linked to your account"
 msgid "Custom domains are not supported"
 msgstr "Custom domains are not supported"
 
-#: src/components/utils/scope-description.tsx:663
+#: src/components/utils/scope-description.tsx:725
 msgid "Data"
 msgstr "Data"
 
-#: src/components/utils/scope-description.tsx:666
+#: src/components/utils/scope-description.tsx:728
 msgid "Delete"
 msgstr "Delete"
 
-#: src/components/consent-form.tsx:99
+#: src/components/consent-form.tsx:102
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Deny access"
@@ -579,7 +587,7 @@ msgstr "HTTP"
 msgid "Identifier"
 msgstr "Identifier"
 
-#: src/components/utils/scope-description.tsx:411
+#: src/components/utils/scope-description.tsx:473
 msgid "Identity"
 msgstr "Identity"
 
@@ -648,7 +656,11 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:153
+#: src/authorization-page.tsx:140
+msgid "Login canceled"
+msgstr "Login canceled"
+
+#: src/authorization-page.tsx:140
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -680,7 +692,7 @@ msgstr "Make visible"
 msgid "Manage applications that have access to your account"
 msgstr "Manage applications that have access to your account"
 
-#: src/components/utils/scope-description.tsx:414
+#: src/components/utils/scope-description.tsx:476
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Manage your <0>full identity</0> including your <1>@handle</1>"
 
@@ -692,11 +704,11 @@ msgstr "Manage your account"
 msgid "Manage your active sessions"
 msgstr "Manage your active sessions"
 
-#: src/components/utils/scope-description.tsx:349
+#: src/components/utils/scope-description.tsx:387
 msgid "Manage your profile, posts, likes and follows"
 msgstr "Manage your profile, posts, likes and follows"
 
-#: src/components/utils/scope-description.tsx:344
+#: src/components/utils/scope-description.tsx:382
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Manage your profile, posts, likes and follows as well as read your private preferences"
 
@@ -785,11 +797,11 @@ msgctxt "Error"
 msgid "Payload"
 msgstr "Payload"
 
-#: src/components/utils/scope-description.tsx:459
+#: src/components/utils/scope-description.tsx:521
 msgid "Perform actions on your behalf"
 msgstr "Perform actions on your behalf"
 
-#: src/components/utils/scope-description.tsx:444
+#: src/components/utils/scope-description.tsx:506
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Perform authenticated actions towards <0>any service</0> on your behalf"
 
@@ -833,11 +845,11 @@ msgstr "Please wait {remainingSeconds} seconds before trying again."
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
-#: src/components/utils/scope-description.tsx:582
+#: src/components/utils/scope-description.tsx:644
 msgid "Publish changes"
 msgstr "Publish changes"
 
-#: src/components/utils/scope-description.tsx:379
+#: src/components/utils/scope-description.tsx:441
 msgid "Read and send messages"
 msgstr "Read and send messages"
 
@@ -849,13 +861,17 @@ msgstr "Read and update your account's email address"
 msgid "Read your account's email address"
 msgstr "Read your account's email address"
 
+#: src/components/utils/scope-description.tsx:396
+msgid "Read your private preferences"
+msgstr "Read your private preferences"
+
 #: src/components/sign-in-form.tsx:227
 #: src/components/sign-in-form.tsx:232
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
-#: src/components/utils/scope-description.tsx:566
-#: src/components/utils/scope-description.tsx:581
+#: src/components/utils/scope-description.tsx:628
+#: src/components/utils/scope-description.tsx:643
 msgid "Repository"
 msgstr "Repository"
 
@@ -974,7 +990,7 @@ msgstr "Successfully revoked access"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:134
+#: src/components/consent-form.tsx:137
 msgid "Technical details"
 msgstr "Technical details"
 
@@ -996,7 +1012,11 @@ msgstr "The application is asking for full control over your network identity, m
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "The application requests the permissions necessary to perform the following actions on your behalf:"
 
-#: src/components/utils/scope-description.tsx:462
+#: src/components/utils/scope-description.tsx:409
+msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
+msgstr "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
+
+#: src/components/utils/scope-description.tsx:524
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 
@@ -1036,7 +1056,7 @@ msgstr "The username is invalid"
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
-#: src/components/consent-form.tsx:139
+#: src/components/consent-form.tsx:142
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "This application is requesting the following permissions (scopes) to access your account:"
 
@@ -1066,7 +1086,7 @@ msgstr "To change your password, you'll need to enter a security code sent to yo
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 
-#: src/components/utils/scope-description.tsx:524
+#: src/components/utils/scope-description.tsx:586
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Towards"
@@ -1100,7 +1120,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
 
-#: src/components/utils/scope-description.tsx:665
+#: src/components/utils/scope-description.tsx:727
 msgid "Update"
 msgstr "Update"
 
@@ -1119,7 +1139,7 @@ msgstr "Update your username"
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr "Update your username to a domain name you own to self-verify your identity."
 
-#: src/components/utils/scope-description.tsx:698
+#: src/components/utils/scope-description.tsx:760
 msgid "Upload files"
 msgstr "Upload files"
 
@@ -1194,11 +1214,11 @@ msgstr "Verify you are human"
 msgid "Verify your email"
 msgstr "Verify your email"
 
-#: src/components/consent-form.tsx:127
+#: src/components/consent-form.tsx:130
 msgid "wants to access your <0/> account"
 msgstr "wants to access your <0/> account"
 
-#: src/components/consent-form.tsx:121
+#: src/components/consent-form.tsx:124
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
@@ -1234,7 +1254,7 @@ msgstr "Wrong identifier or password"
 msgid "yesterday"
 msgstr "yesterday"
 
-#: src/authorization-page.tsx:154
+#: src/components/redirecting-view.tsx:82
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
@@ -1288,7 +1308,7 @@ msgstr "Your full username will be: {0}"
 msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
 
-#: src/components/utils/scope-description.tsx:585
+#: src/components/utils/scope-description.tsx:647
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 

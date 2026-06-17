@@ -5,6 +5,10 @@ export const locales = {
     name: 'English',
     flag: '🇺🇸',
   },
+  es: {
+    name: 'Español',
+    flag: '🇪🇸',
+  },
   fr: {
     name: 'Français',
     flag: '🇫🇷',
