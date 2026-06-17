@@ -14,7 +14,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import { Views } from '../../../../views/index.js'
-import { resHeaders } from '../../../util.js'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActors = createPipeline(
@@ -41,7 +41,14 @@ export default function (server: Server, ctx: AppContext) {
           }),
         ),
       })
-      const results = await searchActors({ ...params, hydrateCtx }, ctx)
+      const results = await searchActors(
+        {
+          ...params,
+          hydrateCtx,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
+        },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: results,
@@ -109,9 +116,10 @@ const skeletonV2 = async (
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useV2 = input.params.hydrateCtx.features.checkGate(
-    input.params.hydrateCtx.features.Gate.SearchV2Enable,
-  )
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
   const skeletonFn = useV2 ? skeletonV2 : skeletonV1
   return skeletonFn(input)
 }
@@ -151,7 +159,10 @@ type Context = {
   searchClient?: Client
 }
 
-type Params = app.bsky.actor.searchActors.$Params & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.actor.searchActors.$Params & {
+  hydrateCtx: HydrateCtx
+  isV2Override: boolean
+}
 
 type Skeleton = {
   dids: DidString[]
