@@ -88,11 +88,11 @@ msgstr "アカウントについて"
 
 #: src/components/utils/scope-description.tsx:394
 msgid "Access specific parts of your Bluesky account"
-msgstr ""
+msgstr "Blueskyアカウントの特定の部分にアクセス"
 
 #: src/components/utils/scope-description.tsx:389
 msgid "Access specific parts of your Bluesky account and read your private preferences"
-msgstr ""
+msgstr "Blueskyアカウントの特定の部分にアクセスし、プライベート設定を読み取ります"
 
 #: src/pages/account/(authenticated)/route.tsx:56
 #: src/components/utils/scope-description.tsx:266
@@ -292,7 +292,7 @@ msgstr "ユーザー名を選んでください"
 
 #: src/components/redirecting-view.tsx:92
 msgid "Click here if nothing happens"
-msgstr ""
+msgstr "何も起こらない場合はここをクリックしてください"
 
 #: src/components/update-email-form.tsx:97
 msgid "Click here to resend."
@@ -657,7 +657,7 @@ msgstr "パスワードをリセットしましょう！"
 
 #: src/authorization-page.tsx:140
 msgid "Login canceled"
-msgstr ""
+msgstr "ログインキャンセル"
 
 #: src/authorization-page.tsx:140
 msgid "Login complete"
@@ -862,7 +862,7 @@ msgstr "あなたのアカウントのメールアドレスを読み取る"
 
 #: src/components/utils/scope-description.tsx:396
 msgid "Read your private preferences"
-msgstr ""
+msgstr "あなたのプライベート設定を読み取る"
 
 #: src/components/sign-in-form.tsx:227
 #: src/components/sign-in-form.tsx:232
@@ -1013,7 +1013,7 @@ msgstr "アプリは、あなたに代わって次のアクションを実行す
 
 #: src/components/utils/scope-description.tsx:409
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
-msgstr ""
+msgstr "アプリは、あなたのBlueskyアカウントに対して次のアクションを実行するために必要な権限を要求しています："
 
 #: src/components/utils/scope-description.tsx:524
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
