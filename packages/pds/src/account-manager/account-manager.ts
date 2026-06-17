@@ -424,29 +424,32 @@ export class AccountManager {
       deleteAfter?: string | null
     },
   ) {
-    await this.db.transaction(async (dbTxn) => {
-      await accountHelpers.deactivateAccount(
-        dbTxn,
-        did,
-        options?.deleteAfter ?? null,
-      )
-
+    const wasUpdated = await this.db.transaction(async (dbTxn) => {
       if (options?.deleteCredentials) {
         await token.removeByDid(dbTxn, did)
         await authorizedClientHelper.deleteAllAuthorizedClients(dbTxn, did)
         await password.deleteAllAppPasswords(dbTxn, did)
       }
+
+      return accountHelpers.deactivateAccount(
+        dbTxn,
+        did,
+        options?.deleteAfter ?? null,
+      )
     })
+
+    if (!wasUpdated) {
+      throw new InvalidRequestError('Account not found')
+    }
 
     const accountStatus = await this.getAccountStatus(did)
 
-    await this.sequencer.sequenceAccount(did, accountStatus.status)
-
+    // Account is likely soft-deleted (takendown)
     if (accountStatus.status === AccountStatus.Deleted) {
       throw new InvalidRequestError('Account not found')
     }
 
-    // @TODO Should we also delete credentials from here?
+    await this.sequencer.sequenceAccount(did, accountStatus.status)
 
     return accountStatus
   }
@@ -455,6 +458,7 @@ export class AccountManager {
     await assertValidDidDocumentForService(this, did)
 
     const found = await accountHelpers.activateAccount(this.db, did, {
+      // We cannot activate a takendown account
       includeTakenDown: false,
       includeDeactivated: true,
     })
