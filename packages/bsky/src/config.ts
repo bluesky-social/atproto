@@ -332,7 +332,8 @@ export class ServerConfig {
       ? parseInt(process.env.BSKY_DRAFTS_LIMIT || '', 10)
       : 500
 
-    const searchV2OverrideHeader = process.env.BSKY_SEARCH_PASSTHROUGH_HEADER
+    const searchV2OverrideHeader =
+      process.env.BSKY_SEARCH_V2_OVERRIDE_HEADER || undefined
 
     return new ServerConfig({
       version,
