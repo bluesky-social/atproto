@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.7.4
+
+### Patch Changes
+
+- [#5101](https://github.com/bluesky-social/atproto/pull/5101) [`9cc6b33`](https://github.com/bluesky-social/atproto/commit/9cc6b3369878fe46554727f2ae9342376f2e41b6) Thanks [@ryanda9910](https://github.com/ryanda9910)! - Avoid relying on `AbortSignal.timeout`, which is not implemented in every runtime this package targets (notably React Native / Expo) and caused `TypeError: AbortSignal.timeout is not a function` during the OAuth login flow. A `timeoutSignal` helper now feature-detects the native static method and falls back to an `AbortController` + `setTimeout` when it is missing.
+
 ## 0.7.3
 
 ### Patch Changes
