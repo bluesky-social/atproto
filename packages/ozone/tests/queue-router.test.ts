@@ -54,10 +54,10 @@ describe('queue-router', () => {
     })
   }
 
-  // Creates an account-level report event the way automated tooling (e.g.
-  // Osprey) does: stamped with a modTool that names the tool, flags the report
+  // Creates an account-level report event the way automated tooling does:
+  // stamped with a modTool that names the tool, flags the report
   // as automated, and names the destination queue via meta.queueId.
-  const reportAccountAutomated = async (
+  const createReportForQueue = async (
     did: string,
     reportType: string,
     queueId: number,
@@ -300,7 +300,7 @@ describe('queue-router', () => {
       // spam-accounts queue. The explicit queueId points it at the spam-posts
       // queue instead (whose record/post attributes it could never match
       // organically), proving the explicit id wins over attribute matching.
-      await reportAccountAutomated(sc.dids.dan, REASON_SPAM, spamPostQueueId)
+      await createReportForQueue(sc.dids.dan, REASON_SPAM, spamPostQueueId)
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
