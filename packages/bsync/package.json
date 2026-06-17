@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -34,7 +34,7 @@
     "@connectrpc/connect": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "http-terminator": "^3.2.0",
-    "kysely": "^0.22.0",
+    "kysely": "^0.29.2",
     "pg": "^8.10.0",
     "pino-http": "^8.2.1",
     "typed-emitter": "^2.1.0"
@@ -43,7 +43,7 @@
     "@bufbuild/buf": "^1.28.1",
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
-    "@types/pg": "^8.6.6",
+    "@types/pg": "^8.15.5",
     "get-port": "^5.1.1",
     "jest": "^30.0.0",
     "ts-node": "^10.8.2"

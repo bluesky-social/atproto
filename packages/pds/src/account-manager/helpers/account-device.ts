@@ -48,8 +48,8 @@ export function selectQB(
         'device.ipAddress',
         'device.lastSeenAt',
       ])
-      .if(filter.did != null, (qb) => qb.where('actor.did', '=', filter.did!))
-      .if(filter.deviceId != null, (qb) =>
+      .$if(filter.did != null, (qb) => qb.where('actor.did', '=', filter.did!))
+      .$if(filter.deviceId != null, (qb) =>
         qb.where('account_device.deviceId', '=', filter.deviceId!),
       )
   )

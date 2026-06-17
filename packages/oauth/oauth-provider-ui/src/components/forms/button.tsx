@@ -112,6 +112,46 @@ const COLORING: Record<
   },
 }
 
+export function buttonClassName({
+  color = 'gray',
+  coloring = 'default',
+  shape = 'rounded',
+  size = 'md',
+  actionable = true,
+  disabled = false,
+  className,
+}: {
+  color?: ButtonColor
+  coloring?: ButtonColoring
+  shape?: ButtonShape
+  size?: ButtonSize
+  actionable?: boolean
+  disabled?: boolean
+  className?: string
+} = {}) {
+  return clsx(
+    'touch-manipulation overflow-hidden',
+    'truncate tracking-wide',
+    actionable && 'cursor-pointer',
+    shape === 'circle' ? 'rounded-full' : 'rounded-md',
+    'flex items-center justify-center',
+    'box-border',
+    PADDING_SIZES[shape][size],
+    TEXT_SIZES[size],
+    COLORING[color][coloring],
+
+    // Transition
+    'transition duration-300 ease-in-out',
+
+    // Outline
+    'outline-none',
+    'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
+
+    disabled ? 'opacity-50' : 'disabled:opacity-50',
+    className,
+  )
+}
+
 export function Button({
   color = 'gray',
   transparent = false,
@@ -141,27 +181,14 @@ export function Button({
       disabled={isDisabled}
       tabIndex={props?.tabIndex ?? (actionable ? 0 : -1)}
       aria-disabled={ariaDisabled ?? isDisabled}
-      className={clsx(
-        'touch-manipulation overflow-hidden',
-        'truncate tracking-wide',
-        actionable ? 'cursor-pointer' : null,
-        shape === 'circle' ? 'rounded-full' : 'rounded-md',
-        'flex items-center justify-center',
-        'box-border',
-        PADDING_SIZES[shape][size],
-        TEXT_SIZES[size],
-        COLORING[color][coloring],
-
-        // Transition
-        'transition duration-300 ease-in-out',
-
-        // Outline
-        'outline-none',
-        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-
-        'disabled:opacity-50',
+      className={buttonClassName({
+        color,
+        coloring,
+        shape,
+        size,
+        actionable,
         className,
-      )}
+      })}
     >
       {children}
     </button>

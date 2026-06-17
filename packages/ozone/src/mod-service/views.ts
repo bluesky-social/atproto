@@ -602,7 +602,7 @@ export class ModerationViews {
       this.db.db,
     )
       .where(
-        sql<string>`${ref(
+        sql<boolean>`${ref(
           'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
@@ -642,10 +642,10 @@ export class ModerationViews {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
-      .where((qb) =>
-        qb.where('label.exp', 'is', null).orWhere('label.exp', '>', now),
+      .where((eb) =>
+        eb.or([eb('label.exp', 'is', null), eb('label.exp', '>', now)]),
       )
-      .if(!includeNeg, (qb) => qb.where('neg', '=', false))
+      .$if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
 
@@ -688,21 +688,21 @@ export class ModerationViews {
 
     const builder = moderationSubjectStatusQueryBuilder(this.db.db)
       //
-      .where((qb) => {
-        for (const sub of parsedSubjects) {
-          qb = qb.orWhere((qb) =>
-            qb
-              .where('moderation_subject_status.did', '=', sub.did)
-              .where(
+      .where((eb) =>
+        eb.or(
+          parsedSubjects.map((sub) =>
+            eb.and([
+              eb('moderation_subject_status.did', '=', sub.did),
+              eb(
                 'moderation_subject_status.recordPath',
                 '=',
                 sub.recordPath ?? '',
-              )
-              .where('moderation_subject_status.convoId', '=', ''),
-          )
-        }
-        return qb
-      })
+              ),
+              eb('moderation_subject_status.convoId', '=', ''),
+            ]),
+          ),
+        ),
+      )
 
     const [statusRes, accountsByDid] = await Promise.all([
       builder.execute(),
