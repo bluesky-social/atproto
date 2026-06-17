@@ -324,11 +324,11 @@ export const activateAccount = async (
         deleteAfter: null,
       })
       .where('did', '=', did)
-      .if(!includeTakenDown, (qb) =>
-        qb.where(notSoftDeletedClause(ref('actor'))),
+      .$if(!includeTakenDown, (q) =>
+        q.where(notSoftDeletedClause(ref('actor'))),
       )
-      .if(!includeDeactivated, (qb) =>
-        qb.where('actor.deactivatedAt', 'is not', null),
+      .$if(!includeDeactivated, (q) =>
+        q.where('actor.deactivatedAt', 'is not', null),
       ),
   )
 
