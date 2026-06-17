@@ -33,6 +33,7 @@
   },
   "files": [
     "server.cjs",
+    "files.d.ts",
     "dist"
   ],
   "devDependencies": {
