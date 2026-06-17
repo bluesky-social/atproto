@@ -47,8 +47,11 @@ deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile
 
 .PHONY: clean
-clean: ## Deletes all 'dist' and 'node_modules' directories (including nested)
-	find . -type d \( -name "dist" -o -name "node_modules" \) -prune -exec rm -rf {} +
+clean:
+	find . -type d -name "node_modules" -prune -exec rm -rf {} +;
+	find . -type d -name "dist" -not -path "*/node_modules/*" -prune -exec rm -rf {} +;
+	find . -type f -name "*.tsbuildinfo" -exec rm {} +;
+	for f in packages/*/src/proto packages/*/src/lexicons packages/lex/*/src/lexicons packages/lex/*/tests/lexicons packages/oauth/*/src/lexicons packages/oauth/*/src/locales/*/messages.ts packages/api/src/client packages/api/src/moderation/const/labels.ts packages/ozone/src/lexicon; do rm -r "$$f"; done || true;
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
