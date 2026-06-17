@@ -17,7 +17,7 @@ import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
 import { resHeaders } from '../../../util.js'
 
-const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-passthru'
+const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-v2-override'
 
 export default function (server: Server, ctx: AppContext) {
   const searchStarterPacks = createPipeline(

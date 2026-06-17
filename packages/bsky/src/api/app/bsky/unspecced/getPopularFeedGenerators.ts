@@ -6,7 +6,7 @@ import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
-const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-passthru'
+const SEARCH_V2_OVERRIDE_HEADER = 'x-bsky-search-v2-override'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
