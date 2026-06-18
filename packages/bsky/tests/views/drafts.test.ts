@@ -48,7 +48,7 @@ describe('appview drafts views', () => {
 
     alice = sc.dids.alice
     bob = sc.dids.bob
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterEach(async () => {
     vi.resetAllMocks()
