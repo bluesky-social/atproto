@@ -140,14 +140,6 @@ const hydration = async (
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     params.hydrateCtx,
-    undefined,
-    {
-      processDynamicTagsForView: params.hydrateCtx.features?.checkGate(
-        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
-      )
-        ? 'search'
-        : undefined,
-    },
   )
 }
 
@@ -168,16 +160,7 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
-    let tagged = false
-    if (
-      params.hydrateCtx.features?.checkGate(
-        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
-      )
-    ) {
-      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
-    } else {
-      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
-    }
+    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
 
     if (isCuratedSearch && tagged) return false
     if (!(parsedQuery.author || params.authors?.length) && tagged) return false
