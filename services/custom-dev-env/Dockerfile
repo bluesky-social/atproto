@@ -1,6 +1,6 @@
 # PDS + PLC dev environment - lightweight alternative to dev container
-# Runs only PDS and PLC servers (no appview, ozone, etc.) using SQLite + in-memory stores.
-# No Postgres or Redis required.
+# Runs PDS and PLC servers. Optional Sokaa AppView when APPVIEW_ENABLED=true
+# (requires DB_POSTGRES_URL). Without AppView, no Postgres or Redis required.
 
 FROM node:20-alpine AS build
 
@@ -39,6 +39,7 @@ COPY packages/xrpc ./packages/xrpc
 COPY packages/xrpc-server ./packages/xrpc-server
 COPY packages/ws-client ./packages/ws-client
 COPY packages/pds ./packages/pds
+COPY packages/sokaa-appview ./packages/sokaa-appview
 COPY packages/oauth/jwk ./packages/oauth/jwk
 COPY packages/oauth/jwk-jose ./packages/oauth/jwk-jose
 COPY packages/oauth/jwk-webcrypto ./packages/oauth/jwk-webcrypto

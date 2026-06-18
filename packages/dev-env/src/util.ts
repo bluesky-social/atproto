@@ -4,13 +4,21 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { TestBsky } from './bsky'
 import { TestPds } from './pds'
+import { TestSokaaAppView } from './sokaa-appview'
 import { DidAndKey } from './types'
 
-export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
+export const mockNetworkUtilities = (
+  pds: TestPds,
+  bsky?: TestBsky,
+  sokaa?: TestSokaaAppView,
+) => {
   mockResolvers(pds.ctx.idResolver, pds)
   if (bsky) {
     mockResolvers(bsky.ctx.idResolver, pds)
     mockResolvers(bsky.dataplane.idResolver, pds)
+  }
+  if (sokaa) {
+    mockResolvers(sokaa.ctx.idResolver, pds)
   }
 }
 

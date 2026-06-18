@@ -1,7 +1,7 @@
 // Import env first to respect LOG_ENABLED
 import '../src/env'
 import fs from 'node:fs/promises'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestNetworkNoAppView, TestNetworkSokaa } from '@atproto/dev-env'
 import { type ServerEnvironment, readEnv } from '@atproto/pds'
 
 /** Merge `readEnv()` into TestPds options; omit undefined so dev-env defaults still apply. */
@@ -61,6 +61,17 @@ async function main() {
 
   console.log('🚀 Starting PDS + PLC servers...\n')
 
+  const appviewEnabled =
+    process.env.APPVIEW_ENABLED === 'true' ||
+    process.env.APPVIEW_ENABLED === '1'
+  const dbPostgresUrl = nonEmptyEnv('DB_POSTGRES_URL')
+
+  if (appviewEnabled && !dbPostgresUrl) {
+    throw new Error(
+      'APPVIEW_ENABLED requires DB_POSTGRES_URL for Sokaa AppView Postgres',
+    )
+  }
+
   // Ensure persistent storage directories exist before starting servers
   if (process.env.PDS_DATA_DIRECTORY) {
     await fs.mkdir(process.env.PDS_DATA_DIRECTORY, { recursive: true })
@@ -69,33 +80,38 @@ async function main() {
     await fs.mkdir(process.env.PDS_BLOB_STORE_LOCATION, { recursive: true })
   }
 
-  // Create PDS + PLC network (no appview).
-  // Railway / production: set PDS_* vars per packages/pds/src/config/env.ts (e.g. JWT, admin
-  // password, PDS_DEV_MODE, PDS_INVITE_REQUIRED). Omitted vars keep TestPds dev defaults.
-  const network = await TestNetworkNoAppView.create({
-    plc: {
-      port: plcPort,
-      ...(process.env.PLC_DB_URL ? { dbUrl: process.env.PLC_DB_URL } : {}),
-    },
-    pds: {
-      ...pdsEnvFromProcess(),
-      port: pdsPort,
-      hostname: pdsHostname,
-      didPlcUrl,
-      ...(process.env.PDS_DATA_DIRECTORY
-        ? { dataDirectory: process.env.PDS_DATA_DIRECTORY }
+  const pdsConfig = {
+    ...pdsEnvFromProcess(),
+    port: pdsPort,
+    hostname: pdsHostname,
+    didPlcUrl,
+    ...(process.env.PDS_DATA_DIRECTORY
+      ? { dataDirectory: process.env.PDS_DATA_DIRECTORY }
+      : {}),
+    ...(process.env.PDS_BLOBSTORE_S3_BUCKET
+      ? { blobstoreDiskLocation: undefined }
+      : process.env.PDS_BLOB_STORE_LOCATION
+        ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
         : {}),
-      // Blobstore selection: S3/R2 takes priority over disk.
-      // TestPds always sets a default blobstoreDiskLocation (tmpdir); we must
-      // explicitly override it to undefined when S3 is configured, otherwise
-      // envToCfg throws "Cannot set both S3 and disk blobstore env vars".
-      ...(process.env.PDS_BLOBSTORE_S3_BUCKET
-        ? { blobstoreDiskLocation: undefined }
-        : process.env.PDS_BLOB_STORE_LOCATION
-          ? { blobstoreDiskLocation: process.env.PDS_BLOB_STORE_LOCATION }
-          : {}),
-    },
-  })
+  }
+
+  const network = appviewEnabled
+    ? await TestNetworkSokaa.create({
+        plc: {
+          port: plcPort,
+          ...(process.env.PLC_DB_URL ? { dbUrl: process.env.PLC_DB_URL } : {}),
+        },
+        pds: pdsConfig,
+        dbPostgresUrl,
+        dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA ?? 'pds_plc',
+      })
+    : await TestNetworkNoAppView.create({
+        plc: {
+          port: plcPort,
+          ...(process.env.PLC_DB_URL ? { dbUrl: process.env.PLC_DB_URL } : {}),
+        },
+        pds: pdsConfig,
+      })
 
   console.log('✅ Servers running!')
   console.log(`📡 PLC (internal): ${network.plc.url}`)
@@ -112,6 +128,10 @@ async function main() {
   console.log(`📡 PDS (internal): ${network.pds.url}`)
   console.log(`📡 PDS (clients):  ${pdsPublicUrl}`)
   console.log(`📡 PDS DID: ${network.pds.ctx.cfg.service.did}\n`)
+  if ('sokaa' in network) {
+    console.log(`📡 Sokaa AppView: ${network.sokaa.url}`)
+    console.log(`📡 Sokaa AppView DID: ${network.sokaa.serverDid}\n`)
+  }
   console.log(
     `🔧 PDS devMode=${network.pds.ctx.cfg.service.devMode} invites.required=${network.pds.ctx.cfg.invites.required}`,
   )

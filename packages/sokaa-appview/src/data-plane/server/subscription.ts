@@ -9,6 +9,8 @@ export class RepoSubscription {
   firehose: Firehose
   runner: MemoryRunner
   indexingSvc: IndexingService
+  private destroyed = false
+  private running: Promise<void> | undefined
 
   private constructor(
     public opts: { service: string; db: Database; idResolver: IdResolver },
@@ -37,7 +39,7 @@ export class RepoSubscription {
   }
 
   start() {
-    this.firehose.start()
+    this.running = this.firehose.start()
   }
 
   async restart() {
@@ -50,6 +52,7 @@ export class RepoSubscription {
     })
     this.runner = runner
     this.firehose = firehose
+    this.destroyed = false
     this.start()
   }
 
@@ -58,8 +61,14 @@ export class RepoSubscription {
   }
 
   async destroy() {
+    if (this.destroyed) return
+    this.destroyed = true
     await this.firehose.destroy()
     await this.runner.destroy()
+    if (this.running) {
+      await this.running.catch(() => {})
+      this.running = undefined
+    }
   }
 }
 
