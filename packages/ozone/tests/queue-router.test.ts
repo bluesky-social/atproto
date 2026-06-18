@@ -335,18 +335,18 @@ describe('queue-router', () => {
     })
   })
 
-  describe('automation-only queue', () => {
-    let automationQueueId: number
+  describe('custom queues', () => {
+    let customQueueId: number
 
     beforeAll(async () => {
       // A queue with no subjectTypes/reportTypes is never attribute-matched,
       // so it only receives reports routed explicitly via modTool.meta.queueId.
-      const automationQueue = await createQueue({ name: 'QR: Automation Only' })
-      automationQueueId = automationQueue.id
+      const customQueue = await createQueue({ name: 'QR: Automation Only' })
+      customQueueId = customQueue.id
     })
 
     afterAll(async () => {
-      await deleteQueue(automationQueueId).catch(() => {})
+      await deleteQueue(customQueueId).catch(() => {})
     })
 
     it('creates a queue with empty subjectTypes and reportTypes', async () => {
@@ -356,27 +356,27 @@ describe('queue-router', () => {
           { headers: await modHeaders(ids.ToolsOzoneQueueListQueues) },
         )
       ).data
-      const automationQueue = queues.find((q) => q.id === automationQueueId)
-      expect(automationQueue).toBeDefined()
-      expect(automationQueue!.subjectTypes ?? []).toEqual([])
-      expect(automationQueue!.reportTypes ?? []).toEqual([])
+      const customQueue = queues.find((q) => q.id === customQueueId)
+      expect(customQueue).toBeDefined()
+      expect(customQueue!.subjectTypes ?? []).toEqual([])
+      expect(customQueue!.reportTypes ?? []).toEqual([])
     })
 
     it('routes an automated report into it via modTool.meta.queueId', async () => {
-      await createAutomatedReport(sc.dids.bob, REASON_SPAM, automationQueueId)
+      await createAutomatedReport(sc.dids.bob, REASON_SPAM, customQueueId)
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
       const report = await queryLatestReportForSubject(sc.dids.bob)
       expect(report).toBeDefined()
-      expect(report.queue?.id).toBe(automationQueueId)
+      expect(report.queue?.id).toBe(customQueueId)
       expect(report.isAutomated).toBe(true)
     })
 
     it('never attribute-matches an organic report into it', async () => {
       // No other queue matches REASON_SPAM accounts, so
       // a plain (non-automated) report must land unrouted rather than in the
-      // automation-only queue.
+      // custom queue.
       await reportAccount(sc.dids.carol, REASON_SPAM)
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
@@ -391,8 +391,8 @@ describe('queue-router', () => {
       // Two more queues with no matching criteria coexist (checkConflict
       // ignores empty criteria) alongside the one from beforeAll.
       const [queueA, queueB] = await Promise.all([
-        createQueue({ name: 'QR: Automation Only A' }),
-        createQueue({ name: 'QR: Automation Only B' }),
+        createQueue({ name: 'QR: Custom Queue A' }),
+        createQueue({ name: 'QR: Custom Queue B' }),
       ])
       expect(queueA.id).not.toBe(queueB.id)
 
