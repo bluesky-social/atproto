@@ -10,6 +10,7 @@ export interface Report {
   actionEventIds: number[] | null // Array of event IDs, sorted DESC [newest, ..., oldest]
   actionNote: string | null
   isMuted: boolean
+  isAutomated: boolean // Denormalized from moderation_event.modTool.meta.isAutomated
   status: string // 'open', 'closed', 'escalated', 'queued', 'assigned'
   reportType: string // Denormalized from moderation_event.meta.reportType
   did: string // Denormalized from moderation_event.subjectDid

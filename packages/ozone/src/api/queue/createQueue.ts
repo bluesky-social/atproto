@@ -14,8 +14,13 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Must be a moderator to create a queue')
       }
 
-      const { name, subjectTypes, collection, reportTypes, description } =
-        input.body
+      const {
+        name,
+        subjectTypes = [],
+        collection,
+        reportTypes = [],
+        description,
+      } = input.body
       const createdBy =
         access.type === 'admin_token' ? 'admin_token' : access.iss
 
@@ -39,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       const queueService = ctx.queueService(ctx.db)
 
       await queueService.checkConflict({
+        name,
         subjectTypes,
         collection,
         reportTypes,

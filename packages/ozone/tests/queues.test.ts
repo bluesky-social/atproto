@@ -194,6 +194,28 @@ describe('ozone-queues', () => {
       ).rejects.toMatchObject({ error: 'ConflictingQueue' })
     })
 
+    it('rejects creating a queue with a duplicate name', async () => {
+      const { data: q1 } = await createQueue({
+        name: 'CQ: Duplicate Name',
+        subjectTypes: ['account'],
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+      })
+      createdIds.push(q1.queue.id)
+
+      // Distinct criteria (different report type) so only the name collides —
+      // proves the name check fires, not attribute-overlap.
+      await expect(
+        createQueue({
+          name: 'CQ: Duplicate Name',
+          subjectTypes: ['account'],
+          reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
+        }),
+      ).rejects.toMatchObject({
+        error: 'ConflictingQueue',
+        message: 'A queue with that name already exists',
+      })
+    })
+
     it('rejects conflicting queue - partial overlap in subject types', async () => {
       const { data: q1 } = await createQueue({
         name: 'CQ: Spam Account Only',
@@ -352,7 +374,7 @@ describe('ozone-queues', () => {
       // q3 is the only record+post+sexual queue
       const bySubjectType = await listQueues({ subjectType: 'record' })
       expect(
-        bySubjectType.queues.every((q) => q.subjectTypes.includes('record')),
+        bySubjectType.queues.every((q) => q.subjectTypes?.includes('record')),
       ).toBe(true)
       expect(bySubjectType.queues.some((q) => q.id === queueIds[2])).toBe(true)
       expect(bySubjectType.queues.some((q) => q.id === queueIds[0])).toBe(false)

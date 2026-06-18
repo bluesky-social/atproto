@@ -4,12 +4,12 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a new moderation queue. Will fail if the queue configuration conflicts with an existing queue.",
+      "description": "Create a new moderation queue. A queue can have optional matching criteria that ozone's queue router will use to match reports. A queue with no criteria must have reports assigned to it manually via (1) `modTool.meta.queueId` in `tools.ozone.moderation.emitEvent` or (2) `tools.ozone.report.reassignQueue`.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["name", "subjectTypes", "reportTypes"],
+          "required": ["name"],
           "properties": {
             "name": {
               "type": "string",
@@ -17,7 +17,6 @@
             },
             "subjectTypes": {
               "type": "array",
-              "minLength": 1,
               "items": {
                 "type": "string",
                 "knownValues": ["account", "record", "message"]
@@ -34,7 +33,6 @@
               "items": {
                 "type": "string"
               },
-              "minLength": 1,
               "maxLength": 25,
               "description": "Report reason types (fully qualified NSIDs)"
             },
