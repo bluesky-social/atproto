@@ -175,6 +175,25 @@ export async function getReportById(
     .executeTakeFirst()
 }
 
+export async function getReportsByIds(
+  db: Database,
+  ids: number[],
+): Promise<ReportWithEvent[]> {
+  if (!ids.length) return []
+  return reportQuery(db)
+    .where('r.id', 'in', ids)
+    .selectAll('r')
+    .select([
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.createdBy as reportedBy',
+      'me.comment',
+      'me.meta',
+    ])
+    .execute()
+}
+
 export async function getLatestReport(
   db: Database,
 ): Promise<ReportWithEvent | undefined> {

@@ -564,4 +564,148 @@ describe('report-activity', () => {
       expect(data.activities.some((a) => a.reportId === reportB.id)).toBe(false)
     })
   })
+
+  describe('queryActivities', () => {
+    const queryActivities = async (
+      params: {
+        activityTypes?: string[]
+        createdAfter?: string
+        createdBefore?: string
+        sortDirection?: 'asc' | 'desc'
+        limit?: number
+        cursor?: string
+      },
+      role: 'admin' | 'triage' = 'admin',
+    ) => {
+      return agent.tools.ozone.report.queryActivities(params, {
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneReportQueryActivities,
+          role,
+        ),
+      })
+    }
+
+    it('hydrates the report on each activity', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+
+      const { data } = await queryActivities({
+        activityTypes: ['closeActivity'],
+        sortDirection: 'desc',
+        limit: 100,
+      })
+      const hit = data.activities.find((a) => a.reportId === report.id)
+      expect(hit).toBeDefined()
+      expect(hit!.report).toBeDefined()
+      expect(hit!.report!.id).toBe(report.id)
+      expect(hit!.report!.subject).toBeDefined()
+    })
+
+    it('filters by activity types across reports', async () => {
+      const reportA = await createReport(sc.dids.alice)
+      const reportB = await createReport(sc.dids.bob)
+      await createActivity({
+        reportId: reportA.id,
+        activity: { $type: `${DEFS}#noteActivity` },
+        internalNote: 'note',
+      })
+      await createActivity({
+        reportId: reportA.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+      await createActivity({
+        reportId: reportB.id,
+        activity: { $type: `${DEFS}#escalationActivity` },
+      })
+
+      const { data } = await queryActivities({
+        activityTypes: ['closeActivity', 'escalationActivity'],
+        sortDirection: 'asc',
+      })
+
+      const types = new Set(data.activities.map((a) => a.activity.$type))
+      expect(types.has(`${DEFS}#noteActivity`)).toBe(false)
+      expect(types.has(`${DEFS}#closeActivity`)).toBe(true)
+      expect(types.has(`${DEFS}#escalationActivity`)).toBe(true)
+      const reportIds = new Set(data.activities.map((a) => a.reportId))
+      expect(reportIds.has(reportA.id)).toBe(true)
+      expect(reportIds.has(reportB.id)).toBe(true)
+    })
+
+    it('paginates ascending across multiple reports with stable cursor', async () => {
+      const reportA = await createReport(sc.dids.alice)
+      const reportB = await createReport(sc.dids.bob)
+      const created: number[] = []
+      for (let i = 0; i < 3; i++) {
+        const r = await createActivity({
+          reportId: i % 2 === 0 ? reportA.id : reportB.id,
+          activity: { $type: `${DEFS}#noteActivity` },
+          internalNote: `n-${i}`,
+        })
+        created.push(r.data.activity.id)
+      }
+      const minId = Math.min(...created)
+
+      const seen: number[] = []
+      let cursor: string | undefined
+      let pages = 0
+      do {
+        const { data } = await queryActivities({
+          sortDirection: 'asc',
+          limit: 2,
+          cursor,
+        })
+        for (const a of data.activities) {
+          if (a.id >= minId) seen.push(a.id)
+        }
+        cursor = data.cursor
+        pages++
+        if (pages > 50) break // safety net for runaway loops
+      } while (cursor)
+
+      // The created activities should appear in ascending ID order, no dupes.
+      const sortedCreated = [...created].sort((a, b) => a - b)
+      const seenForCreated = seen.filter((id) => created.includes(id))
+      expect(seenForCreated).toEqual(sortedCreated)
+    })
+
+    it('respects createdBefore and createdAfter bounds', async () => {
+      const report = await createReport(sc.dids.alice)
+      const before = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#noteActivity` },
+        internalNote: 'before',
+      })
+      // Small wait so the next activity's createdAt is strictly later.
+      await new Promise((r) => setTimeout(r, 50))
+      const cutoff = new Date().toISOString()
+      await new Promise((r) => setTimeout(r, 50))
+      const after = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#noteActivity` },
+        internalNote: 'after',
+      })
+
+      const beforeRes = await queryActivities({
+        createdBefore: cutoff,
+        sortDirection: 'asc',
+        limit: 100,
+      })
+      const beforeIds = new Set(beforeRes.data.activities.map((a) => a.id))
+      expect(beforeIds.has(before.data.activity.id)).toBe(true)
+      expect(beforeIds.has(after.data.activity.id)).toBe(false)
+
+      const afterRes = await queryActivities({
+        createdAfter: cutoff,
+        sortDirection: 'asc',
+        limit: 100,
+      })
+      const afterIds = new Set(afterRes.data.activities.map((a) => a.id))
+      expect(afterIds.has(before.data.activity.id)).toBe(false)
+      expect(afterIds.has(after.data.activity.id)).toBe(true)
+    })
+  })
 })

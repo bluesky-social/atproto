@@ -1,5 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db/index.js'
+import { TimeIdKeyset, paginate } from '../db/pagination.js'
+import { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
+import { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
 import { Member } from '../lexicon/types/tools/ozone/team/defs.js'
 import {
   AlreadyInTargetState,
@@ -190,6 +193,48 @@ export async function listReportActivities(
   return { activities, cursor: nextCursor }
 }
 
+export async function queryReportActivities(
+  db: Database,
+  params: QueryActivitiesParams,
+) {
+  const {
+    activityTypes,
+    createdAfter,
+    createdBefore,
+    sortDirection,
+    limit,
+    cursor,
+  } = params
+  const { ref } = db.db.dynamic
+
+  let builder = db.db.selectFrom('report_activity').selectAll()
+
+  if (activityTypes && activityTypes.length > 0) {
+    builder = builder.where('activityType', 'in', activityTypes)
+  }
+  if (createdAfter) {
+    builder = builder.where('createdAt', '>=', createdAfter)
+  }
+  if (createdBefore) {
+    builder = builder.where('createdAt', '<=', createdBefore)
+  }
+
+  const keyset = new TimeIdKeyset(
+    ref('report_activity.createdAt'),
+    ref('report_activity.id'),
+  )
+  const paginatedBuilder = paginate(builder, {
+    limit,
+    cursor,
+    keyset,
+    direction: sortDirection,
+    tryIndex: true,
+  })
+
+  const activities = await paginatedBuilder.execute()
+  return { activities, cursor: keyset.packFromResult(activities) }
+}
+
 function buildActivityObject(
   activityType: string,
   previousStatus: string | null,
@@ -215,6 +260,7 @@ export function formatActivityView(
     createdAt: string
   },
   memberViews?: Map<string, Member>,
+  reportViews?: Map<number, ReportView>,
 ) {
   return {
     id: activity.id,
@@ -229,6 +275,7 @@ export function formatActivityView(
     isAutomated: activity.isAutomated,
     createdBy: activity.createdBy,
     moderator: memberViews?.get(activity.createdBy),
+    report: reportViews?.get(activity.reportId),
     createdAt: activity.createdAt,
   }
 }
