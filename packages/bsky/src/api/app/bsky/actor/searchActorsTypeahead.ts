@@ -95,9 +95,11 @@ const skeletonV2 = async (
   const term = params.q ?? params.term ?? ''
 
   const res = await ctx.dataplane.searchActorsTypeahead({
-    viewer: params.hydrateCtx.viewer ?? undefined,
-    query: term,
-    limit: params.limit,
+    params: {
+      query: term,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      limit: params.limit,
+    },
   })
   return {
     dids: res.actors.map(({ did }) => did as DidString),
