@@ -98,7 +98,7 @@ const skeleton = async (
       mentions: params.mentions ?? [],
       domains: params.domains ?? [],
       urls: params.urls ?? [],
-      embedUris: params.embedUris ?? [],
+      embeddedAtUris: params.embeddedAtUris ?? [],
       hashtags: params.hashtags ?? [],
     },
     exclude: {
@@ -106,7 +106,7 @@ const skeleton = async (
       mentions: params.excludeMentions ?? [],
       domains: params.excludeDomains ?? [],
       urls: params.excludeUrls ?? [],
-      embedUris: params.excludeEmbedUris ?? [],
+      embeddedAtUris: params.excludeEmbeddedAtUris ?? [],
       hashtags: params.excludeHashtags ?? [],
     },
     since: parseTimestamp(params.since),

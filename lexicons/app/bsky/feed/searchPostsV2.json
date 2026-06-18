@@ -58,7 +58,7 @@
             },
             "description": "Include posts that link to any of these URLs."
           },
-          "embedUris": {
+          "embeddedAtUris": {
             "type": "array",
             "items": {
               "type": "string",
@@ -104,7 +104,7 @@
             },
             "description": "Exclude posts that link to any of these URLs."
           },
-          "excludeEmbedUris": {
+          "excludeEmbeddedAtUris": {
             "type": "array",
             "items": {
               "type": "string",
