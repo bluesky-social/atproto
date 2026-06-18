@@ -54,10 +54,20 @@ describe('queue-router', () => {
     })
   }
 
-  // Creates an account-level report event the way automated tooling does:
-  // stamped with a modTool that names the tool, flags the report
-  // as automated, and names the destination queue via meta.queueId.
-  const createReportForQueue = async (
+  // Creates a record-level report event via modClient
+  const reportRecord = async (uri: string, cid: string, reportType: string) => {
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReport',
+        reportType,
+        comment: 'automated test report',
+      },
+      subject: { $type: 'com.atproto.repo.strongRef', uri, cid },
+    })
+  }
+
+  // Creates an account-level report event the way automated tooling will
+  const createAutomatedReport = async (
     did: string,
     reportType: string,
     queueId: number,
@@ -73,18 +83,6 @@ describe('queue-router', () => {
         name: 'automated-tool',
         meta: { isAutomated: true, queueId },
       },
-    })
-  }
-
-  // Creates a record-level report event via modClient
-  const reportRecord = async (uri: string, cid: string, reportType: string) => {
-    await modClient.emitEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventReport',
-        reportType,
-        comment: 'automated test report',
-      },
-      subject: { $type: 'com.atproto.repo.strongRef', uri, cid },
     })
   }
 
@@ -296,11 +294,7 @@ describe('queue-router', () => {
     })
 
     it('routes an automated report to the queue named in modTool.meta.queueId', async () => {
-      // An account-level REASON_SPAM report would normally attribute-match the
-      // spam-accounts queue. The explicit queueId points it at the spam-posts
-      // queue instead (whose record/post attributes it could never match
-      // organically), proving the explicit id wins over attribute matching.
-      await createReportForQueue(sc.dids.dan, REASON_SPAM, spamPostQueueId)
+      await createAutomatedReport(sc.dids.dan, REASON_SPAM, spamPostQueueId)
 
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 

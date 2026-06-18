@@ -318,9 +318,6 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
     }
 
-    // Join the originating event so explicit id routing (modTool.meta.queueId)
-    // applies on re-route too. The join is on moderation_event's PK via
-    // report.eventId, so it stays cheap.
     let query = this.db.db
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
