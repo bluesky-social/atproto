@@ -54,6 +54,19 @@ export class OzoneService {
     app.use(loggerMiddleware)
     app.use(compression())
 
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
+
+    let server = createServer({
+      validateResponse: false,
+      payload: {
+        jsonLimit: 100 * 1024, // 100kb
+        textLimit: 100 * 1024, // 100kb
+        blobLimit: 5 * 1024 * 1024, // 5mb
+      },
+    })
+
+    server = API(server, ctx)
+
     if (register) {
       // Collect standard metrics on the nodejs runtime (GC, event loop, etc).
       prometheus.collectDefaultMetrics({ prefix: 'ozone_', register })
@@ -74,10 +87,17 @@ export class OzoneService {
         // Only record xrpc methods; non-xrpc paths (health, robots, frontend)
         // are skipped to keep the metric's label cardinality bounded.
         if (!nsid) return next()
+        // extractUrlNsid only validates path *shape*, not that the method
+        // exists. A caller can hit /xrpc/<well-formed-but-bogus-nsid> (served a
+        // 501), so labeling by the raw nsid lets external traffic mint unbounded
+        // series and grow prom-client's memory without limit. Bucket anything
+        // that isn't a registered query/procedure under a single `unknown` label.
+        const def = server.xrpc.lex.getDef(nsid)
+        const isMethod = def?.type === 'query' || def?.type === 'procedure'
         const end = xrpcRequestDuration.startTimer()
         res.on('finish', () => {
           end({
-            nsid,
+            nsid: isMethod ? nsid : 'unknown',
             method: req.method,
             code: res.statusCode,
           })
@@ -85,19 +105,6 @@ export class OzoneService {
         next()
       })
     }
-
-    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
-
-    let server = createServer({
-      validateResponse: false,
-      payload: {
-        jsonLimit: 100 * 1024, // 100kb
-        textLimit: 100 * 1024, // 100kb
-        blobLimit: 5 * 1024 * 1024, // 5mb
-      },
-    })
-
-    server = API(server, ctx)
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
@@ -203,8 +210,17 @@ export class MetricsService {
     const app = express()
 
     app.get('/metrics', async (_req, res) => {
-      res.set('Content-Type', register.contentType)
-      res.end(await register.metrics())
+      // Express 4 does not catch rejections from async handlers, so an
+      // unguarded throw here (e.g. a custom collector failing) would surface as
+      // an unhandledRejection and crash the process. Metrics are a passive
+      // side-channel and must never take down the service.
+      try {
+        const metrics = await register.metrics()
+        res.set('Content-Type', register.contentType)
+        res.end(metrics)
+      } catch {
+        res.status(500).end()
+      }
     })
 
     // Liveness: is the process up and the event loop responsive? No external
