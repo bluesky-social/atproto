@@ -68,11 +68,13 @@ export class QueueService {
   }
 
   async checkConflict({
+    name,
     subjectTypes,
     collection,
     reportTypes,
     excludeId,
   }: {
+    name: string
     subjectTypes: string[]
     collection?: string | null
     reportTypes: string[]
@@ -92,6 +94,13 @@ export class QueueService {
     const existingQueues = await qb.execute()
 
     for (const existing of existingQueues) {
+      if (existing.name === name) {
+        throw new InvalidRequestError(
+          'A queue with that name already exists',
+          'ConflictingQueue',
+        )
+      }
+
       const subjectTypesOverlap = subjectTypes.some((st) =>
         existing.subjectTypes.includes(st),
       )

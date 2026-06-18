@@ -44,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       const queueService = ctx.queueService(ctx.db)
 
       await queueService.checkConflict({
+        name,
         subjectTypes,
         collection,
         reportTypes,
