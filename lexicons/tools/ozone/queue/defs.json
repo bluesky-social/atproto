@@ -7,8 +7,6 @@
       "required": [
         "id",
         "name",
-        "subjectTypes",
-        "reportTypes",
         "createdBy",
         "createdAt",
         "updatedAt",
@@ -26,7 +24,6 @@
         },
         "subjectTypes": {
           "type": "array",
-          "minLength": 1,
           "items": {
             "type": "string",
             "knownValues": ["account", "record", "message"]
@@ -43,7 +40,6 @@
           "items": {
             "type": "string"
           },
-          "minLength": 1,
           "description": "Report reason types this queue accepts (fully qualified NSIDs)"
         },
         "description": {

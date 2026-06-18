@@ -352,7 +352,7 @@ describe('ozone-queues', () => {
       // q3 is the only record+post+sexual queue
       const bySubjectType = await listQueues({ subjectType: 'record' })
       expect(
-        bySubjectType.queues.every((q) => q.subjectTypes.includes('record')),
+        bySubjectType.queues.every((q) => q.subjectTypes?.includes('record')),
       ).toBe(true)
       expect(bySubjectType.queues.some((q) => q.id === queueIds[2])).toBe(true)
       expect(bySubjectType.queues.some((q) => q.id === queueIds[0])).toBe(false)
