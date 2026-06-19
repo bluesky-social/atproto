@@ -1144,10 +1144,10 @@ enum SearchQueryLanguage {
   SEARCH_QUERY_LANGUAGE_ZH = 2; // Chinese (smartcn)
   SEARCH_QUERY_LANGUAGE_KO = 3; // Korean (nori)
   SEARCH_QUERY_LANGUAGE_TH = 4; // Thai
+  SEARCH_QUERY_LANGUAGE_AR = 5; // Arabic
 }
 
-// Shared request params
-
+// Shared request params for paginated methods
 message SearchParams {
   string query = 1;
   string viewer = 2;
@@ -1155,6 +1155,13 @@ message SearchParams {
   // Pagination
   int32 limit = 3;
   string cursor = 4;
+}
+
+// Shared params for typeahead-style searches, which aren't paginated.
+message SearchTypeaheadParams {
+  string query = 1;
+  string viewer = 2;
+  int32 limit = 3;
 }
 
 // Shared result types
@@ -1246,6 +1253,11 @@ message SearchPostsV2Request {
 message SearchPostsV2Response {
   repeated SearchRecordResult posts = 1;
   PageInfo page_info = 2;
+  // Detected CJK/Thai/Arabic languages of the query, usually one. Han-only text
+  // returns ["zh", "ja"] since it's ambiguous between Chinese and Japanese.
+  // set query_language on the request to disambiguate.
+  // Currently left empty for other scripts (e.g. Latin-based languages like English).
+  repeated string detected_query_languages = 3;
 }
 
 message SearchActorsV2Request {
@@ -1258,9 +1270,7 @@ message SearchActorsV2Response {
 }
 
 message SearchActorsTypeaheadRequest {
-  string viewer = 1;
-  string query = 2;
-  int32 limit = 3;
+  SearchTypeaheadParams params = 1;
 }
 
 message SearchActorsTypeaheadResponse {
