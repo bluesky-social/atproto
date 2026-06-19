@@ -1,7 +1,7 @@
 import { Duplex, Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
-import { Dispatcher, RedirectHandler } from 'undici'
+import { Dispatcher } from 'undici'
 import {
   VerifyCidError,
   VerifyCidTransform,
