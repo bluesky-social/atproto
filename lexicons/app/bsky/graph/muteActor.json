@@ -11,7 +11,12 @@
           "type": "object",
           "required": ["actor"],
           "properties": {
-            "actor": { "type": "string", "format": "at-identifier" }
+            "actor": { "type": "string", "format": "at-identifier" },
+            "kind": {
+              "type": "string",
+              "knownValues": ["all", "reposts"],
+              "default": "all"
+            }
           }
         }
       }

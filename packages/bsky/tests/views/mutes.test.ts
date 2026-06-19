@@ -1,12 +1,17 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { AppBskyGraphGetMutes, AtpAgent, ids } from '@atproto/api'
+import {
+  AppBskyFeedDefs,
+  AppBskyGraphGetMutes,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
 import {
   SeedClient,
   TestNetwork,
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util.js'
+import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
 describe('mute views', () => {
   let network: TestNetwork
@@ -137,6 +142,181 @@ describe('mute views', () => {
       },
     )
     expect(res.data.viewer?.muted).toBe(true)
+  })
+
+  it('supports muting only reposts from an account', async () => {
+    let cleanedUp = false
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: dan, kind: 'reposts' },
+      {
+        headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
+        encoding: 'application/json',
+      },
+    )
+
+    try {
+      const authoredPost = await sc.post(
+        dan,
+        'dan post visible through repost mute',
+      )
+      await sc.repost(dan, sc.posts[alice][0].ref)
+      const listRef = await sc.createList(alice, 'repost mute test', 'curate')
+      await sc.addToList(alice, dan, listRef)
+      await network.processAll()
+
+      await agent.api.app.bsky.graph.muteActor(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphMuteActor,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      const replacedWithFull = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(replacedWithFull.data.viewer?.muted).toBe(true)
+      expect(replacedWithFull.data.viewer?.mutedReposts).toBe(false)
+
+      await agent.api.app.bsky.graph.muteActor(
+        { actor: dan, kind: 'reposts' },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphMuteActor,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      const profile = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(profile.data.viewer?.muted).toBe(false)
+      expect(profile.data.viewer?.mutedReposts).toBe(true)
+
+      const { data: mutes } = await agent.api.app.bsky.graph.getMutes(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphGetMutes,
+          ),
+        },
+      )
+      const danMute = mutes.mutes.find((mute) => mute.did === dan)
+      expect(danMute?.viewer?.muted).toBe(false)
+      expect(danMute?.viewer?.mutedReposts).toBe(true)
+
+      const timeline = await agent.api.app.bsky.feed.getTimeline(
+        { limit: 100 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetTimeline,
+          ),
+        },
+      )
+      expect(
+        timeline.data.feed.some(
+          (item) => item.post.uri === authoredPost.ref.uriStr,
+        ),
+      ).toBe(true)
+      expect(timeline.data.feed.some((item) => isRepostBy(item, dan))).toBe(
+        false,
+      )
+
+      const listFeed = await agent.api.app.bsky.feed.getListFeed(
+        { list: listRef.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetListFeed,
+          ),
+        },
+      )
+      expect(
+        listFeed.data.feed.some(
+          (item) => item.post.uri === authoredPost.ref.uriStr,
+        ),
+      ).toBe(true)
+      expect(listFeed.data.feed.some((item) => isRepostBy(item, dan))).toBe(
+        false,
+      )
+
+      const authorFeed = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+      expect(
+        authorFeed.data.feed.some(
+          (item) => item.post.uri === authoredPost.ref.uriStr,
+        ),
+      ).toBe(true)
+      expect(
+        authorFeed.data.feed.some(
+          (item) =>
+            item.post.uri === sc.posts[alice][0].ref.uriStr &&
+            isRepostBy(item, dan),
+        ),
+      ).toBe(true)
+
+      await agent.api.app.bsky.graph.unmuteActor(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphUnmuteActor,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+      cleanedUp = true
+      const unmutedProfile = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(unmutedProfile.data.viewer?.muted).toBe(false)
+      expect(unmutedProfile.data.viewer?.mutedReposts).toBe(false)
+    } finally {
+      if (!cleanedUp) {
+        await agent.api.app.bsky.graph.unmuteActor(
+          { actor: dan },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskyGraphUnmuteActor,
+            ),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+      }
+    }
   })
 
   it('returns mute status on getProfiles', async () => {
@@ -292,3 +472,12 @@ describe('mute views', () => {
     await expect(promise).rejects.toThrow() // @TODO check error message w/ grpc error passthru
   })
 })
+
+const isRepostBy = (
+  item: AppBskyFeedDefs.FeedViewPost,
+  did: string,
+): boolean => {
+  return (
+    AppBskyFeedDefs.isReasonRepost(item.reason) && getOriginator(item) === did
+  )
+}

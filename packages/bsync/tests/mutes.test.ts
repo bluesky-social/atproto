@@ -9,7 +9,11 @@ import {
   createClient,
   envToCfg,
 } from '../src/index.js'
-import { MuteOperation, MuteOperation_Type } from '../src/proto/bsync_pb.js'
+import {
+  MuteKind,
+  MuteOperation,
+  MuteOperation_Type,
+} from '../src/proto/bsync_pb.js'
 
 describe('mutes', () => {
   let bsync: BsyncService
@@ -107,6 +111,47 @@ describe('mutes', () => {
       expect(await dumpMuteState(bsync.ctx.db)).toEqual({
         'did:example:a': ['did:example:b'],
         'did:example:b': ['did:example:c'],
+      })
+    })
+
+    it('upserts mute kind and removes mutes regardless of kind.', async () => {
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        kind: MuteKind.REPOSTS,
+      })
+      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
+        'did:example:a': { 'did:example:b': MuteKind.REPOSTS },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        kind: MuteKind.ALL,
+      })
+      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
+        'did:example:a': { 'did:example:b': MuteKind.ALL },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.REMOVE,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+      })
+      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({})
+    })
+
+    it('defaults missing mute kind to all.', async () => {
+      const { operation } = await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+      })
+      expect(operation?.kind).toBe(MuteKind.ALL)
+      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
+        'did:example:a': { 'did:example:b': MuteKind.ALL },
       })
     })
 
@@ -221,6 +266,27 @@ describe('mutes', () => {
       ).rejects.toEqual(
         new ConnectError('bad mute operation type', Code.InvalidArgument),
       )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'did:example:a',
+          subject: 'did:example:b',
+          kind: 100 as any,
+        }),
+      ).rejects.toEqual(new ConnectError('bad mute kind', Code.InvalidArgument))
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'did:example:a',
+          subject: 'at://did:example:b/app.bsky.graph.list/rkey1',
+          kind: MuteKind.REPOSTS,
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'mute kind reposts only applies to actor mutes',
+          Code.InvalidArgument,
+        ),
+      )
     })
 
     it('requires auth', async () => {
@@ -311,6 +377,7 @@ describe('mutes', () => {
       const operationIds = operations.map((op) => parseInt(op.id, 10))
       const ascending = (a: number, b: number) => a - b
       expect(operationIds).toEqual([...operationIds].sort(ascending))
+      expect(operations.every((op) => op.kind === MuteKind.ALL)).toBe(true)
     })
 
     it('supports long-poll, finding an operation.', async () => {
@@ -343,6 +410,16 @@ const dumpMuteState = async (db: Database) => {
     result[item.actorDid].push(item.subject)
   })
   Object.values(result).forEach((subjects) => subjects.sort())
+  return result
+}
+
+const dumpMuteKinds = async (db: Database) => {
+  const items = await db.db.selectFrom('mute_item').selectAll().execute()
+  const result: Record<string, Record<string, MuteKind>> = {}
+  items.forEach((item) => {
+    result[item.actorDid] ??= {}
+    result[item.actorDid][item.subject] = item.kind
+  })
   return result
 }
 

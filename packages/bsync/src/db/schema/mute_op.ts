@@ -1,11 +1,12 @@
 import { GeneratedAlways, Selectable } from 'kysely'
-import { MuteOperation_Type } from '../../proto/bsync_pb.js'
+import { MuteKind, MuteOperation_Type } from '../../proto/bsync_pb.js'
 
 export interface MuteOp {
   id: GeneratedAlways<number>
   type: MuteOperation_Type // integer enum: 0->add, 1->remove, 2->clear
   actorDid: string
   subject: string // did or aturi for list
+  kind: MuteKind
   createdAt: GeneratedAlways<Date>
 }
 

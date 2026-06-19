@@ -58,6 +58,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
+        kind: op.kind,
       })),
       cursor: lastOp.id.toString(),
     })

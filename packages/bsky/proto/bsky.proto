@@ -545,6 +545,7 @@ message Relationships {
   string blocking_by_list = 6;
   string following = 7;
   string followed_by = 8;
+  bool muted_reposts = 9;
 }
 
 message GetRelationshipsResponse {
@@ -645,6 +646,18 @@ message GetActorMutesActorRequest {
 
 message GetActorMutesActorResponse {
   bool muted = 1;
+  bool muted_reposts = 2;
+}
+
+enum MuteKind {
+  MUTE_KIND_UNSPECIFIED = 0;
+  MUTE_KIND_ALL = 1;
+  MUTE_KIND_REPOSTS = 2;
+}
+
+message MuteInfo {
+  string did = 1;
+  MuteKind kind = 2;
 }
 
 // - return list of user dids of users who A mutes
@@ -658,6 +671,7 @@ message GetMutesRequest {
 message GetMutesResponse {
   repeated string dids = 1;
   string cursor = 2;
+  repeated MuteInfo mutes = 3;
 }
 
 //
@@ -1857,6 +1871,7 @@ message UntakedownRecordResponse {
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
+  MuteKind kind = 3;
 }
 
 message CreateActorMuteResponse {}

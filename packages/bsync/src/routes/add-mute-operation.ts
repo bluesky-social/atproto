@@ -7,6 +7,7 @@ import { createMuteOpChannel } from '../db/schema/mute_op.js'
 import { Service } from '../proto/bsync_connect.js'
 import {
   AddMuteOperationResponse,
+  MuteKind,
   MuteOperation_Type,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
@@ -39,12 +40,13 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
+        kind: op.kind,
       },
     })
   },
 })
 
-const createMuteOp = async (db: Database, op: MuteOpInfo) => {
+const createMuteOp = async (db: Database, op: MuteOpInfoValid) => {
   const { ref } = db.db.dynamic
   const { id } = await db.db
     .insertInto('mute_op')
@@ -52,6 +54,7 @@ const createMuteOp = async (db: Database, op: MuteOpInfo) => {
       type: op.type,
       actorDid: op.actorDid,
       subject: op.subject,
+      kind: op.kind,
     })
     .returning('id')
     .executeTakeFirstOrThrow()
@@ -59,7 +62,11 @@ const createMuteOp = async (db: Database, op: MuteOpInfo) => {
   return id
 }
 
-const addMuteItem = async (db: Database, fromId: number, op: MuteOpInfo) => {
+const addMuteItem = async (
+  db: Database,
+  fromId: number,
+  op: MuteOpInfoValid,
+) => {
   const { ref } = db.db.dynamic
   await db.db
     .insertInto('mute_item')
@@ -67,11 +74,13 @@ const addMuteItem = async (db: Database, fromId: number, op: MuteOpInfo) => {
       actorDid: op.actorDid,
       subject: op.subject,
       fromId,
+      kind: op.kind,
     })
     .onConflict((oc) =>
-      oc
-        .constraint('mute_item_pkey')
-        .doUpdateSet({ fromId: sql`${ref('excluded.fromId')}` }),
+      oc.constraint('mute_item_pkey').doUpdateSet({
+        fromId: sql`${ref('excluded.fromId')}`,
+        kind: sql`${ref('excluded.kind')}`,
+      }),
     )
     .execute()
 }
@@ -95,6 +104,7 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
+  const kind = validMuteKind(op.kind)
   if (op.type === MuteOperation_Type.UNSPECIFIED) {
     throw new ConnectError(
       'unspecified mute operation type',
@@ -118,6 +128,12 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
     if (isValidDid(op.subject)) {
       // all good
     } else if (isValidAtUri(op.subject)) {
+      if (kind !== MuteKind.ALL) {
+        throw new ConnectError(
+          'mute kind reposts only applies to actor mutes',
+          Code.InvalidArgument,
+        )
+      }
       const uri = new AtUri(op.subject)
       if (
         uri.collection !== 'app.bsky.graph.list' &&
@@ -135,13 +151,24 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
       )
     }
   }
-  return op as MuteOpInfoValid // op.type has been checked
+  return { ...op, kind } as MuteOpInfoValid // op.type has been checked
+}
+
+const validMuteKind = (kind: MuteKind | undefined): MuteKind => {
+  if (kind === undefined || kind === MuteKind.UNSPECIFIED) {
+    return MuteKind.ALL
+  }
+  if (kind === MuteKind.ALL || kind === MuteKind.REPOSTS) {
+    return kind
+  }
+  throw new ConnectError('bad mute kind', Code.InvalidArgument)
 }
 
 type MuteOpInfo = {
   type: MuteOperation_Type
   actorDid: string
   subject: string
+  kind?: MuteKind
 }
 
 type MuteOpInfoValid = {
@@ -151,4 +178,5 @@ type MuteOpInfoValid = {
     | MuteOperation_Type.CLEAR
   actorDid: string
   subject: string
+  kind: MuteKind
 }

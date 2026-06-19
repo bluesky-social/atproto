@@ -129,6 +129,7 @@ const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
       !bam.authorMuted &&
       !bam.originatorBlocked &&
       !bam.originatorMuted &&
+      !bam.originatorRepostMuted &&
       !bam.ancestorAuthorBlocked
     )
   })

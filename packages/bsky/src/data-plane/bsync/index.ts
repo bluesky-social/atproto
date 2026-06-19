@@ -12,6 +12,7 @@ import { httpLogger } from '../../logger.js'
 import { Service } from '../../proto/bsync_connect.js'
 import {
   Method,
+  MuteKind,
   MuteOperation_Type,
   PutOperationRequest,
 } from '../../proto/bsync_pb.js'
@@ -48,6 +49,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
   router.service(Service, {
     async addMuteOperation(req) {
       const { type, actorDid, subject } = req
+      const kind = req.kind === MuteKind.REPOSTS ? 'reposts' : 'all'
       if (type === MuteOperation_Type.ADD) {
         if (subject.startsWith('did:')) {
           assert(actorDid !== subject, 'cannot mute yourself') // @TODO pass message through in http error
@@ -57,8 +59,11 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
               mutedByDid: actorDid,
               subjectDid: subject,
               createdAt: new Date().toISOString(),
+              kind,
             })
-            .onConflict((oc) => oc.doNothing())
+            .onConflict((oc) =>
+              oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kind }),
+            )
             .execute()
         } else {
           const uri = new AtUri(subject)
