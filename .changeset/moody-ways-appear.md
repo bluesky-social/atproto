@@ -5,4 +5,4 @@
 '@atproto/pds': patch
 ---
 
-Make tests run (slightly) faster
+Make tests less flaky in CI

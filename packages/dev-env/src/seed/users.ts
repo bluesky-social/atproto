@@ -1,32 +1,29 @@
 import { SeedClient } from './client.js'
 
 export default async function usersSeed(sc: SeedClient) {
-  await Promise.all([
-    sc.createAccount('alice', users.alice),
-    sc.createAccount('bob', users.bob),
-    sc.createAccount('carol', users.carol),
-    sc.createAccount('dan', users.dan),
-  ])
+  await sc.createAccount('alice', users.alice)
+  await sc.createAccount('bob', users.bob)
+  await sc.createAccount('carol', users.carol)
+  await sc.createAccount('dan', users.dan)
 
-  await Promise.all([
-    sc.createProfile(
-      sc.dids.alice,
-      users.alice.displayName,
-      users.alice.description,
-      users.alice.selfLabels,
-    ),
-    sc.createProfile(
-      sc.dids.bob,
-      users.bob.displayName,
-      users.bob.description,
-      users.bob.selfLabels,
-    ),
-    sc.agent.api.chat.bsky.actor.declaration.create(
-      { repo: sc.dids.dan },
-      { allowIncoming: 'none' },
-      sc.getHeaders(sc.dids.dan),
-    ),
-  ])
+  await sc.createProfile(
+    sc.dids.alice,
+    users.alice.displayName,
+    users.alice.description,
+    users.alice.selfLabels,
+  )
+  await sc.createProfile(
+    sc.dids.bob,
+    users.bob.displayName,
+    users.bob.description,
+    users.bob.selfLabels,
+  )
+
+  await sc.agent.api.chat.bsky.actor.declaration.create(
+    { repo: sc.dids.dan },
+    { allowIncoming: 'none' },
+    sc.getHeaders(sc.dids.dan),
+  )
 
   return sc
 }
