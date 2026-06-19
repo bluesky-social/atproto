@@ -24,7 +24,7 @@ describe('blob resolver', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('resolves blob with good signature check.', async () => {

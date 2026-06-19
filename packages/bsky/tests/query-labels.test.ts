@@ -35,7 +35,7 @@ describe('label hydration', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('returns labels based for a subject', async () => {

@@ -69,7 +69,7 @@ describe('pds views with blocking', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('blocks thread post', async () => {

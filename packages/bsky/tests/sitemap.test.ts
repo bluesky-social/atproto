@@ -15,7 +15,7 @@ describe('sitemap', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('returns sitemap index', async () => {

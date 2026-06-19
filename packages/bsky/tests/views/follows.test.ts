@@ -28,7 +28,7 @@ describe('pds follow views', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   // TODO(bsky) blocks followers by actor takedown via labels

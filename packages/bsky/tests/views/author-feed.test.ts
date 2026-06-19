@@ -55,7 +55,7 @@ describe('pds author feed views', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   // @TODO(bsky) blocked by actor takedown via labels.

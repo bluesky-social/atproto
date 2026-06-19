@@ -87,7 +87,7 @@ describe('pds profile views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   // @TODO(bsky) blocked by actor takedown via labels.

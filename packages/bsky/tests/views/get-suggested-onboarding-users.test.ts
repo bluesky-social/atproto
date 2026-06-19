@@ -88,8 +88,8 @@ describe('getSuggestedOnboardingUsers', () => {
   })
 
   afterAll(async () => {
-    await network.close()
-    await mockServer.stop()
+    await network?.close()
+    await mockServer?.stop()
   })
 
   describe(`basic handling`, () => {

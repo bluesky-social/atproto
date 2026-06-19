@@ -36,8 +36,8 @@ describe('getTrends', () => {
   })
 
   afterAll(async () => {
-    await network.close()
-    await mockTrendServer.stop()
+    await network?.close()
+    await mockTrendServer?.stop()
   })
 
   describe(`basic handling`, () => {

@@ -85,7 +85,7 @@ describe('starter packs', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('gets actor starter packs.', async () => {

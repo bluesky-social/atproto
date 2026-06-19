@@ -37,7 +37,7 @@ describe('list feed views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('fetches list feed', async () => {

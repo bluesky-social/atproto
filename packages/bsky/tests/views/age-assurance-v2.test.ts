@@ -173,8 +173,8 @@ describe('age assurance v2 views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
-    await kws.stop()
+    await network?.close()
+    await kws?.stop()
   })
 
   const getState = async (params: AppBskyAgeassuranceGetState.QueryParams) => {

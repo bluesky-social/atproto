@@ -58,7 +58,7 @@ describe('appview thread views v2', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('not found anchor', () => {

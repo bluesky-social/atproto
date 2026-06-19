@@ -55,7 +55,7 @@ describe('timeline views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels

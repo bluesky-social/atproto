@@ -58,7 +58,7 @@ describe('appview bookmarks views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const get = async (actor: string, limit?: number, cursor?: string) =>

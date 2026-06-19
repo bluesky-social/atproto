@@ -53,7 +53,7 @@ describe('pds posts views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('fetches posts', async () => {

@@ -41,7 +41,7 @@ describe('handle invalidation', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const backdateIndexedAt = async (did: string) => {

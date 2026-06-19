@@ -40,8 +40,8 @@ describe('notif service proxy', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
-    notifServer.close()
+    await network?.close()
+    notifServer?.close()
     await once(notifServer, 'close')
   })
 

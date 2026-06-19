@@ -31,7 +31,7 @@ describe('pds user search views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('actor suggestion gives users', async () => {

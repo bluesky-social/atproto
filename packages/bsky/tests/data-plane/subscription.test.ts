@@ -23,7 +23,7 @@ describe('sync', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('indexes permit history being replayed.', async () => {

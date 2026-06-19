@@ -28,7 +28,7 @@ describe('bsky actor likes feed views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('returns posts liked by actor', async () => {

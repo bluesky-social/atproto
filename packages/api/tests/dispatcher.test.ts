@@ -28,7 +28,7 @@ describe('AtpAgent', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('clones correctly', () => {

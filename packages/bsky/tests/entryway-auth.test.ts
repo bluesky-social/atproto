@@ -56,7 +56,7 @@ describe('entryway auth', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('works', async () => {

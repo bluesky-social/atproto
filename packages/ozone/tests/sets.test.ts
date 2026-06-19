@@ -97,7 +97,7 @@ describe('ozone-sets', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('querySets', () => {

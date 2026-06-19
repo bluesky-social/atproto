@@ -25,7 +25,7 @@ describe('postgates', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe(`quotee <-> quoter`, () => {

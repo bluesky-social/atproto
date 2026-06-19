@@ -28,7 +28,7 @@ describe('server', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('preserves 404s.', async () => {

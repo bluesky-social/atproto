@@ -95,8 +95,8 @@ describe('proxy oauth audience', () => {
 
   afterAll(async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()))
-    await upstream.close()
-    await network.close()
+    await upstream?.close()
+    await network?.close()
   })
 
   it('matches an OAuth rpc scope granted with combined did#serviceId aud', async () => {

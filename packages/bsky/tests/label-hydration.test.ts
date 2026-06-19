@@ -53,7 +53,7 @@ describe('label hydration', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('hydrates labels based on a supplied labeler header', async () => {

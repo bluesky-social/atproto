@@ -103,7 +103,7 @@ describe('bsky actor likes feed views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('does not include reference lists in getActorLists', async () => {

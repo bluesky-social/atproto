@@ -52,7 +52,7 @@ describe('pds thread views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it(`[A] -> [B], A blocks B, viewed as C`, async () => {

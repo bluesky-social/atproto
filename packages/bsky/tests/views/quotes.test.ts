@@ -29,7 +29,7 @@ describe('pds quote views', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('fetches post quotes', async () => {

@@ -71,7 +71,7 @@ describe('labeler service views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('fetches labelers', async () => {

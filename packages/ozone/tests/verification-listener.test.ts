@@ -41,8 +41,8 @@ describe('verification-listener', () => {
   })
 
   afterAll(async () => {
-    await jetstream.close()
-    await network.close()
+    await jetstream?.close()
+    await network?.close()
   })
 
   it('indexes new and revoked verifications', async () => {

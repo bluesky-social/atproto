@@ -25,7 +25,7 @@ describe('pds repost views', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('fetches reposted-by for a post', async () => {

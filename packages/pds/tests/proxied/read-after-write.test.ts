@@ -34,7 +34,7 @@ describe('proxy read after write', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('handles read after write on profiles', async () => {

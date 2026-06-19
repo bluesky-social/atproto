@@ -43,7 +43,7 @@ describe('admin get multiple repos', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

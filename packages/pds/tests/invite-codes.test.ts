@@ -26,7 +26,7 @@ describe('account', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('describes the fact that invites are required', async () => {

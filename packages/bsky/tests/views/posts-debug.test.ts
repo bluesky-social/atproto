@@ -22,7 +22,7 @@ describe('post views w/ debug field', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it(`does not include debug field for unauthed requests`, async () => {

@@ -33,7 +33,7 @@ describe('bsky views with mutes from mute lists', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   let listUri: string

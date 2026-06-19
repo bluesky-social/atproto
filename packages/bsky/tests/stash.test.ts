@@ -40,7 +40,7 @@ describe('private data', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('create', () => {

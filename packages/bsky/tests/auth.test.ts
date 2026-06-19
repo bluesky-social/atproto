@@ -26,7 +26,7 @@ describe('auth', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   // @TODO invalidations do not originate from appview frontends: requires identity event on the repo stream.

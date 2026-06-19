@@ -22,7 +22,7 @@ describe('age assurance events', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('handles age assurance events from user', async () => {

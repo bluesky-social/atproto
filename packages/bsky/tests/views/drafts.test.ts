@@ -56,7 +56,7 @@ describe('appview drafts views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const makeDraft = (): AppBskyDraftDefs.Draft => ({

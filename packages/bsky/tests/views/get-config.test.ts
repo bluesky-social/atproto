@@ -17,7 +17,7 @@ describe('get config', () => {
     })
 
     afterAll(async () => {
-      await network.close()
+      await network?.close()
     })
 
     it('omits the live now config', async () => {
@@ -55,7 +55,7 @@ describe('get config', () => {
     })
 
     afterAll(async () => {
-      await network.close()
+      await network?.close()
     })
 
     it(`returns the config`, async () => {

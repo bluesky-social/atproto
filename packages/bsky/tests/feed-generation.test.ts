@@ -105,7 +105,7 @@ describe('feed generation', () => {
 
   afterAll(async () => {
     await gen.close()
-    await network.close()
+    await network?.close()
   })
 
   it('feed gen records can be created.', async () => {

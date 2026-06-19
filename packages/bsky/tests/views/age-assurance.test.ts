@@ -103,8 +103,8 @@ describe('age assurance views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
-    await kwsServer.stop()
+    await network?.close()
+    await kwsServer?.stop()
   })
 
   const getAgeAssurance = async (did: string) => {

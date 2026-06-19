@@ -27,7 +27,7 @@ describe('views with thread gating', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   // check that replyDisabled state is applied correctly in a simple method like getPosts

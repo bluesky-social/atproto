@@ -132,7 +132,7 @@ describe('bsky takedown labels', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('takesdown profiles', async () => {

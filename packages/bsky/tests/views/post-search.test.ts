@@ -56,7 +56,7 @@ describe('appview search', () => {
       uri: post1.ref.uriStr,
     })
 
-    await network.close()
+    await network?.close()
   })
 
   describe(`post search with 'top' sort`, () => {

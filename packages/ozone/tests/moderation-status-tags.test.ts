@@ -24,7 +24,7 @@ describe('moderation-status-tags', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('manage tags on subject status', () => {

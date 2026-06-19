@@ -35,8 +35,8 @@ describe('proxy header', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await proxyServer.close()
-    await network.close()
+    await proxyServer?.close()
+    await network?.close()
   })
 
   it('parses proxy header', async () => {
