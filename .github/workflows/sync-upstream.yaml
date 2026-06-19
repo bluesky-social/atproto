@@ -8,11 +8,12 @@ name: Sync from upstream
 # Requirements:
 #   - An `upstream` reference to bluesky-social/atproto. This workflow adds it at
 #     runtime, so no remote config is needed in the repo.
-#   - A GitHub App installed on this repo with `contents: write` and
-#     `pull-requests: write`. Store its App ID in the `SYNC_UPSTREAM_APP_ID`
-#     repository variable and its private key in the `SYNC_UPSTREAM_PK` secret.
-#     The App token (rather than the default GITHUB_TOKEN) is what allows the
-#     PR this workflow opens to trigger the `on: pull_request` CI in repo.yaml.
+#
+# Note on tokens/CI: the PR is opened with the default GITHUB_TOKEN, which by
+# design does NOT trigger the `on: pull_request` CI in repo.yaml. That is fine
+# here because the PR is opened as a draft (we don't want CI yet). When a human
+# marks it "Ready for review", that human-triggered `ready_for_review` event
+# does start CI. So no GitHub App / PAT is needed.
 
 on:
   workflow_dispatch:
@@ -34,21 +35,11 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.SYNC_UPSTREAM_APP_ID }}
-          private-key: ${{ secrets.SYNC_UPSTREAM_PK }}
-
       - name: Checkout main (full history)
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
-          # Use the App token so the branch push (and the PR opened below)
-          # carries an identity that can trigger the pull_request CI.
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Add upstream and fetch
         run: |
@@ -105,7 +96,7 @@ jobs:
 
       - name: Open pull request
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.branch.outputs.name }}
           UPSTREAM_REF: ${{ github.event.inputs.upstream_ref }}
           CONFLICTS: ${{ steps.merge.outputs.conflicts }}
