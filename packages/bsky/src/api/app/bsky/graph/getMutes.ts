@@ -42,13 +42,15 @@ const skeleton = async (
   if (clearlyBadCursor(params.cursor)) {
     return { mutedDids: [] }
   }
-  const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
+  const { dids, mutes, cursor } = await ctx.hydrator.dataplane.getMutes({
     actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
   return {
-    mutedDids: dids as DidString[],
+    mutedDids: (mutes.length
+      ? mutes.map((mute) => mute.did)
+      : dids) as DidString[],
     cursor: cursor || undefined,
   }
 }

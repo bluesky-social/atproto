@@ -215,6 +215,12 @@ export class Views {
     return !!(viewer.muted || this.mutedByList(viewer, state))
   }
 
+  viewerRepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedReposts
+  }
+
   blockingByList(
     viewer: ProfileViewerState,
     state: HydrationState,
@@ -454,6 +460,7 @@ export class Views {
     const mutedByList = this.mutedByList(viewer, state)
     return {
       muted: !!(viewer.muted || mutedByList),
+      mutedReposts: !!viewer.mutedReposts,
       mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
@@ -897,6 +904,7 @@ export class Views {
     state: HydrationState,
   ): {
     originatorMuted: boolean
+    originatorRepostMuted: boolean
     originatorBlocked: boolean
     authorMuted: boolean
     authorBlocked: boolean
@@ -915,6 +923,8 @@ export class Views {
       grandparentUri && creatorFromUri(grandparentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
+      originatorRepostMuted:
+        !!item.repost && this.viewerRepostMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),

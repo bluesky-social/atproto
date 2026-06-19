@@ -4,6 +4,7 @@ import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../lexicons/index.js'
 import { Service } from '../../../proto/bsky_connect.js'
+import { MuteKind } from '../../../proto/bsky_pb.js'
 import { Database } from '../db/index.js'
 import {
   CreatedAtDidKeyset,
@@ -21,7 +22,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('subjectDid', '=', targetDid)
       .executeTakeFirst()
     return {
-      muted: !!res,
+      muted: res?.kind === 'all',
+      mutedReposts: res?.kind === 'reposts',
     }
   },
 
@@ -35,6 +37,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('mute.mutedByDid', '=', actorDid)
       .selectAll('actor')
       .select('mute.createdAt as createdAt')
+      .select('mute.kind as kind')
 
     const keyset = new CreatedAtDidKeyset(
       ref('mute.createdAt'),
@@ -50,6 +53,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     return {
       dids: mutes.map((m) => m.did),
+      mutes: mutes.map((m) => ({
+        did: m.did,
+        kind: m.kind === 'reposts' ? MuteKind.REPOSTS : MuteKind.ALL,
+      })),
       cursor: keyset.packFromResult(mutes),
     }
   },
@@ -114,16 +121,20 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async createActorMute(req) {
-    const { actorDid, subjectDid } = req
+    const { actorDid, subjectDid, kind: reqKind } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
+    const kind = reqKind === MuteKind.REPOSTS ? 'reposts' : 'all'
     await db.db
       .insertInto('mute')
       .values({
         subjectDid,
         mutedByDid: actorDid,
         createdAt: new Date().toISOString(),
+        kind,
       })
-      .onConflict((oc) => oc.doNothing())
+      .onConflict((oc) =>
+        oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kind }),
+      )
       .execute()
   },
 

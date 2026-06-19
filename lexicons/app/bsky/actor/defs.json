@@ -196,6 +196,7 @@
       "description": "Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests.",
       "properties": {
         "muted": { "type": "boolean" },
+        "mutedReposts": { "type": "boolean" },
         "mutedByList": {
           "type": "ref",
           "ref": "app.bsky.graph.defs#listViewBasic"
