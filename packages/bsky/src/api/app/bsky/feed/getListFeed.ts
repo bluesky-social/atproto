@@ -100,6 +100,7 @@ const noBlocksOrMutes = (inputs: {
       !bam.authorMuted &&
       !bam.originatorBlocked &&
       !bam.originatorMuted &&
+      !bam.originatorRepostMuted &&
       !bam.ancestorAuthorBlocked &&
       !creatorBlocks?.get(uriToDid(item.post.uri))
     )

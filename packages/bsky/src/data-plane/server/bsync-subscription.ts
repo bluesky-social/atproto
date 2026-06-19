@@ -12,6 +12,7 @@ import { subLogger as log } from '../../logger.js'
 import {
   Method,
   type MuteOperation,
+  MuteKind,
   MuteOperation_Type,
   type NotifOperation,
   type Operation,
@@ -160,6 +161,7 @@ export class BsyncSubscription {
   private async processMuteOperations(operations: MuteOperation[]) {
     for (const op of operations) {
       const { type, actorDid, subject } = op
+      const kind = op.kind === MuteKind.REPOSTS ? 'reposts' : 'all'
       if (type === MuteOperation_Type.ADD) {
         if (subject.startsWith('did:')) {
           await this.db.db
@@ -168,8 +170,11 @@ export class BsyncSubscription {
               mutedByDid: actorDid,
               subjectDid: subject,
               createdAt: new Date().toISOString(),
+              kind,
             })
-            .onConflict((oc) => oc.doNothing())
+            .onConflict((oc) =>
+              oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kind }),
+            )
             .execute()
         } else {
           const uri = new AtUri(subject)

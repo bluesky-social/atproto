@@ -99,6 +99,7 @@ export type Statuses = HydrationMap<AtUriString, Status>
 export type ProfileViewerState = {
   did: DidString
   muted?: boolean
+  mutedReposts?: boolean
   mutedByList?: AtUriString
   blockedBy?: AtUriString
   blocking?: AtUriString
@@ -466,6 +467,7 @@ export class ActorHydrator {
       map.set(actor, {
         did,
         muted: rels.muted ?? false,
+        mutedReposts: rels.mutedReposts ?? false,
         mutedByList: parseString(rels.mutedByList),
         blockedBy: parseString(rels.blockedBy),
         blocking: parseString<AtUriString>(rels.blocking),

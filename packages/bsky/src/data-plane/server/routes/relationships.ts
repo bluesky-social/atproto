@@ -21,8 +21,16 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .selectFrom('mute')
           .where('mute.mutedByDid', '=', actorDid)
           .whereRef('mute.subjectDid', '=', ref('actor.did'))
+          .where('mute.kind', '=', 'all')
           .select(sql<true>`${true}`.as('val'))
           .as('muted'),
+        db.db
+          .selectFrom('mute')
+          .where('mute.mutedByDid', '=', actorDid)
+          .whereRef('mute.subjectDid', '=', ref('actor.did'))
+          .where('mute.kind', '=', 'reposts')
+          .select(sql<true>`${true}`.as('val'))
+          .as('mutedReposts'),
         db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
@@ -75,6 +83,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const row = byDid.get(did)
       return {
         muted: row?.muted ?? false,
+        mutedReposts: row?.mutedReposts ?? false,
         mutedByList: row?.mutedByList ?? '',
         blockedBy: row?.blockedBy ?? '',
         blocking: row?.blocking ?? '',
