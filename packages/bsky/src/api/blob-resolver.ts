@@ -1,7 +1,7 @@
 import { Duplex, Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
-import { Dispatcher } from 'undici'
+import { Dispatcher, RedirectHandler } from 'undici'
 import {
   VerifyCidError,
   VerifyCidTransform,
@@ -197,7 +197,6 @@ export async function streamBlob(
         path: url.pathname + url.search,
         headers,
         signal: options.signal,
-        maxRedirections: 10,
       },
       (upstream) => {
         headersReceived = true
