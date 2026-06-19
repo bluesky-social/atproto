@@ -21,12 +21,7 @@ import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import {
-  Fetch,
-  isUnicastIp,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
+import { Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager.js'
 import { OAuthStore } from './account-manager/oauth-store.js'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
@@ -47,6 +42,7 @@ import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
+import { buildProxyAgent } from './pipethrough.js'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
@@ -295,36 +291,7 @@ export class AppContext {
     )
 
     // An agent for performing HTTP requests based on user provided URLs.
-    const proxyAgentBase = new undici.Agent({
-      allowH2: cfg.proxy.allowHTTP2, // This is experimental
-      headersTimeout: cfg.proxy.headersTimeout,
-      maxResponseSize: cfg.proxy.maxResponseSize,
-      bodyTimeout: cfg.proxy.bodyTimeout,
-      factory: cfg.proxy.disableSsrfProtection
-        ? undefined
-        : (origin, opts) => {
-            const { protocol, hostname } =
-              origin instanceof URL ? origin : new URL(origin)
-            if (protocol !== 'https:') {
-              throw new Error(`Forbidden protocol "${protocol}"`)
-            }
-            if (isUnicastIp(hostname) === false) {
-              throw new Error('Hostname resolved to non-unicast address')
-            }
-            return new undici.Pool(origin, opts)
-          },
-      connect: {
-        lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
-      },
-    })
-    const proxyAgent =
-      cfg.proxy.maxRetries > 0
-        ? new undici.RetryAgent(proxyAgentBase, {
-            statusCodes: [], // Only retry on socket errors
-            methods: ['GET', 'HEAD'],
-            maxRetries: cfg.proxy.maxRetries,
-          })
-        : proxyAgentBase
+    const proxyAgent = buildProxyAgent(cfg.proxy)
 
     /**
      * A fetch() function that protects against SSRF attacks, large responses &

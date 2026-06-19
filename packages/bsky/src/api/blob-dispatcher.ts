@@ -1,4 +1,4 @@
-import { Agent, Dispatcher, Pool, RetryAgent } from 'undici'
+import { Agent, Dispatcher, Pool, interceptors } from 'undici'
 import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { ServerConfig } from '../config.js'
 import { RETRYABLE_HTTP_STATUS_CODES } from '../util/retry.js'
@@ -27,11 +27,15 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
     },
   })
 
-  return cfg.proxyMaxRetries > 0
-    ? new RetryAgent(baseDispatcher, {
-        statusCodes: [...RETRYABLE_HTTP_STATUS_CODES],
-        methods: ['GET', 'HEAD'],
-        maxRetries: cfg.proxyMaxRetries,
-      })
-    : baseDispatcher
+  return baseDispatcher.compose(
+    interceptors.redirect({
+      maxRedirections: 10,
+      throwOnMaxRedirect: true,
+    }),
+    interceptors.retry({
+      statusCodes: [...RETRYABLE_HTTP_STATUS_CODES],
+      methods: ['GET', 'HEAD'],
+      maxRetries: cfg.proxyMaxRetries,
+    }),
+  )
 }

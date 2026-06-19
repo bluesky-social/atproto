@@ -197,7 +197,6 @@ export async function streamBlob(
         path: url.pathname + url.search,
         headers,
         signal: options.signal,
-        maxRedirections: 10,
       },
       (upstream) => {
         headersReceived = true
