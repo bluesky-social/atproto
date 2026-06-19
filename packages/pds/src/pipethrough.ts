@@ -59,8 +59,7 @@ export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
           methods: ['GET', 'HEAD'],
           maxRetries: cfg.maxRetries,
         })
-      : // @TODO replace with "null" https://github.com/nodejs/undici/pull/5443
-        (dispatcher) => dispatcher,
+      : (dispatch) => dispatch,
   )
 }
 
