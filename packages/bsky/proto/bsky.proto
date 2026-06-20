@@ -52,6 +52,22 @@ message GetLikeRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetPollTopicRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetPollTopicRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetPollVoteRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetPollVoteRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetListBlockRecordsRequest {
   repeated string uris = 1;
 }
@@ -356,6 +372,72 @@ message LikeInfo {
 message GetActorLikesResponse {
   repeated LikeInfo likes = 1;
   string cursor = 2;
+}
+
+//
+// Polls
+//
+
+// - return vote record uris on a poll, optionally filtered to one option
+//     - `getVotes` voter list
+message GetPollVotesBySubjectRequest {
+  RecordRef subject = 1;
+  // if has_option is false, votes for all options are returned
+  bool has_option = 2;
+  int32 option = 3;
+  int32 limit = 4;
+  string cursor = 5;
+}
+
+message GetPollVotesBySubjectResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+// - return the requesting user's vote on polls B, C, D...
+//     - viewer state on polls
+message GetPollVotesByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated RecordRef refs = 2;
+}
+
+message PollVoteInfo {
+  // empty uri means the actor has not voted on the corresponding poll
+  string uri = 1;
+  int32 option = 2;
+}
+
+message GetPollVotesByActorAndSubjectsResponse {
+  repeated PollVoteInfo votes = 1;
+}
+
+// - return per-option and total vote counts for polls B, C, D...
+message GetPollVoteCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message PollVoteCounts {
+  // index i holds the vote count for option i
+  repeated int32 option_counts = 1;
+  int32 total = 2;
+}
+
+message GetPollVoteCountsResponse {
+  repeated PollVoteCounts counts = 1;
+}
+
+// - return a preview of voter dids for one poll option, prioritizing accounts
+//   the viewer follows (for facepiles)
+message GetPollVoterFacepileRequest {
+  // empty for logged-out; used to prioritize followed accounts
+  string viewer_did = 1;
+  RecordRef subject = 2;
+  int32 option = 3;
+  int32 limit = 4;
+}
+
+message GetPollVoterFacepileResponse {
+  repeated string dids = 1;
 }
 
 //
@@ -1609,6 +1691,8 @@ service Service {
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
+  rpc GetPollTopicRecords(GetPollTopicRecordsRequest) returns (GetPollTopicRecordsResponse);
+  rpc GetPollVoteRecords(GetPollVoteRecordsRequest) returns (GetPollVoteRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1633,6 +1717,12 @@ service Service {
 
   // Quotes
   rpc GetQuotesBySubjectSorted(GetQuotesBySubjectSortedRequest) returns (GetQuotesBySubjectSortedResponse);
+
+  // Polls
+  rpc GetPollVotesBySubject(GetPollVotesBySubjectRequest) returns (GetPollVotesBySubjectResponse);
+  rpc GetPollVotesByActorAndSubjects(GetPollVotesByActorAndSubjectsRequest) returns (GetPollVotesByActorAndSubjectsResponse);
+  rpc GetPollVoteCounts(GetPollVoteCountsRequest) returns (GetPollVoteCountsResponse);
+  rpc GetPollVoterFacepile(GetPollVoterFacepileRequest) returns (GetPollVoterFacepileResponse);
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);

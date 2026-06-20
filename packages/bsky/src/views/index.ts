@@ -26,6 +26,7 @@ import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
 import { Follow, Verification } from '../hydration/graph.js'
 import { HydrationState } from '../hydration/hydrator.js'
 import { Label } from '../hydration/label.js'
+import { Poll, pollFacepileKey } from '../hydration/poll.js'
 import { RecordInfo, parseString } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
@@ -87,6 +88,12 @@ import {
   NotFoundPost,
   NotificationRecordDeleted,
   NotificationView,
+  PollEmbed,
+  PollEmbedView,
+  PollOptionView,
+  PollTopicRecord,
+  PollView,
+  PollViewNotFound,
   PostEmbedView,
   PostRecord,
   PostView,
@@ -125,6 +132,7 @@ import {
   isImagesEmbedType,
   isLabelerRecordType,
   isListRuleType,
+  isPollEmbedType,
   isPostRecordType,
   isPostViewType,
   isProfileRecordType,
@@ -803,6 +811,7 @@ export class Views {
       | ProfileRecord
       | LabelerRecord
       | VerificationRecord
+      | PollTopicRecord
       | NotificationRecordDeleted
   }): Label[] {
     if (!uri || !cid || !record) return []
@@ -2102,9 +2111,66 @@ export class Views {
       return this.recordEmbed(postUri, embed, state, depth)
     } else if (isRecordWithMediaType(embed)) {
       return this.recordWithMediaEmbed(postUri, embed, state, depth)
+    } else if (isPollEmbedType(embed)) {
+      return this.pollEmbed(embed, state)
     } else {
       return undefined
     }
+  }
+
+  pollEmbed(embed: PollEmbed, state: HydrationState): $Typed<PollEmbedView> {
+    return app.bsky.embed.poll.view.$build({
+      poll: this.pollView(embed.poll.uri, state),
+    })
+  }
+
+  pollView(
+    uri: AtUriString,
+    state: HydrationState,
+  ): $Typed<PollView> | $Typed<PollViewNotFound> {
+    const poll = state.polls?.get(uri)
+    if (!poll) {
+      return app.bsky.embed.poll.pollViewNotFound.$build({
+        uri,
+        notFound: true,
+      })
+    }
+
+    const agg = state.pollAggs?.get(uri)
+    const viewer = state.pollViewers?.get(uri)
+    const endsAt = poll.record.endsAt
+    const isClosed = !!endsAt && new Date(endsAt).getTime() <= Date.now()
+
+    const options: Un$Typed<PollOptionView>[] = poll.record.options.map(
+      (text, index) => {
+        const facepile = state.pollFacepiles?.get(pollFacepileKey(uri, index))
+        const voters = mapDefined(facepile ?? [], (did) =>
+          this.profileBasic(did, state),
+        )
+        return {
+          index,
+          text,
+          voteCount: agg?.optionCounts[index] ?? 0,
+          voters: voters.length ? voters : undefined,
+        }
+      },
+    )
+
+    return app.bsky.embed.poll.pollView.$build({
+      uri,
+      cid: poll.cid,
+      text: poll.record.text,
+      options,
+      voteCount: agg?.total ?? 0,
+      endsAt: endsAt ? normalizeDatetimeAlways(endsAt) : undefined,
+      isClosed,
+      viewer: viewer
+        ? {
+            vote: viewer.vote,
+            option: viewer.option,
+          }
+        : undefined,
+    })
   }
 
   imagesEmbed(did: DidString, embed: ImagesEmbed): $Typed<ImagesEmbedView> {
@@ -2685,6 +2751,7 @@ export class Views {
       | Like
       | Repost
       | Follow
+      | Poll
       | RecordInfo<ProfileRecord>
       | Verification
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
@@ -2699,6 +2766,8 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri as AtUriString)
     } else if (uri.collection === app.bsky.graph.follow.$type) {
       recordInfo = state.follows?.get(notif.uri as AtUriString)
+    } else if (uri.collection === app.bsky.poll.topic.$type) {
+      recordInfo = state.polls?.get(notif.uri as AtUriString)
     } else if (uri.collection === app.bsky.graph.verification.$type) {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.

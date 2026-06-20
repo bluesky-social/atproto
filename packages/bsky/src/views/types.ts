@@ -61,6 +61,16 @@ export type RecordWithMedia = app.bsky.embed.recordWithMedia.Main
 export type RecordWithMediaView = app.bsky.embed.recordWithMedia.View
 export type RecordWithMediaEmbedView = app.bsky.embed.recordWithMedia.View
 
+export const isPollEmbedType = app.bsky.embed.poll.$isTypeOf
+export type PollEmbed = app.bsky.embed.poll.Main
+export type PollEmbedView = app.bsky.embed.poll.View
+export type PollView = app.bsky.embed.poll.PollView
+export type PollOptionView = app.bsky.embed.poll.PollOptionView
+export type PollViewerState = app.bsky.embed.poll.PollViewerState
+export type PollViewNotFound = app.bsky.embed.poll.PollViewNotFound
+export type PollTopicRecord = app.bsky.poll.topic.Main
+export type PollVoteRecord = app.bsky.poll.vote.Main
+
 export type Embed =
   | ImagesEmbed
   | VideoEmbed
@@ -68,6 +78,7 @@ export type Embed =
   | ExternalEmbed
   | RecordEmbed
   | RecordWithMedia
+  | PollEmbed
 
 export type EmbedView =
   | ImagesEmbedView
@@ -76,6 +87,7 @@ export type EmbedView =
   | ExternalEmbedView
   | RecordEmbedView
   | RecordWithMediaView
+  | PollEmbedView
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 

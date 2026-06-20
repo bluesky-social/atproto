@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.poll.topic",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a poll: a question with a fixed set of options that other users can vote on. Embedded in a post via app.bsky.embed.poll.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["text", "options", "createdAt"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "The poll question."
+          },
+          "options": {
+            "type": "array",
+            "minLength": 2,
+            "maxLength": 4,
+            "description": "The selectable options. A vote refers to an option by its position (index) in this list.",
+            "items": {
+              "type": "string",
+              "maxGraphemes": 50,
+              "maxLength": 500
+            }
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Optional time at which the poll closes. Votes created after this time are not counted."
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

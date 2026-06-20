@@ -1,0 +1,64 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.poll.getVotes",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get votes cast on a poll (app.bsky.poll.topic), optionally filtered to a single option.",
+      "parameters": {
+        "type": "params",
+        "required": ["uri"],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the poll topic record."
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid",
+            "description": "CID of the poll topic record (specific version), to filter votes."
+          },
+          "option": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "If provided, only return votes for this option index."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "votes"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" },
+            "cursor": { "type": "string" },
+            "votes": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#voteView" }
+            }
+          }
+        }
+      }
+    },
+    "voteView": {
+      "type": "object",
+      "required": ["actor", "option", "createdAt", "indexedAt"],
+      "properties": {
+        "actor": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "option": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    }
+  }
+}

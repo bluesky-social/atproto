@@ -23,6 +23,9 @@ import * as list from './tables/list.js'
 import * as mute from './tables/mute.js'
 import * as notificationPushToken from './tables/notification-push-token.js'
 import * as notification from './tables/notification.js'
+import * as pollOptionAgg from './tables/poll-option-agg.js'
+import * as pollVote from './tables/poll-vote.js'
+import * as poll from './tables/poll.js'
 import * as postAgg from './tables/post-agg.js'
 import * as postEmbed from './tables/post-embed.js'
 import * as postgate from './tables/post-gate.js'
@@ -49,6 +52,9 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   post.PartialDB &
   postEmbed.PartialDB &
   postAgg.PartialDB &
+  poll.PartialDB &
+  pollVote.PartialDB &
+  pollOptionAgg.PartialDB &
   repost.PartialDB &
   threadgate.PartialDB &
   postgate.PartialDB &

@@ -32,6 +32,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getStarterPackRecords: getRecords(db, app.bsky.graph.starterpack),
   getVerificationRecords: getRecords(db, app.bsky.graph.verification),
   getStatusRecords: getRecords(db, app.bsky.actor.status),
+  getPollTopicRecords: getRecords(db, app.bsky.poll.topic),
+  getPollVoteRecords: getRecords(db, app.bsky.poll.vote),
 })
 
 export const getRecords = (db: Database, ns?: l.Main<l.RecordSchema>) => {

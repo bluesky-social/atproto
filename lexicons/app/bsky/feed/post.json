@@ -35,7 +35,8 @@
               "app.bsky.embed.gallery",
               "app.bsky.embed.external",
               "app.bsky.embed.record",
-              "app.bsky.embed.recordWithMedia"
+              "app.bsky.embed.recordWithMedia",
+              "app.bsky.embed.poll"
             ]
           },
           "langs": {

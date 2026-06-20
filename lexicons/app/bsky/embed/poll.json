@@ -1,0 +1,95 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.poll",
+  "description": "A poll embedded in a Bluesky post. The post references a standalone app.bsky.poll.topic record by strong ref; the view expands it into vote counts and voter facepiles.",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["poll"],
+      "properties": {
+        "poll": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef",
+          "description": "Reference to the app.bsky.poll.topic record."
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["poll"],
+      "properties": {
+        "poll": {
+          "type": "union",
+          "refs": ["#pollView", "#pollViewNotFound"]
+        }
+      }
+    },
+    "pollView": {
+      "type": "object",
+      "required": ["uri", "cid", "text", "options", "voteCount"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "text": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#pollOptionView" }
+        },
+        "voteCount": {
+          "type": "integer",
+          "description": "Total number of votes cast across all options."
+        },
+        "endsAt": { "type": "string", "format": "datetime" },
+        "isClosed": {
+          "type": "boolean",
+          "description": "Whether the poll has closed (endsAt has passed). Closed polls no longer accept votes."
+        },
+        "viewer": { "type": "ref", "ref": "#pollViewerState" }
+      }
+    },
+    "pollOptionView": {
+      "type": "object",
+      "required": ["index", "text", "voteCount"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "description": "Position of this option within the poll's options list."
+        },
+        "text": { "type": "string" },
+        "voteCount": { "type": "integer" },
+        "voters": {
+          "type": "array",
+          "maxLength": 3,
+          "description": "A preview of accounts who voted for this option, prioritizing accounts the viewer follows.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        }
+      }
+    },
+    "pollViewerState": {
+      "type": "object",
+      "description": "Metadata about the requesting account's relationship with the poll.",
+      "properties": {
+        "vote": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "URI of the viewer's counted vote record, if any."
+        },
+        "option": {
+          "type": "integer",
+          "description": "Index of the option the viewer voted for, if any."
+        }
+      }
+    },
+    "pollViewNotFound": {
+      "type": "object",
+      "required": ["uri", "notFound"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "notFound": { "type": "boolean", "const": true }
+      }
+    }
+  }
+}

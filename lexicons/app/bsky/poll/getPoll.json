@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.poll.getPoll",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the hydrated view of a single poll (app.bsky.poll.topic), including vote counts and voter facepiles. Useful for rendering full results, e.g. from a 'poll-ended' notification.",
+      "parameters": {
+        "type": "params",
+        "required": ["uri"],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the poll topic record."
+          },
+          "cid": {
+            "type": "string",
+            "format": "cid",
+            "description": "CID of the poll topic record (specific version)."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["poll"],
+          "properties": {
+            "poll": {
+              "type": "ref",
+              "ref": "app.bsky.embed.poll#pollView"
+            }
+          }
+        }
+      }
+    }
+  }
+}

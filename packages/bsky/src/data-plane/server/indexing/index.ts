@@ -27,6 +27,8 @@ import * as ListBlock from './plugins/list-block.js'
 import * as ListItem from './plugins/list-item.js'
 import * as List from './plugins/list.js'
 import * as NotifDeclaration from './plugins/notif-declaration.js'
+import * as PollTopic from './plugins/poll-topic.js'
+import * as PollVote from './plugins/poll-vote.js'
 import * as Postgate from './plugins/post-gate.js'
 import * as Post from './plugins/post.js'
 import * as Profile from './plugins/profile.js'
@@ -43,6 +45,8 @@ export class IndexingService {
     postGate: Postgate.PluginType
     like: Like.PluginType
     repost: Repost.PluginType
+    pollTopic: PollTopic.PluginType
+    pollVote: PollVote.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
     list: List.PluginType
@@ -70,6 +74,8 @@ export class IndexingService {
       postGate: Postgate.makePlugin(this.db, this.background),
       like: Like.makePlugin(this.db, this.background),
       repost: Repost.makePlugin(this.db, this.background),
+      pollTopic: PollTopic.makePlugin(this.db, this.background),
+      pollVote: PollVote.makePlugin(this.db, this.background),
       follow: Follow.makePlugin(this.db, this.background),
       profile: Profile.makePlugin(this.db, this.background),
       list: List.makePlugin(this.db, this.background),
@@ -317,6 +323,11 @@ export class IndexingService {
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('repost').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('like').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('poll_vote')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db.deleteFrom('poll').where('creator', '=', did).execute()
     await this.db.db
       .deleteFrom('feed_generator')
       .where('creator', '=', did)

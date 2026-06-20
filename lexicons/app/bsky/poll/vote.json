@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.poll.vote",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a vote on a poll (app.bsky.poll.topic). Only the first vote a user casts on a given poll is counted.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "option", "createdAt"],
+        "properties": {
+          "subject": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef",
+            "description": "The poll being voted on."
+          },
+          "option": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Index of the chosen option within the poll's options list."
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

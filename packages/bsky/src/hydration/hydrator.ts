@@ -25,6 +25,7 @@ import {
   ProfileRecord,
   isExternalEmbedType,
   isListRuleType,
+  isPollEmbedType,
   isRecordEmbedType,
   isRecordWithMediaType,
 } from '../views/types.js'
@@ -83,6 +84,14 @@ import {
   Labels,
 } from './label.js'
 import {
+  PollAggs,
+  PollFacepiles,
+  PollHydrator,
+  PollViewerStates,
+  PollVotes,
+  Polls,
+} from './poll.js'
+import {
   HydrationMap,
   ItemRef,
   RecordInfo,
@@ -134,6 +143,11 @@ export type HydrationState = {
   posts?: Posts
   postAggs?: PostAggs
   postViewers?: PostViewerStates
+  polls?: Polls
+  pollVotes?: PollVotes
+  pollAggs?: PollAggs
+  pollViewers?: PollViewerStates
+  pollFacepiles?: PollFacepiles
   threadContexts?: ThreadContexts
   postBlocks?: PostBlocks
   reposts?: Reposts
@@ -210,6 +224,7 @@ export class Hydrator {
   feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
+  poll: PollHydrator
   serviceLabelers: Set<string>
   config: HydratorConfig
 
@@ -224,6 +239,7 @@ export class Hydrator {
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
+    this.poll = new PollHydrator(dataplane)
     this.serviceLabelers = new Set(serviceLabelers)
   }
 
@@ -631,6 +647,30 @@ export class Hydrator {
       }
     }
 
+    // poll embeds: fetch poll records + counts + viewer vote, then build the
+    // follow-prioritized voter facepiles. Facepile authors are folded into the
+    // profile hydration below so the views layer can render them.
+    const pollRefs = pollRefsFromPosts(posts)
+    const pollUris = pollRefs.map((ref) => ref.uri)
+    const [polls, pollAggs, pollViewers] = await Promise.all([
+      this.poll.getPolls(pollUris, ctx.includeTakedowns),
+      this.poll.getPollAggregates(pollRefs),
+      ctx.viewer
+        ? this.poll.getPollViewerStates(pollRefs, ctx.viewer)
+        : undefined,
+    ])
+    const pollFacepiles = await this.poll.getPollFacepiles(
+      polls,
+      pollAggs,
+      pollRefs,
+      ctx.viewer,
+    )
+    const pollFacepileDids: DidString[] = []
+    for (const key of pollFacepiles.keys()) {
+      const dids = pollFacepiles.get(key)
+      if (dids) pollFacepileDids.push(...dids)
+    }
+
     const siteStandardRefs = siteStandardRefsFromPosts(
       postsLayer0,
       postsLayer1,
@@ -647,6 +687,7 @@ export class Hydrator {
     const knownProfileDids = dedupeStrs([
       ...allPostUris.map(didFromUri),
       ...ssRefDids,
+      ...pollFacepileDids,
     ])
 
     const [
@@ -723,6 +764,10 @@ export class Hydrator {
         posts,
         postAggs,
         postViewers,
+        polls,
+        pollAggs,
+        pollViewers,
+        pollFacepiles,
         postBlocks,
         labels,
         threadgates,
@@ -732,6 +777,54 @@ export class Hydrator {
         ctx,
       },
     )
+  }
+
+  // app.bsky.embed.poll#pollView
+  // - poll record + per-option counts + viewer vote + follow-prioritized facepiles
+  async hydratePolls(
+    refs: ItemRef[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const pollUris = refs.map((ref) => ref.uri)
+    const [polls, pollAggs, pollViewers] = await Promise.all([
+      this.poll.getPolls(pollUris, ctx.includeTakedowns),
+      this.poll.getPollAggregates(refs),
+      ctx.viewer ? this.poll.getPollViewerStates(refs, ctx.viewer) : undefined,
+    ])
+    const pollFacepiles = await this.poll.getPollFacepiles(
+      polls,
+      pollAggs,
+      refs,
+      ctx.viewer,
+    )
+    const facepileDids: DidString[] = []
+    for (const key of pollFacepiles.keys()) {
+      const dids = pollFacepiles.get(key)
+      if (dids) facepileDids.push(...dids)
+    }
+    const profileState = await this.hydrateProfiles(
+      dedupeStrs(facepileDids),
+      ctx,
+    )
+    return mergeStates(profileState, {
+      polls,
+      pollAggs,
+      pollViewers,
+      pollFacepiles,
+      ctx,
+    })
+  }
+
+  // app.bsky.poll.getVotes#voteView
+  async hydratePollVotes(
+    uris: AtUriString[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [pollVotes, profileState] = await Promise.all([
+      this.poll.getPollVotes(uris, ctx.includeTakedowns),
+      this.hydrateProfiles(uris.map(didFromUri), ctx),
+    ])
+    return mergeStates(profileState, { pollVotes, ctx })
   }
 
   private async hydratePostBlocks(
@@ -1156,12 +1249,14 @@ export class Hydrator {
     const followUris = collections.get(app.bsky.graph.follow.$type) ?? []
     const verificationUris =
       collections.get(app.bsky.graph.verification.$type) ?? []
+    const pollTopicUris = collections.get(app.bsky.poll.topic.$type) ?? []
     const [
       posts,
       likes,
       reposts,
       follows,
       verifications,
+      polls,
       labels,
       profileState,
     ] = await Promise.all([
@@ -1170,6 +1265,7 @@ export class Hydrator {
       this.feed.getReposts(repostUris), // reason: repost
       this.graph.getFollows(followUris), // reason: follow
       this.graph.getVerifications(verificationUris), // reason: verified
+      this.poll.getPolls(pollTopicUris), // reason: poll-ended
       this.label.getLabelsForSubjects(uris, ctx.labelers),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
@@ -1195,6 +1291,7 @@ export class Hydrator {
       reposts,
       follows,
       verifications,
+      polls,
       labels,
       threadgates,
       ctx,
@@ -1623,6 +1720,18 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   return uris
 }
 
+const pollRefsFromPosts = (posts: Posts): ItemRef[] => {
+  const refs: ItemRef[] = []
+  for (const uri of posts.keys()) {
+    const item = posts.get(uri)
+    const embed = item?.record?.embed
+    if (embed && isPollEmbedType(embed)) {
+      refs.push({ uri: embed.poll.uri, cid: embed.poll.cid })
+    }
+  }
+  return refs
+}
+
 /**
  * Returns every strongRef the post embedded as `external.associatedRefs`,
  * regardless of collection. Callers are responsible for filtering to NSIDs
@@ -1715,6 +1824,11 @@ export const mergeStates = (
     posts: mergeMaps(stateA.posts, stateB.posts),
     postAggs: mergeMaps(stateA.postAggs, stateB.postAggs),
     postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
+    polls: mergeMaps(stateA.polls, stateB.polls),
+    pollVotes: mergeMaps(stateA.pollVotes, stateB.pollVotes),
+    pollAggs: mergeMaps(stateA.pollAggs, stateB.pollAggs),
+    pollViewers: mergeMaps(stateA.pollViewers, stateB.pollViewers),
+    pollFacepiles: mergeMaps(stateA.pollFacepiles, stateB.pollFacepiles),
     threadContexts: mergeMaps(stateA.threadContexts, stateB.threadContexts),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),

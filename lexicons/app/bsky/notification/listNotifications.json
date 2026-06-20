@@ -75,7 +75,8 @@
             "like-via-repost",
             "repost-via-repost",
             "subscribed-post",
-            "contact-match"
+            "contact-match",
+            "poll-ended"
           ]
         },
         "reasonSubject": { "type": "string", "format": "at-uri" },

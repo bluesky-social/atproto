@@ -73,6 +73,8 @@ import putPreferencesV2 from './app/bsky/notification/putPreferencesV2.js'
 import registerPush from './app/bsky/notification/registerPush.js'
 import unregisterPush from './app/bsky/notification/unregisterPush.js'
 import updateSeen from './app/bsky/notification/updateSeen.js'
+import getPoll from './app/bsky/poll/getPoll.js'
+import getVotes from './app/bsky/poll/getVotes.js'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState.js'
 import getConfig from './app/bsky/unspecced/getConfig.js'
 import getOnboardingSuggestedStarterPacks from './app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
@@ -193,6 +195,8 @@ export default function (server: Server, ctx: AppContext) {
   putPreferencesV2(server, ctx)
   registerPush(server, ctx)
   unregisterPush(server, ctx)
+  getPoll(server, ctx)
+  getVotes(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
