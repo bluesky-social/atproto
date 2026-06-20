@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetPostThread,
@@ -40,13 +40,14 @@ describe('appview thread views', () => {
     await sc.like(alice, sc.replies[alice][0].ref)
     await sc.like(alice, sc.replies[bob][0].ref)
     await sc.like(alice, sc.replies[carol][0].ref)
-  }, 20_000) // @NOTE seeding can take a while
 
-  beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
-    await network.processAll()
   }, 20_000) // @NOTE seeding can take a while
+
+  beforeEach(async () => {
+    await network.processAll()
+  })
 
   afterAll(async () => {
     await network?.close()
