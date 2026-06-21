@@ -30,13 +30,35 @@ const createTestDispatcher = (): Agent =>
  * dispatcher created here to a `fetch` backed by a different undici version
  * throws `InvalidArgumentError: invalid onRequestStart method`, because the
  * internal request-handler interface changed between versions.
+ *
+ * For the same cross-version reason, undici's `fetch` only accepts a string,
+ * `URL`, or *its own* `Request` class — a global `Request` (e.g. the one
+ * `@atproto/api` builds) is stringified to `"[object Request]"`. We therefore
+ * destructure a global `Request` into a `(url, init)` pair, forwarding the body
+ * as a stream (`duplex: 'half'`) so it is never buffered or assumed consumed.
  */
-const dispatcherFetch = (dispatcher: Dispatcher): typeof globalThis.fetch =>
-  ((input: RequestInfo, init?: RequestInit) =>
-    undiciFetch(input, {
-      ...init,
-      dispatcher,
-    })) as unknown as typeof globalThis.fetch
+const dispatcherFetch =
+  (dispatcher: Dispatcher): typeof globalThis.fetch =>
+  (input, init) => {
+    if (input instanceof Request) {
+      return undiciFetch(input.url, {
+        method: input.method,
+        headers: [...input.headers],
+        body: input.body,
+        duplex: input.body ? 'half' : undefined,
+        signal: input.signal,
+        ...init,
+        dispatcher,
+      } as unknown as RequestInit) as unknown as Promise<Response>
+    }
+    return undiciFetch(
+      input as unknown as RequestInfo,
+      {
+        ...init,
+        dispatcher,
+      } as unknown as RequestInit,
+    ) as unknown as Promise<Response>
+  }
 
 export type TestFetch = typeof globalThis.fetch & {
   /** Closes the underlying connection pool. */
