@@ -8,12 +8,15 @@ name: Sync from upstream
 # Requirements:
 #   - An `upstream` reference to bluesky-social/atproto. This workflow adds it at
 #     runtime, so no remote config is needed in the repo.
-#
-# Note on tokens/CI: the PR is opened with the default GITHUB_TOKEN, which by
-# design does NOT trigger the `on: pull_request` CI in repo.yaml. That is fine
-# here because the PR is opened as a draft (we don't want CI yet). When a human
-# marks it "Ready for review", that human-triggered `ready_for_review` event
-# does start CI. So no GitHub App / PAT is needed.
+#   - A GitHub App installed on this repo with these repository permissions:
+#       * Contents:      Read and write   (push the sync branch)
+#       * Pull requests: Read and write   (open the PR)
+#       * Workflows:     Read and write   (REQUIRED: the sync branch carries
+#                        .github/workflows/* changes from upstream, and the
+#                        default GITHUB_TOKEN is categorically forbidden from
+#                        pushing workflow files)
+#     Store the App ID in the `SYNC_UPSTREAM_APP_ID` repository variable and the
+#     private key in the `SYNC_UPSTREAM_PK` secret.
 
 on:
   workflow_dispatch:
@@ -35,11 +38,21 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.SYNC_UPSTREAM_APP_ID }}
+          private-key: ${{ secrets.SYNC_UPSTREAM_PK }}
+
       - name: Checkout main (full history)
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          # App token is required to push the sync branch, which contains
+          # .github/workflows/* changes that GITHUB_TOKEN may not write.
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Add upstream and fetch
         run: |
@@ -96,7 +109,7 @@ jobs:
 
       - name: Open pull request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: ${{ steps.branch.outputs.name }}
           UPSTREAM_REF: ${{ github.event.inputs.upstream_ref }}
           CONFLICTS: ${{ steps.merge.outputs.conflicts }}
