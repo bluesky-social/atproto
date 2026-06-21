@@ -35,7 +35,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     this.lastSeen = curr ?? 0
     this.poll()
     this.conn = await this.db.pool.connect()
-    await this.conn.query(`listen ${LabelChannel}`)
+    this.conn.query(`listen ${LabelChannel}`) // if this errors, unhandled rejection should cause process to exit
     this.conn.on('notification', (notif) => {
       if (notif.channel === LabelChannel) {
         this.poll()
