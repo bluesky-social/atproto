@@ -2,6 +2,10 @@ name: Repository CI
 
 on:
   pull_request:
+    # `ready_for_review` is not a default type, so without it marking a draft PR
+    # ready would not start CI. The jobs below additionally skip while the PR is
+    # still a draft, so CI only runs once a PR is marked ready for review.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
@@ -11,6 +15,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    # Skip while the PR is a draft. `test` and `verify` need `build`, so they are
+    # skipped automatically when this is skipped.
+    if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v6
@@ -71,6 +78,7 @@ jobs:
   changeset:
     name: Changeset
     runs-on: ubuntu-latest
+    if: false
     steps:
       - uses: actions/checkout@v4
         with:

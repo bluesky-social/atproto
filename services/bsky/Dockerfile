@@ -54,12 +54,16 @@ COPY ./packages/bsync ./packages/bsync
 COPY ./services/bsky ./services/bsky
 
 # install all deps
-RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
-RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
-RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm run --recursive --stream --filter '@atproto/crypto...' build > /dev/null
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm run --recursive --stream --filter '@atproto/bsky...' build > /dev/null
 # install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false > /dev/null
 
 # Uses assets from build stage to reduce build size
 FROM node:24.15-alpine3.23
@@ -80,7 +84,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "api.ts"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "api-zeppelin.js"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"

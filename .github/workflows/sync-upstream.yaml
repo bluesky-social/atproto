@@ -1,0 +1,156 @@
+name: Sync from upstream
+
+# Cuts a branch from bluesky-social/atproto (the `upstream` remote) and merges
+# our `main` into it, producing "upstream + our custom changes". It then opens a
+# PR back into `main` so CI (.github/workflows/repo.yaml) validates the result
+# before a human merges it.
+#
+# Requirements:
+#   - An `upstream` reference to bluesky-social/atproto. This workflow adds it at
+#     runtime, so no remote config is needed in the repo.
+#   - A GitHub App installed on this repo with these repository permissions:
+#       * Contents:      Read and write   (push the sync branch)
+#       * Pull requests: Read and write   (open the PR)
+#       * Workflows:     Read and write   (REQUIRED: the sync branch carries
+#                        .github/workflows/* changes from upstream, and the
+#                        default GITHUB_TOKEN is categorically forbidden from
+#                        pushing workflow files)
+#     Store the App ID in the `SYNC_UPSTREAM_APP_ID` repository variable and the
+#     private key in the `SYNC_UPSTREAM_PK` secret.
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: 'Upstream ref to sync from (branch, tag, or SHA)'
+        required: true
+        default: 'main'
+      branch_suffix:
+        description: 'Optional suffix for the sync branch name'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.SYNC_UPSTREAM_APP_ID }}
+          private-key: ${{ secrets.SYNC_UPSTREAM_PK }}
+
+      - name: Checkout main (full history)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # App token is required to push the sync branch, which contains
+          # .github/workflows/* changes that GITHUB_TOKEN may not write.
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/bluesky-social/atproto.git
+          git fetch upstream --no-tags "${{ github.event.inputs.upstream_ref }}"
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create sync branch from upstream
+        id: branch
+        run: |
+          DATE="$(date +'%Y-%m-%d')"
+          SUFFIX="${{ github.event.inputs.branch_suffix }}"
+          BRANCH="sync/upstream-${DATE}"
+          if [ -n "$SUFFIX" ]; then
+            BRANCH="${BRANCH}-${SUFFIX}"
+          fi
+          # Disambiguate if a branch for today already exists.
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            BRANCH="${BRANCH}-${{ github.run_number }}"
+          fi
+          echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
+          git checkout -b "$BRANCH" FETCH_HEAD
+
+      - name: Merge main into the sync branch
+        id: merge
+        run: |
+          set +e
+          git merge --no-ff --no-edit origin/main
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -eq 0 ]; then
+            echo "conflicts=false" >> "$GITHUB_OUTPUT"
+            echo "No conflicts merging origin/main."
+          else
+            CONFLICTED="$(git diff --name-only --diff-filter=U)"
+            echo "conflicts=true" >> "$GITHUB_OUTPUT"
+            {
+              echo 'files<<EOF'
+              echo "$CONFLICTED"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+            # Record the conflict markers so a human can resolve them in-branch.
+            git add -A
+            git commit --no-edit
+            echo "Committed conflict markers for: $CONFLICTED"
+          fi
+
+      - name: Push sync branch
+        run: git push origin "${{ steps.branch.outputs.name }}"
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+          UPSTREAM_REF: ${{ github.event.inputs.upstream_ref }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+          CONFLICT_FILES: ${{ steps.merge.outputs.files }}
+        run: |
+          if [ "$CONFLICTS" = "true" ]; then
+            TITLE="Sync upstream (${UPSTREAM_REF}) — conflicts to resolve"
+            BODY=$(cat <<EOF
+          Automated upstream sync.
+
+          This branch was cut from \`upstream/${UPSTREAM_REF}\` and \`origin/main\` was merged into it.
+
+          ⚠️ **Merge conflicts were committed as markers and must be resolved before merging.**
+
+          Conflicted files:
+          \`\`\`
+          ${CONFLICT_FILES}
+          \`\`\`
+
+          To resolve:
+          \`\`\`
+          git fetch origin
+          git checkout ${BRANCH}
+          # resolve conflict markers, then:
+          git add -A && git commit
+          git push
+          \`\`\`
+
+          Once resolved, mark this PR **Ready for review** to trigger CI.
+          EOF
+          )
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "$TITLE" --body "$BODY" --draft
+          else
+            TITLE="Sync upstream (${UPSTREAM_REF})"
+            BODY=$(cat <<EOF
+          Automated upstream sync.
+
+          This branch was cut from \`upstream/${UPSTREAM_REF}\` and \`origin/main\` was merged into it cleanly.
+
+          Mark this PR **Ready for review** to trigger CI, then merge once it is green.
+          EOF
+          )
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "$TITLE" --body "$BODY" --draft
+          fi
