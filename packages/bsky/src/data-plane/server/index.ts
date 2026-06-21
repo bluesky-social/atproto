@@ -36,6 +36,11 @@ export class DataPlaneServer {
           resolve()
         }
       })
+      // `server.close()` only resolves once all connections are closed, but it
+      // does not close idle keep-alive connections (e.g. those held open by the
+      // appview's data plane client). Force them closed so shutdown is not
+      // blocked waiting for them to hit the server's keepAliveTimeout.
+      this.server.closeAllConnections()
     })
   }
 }

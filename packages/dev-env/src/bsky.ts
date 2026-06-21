@@ -6,10 +6,14 @@ import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client } from '@atproto/lex'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
+import { createTestFetch } from './fetch.js'
 import { BskyConfig } from './types.js'
 export * from '@atproto/bsky'
 
 export class TestBsky {
+  // Pooled but non-keep-alive fetch so clients created here don't leave idle
+  // connections open that would block server shutdown.
+  private readonly fetch = createTestFetch()
   constructor(
     public url: string,
     public port: number,
@@ -132,13 +136,13 @@ export class TestBsky {
   }
 
   getAgent(): AtpAgent {
-    const agent = new AtpAgent({ service: this.url })
+    const agent = new AtpAgent({ service: this.url, fetch: this.fetch })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
   }
 
   getClient(): Client {
-    const client = new Client({ service: this.url })
+    const client = new Client({ service: this.url, fetch: this.fetch })
     client.setLabelers([EXAMPLE_LABELER])
     return client
   }
@@ -163,5 +167,6 @@ export class TestBsky {
     await this.dataplane.destroy()
     await this.sub.destroy()
     await this.db.close()
+    await this.fetch.destroy()
   }
 }

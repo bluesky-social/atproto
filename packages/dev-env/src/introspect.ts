@@ -49,6 +49,9 @@ export class IntrospectServer {
 
   async close() {
     this.server.close()
+    // Force idle keep-alive connections closed so shutdown is not blocked
+    // waiting for them to hit the server's keepAliveTimeout.
+    this.server.closeAllConnections()
     await events.once(this.server, 'close')
   }
 }

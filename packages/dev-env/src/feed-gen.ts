@@ -57,6 +57,9 @@ export class TestFeedGen {
         this.destroyed = true
         resolve()
       })
+      // Force idle keep-alive connections closed so shutdown is not blocked
+      // waiting for them to hit the server's keepAliveTimeout.
+      this.server.closeAllConnections()
     })
   }
 }

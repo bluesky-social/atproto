@@ -6,11 +6,15 @@ import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
+import { createTestFetch } from './fetch.js'
 import { ModeratorClient } from './moderator-client.js'
 import { DidAndKey, OzoneConfig } from './types.js'
 import { createDidAndKey } from './util.js'
 
 export class TestOzone {
+  // Pooled but non-keep-alive fetch so clients created here don't leave idle
+  // connections open that would block server shutdown.
+  private readonly fetch = createTestFetch()
   constructor(
     public url: string,
     public port: number,
@@ -104,7 +108,7 @@ export class TestOzone {
   }
 
   getAgent(): AtpAgent {
-    const agent = new AtpAgent({ service: this.url })
+    const agent = new AtpAgent({ service: this.url, fetch: this.fetch })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
   }
@@ -248,6 +252,7 @@ export class TestOzone {
   async close() {
     await this.daemon.destroy()
     await this.server.destroy()
+    await this.fetch.destroy()
   }
 }
 

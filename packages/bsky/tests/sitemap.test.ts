@@ -1,12 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, createTestFetch } from '@atproto/dev-env'
 
 describe('sitemap', () => {
   let network: TestNetwork
 
-  // Don't keep connections open after tests
-  const fetch = (url: string) =>
-    globalThis.fetch(url, { headers: { connection: 'close' } })
+  // Route requests through a pooled, non-keep-alive fetch so this suite doesn't
+  // leave idle connections open that would block server shutdown. (The
+  // `connection: close` header has no effect here: `connection` is a forbidden
+  // header name that undici silently drops.)
+  const fetch = createTestFetch()
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -16,6 +18,7 @@ describe('sitemap', () => {
 
   afterAll(async () => {
     await network?.close()
+    await fetch.destroy()
   })
 
   it('returns sitemap index', async () => {
