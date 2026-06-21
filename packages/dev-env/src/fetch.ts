@@ -7,17 +7,25 @@ import {
 } from 'undici'
 
 /**
- * An undici {@link Agent} tuned for tests: it still pools connections (so
- * several requests can run in parallel), but closes idle connections almost
- * immediately instead of keeping them alive.
+ * An undici {@link Agent} tuned for tests: it pools connections (so several
+ * requests can run in parallel) and keeps them alive briefly so they can be
+ * reused, but with a short idle timeout. The pool is force-closed on teardown
+ * via {@link TestFetch.destroy}, so this timeout only governs reuse during a
+ * run — it is kept well under the 10s `afterAll` budget as a safety net.
  */
 const createTestDispatcher = (): Agent =>
   new Agent({
     // Allow multiple concurrent connections per origin (parallelism).
     connections: 128,
-    // Effectively disable keep-alive: drop sockets as soon as they go idle.
-    keepAliveTimeout: 1,
-    keepAliveMaxTimeout: 1,
+    // Idle timeout before an unused socket is closed. Default is 4s; we lower
+    // it to 1s so leftover sockets disappear quickly while still allowing reuse
+    // across the back-to-back requests a test typically makes.
+    keepAliveTimeout: 1_000,
+    // Upper bound undici will honor for a server-advertised keep-alive hint
+    // (via the `keep-alive` header). Default is 600s; we cap it at 2s so a
+    // server promising a long-lived connection can't keep our sockets open
+    // anywhere near the 10s `afterAll` budget.
+    keepAliveMaxTimeout: 2_000,
   })
 
 /**
