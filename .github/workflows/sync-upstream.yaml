@@ -141,7 +141,7 @@ jobs:
           Once resolved, mark this PR **Ready for review** to trigger CI.
           EOF
           )
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY" --draft
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "$TITLE" --body "$BODY" --draft
           else
             TITLE="Sync upstream (${UPSTREAM_REF})"
             BODY=$(cat <<EOF
@@ -152,5 +152,5 @@ jobs:
           Mark this PR **Ready for review** to trigger CI, then merge once it is green.
           EOF
           )
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY" --draft
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "$TITLE" --body "$BODY" --draft
           fi
