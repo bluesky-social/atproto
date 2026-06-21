@@ -1,4 +1,10 @@
-import { Agent, Dispatcher } from 'undici'
+import {
+  Agent,
+  Dispatcher,
+  RequestInfo,
+  RequestInit,
+  fetch as undiciFetch,
+} from 'undici'
 
 /**
  * An undici {@link Agent} tuned for tests: it still pools connections (so
@@ -15,16 +21,22 @@ const createTestDispatcher = (): Agent =>
   })
 
 /**
- * Wraps `globalThis.fetch` so that requests are routed through the provided
+ * Wraps undici's `fetch` so that requests are routed through the provided
  * undici {@link Dispatcher}.
+ *
+ * We intentionally use undici's own `fetch` rather than `globalThis.fetch`:
+ * Node's built-in `fetch` is backed by the undici version bundled with the
+ * runtime, which may differ from the one this package depends on. Passing a
+ * dispatcher created here to a `fetch` backed by a different undici version
+ * throws `InvalidArgumentError: invalid onRequestStart method`, because the
+ * internal request-handler interface changed between versions.
  */
-const dispatcherFetch =
-  (dispatcher: Dispatcher): typeof globalThis.fetch =>
-  (input, init) =>
-    // `dispatcher` is supported by Node's undici-based `fetch` at runtime, but
-    // isn't part of the DOM `RequestInit` type (and the bundled undici types
-    // may differ in version), hence the cast.
-    globalThis.fetch(input, { ...init, dispatcher } as unknown as RequestInit)
+const dispatcherFetch = (dispatcher: Dispatcher): typeof globalThis.fetch =>
+  ((input: RequestInfo, init?: RequestInit) =>
+    undiciFetch(input, {
+      ...init,
+      dispatcher,
+    })) as unknown as typeof globalThis.fetch
 
 export type TestFetch = typeof globalThis.fetch & {
   /** Closes the underlying connection pool. */
