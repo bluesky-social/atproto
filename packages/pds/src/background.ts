@@ -44,12 +44,11 @@ export class BackgroundQueue<TContext = unknown> {
   // On destroy we stop accepting new tasks, but complete all pending/in-progress tasks.
   // The application calls this only once http connections have drained (tasks no longer being added).
   async destroy() {
-    if (!this.destroyed) {
-      this.abortController.abort()
-    } else {
+    if (this.destroyed) {
       dbLogger.warn('BackgroundQueue.destroy() called multiple times')
     }
 
+    this.abortController.abort()
     return this.processAll()
   }
 }
