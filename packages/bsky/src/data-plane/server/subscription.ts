@@ -87,7 +87,11 @@ export class RepoSubscription {
 
   async destroy() {
     this.abortController.abort()
-    await this.stop()
+    try {
+      await this.stop()
+    } finally {
+      await this.background.destroy()
+    }
   }
 
   async [Symbol.asyncDispose]() {

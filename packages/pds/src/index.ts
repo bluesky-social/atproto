@@ -142,8 +142,7 @@ export class PDS {
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
-    // @NOTE We use something smaller than tests hooks timeout
-    this.server.keepAliveTimeout = 50_000
+    this.server.keepAliveTimeout = 90_000
     this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
