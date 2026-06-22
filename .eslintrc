@@ -110,6 +110,7 @@
           "packages/lex/*/tsconfig.test.json",
           "packages/oauth/*/tsconfig.build.json",
           "packages/oauth/*/tsconfig.test.json",
+          "packages/oauth/*/tsconfig.lib.json",
           "packages/internal/*/tsconfig.build.json",
           "packages/internal/*/tsconfig.test.json",
           "packages/*/tsconfig.build.json",

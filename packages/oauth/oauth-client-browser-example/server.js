@@ -1,7 +1,4 @@
 import console from 'node:console'
-import { once } from 'node:events'
-import { createServer } from 'node:http'
-import { argv, env } from 'node:process'
 import files from './dist/files.json' with { type: 'json' }
 
 /**
@@ -17,8 +14,8 @@ export function middleware(
     if (err) console.error(err)
 
     const { statusCode, statusMessage } = err
-      ? { statusCode: 404, statusMessage: 'Not Found' }
-      : { statusCode: 500, statusMessage: 'Internal Server Error' }
+      ? { statusCode: 500, statusMessage: 'Internal Server Error' }
+      : { statusCode: 404, statusMessage: 'Not Found' }
 
     res
       .writeHead(statusCode, statusMessage, { 'content-type': 'text/plain' })
@@ -35,20 +32,4 @@ export function middleware(
   } else {
     next()
   }
-}
-
-export async function start(port = 0) {
-  const server = createServer(middleware)
-  server.listen(port)
-  await once(server, 'listening')
-  return server
-}
-
-if (import.meta.main) {
-  const port = Number(argv[2] || env.PORT || 0)
-  start(port).then((server) => {
-    const address = server.address()
-    const port = typeof address === 'string' ? address : address?.port
-    console.log(`Listening on http://127.0.0.1:${port}/`)
-  })
 }

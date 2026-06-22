@@ -20,7 +20,7 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-browser"
   },
-  "bin": "./server.js",
+  "bin": "./bin.js",
   "type": "module",
   "exports": {
     ".": {
@@ -32,10 +32,14 @@
     }
   },
   "files": [
+    "bin.js",
     "server.js",
     "files.d.ts",
     "dist"
   ],
+  "dependencies": {
+    "http-terminator": "^3.2.0"
+  },
   "devDependencies": {
     "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
     "@atproto/lex": "workspace:^",
