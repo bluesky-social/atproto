@@ -20,38 +20,6 @@ describe('verification-listener', () => {
 
     const jetstream = new WebSocketServer({ server })
     jetstream.on('connection', (ws) => {
-      const createEvent = {
-        kind: 'commit',
-        did: sc.dids.bob,
-        time_us: 123456789,
-        commit: {
-          rev: 'xyz',
-          operation: 'create',
-          collection: 'app.bsky.graph.verification',
-          rkey: 'abcdefg',
-          cid: 'xyz',
-          record: {
-            $type: 'app.bsky.graph.verification',
-            subject: sc.dids.alice,
-            handle: sc.accounts[sc.dids.alice].handle,
-            displayName: 'Alice',
-            createdAt: new Date().toISOString(),
-          } satisfies AppBskyGraphVerification.Record,
-        },
-      }
-
-      const deleteEvent = {
-        kind: 'commit',
-        did: sc.dids.bob,
-        time_us: 123456799,
-        commit: {
-          rev: 'yza',
-          operation: 'delete',
-          collection: 'app.bsky.graph.verification',
-          rkey: 'abcdefg',
-        },
-      }
-
       ws.send(JSON.stringify(createEvent))
       ws.send(JSON.stringify(deleteEvent))
     })
@@ -77,6 +45,38 @@ describe('verification-listener', () => {
 
     const sc = network.getSeedClient()
     await basicSeed(sc)
+
+    const createEvent = {
+      kind: 'commit',
+      did: sc.dids.bob,
+      time_us: 123456789,
+      commit: {
+        rev: 'xyz',
+        operation: 'create',
+        collection: 'app.bsky.graph.verification',
+        rkey: 'abcdefg',
+        cid: 'xyz',
+        record: {
+          $type: 'app.bsky.graph.verification',
+          subject: sc.dids.alice,
+          handle: sc.accounts[sc.dids.alice].handle,
+          displayName: 'Alice',
+          createdAt: new Date().toISOString(),
+        } satisfies AppBskyGraphVerification.Record,
+      },
+    }
+
+    const deleteEvent = {
+      kind: 'commit',
+      did: sc.dids.bob,
+      time_us: 123456799,
+      commit: {
+        rev: 'yza',
+        operation: 'delete',
+        collection: 'app.bsky.graph.verification',
+        rkey: 'abcdefg',
+      },
+    }
 
     const adminAgent = network.pds.getAgent()
     await adminAgent.login({
