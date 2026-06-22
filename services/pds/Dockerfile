@@ -55,14 +55,11 @@ COPY ./packages/bsync ./packages/bsync
 COPY ./services/pds ./services/pds
 
 # install all deps
-RUN --mount=type=cache,target=/root/.pnpm-store \
-    PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile > /dev/null
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
-RUN --mount=type=cache,target=/root/.pnpm-store \
-    pnpm run --recursive --stream --filter '@atproto/pds...' build
+RUN pnpm run --recursive --stream --filter '@atproto/pds...' build
 # install only prod deps, hoisted to root node_modules dir
-RUN --mount=type=cache,target=/root/.pnpm-store \
-    pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false > /dev/null
+RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 # Uses assets from build stage to reduce build size
 FROM node:24.15-alpine3.23
