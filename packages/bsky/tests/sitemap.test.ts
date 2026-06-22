@@ -10,13 +10,8 @@ describe('sitemap', () => {
     })
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('returns sitemap index', async () => {
     const response = await fetch(

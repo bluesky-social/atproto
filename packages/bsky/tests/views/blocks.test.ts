@@ -67,13 +67,8 @@ describe('pds views with blocking', () => {
     danBlockUri = danBlockCarol.uri
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('blocks thread post', async () => {
     const { data: threadAlice } = await agent.api.app.bsky.feed.getPostThread(

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util.js'
@@ -21,16 +21,14 @@ describe('pds quote views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await quotesSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     eve = sc.dids.eve
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches post quotes', async () => {
     const alicePostQuotes = await agent.api.app.bsky.feed.getQuotes(

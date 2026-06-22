@@ -53,13 +53,8 @@ describe('pds author feed views', () => {
     eve = sc.dids.eve
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
   // @TODO(bsky) blocked by record takedown via labels.

@@ -51,13 +51,8 @@ describe('label hydration', () => {
     })
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('hydrates labels based on a supplied labeler header', async () => {
     AtpAgent.configure({ appLabelers: [alice] })

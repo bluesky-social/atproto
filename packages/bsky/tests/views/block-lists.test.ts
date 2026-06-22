@@ -38,13 +38,8 @@ describe('pds views with blocking from block lists', () => {
     )
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   let listUri: string
 

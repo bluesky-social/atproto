@@ -293,11 +293,15 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    await Promise.all([
-      this.ctx.featureGatesClient.destroy(),
-      this.terminator?.terminate(),
-      this.ctx.etcd?.close(),
-    ])
+    try {
+      await this.ctx.featureGatesClient.destroy()
+    } finally {
+      try {
+        await this.terminator?.terminate()
+      } finally {
+        await this.ctx.etcd?.close()
+      }
+    }
   }
 
   async [Symbol.asyncDispose]() {

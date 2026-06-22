@@ -93,13 +93,8 @@ describe('pds profile views', () => {
     noprofile = sc.dids.noprofile
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
 

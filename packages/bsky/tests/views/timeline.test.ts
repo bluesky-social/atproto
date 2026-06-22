@@ -54,13 +54,8 @@ describe('timeline views', () => {
     })
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels

@@ -55,13 +55,8 @@ describe('entryway auth', () => {
     alice = sc.dids.alice
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('works', async () => {
     const signer = new jose.SignJWT({ scope: 'com.atproto.access' })

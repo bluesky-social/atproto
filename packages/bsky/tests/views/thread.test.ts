@@ -45,13 +45,8 @@ describe('appview thread views', () => {
     await sc.repost(bob, sc.replies[alice][0].ref)
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(

@@ -43,17 +43,9 @@ describe('private data', () => {
     stashClient = network.bsky.ctx.stashClient
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterEach(async () => {
-    await clearPrivateData(db)
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterEach(async () => clearPrivateData(network.bsky.db))
+  afterAll(async () => network?.close())
 
   describe('create', () => {
     it('creates entry', async () => {

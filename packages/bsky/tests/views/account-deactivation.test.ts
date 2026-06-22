@@ -24,13 +24,8 @@ describe('bsky account deactivation', () => {
     )
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('does not return deactivated profiles', async () => {
     const attempt = agent.api.app.bsky.actor.getProfile({

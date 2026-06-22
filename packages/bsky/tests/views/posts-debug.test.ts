@@ -24,17 +24,11 @@ describe('post views w/ debug field', () => {
     await basicSeed(sc)
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
+  beforeEach(async () => network.processAll())
   afterEach(() => {
     network.bsky.ctx.cfg.debugFieldAllowedDids.clear()
   })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  afterAll(async () => network?.close())
 
   it(`does not include debug field for unauthed requests`, async () => {
     network.bsky.ctx.cfg.debugFieldAllowedDids.add(sc.dids.bob)

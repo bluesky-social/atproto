@@ -52,13 +52,8 @@ describe('pds posts views', () => {
     })
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches posts', async () => {
     const uris = [

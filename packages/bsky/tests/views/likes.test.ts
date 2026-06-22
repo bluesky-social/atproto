@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
 import {
@@ -31,7 +31,6 @@ describe('pds like views', () => {
       email: 'frankie@frankie.com',
       password: 'password',
     })
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -39,9 +38,8 @@ describe('pds like views', () => {
     frankie = sc.dids.frankie
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   const getCursors = (items: { createdAt?: string }[]) =>
     items.map((item) => item.createdAt ?? constantDate)

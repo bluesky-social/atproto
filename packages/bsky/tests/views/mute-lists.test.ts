@@ -31,13 +31,8 @@ describe('bsky views with mutes from mute lists', () => {
     await sc.follow(dan, carol)
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   let listUri: string
   let listCid: string

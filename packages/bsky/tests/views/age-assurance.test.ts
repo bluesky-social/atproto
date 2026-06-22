@@ -85,10 +85,10 @@ describe('age assurance views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
-
     actorDid = sc.dids.alice
   })
+
+  beforeEach(async () => network.processAll())
 
   beforeEach(async () => {
     // @TODO Use the clearMocks setting in the configuration instead of:
@@ -101,13 +101,8 @@ describe('age assurance views', () => {
     await clearActorAgeAssurance(db)
   })
 
-  afterAll(async () => {
-    try {
-      await network?.close()
-    } finally {
-      await kwsServer?.stop()
-    }
-  })
+  afterAll(async () => network?.close())
+  afterAll(async () => kwsServer?.stop())
 
   const getAgeAssurance = async (did: string) => {
     const { data } = await agent.app.bsky.unspecced.getAgeAssuranceState(

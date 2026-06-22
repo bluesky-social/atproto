@@ -21,13 +21,8 @@ describe('server', () => {
     alice = sc.dids.alice
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('preserves 404s.', async () => {
     const response = await fetch(`${network.bsky.url}/unknown`)

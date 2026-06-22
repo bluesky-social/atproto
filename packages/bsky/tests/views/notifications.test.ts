@@ -102,13 +102,8 @@ describe('notification views', () => {
     blocked = sc.dids.blocked
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   const sortNotifs = (
     notifs: AppBskyNotificationListNotifications.Notification[],

@@ -56,13 +56,8 @@ describe('known followers (social proof)', () => {
     )
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   /*
    * Note that this test arbitrarily uses `getFollows` bc atm it returns

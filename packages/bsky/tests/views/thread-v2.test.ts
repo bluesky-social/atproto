@@ -56,13 +56,8 @@ describe('appview thread views v2', () => {
     labelerDid = network.bsky.ctx.cfg.modServiceDid
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('not found anchor', () => {
     it('returns not found error', async () => {

@@ -101,13 +101,8 @@ describe('bsky actor likes feed views', () => {
     greta = sc.dids.greta
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('does not include reference lists in getActorLists', async () => {
     const view = await agent.app.bsky.graph.getLists({

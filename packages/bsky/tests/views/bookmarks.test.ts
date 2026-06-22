@@ -51,9 +51,7 @@ describe('appview bookmarks views', () => {
     dan = sc.dids.dan
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
+  beforeEach(async () => network.processAll())
 
   afterEach(async () => {
     vi.resetAllMocks()
@@ -61,9 +59,7 @@ describe('appview bookmarks views', () => {
     await clearBookmarks(db)
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  afterAll(async () => network?.close())
 
   const get = async (actor: string, limit?: number, cursor?: string) =>
     agent.app.bsky.bookmark.getBookmarks(

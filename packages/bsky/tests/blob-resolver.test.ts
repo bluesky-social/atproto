@@ -23,13 +23,8 @@ describe('blob resolver', () => {
     fileSize = sc.posts[fileDid][0].images[0].image.size
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('resolves blob with good signature check.', async () => {
     const response = await request(

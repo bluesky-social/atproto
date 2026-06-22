@@ -22,13 +22,8 @@ describe('postgates', () => {
     users = result.users
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe(`quotee <-> quoter`, () => {
     it(`quotee detaches own post from quoter`, async () => {

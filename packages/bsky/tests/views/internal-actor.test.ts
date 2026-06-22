@@ -37,13 +37,8 @@ describe('internal actor views', () => {
     )
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('getProfiles', () => {
     const getProfiles = async (

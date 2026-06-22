@@ -14,13 +14,8 @@ describe('get config', () => {
       agent = network.bsky.getAgent()
     })
 
-    beforeEach(async () => {
-      await network.processAll()
-    })
-
-    afterAll(async () => {
-      await network?.close()
-    })
+    beforeEach(async () => network.processAll())
+    afterAll(async () => network?.close())
 
     it('omits the live now config', async () => {
       const res = await agent.app.bsky.unspecced.getConfig()

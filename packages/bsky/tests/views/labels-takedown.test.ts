@@ -131,13 +131,8 @@ describe('bsky takedown labels', () => {
     await network.bsky.db.db.insertInto('label').values(labels).execute()
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('takesdown profiles', async () => {
     const attempt = agent.api.app.bsky.actor.getProfile({

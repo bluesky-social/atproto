@@ -42,13 +42,8 @@ describe('bsky needs-review labels', () => {
     AtpAgent.configure({ appLabelers: [network.ozone.ctx.cfg.service.did] })
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('account-level', () => {
     beforeAll(async () => {

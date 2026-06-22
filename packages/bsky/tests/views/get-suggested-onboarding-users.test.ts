@@ -87,14 +87,9 @@ describe('getSuggestedOnboardingUsers', () => {
     seededUsers = result.users
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-    await mockServer?.stop()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => mockServer?.stop())
 
   describe(`basic handling`, () => {
     beforeAll(() => {

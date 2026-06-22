@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyGraphGetFollowers,
   AppBskyGraphGetFollows,
@@ -23,13 +23,11 @@ describe('pds follow views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await followsSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // TODO(bsky) blocks followers by actor takedown via labels
   // TODO(bsky) blocks follows by actor takedown via labels

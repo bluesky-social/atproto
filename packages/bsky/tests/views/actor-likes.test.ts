@@ -26,13 +26,8 @@ describe('bsky actor likes feed views', () => {
     carol = sc.dids.carol
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('returns posts liked by actor', async () => {
     const {

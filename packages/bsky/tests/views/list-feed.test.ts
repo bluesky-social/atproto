@@ -35,13 +35,8 @@ describe('list feed views', () => {
     await sc.addToList(alice, bob, listRef)
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches list feed', async () => {
     const res = await agent.api.app.bsky.feed.getListFeed(

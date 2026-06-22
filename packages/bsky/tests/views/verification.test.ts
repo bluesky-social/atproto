@@ -64,13 +64,8 @@ describe('verification views', () => {
       .execute()
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('profile views', () => {
     const testCases: ProfileViewTestCase[] = [

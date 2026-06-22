@@ -10,9 +10,7 @@ describe('redis cache', () => {
     redis = new Redis({ host: process.env.REDIS_HOST || '' })
   })
 
-  afterAll(async () => {
-    await redis.destroy()
-  })
+  afterAll(async () => redis.destroy())
 
   it('caches according to namespace', async () => {
     const ns1 = redis.withNamespace('ns1')

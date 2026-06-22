@@ -51,13 +51,8 @@ describe.skip('pds actor search views', () => {
     )
   })
 
-  beforeEach(async () => {
-    await network.processAll(50_000)
-  }, 55_000)
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll(50_000), 50_100)
+  afterAll(async () => network?.close())
 
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(

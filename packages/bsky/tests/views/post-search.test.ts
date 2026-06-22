@@ -51,19 +51,8 @@ describe('appview search', () => {
     nonTaggedResults = [post2.ref.uriStr, post0.ref.uriStr]
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    if (network) {
-      await deleteTags(network.bsky.db.db, {
-        uri: post1.ref.uriStr,
-      })
-
-      await network.close()
-    }
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe(`post search with 'top' sort`, () => {
     type TestCase = {
@@ -203,22 +192,6 @@ const createTag = async (
     .updateTable('record')
     .set({
       tags: JSON.stringify([opts.val]),
-    })
-    .where('uri', '=', opts.uri)
-    .returningAll()
-    .execute()
-}
-
-const deleteTags = async (
-  db: DatabaseSchema,
-  opts: {
-    uri: string
-  },
-) => {
-  await db
-    .updateTable('record')
-    .set({
-      tags: JSON.stringify([]),
     })
     .where('uri', '=', opts.uri)
     .returningAll()

@@ -33,13 +33,8 @@ describe('label hydration', () => {
     })
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('returns labels based for a subject', async () => {
     const { data } = await pdsAgent.api.com.atproto.label.queryLabels(

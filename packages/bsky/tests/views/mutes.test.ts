@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyGraphGetMutes, AtpAgent, ids } from '@atproto/api'
 import {
   SeedClient,
@@ -56,9 +56,8 @@ describe('mute views', () => {
     }
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('flags mutes in threads', async () => {
     const res = await agent.api.app.bsky.feed.getPostThread(

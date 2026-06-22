@@ -27,13 +27,8 @@ describe('pds user search views', () => {
       .execute()
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(

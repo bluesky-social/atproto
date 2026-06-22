@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetRepostedBy, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, repostsSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
@@ -19,14 +19,12 @@ describe('pds repost views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await repostsSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches reposted-by for a post', async () => {
     const view = await agent.api.app.bsky.feed.getRepostedBy(

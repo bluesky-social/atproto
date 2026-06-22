@@ -49,13 +49,8 @@ describe('pds thread views', () => {
     await sc.follow(dan, carol)
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it(`[A] -> [B], A blocks B, viewed as C`, async () => {
     const A = await sc.post(alice, `A`)

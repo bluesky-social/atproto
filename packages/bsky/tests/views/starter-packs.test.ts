@@ -82,13 +82,8 @@ describe('starter packs', () => {
     )
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('gets actor starter packs.', async () => {
     const { data } = await agent.api.app.bsky.graph.getActorStarterPacks({

@@ -35,14 +35,9 @@ describe('getTrends', () => {
     users = result.users
   })
 
-  beforeEach(async () => {
-    await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network?.close()
-    await mockTrendServer?.stop()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => mockTrendServer?.stop())
 
   describe(`basic handling`, () => {
     beforeAll(() => {
@@ -122,6 +117,10 @@ class MockTrendsServer {
 
   async stop() {
     await this.terminator.terminate()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.stop()
   }
 
   get url() {
