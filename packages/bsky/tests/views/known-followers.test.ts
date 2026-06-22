@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { knownFollowersSeed } from '../seed/known-followers.js'
@@ -54,13 +54,10 @@ describe('known followers (social proof)', () => {
       { createdAt: new Date().toISOString(), subject: dids.mix_sp_block_res },
       seedClient.getHeaders(dids.mix_sub_1),
     )
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   /*
    * Note that this test arbitrarily uses `getFollows` bc atm it returns

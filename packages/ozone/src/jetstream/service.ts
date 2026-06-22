@@ -99,7 +99,9 @@ export class Jetstream {
   /**
    * Closes the WebSocket connection.
    */
-  close() {
+  async close() {
+    // @TODO This should return a promise that fulfills when the connection is
+    // fully closed.
     this.ws?.ws?.close()
   }
 }

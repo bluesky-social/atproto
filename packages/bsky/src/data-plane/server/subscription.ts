@@ -7,52 +7,95 @@ import { Database } from './db/index.js'
 import { IndexingService } from './indexing/index.js'
 
 export class RepoSubscription {
-  firehose: Firehose
-  runner: MemoryRunner
-  background: BackgroundQueue
-  indexingSvc: IndexingService
+  private readonly abortController = new AbortController()
+  private current?: ReturnType<typeof createFirehose>
+  readonly background: BackgroundQueue<Database>
+  readonly indexingSvc: IndexingService
+  private readonly service: string
+  private readonly idResolver: IdResolver
 
-  constructor(
-    public opts: { service: string; db: Database; idResolver: IdResolver },
-  ) {
-    const { service, db, idResolver } = opts
-    this.background = new BackgroundQueue(db)
-    this.indexingSvc = new IndexingService(db, idResolver, this.background)
-
-    const { runner, firehose } = createFirehose({
-      idResolver,
-      service,
-      indexingSvc: this.indexingSvc,
+  constructor({
+    service,
+    db,
+    idResolver,
+  }: {
+    service: string
+    db: Database
+    idResolver: IdResolver
+  }) {
+    this.service = service
+    this.idResolver = idResolver
+    this.background = new BackgroundQueue(db, {
+      // @TODO This has historically been using the default concurrency
+      // (Infinity) but we may want to limit this in the future to avoid
+      // overloading the database with indexing tasks.
+      concurrency: Number.POSITIVE_INFINITY,
     })
-    this.runner = runner
-    this.firehose = firehose
+    this.indexingSvc = new IndexingService(db, idResolver, this.background)
   }
 
-  start() {
-    this.firehose.start()
+  get destroyed() {
+    return this.abortController.signal.aborted
+  }
+
+  get running() {
+    return this.current != null
+  }
+
+  getCursor() {
+    return this.current?.runner.getCursor()
+  }
+
+  async start() {
+    this.abortController.signal.throwIfAborted()
+
+    if (!this.current) {
+      this.current = createFirehose({
+        idResolver: this.idResolver,
+        service: this.service,
+        indexingSvc: this.indexingSvc,
+      })
+      void this.current.firehose.start()
+    }
+  }
+
+  async stop() {
+    try {
+      if (this.current) {
+        const { firehose, runner } = this.current
+        this.current = undefined
+        try {
+          await firehose.destroy()
+        } finally {
+          await runner.destroy()
+        }
+      }
+    } finally {
+      await this.background.processAll()
+    }
   }
 
   async restart() {
-    await this.destroy()
-    const { runner, firehose } = createFirehose({
-      idResolver: this.opts.idResolver,
-      service: this.opts.service,
-      indexingSvc: this.indexingSvc,
-    })
-    this.runner = runner
-    this.firehose = firehose
-    this.start()
+    await this.stop()
+    void this.start()
   }
 
   async processAll() {
-    await this.runner.processAll()
+    await this.current?.runner.processAll()
     await this.background.processAll()
   }
 
   async destroy() {
-    await this.firehose.destroy()
-    await this.runner.destroy()
-    await this.background.processAll()
+    this.abortController.abort()
+    try {
+      await this.stop()
+    } finally {
+      await this.background.destroy()
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

@@ -132,7 +132,7 @@ describe('report-assignment', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('can get assignment history', async () => {

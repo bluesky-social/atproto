@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedDefs, AtUri, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -47,13 +47,10 @@ describe('pds thread views', () => {
     await sc.follow(dan, alice)
     await sc.follow(dan, bob)
     await sc.follow(dan, carol)
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it(`[A] -> [B], A blocks B, viewed as C`, async () => {
     const A = await sc.post(alice, `A`)

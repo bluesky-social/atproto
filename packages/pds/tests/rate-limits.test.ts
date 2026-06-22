@@ -27,7 +27,7 @@ describe('rate limits', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('rate limits by ip', async () => {

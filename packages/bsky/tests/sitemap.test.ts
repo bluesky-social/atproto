@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { TestNetwork } from '@atproto/dev-env'
 
 describe('sitemap', () => {
@@ -10,9 +10,8 @@ describe('sitemap', () => {
     })
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('returns sitemap index', async () => {
     const response = await fetch(

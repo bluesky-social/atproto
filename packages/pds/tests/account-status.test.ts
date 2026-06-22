@@ -19,7 +19,7 @@ describe('account-status', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('takedown + activation triggers an error', async () => {

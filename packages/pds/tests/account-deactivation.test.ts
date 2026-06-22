@@ -39,7 +39,7 @@ describe('account deactivation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('deactivates account', async () => {

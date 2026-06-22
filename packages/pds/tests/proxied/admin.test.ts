@@ -69,7 +69,7 @@ describe('proxies admin requests', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('creates reports of a repo.', async () => {
