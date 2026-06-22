@@ -30,7 +30,6 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "await-lock": "^3.0.0",
-    "http-terminator": "^3.2.0",
     "multiformats": "^13.0.0",
     "tlds": "^1.234.0",
     "zod": "^3.23.8"
@@ -38,6 +37,7 @@
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "@jest/globals": "^28.1.3",
+    "http-terminator": "^3.2.0",
     "jest": "^30.0.0",
     "prettier": "^3.2.5"
   },

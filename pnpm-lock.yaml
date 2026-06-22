@@ -307,9 +307,6 @@ importers:
       await-lock:
         specifier: ^3.0.0
         version: 3.0.0
-      http-terminator:
-        specifier: ^3.2.0
-        version: 3.2.0
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
@@ -326,6 +323,9 @@ importers:
       '@jest/globals':
         specifier: ^28.1.3
         version: 28.1.3
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
@@ -2132,9 +2132,6 @@ importers:
       '@atproto/ws-client':
         specifier: workspace:^
         version: link:../ws-client
-      http-terminator:
-        specifier: ^3.2.0
-        version: 3.2.0
       ws:
         specifier: ^8.12.0
         version: 8.18.3
@@ -2151,6 +2148,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.18.2
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -2160,9 +2160,6 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
-      http-terminator:
-        specifier: ^3.2.0
-        version: 3.2.0
       ws:
         specifier: ^8.12.0
         version: 8.18.3
@@ -2173,6 +2170,9 @@ importers:
       get-port:
         specifier: ^6.1.2
         version: 6.1.2
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
