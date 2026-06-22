@@ -60,8 +60,6 @@ export class RepoSubscription {
   }
 
   async stop() {
-    this.abortController.signal.throwIfAborted()
-
     try {
       if (this.current) {
         const { firehose, runner } = this.current
