@@ -105,17 +105,19 @@ export class OzoneService {
     // so we need to sync them from env var to the database
     await this.seedInitialMembers()
 
-    const { db, backgroundQueue } = this.ctx
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
-          idleCount: db.pool.idleCount,
-          totalCount: db.pool.totalCount,
-          waitingCount: db.pool.waitingCount,
+          idleCount: this.ctx.db.pool.idleCount,
+          totalCount: this.ctx.db.pool.totalCount,
+          waitingCount: this.ctx.db.pool.waitingCount,
         },
         'db pool stats',
       )
-      dbLogger.info(backgroundQueue.getStats(), 'background queue stats')
+      dbLogger.info(
+        this.ctx.backgroundQueue.getStats(),
+        'background queue stats',
+      )
     }, 10000)
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
@@ -129,12 +131,36 @@ export class OzoneService {
   }
 
   async destroy(): Promise<void> {
-    await this.terminator?.terminate()
-    await this.ctx.backgroundQueue.destroy()
-    await this.ctx.sequencer.destroy()
-    await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
+
+    console.time('ozoneService.destroy: terminator')
+    try {
+      await this.terminator?.terminate()
+    } finally {
+      console.timeEnd('ozoneService.destroy: terminator')
+
+      console.time('ozoneService.destroy: backgroundQueue')
+      try {
+        await this.ctx.backgroundQueue.destroy()
+      } finally {
+        console.timeEnd('ozoneService.destroy: backgroundQueue')
+
+        console.time('ozoneService.destroy: sequencer')
+        try {
+          await this.ctx.sequencer.destroy()
+        } finally {
+          console.timeEnd('ozoneService.destroy: sequencer')
+
+          console.time('ozoneService.destroy: db')
+          try {
+            await this.ctx.db.close()
+          } finally {
+            console.timeEnd('ozoneService.destroy: db')
+          }
+        }
+      }
+    }
   }
 }
 

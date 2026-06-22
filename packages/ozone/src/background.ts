@@ -76,7 +76,8 @@ export class BackgroundQueue {
   }
 
   async processAll() {
-    await this.queue.onIdle()
+    const { queue } = this
+    if (queue.size || queue.pending) await queue.onIdle()
   }
 
   /**
@@ -86,8 +87,13 @@ export class BackgroundQueue {
    * only once http connections have drained (tasks no longer being added).
    */
   async destroy() {
+    if (this.destroyed) {
+      console.warn('BackgroundQueue.destroy() called multiple times')
+      return
+    }
+
     this.abortController.abort()
-    await this.queue.onIdle()
+    await this.processAll()
   }
 }
 

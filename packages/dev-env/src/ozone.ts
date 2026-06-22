@@ -2,6 +2,7 @@ import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
+import { allFulfilled } from '@atproto/common-web'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
@@ -246,7 +247,7 @@ export class TestOzone {
   }
 
   async close() {
-    await Promise.all([
+    await allFulfilled([
       //
       this.daemon.destroy(),
       this.server.destroy(),
