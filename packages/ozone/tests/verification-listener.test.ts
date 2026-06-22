@@ -68,9 +68,9 @@ describe('verification-listener', () => {
   })
 
   beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
   afterAll(async () => relay.close())
   afterAll(async () => terminator?.terminate())
-  afterAll(async () => network?.close())
 
   it('indexes new and revoked verifications', async () => {
     const { verificationListener } = network.ozone.daemon.ctx
