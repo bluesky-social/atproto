@@ -8,6 +8,7 @@
     },
     "chatPreference": {
       "type": "object",
+      "description": "Deprecated: use chat.bsky.notification preferences instead. This will only return a default value.",
       "required": ["include", "push"],
       "properties": {
         "include": { "type": "string", "knownValues": ["all", "accepted"] },
@@ -49,7 +50,11 @@
         "verified"
       ],
       "properties": {
-        "chat": { "type": "ref", "ref": "#chatPreference" },
+        "chat": {
+          "type": "ref",
+          "ref": "#chatPreference",
+          "description": "Deprecated: use chat.bsky.notification preferences instead. This will only return a default value."
+        },
         "follow": { "type": "ref", "ref": "#filterablePreference" },
         "like": { "type": "ref", "ref": "#filterablePreference" },
         "likeViaRepost": { "type": "ref", "ref": "#filterablePreference" },
