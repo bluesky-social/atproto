@@ -48,12 +48,11 @@
       }
     },
     "directConvoMember": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
       "properties": {}
     },
     "groupConvoMember": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. A current group convo member.",
+      "description": "A current group convo member.",
       "type": "object",
       "required": ["role"],
       "properties": {
@@ -70,7 +69,7 @@
       }
     },
     "pastGroupConvoMember": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. A past group convo member.",
+      "description": "A past group convo member.",
       "type": "object",
       "required": [],
       "properties": {}

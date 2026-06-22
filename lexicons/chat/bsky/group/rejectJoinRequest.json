@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Rejects a request to join a group (via join link) the user owns. Action taken by the group owner.",
+      "description": "Rejects a request to join a group (via join link) the user owns. Action taken by the group owner.",
       "errors": [{ "name": "InvalidConvo" }, { "name": "InsufficientRole" }],
       "input": {
         "encoding": "application/json",
