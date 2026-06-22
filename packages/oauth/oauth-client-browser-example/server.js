@@ -1,5 +1,5 @@
 import console from 'node:console'
-import files from './dist/files.json' with { type: 'json' }
+import files from '@atproto/oauth-client-browser-example' with { type: 'json' }
 
 /**
  * @param {import('http').IncomingMessage} req
