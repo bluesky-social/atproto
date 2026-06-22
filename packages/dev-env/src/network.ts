@@ -151,6 +151,9 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processFullSubscription(timeout = 5000) {
     const sub = this.bsky.sub
+    // If the subscription is not running, there is no point in
+    // waiting for it to process events
+    if (!sub.running) return
     const start = Date.now()
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return

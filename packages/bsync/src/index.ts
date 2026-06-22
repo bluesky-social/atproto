@@ -17,18 +17,14 @@ export { Database } from './db/index.js'
 export { AppContext } from './context.js'
 export { httpLogger } from './logger.js'
 
-enum BsyncServiceState {
-  Initialized,
-  Started,
-  Destroyed,
-}
+type BsyncServiceState = 'initialized' | 'started' | 'destroyed'
 
 export class BsyncService {
   public ctx: AppContext
   public server: http.Server
   private terminator: httpTerminator.HttpTerminator
   private ac: AbortController
-  private state = BsyncServiceState.Initialized
+  private state: BsyncServiceState = 'initialized'
 
   constructor(opts: {
     ctx: AppContext
@@ -64,10 +60,10 @@ export class BsyncService {
   }
 
   async start(): Promise<http.Server> {
-    if (this.state !== BsyncServiceState.Initialized) {
+    if (this.state !== 'initialized') {
       throw new Error(`${this.constructor.name} already started`)
     }
-    this.state = BsyncServiceState.Started
+    this.state = 'started'
 
     const dbStatsInterval = setInterval(() => {
       dbLogger.info(
@@ -92,8 +88,8 @@ export class BsyncService {
   }
 
   async destroy(): Promise<void> {
-    if (this.state === BsyncServiceState.Destroyed) return
-    this.state = BsyncServiceState.Destroyed
+    if (this.state === 'destroyed') return
+    this.state = 'destroyed'
     this.ac.abort()
     try {
       await this.terminator.terminate()

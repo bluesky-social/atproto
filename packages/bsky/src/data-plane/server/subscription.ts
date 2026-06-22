@@ -6,7 +6,10 @@ import { BackgroundQueue } from './background.js'
 import { Database } from './db/index.js'
 import { IndexingService } from './indexing/index.js'
 
+type RepoSubscriptionState = 'stopped' | 'running' | 'destroyed'
+
 export class RepoSubscription {
+  state: RepoSubscriptionState = 'stopped'
   firehose: Firehose
   runner: MemoryRunner
   background: BackgroundQueue<Database>
@@ -33,11 +36,20 @@ export class RepoSubscription {
     this.firehose = firehose
   }
 
+  get running() {
+    return this.state === 'running'
+  }
+
   async start() {
+    if (this.state !== 'stopped') {
+      throw new Error(`Cannot start subscription in state ${this.state}`)
+    }
+    this.state = 'running'
     await this.firehose.start()
   }
 
   async stop() {
+    if (this.state !== 'running') return
     try {
       await this.firehose.destroy()
     } finally {
@@ -63,8 +75,10 @@ export class RepoSubscription {
   }
 
   async destroy() {
+    const shouldStop = this.state === 'running'
+    this.state = 'destroyed'
     try {
-      await this.stop()
+      if (shouldStop) await this.stop()
     } finally {
       await this.background.processAll()
     }
