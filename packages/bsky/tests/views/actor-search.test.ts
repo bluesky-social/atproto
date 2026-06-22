@@ -21,6 +21,7 @@ describe.skip('pds actor search views', () => {
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
+    await network.processAll()
     await network.bsky.sub.stop()
     await usersBulkSeed(sc)
 

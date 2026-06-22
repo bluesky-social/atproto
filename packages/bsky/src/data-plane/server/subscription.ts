@@ -8,7 +8,7 @@ import { IndexingService } from './indexing/index.js'
 
 export class RepoSubscription {
   private readonly abortController = new AbortController()
-  current?: ReturnType<typeof createFirehose>
+  private current?: ReturnType<typeof createFirehose>
   readonly background: BackgroundQueue<Database>
   readonly indexingSvc: IndexingService
   private readonly service: string
@@ -60,14 +60,20 @@ export class RepoSubscription {
   }
 
   async stop() {
-    if (this.current) {
-      const { firehose, runner } = this.current
-      this.current = undefined
-      try {
-        await firehose.destroy()
-      } finally {
-        await runner.destroy()
+    this.abortController.signal.throwIfAborted()
+
+    try {
+      if (this.current) {
+        const { firehose, runner } = this.current
+        this.current = undefined
+        try {
+          await firehose.destroy()
+        } finally {
+          await runner.destroy()
+        }
       }
+    } finally {
+      await this.background.processAll()
     }
   }
 

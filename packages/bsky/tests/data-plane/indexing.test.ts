@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyFeedLike,
@@ -35,13 +35,13 @@ describe('indexing', () => {
     sc = network.getSeedClient()
     db = network.bsky.db
     await usersSeed(sc)
-    await network.processAll()
 
     // Data in tests is not processed from subscription, instead we call
     // indexing service methods directly.
     await network.bsky.sub.stop()
   })
 
+  beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
   it('indexes posts.', async () => {
@@ -436,7 +436,6 @@ describe('indexing', () => {
       await basicSeed(sc, false)
       await network.processAll(15_000)
       await network.bsky.sub.stop()
-      await network.bsky.sub.background.processAll()
     })
 
     it('preserves indexes when no record changes.', async () => {
