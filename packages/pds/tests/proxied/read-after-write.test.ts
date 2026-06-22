@@ -27,9 +27,9 @@ describe('proxy read after write', () => {
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
-    await network.processAll()
     alice = sc.dids.alice
     carol = sc.dids.carol
+    await network.processAll()
     await network.bsky.sub.stop()
   })
 

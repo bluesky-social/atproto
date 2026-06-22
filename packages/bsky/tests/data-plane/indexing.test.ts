@@ -35,6 +35,7 @@ describe('indexing', () => {
     sc = network.getSeedClient()
     db = network.bsky.db
     await usersSeed(sc)
+    await network.processAll()
 
     // Data in tests is not processed from subscription, instead we call
     // indexing service methods directly.
@@ -434,7 +435,7 @@ describe('indexing', () => {
     beforeAll(async () => {
       await network.bsky.sub.restart()
       await basicSeed(sc, false)
-      await network.processAll(15_000)
+      await network.processAll()
       await network.bsky.sub.stop()
     })
 
