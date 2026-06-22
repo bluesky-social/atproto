@@ -1840,6 +1840,9 @@ importers:
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
@@ -15907,7 +15910,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 18.19.67
+      '@types/node': 22.19.17
 
   '@types/ws@8.5.4':
     dependencies:

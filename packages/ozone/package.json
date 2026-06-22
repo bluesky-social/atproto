@@ -63,6 +63,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
+    "@types/ws": "^8.18.1",
     "jest": "^30.0.0",
     "ts-node": "^10.8.2"
   },
