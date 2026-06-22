@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.1
+
+### Patch Changes
+
+- [#5111](https://github.com/bluesky-social/atproto/pull/5111) [`abab1ca`](https://github.com/bluesky-social/atproto/commit/abab1ca4c12dba2b3fbaa37c0340aca4c83f861e) Thanks [@nilaallj](https://github.com/nilaallj)! - Add Swedish (`sv`) translations
+
 ## 0.8.0
 
 ### Minor Changes

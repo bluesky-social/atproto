@@ -1,5 +1,25 @@
 # @atproto/dev-env
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5116](https://github.com/bluesky-social/atproto/pull/5116) [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update undici dependency to v8.5.0
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Don't await for firehose events to be processed in `processAll()` when firehose subscription is stopped
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use http-terminator to close http server
+
+- Updated dependencies [[`3002e9f`](https://github.com/bluesky-social/atproto/commit/3002e9f195df9715395cb72cd3e613f6e5239679), [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b), [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b), [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b), [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b), [`7011bdb`](https://github.com/bluesky-social/atproto/commit/7011bdb1905cb81b10a3ca6ddbc0a6afffc23a70), [`cab3ac3`](https://github.com/bluesky-social/atproto/commit/cab3ac321bf939a4c8ba29aed3f632d8a91790bf), [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b)]:
+  - @atproto/bsky@0.0.244
+  - @atproto/ozone@0.2.6
+  - @atproto/pds@0.5.7
+  - @atproto/sync@0.3.3
+  - @atproto/api@0.20.17
+  - @atproto/bsync@0.0.30
+
 ## 0.5.13
 
 ### Patch Changes

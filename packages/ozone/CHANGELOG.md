@@ -1,5 +1,23 @@
 # @atproto/ozone
 
+## 0.2.6
+
+### Patch Changes
+
+- [#5116](https://github.com/bluesky-social/atproto/pull/5116) [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update undici dependency to v8.5.0
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make BackgroundQueue implementation more resilient
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5030](https://github.com/bluesky-social/atproto/pull/5030) [`7011bdb`](https://github.com/bluesky-social/atproto/commit/7011bdb1905cb81b10a3ca6ddbc0a6afffc23a70) Thanks [@foysalit](https://github.com/foysalit)! - Add tools.ozone.report.queryActivities endpoint to ozone
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use http-terminator to close http server
+
+- Updated dependencies [[`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b), [`cab3ac3`](https://github.com/bluesky-social/atproto/commit/cab3ac321bf939a4c8ba29aed3f632d8a91790bf)]:
+  - @atproto/api@0.20.17
+  - @atproto/ws-client@0.1.2
+
 ## 0.2.5
 
 ### Patch Changes

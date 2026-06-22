@@ -1,5 +1,21 @@
 # @atproto/pds
 
+## 0.5.7
+
+### Patch Changes
+
+- [#5116](https://github.com/bluesky-social/atproto/pull/5116) [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update undici dependency to v8.5.0
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make BackgroundQueue implementation more resilient
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use http-terminator to close http server
+
+- Updated dependencies [[`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b)]:
+  - @atproto-labs/fetch-node@0.3.2
+  - @atproto/oauth-provider@0.19.1
+
 ## 0.5.6
 
 ### Patch Changes
