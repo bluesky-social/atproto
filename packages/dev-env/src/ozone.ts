@@ -250,9 +250,18 @@ export class TestOzone {
   }
 
   async close() {
+    const s = Date.now()
     await this.daemon.destroy()
+    // eslint-disable-next-line no-console
+    console.log(`[ozone close] daemon: ${Date.now() - s}ms`)
+    const s2 = Date.now()
     await this.server.destroy()
+    // eslint-disable-next-line no-console
+    console.log(`[ozone close] server: ${Date.now() - s2}ms`)
+    const s3 = Date.now()
     await this.fetch.destroy()
+    // eslint-disable-next-line no-console
+    console.log(`[ozone close] fetch: ${Date.now() - s3}ms`)
   }
 }
 
