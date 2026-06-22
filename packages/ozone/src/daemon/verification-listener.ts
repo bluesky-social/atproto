@@ -1,5 +1,4 @@
 import { lexicons } from '@atproto/api'
-import { allFulfilled } from '@atproto/common'
 import { BackgroundQueue } from '../background.js'
 import { Database } from '../db/index.js'
 import { CommitCreateEvent, Jetstream } from '../jetstream/service.js'
@@ -160,10 +159,11 @@ export class VerificationListener {
   async stop() {
     if (!this.destroyed) {
       this.destroyed = true
-      await allFulfilled([
-        this.jetstream?.close(),
-        this.backgroundQueue.destroy(),
-      ])
+      try {
+        await this.jetstream?.close()
+      } finally {
+        await this.backgroundQueue.destroy()
+      }
     }
   }
 }

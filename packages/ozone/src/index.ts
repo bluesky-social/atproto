@@ -134,6 +134,7 @@ export class OzoneService {
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
 
+    // @TODO Use a disposable stack when Node24 becomes the min supported version
     try {
       await this.terminator?.terminate()
     } finally {

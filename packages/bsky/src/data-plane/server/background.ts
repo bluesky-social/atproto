@@ -3,6 +3,18 @@ import { dbLogger } from '../../logger.js'
 
 // A simple queue for in-process, out-of-band/backgrounded work
 
+type Task<TContext> = (ctx: TContext, signal: AbortSignal) => Promise<void>
+
+export type BackgroundQueueOptions = NonNullable<
+  ConstructorParameters<typeof PQueue>[0]
+> & {
+  concurrency: number
+}
+
+// @NOTE Keep this in sync with the BackgroundQueue in
+// - packages/bsky/src/data-plane/server/background.ts
+// - packages/ozone/src/background.ts
+// - packages/pds/src/background.ts
 export class BackgroundQueue<TContext = unknown> {
   private abortController = new AbortController()
   private queue: PQueue
@@ -17,9 +29,9 @@ export class BackgroundQueue<TContext = unknown> {
 
   constructor(
     private readonly context: TContext,
-    queueOpts?: { concurrency?: number },
+    options?: BackgroundQueueOptions,
   ) {
-    this.queue = new PQueue(queueOpts)
+    this.queue = new PQueue(options)
   }
 
   add(task: Task<TContext>) {
@@ -38,7 +50,7 @@ export class BackgroundQueue<TContext = unknown> {
 
   async processAll() {
     const { queue } = this
-    if (queue.size || queue.pending) await queue.onIdle()
+    while (queue.size || queue.pending) await queue.onIdle()
   }
 
   // On destroy we stop accepting new tasks, but complete all pending/in-progress tasks.
@@ -52,5 +64,3 @@ export class BackgroundQueue<TContext = unknown> {
     return this.processAll()
   }
 }
-
-type Task<TContext> = (ctx: TContext, signal: AbortSignal) => Promise<void>

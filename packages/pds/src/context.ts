@@ -177,7 +177,7 @@ export class AppContext {
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
-    const backgroundQueue = new BackgroundQueue(undefined)
+    const backgroundQueue = new BackgroundQueue(undefined, { concurrency: 5 })
     const crawlers = new Crawlers(
       backgroundQueue,
       cfg.service.hostname,

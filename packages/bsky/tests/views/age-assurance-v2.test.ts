@@ -174,13 +174,8 @@ describe('age assurance v2 views', () => {
     await clearActorAgeAssurance(db)
   })
 
-  afterAll(async () => {
-    try {
-      await network?.close()
-    } finally {
-      await kws?.stop()
-    }
-  })
+  afterAll(async () => network?.close())
+  afterAll(async () => kws?.stop())
 
   const getState = async (params: AppBskyAgeassuranceGetState.QueryParams) => {
     const { data } = await agent.app.bsky.ageassurance.getState(params, {

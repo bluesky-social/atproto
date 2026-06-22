@@ -202,14 +202,18 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
-    await allFulfilled([
-      ...this.feedGens.map(async (fg) => fg.close()),
-      this.ozone.close(),
-      this.bsky.close(),
-      this.pds.close(),
-      this.plc.close(),
-      this.introspect?.close(),
-    ])
+    try {
+      await this.processAll()
+    } finally {
+      await allFulfilled([
+        ...this.feedGens.map(async (fg) => fg.close()),
+        this.ozone.close(),
+        this.bsky.close(),
+        this.pds.close(),
+        this.plc.close(),
+        this.introspect?.close(),
+      ])
+    }
   }
 
   async [Symbol.asyncDispose]() {

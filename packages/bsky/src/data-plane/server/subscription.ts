@@ -16,7 +16,12 @@ export class RepoSubscription {
     public opts: { service: string; db: Database; idResolver: IdResolver },
   ) {
     const { service, db, idResolver } = opts
-    this.background = new BackgroundQueue(db)
+    this.background = new BackgroundQueue(db, {
+      // @TODO This has historically been using the default concurrency
+      // (Infinity) but we may want to limit this in the future to avoid
+      // overloading the database with indexing tasks.
+      concurrency: Number.POSITIVE_INFINITY,
+    })
     this.indexingSvc = new IndexingService(db, idResolver, this.background)
 
     const { runner, firehose } = createFirehose({

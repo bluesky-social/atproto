@@ -10,8 +10,12 @@ import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
 
 export class TestFeedGen {
-  destroyed?: Promise<void>
   private terminator: httpTerminator.HttpTerminator
+  private terminatorPromise?: Promise<void>
+
+  get destroyed() {
+    return this.terminatorPromise != null
+  }
 
   constructor(
     public port: number,
@@ -55,7 +59,7 @@ export class TestFeedGen {
   }
 
   close(): Promise<void> {
-    return (this.destroyed ??= this.terminator.terminate())
+    return (this.terminatorPromise ??= this.terminator.terminate())
   }
 
   async [Symbol.asyncDispose]() {
