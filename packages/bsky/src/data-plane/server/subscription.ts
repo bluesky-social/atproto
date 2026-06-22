@@ -9,7 +9,7 @@ import { IndexingService } from './indexing/index.js'
 export class RepoSubscription {
   firehose: Firehose
   runner: MemoryRunner
-  background: BackgroundQueue
+  background: BackgroundQueue<Database>
   indexingSvc: IndexingService
 
   constructor(

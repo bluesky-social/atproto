@@ -1,35 +1,60 @@
 import PQueue from 'p-queue'
 import { dbLogger } from '../../logger.js'
-import { Database } from './db/index.js'
 
 // A simple queue for in-process, out-of-band/backgrounded work
 
-export class BackgroundQueue {
-  queue: InstanceType<typeof PQueue> = new PQueue()
-  destroyed = false
-  constructor(public db: Database) {}
+export class BackgroundQueue<TContext = unknown> {
+  private abortController = new AbortController()
+  private queue: PQueue
 
-  add(task: Task) {
-    if (this.destroyed) {
-      return
-    }
-    this.queue
-      .add(() => task(this.db))
-      .catch((err) => {
+  public get signal(): AbortSignal {
+    return this.abortController.signal
+  }
+
+  public get destroyed() {
+    return this.signal.aborted
+  }
+
+  constructor(
+    private readonly context: TContext,
+    queueOpts?: { concurrency?: number },
+  ) {
+    this.queue = new PQueue(queueOpts ?? { concurrency: 5 })
+  }
+
+  add(task: Task<TContext>) {
+    if (this.destroyed) return
+
+    this.queue.add<void>(async () => {
+      // Destroyed while task is waiting in the queue, do not run the task.
+      if (this.destroyed) return
+
+      try {
+        // The task will receive a signal allowing it to abort if the
+        // backgroundQueue is destroyed.
+        await task(this.context, this.signal)
+      } catch (err) {
         dbLogger.error({ err }, 'background queue task failed')
-      })
+      }
+    })
   }
 
   async processAll() {
-    await this.queue.onIdle()
+    const { queue } = this
+    if (queue.size || queue.pending) await queue.onIdle()
   }
 
   // On destroy we stop accepting new tasks, but complete all pending/in-progress tasks.
   // The application calls this only once http connections have drained (tasks no longer being added).
   async destroy() {
-    this.destroyed = true
-    await this.queue.onIdle()
+    if (this.destroyed) {
+      console.warn('BackgroundQueue.destroy() called multiple times')
+      return
+    }
+
+    this.abortController.abort()
+    return this.processAll()
   }
 }
 
-type Task = (db: Database) => Promise<void>
+type Task<TContext> = (ctx: TContext, signal: AbortSignal) => Promise<void>
