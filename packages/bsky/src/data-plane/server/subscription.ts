@@ -6,19 +6,25 @@ import { BackgroundQueue } from './background.js'
 import { Database } from './db/index.js'
 import { IndexingService } from './indexing/index.js'
 
-type RepoSubscriptionState = 'stopped' | 'running' | 'destroyed'
-
 export class RepoSubscription {
-  state: RepoSubscriptionState = 'stopped'
-  firehose: Firehose
-  runner: MemoryRunner
-  background: BackgroundQueue<Database>
-  indexingSvc: IndexingService
+  private readonly abortController = new AbortController()
+  current?: ReturnType<typeof createFirehose>
+  readonly background: BackgroundQueue<Database>
+  readonly indexingSvc: IndexingService
+  private readonly service: string
+  private readonly idResolver: IdResolver
 
-  constructor(
-    public opts: { service: string; db: Database; idResolver: IdResolver },
-  ) {
-    const { service, db, idResolver } = opts
+  constructor({
+    service,
+    db,
+    idResolver,
+  }: {
+    service: string
+    db: Database
+    idResolver: IdResolver
+  }) {
+    this.service = service
+    this.idResolver = idResolver
     this.background = new BackgroundQueue(db, {
       // @TODO This has historically been using the default concurrency
       // (Infinity) but we may want to limit this in the future to avoid
@@ -26,59 +32,59 @@ export class RepoSubscription {
       concurrency: Number.POSITIVE_INFINITY,
     })
     this.indexingSvc = new IndexingService(db, idResolver, this.background)
+  }
 
-    const { runner, firehose } = createFirehose({
-      idResolver,
-      service,
-      indexingSvc: this.indexingSvc,
-    })
-    this.runner = runner
-    this.firehose = firehose
+  get destroyed() {
+    return this.abortController.signal.aborted
   }
 
   get running() {
-    return this.state === 'running'
+    return this.current != null
+  }
+
+  getCursor() {
+    return this.current?.runner.getCursor()
   }
 
   async start() {
-    if (this.state !== 'stopped') {
-      throw new Error(`Cannot start subscription in state ${this.state}`)
+    this.abortController.signal.throwIfAborted()
+
+    if (!this.current) {
+      this.current = createFirehose({
+        idResolver: this.idResolver,
+        service: this.service,
+        indexingSvc: this.indexingSvc,
+      })
+      void this.current.firehose.start()
     }
-    this.state = 'running'
-    await this.firehose.start()
   }
 
   async stop() {
-    if (this.state !== 'running') return
-    try {
-      await this.firehose.destroy()
-    } finally {
-      await this.runner.destroy()
+    if (this.current) {
+      const { firehose, runner } = this.current
+      this.current = undefined
+      try {
+        await firehose.destroy()
+      } finally {
+        await runner.destroy()
+      }
     }
   }
 
   async restart() {
     await this.stop()
-    const { runner, firehose } = createFirehose({
-      idResolver: this.opts.idResolver,
-      service: this.opts.service,
-      indexingSvc: this.indexingSvc,
-    })
-    this.runner = runner
-    this.firehose = firehose
     void this.start()
   }
 
   async processAll() {
-    await this.runner.processAll()
+    await this.current?.runner.processAll()
     await this.background.processAll()
   }
 
   async destroy() {
-    const shouldStop = this.state === 'running'
-    this.state = 'destroyed'
+    this.abortController.abort()
     try {
-      if (shouldStop) await this.stop()
+      await this.stop()
     } finally {
       await this.background.processAll()
     }

@@ -42,9 +42,7 @@ describe('indexing', () => {
     await network.bsky.sub.stop()
   })
 
-  afterAll(async () => {
-    await network?.close()
-  })
+  afterAll(async () => network?.close())
 
   it('indexes posts.', async () => {
     const createdAt = new Date().toISOString()
@@ -436,7 +434,7 @@ describe('indexing', () => {
     beforeAll(async () => {
       await network.bsky.sub.restart()
       await basicSeed(sc, false)
-      await network.processAll()
+      await network.processAll(15_000)
       await network.bsky.sub.stop()
       await network.bsky.sub.background.processAll()
     })

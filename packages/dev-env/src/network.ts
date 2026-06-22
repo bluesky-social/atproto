@@ -159,7 +159,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
       await sub.processAll()
-      const runnerCursor = await sub.runner.getCursor()
+      const runnerCursor = await sub.getCursor()
       // if subscription claims to be done, ensure we are at the most recent cursor from PDS, else wait to process again
       // (the subscription may claim to be finished before the PDS has even emitted it's event)
       if (runnerCursor && runnerCursor >= lastSeq) {
