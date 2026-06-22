@@ -437,7 +437,7 @@ describe('indexing', () => {
       await network.bsky.sub.restart()
       await basicSeed(sc, false)
       await network.processAll()
-      await network.bsky.sub.destroy()
+      await network.bsky.sub.stop()
       await network.bsky.sub.background.processAll()
     })
 
