@@ -1203,7 +1203,8 @@ describe('notification views', () => {
         },
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
-        chat: input0.chat,
+        // chat is deprecated: input is ignored and the default is always returned.
+        chat: cp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1227,8 +1228,8 @@ describe('notification views', () => {
         },
       }
       const expected1: AppBskyNotificationDefs.Preferences = {
-        // Kept from the previous call.
-        chat: input0.chat,
+        // chat is deprecated: input is ignored and the default is always returned.
+        chat: cp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
