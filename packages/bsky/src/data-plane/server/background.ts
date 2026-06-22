@@ -19,7 +19,7 @@ export class BackgroundQueue<TContext = unknown> {
     private readonly context: TContext,
     queueOpts?: { concurrency?: number },
   ) {
-    this.queue = new PQueue(queueOpts ?? { concurrency: 5 })
+    this.queue = new PQueue(queueOpts)
   }
 
   add(task: Task<TContext>) {
