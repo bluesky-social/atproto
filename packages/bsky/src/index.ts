@@ -56,14 +56,11 @@ export { BackgroundQueue } from './data-plane/server/background.js'
 export { Database } from './data-plane/server/db/index.js'
 export { Redis } from './redis.js'
 
-const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -288,7 +285,7 @@ export class BskyAppView {
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)

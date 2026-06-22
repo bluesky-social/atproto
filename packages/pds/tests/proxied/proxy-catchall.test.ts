@@ -11,8 +11,6 @@ import { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { LexiconDocument } from '@atproto/lex-document'
 
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 const lexicons = [
   {
     lexicon: 1,
@@ -162,10 +160,10 @@ describe('proxy header', () => {
 })
 
 class ProxyServer {
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
 
   constructor(
-    private server: http.Server,
+    server: http.Server,
     public did: string,
   ) {
     this.terminator = httpTerminator.createHttpTerminator({ server })

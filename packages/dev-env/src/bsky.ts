@@ -163,13 +163,13 @@ export class TestBsky {
       await this.server.destroy()
     } finally {
       try {
-        await this.sub.destroy()
+        await this.bsync.destroy()
       } finally {
         try {
-          await this.bsync.destroy()
+          await this.dataplane.destroy()
         } finally {
           try {
-            await this.dataplane.destroy()
+            await this.sub.destroy()
           } finally {
             await this.db.close()
           }

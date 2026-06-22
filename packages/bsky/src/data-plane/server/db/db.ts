@@ -164,10 +164,6 @@ export class Database {
     await this.db.destroy()
     this.destroyed = true
   }
-
-  async [Symbol.asyncDispose]() {
-    await this.close()
-  }
 }
 
 export default Database

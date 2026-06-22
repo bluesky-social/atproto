@@ -51,9 +51,9 @@ export class TestFeedGen {
       }
     })
 
-    const server = xrpcServer.listen(port)
-    await events.once(server, 'listening')
-    return new TestFeedGen(port, server, did)
+    const httpServer = xrpcServer.listen(port)
+    await events.once(httpServer, 'listening')
+    return new TestFeedGen(port, httpServer, did)
   }
 
   close(): Promise<void> {

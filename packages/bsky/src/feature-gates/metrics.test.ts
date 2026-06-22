@@ -32,8 +32,8 @@ describe('MetricsClient', () => {
     global.fetch = fetchMock
   })
 
-  afterEach(() => {
-    client?.stop()
+  afterEach(async () => {
+    await client?.stop()
     vi.useRealTimers()
     vi.clearAllMocks()
   })
@@ -145,7 +145,7 @@ describe('MetricsClient', () => {
     expect(fetchRequests).toHaveLength(0)
 
     // Stop should flush remaining events
-    client.stop()
+    await client.stop()
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)

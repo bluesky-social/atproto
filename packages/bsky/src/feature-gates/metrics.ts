@@ -42,12 +42,12 @@ export class MetricsClient<M extends Record<string, any> = Events> {
     }, 10_000)
   }
 
-  stop() {
+  async stop() {
     if (this.flushInterval) {
       clearInterval(this.flushInterval)
       this.flushInterval = null
     }
-    this.flush()
+    await this.flush()
   }
 
   track<E extends keyof M>(
@@ -71,10 +71,10 @@ export class MetricsClient<M extends Record<string, any> = Events> {
     }
   }
 
-  flush() {
+  async flush() {
     if (!this.queue.length) return
     const events = this.queue.splice(0, this.queue.length)
-    this.sendBatch(events)
+    await this.sendBatch(events)
   }
 
   private async sendBatch(events: Event<M>[]) {

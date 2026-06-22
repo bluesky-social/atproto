@@ -154,14 +154,18 @@ export class FeatureGatesClient {
     }
   }
 
-  destroy() {
+  async destroy() {
     if (this.ready) {
       this.ready = false
       if (this.refreshInterval) {
         clearInterval(this.refreshInterval)
       }
     }
-    this.metrics.stop()
+    await this.metrics.stop()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 
   /**

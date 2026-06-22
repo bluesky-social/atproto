@@ -12,8 +12,6 @@ import { DidString } from '@atproto/syntax'
 import { AppContext } from '../../src/context.js'
 import { proxyHandler } from '../../src/pipethrough.js'
 
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 // Regression test for the OAuth service-proxying audience fix.
 //
 // Before the fix, proxyHandler passed a bare DID as `aud` to the rpc scope
@@ -34,7 +32,7 @@ describe('proxy oauth audience', () => {
   let sc: SeedClient
   let alice: string
   let upstream: ProxyServer
-  let terminator: HttpTerminator
+  let terminator: httpTerminator.HttpTerminator
   let serverUrl: string
 
   beforeAll(async () => {
@@ -134,10 +132,10 @@ describe('proxy oauth audience', () => {
 })
 
 class ProxyServer {
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
 
   constructor(
-    public server: http.Server,
+    server: http.Server,
     public url: string,
     public did: string,
   ) {

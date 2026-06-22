@@ -11,8 +11,6 @@ import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
 import { parseProxyHeader } from '../../src/pipethrough.js'
 
-type HttpTerminator = httpTerminator.HttpTerminator
-
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
   let sc: SeedClient
@@ -39,11 +37,8 @@ describe('proxy header', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await Promise.all([
-      //
-      proxyServer?.close(),
-      network?.close(),
-    ])
+    await proxyServer?.close()
+    await network?.close()
   })
 
   it('parses proxy header', async () => {
@@ -178,10 +173,10 @@ type ProxyReq = {
 }
 
 class ProxyServer {
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
 
   constructor(
-    public server: http.Server,
+    server: http.Server,
     public url: string,
     public did: string,
     public requests: ProxyReq[],

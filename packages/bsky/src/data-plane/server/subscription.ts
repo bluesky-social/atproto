@@ -29,11 +29,12 @@ export class RepoSubscription {
   }
 
   start() {
-    this.firehose.start()
+    void this.firehose.start()
   }
 
   async restart() {
-    await this.destroy()
+    await this.firehose.destroy()
+    await this.runner.destroy()
     const { runner, firehose } = createFirehose({
       idResolver: this.opts.idResolver,
       service: this.opts.service,
@@ -41,7 +42,7 @@ export class RepoSubscription {
     })
     this.runner = runner
     this.firehose = firehose
-    this.start()
+    void firehose.start()
   }
 
   async processAll() {
@@ -50,11 +51,15 @@ export class RepoSubscription {
   }
 
   async destroy() {
-    await Promise.all([
-      this.firehose.destroy(),
-      this.runner.destroy(),
-      this.background.processAll(),
-    ])
+    try {
+      await this.firehose.destroy()
+    } finally {
+      try {
+        await this.runner.destroy()
+      } finally {
+        await this.background.destroy()
+      }
+    }
   }
 
   async [Symbol.asyncDispose]() {

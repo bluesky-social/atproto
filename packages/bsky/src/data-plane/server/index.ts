@@ -8,21 +8,18 @@ import { IdResolver, MemoryCache } from '@atproto/identity'
 import { Database, DatabaseSchema } from './db/index.js'
 import createRoutes from './routes/index.js'
 
-const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 export type { DatabaseSchema }
 
 export { RepoSubscription } from './subscription.js'
 
 export class DataPlaneServer {
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
 
   constructor(
     public server: http.Server,
     public idResolver: IdResolver,
   ) {
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
   }
 
   static async create(db: Database, port: number, plcUrl?: string) {

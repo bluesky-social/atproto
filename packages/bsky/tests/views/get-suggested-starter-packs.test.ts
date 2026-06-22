@@ -17,8 +17,6 @@ import {
   starterPacksSeed,
 } from '../seed/get-suggested-starter-packs.js'
 
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 describe('getSuggestedStarterPacks', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -96,7 +94,7 @@ describe('getSuggestedStarterPacks', () => {
 class MockServer {
   app: Application
   server: Server
-  terminator: HttpTerminator
+  terminator: httpTerminator.HttpTerminator
 
   mockedStarterPackUris = new Map<
     string,

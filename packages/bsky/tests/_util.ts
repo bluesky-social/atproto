@@ -1,5 +1,5 @@
+import { RequestListener, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { type Express } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { expect } from 'vitest'
@@ -266,7 +266,7 @@ export const stripViewerFromLabeler = (
   return stripViewer(labeler)
 }
 
-export async function startServer(app: Express) {
+export async function startServer(listener: RequestListener) {
   return new Promise<AsyncDisposable & { port: number }>((resolve, reject) => {
     const onListen = () => {
       const port = (server.address() as AddressInfo).port
@@ -282,7 +282,7 @@ export async function startServer(app: Express) {
       server.removeListener('error', onError)
     }
 
-    const server = app
+    const server = createServer(listener)
       .listen(0)
       .once('listening', onListen)
       .once('error', onError)

@@ -183,7 +183,7 @@ describe('Tap client', () => {
         res.status(500).send('Internal Server Error')
       })
 
-      const server = app.listen()
+      const server = app.listen(0)
       await once(server, 'listening')
       const { port } = server.address() as AddressInfo
       terminator = httpTerminator.createHttpTerminator({ server })

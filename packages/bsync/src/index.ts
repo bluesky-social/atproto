@@ -97,16 +97,14 @@ export class BsyncService {
   }
 
   async destroy(): Promise<void> {
-    if (this.state === BsyncServiceState.Destroyed) {
-      throw new Error(`${this.constructor.name} already destroyed`)
-    }
+    if (this.state === BsyncServiceState.Destroyed) return
     this.state = BsyncServiceState.Destroyed
     this.ac.abort()
-    await Promise.all([
-      // @TODO use something like "allFulfilled“
-      this.terminator.terminate(),
-      this.ctx.db.close(),
-    ])
+    try {
+      await this.terminator.terminate()
+    } finally {
+      await this.ctx.db.close()
+    }
   }
 
   async setupAppEvents() {

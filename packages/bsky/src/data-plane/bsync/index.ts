@@ -22,10 +22,10 @@ import { Database } from '../server/db/index.js'
 import { countAll, excluded } from '../server/db/util.js'
 
 const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
 
 export class MockBsync {
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
+
   constructor(public server: http.Server) {
     this.terminator = createHttpTerminator({ server })
   }
