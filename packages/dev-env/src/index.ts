@@ -1,6 +1,5 @@
 export * from './bsky.js'
 export * from './bsync.js'
-export * from './fetch.js'
 export * from './network.js'
 export * from './network-no-appview.js'
 export * from './ozone.js'

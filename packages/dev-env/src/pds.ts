@@ -9,13 +9,9 @@ import { Client } from '@atproto/lex'
 import * as pds from '@atproto/pds'
 import { createSecretKeyObject } from '@atproto/pds'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const.js'
-import { createTestFetch } from './fetch.js'
 import { PdsConfig } from './types.js'
 
 export class TestPds {
-  // Pooled but non-keep-alive fetch so clients created here don't leave idle
-  // connections open that would block server shutdown.
-  private readonly fetch = createTestFetch()
   constructor(
     public url: string,
     public port: number,
@@ -83,13 +79,13 @@ export class TestPds {
   }
 
   getAgent(): AtpAgent {
-    const agent = new AtpAgent({ service: this.url, fetch: this.fetch })
+    const agent = new AtpAgent({ service: this.url })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
   }
 
   getClient(): Client {
-    const client = new Client({ service: this.url, fetch: this.fetch })
+    const client = new Client({ service: this.url })
     client.setLabelers([EXAMPLE_LABELER])
     return client
   }
@@ -120,6 +116,9 @@ export class TestPds {
 
   async close() {
     await this.server.destroy()
-    await this.fetch.destroy()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

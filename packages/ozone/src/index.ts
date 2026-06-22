@@ -4,11 +4,8 @@ import { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
+// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-// eslint-disable-next-line import/no-named-as-default-member
-const { createHttpTerminator } = httpTerminator
-type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown } from './api/index.js'
 import { OzoneConfig, OzoneSecrets } from './config/index.js'
@@ -24,6 +21,9 @@ export { Database } from './db/index.js'
 export { EventPusher, EventReverser, OzoneDaemon } from './daemon/index.js'
 export { AppContext } from './context.js'
 export { httpLogger } from './logger.js'
+
+const { createHttpTerminator } = httpTerminator
+export type HttpTerminator = httpTerminator.HttpTerminator
 
 export class OzoneService {
   public ctx: AppContext

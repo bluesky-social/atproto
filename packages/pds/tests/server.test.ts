@@ -43,17 +43,14 @@ describe('server', () => {
       })
       .use(errorHandler)
 
-    const { origin, stop } = await startServer(app)
-    try {
-      const res = await fetch(new URL(`/oops`, origin))
-      expect(res.status).toEqual(500)
-      await expect(res.json()).resolves.toEqual({
-        error: 'InternalServerError',
-        message: 'Internal Server Error',
-      })
-    } finally {
-      await stop()
-    }
+    await using server = await startServer(app)
+
+    const res = await fetch(`http://localhost:${server.port}/oops`)
+    expect(res.status).toEqual(500)
+    await expect(res.json()).resolves.toEqual({
+      error: 'InternalServerError',
+      message: 'Internal Server Error',
+    })
   })
 
   it('limits size of json input.', async () => {

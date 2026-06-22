@@ -37,17 +37,14 @@ describe('server', () => {
       throw new Error('Oops!')
     })
     app.use(errorHandler)
-    const { origin, stop } = await startServer(app)
-    try {
-      const response = await fetch(new URL(`/oops`, origin))
-      expect(response.status).toEqual(500)
-      await expect(response.json()).resolves.toEqual({
-        error: 'InternalServerError',
-        message: 'Internal Server Error',
-      })
-    } finally {
-      await stop()
-    }
+    await using server = await startServer(app)
+
+    const response = await fetch(`http://localhost:${server.port}/oops`)
+    expect(response.status).toEqual(500)
+    await expect(response.json()).resolves.toEqual({
+      error: 'InternalServerError',
+      message: 'Internal Server Error',
+    })
   })
 
   it('healthcheck succeeds when database is available.', async () => {

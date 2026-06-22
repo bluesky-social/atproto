@@ -307,6 +307,9 @@ importers:
       await-lock:
         specifier: ^3.0.0
         version: 3.0.0
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
@@ -712,6 +715,9 @@ importers:
       get-port:
         specifier: ^5.1.1
         version: 5.1.1
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
@@ -2126,6 +2132,9 @@ importers:
       '@atproto/ws-client':
         specifier: workspace:^
         version: link:../ws-client
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       ws:
         specifier: ^8.12.0
         version: 8.18.3
@@ -2151,6 +2160,9 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       ws:
         specifier: ^8.12.0
         version: 8.18.3
@@ -18479,7 +18491,7 @@ snapshots:
   globalthis@1.0.4:
     dependencies:
       define-properties: 1.2.1
-      gopd: 1.0.1
+      gopd: 1.2.0
 
   globby@11.1.0:
     dependencies:
@@ -21411,7 +21423,7 @@ snapshots:
       boolean: 3.2.0
       fast-json-stringify: 5.8.0
       fast-printf: 1.6.9
-      globalthis: 1.0.3
+      globalthis: 1.0.4
       safe-stable-stringify: 2.4.3
       semver-compare: 1.0.0
 

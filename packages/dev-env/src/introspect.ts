@@ -1,16 +1,21 @@
 import events from 'node:events'
 import http from 'node:http'
 import express from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { TestBsky } from './bsky.js'
 import { TestOzone } from './ozone.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 
 export class IntrospectServer {
+  private terminator: httpTerminator.HttpTerminator
   constructor(
     public port: number,
     public server: http.Server,
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async start(
     port: number,
@@ -48,10 +53,6 @@ export class IntrospectServer {
   }
 
   async close() {
-    this.server.close()
-    // Force idle keep-alive connections closed so shutdown is not blocked
-    // waiting for them to hit the server's keepAliveTimeout.
-    this.server.closeAllConnections()
-    await events.once(this.server, 'close')
+    await this.terminator.terminate()
   }
 }

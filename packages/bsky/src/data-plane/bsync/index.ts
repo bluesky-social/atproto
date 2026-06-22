@@ -4,6 +4,8 @@ import http from 'node:http'
 import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { TID } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
@@ -19,8 +21,14 @@ import { Namespaces } from '../../stash.js'
 import { Database } from '../server/db/index.js'
 import { countAll, excluded } from '../server/db/util.js'
 
+const { createHttpTerminator } = httpTerminator
+export type HttpTerminator = httpTerminator.HttpTerminator
+
 export class MockBsync {
-  constructor(public server: http.Server) {}
+  private terminator: HttpTerminator
+  constructor(public server: http.Server) {
+    this.terminator = createHttpTerminator({ server })
+  }
 
   static async create(db: Database, port: number) {
     const app = express()
@@ -32,18 +40,11 @@ export class MockBsync {
   }
 
   async destroy() {
-    return new Promise<void>((resolve, reject) => {
-      this.server.close((err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
-      })
-      // Force idle keep-alive connections closed so shutdown is not blocked
-      // waiting for them to hit the server's keepAliveTimeout.
-      this.server.closeAllConnections()
-    })
+    await this.terminator.terminate()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

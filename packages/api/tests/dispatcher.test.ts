@@ -446,7 +446,7 @@ describe('AtpAgent', () => {
 
   describe('App labelers header', () => {
     it('adds the labelers header as expected', async () => {
-      const server = await createHeaderEchoServer()
+      await using server = await createHeaderEchoServer()
       const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
       const agent2 = new AtpAgent({ service: `http://localhost:${port}` })
@@ -466,14 +466,13 @@ describe('AtpAgent', () => {
         'did:plc:test1;redact, did:plc:test2;redact',
       )
       AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
-
-      await new Promise((r) => server.close(r))
     })
   })
 
   describe('configureLabelers', () => {
     it('adds the labelers header as expected', async () => {
-      const server = await createHeaderEchoServer()
+      await using server = await createHeaderEchoServer()
+
       const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
@@ -488,14 +487,12 @@ describe('AtpAgent', () => {
       expect(res2.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1, did:plc:test2`,
       )
-
-      await new Promise((r) => server.close(r))
     })
   })
 
   describe('configureProxy', () => {
     it('adds the proxy header as expected', async () => {
-      const server = await createHeaderEchoServer()
+      await using server = await createHeaderEchoServer()
       const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
@@ -514,8 +511,6 @@ describe('AtpAgent', () => {
       expect(res3.data['atproto-proxy']).toEqual(
         'did:plc:test2#atproto_labeler',
       )
-
-      await new Promise((r) => server.close(r))
     })
   })
 })

@@ -202,20 +202,17 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
-    const t = async (label: string, p: Promise<unknown>) => {
-      const start = Date.now()
-      try {
-        await p
-      } finally {
-        // eslint-disable-next-line no-console
-        console.log(`[net close] ${label}: ${Date.now() - start}ms`)
-      }
-    }
-    await t('feedGens', Promise.all(this.feedGens.map((fg) => fg.close())))
-    await t('ozone', this.ozone.close())
-    await t('bsky', this.bsky.close())
-    await t('pds', this.pds.close())
-    await t('plc', this.plc.close())
-    await t('introspect', this.introspect?.close() ?? Promise.resolve())
+    await Promise.all([
+      ...this.feedGens.map((fg) => fg.close()),
+      this.ozone.close(),
+      this.bsky.close(),
+      this.pds.close(),
+      this.plc.close(),
+      this.introspect?.close(),
+    ])
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

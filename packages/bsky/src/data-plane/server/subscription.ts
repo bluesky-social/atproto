@@ -50,9 +50,15 @@ export class RepoSubscription {
   }
 
   async destroy() {
-    await this.firehose.destroy()
-    await this.runner.destroy()
-    await this.background.processAll()
+    await Promise.all([
+      this.firehose.destroy(),
+      this.runner.destroy(),
+      this.background.processAll(),
+    ])
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

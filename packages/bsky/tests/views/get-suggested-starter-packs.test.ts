@@ -2,6 +2,8 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
@@ -14,6 +16,8 @@ import {
   Users,
   starterPacksSeed,
 } from '../seed/get-suggested-starter-packs.js'
+
+export type HttpTerminator = httpTerminator.HttpTerminator
 
 describe('getSuggestedStarterPacks', () => {
   let network: TestNetwork
@@ -92,6 +96,7 @@ describe('getSuggestedStarterPacks', () => {
 class MockServer {
   app: Application
   server: Server
+  terminator: HttpTerminator
 
   mockedStarterPackUris = new Map<
     string,
@@ -101,6 +106,9 @@ class MockServer {
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
+    this.terminator = httpTerminator.createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -109,8 +117,7 @@ class MockServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   get url() {

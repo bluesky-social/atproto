@@ -2,8 +2,12 @@ import { once } from 'node:events'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { default as express } from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Tap } from '../src/client.js'
+
+export type HttpTerminator = httpTerminator.HttpTerminator
 
 describe('Tap client', () => {
   describe('constructor', () => {
@@ -28,10 +32,7 @@ describe('Tap client', () => {
   })
 
   describe('HTTP methods', () => {
-    let server: http.Server<
-      typeof http.IncomingMessage,
-      typeof http.ServerResponse
-    >
+    let terminator: HttpTerminator
     let tap: Tap
     let requests: {
       path: string
@@ -99,14 +100,15 @@ describe('Tap client', () => {
         })
       })
 
-      server = app.listen()
+      const server = app.listen()
       await once(server, 'listening')
       const { port } = server.address() as AddressInfo
+      terminator = httpTerminator.createHttpTerminator({ server })
       tap = new Tap(`http://localhost:${port}`, { adminPassword: 'secret' })
     })
 
     afterAll(async () => {
-      await new Promise((resolve) => server.close(resolve))
+      await terminator?.terminate()
     })
 
     beforeEach(() => {
@@ -166,10 +168,7 @@ describe('Tap client', () => {
   })
 
   describe('HTTP error handling', () => {
-    let server: http.Server<
-      typeof http.IncomingMessage,
-      typeof http.ServerResponse
-    >
+    let terminator: HttpTerminator
     let tap: Tap
 
     beforeAll(async () => {
@@ -184,14 +183,15 @@ describe('Tap client', () => {
         res.status(500).send('Internal Server Error')
       })
 
-      server = app.listen()
+      const server = app.listen()
       await once(server, 'listening')
       const { port } = server.address() as AddressInfo
+      terminator = httpTerminator.createHttpTerminator({ server })
       tap = new Tap(`http://localhost:${port}`)
     })
 
     afterAll(async () => {
-      await new Promise((resolve) => server.close(resolve))
+      await terminator?.terminate()
     })
 
     it('throws on addRepos failure', async () => {

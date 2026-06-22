@@ -3,6 +3,8 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import {
   afterAll,
   afterEach,
@@ -374,11 +376,15 @@ const clearActorAgeAssurance = async (db: Database) => {
 
 type MockHandler = (req: express.Request, res: express.Response) => void
 
+const { createHttpTerminator } = httpTerminator
+export type HttpTerminator = httpTerminator.HttpTerminator
+
 class MockKwsServer {
   private verificationSecret: string
   private webhookSecret: string
   private app: Application
   private server: Server
+  private terminator: HttpTerminator
 
   constructor({
     verificationSecret,
@@ -403,6 +409,7 @@ class MockKwsServer {
       )
 
     this.server = createServer(this.app)
+    this.terminator = createHttpTerminator({ server: this.server })
   }
 
   async listen(port?: number) {
@@ -411,8 +418,7 @@ class MockKwsServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   callVerificationResponse(

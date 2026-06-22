@@ -2,19 +2,26 @@ import events from 'node:events'
 import http from 'node:http'
 import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SkeletonHandler, app } from '@atproto/pds'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
 
+const { createHttpTerminator } = httpTerminator
+
 export class TestFeedGen {
-  destroyed = false
+  destroyed?: Promise<void>
+  private terminator: httpTerminator.HttpTerminator
 
   constructor(
     public port: number,
     public server: http.Server,
     public did: string,
-  ) {}
+  ) {
+    this.terminator = createHttpTerminator({ server })
+  }
 
   static async create(
     plcUrl: string,
@@ -44,23 +51,17 @@ export class TestFeedGen {
       }
     })
 
-    const httpServer = xrpcServer.listen(port)
-    await events.once(httpServer, 'listening')
-    return new TestFeedGen(port, httpServer, did)
+    const server = xrpcServer.listen(port)
+    await events.once(server, 'listening')
+    return new TestFeedGen(port, server, did)
   }
 
   close(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.destroyed) return resolve()
-      this.server.close((err) => {
-        if (err) return reject(err)
-        this.destroyed = true
-        resolve()
-      })
-      // Force idle keep-alive connections closed so shutdown is not blocked
-      // waiting for them to hit the server's keepAliveTimeout.
-      this.server.closeAllConnections()
-    })
+    return (this.destroyed ??= this.terminator.terminate())
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 

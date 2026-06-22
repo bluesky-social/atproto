@@ -6,15 +6,11 @@ import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
-import { createTestFetch } from './fetch.js'
 import { ModeratorClient } from './moderator-client.js'
 import { DidAndKey, OzoneConfig } from './types.js'
 import { createDidAndKey } from './util.js'
 
 export class TestOzone {
-  // Pooled but non-keep-alive fetch so clients created here don't leave idle
-  // connections open that would block server shutdown.
-  private readonly fetch = createTestFetch()
   constructor(
     public url: string,
     public port: number,
@@ -108,7 +104,7 @@ export class TestOzone {
   }
 
   getAgent(): AtpAgent {
-    const agent = new AtpAgent({ service: this.url, fetch: this.fetch })
+    const agent = new AtpAgent({ service: this.url })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
   }
@@ -250,18 +246,15 @@ export class TestOzone {
   }
 
   async close() {
-    const s = Date.now()
-    await this.daemon.destroy()
-    // eslint-disable-next-line no-console
-    console.log(`[ozone close] daemon: ${Date.now() - s}ms`)
-    const s2 = Date.now()
-    await this.server.destroy()
-    // eslint-disable-next-line no-console
-    console.log(`[ozone close] server: ${Date.now() - s2}ms`)
-    const s3 = Date.now()
-    await this.fetch.destroy()
-    // eslint-disable-next-line no-console
-    console.log(`[ozone close] fetch: ${Date.now() - s3}ms`)
+    await Promise.all([
+      //
+      this.daemon.destroy(),
+      this.server.destroy(),
+    ])
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 

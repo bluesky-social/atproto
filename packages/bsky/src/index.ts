@@ -5,11 +5,8 @@ import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
+// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-// eslint-disable-next-line import/no-named-as-default-member
-const { createHttpTerminator } = httpTerminator
-type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -58,6 +55,9 @@ export * from './data-plane/index.js'
 export { BackgroundQueue } from './data-plane/server/background.js'
 export { Database } from './data-plane/server/db/index.js'
 export { Redis } from './redis.js'
+
+const { createHttpTerminator } = httpTerminator
+export type HttpTerminator = httpTerminator.HttpTerminator
 
 export class BskyAppView {
   public ctx: AppContext
@@ -296,9 +296,15 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.featureGatesClient.destroy()
-    await this.terminator?.terminate()
-    await this.ctx.etcd?.close()
+    await Promise.all([
+      this.ctx.featureGatesClient.destroy(),
+      this.terminator?.terminate(),
+      this.ctx.etcd?.close(),
+    ])
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 
