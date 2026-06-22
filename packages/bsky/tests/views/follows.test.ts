@@ -25,7 +25,7 @@ describe('pds follow views', () => {
     await followsSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-  }, 20_000) // @NOTE seeding can take a while
+  })
 
   afterAll(async () => {
     await network?.close()

@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyGraphGetStarterPacksWithMembership,
@@ -80,7 +80,9 @@ describe('starter packs', () => {
       [sc.dids.alice, sc.dids.frankie],
       [],
     )
+  })
 
+  beforeEach(async () => {
     await network.processAll()
   })
 

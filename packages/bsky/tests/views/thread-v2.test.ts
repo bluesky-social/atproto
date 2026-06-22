@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedDefs,
   AppBskyUnspeccedGetPostThreadOtherV2,
@@ -54,6 +54,9 @@ describe('appview thread views v2', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     labelerDid = network.bsky.ctx.cfg.modServiceDid
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

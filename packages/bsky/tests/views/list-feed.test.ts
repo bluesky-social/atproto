@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetListFeed, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
@@ -33,6 +33,9 @@ describe('list feed views', () => {
     listRef = await sc.createList(alice, 'test list', 'curate')
     await sc.addToList(alice, alice, listRef)
     await sc.addToList(alice, bob, listRef)
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

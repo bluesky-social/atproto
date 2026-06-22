@@ -1,5 +1,5 @@
 import { request } from 'undici'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { cidForCbor, verifyCidForBytes } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -17,10 +17,14 @@ describe('blob resolver', () => {
     })
     const sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
+
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     fileSize = sc.posts[fileDid][0].images[0].image.size
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedGallery,
   AppBskyEmbedRecord,
@@ -50,6 +50,10 @@ describe('pds posts views', () => {
     await network.bsky.ctx.dataplane.takedownActor({
       did: sc.dids.frankie,
     })
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

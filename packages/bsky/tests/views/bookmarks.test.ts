@@ -3,6 +3,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -43,12 +44,15 @@ describe('appview bookmarks views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterEach(async () => {

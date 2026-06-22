@@ -1,4 +1,12 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { TestNetwork } from '@atproto/dev-env'
 import { lexStringify } from '@atproto/lex'
 import { StashClient } from '../dist/stash.js'
@@ -33,6 +41,10 @@ describe('private data', () => {
     })
     db = network.bsky.db
     stashClient = network.bsky.ctx.stashClient
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterEach(async () => {

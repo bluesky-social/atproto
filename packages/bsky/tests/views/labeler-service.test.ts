@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyLabelerDefs,
@@ -67,6 +67,9 @@ describe('labeler service views', () => {
     aliceService = new RecordRef(aliceRes.data.uri, aliceRes.data.cid)
 
     await sc.like(bob, aliceService)
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

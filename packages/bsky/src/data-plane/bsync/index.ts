@@ -21,13 +21,11 @@ import { Namespaces } from '../../stash.js'
 import { Database } from '../server/db/index.js'
 import { countAll, excluded } from '../server/db/util.js'
 
-const { createHttpTerminator } = httpTerminator
-
 export class MockBsync {
   private terminator: httpTerminator.HttpTerminator
 
   constructor(public server: http.Server) {
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
   }
 
   static async create(db: Database, port: number) {

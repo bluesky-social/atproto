@@ -4,7 +4,7 @@ import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
   AtpAgent,
@@ -42,7 +42,9 @@ describe('getSuggestedStarterPacks', () => {
     const result = await starterPacksSeed(sc)
     users = result.users
     starterpacks = result.starterpacks
+  })
 
+  beforeEach(async () => {
     await network.processAll()
   })
 

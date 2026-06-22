@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -31,6 +31,9 @@ describe('label hydration', () => {
       cid: '',
       val: 'misleading',
     })
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

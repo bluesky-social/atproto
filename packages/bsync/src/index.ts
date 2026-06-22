@@ -17,11 +17,6 @@ export { Database } from './db/index.js'
 export { AppContext } from './context.js'
 export { httpLogger } from './logger.js'
 
-export type HttpTerminator = httpTerminator.HttpTerminator
-export type HttpTerminatorConfigurationInput = Parameters<
-  typeof httpTerminator.createHttpTerminator
->[0]
-
 enum BsyncServiceState {
   Initialized,
   Started,
@@ -31,7 +26,7 @@ enum BsyncServiceState {
 export class BsyncService {
   public ctx: AppContext
   public server: http.Server
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
   private ac: AbortController
   private state = BsyncServiceState.Initialized
 

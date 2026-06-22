@@ -5,7 +5,7 @@ import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyUnspeccedGetTrendsSkeleton, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { Users, trendsSeed } from '../seed/get-trends.js'
@@ -33,7 +33,9 @@ describe('getTrends', () => {
 
     const result = await trendsSeed(sc)
     users = result.users
+  })
 
+  beforeEach(async () => {
     await network.processAll()
   })
 

@@ -661,9 +661,6 @@ const clearActorAgeAssurance = async (db: Database) => {
 
 type MockHandler = (req: express.Request, res: express.Response) => void
 
-const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 class MockKwsServer {
   verificationSecret = 'verificationSecret' // unused here
   webhookSecret = 'webhookSecret' // unused here
@@ -672,7 +669,7 @@ class MockKwsServer {
 
   private app: Application
   private server: Server
-  private terminator: HttpTerminator
+  private terminator: httpTerminator.HttpTerminator
   private bskyUrlBase = ''
 
   constructor({
@@ -699,7 +696,9 @@ class MockKwsServer {
       })
 
     this.server = createServer(this.app)
-    this.terminator = createHttpTerminator({ server: this.server })
+    this.terminator = httpTerminator.createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {

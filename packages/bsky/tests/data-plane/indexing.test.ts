@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyFeedLike,
@@ -37,7 +37,11 @@ describe('indexing', () => {
     // Data in tests is not processed from subscription
     await network.processAll()
     await network.bsky.sub.destroy()
-  }, 20_000) // @NOTE seeding can take a while
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
+  })
 
   afterAll(async () => {
     await network?.close()

@@ -1,7 +1,15 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyEmbedExternal,
   AtpAgent,
@@ -77,13 +85,16 @@ describe('pds profile views', () => {
       password: 'noprofile-pass',
     })
 
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
     eve = sc.dids.eve
     frank = sc.dids.frank
     noprofile = sc.dids.noprofile
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

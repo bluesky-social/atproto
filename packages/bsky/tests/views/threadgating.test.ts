@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util.js'
@@ -23,6 +23,9 @@ describe('views with thread gating', () => {
       email: 'eve@eve.com',
       password: 'hunter2',
     })
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

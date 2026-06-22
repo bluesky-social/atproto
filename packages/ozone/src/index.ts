@@ -22,14 +22,11 @@ export { EventPusher, EventReverser, OzoneDaemon } from './daemon/index.js'
 export { AppContext } from './context.js'
 export { httpLogger } from './logger.js'
 
-const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 export class OzoneService {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
@@ -124,7 +121,7 @@ export class OzoneService {
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.assignPort(port)

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 
@@ -12,7 +12,9 @@ describe('get config', () => {
         dbPostgresSchema: 'bsky_tests_live_now_config_off',
       })
       agent = network.bsky.getAgent()
+    })
 
+    beforeEach(async () => {
       await network.processAll()
     })
 

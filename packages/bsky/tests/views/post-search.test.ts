@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedSearchPosts, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { DatabaseSchema } from '../../src/index.js'
@@ -51,12 +51,18 @@ describe('appview search', () => {
     nonTaggedResults = [post2.ref.uriStr, post0.ref.uriStr]
   })
 
-  afterAll(async () => {
-    await deleteTags(network.bsky.db.db, {
-      uri: post1.ref.uriStr,
-    })
+  beforeEach(async () => {
+    await network.processAll()
+  })
 
-    await network?.close()
+  afterAll(async () => {
+    if (network) {
+      await deleteTags(network.bsky.db.db, {
+        uri: post1.ref.uriStr,
+      })
+
+      await network.close()
+    }
   })
 
   describe(`post search with 'top' sort`, () => {

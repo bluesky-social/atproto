@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtUri, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -21,10 +21,13 @@ describe('bsky actor likes feed views', () => {
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

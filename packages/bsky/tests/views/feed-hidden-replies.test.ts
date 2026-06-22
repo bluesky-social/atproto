@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies.js'
@@ -20,7 +20,9 @@ describe('feed hidden replies', () => {
 
     const result = await feedHiddenRepliesSeed(sc)
     users = result.users
+  })
 
+  beforeEach(async () => {
     await network.processAll()
   })
 

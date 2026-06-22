@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetTimeline,
@@ -35,7 +35,7 @@ describe('timeline views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
+
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -52,6 +52,10 @@ describe('timeline views', () => {
       uri: sc.posts[carol][0].ref.uriStr,
       cid: sc.posts[carol][0].ref.cidStr,
     })
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

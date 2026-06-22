@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { knownFollowersSeed } from '../seed/known-followers.js'
@@ -35,9 +35,11 @@ describe('internal actor views', () => {
       { createdAt: new Date().toISOString(), subject: dids.mix_sp_block_res },
       seedClient.getHeaders(dids.mix_sub_1),
     )
+  })
 
+  beforeEach(async () => {
     await network.processAll()
-  }, 20_000) // @NOTE seeding can take a while
+  })
 
   afterAll(async () => {
     await network?.close()

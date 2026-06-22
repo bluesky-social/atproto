@@ -26,7 +26,7 @@ describe('pds quote views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     eve = sc.dids.eve
-  }, 20_000) // @NOTE seeding can take a while
+  })
 
   afterAll(async () => {
     await network?.close()

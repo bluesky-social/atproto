@@ -9,8 +9,6 @@ import { SkeletonHandler, app } from '@atproto/pds'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
 
-const { createHttpTerminator } = httpTerminator
-
 export class TestFeedGen {
   destroyed?: Promise<void>
   private terminator: httpTerminator.HttpTerminator
@@ -20,7 +18,7 @@ export class TestFeedGen {
     public server: http.Server,
     public did: string,
   ) {
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
   }
 
   static async create(

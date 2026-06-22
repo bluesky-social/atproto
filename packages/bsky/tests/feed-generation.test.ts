@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetActorFeeds,
@@ -103,9 +103,13 @@ describe('feed generation', () => {
       .execute()
   })
 
+  beforeEach(async () => {
+    await network.processAll()
+  })
+
   afterAll(async () => {
-    await gen.close()
     await network?.close()
+    await gen?.close()
   })
 
   it('feed gen records can be created.', async () => {

@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
+import express, { Application, RequestHandler } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import {
@@ -43,8 +43,17 @@ describe('age assurance views', () => {
   let actorDid: string
 
   let kwsServer: MockKwsServer
-  const authMock = vi.fn<MockHandler>()
-  const sendEmailMock = vi.fn<MockHandler>()
+
+  const authMock = vi.fn<RequestHandler>((req, res) =>
+    res.json({
+      access_token:
+        'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
+      expires_in: 3600,
+    }),
+  )
+  const sendEmailMock = vi.fn<RequestHandler>((req, res) => {
+    res.json({})
+  })
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
@@ -82,31 +91,22 @@ describe('age assurance views', () => {
   })
 
   beforeEach(async () => {
-    // Default mocks for KWS endpoints.
-    authMock.mockImplementation(
-      (_req: express.Request, res: express.Response) =>
-        res.json({
-          access_token:
-            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
-          expires_in: 3600,
-        }),
-    )
-    sendEmailMock.mockImplementation(
-      (_req: express.Request, res: express.Response) => {
-        res.json({})
-      },
-    )
+    // @TODO Use the clearMocks setting in the configuration instead of:
+    authMock.mockClear()
+    sendEmailMock.mockClear()
   })
 
   afterEach(async () => {
-    vi.resetAllMocks()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
 
   afterAll(async () => {
-    await network?.close()
-    await kwsServer?.stop()
+    try {
+      await network?.close()
+    } finally {
+      await kwsServer?.stop()
+    }
   })
 
   const getAgeAssurance = async (did: string) => {
@@ -374,8 +374,6 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
-type MockHandler = (req: express.Request, res: express.Response) => void
-
 class MockKwsServer {
   private verificationSecret: string
   private webhookSecret: string
@@ -391,19 +389,15 @@ class MockKwsServer {
   }: {
     verificationSecret: string
     webhookSecret: string
-    authMock: ReturnType<typeof vi.fn<MockHandler>>
-    sendEmailMock: ReturnType<typeof vi.fn<MockHandler>>
+    authMock: RequestHandler
+    sendEmailMock: RequestHandler
   }) {
     this.verificationSecret = verificationSecret
     this.webhookSecret = webhookSecret
 
     this.app = express()
-      .post('/auth/realms/kws/protocol/openid-connect/token', (req, res) =>
-        authMock(req, res),
-      )
-      .post('/v1/verifications/send-email', (req, res) =>
-        sendEmailMock(req, res),
-      )
+      .post('/auth/realms/kws/protocol/openid-connect/token', authMock)
+      .post('/v1/verifications/send-email', sendEmailMock)
 
     this.server = createServer(this.app)
     this.terminator = httpTerminator.createHttpTerminator({

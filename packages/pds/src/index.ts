@@ -57,14 +57,11 @@ export type SkeletonHandler = MethodHandler<
   app.bsky.feed.getFeedSkeleton.$Output
 >
 
-const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 export class PDS {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
   private sequencerStatsInterval?: NodeJS.Timeout
 
@@ -147,7 +144,7 @@ export class PDS {
     this.server = server
     // @NOTE We use something smaller than tests hooks timeout
     this.server.keepAliveTimeout = 50_000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
   }

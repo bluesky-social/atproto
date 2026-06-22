@@ -3,7 +3,7 @@ import { AddressInfo } from 'node:net'
 import { finished } from 'node:stream/promises'
 import express from 'express'
 import { request } from 'undici'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error.js'
 import { startServer } from './_util.js'
@@ -18,8 +18,11 @@ describe('server', () => {
     })
     const sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

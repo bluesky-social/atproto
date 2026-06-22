@@ -2,6 +2,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -44,11 +45,14 @@ describe('appview drafts views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
-  }, 20_000) // @NOTE seeding can take a while
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
+  })
 
   afterEach(async () => {
     vi.resetAllMocks()

@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -49,6 +49,9 @@ describe('label hydration', () => {
       val: 'not-expired',
       exp: new Date(Date.now() + MINUTE).toISOString(),
     })
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

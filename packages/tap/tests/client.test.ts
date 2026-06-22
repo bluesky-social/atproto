@@ -7,8 +7,6 @@ import httpTerminator from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Tap } from '../src/client.js'
 
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 describe('Tap client', () => {
   describe('constructor', () => {
     it('accepts http URL', () => {
@@ -32,7 +30,7 @@ describe('Tap client', () => {
   })
 
   describe('HTTP methods', () => {
-    let terminator: HttpTerminator
+    let terminator: httpTerminator.HttpTerminator
     let tap: Tap
     let requests: {
       path: string
@@ -168,7 +166,7 @@ describe('Tap client', () => {
   })
 
   describe('HTTP error handling', () => {
-    let terminator: HttpTerminator
+    let terminator: httpTerminator.HttpTerminator
     let tap: Tap
 
     beforeAll(async () => {

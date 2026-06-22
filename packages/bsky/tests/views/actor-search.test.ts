@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyActorSearchActors, AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
@@ -41,7 +41,6 @@ describe.skip('pds actor search views', () => {
 
     // Process remaining profiles
     await network.bsky.sub.restart()
-    await network.processAll(50000)
     headers = await network.serviceHeaders(
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActors,
@@ -50,7 +49,11 @@ describe.skip('pds actor search views', () => {
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActorsTypeahead,
     )
-  }, 20_000) // @NOTE seeding can take a while
+  })
+
+  beforeEach(async () => {
+    await network.processAll(50_000)
+  }, 55_000)
 
   afterAll(async () => {
     await network?.close()

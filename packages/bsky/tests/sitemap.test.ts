@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { TestNetwork } from '@atproto/dev-env'
 
 describe('sitemap', () => {
@@ -8,6 +8,10 @@ describe('sitemap', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_sitemap',
     })
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

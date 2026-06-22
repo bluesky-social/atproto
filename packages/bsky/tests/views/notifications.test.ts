@@ -91,8 +91,6 @@ describe('notification views', () => {
       password: 'blocked-pass',
     })
 
-    await network.processAll()
-
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -102,6 +100,10 @@ describe('notification views', () => {
     greg = sc.dids.greg
     han = sc.dids.han
     blocked = sc.dids.blocked
+  })
+
+  beforeEach(async () => {
+    await network.processAll()
   })
 
   afterAll(async () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -22,6 +22,9 @@ describe('bsky account deactivation', () => {
       {},
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
+  })
+
+  beforeEach(async () => {
     await network.processAll()
   })
 

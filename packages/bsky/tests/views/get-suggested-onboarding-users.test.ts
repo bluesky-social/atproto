@@ -4,7 +4,7 @@ import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
   AtpAgent,
@@ -85,7 +85,9 @@ describe('getSuggestedOnboardingUsers', () => {
 
     const result = await seed(sc)
     seededUsers = result.users
+  })
 
+  beforeEach(async () => {
     await network.processAll()
   })
 
@@ -149,20 +151,19 @@ describe('getSuggestedOnboardingUsers', () => {
   })
 })
 
-const { createHttpTerminator } = httpTerminator
-export type HttpTerminator = httpTerminator.HttpTerminator
-
 class MockServer {
   app: Application
   server: Server
-  terminator: HttpTerminator
+  terminator: httpTerminator.HttpTerminator
 
   mockedDids = new Map<string, string>()
 
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
-    this.terminator = createHttpTerminator({ server: this.server })
+    this.terminator = httpTerminator.createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
