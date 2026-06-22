@@ -25,10 +25,10 @@ describe('thread mutes', () => {
     rootPost = (await sc.post(alice, 'root post')).ref
     replyPost = (await sc.reply(alice, rootPost, rootPost, 'first reply')).ref
     await network.processAll()
-  }, 20_000) // @NOTE seeding can take a while
+  })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('mutes threads', async () => {

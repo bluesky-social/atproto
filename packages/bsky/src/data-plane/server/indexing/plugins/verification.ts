@@ -96,7 +96,10 @@ const notifsForDelete = (
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: app.bsky.graph.verification.main,
     insertFn,

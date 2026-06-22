@@ -62,7 +62,7 @@ describe('account timeline', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('Returns entire timeline of events for a given account', async () => {

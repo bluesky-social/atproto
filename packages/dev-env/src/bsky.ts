@@ -122,7 +122,7 @@ export class TestBsky {
 
     await server.start()
 
-    sub.start()
+    void sub.start()
 
     return new TestBsky(url, port, db, server, dataplane, bsync, sub, serverDid)
   }
@@ -158,10 +158,27 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy()
-    await this.bsync.destroy()
-    await this.dataplane.destroy()
-    await this.sub.destroy()
-    await this.db.close()
+    // @TODO Use disposable stack when it becomes available (Node24+)
+    try {
+      await this.server.destroy()
+    } finally {
+      try {
+        await this.bsync.destroy()
+      } finally {
+        try {
+          await this.dataplane.destroy()
+        } finally {
+          try {
+            await this.sub.destroy()
+          } finally {
+            await this.db.close()
+          }
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

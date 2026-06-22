@@ -1,5 +1,21 @@
 # @atproto/oauth-provider
 
+## 0.19.0
+
+### Minor Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `Account` properties to contain strongly typed `did`
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to deactivate and delete account from the account manager interface
+
+### Patch Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `consentRequired` logic from OAuth consent flow UI
+
+- Updated dependencies [[`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`6fcf9b2`](https://github.com/bluesky-social/atproto/commit/6fcf9b20d8ed4b30d63f97b9311e81c25f12b684), [`61c0066`](https://github.com/bluesky-social/atproto/commit/61c006651b874558c1b24110b01806067b93b49a), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`dd77cdd`](https://github.com/bluesky-social/atproto/commit/dd77cdd4d728c6d9fa0429629cb66266ec88ca96), [`22b0c43`](https://github.com/bluesky-social/atproto/commit/22b0c43401d8c6b8e622e1737333671e8847674f), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`55172ab`](https://github.com/bluesky-social/atproto/commit/55172aba771b54d5eed73e5b314bf7c3a2f7364a)]:
+  - @atproto/oauth-provider-api@0.7.0
+  - @atproto/oauth-provider-ui@0.8.0
+
 ## 0.18.4
 
 ### Patch Changes

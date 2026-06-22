@@ -44,7 +44,7 @@ describe('sequencer', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))

@@ -34,7 +34,7 @@ describe('blob deletes', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getDbBlobsForDid = (did: string) => {

@@ -47,7 +47,7 @@ describe('plc operations', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getMailFrom = async (promise): Promise<SendMailOptions> => {

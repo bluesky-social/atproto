@@ -106,7 +106,7 @@ describe('queue', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('get active assignments', async () => {

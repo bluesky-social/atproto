@@ -12,10 +12,8 @@ import { type ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
+// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-// eslint-disable-next-line import/no-named-as-default-member
-const { createHttpTerminator } = httpTerminator
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 import type { FetchHandler } from './lex-router.ts'
 
@@ -549,7 +547,7 @@ export function createServer<
   const listener = toRequestListener(fetchHandler)
   const server = createHttpServer(options, listener)
 
-  const terminator = createHttpTerminator({
+  const terminator = httpTerminator.createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
   })

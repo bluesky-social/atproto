@@ -5,11 +5,8 @@ import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
+// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-// eslint-disable-next-line import/no-named-as-default-member
-const { createHttpTerminator } = httpTerminator
-type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -63,7 +60,7 @@ export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -288,7 +285,7 @@ export class BskyAppView {
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
@@ -296,9 +293,19 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.featureGatesClient.destroy()
-    await this.terminator?.terminate()
-    await this.ctx.etcd?.close()
+    try {
+      await this.ctx.featureGatesClient.destroy()
+    } finally {
+      try {
+        await this.terminator?.terminate()
+      } finally {
+        await this.ctx.etcd?.close()
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

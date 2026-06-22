@@ -3,6 +3,8 @@ import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
 import { ScopePermissions } from '@atproto/oauth-scopes'
@@ -30,7 +32,7 @@ describe('proxy oauth audience', () => {
   let sc: SeedClient
   let alice: string
   let upstream: ProxyServer
-  let server: http.Server
+  let terminator: httpTerminator.HttpTerminator
   let serverUrl: string
 
   beforeAll(async () => {
@@ -88,15 +90,18 @@ describe('proxy oauth audience', () => {
         res.status(err.status ?? err.statusCode ?? 500).end()
       },
     )
-    server = app.listen(0)
+    const server = app.listen(0)
     await once(server, 'listening')
+    terminator = httpTerminator.createHttpTerminator({ server })
     serverUrl = `http://localhost:${(server.address() as AddressInfo).port}`
   })
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => server.close(() => resolve()))
-    await upstream.close()
-    await network.close()
+    await Promise.all([
+      terminator?.terminate(),
+      upstream?.close(),
+      network?.close(),
+    ])
   })
 
   it('matches an OAuth rpc scope granted with combined did#serviceId aud', async () => {
@@ -127,11 +132,15 @@ describe('proxy oauth audience', () => {
 })
 
 class ProxyServer {
+  private terminator: httpTerminator.HttpTerminator
+
   constructor(
-    public server: http.Server,
+    server: http.Server,
     public url: string,
     public did: string,
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async create(
     plcClient: plc.Client,
@@ -168,8 +177,6 @@ class ProxyServer {
   }
 
   close(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.server.close(() => resolve())
-    })
+    return this.terminator.terminate()
   }
 }

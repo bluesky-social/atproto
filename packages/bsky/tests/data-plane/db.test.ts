@@ -16,7 +16,7 @@ describe('db', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('handles client errors without crashing.', async () => {

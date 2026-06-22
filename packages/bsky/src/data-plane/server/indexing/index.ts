@@ -62,7 +62,7 @@ export class IndexingService {
   constructor(
     public db: Database,
     public idResolver: IdResolver,
-    public background: BackgroundQueue,
+    public background: BackgroundQueue<Database>,
   ) {
     this.records = {
       post: Post.makePlugin(this.db, this.background),

@@ -21,6 +21,10 @@ export const locales = {
     name: '한국어',
     flag: '🇰🇷',
   },
+  sv: {
+    name: 'svenska',
+    flag: '🇸🇪',
+  },
 } as const satisfies Record<string, { name: string; flag?: string }>
 
 export type Locale = keyof typeof locales

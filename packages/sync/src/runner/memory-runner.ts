@@ -13,10 +13,11 @@ type Queue = InstanceType<typeof PQueue>
 // A queue with arbitrarily many partitions, each processing work sequentially.
 // Partitions are created lazily and taken out of memory when they go idle.
 export class MemoryRunner implements EventRunner {
-  consecutive = new ConsecutiveList<number>()
-  mainQueue: Queue
-  partitions: Map<string, Queue> = new Map()
-  cursor: number | undefined
+  private destroyed = false
+  private readonly consecutive = new ConsecutiveList<number>()
+  private readonly mainQueue: Queue
+  private readonly partitions: Map<string, Queue> = new Map()
+  private cursor: number | undefined
 
   constructor(public opts: MemoryRunnerOptions = {}) {
     this.mainQueue = new PQueue({ concurrency: opts.concurrency ?? Infinity })
@@ -27,8 +28,13 @@ export class MemoryRunner implements EventRunner {
     return this.cursor
   }
 
+  /** @deprecated internal use only */
+  get partitionCount() {
+    return this.partitions.size
+  }
+
   async addTask(partitionId: string, task: () => Promise<void>) {
-    if (this.mainQueue.isPaused) return
+    if (this.destroyed) return
     return this.mainQueue.add(() => {
       return this.getPartition(partitionId).add(task)
     })
@@ -45,7 +51,7 @@ export class MemoryRunner implements EventRunner {
   }
 
   async trackEvent(did: string, seq: number, handler: () => Promise<void>) {
-    if (this.mainQueue.isPaused) return
+    if (this.destroyed) return
     const item = this.consecutive.push(seq)
     await this.addTask(did, async () => {
       await handler()
@@ -60,13 +66,14 @@ export class MemoryRunner implements EventRunner {
   }
 
   async processAll() {
-    await this.mainQueue.onIdle()
+    const queue = this.mainQueue
+    while (queue.size || queue.pending) await queue.onIdle()
   }
 
   async destroy() {
-    this.mainQueue.pause()
+    this.destroyed = true
     this.mainQueue.clear()
     this.partitions.forEach((p) => p.clear())
-    await this.mainQueue.onIdle()
+    await this.processAll()
   }
 }

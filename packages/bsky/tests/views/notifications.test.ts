@@ -91,8 +91,6 @@ describe('notification views', () => {
       password: 'blocked-pass',
     })
 
-    await network.processAll()
-
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -104,9 +102,8 @@ describe('notification views', () => {
     blocked = sc.dids.blocked
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   const sortNotifs = (
     notifs: AppBskyNotificationListNotifications.Notification[],

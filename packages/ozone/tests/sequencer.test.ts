@@ -20,7 +20,7 @@ describe('sequencer', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const loadFromDb = (lastSeen: number) => {

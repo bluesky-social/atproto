@@ -31,7 +31,7 @@ describe('admin repo search view', () => {
   }, 40_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

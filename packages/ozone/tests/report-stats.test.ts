@@ -119,7 +119,7 @@ describe('report-stats', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('aggregate', () => {

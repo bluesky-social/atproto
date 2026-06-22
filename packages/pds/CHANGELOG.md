@@ -1,5 +1,20 @@
 # @atproto/pds
 
+## 0.5.6
+
+### Patch Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Calling `updateSubjectStatus` to both activate & take an account down will result in an error as takendown accounts can no longer be updated to an "active" status
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `com.atproto.admin.updateSubjectStatus` will throw when trying to re-activate an account whose DID does not resolve to the right PDS
+
+- [#5086](https://github.com/bluesky-social/atproto/pull/5086) [`20665c1`](https://github.com/bluesky-social/atproto/commit/20665c18322effe648f73d70fc1a8dcc7e312992) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade kysely from 0.22 to 0.29
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to deactivate and delete account from the account manager interface
+
+- Updated dependencies [[`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f), [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f)]:
+  - @atproto/oauth-provider@0.19.0
+
 ## 0.5.5
 
 ### Patch Changes

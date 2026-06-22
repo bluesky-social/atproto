@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyEmbedRecord, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { Users, postgatesSeed } from './seed/postgates.js'
@@ -20,13 +20,10 @@ describe('postgates', () => {
 
     const result = await postgatesSeed(sc)
     users = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe(`quotee <-> quoter`, () => {
     it(`quotee detaches own post from quoter`, async () => {

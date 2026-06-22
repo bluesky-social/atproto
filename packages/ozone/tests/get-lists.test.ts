@@ -35,8 +35,9 @@ describe('admin get lists', () => {
   })
 
   afterAll(async () => {
+    // @TODO figure out why we even need this in afterAll ?
     AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
-    await network.close()
+    await network?.close()
   })
 
   const getAlicesList = async () => {

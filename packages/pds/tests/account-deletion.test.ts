@@ -56,7 +56,7 @@ describe('account deletion', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    await network.close()
+    await network?.close()
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {

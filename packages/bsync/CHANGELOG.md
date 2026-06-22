@@ -1,5 +1,11 @@
 # @atproto/bsync
 
+## 0.0.29
+
+### Patch Changes
+
+- [#5086](https://github.com/bluesky-social/atproto/pull/5086) [`20665c1`](https://github.com/bluesky-social/atproto/commit/20665c18322effe648f73d70fc1a8dcc7e312992) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade kysely from 0.22 to 0.29
+
 ## 0.0.28
 
 ### Patch Changes

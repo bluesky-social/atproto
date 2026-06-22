@@ -143,7 +143,7 @@ describe('report-reassign-queue', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('happy path: assigning to a real queue', () => {

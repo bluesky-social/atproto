@@ -323,6 +323,9 @@ importers:
       '@jest/globals':
         specifier: ^28.1.3
         version: 28.1.3
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
@@ -495,8 +498,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^6.19.8
-        version: 6.19.8
+        specifier: ^8.5.0
+        version: 8.5.0
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -712,6 +715,9 @@ importers:
       get-port:
         specifier: ^5.1.1
         version: 5.1.1
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
@@ -719,8 +725,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^6.14.1
-        version: 6.19.8
+        specifier: ^8.5.0
+        version: 8.5.0
     devDependencies:
       '@types/express':
         specifier: ^4.17.13
@@ -809,8 +815,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       undici:
-        specifier: ^6.14.1
-        version: 6.19.8
+        specifier: ^8.5.0
+        version: 8.5.0
 
   packages/internal/handle-resolver:
     dependencies:
@@ -1801,8 +1807,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^6.14.1
-        version: 6.19.8
+        specifier: ^8.5.0
+        version: 8.5.0
       ws:
         specifier: ^8.12.0
         version: 8.18.0
@@ -1834,6 +1840,9 @@ importers:
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
@@ -1973,8 +1982,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.1
       undici:
-        specifier: ^6.19.8
-        version: 6.19.8
+        specifier: ^8.5.0
+        version: 8.5.0
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -2142,6 +2151,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.18.2
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
@@ -2161,6 +2173,9 @@ importers:
       get-port:
         specifier: ^6.1.2
         version: 6.1.2
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
@@ -11016,6 +11031,10 @@ packages:
     resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
     engines: {node: '>=18.17'}
 
+  undici@8.5.0:
+    resolution: {integrity: sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==}
+    engines: {node: '>=22.19.0'}
+
   unicode-canonical-property-names-ecmascript@2.0.1:
     resolution: {integrity: sha512-dA8WbNeb2a6oQzAQ55YlT5vQAWGV9WXOsi3SskE3bcCdM0P4SDd+24zS/OCacdRq5BkdsRj9q3Pg6YyQoxIGqg==}
     engines: {node: '>=4'}
@@ -15891,7 +15910,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 18.19.67
+      '@types/node': 22.19.17
 
   '@types/ws@8.5.4':
     dependencies:
@@ -18475,7 +18494,7 @@ snapshots:
   globalthis@1.0.4:
     dependencies:
       define-properties: 1.2.1
-      gopd: 1.0.1
+      gopd: 1.2.0
 
   globby@11.1.0:
     dependencies:
@@ -18977,7 +18996,7 @@ snapshots:
   istanbul-lib-instrument@6.0.3:
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/parser': 7.28.5
+      '@babel/parser': 7.29.3
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
       semver: 7.7.4
@@ -21407,7 +21426,7 @@ snapshots:
       boolean: 3.2.0
       fast-json-stringify: 5.8.0
       fast-printf: 1.6.9
-      globalthis: 1.0.3
+      globalthis: 1.0.4
       safe-stable-stringify: 2.4.3
       semver-compare: 1.0.0
 
@@ -22298,6 +22317,8 @@ snapshots:
       '@fastify/busboy': 2.1.0
 
   undici@6.19.8: {}
+
+  undici@8.5.0: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 

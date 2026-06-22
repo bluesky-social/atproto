@@ -40,8 +40,8 @@ describe('file uploads', () => {
   })
 
   afterAll(async () => {
-    aliceDb.close()
-    await network.close()
+    aliceDb?.close()
+    await network?.close()
   })
 
   let smallBlob: TypedBlobRef

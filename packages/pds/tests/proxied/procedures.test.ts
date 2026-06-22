@@ -25,7 +25,7 @@ describe('proxies appview procedures', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('maintains muted actors.', async () => {

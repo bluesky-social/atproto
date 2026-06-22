@@ -2,6 +2,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -16,7 +17,7 @@ import {
   ids,
 } from '@atproto/api'
 import { TID } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
@@ -26,8 +27,6 @@ const LIMIT = 10
 describe('appview drafts views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let sc: SeedClient
-  let db: Database
 
   // account dids, for convenience
   let alice: string
@@ -40,24 +39,18 @@ describe('appview drafts views', () => {
         draftsLimit: LIMIT,
       },
     })
-    db = network.bsky.db
     agent = network.bsky.getAgent()
-    sc = network.getSeedClient()
+    const sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
 
-  afterEach(async () => {
-    vi.resetAllMocks()
-    await clearDrafts(db)
-  })
-
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterEach(async () => vi.resetAllMocks())
+  afterEach(async () => clearDrafts(network.bsky.db))
+  afterAll(async () => network?.close())
 
   const makeDraft = (): AppBskyDraftDefs.Draft => ({
     posts: [{ text: 'Hello, world!' }],

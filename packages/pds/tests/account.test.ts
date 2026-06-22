@@ -58,7 +58,7 @@ describe('account', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    await network.close()
+    await network?.close()
   })
 
   it('serves the accounts system config', async () => {
