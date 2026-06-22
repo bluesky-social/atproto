@@ -725,12 +725,12 @@ describe('notification views', () => {
     await network.processAll()
   })
 
-  // @NOTE there is some flakyness between these tests. We sometimes get
-  // "priority": true when the snapshot expects false.
-
   it('filters notifications by reason', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
+        // Pin priority so the snapshot doesn't race with the viewer's stored
+        // priority preference, which neighbouring tests mutate.
+        priority: false,
         reasons: ['mention'],
       },
       {
@@ -747,6 +747,9 @@ describe('notification views', () => {
   it('filters notifications by multiple reasons', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
+        // Pin priority so the snapshot doesn't race with the viewer's stored
+        // priority preference, which neighbouring tests mutate.
+        priority: false,
         reasons: ['mention', 'reply'],
       },
       {
@@ -1200,7 +1203,8 @@ describe('notification views', () => {
         },
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
-        chat: input0.chat,
+        // chat is deprecated: input is ignored and the default is always returned.
+        chat: cp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1224,8 +1228,8 @@ describe('notification views', () => {
         },
       }
       const expected1: AppBskyNotificationDefs.Preferences = {
-        // Kept from the previous call.
-        chat: input0.chat,
+        // chat is deprecated: input is ignored and the default is always returned.
+        chat: cp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
