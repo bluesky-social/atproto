@@ -247,11 +247,11 @@ export class TestOzone {
   }
 
   async close() {
-    await allFulfilled([
-      //
-      this.daemon.destroy(),
-      this.server.destroy(),
-    ])
+    try {
+      await this.server.destroy()
+    } finally {
+      await this.daemon.destroy()
+    }
   }
 
   async [Symbol.asyncDispose]() {

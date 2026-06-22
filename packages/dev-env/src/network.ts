@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
-import { wait } from '@atproto/common-web'
+import { allFulfilled, wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky.js'
 import { EXAMPLE_LABELER } from './const.js'
@@ -202,8 +202,8 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
-    await Promise.all([
-      ...this.feedGens.map((fg) => fg.close()),
+    await allFulfilled([
+      ...this.feedGens.map(async (fg) => fg.close()),
       this.ozone.close(),
       this.bsky.close(),
       this.pds.close(),

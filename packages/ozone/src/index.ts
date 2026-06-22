@@ -134,30 +134,16 @@ export class OzoneService {
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
 
-    console.time('ozoneService.destroy: terminator')
     try {
       await this.terminator?.terminate()
     } finally {
-      console.timeEnd('ozoneService.destroy: terminator')
-
-      console.time('ozoneService.destroy: backgroundQueue')
       try {
         await this.ctx.backgroundQueue.destroy()
       } finally {
-        console.timeEnd('ozoneService.destroy: backgroundQueue')
-
-        console.time('ozoneService.destroy: sequencer')
         try {
           await this.ctx.sequencer.destroy()
         } finally {
-          console.timeEnd('ozoneService.destroy: sequencer')
-
-          console.time('ozoneService.destroy: db')
-          try {
-            await this.ctx.db.close()
-          } finally {
-            console.timeEnd('ozoneService.destroy: db')
-          }
+          await this.ctx.db.close()
         }
       }
     }

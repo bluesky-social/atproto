@@ -87,13 +87,13 @@ export class BackgroundQueue {
    * only once http connections have drained (tasks no longer being added).
    */
   async destroy() {
-    if (this.destroyed) {
-      console.warn('BackgroundQueue.destroy() called multiple times')
-      return
+    if (!this.destroyed) {
+      this.abortController.abort()
+    } else {
+      dbLogger.warn('BackgroundQueue.destroy() called multiple times')
     }
 
-    this.abortController.abort()
-    await this.processAll()
+    return this.processAll()
   }
 }
 
