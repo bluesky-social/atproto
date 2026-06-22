@@ -1,5 +1,11 @@
 # @atproto-labs/fetch-node
 
+## 0.3.2
+
+### Patch Changes
+
+- [#5116](https://github.com/bluesky-social/atproto/pull/5116) [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update undici dependency to v8.5.0
+
 ## 0.3.1
 
 ### Patch Changes
