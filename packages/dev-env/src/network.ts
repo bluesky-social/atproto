@@ -167,7 +167,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
 
-  async processAll(timeout = 15_000) {
+  async processAll(timeout?: number) {
     await this.pds.processAll()
     await this.ozone.processAll()
     await this.processFullSubscription(timeout)

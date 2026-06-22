@@ -122,7 +122,7 @@ export class TestBsky {
 
     await server.start()
 
-    sub.start()
+    void sub.start()
 
     return new TestBsky(url, port, db, server, dataplane, bsync, sub, serverDid)
   }

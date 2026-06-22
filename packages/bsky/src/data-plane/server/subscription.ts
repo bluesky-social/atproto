@@ -28,13 +28,20 @@ export class RepoSubscription {
     this.firehose = firehose
   }
 
-  start() {
-    void this.firehose.start()
+  async start() {
+    await this.firehose.start()
+  }
+
+  async stop() {
+    try {
+      await this.firehose.destroy()
+    } finally {
+      await this.runner.destroy()
+    }
   }
 
   async restart() {
-    await this.firehose.destroy()
-    await this.runner.destroy()
+    await this.stop()
     const { runner, firehose } = createFirehose({
       idResolver: this.opts.idResolver,
       service: this.opts.service,
@@ -42,7 +49,7 @@ export class RepoSubscription {
     })
     this.runner = runner
     this.firehose = firehose
-    void firehose.start()
+    void this.start()
   }
 
   async processAll() {
@@ -52,13 +59,9 @@ export class RepoSubscription {
 
   async destroy() {
     try {
-      await this.firehose.destroy()
+      await this.stop()
     } finally {
-      try {
-        await this.runner.destroy()
-      } finally {
-        await this.background.destroy()
-      }
+      await this.background.processAll()
     }
   }
 

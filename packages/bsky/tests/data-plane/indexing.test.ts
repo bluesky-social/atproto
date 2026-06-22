@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyFeedLike,
@@ -16,6 +16,7 @@ import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../../src/data-plane/server/db/index.js'
+import { IndexingService } from '../../src/data-plane/server/indexing/index.js'
 import { forSnapshot } from '../_util.js'
 
 describe('indexing', () => {
@@ -34,13 +35,11 @@ describe('indexing', () => {
     sc = network.getSeedClient()
     db = network.bsky.db
     await usersSeed(sc)
-    // Data in tests is not processed from subscription
     await network.processAll()
-    await network.bsky.sub.destroy()
-  })
 
-  beforeEach(async () => {
-    await network.processAll()
+    // Data in tests is not processed from subscription, instead we call
+    // indexing service methods directly.
+    await network.bsky.sub.stop()
   })
 
   afterAll(async () => {
@@ -49,7 +48,7 @@ describe('indexing', () => {
 
   it('indexes posts.', async () => {
     const createdAt = new Date().toISOString()
-    const createRecord = await prepareCreate({
+    const createRecord = await prepareCreate<AppBskyFeedPost.Record>({
       did: sc.dids.alice,
       collection: ids.AppBskyFeedPost,
       record: {
@@ -67,10 +66,10 @@ describe('indexing', () => {
           },
         ],
         createdAt,
-      } satisfies AppBskyFeedPost.Record,
+      },
     })
     const [uri] = createRecord
-    const updateRecord = await prepareUpdate({
+    const updateRecord = await prepareUpdate<AppBskyFeedPost.Record>({
       did: sc.dids.alice,
       collection: ids.AppBskyFeedPost,
       rkey: uri.rkey,
@@ -89,7 +88,7 @@ describe('indexing', () => {
           },
         ],
         createdAt,
-      } satisfies AppBskyFeedPost.Record,
+      },
     })
     const deleteRecord = prepareDelete({
       did: sc.dids.alice,
@@ -786,13 +785,13 @@ describe('indexing', () => {
   }
 })
 
-async function prepareCreate(opts: {
+async function prepareCreate<TRecord>(opts: {
   did: string
   collection: string
   rkey?: string
-  record: unknown
+  record: TRecord
   timestamp?: string
-}): Promise<[AtUri, Cid, unknown, WriteOpAction.Create, string]> {
+}): Promise<[AtUri, Cid, TRecord, WriteOpAction.Create, string]> {
   const rkey = opts.rkey ?? TID.nextStr()
   return [
     AtUri.make(opts.did, opts.collection, rkey),
@@ -800,23 +799,23 @@ async function prepareCreate(opts: {
     opts.record,
     WriteOpAction.Create,
     opts.timestamp ?? new Date().toISOString(),
-  ]
+  ] satisfies Parameters<IndexingService['indexRecord']>
 }
 
-async function prepareUpdate(opts: {
+async function prepareUpdate<TRecord>(opts: {
   did: string
   collection: string
   rkey: string
-  record: unknown
+  record: TRecord
   timestamp?: string
-}): Promise<[AtUri, Cid, unknown, WriteOpAction.Update, string]> {
+}): Promise<[AtUri, Cid, TRecord, WriteOpAction.Update, string]> {
   return [
     AtUri.make(opts.did, opts.collection, opts.rkey),
     await cidForCbor(opts.record),
     opts.record,
     WriteOpAction.Update,
     opts.timestamp ?? new Date().toISOString(),
-  ]
+  ] satisfies Parameters<IndexingService['indexRecord']>
 }
 
 function prepareDelete(opts: {
@@ -824,5 +823,7 @@ function prepareDelete(opts: {
   collection: string
   rkey: string
 }): [AtUri] {
-  return [AtUri.make(opts.did, opts.collection, opts.rkey)]
+  return [
+    AtUri.make(opts.did, opts.collection, opts.rkey),
+  ] satisfies Parameters<IndexingService['deleteRecord']>
 }
