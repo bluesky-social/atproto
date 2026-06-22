@@ -26,9 +26,6 @@ export class BackgroundQueue<TContext = unknown> {
     if (this.destroyed) return
 
     this.queue.add<void>(async () => {
-      // Destroyed while task is waiting in the queue, do not run the task.
-      if (this.destroyed) return
-
       try {
         // The task will receive a signal allowing it to abort if the
         // backgroundQueue is destroyed.
