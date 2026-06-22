@@ -18,25 +18,20 @@
             },
             "mintPolicy": {
               "type": "string",
-              "knownValues": ["public", "member-list", "app-callback"],
-              "description": "How the host decides whether to authorize a credential for a requesting user."
+              "knownValues": ["public", "member-list", "managing-app"],
+              "description": "How the authority decides whether to authorize a requesting user."
             },
             "managingApp": {
               "type": "string",
               "description": "Service identifier of the managing application. Pass an empty string to clear."
             },
-            "appAccessMode": {
-              "type": "string",
-              "knownValues": ["allow", "deny"],
-              "description": "App-level access policy."
-            },
-            "appExceptions": {
-              "type": "array",
-              "description": "Apps that break from the default appAccessMode. Sent as a full replacement, not a delta.",
-              "items": {
-                "type": "string",
-                "description": "OAuth client ID."
-              }
+            "appAccess": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting app. When supplied, replaces the current policy wholesale.",
+              "refs": [
+                "com.atproto.simplespace.defs#open",
+                "com.atproto.simplespace.defs#allowList"
+              ]
             }
           }
         }

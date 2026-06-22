@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify a member's PDS or a syncing service that a space has been deleted. Sent by the space owner's PDS.",
+      "description": "Notify a repo host or syncing service that a space has been deleted. Sent by the space authority, best-effort. Authenticated with service auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

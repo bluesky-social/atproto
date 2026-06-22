@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a blob referenced from a record in a permissioned space. Returns the full blob as originally uploaded. Callable with either OAuth (for the authenticated user's own data) or a space-credential (for syncing services).",
+      "description": "Get a blob referenced from a record in a permissioned space. Returns the full blob as originally uploaded. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo", "cid"],
@@ -17,7 +17,7 @@
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the member whose repo holds the blob."
+            "description": "The DID of the account whose repo holds the blob."
           },
           "cid": {
             "type": "string",

@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.getRepoOplog",
+  "id": "com.atproto.space.listRepoOps",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the operation log for a member's permissioned repo within a space. Used for incremental sync. If a syncer falls behind compaction, oplog replay will produce a hash mismatch against the current commitment; the syncer then falls back to full-state recovery via listRecords + getRecord. Callable with either OAuth (for the authenticated user's own data) or a space-credential (for syncing services).",
+      "description": "List the operation log for an account's permissioned repo within a space, returning operations after a given revision. Primary incremental sync mechanism. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
@@ -17,7 +17,7 @@
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the member whose oplog to retrieve."
+            "description": "The DID of the account whose oplog to retrieve."
           },
           "since": {
             "type": "string",
@@ -48,7 +48,7 @@
             "commit": {
               "type": "ref",
               "ref": "com.atproto.space.defs#signedCommit",
-              "description": "Signed commitment over the current repo state. Includes the LtHash digest (commit.hash) and the rev. Only returned when the response drains the oplog to head — backfill responses omit it."
+              "description": "The account's current signed commit. Included when the response reaches the head of the oplog; omitted on backfill responses."
             },
             "cursor": {
               "type": "string"

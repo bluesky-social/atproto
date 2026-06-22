@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.registerNotify",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Register an endpoint to be notified of writes. On a space host, subscribes to all repos in the space; on a repo host with a `repo`, subscribes to that repo only. Authenticated with a space credential.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "endpoint"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-uri",
+              "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of a specific repo to subscribe to (repo host). Omit to subscribe to the whole space (space host)."
+            },
+            "endpoint": {
+              "type": "string",
+              "format": "uri",
+              "description": "The endpoint to which notifyWrite events should be delivered."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["expiresAt"],
+          "properties": {
+            "expiresAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When the registration expires."
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    }
+  }
+}

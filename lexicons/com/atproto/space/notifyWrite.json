@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify of a write to a permissioned repo within a space. Sent by member PDSes to the space owner, and by the space owner to syncing services.",
+      "description": "Notify that a repo in a space has advanced to a new revision. Sent by a repo host to the space host, and forwarded to registered syncers. Best-effort. Authenticated with service auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -19,7 +19,7 @@
             "repo": {
               "type": "string",
               "format": "did",
-              "description": "The DID of the member who wrote data."
+              "description": "The DID of the account whose repo advanced."
             },
             "rev": {
               "type": "string",

@@ -29,7 +29,7 @@
             "config": {
               "type": "ref",
               "ref": "com.atproto.simplespace.defs#spaceConfig",
-              "description": "Initial configuration for the space. If omitted, the host applies its defaults (e.g. mintPolicy 'member-list', appAccessMode 'allow')."
+              "description": "Initial configuration for the space. If omitted, the host applies its defaults (mintPolicy 'member-list', appAccess '#open')."
             }
           }
         }

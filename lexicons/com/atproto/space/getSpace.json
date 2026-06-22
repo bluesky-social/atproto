@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get details for a space. Must be called on the space owner's PDS. Returns the space URI and ownership, plus an open-union `config` carrying host-implementation-specific configuration (e.g. com.atproto.simplespace.defs#spaceConfig). Clients that don't recognize the config variant should ignore it.",
+      "description": "Describe a space. Served by the space host. Returns the space URI plus an open-union `config` carrying host-implementation-specific configuration (e.g. com.atproto.simplespace.defs#spaceConfig). Clients that don't recognize the config variant should ignore it.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -26,10 +26,6 @@
               "type": "string",
               "format": "space-uri",
               "description": "URI of the space."
-            },
-            "isOwner": {
-              "type": "boolean",
-              "description": "Whether the authenticated user is the owner of the space."
             },
             "config": {
               "type": "union",

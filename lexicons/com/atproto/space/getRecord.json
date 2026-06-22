@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a single record from a permissioned space. Callable with either OAuth (for the authenticated user's own data) or a space-credential (for syncing services).",
+      "description": "Get a single record from a permissioned space. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo", "collection", "rkey"],
@@ -17,7 +17,7 @@
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the member whose repo to read from."
+            "description": "The DID of the account whose repo to read from."
           },
           "collection": {
             "type": "string",

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the repos that hold data in a space. Analogous to com.atproto.sync.listRepos: a space owner is self-interested in helping syncers sync the space, so it enumerates the repos that have written data (the writer set). This is the sync boundary — it is not an access-control list, and it intentionally does not enumerate readers. Must be called on the space owner's PDS.",
+      "description": "List the known repos that hold data in a space (the writer set). Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers.",
       "parameters": {
         "type": "params",
         "required": ["space"],
