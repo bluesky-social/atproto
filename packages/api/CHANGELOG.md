@@ -1,5 +1,21 @@
 # @atproto/api
 
+## 0.20.18
+
+### Patch Changes
+
+- [#5124](https://github.com/bluesky-social/atproto/pull/5124) [`ef3adfa`](https://github.com/bluesky-social/atproto/commit/ef3adfaa0731a57780ccf6f1f81183c1938e1af4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5114](https://github.com/bluesky-social/atproto/pull/5114) [`5206b3a`](https://github.com/bluesky-social/atproto/commit/5206b3aae30b1efe39cff8cccbabb5932cd49a3d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add searchPostsV2 endpoint
+
+## 0.20.17
+
+### Patch Changes
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5123](https://github.com/bluesky-social/atproto/pull/5123) [`cab3ac3`](https://github.com/bluesky-social/atproto/commit/cab3ac321bf939a4c8ba29aed3f632d8a91790bf) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.16
 
 ### Patch Changes

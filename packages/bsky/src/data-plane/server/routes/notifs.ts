@@ -6,8 +6,6 @@ import { lexParse } from '@atproto/lex'
 import { app } from '../../../lexicons/index.js'
 import { Service } from '../../../proto/bsky_connect.js'
 import {
-  ChatNotificationInclude,
-  ChatNotificationPreference,
   FilterableNotificationPreference,
   NotificationInclude,
   NotificationPreference,
@@ -203,17 +201,6 @@ export const notificationPreferencesLexToProtobuf = (
   p: app.bsky.notification.defs.Preferences,
   json: string,
 ): NotificationPreferences => {
-  const lexChatPreferenceToProtobuf = (
-    p: app.bsky.notification.defs.ChatPreference,
-  ): ChatNotificationPreference =>
-    new ChatNotificationPreference({
-      include:
-        p.include === 'accepted'
-          ? ChatNotificationInclude.ACCEPTED
-          : ChatNotificationInclude.ALL,
-      push: { enabled: p.push ?? true },
-    })
-
   const lexFilterablePreferenceToProtobuf = (
     p: app.bsky.notification.defs.FilterablePreference,
   ): FilterableNotificationPreference =>
@@ -236,7 +223,6 @@ export const notificationPreferencesLexToProtobuf = (
 
   return new NotificationPreferences({
     entry: Buffer.from(json),
-    chat: lexChatPreferenceToProtobuf(p.chat),
     follow: lexFilterablePreferenceToProtobuf(p.follow),
     like: lexFilterablePreferenceToProtobuf(p.like),
     likeViaRepost: lexFilterablePreferenceToProtobuf(p.likeViaRepost),

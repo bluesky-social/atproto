@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Marks all join requests as read for the group owner.",
+      "description": "Marks all join requests as read for the group owner.",
       "errors": [{ "name": "InvalidConvo" }, { "name": "InsufficientRole" }],
       "input": {
         "encoding": "application/json",

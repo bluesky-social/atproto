@@ -815,20 +815,12 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationInclude {
-  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
-  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
-}
-
-message ChatNotificationPreference {
-  ChatNotificationInclude include = 1;
-  NotificationChannelPush push = 2;
-}
-
 message NotificationPreferences {
   bytes entry = 1;
-  ChatNotificationPreference chat = 2;
+
+  reserved 2; // formerly "chat". This is now stored on the chat service.
+  reserved "chat";
+
   FilterableNotificationPreference follow = 3;
   FilterableNotificationPreference like = 4;
   FilterableNotificationPreference like_via_repost = 5;
@@ -1202,7 +1194,8 @@ message PostsFilters {
   // Content filters
   repeated string domains = 3;
   repeated string urls = 4;
-  repeated string embed_uris = 5;
+  // Canonical request field for posts embedding these AT-URI records.
+  repeated string embedded_at_uris = 5;
   repeated string hashtags = 6;
 }
 
