@@ -1,0 +1,25 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.pollAnswer",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Record declaring a user's answer to a poll.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "answer", "createdAt"],
+        "properties": {
+          "subject": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "answer": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 15,
+            "description": "The index of the option selected by the user."
+          }
+        }
+      }
+    }
+  }
+}
