@@ -4,5 +4,8 @@
     "rootDir": ".",
   },
   "include": ["./tests", "./src/**/*.test.ts"],
-  "references": [{ "path": "./tsconfig.build.json" }],
+  "references": [
+    { "path": "../dev-env/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
 }

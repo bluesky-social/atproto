@@ -11,4 +11,10 @@
     },
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    { "path": "../../syntax/tsconfig.build.json" },
+    { "path": "../oauth-provider-api/tsconfig.build.json" },
+    { "path": "../oauth-scopes/tsconfig.build.json" },
+    { "path": "../oauth-types/tsconfig.build.json" },
+  ],
 }

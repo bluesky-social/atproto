@@ -9,5 +9,8 @@
     "outDir": "./dist",
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
-  "references": [{ "path": "../oauth-client-browser/tsconfig.build.json" }],
+  "references": [
+    { "path": "../../lex/lex/tsconfig.build.json" },
+    { "path": "../oauth-client-browser/tsconfig.build.json" },
+  ],
 }

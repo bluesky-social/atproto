@@ -6,4 +6,9 @@
     "noEmit": true,
   },
   "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts", "./*.cts", "./*.mts"],
+  "references": [
+    {
+      "path": "../../internal/rollup-plugin-bundle-manifest/tsconfig.build.json",
+    },
+  ],
 }

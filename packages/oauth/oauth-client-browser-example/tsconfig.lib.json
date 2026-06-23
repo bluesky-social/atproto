@@ -8,4 +8,9 @@
   },
   "include": ["./*.js", "./*.mjs", "./*.cjs", "./*.ts"],
   "exclude": [],
+  "references": [
+    {
+      "path": "../../internal/rollup-plugin-bundle-manifest/tsconfig.build.json",
+    },
+  ],
 }

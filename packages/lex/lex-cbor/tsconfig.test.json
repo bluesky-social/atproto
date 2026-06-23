@@ -4,5 +4,8 @@
   "compilerOptions": {
     "rootDir": "./",
   },
-  "references": [{ "path": "./tsconfig.build.json" }],
+  "references": [
+    { "path": "../lex-json/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
 }

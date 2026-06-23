@@ -6,5 +6,8 @@
     "rootDir": ".",
   },
   "include": ["./tests"],
-  "references": [{ "path": "./tsconfig.build.json" }],
+  "references": [
+    { "path": "../lex/lex-document/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
 }
