@@ -26,8 +26,6 @@ export default function (server: Server, ctx: AppContext) {
         const keypair = await store.keypair()
         return buildSignedCommit({
           spaceUri: space,
-          userDid: repo,
-          scope: 'records',
           state,
           keypair,
         })

@@ -1,6 +1,6 @@
 import { Keypair } from '@atproto/crypto'
 import { cidForLex } from '@atproto/lex-cbor'
-import { createCommit, verifyCommit } from './commit.js'
+import { createCommit, verifyCommitMac, verifyCommitSig } from './commit.js'
 import { RecordAlreadyExistsError, RecordNotFoundError } from './error.js'
 import { LtHash } from './lthash.js'
 import { SpaceRepoStorage } from './storage/index.js'
@@ -176,11 +176,22 @@ export class SpaceRepo {
     return createCommit(this.setHash, space, keypair)
   }
 
+  // Integrity: the commit's hash matches our local set hash, and its MAC binds
+  // that hash to the commit context. Does not establish authenticity — use
+  // verifyCommitSig with the author's signing key for that.
   verifyCommit(space: SpaceContext, commit: SignedCommit): boolean {
     return (
-      commit.hash.equals(this.setHash.digest()) &&
-      verifyCommit(space, commit)
+      commit.hash.equals(this.setHash.digest()) && verifyCommitMac(space, commit)
     )
+  }
+
+  // Authenticity: the signature over the commit context is valid for didKey.
+  verifyCommitSig(
+    space: SpaceContext,
+    commit: SignedCommit,
+    didKey: string,
+  ): Promise<boolean> {
+    return verifyCommitSig(space, commit, didKey)
   }
 }
 

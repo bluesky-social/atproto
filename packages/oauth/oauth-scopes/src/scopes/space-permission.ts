@@ -11,15 +11,34 @@ import {
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
 
+// Record-level actions. `read` is whole-space; `read_self` is the narrower
+// own-repo-only grant. Defaulted (when `action` is omitted) to everything but
+// `read_self`, since `read` already implies it.
 export const SPACE_ACTIONS = Object.freeze([
+  'read_self',
   'read',
   'create',
   'update',
   'delete',
-  'manage',
 ] as const)
 export type SpaceAction = (typeof SPACE_ACTIONS)[number]
 export const isSpaceAction = knownValuesValidator(SPACE_ACTIONS)
+
+export const SPACE_DEFAULT_ACTIONS = Object.freeze([
+  'read',
+  'create',
+  'update',
+  'delete',
+] as const)
+
+// Space-level management verbs, governed by the separate `manage=` param.
+export const SPACE_MANAGE_OPS = Object.freeze([
+  'create',
+  'update',
+  'delete',
+] as const)
+export type SpaceManageOp = (typeof SPACE_MANAGE_OPS)[number]
+export const isSpaceManageOp = knownValuesValidator(SPACE_MANAGE_OPS)
 
 /** Type param value: a space-type NSID, or "*" for any space type. */
 export type SpaceTypeParam = '*' | Nsid
@@ -51,22 +70,27 @@ export const isSpaceCollectionParam = (
 /**
  * The shape of a permission check at request time.
  *
- * - `read`: any grant on the matching (type, did, skey) tuple whose action
- *   list includes `read` (the default). Collection-independent.
+ * - `read`: whole-space read. Collection-independent. Satisfied by a grant
+ *   listing `read`.
+ * - `read_self`: own-repo read. Collection-constrained. Satisfied by a grant
+ *   listing `read` (which implies it) or `read_self`.
  * - `create | update | delete`: requires the action to be in the grant's
  *   action list AND the target collection to be in the grant's collection
  *   list. Empty collection list = no write targets.
- * - `manage`: governs space-level operations like `createSpace`,
+ * - `manage` (a verb): governs space-level operations like `createSpace`,
  *   `addMember`, `removeMember`, `deleteSpace`. Collection-independent;
- *   requires the action list to include `manage`. Implicitly grants read.
+ *   requires the verb to be in the grant's `manage` list. Not implied by any
+ *   record action.
  */
 export type SpacePermissionMatch = {
   type: string
   did: string
   skey: string
 } & (
-  | { action: 'read' | 'manage'; collection?: never }
-  | { action: 'create' | 'update' | 'delete'; collection: string }
+  | { action: 'read'; collection?: never; manage?: never }
+  | { action: 'read_self'; collection: string; manage?: never }
+  | { action: 'create' | 'update' | 'delete'; collection: string; manage?: never }
+  | { action?: never; collection?: never; manage: SpaceManageOp }
 )
 
 export class SpacePermission
@@ -78,6 +102,7 @@ export class SpacePermission
     public readonly skey: SpaceSkeyParam | '*',
     public readonly collection: NeRoArray<SpaceCollectionParam>,
     public readonly action: NeRoArray<SpaceAction>,
+    public readonly manage: NeRoArray<SpaceManageOp>,
   ) {}
 
   matches(target: SpacePermissionMatch) {
@@ -86,29 +111,34 @@ export class SpacePermission
     if (this.did !== '*' && this.did !== target.did) return false
     if (this.skey !== '*' && this.skey !== target.skey) return false
 
-    // Read is the baseline — any grant on the right (type, did, skey) tuple
-    // confers read access if it lists `read`. `manage` also implies read,
-    // since space-level admin without read access doesn't make sense.
-    if (target.action === 'read') {
-      return this.action.includes('read') || this.action.includes('manage')
+    // Space management — governed by the separate `manage` list.
+    if ('manage' in target && target.manage !== undefined) {
+      return this.manage.includes(target.manage)
     }
 
-    // Manage is collection-independent — governs space-level operations
-    // (createSpace, addMember, removeMember, deleteSpace).
-    if (target.action === 'manage') {
-      return this.action.includes('manage')
+    // Whole-space read. Collection-independent.
+    if (target.action === 'read') {
+      return this.action.includes('read')
+    }
+
+    // Own-repo read. `read` implies `read_self`; otherwise constrained by
+    // collection like a write.
+    if (target.action === 'read_self') {
+      if (this.action.includes('read')) return true
+      if (!this.action.includes('read_self')) return false
+      return this.collectionAllows(target.collection)
     }
 
     // Write check: action must be in the grant's action list and the target
     // collection must be in the grant's collection list.
-    const writeTarget = target as Extract<
-      SpacePermissionMatch,
-      { action: 'create' | 'update' | 'delete' }
-    >
-    if (!this.action.includes(writeTarget.action)) return false
+    if (!this.action.includes(target.action)) return false
+    return this.collectionAllows(target.collection)
+  }
+
+  private collectionAllows(collection: string): boolean {
     return (
       this.collection.includes('*') ||
-      (this.collection as readonly string[]).includes(writeTarget.collection)
+      (this.collection as readonly string[]).includes(collection)
     )
   }
 
@@ -157,11 +187,24 @@ export class SpacePermission
         multiple: true,
         required: false,
         validate: isSpaceAction,
-        default: SPACE_ACTIONS,
+        // Omitting `action` grants read + the three writes (read implies
+        // read_self), per proposal 0016.
+        default: SPACE_DEFAULT_ACTIONS as unknown as NeRoArray<SpaceAction>,
         normalize: (value) => {
-          return value === SPACE_ACTIONS
-            ? SPACE_ACTIONS
-            : (SPACE_ACTIONS.filter(includedIn, value) as NeArray<SpaceAction>)
+          return SPACE_ACTIONS.filter(includedIn, value) as NeArray<SpaceAction>
+        },
+      },
+      manage: {
+        multiple: true,
+        required: false,
+        validate: isSpaceManageOp,
+        // Omitted by default — an ordinary record grant confers no admin.
+        default: [] as unknown as NeRoArray<SpaceManageOp>,
+        normalize: (value) => {
+          return SPACE_MANAGE_OPS.filter(
+            includedIn,
+            value,
+          ) as NeArray<SpaceManageOp>
         },
       },
     },
@@ -184,23 +227,37 @@ export class SpacePermission
       result.skey,
       result.collection,
       result.action,
+      result.manage,
     )
   }
 
   static scopeNeededFor(options: SpacePermissionMatch): string {
-    const collectionIndependent =
-      options.action === 'read' || options.action === 'manage'
-    return SpacePermission.parser.format({
+    const base = {
       type: options.type as SpaceTypeParam,
       did: options.did as SpaceDidParam,
       skey: options.skey as SpaceSkeyParam | '*',
-      collection: collectionIndependent
-        ? ([] as unknown as NeRoArray<SpaceCollectionParam>)
-        : [
-            (options as { collection: string })
-              .collection as SpaceCollectionParam,
-          ],
+    }
+    // Space management grant.
+    if ('manage' in options && options.manage !== undefined) {
+      return SpacePermission.parser.format({
+        ...base,
+        collection: [] as unknown as NeRoArray<SpaceCollectionParam>,
+        action: [] as unknown as NeRoArray<SpaceAction>,
+        manage: [options.manage],
+      })
+    }
+    // Record grant. `read` is collection-independent; the rest carry a target
+    // collection.
+    const collection = (
+      options.action === 'read'
+        ? []
+        : [options.collection as SpaceCollectionParam]
+    ) as unknown as NeRoArray<SpaceCollectionParam>
+    return SpacePermission.parser.format({
+      ...base,
+      collection,
       action: [options.action],
+      manage: [] as unknown as NeRoArray<SpaceManageOp>,
     })
   }
 }

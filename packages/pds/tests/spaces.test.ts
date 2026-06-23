@@ -6,12 +6,17 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
 
 // Spaces tests run against a 3-PDS network:
-//   pds1: alice (owner), dan (co-located member)
+//   pds1: alice (authority/owner), dan (co-located member)
 //   pds2: bob  (remote member)
 //   pds3: carol (not a member by default; joins where needed)
 // Any test can reach into any PDS; most use one or two. Tests create a
 // dedicated space per-test (distinct skey) so they don't order-depend on each
 // other.
+//
+// NOTE (proposal 0016): the member list is the authority's internal concern and
+// is NOT pushed to a member's PDS. A member's PDS materializes its local space
+// row lazily on first write. So `listSpaces` on a member PDS reflects "spaces
+// the user has written to", not "spaces the user was added to".
 describe('spaces', () => {
   let network: TestNetworkNoAppView
   let pds1: TestPds
@@ -46,19 +51,48 @@ describe('spaces', () => {
     }
   }
 
+  // getSpace returns config as an open union; in simplespace it's always a
+  // spaceConfig. Narrow it for assertions.
+  const asSpaceConfig = (
+    config: Record<string, unknown>,
+  ): com.atproto.simplespace.defs.SpaceConfig => {
+    expect(config.$type).toBe('com.atproto.simplespace.defs#spaceConfig')
+    return config as unknown as com.atproto.simplespace.defs.SpaceConfig
+  }
+
+  type CreateSpaceConfig = {
+    mintPolicy?: 'public' | 'member-list' | 'managing-app'
+    managingApp?: string
+    appAccess?: com.atproto.simplespace.defs.SpaceConfig['appAccess']
+  }
+
   const createSpace = async (
     skey: string,
     members: DidString[] = [],
+    config?: CreateSpaceConfig,
   ): Promise<SpaceUriString> => {
     const res = await pds1Client.call(
-      com.atproto.space.createSpace,
-      { did: aliceDid, type: 'app.bsky.group' as NsidString, skey },
+      com.atproto.simplespace.createSpace,
+      {
+        did: aliceDid,
+        type: 'app.bsky.group' as NsidString,
+        skey,
+        config: config
+          ? com.atproto.simplespace.defs.spaceConfig.build({
+              mintPolicy: config.mintPolicy ?? 'member-list',
+              appAccess:
+                config.appAccess ??
+                com.atproto.simplespace.defs.open.build({}),
+              managingApp: config.managingApp,
+            })
+          : undefined,
+      },
       { headers: aliceHeaders },
     )
     const uri = res.uri as SpaceUriString
     for (const did of members) {
       await pds1Client.call(
-        com.atproto.space.addMember,
+        com.atproto.simplespace.addMember,
         { space: uri, did },
         { headers: aliceHeaders },
       )
@@ -66,22 +100,23 @@ describe('spaces', () => {
     return uri
   }
 
-  // Issues a fresh space credential for `memberPds`-hosted member.
+  // Issues a fresh space credential for a `memberPds`-hosted member: mint a
+  // delegation token on the member's PDS, exchange it with the authority.
   const credentialFor = async (
     memberPds: TestPds,
     memberHeaders: { authorization: string },
     space: SpaceUriString,
   ): Promise<{ authorization: string }> => {
     const memberClient = memberPds.getClient()
-    const grantRes = await memberClient.call(
-      com.atproto.space.getMemberGrant,
+    const tokenRes = await memberClient.call(
+      com.atproto.space.getDelegationToken,
       { space },
       { headers: memberHeaders },
     )
     const credRes = await pds1Client.call(
       com.atproto.space.getSpaceCredential,
       { space },
-      { headers: { authorization: `Bearer ${grantRes.grant}` } },
+      { headers: { authorization: `Bearer ${tokenRes.token}` } },
     )
     return { authorization: `Bearer ${credRes.credential}` }
   }
@@ -143,67 +178,47 @@ describe('spaces', () => {
     expect(match).toMatchObject({ uri: spaceUri, isOwner: true })
   })
 
-  it('adds and removes members', async () => {
+  it('adds and lists members on the authority', async () => {
     const spaceUri = await createSpace('membership', [danDid])
 
     // Dan is a member but not the owner — addMember must refuse.
     await expect(
       pds1Client.call(
-        com.atproto.space.addMember,
+        com.atproto.simplespace.addMember,
         { space: spaceUri, did: carolDid },
         { headers: danHeaders },
       ),
     ).rejects.toThrow('Not the space owner')
 
-    // State before any membership changes — setHash/rev should exist but the
-    // owner-is-a-member add at space-creation time is the only entry so far.
-    const before = await pds1.ctx.actorStore.read(aliceDid, (store) =>
-      store.space.getMemberState(spaceUri),
-    )
-
     await pds1Client.call(
-      com.atproto.space.addMember,
+      com.atproto.simplespace.addMember,
       { space: spaceUri, did: bobDid },
       { headers: aliceHeaders },
     )
 
-    // Bob's PDS sees the space as a non-owner membership.
-    const bobList = await pds2Client.call(
-      com.atproto.space.listSpaces,
-      {},
-      { headers: bobHeaders },
+    const members = await pds1Client.call(
+      com.atproto.simplespace.listMembers,
+      { space: spaceUri },
+      { headers: aliceHeaders },
     )
-    expect(bobList.spaces.find((s) => s.uri === spaceUri)).toMatchObject({
-      uri: spaceUri,
-      isOwner: false,
-    })
+    const dids = members.members.map((m) => m.did)
+    // alice (owner, auto-added) + dan + bob
+    expect(dids).toContain(aliceDid)
+    expect(dids).toContain(danDid)
+    expect(dids).toContain(bobDid)
 
-    const addedOplog = await pds1.ctx.actorStore.read(aliceDid, (store) =>
-      store.space.getMemberOplog(spaceUri, {}),
-    )
-    const addOp = addedOplog.ops.find(
-      (op) => op.action === 'add' && op.did === bobDid,
-    )
-    expect(addOp).toBeDefined()
-
-    const after = await pds1.ctx.actorStore.read(aliceDid, (store) =>
-      store.space.getMemberState(spaceUri),
-    )
-    expect(after!.rev).not.toEqual(before!.rev)
-    expect(after!.setHash).not.toEqual(before!.setHash)
-
-    // Remove and confirm the membership disappears from bob's view.
+    // Remove bob and confirm he's gone from the member list.
     await pds1Client.call(
-      com.atproto.space.removeMember,
+      com.atproto.simplespace.removeMember,
       { space: spaceUri, did: bobDid },
       { headers: aliceHeaders },
     )
-    const bobListAfter = await pds2Client.call(
-      com.atproto.space.listSpaces,
-      {},
-      { headers: bobHeaders },
+    const after = await pds1Client.call(
+      com.atproto.simplespace.listMembers,
+      { space: spaceUri },
+      { headers: aliceHeaders },
     )
-    expect(bobListAfter.spaces.find((s) => s.uri === spaceUri)).toBeUndefined()
+    expect(after.members.map((m) => m.did)).not.toContain(bobDid)
   })
 
   // ---------------- Writes & reads ----------------
@@ -331,7 +346,7 @@ describe('spaces', () => {
   // ---------------- Cross-PDS ----------------
 
   it('writes a record from a remote PDS', async () => {
-    // Story: bob (pds2) writes. The owner PDS will receive a notifyWrite
+    // Story: bob (pds2) writes. The authority will receive a notifyWrite
     // fire-and-forget, but the authoritative path is the oplog on bob's PDS.
     const spaceUri = await createSpace('remote-write', [bobDid])
 
@@ -357,6 +372,17 @@ describe('spaces', () => {
     const lastOp = oplog.ops[oplog.ops.length - 1]
     expect(lastOp.action).toBe('create')
     expect(lastOp.cid).toBe(created.cid)
+
+    // Bob's PDS lazily materialized the space on first write.
+    const bobList = await pds2Client.call(
+      com.atproto.space.listSpaces,
+      {},
+      { headers: bobHeaders },
+    )
+    expect(bobList.spaces.find((s) => s.uri === spaceUri)).toMatchObject({
+      uri: spaceUri,
+      isOwner: false,
+    })
   })
 
   it('reads a member repo with a space credential', async () => {
@@ -378,8 +404,8 @@ describe('spaces', () => {
       { headers: bobHeaders },
     )
 
-    // Carol (pds3) exchanges her grant for a credential and uses it to read
-    // bob's repo on pds2.
+    // Carol (pds3) exchanges her delegation token for a credential and uses it
+    // to read bob's repo on pds2.
     const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
 
     const list = await pds2Client.call(
@@ -464,19 +490,19 @@ describe('spaces', () => {
 
   // ---------------- Credential issuance ----------------
 
-  it('rejects a grant from a revoked member', async () => {
+  it('refuses a credential for a revoked member', async () => {
     const spaceUri = await createSpace('cred-revoke', [carolDid])
 
-    // Carol fetches a grant while she's a member.
-    const grantRes = await pds3Client.call(
-      com.atproto.space.getMemberGrant,
+    // Carol mints a delegation token while she's a member.
+    const tokenRes = await pds3Client.call(
+      com.atproto.space.getDelegationToken,
       { space: spaceUri },
       { headers: carolHeaders },
     )
 
     // Alice removes her before she can redeem.
     await pds1Client.call(
-      com.atproto.space.removeMember,
+      com.atproto.simplespace.removeMember,
       { space: spaceUri, did: carolDid },
       { headers: aliceHeaders },
     )
@@ -485,7 +511,7 @@ describe('spaces', () => {
       pds1Client.call(
         com.atproto.space.getSpaceCredential,
         { space: spaceUri },
-        { headers: { authorization: `Bearer ${grantRes.grant}` } },
+        { headers: { authorization: `Bearer ${tokenRes.token}` } },
       ),
     ).rejects.toThrow()
   })
@@ -506,7 +532,7 @@ describe('spaces', () => {
 
     await expect(
       pds1Client.call(
-        com.atproto.space.getRepoOplog,
+        com.atproto.space.listRepoOps,
         { space: otherSpace, repo: aliceDid },
         { headers: credHeaders },
       ),
@@ -515,59 +541,52 @@ describe('spaces', () => {
 
   // ---------------- Space config ----------------
 
-  it('createSpace persists all config fields', async () => {
-    const skey = 'config-create'
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey,
-          managingApp: 'did:web:example.com#forum',
-          isPublic: true,
-          appAccessMode: 'deny',
-          appExceptions: ['app:one', 'app:two'],
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
+  it('createSpace persists config (managing-app + allowList)', async () => {
+    const spaceUri = await createSpace('config-create', [], {
+      mintPolicy: 'managing-app',
+      managingApp: 'did:web:example.com#forum',
+      appAccess: com.atproto.simplespace.defs.allowList.build({
+        allowed: ['app:one', 'app:two'],
+      }),
+    })
 
     const got = await pds1Client.call(
       com.atproto.space.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got).toMatchObject({
-      uri: spaceUri,
-      isOwner: true,
-      isPublic: true,
+    expect(got.uri).toBe(spaceUri)
+    const config = asSpaceConfig(got.config)
+    expect(config).toMatchObject({
+      mintPolicy: 'managing-app',
       managingApp: 'did:web:example.com#forum',
-      appAccessMode: 'deny',
-      appExceptions: ['app:one', 'app:two'],
+    })
+    expect(config.appAccess).toMatchObject({
+      $type: 'com.atproto.simplespace.defs#allowList',
+      allowed: ['app:one', 'app:two'],
     })
   })
 
-  it('createSpace defaults config to a private allow-mode space', async () => {
+  it('createSpace defaults to a member-list + open space', async () => {
     const spaceUri = await createSpace('config-defaults')
     const got = await pds1Client.call(
       com.atproto.space.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got).toMatchObject({
-      uri: spaceUri,
-      isPublic: false,
-      appAccessMode: 'allow',
-      appExceptions: [],
+    const config = asSpaceConfig(got.config)
+    expect(config).toMatchObject({
+      mintPolicy: 'member-list',
     })
-    expect(got.managingApp).toBeUndefined()
+    expect(config.appAccess).toMatchObject({
+      $type: 'com.atproto.simplespace.defs#open',
+    })
   })
 
-  it('getSpace refuses non-owner', async () => {
+  it('getSpace refuses non-authority', async () => {
     const spaceUri = await createSpace('config-getspace-nonowner', [bobDid])
     // Bob is a member but the space lives on alice's PDS — even calling on
-    // his own PDS, getSpace must refuse since he's not the owner.
+    // his own PDS, getSpace must refuse since he's not the authority.
     await expect(
       pds2Client.call(
         com.atproto.space.getSpace,
@@ -577,12 +596,12 @@ describe('spaces', () => {
     ).rejects.toThrow()
   })
 
-  it('updateSpaceConfig patches each field individually', async () => {
+  it('updateSpace patches mintPolicy and appAccess', async () => {
     const spaceUri = await createSpace('config-update-each')
 
     await pds1Client.call(
-      com.atproto.space.updateSpaceConfig,
-      { space: spaceUri, isPublic: true },
+      com.atproto.simplespace.updateSpace,
+      { space: spaceUri, mintPolicy: 'public' },
       { headers: aliceHeaders },
     )
     let got = await pds1Client.call(
@@ -590,11 +609,16 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got).toMatchObject({ isPublic: true, appAccessMode: 'allow' })
+    expect(got.config).toMatchObject({ mintPolicy: 'public' })
 
     await pds1Client.call(
-      com.atproto.space.updateSpaceConfig,
-      { space: spaceUri, managingApp: 'did:web:example.com#forum' },
+      com.atproto.simplespace.updateSpace,
+      {
+        space: spaceUri,
+        appAccess: com.atproto.simplespace.defs.allowList.build({
+          allowed: ['app:x'],
+        }),
+      },
       { headers: aliceHeaders },
     )
     got = await pds1Client.call(
@@ -602,43 +626,23 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got).toMatchObject({
-      isPublic: true,
+    // mintPolicy untouched; appAccess replaced.
+    const config = asSpaceConfig(got.config)
+    expect(config).toMatchObject({ mintPolicy: 'public' })
+    expect(config.appAccess).toMatchObject({
+      $type: 'com.atproto.simplespace.defs#allowList',
+      allowed: ['app:x'],
+    })
+  })
+
+  it('updateSpace clears managingApp on empty string', async () => {
+    const spaceUri = await createSpace('config-clear-managing', [], {
+      mintPolicy: 'member-list',
       managingApp: 'did:web:example.com#forum',
     })
 
     await pds1Client.call(
-      com.atproto.space.updateSpaceConfig,
-      { space: spaceUri, appAccessMode: 'deny' },
-      { headers: aliceHeaders },
-    )
-    got = await pds1Client.call(
-      com.atproto.space.getSpace,
-      { space: spaceUri },
-      { headers: aliceHeaders },
-    )
-    expect(got.appAccessMode).toBe('deny')
-    // Non-targeted fields are untouched.
-    expect(got.isPublic).toBe(true)
-    expect(got.managingApp).toBe('did:web:example.com#forum')
-  })
-
-  it('updateSpaceConfig clears managingApp on empty string', async () => {
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey: 'config-clear-managing',
-          managingApp: 'did:web:example.com#forum',
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
-
-    await pds1Client.call(
-      com.atproto.space.updateSpaceConfig,
+      com.atproto.simplespace.updateSpace,
       { space: spaceUri, managingApp: '' },
       { headers: aliceHeaders },
     )
@@ -647,42 +651,15 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got.managingApp).toBeUndefined()
+    expect(asSpaceConfig(got.config).managingApp).toBeUndefined()
   })
 
-  it('updateSpaceConfig replaces appExceptions wholesale', async () => {
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey: 'config-exceptions-replace',
-          appExceptions: ['app:a', 'app:b'],
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
-
-    await pds1Client.call(
-      com.atproto.space.updateSpaceConfig,
-      { space: spaceUri, appExceptions: ['app:c'] },
-      { headers: aliceHeaders },
-    )
-    const got = await pds1Client.call(
-      com.atproto.space.getSpace,
-      { space: spaceUri },
-      { headers: aliceHeaders },
-    )
-    expect(got.appExceptions).toEqual(['app:c'])
-  })
-
-  it('updateSpaceConfig refuses non-owner', async () => {
+  it('updateSpace refuses non-owner', async () => {
     const spaceUri = await createSpace('config-update-nonowner', [bobDid])
     await expect(
       pds2Client.call(
-        com.atproto.space.updateSpaceConfig,
-        { space: spaceUri, isPublic: true },
+        com.atproto.simplespace.updateSpace,
+        { space: spaceUri, mintPolicy: 'public' },
         { headers: bobHeaders },
       ),
     ).rejects.toThrow()
@@ -690,53 +667,22 @@ describe('spaces', () => {
 
   // ---------------- Credential mint: config gates ----------------
 
-  it('mints a credential for a non-member when the space is public', async () => {
-    // Carol is NOT a member, but isPublic=true bypasses the member-list check.
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey: 'config-public-mint',
-          isPublic: true,
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
+  it('mints a credential for a non-member when mintPolicy is public', async () => {
+    // Carol is NOT a member, but mintPolicy=public bypasses the member check.
+    const spaceUri = await createSpace('config-public-mint', [], {
+      mintPolicy: 'public',
+    })
 
-    // The grant is just an "user X via app Y is asking" envelope — Carol's
-    // PDS issues it from her OAuth scope alone, no local membership needed.
-    // The owner's PDS is the source of truth and honors it because the space
-    // is public.
     const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
     expect(credHeaders.authorization).toMatch(/^Bearer /)
   })
 
-  it('refuses credential mint when clientId is in the appExceptions denylist', async () => {
-    // appAccessMode=allow + 'unknown' in exceptions → the test grant's
-    // hardcoded clientId 'unknown' is on the denylist, so refuse.
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey: 'config-app-deny-allowmode',
-          appAccessMode: 'allow',
-          appExceptions: ['unknown'],
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
-    await pds1Client.call(
-      com.atproto.space.addMember,
-      { space: spaceUri, did: carolDid },
-      { headers: aliceHeaders },
-    )
+  it('refuses credential mint for a non-member under member-list policy', async () => {
+    // Default member-list policy; carol is not on the list.
+    const spaceUri = await createSpace('config-memberlist-deny')
 
-    const grantRes = await pds3Client.call(
-      com.atproto.space.getMemberGrant,
+    const tokenRes = await pds3Client.call(
+      com.atproto.space.getDelegationToken,
       { space: spaceUri },
       { headers: carolHeaders },
     )
@@ -744,35 +690,23 @@ describe('spaces', () => {
       pds1Client.call(
         com.atproto.space.getSpaceCredential,
         { space: spaceUri },
-        { headers: { authorization: `Bearer ${grantRes.grant}` } },
+        { headers: { authorization: `Bearer ${tokenRes.token}` } },
       ),
     ).rejects.toThrow()
   })
 
-  it('refuses credential mint when clientId is missing from a deny-mode allowlist', async () => {
-    // appAccessMode=deny + exceptions=['some-other-app'] → 'unknown' isn't
-    // on the allowlist, so refuse.
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey: 'config-app-deny-denymode',
-          appAccessMode: 'deny',
-          appExceptions: ['some-other-app'],
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
-    await pds1Client.call(
-      com.atproto.space.addMember,
-      { space: spaceUri, did: carolDid },
-      { headers: aliceHeaders },
-    )
+  it('refuses credential mint when appAccess is allowList and no attestation', async () => {
+    // mintPolicy public so the user passes; appAccess allowList requires an
+    // attested client_id, which the test flow does not supply.
+    const spaceUri = await createSpace('config-app-allowlist', [], {
+      mintPolicy: 'public',
+      appAccess: com.atproto.simplespace.defs.allowList.build({
+        allowed: ['https://app.example.com/client-metadata.json'],
+      }),
+    })
 
-    const grantRes = await pds3Client.call(
-      com.atproto.space.getMemberGrant,
+    const tokenRes = await pds3Client.call(
+      com.atproto.space.getDelegationToken,
       { space: spaceUri },
       { headers: carolHeaders },
     )
@@ -780,35 +714,9 @@ describe('spaces', () => {
       pds1Client.call(
         com.atproto.space.getSpaceCredential,
         { space: spaceUri },
-        { headers: { authorization: `Bearer ${grantRes.grant}` } },
+        { headers: { authorization: `Bearer ${tokenRes.token}` } },
       ),
     ).rejects.toThrow()
-  })
-
-  it('mints when clientId is on a deny-mode allowlist', async () => {
-    // appAccessMode=deny + exceptions=['unknown'] → 'unknown' IS on the
-    // allowlist, so allow.
-    const spaceUri = await pds1Client
-      .call(
-        com.atproto.space.createSpace,
-        {
-          did: aliceDid,
-          type: 'app.bsky.group' as NsidString,
-          skey: 'config-app-allow-denymode',
-          appAccessMode: 'deny',
-          appExceptions: ['unknown'],
-        },
-        { headers: aliceHeaders },
-      )
-      .then((r) => r.uri as SpaceUriString)
-    await pds1Client.call(
-      com.atproto.space.addMember,
-      { space: spaceUri, did: carolDid },
-      { headers: aliceHeaders },
-    )
-
-    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
-    expect(credHeaders.authorization).toMatch(/^Bearer /)
   })
 
   // ---------------- Sync recovery ----------------
@@ -871,7 +779,7 @@ describe('spaces', () => {
     const applied = new LtHash()
     for (const op of incremental.ops) {
       if (op.cid && (op.action === 'create' || op.action === 'update')) {
-        applied.add(`${op.collection}/${op.rkey}:${op.cid}`)
+        applied.add(`${op.collection}/${op.rkey}/${op.cid}`)
       }
     }
     expect(applied.equals(new LtHash(incremental.setHash!))).toBe(false)
@@ -892,7 +800,7 @@ describe('spaces', () => {
 
     const recomputed = new LtHash()
     for (const r of allRecords) {
-      recomputed.add(`${r.collection}/${r.rkey}:${r.cid}`)
+      recomputed.add(`${r.collection}/${r.rkey}/${r.cid}`)
     }
     const repoState = await pds2.ctx.actorStore.read(bobDid, (store) =>
       store.space.getRepoState(spaceUri),
@@ -903,8 +811,8 @@ describe('spaces', () => {
   // ---------------- Adversarial ----------------
 
   it('rejects a notifyWrite that spoofs the writer', async () => {
-    // Bob (pds2, member) signs a notifyWrite but claims carol wrote. Owner
-    // must refuse based on iss ≠ body.did.
+    // Bob (pds2, member) signs a notifyWrite but claims carol wrote. Authority
+    // must refuse based on iss ≠ body.repo.
     const spaceUri = await createSpace('spoof-iss', [bobDid, carolDid])
 
     const keypair = await pds2.ctx.actorStore.keypair(bobDid)
@@ -918,8 +826,8 @@ describe('spaces', () => {
       xrpc(pds1.url, com.atproto.space.notifyWrite, {
         headers,
         body: {
-          space: spaceUri as any,
-          repo: carolDid as any,
+          space: spaceUri as SpaceUriString,
+          repo: carolDid,
           rev: 'spoof',
         },
       }),
@@ -927,7 +835,7 @@ describe('spaces', () => {
   })
 
   it('rejects a notifyWrite from a non-member', async () => {
-    // iss === body.did, but the signer isn't in the member list.
+    // iss === body.repo, but the signer isn't in the member list.
     const spaceUri = await createSpace('spoof-nonmember', [bobDid])
 
     const keypair = await pds3.ctx.actorStore.keypair(carolDid)
@@ -941,8 +849,8 @@ describe('spaces', () => {
       xrpc(pds1.url, com.atproto.space.notifyWrite, {
         headers,
         body: {
-          space: spaceUri as any,
-          repo: carolDid as any,
+          space: spaceUri as SpaceUriString,
+          repo: carolDid,
           rev: 'spoof',
         },
       }),

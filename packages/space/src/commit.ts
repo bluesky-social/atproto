@@ -1,4 +1,10 @@
-import { Keypair, hkdfSha256, hmacSha256, randomBytes } from '@atproto/crypto'
+import {
+  Keypair,
+  hkdfSha256,
+  hmacSha256,
+  randomBytes,
+  verifySignature,
+} from '@atproto/crypto'
 import { LtHash } from './lthash.js'
 import { SignedCommit, SpaceContext } from './types.js'
 
@@ -9,44 +15,57 @@ export const createCommit = async (
 ): Promise<SignedCommit> => {
   const hash = setHash.digest()
   const ikm = Buffer.from(randomBytes(32))
-  const hmac = deriveKeyAndHmac(ikm, hash, space)
-  const sig = Buffer.from(await keypair.sign(ikm))
-  return { hash, hmac, ikm, sig, rev: space.rev }
+  const ctx = encodeCtx(space, ikm)
+  const mac = deriveKeyAndMac(ikm, ctx, hash)
+  const sig = Buffer.from(await keypair.sign(ctx))
+  return { hash, mac, ikm, sig, rev: space.rev }
 }
 
-export const verifyCommit = (
+// Integrity check: recompute the MAC and compare. Symmetric — anyone holding
+// the commit can do this, which is what gives a leaked commit its deniability.
+export const verifyCommitMac = (
   space: SpaceContext,
   commit: SignedCommit,
 ): boolean => {
-  const expected = deriveKeyAndHmac(commit.ikm, commit.hash, space)
-  return expected.equals(commit.hmac)
+  const ctx = encodeCtx(space, commit.ikm)
+  const expected = deriveKeyAndMac(commit.ikm, ctx, commit.hash)
+  return expected.equals(commit.mac)
 }
 
-export const deriveKeyAndHmac = (
-  ikm: Buffer,
-  data: Buffer,
+// Authenticity check: verify the signature over the commit's context against
+// the author's signing key. The signature covers only (space, rev, ikm), never
+// the repo hash — that is what makes a rebroadcast commit non-probative.
+export const verifyCommitSig = async (
   space: SpaceContext,
-): Buffer => {
-  const info = encodeCommitInfo(space)
-  const derivedKey = hkdfSha256(ikm, info)
+  commit: SignedCommit,
+  didKey: string,
+): Promise<boolean> => {
+  const ctx = encodeCtx(space, commit.ikm)
+  return verifySignature(didKey, ctx, commit.sig)
+}
+
+const deriveKeyAndMac = (ikm: Buffer, ctx: Buffer, data: Buffer): Buffer => {
+  const derivedKey = hkdfSha256(ikm, ctx)
   return Buffer.from(hmacSha256(derivedKey, data))
 }
 
-// This is modeled after TLS 1.3
-// @TODO should we be using varints instead (consistency with CARs)? delimiters (like Signal)?
+// ctx = "atproto-space-v1"
+//    || uint16be(len(space)) || space   // space URI: ats://authority/type/skey
+//    || uint16be(len(rev))   || rev     // commit revision (TID)
+//    || uint16be(len(ikm))   || ikm     // per-commit nonce
+//
+// Length prefixes are big-endian, following the TLS 1.3 (§3.4) variable-length
+// vector convention. This is the opposite byte order from the little-endian
+// lanes of the LtHash state; the two come from different specs.
 const DOMAIN_PREFIX = Buffer.from('atproto-space-v1')
-const encodeCommitInfo = (space: SpaceContext): Buffer => {
-  const fields = [
-    space.spaceDid,
-    space.spaceType,
-    space.spaceKey,
-    space.userDid,
-    space.rev,
-    space.scope,
+const encodeCtx = (space: SpaceContext, ikm: Buffer): Buffer => {
+  const fields: Buffer[] = [
+    Buffer.from(space.space),
+    Buffer.from(space.rev),
+    ikm,
   ]
   const parts: Buffer[] = [DOMAIN_PREFIX]
-  for (const field of fields) {
-    const bytes = Buffer.from(field)
+  for (const bytes of fields) {
     const len = Buffer.alloc(2)
     len.writeUInt16BE(bytes.length)
     parts.push(len, bytes)

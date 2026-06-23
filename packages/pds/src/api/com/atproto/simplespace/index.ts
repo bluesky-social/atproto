@@ -1,0 +1,19 @@
+import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context.js'
+import addMember from './addMember.js'
+import checkUserAccess from './checkUserAccess.js'
+import createSpace from './createSpace.js'
+import deleteSpace from './deleteSpace.js'
+import listMembers from './listMembers.js'
+import removeMember from './removeMember.js'
+import updateSpace from './updateSpace.js'
+
+export default function (server: Server, ctx: AppContext) {
+  createSpace(server, ctx)
+  updateSpace(server, ctx)
+  deleteSpace(server, ctx)
+  addMember(server, ctx)
+  removeMember(server, ctx)
+  listMembers(server, ctx)
+  checkUserAccess(server, ctx)
+}

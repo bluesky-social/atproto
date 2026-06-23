@@ -1,6 +1,7 @@
 import { SpacePermission } from './space-permission.js'
 
-const ALL_ACTIONS = ['read', 'create', 'update', 'delete', 'manage'] as const
+// Default action list when `action` is omitted (read implies read_self).
+const DEFAULT_ACTIONS = ['read', 'create', 'update', 'delete'] as const
 
 describe('SpacePermission', () => {
   describe('static', () => {
@@ -12,7 +13,8 @@ describe('SpacePermission', () => {
         expect(scope!.did).toBe('*')
         expect(scope!.skey).toBe('*')
         expect(scope!.collection).toEqual([])
-        expect(scope!.action).toEqual(ALL_ACTIONS)
+        expect(scope!.action).toEqual(DEFAULT_ACTIONS)
+        expect(scope!.manage).toEqual([])
       })
 
       it('parses wildcard type', () => {
@@ -36,11 +38,31 @@ describe('SpacePermission', () => {
         expect(scope!.action).toEqual(['create', 'update'])
       })
 
-      it('omitted action defaults to all four actions', () => {
+      it('omitted action defaults to read + the three writes', () => {
         const scope = SpacePermission.fromString(
           'space:com.atmoboards.forum?collection=*',
         )
-        expect(scope!.action).toEqual(ALL_ACTIONS)
+        expect(scope!.action).toEqual(DEFAULT_ACTIONS)
+      })
+
+      it('parses read_self action', () => {
+        const scope = SpacePermission.fromString(
+          'space:com.atmoboards.forum?action=read_self&collection=*',
+        )
+        expect(scope!.action).toEqual(['read_self'])
+      })
+
+      it('parses manage verbs into the manage list', () => {
+        const scope = SpacePermission.fromString(
+          'space:com.atmoboards.forum?manage=update&manage=delete',
+        )
+        expect(scope!.manage).toEqual(['update', 'delete'])
+      })
+
+      it('rejects invalid manage verbs', () => {
+        expect(
+          SpacePermission.fromString('space:com.example.x?manage=bogus'),
+        ).toBeNull()
       })
 
       it('omitted collection means no write targets (empty list)', () => {
@@ -176,33 +198,52 @@ describe('SpacePermission', () => {
       ).toBe(true)
     })
 
-    it('action=manage governs space-level ops independent of collection', () => {
+    it('manage= governs space-level ops independent of collection', () => {
       const scope = SpacePermission.fromString(
-        'space:com.atmoboards.forum?action=manage',
+        'space:com.atmoboards.forum?action=read&manage=update',
       )!
-      expect(scope.matches({ ...baseTarget, action: 'manage' })).toBe(true)
-      // manage implies read
-      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(true)
-      // but not arbitrary writes
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'create',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(false)
+      expect(scope.matches({ ...baseTarget, manage: 'update' })).toBe(true)
+      // a different manage verb is not covered
+      expect(scope.matches({ ...baseTarget, manage: 'delete' })).toBe(false)
     })
 
-    it('default action list (all five) covers manage', () => {
-      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
-      expect(scope.matches({ ...baseTarget, action: 'manage' })).toBe(true)
-    })
-
-    it('grants without manage refuse manage', () => {
+    it('a record-only grant (no manage) confers no manage verb', () => {
       const scope = SpacePermission.fromString(
         'space:com.atmoboards.forum?action=read',
       )!
-      expect(scope.matches({ ...baseTarget, action: 'manage' })).toBe(false)
+      expect(scope.matches({ ...baseTarget, manage: 'update' })).toBe(false)
+    })
+
+    it('default grant confers no manage capability', () => {
+      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
+      expect(scope.matches({ ...baseTarget, manage: 'update' })).toBe(false)
+    })
+
+    it('read implies read_self', () => {
+      const scope = SpacePermission.fromString(
+        'space:com.atmoboards.forum?action=read',
+      )!
+      expect(
+        scope.matches({
+          ...baseTarget,
+          action: 'read_self',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(true)
+    })
+
+    it('read_self grants own-repo read but not whole-space read', () => {
+      const scope = SpacePermission.fromString(
+        'space:com.atmoboards.forum?action=read_self&collection=*',
+      )!
+      expect(
+        scope.matches({
+          ...baseTarget,
+          action: 'read_self',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(true)
+      expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(false)
     })
 
     it('explicit collection limits writes to that collection', () => {

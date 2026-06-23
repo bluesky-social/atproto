@@ -19,25 +19,26 @@ const parseListCursor = (
 export const formatListCursor = (collection: string, rkey: string): string =>
   `${collection}/${rkey}`
 
-const parseAppExceptions = (raw: string): string[] => {
+const parseStringArray = (raw: string): string[] => {
   const parsed = JSON.parse(raw)
   if (!Array.isArray(parsed)) return []
   return parsed.filter((v): v is string => typeof v === 'string')
 }
 
+export type SpaceRow = {
+  uri: string
+  isOwner: boolean
+  mintPolicy: string
+  managingApp: string | null
+  appAccessType: string
+  appAllowed: string[]
+  deletedAt: string | null
+}
+
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
-  async getSpace(uri: string): Promise<{
-    uri: string
-    isOwner: boolean
-    isMember: boolean
-    managingApp: string | null
-    isPublic: boolean
-    appAccessMode: string
-    appExceptions: string[]
-    deletedAt: string | null
-  } | null> {
+  async getSpace(uri: string): Promise<SpaceRow | null> {
     const row = await this.db.db
       .selectFrom('space')
       .selectAll()
@@ -47,11 +48,10 @@ export class SpaceReader {
     return {
       uri: row.uri,
       isOwner: row.isOwner === 1,
-      isMember: row.isMember === 1,
+      mintPolicy: row.mintPolicy,
       managingApp: row.managingApp,
-      isPublic: row.isPublic === 1,
-      appAccessMode: row.appAccessMode,
-      appExceptions: parseAppExceptions(row.appExceptions),
+      appAccessType: row.appAccessType,
+      appAllowed: parseStringArray(row.appAllowed),
       deletedAt: row.deletedAt,
     }
   }
@@ -63,10 +63,11 @@ export class SpaceReader {
     did?: string
   }): Promise<{ uri: string; isOwner: boolean }[]> {
     const { limit, cursor, type, did } = opts
+    // "Spaces the caller holds a repo in" — every local, non-deleted space row.
     let builder = this.db.db
       .selectFrom('space')
       .select(['uri', 'isOwner'])
-      .where(sql`("isOwner" = 1 OR "isMember" = 1)`)
+      .where('deletedAt', 'is', null)
       .orderBy('uri', 'asc')
       .limit(limit)
     // Filter by URI shape `ats://<did>/<type>/<skey>`. DIDs can't contain `/`
@@ -180,10 +181,10 @@ export class SpaceReader {
   async listMembers(
     space: string,
     opts: { limit: number; cursor?: string },
-  ): Promise<{ did: string; memberRev: string }[]> {
+  ): Promise<{ did: string }[]> {
     let builder = this.db.db
       .selectFrom('space_member')
-      .select(['did', 'memberRev'])
+      .select(['did'])
       .where('space', '=', space)
       .orderBy('did', 'asc')
       .limit(opts.limit)
@@ -237,21 +238,6 @@ export class SpaceReader {
     }
   }
 
-  async getMemberState(
-    space: string,
-  ): Promise<{ setHash: Buffer | null; rev: string | null } | null> {
-    const row = await this.db.db
-      .selectFrom('space_member_state')
-      .select(['setHash', 'rev'])
-      .where('space', '=', space)
-      .executeTakeFirst()
-    if (!row) return null
-    return {
-      setHash: row.setHash ? Buffer.from(row.setHash) : null,
-      rev: row.rev,
-    }
-  }
-
   async getRepoOplog(
     space: string,
     opts: { since?: string; limit?: number },
@@ -291,45 +277,6 @@ export class SpaceReader {
         rkey: r.rkey,
         cid: r.cid,
         prev: r.prev,
-      })),
-      setHash: state?.setHash ?? null,
-      rev: state?.rev ?? null,
-    }
-  }
-
-  async getMemberOplog(
-    space: string,
-    opts: { since?: string; limit?: number },
-  ): Promise<{
-    ops: Array<{
-      rev: string
-      idx: number
-      action: string
-      did: string
-    }>
-    setHash: Buffer | null
-    rev: string | null
-  }> {
-    let builder = this.db.db
-      .selectFrom('space_member_oplog')
-      .selectAll()
-      .where('space', '=', space)
-      .orderBy('rev', 'asc')
-      .orderBy('idx', 'asc')
-    if (opts.since) {
-      builder = builder.where('rev', '>', opts.since)
-    }
-    if (opts.limit) {
-      builder = builder.limit(opts.limit)
-    }
-    const rows = await builder.execute()
-    const state = await this.getMemberState(space)
-    return {
-      ops: rows.map((r) => ({
-        rev: r.rev,
-        idx: r.idx,
-        action: r.action,
-        did: r.did,
       })),
       setHash: state?.setHash ?? null,
       rev: state?.rev ?? null,

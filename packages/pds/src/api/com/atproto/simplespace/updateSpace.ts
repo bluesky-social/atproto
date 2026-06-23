@@ -2,10 +2,11 @@ import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope } from '../space/util.js'
+import { fromLexAppAccess } from './config.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.updateSpaceConfig, {
+  server.add(com.atproto.simplespace.updateSpace, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // Performed in the handler as it requires the request body
@@ -13,15 +14,16 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const ownerDid = auth.credentials.did
-      const { space, managingApp, isPublic, appAccessMode, appExceptions } =
-        input.body
+      const { space, mintPolicy, managingApp, appAccess } = input.body
 
-      assertSpaceScope(auth, space, { action: 'manage' })
+      assertSpaceScope(auth, space, { manage: 'update' })
 
       const spaceDid = new SpaceUri(space).spaceDid
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }
+
+      const appAccessPatch = appAccess ? fromLexAppAccess(appAccess) : {}
 
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
         const spaceRow = await actorTxn.space.getSpace(space)
@@ -33,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         await actorTxn.space.updateSpaceConfig(space, {
+          mintPolicy,
           // Empty string clears managingApp; any other string sets it.
           managingApp:
             managingApp === undefined
@@ -40,9 +43,7 @@ export default function (server: Server, ctx: AppContext) {
               : managingApp === ''
                 ? null
                 : managingApp,
-          isPublic,
-          appAccessMode,
-          appExceptions,
+          ...appAccessPatch,
         })
       })
     },

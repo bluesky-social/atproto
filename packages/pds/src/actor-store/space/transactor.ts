@@ -1,13 +1,15 @@
 import { TID } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
-import {
-  CommitData,
-  MemberCommitData,
-  MemberOpAction,
-  WriteOpAction,
-} from '@atproto/space'
+import { CommitData, WriteOpAction } from '@atproto/space'
 import { ActorDb } from '../db/index.js'
 import { SpaceReader } from './reader.js'
+
+export type SpaceConfig = {
+  mintPolicy?: string
+  managingApp?: string | null
+  appAccessType?: string
+  appAllowed?: string[]
+}
 
 export class SpaceTransactor extends SpaceReader {
   constructor(public db: ActorDb) {
@@ -17,12 +19,7 @@ export class SpaceTransactor extends SpaceReader {
   async createSpace(
     uri: string,
     isOwner: boolean,
-    config: {
-      managingApp?: string
-      isPublic?: boolean
-      appAccessMode?: string
-      appExceptions?: string[]
-    } = {},
+    config: SpaceConfig = {},
     now?: string,
   ): Promise<void> {
     const timestamp = now ?? new Date().toISOString()
@@ -31,11 +28,10 @@ export class SpaceTransactor extends SpaceReader {
       .values({
         uri,
         isOwner: isOwner ? 1 : 0,
-        isMember: 0,
+        mintPolicy: config.mintPolicy ?? 'member-list',
         managingApp: config.managingApp ?? null,
-        isPublic: config.isPublic ? 1 : 0,
-        appAccessMode: config.appAccessMode ?? 'allow',
-        appExceptions: JSON.stringify(config.appExceptions ?? []),
+        appAccessType: config.appAccessType ?? 'open',
+        appAllowed: JSON.stringify(config.appAllowed ?? []),
         createdAt: timestamp,
         deletedAt: null,
       })
@@ -44,18 +40,22 @@ export class SpaceTransactor extends SpaceReader {
       .insertInto('space_repo')
       .values({ space: uri, setHash: null, rev: null })
       .execute()
-    if (isOwner) {
-      await this.db.db
-        .insertInto('space_member_state')
-        .values({ space: uri, setHash: null, rev: null })
-        .execute()
-    }
+  }
+
+  // Lazily create the local space row + repo state for a writer's own repo on
+  // first write. A writer's PDS isn't told about membership (the member list is
+  // the authority's concern), so it materializes the repo when its user writes.
+  async ensureSpaceRepo(uri: string, now?: string): Promise<void> {
+    const existing = await this.getSpace(uri)
+    if (existing) return
+    await this.createSpace(uri, false, {}, now)
   }
 
   async addMember(space: string, did: string): Promise<void> {
     await this.db.db
       .insertInto('space_member')
-      .values({ space, did, memberRev: '' })
+      .values({ space, did })
+      .onConflict((oc) => oc.columns(['space', 'did']).doNothing())
       .execute()
   }
 
@@ -67,27 +67,19 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async updateSpaceConfig(
-    uri: string,
-    patch: {
-      managingApp?: string | null
-      isPublic?: boolean
-      appAccessMode?: string
-      appExceptions?: string[]
-    },
-  ): Promise<void> {
+  async updateSpaceConfig(uri: string, patch: SpaceConfig): Promise<void> {
     const set: Record<string, unknown> = {}
+    if (patch.mintPolicy !== undefined) {
+      set.mintPolicy = patch.mintPolicy
+    }
     if (patch.managingApp !== undefined) {
       set.managingApp = patch.managingApp
     }
-    if (patch.isPublic !== undefined) {
-      set.isPublic = patch.isPublic ? 1 : 0
+    if (patch.appAccessType !== undefined) {
+      set.appAccessType = patch.appAccessType
     }
-    if (patch.appAccessMode !== undefined) {
-      set.appAccessMode = patch.appAccessMode
-    }
-    if (patch.appExceptions !== undefined) {
-      set.appExceptions = JSON.stringify(patch.appExceptions)
+    if (patch.appAllowed !== undefined) {
+      set.appAllowed = JSON.stringify(patch.appAllowed)
     }
     if (Object.keys(set).length === 0) return
     await this.db.db
@@ -107,22 +99,13 @@ export class SpaceTransactor extends SpaceReader {
   }
 
   /**
-   * Owner-side cleanup of space-scoped data after deletion. Only purges data
-   * that belongs to the owner (member list + state, oplog, credential
-   * recipients). Does NOT touch space_record / space_record_oplog — those are
-   * member-scoped and only exist on members' PDSes.
+   * Authority-side cleanup of space-scoped data after deletion. Purges the
+   * member list and credential recipients. Does NOT touch space_record /
+   * space_record_oplog — those belong to the writer's own repo.
    */
   async purgeOwnerSpaceData(uri: string): Promise<void> {
     await this.db.db
       .deleteFrom('space_member')
-      .where('space', '=', uri)
-      .execute()
-    await this.db.db
-      .deleteFrom('space_member_state')
-      .where('space', '=', uri)
-      .execute()
-    await this.db.db
-      .deleteFrom('space_member_oplog')
       .where('space', '=', uri)
       .execute()
     await this.db.db
@@ -136,6 +119,9 @@ export class SpaceTransactor extends SpaceReader {
     commit: CommitData,
     now?: string,
   ): Promise<string> {
+    // Materialize the local space row + repo state on first write. A writer's
+    // PDS isn't told about membership, so its repo is created lazily here.
+    await this.ensureSpaceRepo(space, now)
     const rev = TID.nextStr()
     const timestamp = now ?? new Date().toISOString()
     let idx = 0
@@ -223,50 +209,6 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
 
     return rev
-  }
-
-  async applyMemberCommit(
-    space: string,
-    commit: MemberCommitData,
-  ): Promise<string> {
-    const rev = TID.nextStr()
-    let idx = 0
-
-    for (const op of commit.ops) {
-      if (op.action === MemberOpAction.Add) {
-        await this.db.db
-          .insertInto('space_member')
-          .values({ space, did: op.did, memberRev: rev })
-          .execute()
-      } else if (op.action === MemberOpAction.Remove) {
-        await this.db.db
-          .deleteFrom('space_member')
-          .where('space', '=', space)
-          .where('did', '=', op.did)
-          .execute()
-      }
-      await this.db.db
-        .insertInto('space_member_oplog')
-        .values({ space, rev, idx, action: op.action, did: op.did })
-        .execute()
-      idx++
-    }
-
-    await this.db.db
-      .updateTable('space_member_state')
-      .set({ setHash: commit.setHash, rev })
-      .where('space', '=', space)
-      .execute()
-
-    return rev
-  }
-
-  async updateMembership(space: string, isMember: boolean): Promise<void> {
-    await this.db.db
-      .updateTable('space')
-      .set({ isMember: isMember ? 1 : 0 })
-      .where('uri', '=', space)
-      .execute()
   }
 
   async recordCredentialRecipient(

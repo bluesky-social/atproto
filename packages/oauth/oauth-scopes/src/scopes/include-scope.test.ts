@@ -644,7 +644,7 @@ describe('IncludeScope', () => {
                     type: 'permission',
                     resource: 'space',
                     spaceType: 'com.example.calendar.group',
-                    action: ['read', 'create', 'update', 'delete', 'manage'],
+                    action: ['read', 'create', 'update', 'delete'],
                   },
                 ],
               }),
@@ -687,22 +687,6 @@ describe('IncludeScope', () => {
             ).toEqual([])
           })
 
-          it('space collection outside the include namespace', () => {
-            expect(
-              compilePermissions('include:com.example.calendar.auth', {
-                type: 'permission-set',
-                permissions: [
-                  {
-                    type: 'permission',
-                    resource: 'space',
-                    spaceType: 'com.example.calendar.group',
-                    collection: ['app.bsky.feed.post'],
-                  },
-                ],
-              }),
-            ).toEqual([])
-          })
-
           it('wildcard space type (too broad for a permission-set)', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
@@ -717,8 +701,30 @@ describe('IncludeScope', () => {
               }),
             ).toEqual([])
           })
+        })
 
-          it('wildcard collection (too broad for a permission-set)', () => {
+        describe('allows cross-namespace collections (proposal 0016)', () => {
+          // The space type must be under the set's authority, but collections
+          // may be a wildcard or live under a different authority.
+          it('collection outside the include namespace', () => {
+            expect(
+              compilePermissions('include:com.example.calendar.auth', {
+                type: 'permission-set',
+                permissions: [
+                  {
+                    type: 'permission',
+                    resource: 'space',
+                    spaceType: 'com.example.calendar.group',
+                    collection: ['app.bsky.feed.post'],
+                  },
+                ],
+              }),
+            ).toEqual([
+              'space:com.example.calendar.group?collection=app.bsky.feed.post',
+            ])
+          })
+
+          it('wildcard collection', () => {
             expect(
               compilePermissions('include:com.example.calendar.auth', {
                 type: 'permission-set',
@@ -731,7 +737,7 @@ describe('IncludeScope', () => {
                   },
                 ],
               }),
-            ).toEqual([])
+            ).toEqual(['space:com.example.calendar.group?collection=*'])
           })
         })
       })

@@ -64,17 +64,20 @@ export type SpaceCredentialOutput = {
   credentials: {
     type: 'space_credential'
     iss: string
+    // The space URI the credential reads (the credential's `sub`).
     space: string
-    clientId: string
+    clientId?: string
   }
 }
 
-export type MemberGrantOutput = {
+export type DelegationTokenOutput = {
   credentials: {
-    type: 'member_grant'
-    memberDid: string
+    type: 'delegation_token'
+    // The user the token acts for (the token's `iss`).
+    userDid: string
+    // The space host the token is addressed to (the token's `aud`).
     aud: string
+    // The space URI being requested (the token's `sub`).
     space: string
-    clientId: string
   }
 }

@@ -13,11 +13,13 @@ export const parseDataKey = (
   return { collection, rkey }
 }
 
+// An LtHash element is the UTF-8 bytes of `{collection}/{rkey}/{record_cid}`,
+// per proposal 0016 §"Commit digest".
 export const formatRecordElement = async (
   collection: string,
   rkey: string,
   record: RepoRecord,
 ): Promise<string> => {
   const cid = await cidForLex(record)
-  return `${formatDataKey(collection, rkey)}:${cid.toString()}`
+  return `${formatDataKey(collection, rkey)}/${cid.toString()}`
 }

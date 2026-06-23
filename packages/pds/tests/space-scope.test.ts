@@ -51,7 +51,7 @@ describe('assertSpaceScope', () => {
         }),
       ).not.toThrow()
       expect(() =>
-        assertSpaceScope(accessAuth(), SPACE, { action: 'manage' }),
+        assertSpaceScope(accessAuth(), SPACE, { manage: 'update' }),
       ).not.toThrow()
     })
 
@@ -109,10 +109,13 @@ describe('assertSpaceScope', () => {
       )
     })
 
-    it('passes when the grant lists action=manage (manage implies read)', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?action=manage')
+    it('passes read_self when the grant has read (read implies read_self)', () => {
+      const auth = oauthAuth('space:com.atmoboards.forum?action=read')
       expect(() =>
-        assertSpaceScope(auth, SPACE, { action: 'read' }),
+        assertSpaceScope(auth, SPACE, {
+          action: 'read_self',
+          collection: 'com.atmoboards.thread',
+        }),
       ).not.toThrow()
     })
 
@@ -197,34 +200,34 @@ describe('assertSpaceScope', () => {
   })
 
   describe('OAuth — manage', () => {
-    it('passes when the grant lists manage', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?action=manage')
+    it('passes when the grant lists the manage verb', () => {
+      const auth = oauthAuth('space:com.atmoboards.forum?manage=update')
       expect(() =>
-        assertSpaceScope(auth, SPACE, { action: 'manage' }),
+        assertSpaceScope(auth, SPACE, { manage: 'update' }),
       ).not.toThrow()
     })
 
-    it('passes with default action list (covers manage)', () => {
+    it('rejects a different manage verb', () => {
+      const auth = oauthAuth('space:com.atmoboards.forum?manage=update')
+      expect(() =>
+        assertSpaceScope(auth, SPACE, { manage: 'delete' }),
+      ).toThrow(ScopeMissingError)
+    })
+
+    it('rejects when the default grant has no manage verbs', () => {
       const auth = oauthAuth('space:com.atmoboards.forum')
       expect(() =>
-        assertSpaceScope(auth, SPACE, { action: 'manage' }),
-      ).not.toThrow()
+        assertSpaceScope(auth, SPACE, { manage: 'update' }),
+      ).toThrow(ScopeMissingError)
     })
 
-    it('rejects when the grant lists only writes (no manage, no read implies)', () => {
+    it('rejects when the grant lists only record actions', () => {
       const auth = oauthAuth(
         'space:com.atmoboards.forum?action=create&action=update',
       )
-      expect(() => assertSpaceScope(auth, SPACE, { action: 'manage' })).toThrow(
-        ScopeMissingError,
-      )
-    })
-
-    it('rejects when the grant is read-only', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?action=read')
-      expect(() => assertSpaceScope(auth, SPACE, { action: 'manage' })).toThrow(
-        ScopeMissingError,
-      )
+      expect(() =>
+        assertSpaceScope(auth, SPACE, { manage: 'update' }),
+      ).toThrow(ScopeMissingError)
     })
   })
 

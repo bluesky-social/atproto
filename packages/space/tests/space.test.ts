@@ -1,30 +1,23 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
-  MemberAlreadyExistsError,
-  MemberNotFoundError,
-  MemoryMembersStorage,
   MemoryRepoStorage,
   RecordAlreadyExistsError,
-  LtHash,
   RecordNotFoundError,
   SpaceContext,
-  SpaceMembers,
   SpaceRepo,
   WriteOpAction,
-  createMemberGrant,
+  createClientAttestation,
+  createDelegationToken,
   createSpaceCredential,
-  verifyMemberGrant,
+  parseClientAttestation,
+  verifyDelegationToken,
   verifySpaceCredential,
 } from '../src/index.js'
 
 const testSpace: SpaceContext = {
-  spaceDid: 'did:example:space',
-  spaceType: 'app.bsky.group',
-  spaceKey: 'test',
-  userDid: 'did:example:alice',
+  space: 'ats://did:example:space/app.bsky.group/test',
   rev: '3kbcq3p7ad400',
-  scope: 'records',
 }
 
 describe('SpaceRepo', () => {
@@ -209,82 +202,6 @@ describe('SpaceRepo', () => {
   })
 })
 
-
-describe('SpaceMembers', () => {
-  let members: SpaceMembers
-
-  beforeEach(() => {
-    const storage = new MemoryMembersStorage()
-    members = SpaceMembers.create(storage)
-  })
-
-  it('creates and adds members', async () => {
-    await members.addMember('did:plc:alice')
-    await members.addMember('did:plc:bob')
-
-    const memberList = await members.getMembers()
-    expect(memberList).toHaveLength(2)
-    expect(memberList).toContain('did:plc:alice')
-    expect(memberList).toContain('did:plc:bob')
-
-    expect(await members.isMember('did:plc:alice')).toBe(true)
-    expect(await members.isMember('did:plc:bob')).toBe(true)
-  })
-
-  it('removes a member', async () => {
-    await members.addMember('did:plc:alice')
-    await members.removeMember('did:plc:alice')
-
-    expect(await members.isMember('did:plc:alice')).toBe(false)
-    const memberList = await members.getMembers()
-    expect(memberList).not.toContain('did:plc:alice')
-  })
-
-  it('setHash is order-independent', async () => {
-    const storage1 = new MemoryMembersStorage()
-    const members1 = SpaceMembers.create(storage1)
-    await members1.addMember('did:plc:alice')
-    await members1.addMember('did:plc:bob')
-
-    const storage2 = new MemoryMembersStorage()
-    const members2 = SpaceMembers.create(storage2)
-    await members2.addMember('did:plc:bob')
-    await members2.addMember('did:plc:alice')
-
-    expect(members1.setHash.equals(members2.setHash)).toBe(true)
-  })
-
-  it('remove reverses add for setHash', async () => {
-    const emptyHash = new LtHash(members.setHash.toBytes())
-
-    await members.addMember('did:plc:alice')
-    await members.removeMember('did:plc:alice')
-
-    expect(members.setHash.equals(emptyHash)).toBe(true)
-  })
-
-  it('throws on duplicate add', async () => {
-    await members.addMember('did:plc:alice')
-    await expect(members.addMember('did:plc:alice')).rejects.toThrow(
-      MemberAlreadyExistsError,
-    )
-  })
-
-  it('throws on remove of non-member', async () => {
-    await expect(members.removeMember('did:plc:unknown')).rejects.toThrow(
-      MemberNotFoundError,
-    )
-  })
-
-  it('load recomputes setHash from storage', async () => {
-    await members.addMember('did:plc:alice')
-    await members.addMember('did:plc:bob')
-
-    const loaded = await SpaceMembers.load(members.storage)
-    expect(loaded.setHash.equals(members.setHash)).toBe(true)
-  })
-})
-
 describe('commits', () => {
   let repo: SpaceRepo
   let keypair: Secp256k1Keypair
@@ -307,9 +224,10 @@ describe('commits', () => {
     })
     const commit = await repo.commit(testSpace, keypair)
     expect(commit.hash).toBeInstanceOf(Buffer)
-    expect(commit.hmac).toBeInstanceOf(Buffer)
+    expect(commit.mac).toBeInstanceOf(Buffer)
     expect(commit.ikm).toBeInstanceOf(Buffer)
     expect(commit.sig).toBeInstanceOf(Buffer)
+    expect(commit.rev).toBe(testSpace.rev)
   })
 
   it('commit.hash equals setHash.digest() (32 bytes)', async () => {
@@ -334,11 +252,11 @@ describe('commits', () => {
     const c1 = await repo.commit(testSpace, keypair)
     const c2 = await repo.commit(testSpace, keypair)
     expect(c1.ikm).not.toEqual(c2.ikm)
-    expect(c1.hmac).not.toEqual(c2.hmac)
+    expect(c1.mac).not.toEqual(c2.mac)
     expect(c1.hash).toEqual(c2.hash)
   })
 
-  it('repo verifies its own commit', async () => {
+  it('repo verifies its own commit (mac)', async () => {
     await repo.applyWrites({
       action: WriteOpAction.Create,
       collection: 'app.bsky.feed.post',
@@ -347,6 +265,48 @@ describe('commits', () => {
     })
     const commit = await repo.commit(testSpace, keypair)
     expect(repo.verifyCommit(testSpace, commit)).toBe(true)
+  })
+
+  it('verifies the commit signature against the author key', async () => {
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
+    const commit = await repo.commit(testSpace, keypair)
+    expect(await repo.verifyCommitSig(testSpace, commit, keypair.did())).toBe(
+      true,
+    )
+  })
+
+  it('signature fails against a different key', async () => {
+    const other = await Secp256k1Keypair.create()
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
+    const commit = await repo.commit(testSpace, keypair)
+    expect(await repo.verifyCommitSig(testSpace, commit, other.did())).toBe(
+      false,
+    )
+  })
+
+  it('mac does not verify under a different space context', async () => {
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
+    const commit = await repo.commit(testSpace, keypair)
+    const otherSpace: SpaceContext = {
+      space: 'ats://did:example:space/app.bsky.group/other',
+      rev: testSpace.rev,
+    }
+    expect(repo.verifyCommit(otherSpace, commit)).toBe(false)
   })
 
   it('commit does not verify after repo changes', async () => {
@@ -466,124 +426,80 @@ describe('commits', () => {
     const loaded = await SpaceRepo.load(repo.storage, 'did:example:alice')
     expect(loaded.verifyCommit(testSpace, commit)).toBe(true)
   })
-
-  it('domain separation: records scope != members scope', async () => {
-    const recordsContext: SpaceContext = {
-      ...testSpace,
-      scope: 'records',
-    }
-    const membersContext: SpaceContext = {
-      ...testSpace,
-      scope: 'members',
-    }
-
-    // Create a repo commit with records scope
-    await repo.applyWrites({
-      action: WriteOpAction.Create,
-      collection: 'app.bsky.feed.post',
-      rkey: '1',
-      record: { text: 'hello' },
-    })
-    const repoCommit = await repo.commit(recordsContext, keypair)
-
-    // Create a members commit with members scope
-    const membersStorage = new MemoryMembersStorage()
-    const spaceMembers = SpaceMembers.create(membersStorage)
-    await spaceMembers.addMember('did:plc:alice')
-    const membersCommit = await spaceMembers.commit(membersContext, keypair)
-
-    // Verify repo commit fails with members context
-    expect(repo.verifyCommit(membersContext, repoCommit)).toBe(false)
-
-    // Verify members commit fails with records context
-    expect(spaceMembers.verifyCommit(recordsContext, membersCommit)).toBe(false)
-  })
 })
 
 describe('credentials', () => {
   let keypairA: Secp256k1Keypair
   let keypairB: Secp256k1Keypair
+  const spaceUri = 'ats://did:plc:authority/app.bsky.group/myspace'
 
   beforeAll(async () => {
     keypairA = await Secp256k1Keypair.create()
     keypairB = await Secp256k1Keypair.create()
   })
 
-  describe('member grants', () => {
-    it('creates and verifies a member grant', async () => {
-      const grant = await createMemberGrant(
+  describe('delegation tokens', () => {
+    it('creates and verifies a delegation token', async () => {
+      const token = await createDelegationToken(
         {
-          iss: 'did:plc:member',
-          aud: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
+          iss: 'did:plc:user',
+          aud: 'did:plc:authority#atproto_space_host',
+          sub: spaceUri,
         },
         keypairA,
       )
 
-      expect(grant).toBeTruthy()
-      expect(typeof grant).toBe('string')
+      expect(typeof token).toBe('string')
 
-      const payload = await verifyMemberGrant(grant, keypairA.did())
-      expect(payload.iss).toBe('did:plc:member')
-      expect(payload.aud).toBe('did:plc:owner')
-      expect(payload.space).toBe('at://did:plc:owner/app.bsky.group/myspace')
-      expect(payload.clientId).toBe('https://example.com/client')
-      expect(payload.lxm).toBe('com.atproto.space.getSpaceCredential')
+      const payload = await verifyDelegationToken(token, keypairA.did())
+      expect(payload.iss).toBe('did:plc:user')
+      expect(payload.aud).toBe('did:plc:authority#atproto_space_host')
+      expect(payload.sub).toBe(spaceUri)
     })
 
-    it('rejects expired grant', async () => {
-      const grant = await createMemberGrant(
+    it('defaults to a 60-second expiry', async () => {
+      const token = await createDelegationToken(
         {
-          iss: 'did:plc:member',
-          aud: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
+          iss: 'did:plc:user',
+          aud: 'did:plc:authority#atproto_space_host',
+          sub: spaceUri,
         },
         keypairA,
       )
-
-      // Wait longer than the expiry (5 minutes = 300 seconds)
-      // We can't easily wait that long in tests, so we'll manipulate time by mocking
-      // For now, we'll verify the JWT structure includes an exp field
-      const parts = grant.split('.')
-      const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8')
-      const payload = JSON.parse(payloadJson)
-      expect(payload.exp - payload.iat).toBe(300)
-
-      // To properly test expiry, we'd need to mock Date.now(), but for now
-      // we verify the structure is correct
+      const payload = JSON.parse(
+        Buffer.from(token.split('.')[1], 'base64url').toString('utf8'),
+      )
+      expect(payload.exp - payload.iat).toBe(60)
     })
 
-    it('rejects grant with wrong public key', async () => {
-      const grant = await createMemberGrant(
+    it('uses the atproto-space-delegation+jwt typ and #atproto kid', async () => {
+      const token = await createDelegationToken(
         {
-          iss: 'did:plc:member',
-          aud: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
+          iss: 'did:plc:user',
+          aud: 'did:plc:authority#atproto_space_host',
+          sub: spaceUri,
         },
         keypairA,
       )
-
-      await expect(verifyMemberGrant(grant, keypairB.did())).rejects.toThrow(
-        'Invalid JWT signature',
+      const header = JSON.parse(
+        Buffer.from(token.split('.')[0], 'base64url').toString('utf8'),
       )
+      expect(header.typ).toBe('atproto-space-delegation+jwt')
+      expect(header.kid).toBe('#atproto')
     })
 
-    it('verifies lxm binding on grant', async () => {
-      const grant = await createMemberGrant(
+    it('rejects a token signed by a different key', async () => {
+      const token = await createDelegationToken(
         {
-          iss: 'did:plc:member',
-          aud: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
+          iss: 'did:plc:user',
+          aud: 'did:plc:authority#atproto_space_host',
+          sub: spaceUri,
         },
         keypairA,
       )
-
-      const payload = await verifyMemberGrant(grant, keypairA.did())
-      expect(payload.lxm).toBe('com.atproto.space.getSpaceCredential')
+      await expect(
+        verifyDelegationToken(token, keypairB.did()),
+      ).rejects.toThrow('Invalid JWT signature')
     })
   })
 
@@ -591,88 +507,103 @@ describe('credentials', () => {
     it('creates and verifies a space credential', async () => {
       const credential = await createSpaceCredential(
         {
-          iss: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
+          iss: 'did:plc:authority',
+          sub: spaceUri,
           clientId: 'https://example.com/client',
         },
         keypairA,
       )
-
-      expect(credential).toBeTruthy()
-      expect(typeof credential).toBe('string')
 
       const payload = await verifySpaceCredential(credential, keypairA.did())
-      expect(payload.iss).toBe('did:plc:owner')
-      expect(payload.space).toBe('at://did:plc:owner/app.bsky.group/myspace')
-      expect(payload.clientId).toBe('https://example.com/client')
+      expect(payload.iss).toBe('did:plc:authority')
+      expect(payload.sub).toBe(spaceUri)
+      expect(payload.client_id).toBe('https://example.com/client')
     })
 
-    it('rejects expired credential', async () => {
+    it('omits client_id when no attestation was presented', async () => {
       const credential = await createSpaceCredential(
-        {
-          iss: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
-          expSeconds: 7200,
-        },
+        { iss: 'did:plc:authority', sub: spaceUri },
         keypairA,
       )
+      const payload = await verifySpaceCredential(credential, keypairA.did())
+      expect(payload.client_id).toBeUndefined()
+    })
 
-      // Verify the JWT structure includes correct expiry
-      const parts = credential.split('.')
-      const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8')
-      const payload = JSON.parse(payloadJson)
+    it('defaults to a 2-hour expiry and uses #atproto_space kid', async () => {
+      const credential = await createSpaceCredential(
+        { iss: 'did:plc:authority', sub: spaceUri },
+        keypairA,
+      )
+      const header = JSON.parse(
+        Buffer.from(credential.split('.')[0], 'base64url').toString('utf8'),
+      )
+      const payload = JSON.parse(
+        Buffer.from(credential.split('.')[1], 'base64url').toString('utf8'),
+      )
+      expect(header.typ).toBe('atproto-space-credential+jwt')
+      expect(header.kid).toBe('#atproto_space')
       expect(payload.exp - payload.iat).toBe(7200)
     })
 
-    it('rejects credential with wrong public key', async () => {
+    it('rejects a credential signed by a different key', async () => {
       const credential = await createSpaceCredential(
-        {
-          iss: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
-        },
+        { iss: 'did:plc:authority', sub: spaceUri },
         keypairA,
       )
-
       await expect(
         verifySpaceCredential(credential, keypairB.did()),
       ).rejects.toThrow('Invalid JWT signature')
     })
   })
 
-  describe('type validation', () => {
-    it('rejects wrong typ', async () => {
-      // Create a space credential
-      const credential = await createSpaceCredential(
-        {
-          iss: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
-        },
+  describe('client attestation', () => {
+    const clientId = 'https://app.example.com/client-metadata.json'
+
+    it('parses a structurally valid attestation', async () => {
+      const attestation = await createClientAttestation(
+        { clientId, aud: 'did:plc:authority#atproto_space_host' },
         keypairA,
       )
+      const { header, payload } = parseClientAttestation(attestation)
+      expect(header.typ).toBe('atproto-client-attestation+jwt')
+      expect(payload.iss).toBe(clientId)
+      expect(payload.sub).toBe(clientId)
+      expect(payload.aud).toBe('did:plc:authority#atproto_space_host')
+    })
 
-      // Try to verify it as a member grant - should fail
+    it('rejects a non-attestation typ', async () => {
+      const credential = await createSpaceCredential(
+        { iss: 'did:plc:authority', sub: spaceUri },
+        keypairA,
+      )
+      expect(() => parseClientAttestation(credential)).toThrow(
+        'Invalid JWT type',
+      )
+    })
+  })
+
+  describe('type validation', () => {
+    it('rejects a space credential verified as a delegation token', async () => {
+      const credential = await createSpaceCredential(
+        { iss: 'did:plc:authority', sub: spaceUri },
+        keypairA,
+      )
       await expect(
-        verifyMemberGrant(credential, keypairA.did()),
+        verifyDelegationToken(credential, keypairA.did()),
       ).rejects.toThrow('Invalid JWT type')
     })
 
-    it('rejects member grant verified as space credential', async () => {
-      const grant = await createMemberGrant(
+    it('rejects a delegation token verified as a space credential', async () => {
+      const token = await createDelegationToken(
         {
-          iss: 'did:plc:member',
-          aud: 'did:plc:owner',
-          space: 'at://did:plc:owner/app.bsky.group/myspace',
-          clientId: 'https://example.com/client',
+          iss: 'did:plc:user',
+          aud: 'did:plc:authority#atproto_space_host',
+          sub: spaceUri,
         },
         keypairA,
       )
-
-      // Try to verify it as a space credential - should fail
       await expect(
-        verifySpaceCredential(grant, keypairA.did()),
+        verifySpaceCredential(token, keypairA.did()),
       ).rejects.toThrow('Invalid JWT type')
     })
   })

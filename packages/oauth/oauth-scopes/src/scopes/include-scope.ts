@@ -15,6 +15,7 @@ import {
   RpcPermission,
   isAtprotoDidRefAbsolute,
 } from './rpc-permission.js'
+import { SpacePermission } from './space-permission.js'
 
 export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 
@@ -35,13 +36,13 @@ export class IncludeScope {
 
   toPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Array<RepoPermission | RpcPermission> {
+  ): Array<RepoPermission | RpcPermission | SpacePermission> {
     return Array.from(this.buildPermissions(permissionSet))
   }
 
   toScopes(
     permissionSet: LexiconPermissionSet,
-  ): Array<ScopeStringFor<'repo' | 'rpc'>> {
+  ): Array<ScopeStringFor<'repo' | 'rpc' | 'space'>> {
     return Array.from(this.buildPermissions(permissionSet), (p) => p.toString())
   }
 
@@ -51,7 +52,7 @@ export class IncludeScope {
    */
   *buildPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Generator<RepoPermission | RpcPermission, void, unknown> {
+  ): Generator<RepoPermission | RpcPermission | SpacePermission, void, unknown> {
     for (const lexPermission of permissionSet.permissions) {
       const syntax = this.parseLexPermission(lexPermission)
       if (!syntax) continue
@@ -67,12 +68,18 @@ export class IncludeScope {
 
   protected parseLexPermission(
     permission: LexiconPermission,
-  ): ScopeSyntax<'repo' | 'rpc'> | null {
+  ): ScopeSyntax<'repo' | 'rpc' | 'space'> | null {
     // This function converts permissions listed in the permission set into
     // their respective ScopeSyntax representations, handling special cases as
     // needed.
 
     if (isLexPermissionForResource(permission, 'repo')) {
+      return new LexPermissionSyntax(permission)
+    }
+
+    if (isLexPermissionForResource(permission, 'space')) {
+      // A space permission set entry may not use a wildcard space type — it
+      // must name a concrete type under the set's namespace authority.
       return new LexPermissionSyntax(permission)
     }
 
@@ -108,7 +115,7 @@ export class IncludeScope {
    * and that it only contains "repo:", "rpc:", or "blob:" permissions.
    */
   protected isAllowedPermission(
-    permission: RpcPermission | RepoPermission,
+    permission: RpcPermission | RepoPermission | SpacePermission,
   ): boolean {
     if (permission instanceof RpcPermission) {
       return permission.lxm.every(this.isParentAuthorityOf, this)
@@ -116,6 +123,13 @@ export class IncludeScope {
 
     if (permission instanceof RepoPermission) {
       return permission.collection.every(this.isParentAuthorityOf, this)
+    }
+
+    if (permission instanceof SpacePermission) {
+      // The space type must be under the set's namespace authority and may not
+      // be a wildcard. Collections may live under a different authority (per
+      // proposal 0016), so they're not authority-checked here.
+      return this.isParentAuthorityOf(permission.type)
     }
 
     throw new TypeError(`Unexpected permission ${permission}`)
@@ -189,13 +203,16 @@ export class IncludeScope {
 }
 
 function toResourcePermission(
-  syntax: ScopeSyntax<'repo' | 'rpc'>,
-): RepoPermission | RpcPermission | null {
+  syntax: ScopeSyntax<'repo' | 'rpc' | 'space'>,
+): RepoPermission | RpcPermission | SpacePermission | null {
   if (isScopeSyntaxFor(syntax, 'repo')) {
     return RepoPermission.fromSyntax(syntax)
   }
   if (isScopeSyntaxFor(syntax, 'rpc')) {
     return RpcPermission.fromSyntax(syntax)
+  }
+  if (isScopeSyntaxFor(syntax, 'space')) {
+    return SpacePermission.fromSyntax(syntax)
   }
   return null
 }

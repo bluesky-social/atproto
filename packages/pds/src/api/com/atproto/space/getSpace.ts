@@ -2,7 +2,7 @@ import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { toLexSpaceConfig } from '../simplespace/config.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpace, {
@@ -12,35 +12,30 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const ownerDid = auth.credentials.did
+      const callerDid = auth.credentials.did
       const { space } = params
 
-      assertSpaceScope(auth, space, { action: 'manage' })
-
-      const spaceDid = new SpaceUri(space).spaceDid
-      if (spaceDid !== ownerDid) {
-        throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
+      const authorityDid = new SpaceUri(space).spaceDid
+      // Served by the space host (the authority's PDS).
+      if (authorityDid !== callerDid) {
+        throw new InvalidRequestError(
+          'getSpace must be called on the space authority',
+          'SpaceNotFound',
+        )
       }
 
-      const spaceRow = await ctx.actorStore.read(ownerDid, (store) =>
+      const spaceRow = await ctx.actorStore.read(authorityDid, (store) =>
         store.space.getSpace(space),
       )
-      if (!spaceRow || spaceRow.deletedAt) {
+      if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
-      if (!spaceRow.isOwner) {
-        throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }
 
       return {
         encoding: 'application/json' as const,
         body: {
           uri: space,
-          isOwner: spaceRow.isOwner,
-          isPublic: spaceRow.isPublic,
-          managingApp: spaceRow.managingApp ?? undefined,
-          appAccessMode: spaceRow.appAccessMode,
-          appExceptions: spaceRow.appExceptions,
+          config: toLexSpaceConfig(spaceRow),
         },
       }
     },

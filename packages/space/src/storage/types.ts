@@ -1,4 +1,4 @@
-import { CommitData, MemberCommitData, RepoRecord } from '../types.js'
+import { CommitData, RepoRecord } from '../types.js'
 
 export interface SpaceRepoStorage {
   // Record reads
@@ -16,13 +16,5 @@ export interface SpaceRepoStorage {
   applyCommit(commit: CommitData): Promise<void>
 
   // Lifecycle
-  destroy(): Promise<void>
-}
-
-export interface SpaceMembersStorage {
-  getMembers(): Promise<string[]>
-  isMember(did: string): Promise<boolean>
-  getSetHashState(): Promise<Buffer | null>
-  applyCommit(commit: MemberCommitData): Promise<void>
   destroy(): Promise<void>
 }

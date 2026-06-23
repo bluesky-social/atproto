@@ -8,10 +8,10 @@ import {
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.deleteSpace, {
+  server.add(com.atproto.simplespace.deleteSpace, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // Performed in the handler as it requires the request body
@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       const ownerDid = auth.credentials.did
       const { space } = input.body
 
-      assertSpaceScope(auth, space, { action: 'manage' })
+      assertSpaceScope(auth, space, { manage: 'delete' })
 
       const spaceDid = new SpaceUri(space).spaceDid
       if (spaceDid !== ownerDid) {
@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      // Snapshot membership + recipients before purge so we can fan out.
+      // Snapshot members + recipients before purge so we can fan out.
       const { members, recipients } = await ctx.actorStore.read(
         ownerDid,
         async (store) => {
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
         },
       )
 
-      // Mark deleted and purge owner-scoped data.
+      // Mark deleted and purge authority-scoped data.
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
         await actorTxn.space.markSpaceDeleted(space)
         await actorTxn.space.purgeOwnerSpaceData(space)

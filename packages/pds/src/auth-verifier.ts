@@ -15,7 +15,11 @@ import {
   ScopePermissions,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
-import { verifyMemberGrant, verifySpaceCredential } from '@atproto/space'
+import {
+  SPACE_CREDENTIAL_TYP,
+  verifyDelegationToken,
+  verifySpaceCredential,
+} from '@atproto/space'
 import {
   AuthRequiredError,
   Awaitable,
@@ -33,7 +37,7 @@ import { ActorAccount } from './account-manager/helpers/account.js'
 import {
   AccessOutput,
   AdminTokenOutput,
-  MemberGrantOutput,
+  DelegationTokenOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
@@ -394,14 +398,20 @@ export class AuthVerifier {
           )
         }
 
+        // @TODO the space credential is signed by the authority's
+        // `#atproto_space` verification method (proposal 0016). We resolve the
+        // `#atproto` key here; in simplespace the authority is the user's own
+        // DID backed by the same keypair, so this works in practice. Resolving
+        // a distinct `#atproto_space` key (fallback to `#atproto`) is the
+        // proposal-correct behavior. See SPACE_RECONCILIATION_NOTES.md.
         const verified = await verifySpaceCredential(jwtStr, didKey)
 
         return {
           credentials: {
             type: 'space_credential' as const,
             iss: verified.iss,
-            space: verified.space,
-            clientId: verified.clientId,
+            space: verified.sub,
+            clientId: verified.client_id,
           },
         }
       } catch (err) {
@@ -413,62 +423,60 @@ export class AuthVerifier {
       }
     }
 
-  public memberGrantAuth: MethodAuthVerifier<MemberGrantOutput> = async (
-    ctx,
-  ) => {
-    setAuthHeaders(ctx.res)
-    const jwtStr = bearerTokenFromReq(ctx.req)
-    if (!jwtStr) {
-      throw new AuthRequiredError(
-        'missing member grant',
-        'MissingCredential',
-      )
-    }
-    try {
-      const parts = jwtStr.split('.')
-      if (parts.length !== 3) {
-        throw new AuthRequiredError('invalid member grant format')
+  public delegationTokenAuth: MethodAuthVerifier<DelegationTokenOutput> =
+    async (ctx) => {
+      setAuthHeaders(ctx.res)
+      const jwtStr = bearerTokenFromReq(ctx.req)
+      if (!jwtStr) {
+        throw new AuthRequiredError(
+          'missing delegation token',
+          'MissingCredential',
+        )
       }
-      const payloadJson = Buffer.from(parts[1], 'base64url').toString()
-      const payload = JSON.parse(payloadJson)
-      const iss = payload.iss
-      if (!iss) {
-        throw new AuthRequiredError('missing issuer in member grant')
-      }
+      try {
+        const parts = jwtStr.split('.')
+        if (parts.length !== 3) {
+          throw new AuthRequiredError('invalid delegation token format')
+        }
+        const payloadJson = Buffer.from(parts[1], 'base64url').toString()
+        const payload = JSON.parse(payloadJson)
+        const iss = payload.iss
+        if (!iss) {
+          throw new AuthRequiredError('missing issuer in delegation token')
+        }
 
-      // The grant is signed by the member's atproto signing key — resolve
-      // their DID document to verify.
-      const didDoc = await this.idResolver.did.resolve(iss)
-      if (!didDoc) {
-        throw new AuthRequiredError('could not resolve member DID')
-      }
-      const parsedKey = getVerificationMaterial(didDoc, 'atproto')
-      if (!parsedKey) {
-        throw new AuthRequiredError('missing or bad key in member did doc')
-      }
-      const didKey = getDidKeyFromMultibase(parsedKey)
-      if (!didKey) {
-        throw new AuthRequiredError('missing or bad key in member did doc')
-      }
+        // The token is signed by the user's atproto signing key — resolve
+        // their DID document to verify.
+        const didDoc = await this.idResolver.did.resolve(iss)
+        if (!didDoc) {
+          throw new AuthRequiredError('could not resolve user DID')
+        }
+        const parsedKey = getVerificationMaterial(didDoc, 'atproto')
+        if (!parsedKey) {
+          throw new AuthRequiredError('missing or bad key in user did doc')
+        }
+        const didKey = getDidKeyFromMultibase(parsedKey)
+        if (!didKey) {
+          throw new AuthRequiredError('missing or bad key in user did doc')
+        }
 
-      const verified = await verifyMemberGrant(jwtStr, didKey)
-      return {
-        credentials: {
-          type: 'member_grant' as const,
-          memberDid: verified.iss,
-          aud: verified.aud,
-          space: verified.space,
-          clientId: verified.clientId,
-        },
+        const verified = await verifyDelegationToken(jwtStr, didKey)
+        return {
+          credentials: {
+            type: 'delegation_token' as const,
+            userDid: verified.iss,
+            aud: verified.aud,
+            space: verified.sub,
+          },
+        }
+      } catch (err) {
+        if (err instanceof AuthRequiredError) throw err
+        throw new AuthRequiredError(
+          `Invalid delegation token: ${err instanceof Error ? err.message : String(err)}`,
+          'InvalidDelegationToken',
+        )
       }
-    } catch (err) {
-      if (err instanceof AuthRequiredError) throw err
-      throw new AuthRequiredError(
-        `Invalid member grant: ${err instanceof Error ? err.message : String(err)}`,
-        'InvalidGrant',
-      )
     }
-  }
 
   public userServiceAuthOptional: MethodAuthVerifier<
     UserServiceAuthOutput | UnauthenticatedOutput
@@ -808,7 +816,7 @@ const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {
   if (!token) return false
   try {
     const header = jose.decodeProtectedHeader(token)
-    return header.typ === 'space_credential'
+    return header.typ === SPACE_CREDENTIAL_TYP
   } catch {
     return false
   }

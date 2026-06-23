@@ -59,48 +59,22 @@ export type CommitData = {
   setHash: Buffer
 }
 
+// The context bound into a commit's signature and MAC. `space` is the 3-part
+// space URI (ats://authority/type/skey); `rev` is the commit revision (TID).
 export type SpaceContext = {
-  spaceDid: string
-  spaceType: string
-  spaceKey: string
-  userDid: string
+  space: string
   rev: string
-  scope: 'records' | 'members'
 }
 
 export type UnsignedCommit = {
   hash: Buffer
-  hmac: Buffer
+  mac: Buffer
   ikm: Buffer
 }
 
-// `rev` rides along on the commit because it's part of the HKDF info — a
-// reader needs it to reconstruct the SpaceContext used for HMAC verification.
+// `rev` rides along on the commit because it's bound into the signing context —
+// a reader needs it to reconstruct the ctx used for signature & MAC verification.
 export type SignedCommit = UnsignedCommit & {
   sig: Buffer
   rev: string
-}
-
-export enum MemberOpAction {
-  Add = 'add',
-  Remove = 'remove',
-}
-
-export type MemberAddOp = {
-  action: MemberOpAction.Add
-  did: string
-}
-
-export type MemberRemoveOp = {
-  action: MemberOpAction.Remove
-  did: string
-}
-
-export type MemberWriteOp = MemberAddOp | MemberRemoveOp
-
-export type PreparedMemberOp = MemberAddOp | MemberRemoveOp
-
-export type MemberCommitData = {
-  ops: PreparedMemberOp[]
-  setHash: Buffer
 }

@@ -1,36 +1,52 @@
-import { createSpaceCredential } from '@atproto/space'
-import { SpaceUri } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { getServiceEndpoint } from '@atproto/common'
+import { xrpc } from '@atproto/lex'
+import { createSpaceCredential, parseClientAttestation } from '@atproto/space'
+import { DidString, SpaceUri, SpaceUriString } from '@atproto/syntax'
+import {
+  InvalidRequestError,
+  Server,
+  createServiceAuthHeaders,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
-    auth: ctx.authVerifier.memberGrantAuth,
+    auth: ctx.authVerifier.delegationTokenAuth,
     handler: async ({ input, auth }) => {
-      const { space, notifyEndpoint } = input.body
-      const { memberDid, aud, clientId, space: grantSpace } = auth.credentials
+      const { space, clientAttestation } = input.body
+      const { userDid, space: tokenSpace } = auth.credentials
 
-      if (grantSpace !== space) {
+      if (tokenSpace !== space) {
         throw new InvalidRequestError(
-          'Grant space does not match requested space',
-          'InvalidGrant',
+          'Delegation token subject does not match requested space',
+          'InvalidDelegationToken',
         )
       }
 
-      const ownerDid = new SpaceUri(space).spaceDid
-      if (aud !== ownerDid) {
-        throw new InvalidRequestError(
-          'Grant audience does not match space owner',
-          'InvalidGrant',
-        )
+      const authorityDid = new SpaceUri(space).spaceDid
+
+      // Parse the client attestation if present. Structural validation only —
+      // the attested client_id is taken as advisory until JWKS verification is
+      // implemented (see SPACE_RECONCILIATION_NOTES.md).
+      let clientId: string | undefined
+      if (clientAttestation) {
+        try {
+          const parsed = parseClientAttestation(clientAttestation)
+          clientId = parsed.payload.iss
+        } catch (err) {
+          throw new InvalidRequestError(
+            `Invalid client attestation: ${err instanceof Error ? err.message : String(err)}`,
+            'InvalidClientAttestation',
+          )
+        }
       }
 
       const { spaceRow, isMember } = await ctx.actorStore.read(
-        ownerDid,
+        authorityDid,
         async (store) => ({
           spaceRow: await store.space.getSpace(space),
-          isMember: await store.space.isMember(space, memberDid),
+          isMember: await store.space.isMember(space, userDid),
         }),
       )
       if (!spaceRow) {
@@ -39,50 +55,44 @@ export default function (server: Server, ctx: AppContext) {
       if (spaceRow.deletedAt) {
         throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
       }
-      // Read perimeter. Public spaces skip the member-list check; private
-      // spaces require the grant subject to be a member.
-      // TODO: support truly anonymous mint for public spaces (no member grant
-      // at all) — requires a different auth flow for client identification.
-      if (!spaceRow.isPublic && !isMember) {
-        throw new InvalidRequestError('Member not found in space', 'NotAMember')
-      }
-      // App perimeter. allow-mode refuses clientIds in appExceptions;
-      // deny-mode refuses clientIds NOT in appExceptions.
-      const appExceptionMatch = spaceRow.appExceptions.includes(clientId)
-      const appAllowed =
-        spaceRow.appAccessMode === 'deny'
-          ? appExceptionMatch
-          : !appExceptionMatch
-      if (!appAllowed) {
+
+      // User perimeter (mintPolicy).
+      const userAuthorized = await checkUserAuthorized(ctx, {
+        mintPolicy: spaceRow.mintPolicy,
+        managingApp: spaceRow.managingApp,
+        authorityDid,
+        space,
+        userDid,
+        clientId,
+        isMember,
+      })
+      if (!userAuthorized) {
         throw new InvalidRequestError(
-          'Application not permitted to sync this space',
-          'AppNotPermitted',
+          'User not authorized for this space',
+          'UserNotAuthorized',
         )
       }
 
-      const keypair = await ctx.actorStore.keypair(ownerDid)
+      // App perimeter (appAccess). #open allows any app; #allowList requires an
+      // attested client_id present in the allow list.
+      if (spaceRow.appAccessType === 'allowList') {
+        if (!clientId || !spaceRow.appAllowed.includes(clientId)) {
+          throw new InvalidRequestError(
+            'Application not authorized for this space',
+            'AppNotAuthorized',
+          )
+        }
+      }
+
+      const keypair = await ctx.actorStore.keypair(authorityDid)
       const credential = await createSpaceCredential(
         {
-          iss: ownerDid,
-          space,
+          iss: authorityDid,
+          sub: space,
           clientId,
         },
         keypair,
       )
-
-      // Register the requesting service to receive notifyWrite events.
-      // FIXME: recipient table is keyed (space, serviceDid). Using memberDid
-      // here preserves prior behavior but is wrong when one service syncs for
-      // many members; revisit when reworking the fan-out layer.
-      if (notifyEndpoint) {
-        await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-          await actorTxn.space.recordCredentialRecipient(
-            space,
-            memberDid,
-            notifyEndpoint,
-          )
-        })
-      }
 
       return {
         encoding: 'application/json' as const,
@@ -90,4 +100,73 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+async function checkUserAuthorized(
+  ctx: AppContext,
+  opts: {
+    mintPolicy: string
+    managingApp: string | null
+    authorityDid: string
+    space: string
+    userDid: string
+    clientId?: string
+    isMember: boolean
+  },
+): Promise<boolean> {
+  switch (opts.mintPolicy) {
+    case 'public':
+      return true
+    case 'member-list':
+      return opts.isMember
+    case 'managing-app':
+      return checkManagingApp(ctx, opts)
+    default:
+      return false
+  }
+}
+
+// Ask the space's managingApp whether to authorize the request, via
+// com.atproto.simplespace.checkUserAccess. The authority calls with itself as
+// iss and the managingApp service identifier as aud (service auth).
+async function checkManagingApp(
+  ctx: AppContext,
+  opts: {
+    managingApp: string | null
+    authorityDid: string
+    space: string
+    userDid: string
+    clientId?: string
+  },
+): Promise<boolean> {
+  const { managingApp, authorityDid, space, userDid, clientId } = opts
+  if (!managingApp) return false
+  const [appDid, fragment] = managingApp.split('#')
+  try {
+    const didDoc = await ctx.idResolver.did.resolve(appDid)
+    if (!didDoc) return false
+    const endpoint = getServiceEndpoint(didDoc, {
+      id: fragment ? `#${fragment}` : '',
+    })
+    if (!endpoint) return false
+
+    const keypair = await ctx.actorStore.keypair(authorityDid)
+    const { headers } = await createServiceAuthHeaders({
+      iss: authorityDid,
+      aud: managingApp,
+      lxm: com.atproto.simplespace.checkUserAccess.$lxm,
+      keypair,
+    })
+    const res = await xrpc(endpoint, com.atproto.simplespace.checkUserAccess, {
+      headers,
+      params: {
+        space: space as SpaceUriString,
+        user: userDid as DidString,
+        clientId,
+      },
+    })
+    return res.body.authorized === true
+  } catch {
+    return false
+  }
 }
