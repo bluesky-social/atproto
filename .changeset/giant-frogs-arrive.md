@@ -60,4 +60,4 @@
 '@atproto/tap': patch
 ---
 
-Update typescript build to properly rely on references to composite internal projects
+Update TypeScript build to rely on references to composite internal projects

@@ -8,8 +8,6 @@
 
 // @NOTE Self-referencing the package name (rather than importing
 // "./dist/index.js") lets Node resolve through this package's own "exports"
-// map. Under --conditions=typescript, that picks "./src/index.ts" so the CLI
-// runs from source without a prior build. Otherwise it falls back to
-// "./dist/index.js".
+// map.
 
 import '@atproto/lex-cli'
