@@ -25,6 +25,9 @@ export const externalPayloadSchema = z
 
 export type KwsStatus = {
   verified: boolean
+  // Epoch seconds indicating when KWS generated the payload. Optional so we
+  // remain compatible with payloads sent before this field was introduced.
+  timestamp?: number
 }
 
 export type KwsVerificationIntermediateQuery = {
@@ -56,6 +59,7 @@ export type KwsWebhookBody = {
 // Not `.strict()` to avoid breaking if KWS adds fields.
 export const statusSchema = z.object({
   verified: z.boolean(),
+  timestamp: z.number().optional(),
 })
 
 // Not `.strict()` to avoid breaking if KWS adds fields.
