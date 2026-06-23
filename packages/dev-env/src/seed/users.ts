@@ -61,4 +61,4 @@ const users = {
     description: undefined,
     selfLabels: undefined,
   },
-}
+} as const

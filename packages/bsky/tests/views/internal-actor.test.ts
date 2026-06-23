@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { knownFollowersSeed } from '../seed/known-followers.js'
 
 describe('internal actor views', () => {
@@ -8,7 +9,7 @@ describe('internal actor views', () => {
   let pdsAgent: AtpAgent
   let seedClient: SeedClient
 
-  let dids: Record<string, string>
+  let dids: Record<string, DidString>
 
   beforeAll(async () => {
     network = await TestNetwork.create({

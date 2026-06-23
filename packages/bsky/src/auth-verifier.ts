@@ -76,17 +76,17 @@ const ALLOWED_AUTH_SCOPES = new Set([
 ])
 
 export type AuthVerifierOpts = {
-  ownDid: string
-  alternateAudienceDids: string[]
-  modServiceDid: string
+  ownDid: DidString
+  alternateAudienceDids: DidString[]
+  modServiceDid: DidString
   adminPasses: string[]
   entrywayJwtPublicKey?: KeyObject
 }
 
 export class AuthVerifier {
-  public ownDid: string
-  public standardAudienceDids: Set<string>
-  public modServiceDid: string
+  public ownDid: DidString
+  public standardAudienceDids: Set<DidString>
+  public modServiceDid: DidString
   private adminPasses: Set<string>
   private entrywayJwtPublicKey?: KeyObject
 
@@ -303,12 +303,12 @@ export class AuthVerifier {
     reqCtx: ReqCtx,
     opts: {
       iss: string[] | null
-      aud: string | null
+      aud: DidString | null
       lxmCheck?: (method?: string) => boolean
     },
   ): Promise<{
     iss: DidString | `${DidString}#${string}`
-    aud: string
+    aud: DidString | `${DidString}#${string}`
   }> {
     const getSigningKey = async (
       iss: string,
@@ -371,10 +371,20 @@ export class AuthVerifier {
       // we'll allow ozone self-hosters to upgrade before removing this condition.
       assertLxmCheck()
     }
-    return { iss: payload.iss, aud: payload.aud }
+    const audHashIndex = payload.aud.indexOf('#')
+    const audDid =
+      audHashIndex !== -1 ? payload.aud.slice(0, audHashIndex) : payload.aud
+    if (!isDidString(audDid)) {
+      throw new AuthRequiredError('bad jwt audience', 'BadJwtAudience')
+    }
+
+    return {
+      iss: payload.iss,
+      aud: payload.aud as DidString | `${DidString}#${string}`,
+    }
   }
 
-  isModService(iss: string): boolean {
+  isModService(iss: string): iss is DidString | `${DidString}#${string}` {
     return [
       this.modServiceDid,
       `${this.modServiceDid}#atproto_labeler`,

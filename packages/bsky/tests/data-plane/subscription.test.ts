@@ -3,6 +3,7 @@ import { AtpAgent, ids } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { sequencer } from '@atproto/pds'
+import type { DidString } from '@atproto/syntax'
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema.js'
 import { forSnapshot } from '../_util.js'
 
@@ -98,7 +99,7 @@ describe('sync', () => {
 
   async function updateProfile(
     agent: AtpAgent,
-    did: string,
+    did: DidString,
     record: Record<string, unknown>,
   ) {
     return await agent.api.com.atproto.repo.putRecord(
