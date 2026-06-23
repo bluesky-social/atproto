@@ -14,6 +14,9 @@
     { "path": "../../internal/fetch-node/tsconfig.build.json" },
     { "path": "../../internal/fetch/tsconfig.build.json" },
     { "path": "../../internal/pipe/tsconfig.build.json" },
+    {
+      "path": "../../internal/rollup-plugin-bundle-manifest/tsconfig.build.json",
+    },
     { "path": "../../internal/simple-store-memory/tsconfig.build.json" },
     { "path": "../../internal/simple-store/tsconfig.build.json" },
     { "path": "../../lex/lex-document/tsconfig.build.json" },
