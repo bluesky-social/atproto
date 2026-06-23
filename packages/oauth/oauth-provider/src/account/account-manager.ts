@@ -20,6 +20,7 @@ import {
   DeleteAccountConfirmInput,
   DeleteAccountRequestInput,
   DeviceAccount,
+  HandleString,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
@@ -345,7 +346,7 @@ export class AccountManager {
     })
   }
 
-  public async verifyHandleAvailability(handle: string): Promise<void> {
+  public async verifyHandleAvailability(handle: HandleString): Promise<void> {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       return this.store.verifyHandleAvailability(handle)
     })

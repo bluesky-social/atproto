@@ -1,4 +1,4 @@
-import { Did } from '@atproto/did'
+import type { Did } from '@atproto/did'
 import type {
   Account,
   ConfirmAccountDeletionInput,
@@ -14,20 +14,22 @@ import type {
   ReactivateAccountInput,
   UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
-import { OAuthScope } from '@atproto/oauth-types'
-import { ClientId } from '../client/client-id.js'
-import { DeviceId } from '../device/device-id.js'
-import { DeviceData } from '../device/device-store.js'
-import { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
-import {
+import type { OAuthScope } from '@atproto/oauth-types'
+import type { HandleString } from '@atproto/syntax'
+import type { ClientId } from '../client/client-id.js'
+import type { DeviceId } from '../device/device-id.js'
+import type { DeviceData } from '../device/device-store.js'
+import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import type { Awaitable } from '../lib/util/type.js'
+import { buildInterfaceChecker } from '../lib/util/type.js'
+import type {
   HandleUnavailableError,
   InvalidCredentialsError,
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
 } from '../oauth-errors.js'
-import { InviteCode } from '../types/invite-code.js'
-import { SignUpInput } from './sign-up-input.js'
+import type { InviteCode } from '../types/invite-code.js'
+import type { SignUpInput } from './sign-up-input.js'
 
 // Export all types needed to implement the AccountStore interface
 
@@ -39,6 +41,7 @@ export * from '../request/request-id.js'
 export type {
   Account,
   Did,
+  HandleString,
   HcaptchaVerifyResult,
   InviteCode,
   OAuthScope,
@@ -71,7 +74,7 @@ export type CreateAccountData = {
   locale: string
   email: string
   password: string
-  handle: string
+  handle: HandleString
   inviteCode?: string | undefined
 }
 
@@ -226,7 +229,7 @@ export interface AccountStore {
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
-  verifyHandleAvailability(handle: string): Awaitable<void>
+  verifyHandleAvailability(handle: HandleString): Awaitable<void>
 
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
