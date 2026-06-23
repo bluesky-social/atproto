@@ -53,6 +53,7 @@ describe('parseKWSAgeVerifiedStatus', () => {
       verified: true,
       verifiedMinimumAge: 18,
       timestamp: 1750680000,
+      errorCode: null,
     })
   })
 
