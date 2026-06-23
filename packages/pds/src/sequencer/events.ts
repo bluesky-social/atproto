@@ -8,11 +8,13 @@ import {
   isDidString,
   isHandleString,
 } from '@atproto/lex'
-import { encode as cborEncode } from '@atproto/lex-cbor'
+import { encode as cborEncode, decode as cborDecode } from '@atproto/lex-cbor'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager.js'
 import { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
 import { RepoSeqInsert } from './db/index.js'
+
+const LIKE_NSID = 'app.bsky.feed.like'
 
 export const formatSeqCommit = async (
   did: string,
@@ -22,13 +24,37 @@ export const formatSeqCommit = async (
   blocksToSend.addMap(commitData.newBlocks)
   blocksToSend.addMap(commitData.relevantBlocks)
 
+  // Strip hidden likes from the outbound firehose event. The like record
+  // still exists in the user's repo but won't appear in the event stream.
+  const filteredOps = commitData.ops.filter((op) => {
+    if (
+      (op.action === 'create' || op.action === 'update') &&
+      op.cid !== null &&
+      op.path.startsWith(`${LIKE_NSID}/`)
+    ) {
+      const bytes = commitData.newBlocks.get(op.cid)
+      if (bytes) {
+        try {
+          const record = cborDecode(bytes) as Record<string, unknown>
+          if (record['hideLike'] === true) {
+            blocksToSend.delete(op.cid)
+            return false
+          }
+        } catch {
+          // malformed block — leave it in the stream as-is
+        }
+      }
+    }
+    return true
+  })
+
   const evt = {
     repo: did,
     commit: commitData.cid,
     rev: commitData.rev,
     since: commitData.since,
     blocks: await blocksToCarFile(commitData.cid, blocksToSend),
-    ops: commitData.ops,
+    ops: filteredOps,
     prevData: commitData.prevData ?? undefined,
     // deprecated (but still required) fields
     rebase: false,

@@ -19,6 +19,10 @@ const insertFn = async (
   obj: app.bsky.feed.like.Main,
   timestamp: string,
 ): Promise<IndexedLike | null> => {
+  // Respect the author's privacy preference — hidden likes are not indexed.
+  if (obj.hideLike === true) {
+    return null
+  }
   const inserted = await db
     .insertInto('like')
     .values({
