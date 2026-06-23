@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { SqlBool, sql } from 'kysely'
 import { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import { ActorDb } from '../db/index.js'
@@ -164,9 +164,11 @@ export class SpaceReader {
         // Lexicographic tuple comparison: (collection, rkey) </> cursor.
         // Written with `sql` because not all kysely versions expose tuple
         // expressions in the typed builder.
-        const op = reverse ? sql`>` : sql`<`
+        const { collection: c, rkey: r } = cursorKey
         builder = builder.where(
-          sql`("collection", "rkey") ${op} (${cursorKey.collection}, ${cursorKey.rkey})`,
+          reverse
+            ? sql<SqlBool>`("collection", "rkey") > (${c}, ${r})`
+            : sql<SqlBool>`("collection", "rkey") < (${c}, ${r})`,
         )
       }
     }
