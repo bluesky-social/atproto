@@ -62,6 +62,9 @@ export default function (server: Server, ctx: AppContext) {
       const results = await searchPostsV2(
         {
           ...params,
+          // Default to curated 'top' ranking when unset; the backend rejects an
+          // unspecified sort order.
+          sort: params.sort ?? 'top',
           hydrateCtx,
           isModService,
         },
