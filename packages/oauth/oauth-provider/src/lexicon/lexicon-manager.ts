@@ -40,15 +40,50 @@ export class LexiconManager {
   public async buildTokenScope(scope: string): Promise<string> {
     const { includeScopes, otherScopes } = parseScope(scope)
 
-    // If the scope does not contain any "include:<nsid>" scopes, return it as-is.
-    if (!includeScopes.length) return scope
+    // 1. Expand any "include:<nsid>" permission-set scopes into concrete scopes.
+    const concreteScopes = includeScopes.length
+      ? Array.from(includeScopes)
+          .flatMap(nsidToPermissionScopes, await this.extractPermissionSets(includeScopes))
+          .concat(otherScopes)
+      : otherScopes
 
-    const permissionSets = await this.extractPermissionSets(includeScopes)
+    // 2. Default `collection` on bare `space:<type>` grants to the space type's
+    //    declared collections. The runtime matcher is context-free, so this
+    //    resolution-at-issuance step is where declared collections are
+    //    materialized (mirrors how include: scopes are expanded above).
+    const expanded = await this.expandSpaceCollections(concreteScopes)
 
-    return Array.from(includeScopes)
-      .flatMap(nsidToPermissionScopes, permissionSets)
-      .concat(otherScopes)
-      .join(' ')
+    return expanded.join(' ')
+  }
+
+  /**
+   * Rewrites `space:<concreteType>` scopes that omit `collection` to carry the
+   * space type's declared collections. Scopes that already name collections
+   * (including `*`), wildcard-type scopes, and non-space scopes pass through
+   * unchanged. Declaration-resolution failures leave the scope untouched.
+   */
+  protected async expandSpaceCollections(
+    scopes: readonly string[],
+  ): Promise<string[]> {
+    // Collect the concrete space types that need a declaration lookup.
+    const nsids = new Set<Nsid>()
+    for (const value of scopes) {
+      const parsed = SpacePermission.fromString(value)
+      if (parsed && parsed.type !== '*' && !parsed.hasCollections) {
+        nsids.add(parsed.type)
+      }
+    }
+    if (nsids.size === 0) return scopes.slice()
+
+    const spaces = await this.getSpaces(nsids)
+
+    return scopes.map((value) => {
+      const parsed = SpacePermission.fromString(value)
+      if (!parsed || parsed.type === '*' || parsed.hasCollections) return value
+      const space = spaces.get(parsed.type)
+      if (!space?.collections?.length) return value
+      return parsed.withDefaultCollections(space.collections).toString()
+    })
   }
 
   /**

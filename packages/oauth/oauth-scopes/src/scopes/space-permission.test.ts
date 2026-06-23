@@ -312,4 +312,52 @@ describe('SpacePermission', () => {
       expect(scope.toString()).toBe(input)
     })
   })
+
+  describe('withDefaultCollections', () => {
+    it('materializes declared collections into a bare grant', () => {
+      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
+      expect(scope.hasCollections).toBe(false)
+      const expanded = scope.withDefaultCollections([
+        'com.atmoboards.thread',
+        'com.atmoboards.reply',
+      ])
+      expect(expanded.collection).toEqual([
+        'com.atmoboards.thread',
+        'com.atmoboards.reply',
+      ])
+      // Now writes to the declared collections are permitted.
+      expect(
+        expanded.matches({
+          type: 'com.atmoboards.forum',
+          did: 'did:plc:abc',
+          skey: 'default',
+          action: 'create',
+          collection: 'com.atmoboards.thread',
+        }),
+      ).toBe(true)
+    })
+
+    it('leaves a grant that already names collections unchanged', () => {
+      const scope = SpacePermission.fromString(
+        'space:com.atmoboards.forum?collection=com.atmoboards.thread',
+      )!
+      expect(scope.hasCollections).toBe(true)
+      const expanded = scope.withDefaultCollections(['com.atmoboards.reply'])
+      expect(expanded).toBe(scope)
+      expect(expanded.collection).toEqual(['com.atmoboards.thread'])
+    })
+
+    it('leaves a collection=* grant unchanged', () => {
+      const scope = SpacePermission.fromString(
+        'space:com.atmoboards.forum?collection=*',
+      )!
+      expect(scope.hasCollections).toBe(true)
+      expect(scope.withDefaultCollections(['com.atmoboards.thread'])).toBe(scope)
+    })
+
+    it('is a no-op when given an empty default list', () => {
+      const scope = SpacePermission.fromString('space:com.atmoboards.forum')!
+      expect(scope.withDefaultCollections([])).toBe(scope)
+    })
+  })
 })

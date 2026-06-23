@@ -135,26 +135,37 @@ Match shapes:
 Omitting `action` defaults to `read,create,update,delete` (read implies read_self). `manage` is
 never implied by an action grant.
 
-### D13 — collection defaults: deferred to scope expansion, NOT the matcher
+### D13 — collection defaults: expand at token-issuance (DONE)
 The proposal says an omitted `collection` defaults to the space type's declared collections.
 The runtime matcher is context-free (no lexicon resolution), so it can't expand defaults itself.
-Decision: the parser keeps an empty collection default (= no write targets) at the matcher level,
-and collection-defaulting is the responsibility of the scope-construction/expansion layer that
-already resolves space declarations for the consent screen (oauth-provider lexicon-manager). A
-bare `space:com.x.forum` grant therefore confers read but no writes until the declared collections
-are materialized into the scope. Implementing that expansion in oauth-provider is a follow-up;
-the grammar + matcher support it. Documented so the gap is explicit (no silent truncation).
 
-### D14 — action and manage are orthogonal (NEEDS YOUR REVIEW)
-The proposal example `space:com.atmoboards.forum?manage=update&manage=delete` is annotated
-"with read access, but no record-write access". This is ambiguous: it implies `manage` alters
-the *action* default. I implemented `action` and `manage` as fully orthogonal — `manage=` only
-governs management ops, and `action` independently defaults to read+writes when omitted. So that
-example scope as written ALSO grants the default record actions (read + writes), not "no writes".
-To express "manage + read only", a client writes `?action=read&manage=update&manage=delete`.
-This is the cleaner, more predictable model (each param means one thing), but it diverges from
-the proposal's prose reading of that one example. FLAG: if you want `manage` presence to suppress
-the action default, that's a one-line change in the parser — tell me which you prefer.
+RESOLVED: implemented expand-at-grant-time, exactly mirroring how `include:` permission-set
+scopes are already resolved. `LexiconManager.buildTokenScope` (oauth-provider) runs at token
+issuance (initial grant + refresh); it already expands `include:<nsid>` into concrete scopes via
+the lexicon resolver. Added a second pass, `expandSpaceCollections`, that finds concrete
+`space:<type>` scopes with no `collection`, resolves the space declaration, and materializes its
+`collections` into the stored scope string. So `space:com.atmoboards.forum` is stored as
+`space:com.atmoboards.forum?collection=com.atmoboards.thread&collection=com.atmoboards.reply`.
+- `collection=*` and explicit lists pass through unchanged.
+- `type=*` has no declaration → left empty (matches proposal: cross-type grants confer no write
+  targets unless provided).
+- Declaration-resolution failure → scope left untouched (no silent broadening).
+- Helpers `SpacePermission.hasCollections` / `withDefaultCollections()` added in oauth-scopes
+  with unit tests; the matcher stays context-free.
+The `include:` precedent (buildTokenScope already does resolution-at-issuance) is what made this
+the obviously-right layer rather than threading async resolution into the matcher.
+
+### D14 — action and manage are orthogonal (SETTLED: orthogonal)
+RESOLVED (dholms): keep them fully orthogonal. `manage=` governs only management ops; `action`
+independently defaults to `read,create,update,delete` when omitted, regardless of `manage`.
+Each param means exactly one thing. To express "manage + read only" a client writes
+`?action=read&manage=update&manage=delete`.
+
+PROPOSAL FIX NEEDED: the 0016 example `space:com.atmoboards.forum?manage=update&manage=delete`
+is annotated "with read access, but no record-write access" — that prose is inconsistent with the
+orthogonal model (the scope as written grants the default record actions too). The proposal text
+should be corrected to either drop that annotation or change the example to
+`?action=read&manage=update&manage=delete`. Tracked here for a proposal-side edit.
 
 ### D15 — wired `space` into permission-set compilation (was a pre-existing gap)
 include-scope.ts only handled `repo`/`rpc` resources; `space` permission-set entries silently

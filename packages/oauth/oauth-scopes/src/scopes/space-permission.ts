@@ -142,6 +142,32 @@ export class SpacePermission
     )
   }
 
+  /** True when no `collection` was specified (the grant has no write targets). */
+  get hasCollections(): boolean {
+    return this.collection.length > 0
+  }
+
+  /**
+   * Returns a copy of this permission with `collection` defaulted to the given
+   * list when none was specified. Used at token-issuance time to materialize a
+   * space type's declared collections into a bare `space:<type>` grant (the
+   * matcher is context-free and can't resolve declarations itself). A grant
+   * that already names collections (including `*`) is returned unchanged.
+   */
+  withDefaultCollections(
+    collections: readonly SpaceCollectionParam[],
+  ): SpacePermission {
+    if (this.hasCollections || collections.length === 0) return this
+    return new SpacePermission(
+      this.type,
+      this.did,
+      this.skey,
+      collections as NeRoArray<SpaceCollectionParam>,
+      this.action,
+      this.manage,
+    )
+  }
+
   toString() {
     return SpacePermission.parser.format(this)
   }
