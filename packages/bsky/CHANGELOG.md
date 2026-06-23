@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.245
+
+### Patch Changes
+
+- [#5114](https://github.com/bluesky-social/atproto/pull/5114) [`5206b3a`](https://github.com/bluesky-social/atproto/commit/5206b3aae30b1efe39cff8cccbabb5932cd49a3d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add searchPostsV2 endpoint
+
+- Updated dependencies [[`ef3adfa`](https://github.com/bluesky-social/atproto/commit/ef3adfaa0731a57780ccf6f1f81183c1938e1af4), [`5206b3a`](https://github.com/bluesky-social/atproto/commit/5206b3aae30b1efe39cff8cccbabb5932cd49a3d)]:
+  - @atproto/api@0.20.18
+
 ## 0.0.244
 
 ### Patch Changes
