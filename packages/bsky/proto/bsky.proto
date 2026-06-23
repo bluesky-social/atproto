@@ -1194,7 +1194,8 @@ message PostsFilters {
   // Content filters
   repeated string domains = 3;
   repeated string urls = 4;
-  repeated string embed_uris = 5;
+  // Canonical request field for posts embedding these AT-URI records.
+  repeated string embedded_at_uris = 5;
   repeated string hashtags = 6;
 }
 

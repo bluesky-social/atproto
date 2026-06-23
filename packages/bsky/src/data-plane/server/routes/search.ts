@@ -159,6 +159,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => {
       return {
         posts: uris.map((uri) => ({ uri, score: 0 })),
         pageInfo: { cursor: cursor ?? '', hitsTotal: 0n },
+        detectedQueryLanguages: [],
       }
     },
 
