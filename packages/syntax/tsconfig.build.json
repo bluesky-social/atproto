@@ -5,6 +5,7 @@
   "compilerOptions": {
     "composite": true,
     "verbatimModuleSyntax": true,
+    "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
   },

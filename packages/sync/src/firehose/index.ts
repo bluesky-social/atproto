@@ -131,7 +131,7 @@ export class Firehose {
         }
       }
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      if ((err as any)?.name === 'AbortError') {
         this.destoryDefer.resolve()
         return
       }
