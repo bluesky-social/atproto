@@ -7,7 +7,7 @@
       "description": "Find posts matching a search query or filters, returning search hits for matching post records.",
       "parameters": {
         "type": "params",
-        "required": ["sort"],
+        "required": [],
         "properties": {
           "cursor": {
             "type": "string",
@@ -22,7 +22,7 @@
           },
           "query": {
             "type": "string",
-            "description": "Search query string. A query or at least one filter is required."
+            "description": "Search query string."
           },
           "sort": {
             "type": "string",
