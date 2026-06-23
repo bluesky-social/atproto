@@ -18,10 +18,6 @@
     "directory": "packages/lex/lex-data"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
   ],

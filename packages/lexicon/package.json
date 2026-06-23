@@ -16,6 +16,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsgo --build tsconfig.build.json"
@@ -35,13 +39,5 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
-  },
-  "files": [
-    "./dist",
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
-    "./CHANGELOG.md"
-  ]
+  }
 }

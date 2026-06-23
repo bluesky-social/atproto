@@ -16,7 +16,6 @@ describe('sitemap', () => {
   it('returns sitemap index', async () => {
     const response = await fetch(
       `${network.bsky.url}/external/sitemap/users.xml.gz`,
-      { headers: { Connection: 'close' } },
     )
     expect(response.status).toEqual(200)
     expect(response.headers.get('content-type')).toEqual('application/gzip')
@@ -33,7 +32,6 @@ describe('sitemap', () => {
   it('returns sitemap page', async () => {
     const response = await fetch(
       `${network.bsky.url}/external/sitemap/users/2025-01-01/1.xml.gz`,
-      { headers: { Connection: 'close' } },
     )
     expect(response.status).toEqual(200)
     expect(response.headers.get('content-type')).toEqual('application/gzip')
@@ -50,7 +48,6 @@ describe('sitemap', () => {
   it('returns 400 for invalid date format', async () => {
     const response = await fetch(
       `${network.bsky.url}/external/sitemap/users/invalid-date/1.xml.gz`,
-      { headers: { Connection: 'close' } },
     )
     expect(response.status).toEqual(400)
   })
@@ -58,7 +55,6 @@ describe('sitemap', () => {
   it('returns 400 for invalid bucket number', async () => {
     const response = await fetch(
       `${network.bsky.url}/external/sitemap/users/2025-01-01/0.xml.gz`,
-      { headers: { Connection: 'close' } },
     )
     expect(response.status).toEqual(400)
   })
@@ -66,7 +62,6 @@ describe('sitemap', () => {
   it('returns 400 for non-numeric bucket', async () => {
     const response = await fetch(
       `${network.bsky.url}/external/sitemap/users/2025-01-01/abc.xml.gz`,
-      { headers: { Connection: 'close' } },
     )
     expect(response.status).toEqual(400)
   })
@@ -74,7 +69,6 @@ describe('sitemap', () => {
   it('returns 404 for non-existent sitemap page', async () => {
     const response = await fetch(
       `${network.bsky.url}/external/sitemap/users/2024-01-01/1.xml.gz`,
-      { headers: { Connection: 'close' } },
     )
     expect(response.status).toEqual(404)
   })

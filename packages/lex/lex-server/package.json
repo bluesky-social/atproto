@@ -19,12 +19,8 @@
     "directory": "packages/lex/lex-server"
   },
   "files": [
-    "./nodejs.cjs",
     "./dist",
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
+    "./nodejs.cjs",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,

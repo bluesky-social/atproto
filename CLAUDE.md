@@ -26,7 +26,7 @@ pnpm build --force  # single root `tsgo --build` over the project-references gra
 pnpm codegen        # parallel codegen across all packages; runs from .ts sources via Node type-stripping
 ```
 
-The pipeline is: `codegen` → `prebuild` → `build` (one `tsgo --build tsconfig.json` at the root) → `postbuild` (Vite/UI bundlers). Codegen and prebuild scripts are launched with `NODE_OPTIONS='--conditions=typescript'` so that `lex-cli` / `@atproto/lex` resolve their `./src/*.ts` sources directly (via a `"typescript"` export condition) instead of requiring a prior compiled output. There is no `verify:types` step — type-checking happens inside the root build.
+The pipeline is: `build:tooling` → `codegen` → `prebuild` → `build` (one `tsgo --build tsconfig.json` at the root) → `postbuild` (Vite/UI bundlers).
 
 The [Makefile](Makefile) wraps the most common entry points: `make build`, `make test`, `make lint`, `make fmt`, `make codegen`, `make run-dev-env` (boots the in-process PDS+AppView+bsync+plc+ozone constellation), `make run-dev-env-logged` (same with `pino-pretty` log output), `make fmt-lexicons` (eslint-fix on `lexicons/*.json`).
 

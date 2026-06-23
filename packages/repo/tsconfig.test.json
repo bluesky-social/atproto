@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig/jest.tsconfig.json",
   "compilerOptions": {
+    "rootDir": ".",
     // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
-    "rootDir": ".",
   },
   "include": ["./tests"],
   "references": [{ "path": "./tsconfig.build.json" }],

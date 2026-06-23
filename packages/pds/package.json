@@ -16,6 +16,14 @@
   "engines": {
     "node": ">=22"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
     "codegen:templates": "node ./build.templates.cjs",
@@ -96,13 +104,5 @@
     "puppeteer": "^23.11.1",
     "ts-node": "^10.8.2",
     "ws": "^8.12.0"
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
   }
 }

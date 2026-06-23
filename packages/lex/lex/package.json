@@ -20,10 +20,6 @@
   "files": [
     "./dist",
     "./bin",
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
     "./README.md",
     "./CHANGELOG.md"
   ],

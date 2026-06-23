@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig/node.tsconfig.json",
   "compilerOptions": {
-    // @TODO Change to true and fix implicit any errors
-    "noImplicitAny": false,
     "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
   },
   "include": ["./src"],
   "references": [

@@ -30,10 +30,6 @@
   },
   "files": [
     "./dist",
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
     "./CHANGELOG.md"
   ],
   "type": "module",

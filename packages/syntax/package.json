@@ -18,6 +18,17 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/syntax"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "scripts": {
     "test": "vitest run",
     "build": "tsgo --build tsconfig.build.json"
@@ -28,23 +39,5 @@
   },
   "devDependencies": {
     "vitest": "^4.0.16"
-  },
-  "browser": {
-    "dns/promises": false
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "files": [
-    "./dist",
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
-    "./CHANGELOG.md"
-  ]
+  }
 }

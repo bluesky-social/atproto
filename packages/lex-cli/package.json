@@ -16,6 +16,11 @@
   "bin": {
     "lex": "bin.js"
   },
+  "files": [
+    "./bin.js",
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   },
@@ -39,14 +44,5 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
-  },
-  "files": [
-    "./bin.js",
-    "./dist",
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.test.json",
-    "./tsconfig.json",
-    "./CHANGELOG.md"
-  ]
+  }
 }
