@@ -16,16 +16,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const authorityDid = new SpaceUri(space).spaceDid
 
-      // @TODO This should enumerate the writer set (accounts that have written
-      // to the space), which the authority maintains from notifyWrite. There's
-      // no writer-set table yet, so we return the simplespace member list as a
-      // stand-in (in simplespace, members are the expected writers). See
-      // SPACE_RECONCILIATION_NOTES.md.
-      const { spaceRow, members } = await ctx.actorStore.read(
+      // The writer set: accounts that have written to the space, maintained by
+      // the authority from incoming notifyWrite calls. This is the sync
+      // boundary — it enumerates writers, not readers.
+      const { spaceRow, writers } = await ctx.actorStore.read(
         authorityDid,
         async (store) => ({
           spaceRow: await store.space.getSpace(space),
-          members: await store.space.listMembers(space, {
+          writers: await store.space.listWriters(space, {
             limit: limit ?? 100,
             cursor,
           }),
@@ -38,9 +36,9 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          cursor: members.at(-1)?.did,
-          repos: members.map((m) => ({
-            did: m.did as l.DidString,
+          cursor: writers.at(-1)?.did,
+          repos: writers.map((w) => ({
+            did: w.did as l.DidString,
           })),
         },
       }

@@ -195,6 +195,22 @@ export class SpaceReader {
     return rows
   }
 
+  async listWriters(
+    space: string,
+    opts: { limit: number; cursor?: string },
+  ): Promise<{ did: string; rev: string }[]> {
+    let builder = this.db.db
+      .selectFrom('space_writer')
+      .select(['did', 'rev'])
+      .where('space', '=', space)
+      .orderBy('did', 'asc')
+      .limit(opts.limit)
+    if (opts.cursor !== undefined) {
+      builder = builder.where('did', '>', opts.cursor)
+    }
+    return builder.execute()
+  }
+
   async isMember(space: string, did: string): Promise<boolean> {
     const row = await this.db.db
       .selectFrom('space_member')

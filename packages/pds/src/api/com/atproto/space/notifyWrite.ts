@@ -47,6 +47,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      // Record the writer in the space's writer set (the sync boundary that
+      // listRepos enumerates), advancing its latest known rev.
+      await ctx.actorStore.transact(ownerDid, (txn) =>
+        txn.space.recordWriter(space, repo, rev),
+      )
+
       const keypair = await ctx.actorStore.keypair(ownerDid)
       for (const recipient of recipients) {
         const { headers } = await createServiceAuthHeaders({

@@ -98,31 +98,39 @@ never shipped). Rather than pile a 005 onto a schema that only exists on this br
 Actor-store sqlite DBs are per-actor and ephemeral in dev/test, so in-place rewrite is safe and
 much cleaner. If any long-lived dev DBs exist they should be recreated.
 
-### D9 — space credential verification key (#atproto_space)
+### D9 — space credential verification key (#atproto_space) — DEFERRED (dholms)
 Per proposal the space credential is signed by the authority's `#atproto_space` verification
 method and the delegation token by the user's `#atproto`. In simplespace the authority is the
 user's own DID and (in dev) the same keypair backs both, so the verifier currently resolves the
-`#atproto` key for both. Resolving a distinct `#atproto_space` key (with fallback to `#atproto`)
-is the proposal-correct behavior and is left as a documented TODO in auth-verifier.ts.
+`#atproto` key for both. RESOLVED (dholms): leave as TODO — fine for simplespace, which is the
+only implementation that exists. Revisit (resolve `#atproto_space` with fallback to `#atproto`,
+plus sign with that key) when a dedicated space-authority implementation lands. TODO marker is in
+auth-verifier.ts.
 
-### D10 — listRepos backed by the member list (stand-in for a writer set)
-The proposal's listRepos returns the *writer set* (accounts that have written to the space),
-which the authority maintains from notifyWrite. There's no writer-set table yet. As a baseline,
-listRepos returns the simplespace member list (in simplespace, members are the expected writers,
-and the authority is a member). A dedicated writer-set table populated by notifyWrite is the
-proposal-correct follow-up. Documented as TODO in listRepos.ts.
+### D10 — listRepos backed by a real writer set (DONE)
+RESOLVED: built the proposal-correct writer set. New `space_writer` table (space, did, rev) on
+the authority, in migration 002. The `notifyWrite` handler now calls `recordWriter(space, repo,
+rev)` when the authority receives a write notification, upserting/advancing the writer's rev.
+`listRepos` reads `listWriters` instead of the member list, so it enumerates accounts that have
+actually written (not members who haven't), independent of the member list. Co-located writers
+populate it too, since write handlers fire notifyWrite to the authority regardless of co-location.
+`purgeOwnerSpaceData` clears it on space deletion. Covered by a spaces.test.ts test that writes
+from a remote PDS and polls listRepos (notifyWrite is best-effort/async) — asserts the writer
+appears and a non-writing member (alice) does not.
 
-### D11 — registerNotify expiry
+### D11 — registerNotify expiry (SETTLED: 24h fixed)
 registerNotify records the caller (space credential's iss = authority, or the requesting
-service) as a credential recipient and returns an expiry. Baseline expiry = 24h from now.
-The space-credential auth gives us the requesting service identity via the credential's iss.
+service) as a credential recipient and returns an expiry. Baseline expiry = 24h from now,
+renewable by re-calling. RESOLVED (dholms): keep the fixed 24h default; not configurable for now.
 
-### Pre-existing build errors (NOT mine, flagged for dholms)
+### Pre-existing build errors (NOT mine — dholms to handle separately)
 `pnpm exec tsc --build` on packages/pds reports two errors in files I never touched:
 - `src/account-manager/oauth-store.ts(80)`: OAuthStore missing `updateHandle` (AccountStore iface)
 - `src/context.ts(376)`: `idResolver` not in `OAuthProviderOptions`
-These look like an oauth-provider version skew already present on the branch. Left alone.
-They will keep `pnpm exec tsc` from going fully green until resolved separately.
+These look like an oauth-provider version skew already present on the branch. RESOLVED (dholms):
+leave for dholms to handle separately (possibly mid-flight branch work). NOTE: these surface only
+under the test/strict tsconfig — `pnpm build` (tsconfig.build.json) passes clean, and all space
+tests run green. They do block a fully-green `tsc --build tsconfig.tests.json`.
 
 ### D12 — scope grammar: read_self + manage= split
 `SpaceAction` is now `read_self | read | create | update | delete` (manage removed). `manage`

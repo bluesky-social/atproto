@@ -70,6 +70,16 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addPrimaryKeyConstraint('space_record_oplog_pkey', ['space', 'rev', 'idx'])
     .execute()
 
+  // Writer set: accounts that have written to a space, maintained by the
+  // authority from incoming notifyWrite calls. Returned by listRepos.
+  await db.schema
+    .createTable('space_writer')
+    .addColumn('space', 'varchar', (col) => col.notNull())
+    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addColumn('rev', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('space_writer_pkey', ['space', 'did'])
+    .execute()
+
   // Services registered (via registerNotify) to receive write notifications.
   await db.schema
     .createTable('space_credential_recipient')
@@ -86,6 +96,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('space_credential_recipient').execute()
+  await db.schema.dropTable('space_writer').execute()
   await db.schema.dropTable('space_record_oplog').execute()
   await db.schema.dropTable('space_repo').execute()
   await db.schema.dropTable('space_record').execute()

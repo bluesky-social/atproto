@@ -385,6 +385,45 @@ describe('spaces', () => {
     })
   })
 
+  it('listRepos returns the writer set from notifyWrite', async () => {
+    const spaceUri = await createSpace('writer-set', [bobDid])
+
+    // Bob writes on pds2; his PDS fires a best-effort notifyWrite to the
+    // authority (pds1), which records him in the writer set.
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'writer set entry',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: bobHeaders },
+    )
+
+    // notifyWrite is fire-and-forget — poll the authority's writer set.
+    const credHeaders = await credentialFor(pds2, bobHeaders, spaceUri)
+    let writerDids: string[] = []
+    for (let i = 0; i < 50; i++) {
+      const repos = await pds1Client.call(
+        com.atproto.space.listRepos,
+        { space: spaceUri },
+        { headers: credHeaders },
+      )
+      writerDids = repos.repos.map((r) => r.did)
+      if (writerDids.includes(bobDid)) break
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    expect(writerDids).toContain(bobDid)
+    // The writer set is not the member list — alice (a member who hasn't
+    // written) is absent.
+    expect(writerDids).not.toContain(aliceDid)
+  })
+
   it('reads a member repo with a space credential', async () => {
     const spaceUri = await createSpace('cred-read', [bobDid, carolDid])
 

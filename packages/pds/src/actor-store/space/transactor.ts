@@ -100,8 +100,8 @@ export class SpaceTransactor extends SpaceReader {
 
   /**
    * Authority-side cleanup of space-scoped data after deletion. Purges the
-   * member list and credential recipients. Does NOT touch space_record /
-   * space_record_oplog — those belong to the writer's own repo.
+   * member list, writer set, and credential recipients. Does NOT touch
+   * space_record / space_record_oplog — those belong to the writer's own repo.
    */
   async purgeOwnerSpaceData(uri: string): Promise<void> {
     await this.db.db
@@ -109,8 +109,25 @@ export class SpaceTransactor extends SpaceReader {
       .where('space', '=', uri)
       .execute()
     await this.db.db
+      .deleteFrom('space_writer')
+      .where('space', '=', uri)
+      .execute()
+    await this.db.db
       .deleteFrom('space_credential_recipient')
       .where('space', '=', uri)
+      .execute()
+  }
+
+  // Record (or advance) a writer in the space's writer set. Called by the
+  // authority when it receives a notifyWrite. The writer set is what listRepos
+  // enumerates as the sync boundary.
+  async recordWriter(space: string, did: string, rev: string): Promise<void> {
+    await this.db.db
+      .insertInto('space_writer')
+      .values({ space, did, rev })
+      .onConflict((oc) =>
+        oc.columns(['space', 'did']).doUpdateSet({ rev }),
+      )
       .execute()
   }
 

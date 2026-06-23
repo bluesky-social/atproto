@@ -11,6 +11,7 @@ import * as spaceMember from './space-member.js'
 import * as spaceRecord from './space-record.js'
 import * as spaceRecordOplog from './space-record-oplog.js'
 import * as spaceRepo from './space-repo.js'
+import * as spaceWriter from './space-writer.js'
 
 export type DatabaseSchema = accountPref.PartialDB &
   repoRoot.PartialDB &
@@ -24,6 +25,7 @@ export type DatabaseSchema = accountPref.PartialDB &
   spaceRecord.PartialDB &
   spaceRepo.PartialDB &
   spaceRecordOplog.PartialDB &
+  spaceWriter.PartialDB &
   spaceCredentialRecipient.PartialDB
 
 export type { AccountPref } from './account-pref.js'
@@ -38,4 +40,5 @@ export type { SpaceMember } from './space-member.js'
 export type { SpaceRecord } from './space-record.js'
 export type { SpaceRepo } from './space-repo.js'
 export type { SpaceRecordOplog } from './space-record-oplog.js'
+export type { SpaceWriter } from './space-writer.js'
 export type { SpaceCredentialRecipient } from './space-credential-recipient.js'
