@@ -1,14 +1,14 @@
-import { type StandardSchemaV1 } from '@standard-schema/spec'
-import { lazyProperty } from '../util/lazy-property.ts'
-import { StandardSchemaAdapter } from './standard-schema.ts'
-import {
-  type InferInput,
-  type InferOutput,
-  ValidationContext,
-  type ValidationOptions,
-  type ValidationResult,
-  type Validator,
-} from './validator.ts'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import { lazyProperty } from '../util/lazy-property.js'
+import { StandardSchemaAdapter } from './standard-schema.js'
+import { ValidationContext } from './validator.js'
+import type {
+  InferInput,
+  InferOutput,
+  ValidationOptions,
+  ValidationResult,
+  Validator,
+} from './validator.js'
 
 /**
  * Options for parsing operations.

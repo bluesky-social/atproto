@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig/jest.tsconfig.json",
   "compilerOptions": {
+    // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
     "rootDir": ".",
   },

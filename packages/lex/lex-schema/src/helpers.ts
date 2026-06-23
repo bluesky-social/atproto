@@ -1,4 +1,4 @@
-import { type LexErrorData } from '@atproto/lex-data'
+import type { LexErrorData } from '@atproto/lex-data'
 import {
   type AtIdentifierString,
   type InferOutput,
@@ -8,7 +8,7 @@ import {
   Schema,
   assertAtIdentifierString,
   assertStringFormat,
-} from './core.ts'
+} from './core.js'
 import {
   type InferPayload,
   type InferPayloadBody,
@@ -22,7 +22,7 @@ import {
   optional,
   regexp,
   string,
-} from './schema.ts'
+} from './schema.js'
 
 export type Main<T> = T | { main: T }
 

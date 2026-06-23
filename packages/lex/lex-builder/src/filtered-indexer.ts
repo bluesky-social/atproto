@@ -1,5 +1,5 @@
 import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
-import type { Filter } from './filter.ts'
+import type { Filter } from './filter.js'
 
 /**
  * A lexicon indexer that filters documents based on a provided filter.
@@ -9,16 +9,11 @@ import type { Filter } from './filter.ts'
  */
 export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
   protected readonly returned = new Set<string>()
-  readonly indexer: LexiconIndexer & AsyncIterable<LexiconDocument>
-  readonly filter: Filter
 
   constructor(
-    indexer: LexiconIndexer & AsyncIterable<LexiconDocument>,
-    filter: Filter,
-  ) {
-    this.indexer = indexer
-    this.filter = filter
-  }
+    readonly indexer: LexiconIndexer & AsyncIterable<LexiconDocument>,
+    readonly filter: Filter,
+  ) {}
 
   async get(id: string): Promise<LexiconDocument> {
     this.returned.add(id)

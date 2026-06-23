@@ -6,8 +6,8 @@ import {
 } from 'ts-morph'
 import { type LexRecord, type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { type GeneratedAPI } from '../types.ts'
-import { gen, lexiconsTs, utilTs } from './common.ts'
+import type { GeneratedAPI } from '../types.js'
+import { gen, lexiconsTs, utilTs } from './common.js'
 import {
   genCommonImports,
   genImports,
@@ -16,7 +16,7 @@ import {
   genXrpcInput,
   genXrpcOutput,
   genXrpcParams,
-} from './lex-gen.ts'
+} from './lex-gen.js'
 import {
   type DefTreeNode,
   lexiconsToDefTree,
@@ -24,7 +24,7 @@ import {
   toCamelCase,
   toScreamingSnakeCase,
   toTitleCase,
-} from './util.ts'
+} from './util.js'
 
 const ATP_METHODS = {
   list: 'com.atproto.repo.listRecords',

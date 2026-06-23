@@ -1,42 +1,40 @@
-import { type LexMap, type LexValue, type TypedLexMap } from '@atproto/lex-data'
-import {
-  type AtIdentifierString,
-  type AtUriString,
-  type CidString,
-  type DidString,
-  type Infer,
-  type InferMethodInputBody,
-  type InferMethodOutputBody,
-  type InferRecordKey,
-  type LexiconRecordKey,
-  type Main,
-  type NsidString,
-  type Params,
-  Procedure,
-  Query,
-  RecordSchema,
-  type Restricted,
-  getMain,
+import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import type {
+  AtIdentifierString,
+  AtUriString,
+  CidString,
+  DidString,
+  Infer,
+  InferMethodInputBody,
+  InferMethodOutputBody,
+  InferRecordKey,
+  LexiconRecordKey,
+  Main,
+  NsidString,
+  Params,
+  Restricted,
 } from '@atproto/lex-schema'
-import { type Agent, type AgentOptions, buildAgent } from './agent.ts'
-import { type XrpcFailure } from './errors.ts'
+import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
-import applyWrites from './lexicons/com/atproto/repo/applyWrites.ts'
-import createRecord from './lexicons/com/atproto/repo/createRecord.ts'
-import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.ts'
-import getRecord from './lexicons/com/atproto/repo/getRecord.ts'
-import listRecords from './lexicons/com/atproto/repo/listRecords.ts'
-import putRecord from './lexicons/com/atproto/repo/putRecord.ts'
-import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.ts'
-import getBlob from './lexicons/com/atproto/sync/getBlob.ts'
+import applyWrites from './lexicons/com/atproto/repo/applyWrites.js'
+import createRecord from './lexicons/com/atproto/repo/createRecord.js'
+import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.js'
+import getRecord from './lexicons/com/atproto/repo/getRecord.js'
+import listRecords from './lexicons/com/atproto/repo/listRecords.js'
+import putRecord from './lexicons/com/atproto/repo/putRecord.js'
+import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
+import getBlob from './lexicons/com/atproto/sync/getBlob.js'
 import {
   XrpcResponse,
   type XrpcResponseBody,
   type XrpcResponseOptions,
-} from './response.ts'
-import { type BinaryBodyInit, type Service } from './types.ts'
+} from './response.js'
+import type { BinaryBodyInit, Service } from './types.js'
 import {
   type RecordKeyOptions,
   type XrpcRequestHeadersOptions,
@@ -44,7 +42,7 @@ import {
   buildXrpcRequestHeaders,
   getDefaultRecordKey,
   getLiteralRecordKey,
-} from './util.ts'
+} from './util.js'
 import {
   type WriteOperation,
   type WriteOperationCreateOptions,
@@ -52,14 +50,14 @@ import {
   WriteOperationHelper,
   type WriteOperationUpdateOptions,
   type WriteOperationsFactory,
-} from './write-operation-builder.ts'
+} from './write-operation-builder.js'
 import {
   type XrpcOptions,
   type XrpcRequestParams,
   type XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
-} from './xrpc.ts'
+} from './xrpc.js'
 
 export {
   type AtIdentifierString,

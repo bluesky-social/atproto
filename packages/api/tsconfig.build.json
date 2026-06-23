@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig/isomorphic.tsconfig.json",
   "compilerOptions": {
+    // @TODO Change to true and fix implicit any errors
+    // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
     "composite": true,
     "rootDir": "./src",

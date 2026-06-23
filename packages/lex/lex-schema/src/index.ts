@@ -1,3 +1,3 @@
-import * as l from './external.ts'
-export * from './external.ts'
+import * as l from './external.js'
+export * from './external.js'
 export { l }

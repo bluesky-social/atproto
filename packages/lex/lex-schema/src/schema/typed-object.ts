@@ -13,8 +13,8 @@ import {
   type Unknown$TypedObject,
   ValidationContext,
   type Validator,
-} from '../core.ts'
-import { lazyProperty } from '../util/lazy-property.ts'
+} from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 
 export type MaybeTypedObject<
   TType extends $Type,
@@ -50,13 +50,11 @@ export class TypedObjectSchema<
 > {
   readonly type = 'typedObject' as const
 
-  readonly $type: TType
-  readonly schema: TShape
-
-  constructor($type: TType, schema: TShape) {
+  constructor(
+    readonly $type: TType,
+    readonly schema: TShape,
+  ) {
     super()
-    this.$type = $type
-    this.schema = schema
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

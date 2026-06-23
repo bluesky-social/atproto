@@ -11,7 +11,7 @@ import {
   isValidTid,
   isValidUri,
 } from '@atproto/syntax'
-import { ValidationError, type ValidationResult } from '../types.ts'
+import { ValidationError, type ValidationResult } from '../types.js'
 
 export const datetime = createValidator(
   isDatetimeStringLenient,

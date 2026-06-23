@@ -1,5 +1,5 @@
-import { Schema, ValidationContext } from '../core.ts'
-import { memoizedOptions } from '../util/memoize.ts'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 /**
  * Configuration options for integer schema validation.
@@ -26,11 +26,9 @@ export type IntegerSchemaOptions = {
  */
 export class IntegerSchema extends Schema<number> {
   readonly type = 'integer' as const
-  readonly options?: IntegerSchemaOptions
 
-  constructor(options?: IntegerSchemaOptions) {
+  constructor(readonly options?: IntegerSchemaOptions) {
     super()
-    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

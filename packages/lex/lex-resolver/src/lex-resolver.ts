@@ -1,11 +1,9 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { type Cid } from '@atproto/lex-data'
-import {
-  type LexiconDocument,
-  lexiconDocumentSchema,
-} from '@atproto/lex-document'
+import type { Cid } from '@atproto/lex-data'
+import type { LexiconDocument } from '@atproto/lex-document'
+import { lexiconDocumentSchema } from '@atproto/lex-document'
 import {
   MST,
   MemoryBlockstore,
@@ -13,19 +11,22 @@ import {
   readCarWithRoot,
   verifyCommitSig,
 } from '@atproto/repo'
-import { AtUri, NSID, type NsidString } from '@atproto/syntax'
+import type { NsidString } from '@atproto/syntax'
+import { AtUri, NSID } from '@atproto/syntax'
+import type {
+  AtprotoVerificationMethod,
+  CreateDidResolverOptions,
+  Did,
+  DidResolver,
+  ResolveDidOptions,
+} from '@atproto-labs/did-resolver'
 import {
-  type AtprotoVerificationMethod,
-  type CreateDidResolverOptions,
-  type Did,
-  type DidResolver,
-  type ResolveDidOptions,
   assertDid,
   createDidResolver,
   extractAtprotoData,
 } from '@atproto-labs/did-resolver'
-import { LexResolverError } from './lex-resolver-error.ts'
-import { com } from './lexicons/index.ts'
+import { LexResolverError } from './lex-resolver-error.js'
+import { com } from './lexicons/index.js'
 
 /**
  * Result returned when successfully resolving a lexicon document.

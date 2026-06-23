@@ -1,13 +1,12 @@
 import { isPlainObject } from '@atproto/lex-data'
-import {
-  type InferInput,
-  type InferOutput,
-  Schema,
-  ValidationContext,
-  type Validator,
-  type WithOptionalProperties,
-} from '../core.ts'
-import { lazyProperty } from '../util/lazy-property.ts'
+import { Schema, ValidationContext } from '../core.js'
+import type {
+  InferInput,
+  InferOutput,
+  Validator,
+  WithOptionalProperties,
+} from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 
 /**
  * Type representing the shape of an object schema.
@@ -45,11 +44,8 @@ export class ObjectSchema<
 > {
   readonly type = 'object' as const
 
-  readonly shape: TShape
-
-  constructor(shape: TShape) {
+  constructor(readonly shape: TShape) {
     super()
-    this.shape = shape
   }
 
   get validatorsMap(): Map<string, Validator> {

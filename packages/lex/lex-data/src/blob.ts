@@ -5,9 +5,9 @@ import {
   ifCid,
   parseCid,
   validateCidString,
-} from './cid.ts'
-import { type LexValue } from './lex.ts'
-import { isPlainObject, isPlainProto } from './object.ts'
+} from './cid.js'
+import type { LexValue } from './lex.js'
+import { isPlainObject, isPlainProto } from './object.js'
 
 /**
  * Options to use with {@link ifCid}, {@link validateCidString}, and related CID

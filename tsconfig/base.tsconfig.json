@@ -24,9 +24,12 @@
     "lib": [],
     "moduleResolution": "node16",
     "resolveJsonModule": true,
-    // @TODO Configure eslint to force consistent import extensions (.ts)
-    "rewriteRelativeImportExtensions": true,
-    // @TODO We ideally should enable this
+    // @TODO Change this to true and enforce the use of actual file extensions
+    // in imports (through eslint)
+    "rewriteRelativeImportExtensions": false,
+    // @TODO Change this to true to better control the emitted JS imports (in
+    // particular, to avoid runtime dependencies by promoting the use of "import
+    // type" for *ALL* types)
     "verbatimModuleSyntax": false,
     "types": [],
 

@@ -1,6 +1,6 @@
-import { type NsidString } from '../core.ts'
-import { ParamsSchema } from './params.ts'
-import { Payload } from './payload.ts'
+import type { NsidString } from '../core.js'
+import { ParamsSchema } from './params.js'
+import { Payload } from './payload.js'
 
 /**
  * Represents a Lexicon query (HTTP GET) endpoint definition.
@@ -34,22 +34,12 @@ export class Query<
 > {
   readonly type = 'query' as const
 
-  readonly nsid: TNsid
-  readonly parameters: TParameters
-  readonly output: TOutputPayload
-  readonly errors: TErrors
-
   constructor(
-    nsid: TNsid,
-    parameters: TParameters,
-    output: TOutputPayload,
-    errors: TErrors,
-  ) {
-    this.nsid = nsid
-    this.parameters = parameters
-    this.output = output
-    this.errors = errors
-  }
+    readonly nsid: TNsid,
+    readonly parameters: TParameters,
+    readonly output: TOutputPayload,
+    readonly errors: TErrors,
+  ) {}
 }
 
 /**

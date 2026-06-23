@@ -26,7 +26,7 @@ Promise.all([
     pretty: true,
     indexFile: true,
     defaultExport: true,
-    importExt: '.ts',
+    importExt: '.js',
   }),
 
   // For tests

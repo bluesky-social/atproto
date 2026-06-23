@@ -1,4 +1,4 @@
-import { Lexicons } from './lexicons.ts'
+import { Lexicons } from './lexicons.js'
 import type {
   LexRecord,
   LexRefVariant,
@@ -6,9 +6,9 @@ import type {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexXrpcSubscription,
-} from './types.ts'
-import { object, validateOneOf } from './validators/complex.ts'
-import { params } from './validators/xrpc.ts'
+} from './types.js'
+import { object, validateOneOf } from './validators/complex.js'
+import { params } from './validators/xrpc.js'
 
 export function assertValidRecord(
   lexicons: Lexicons,

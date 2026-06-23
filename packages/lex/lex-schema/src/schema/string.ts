@@ -7,10 +7,10 @@ import {
   type UnknownString,
   ValidationContext,
   isStringFormat,
-} from '../core.ts'
-import { type IfAny } from '../util/if-any.ts'
-import { memoizedOptions } from '../util/memoize.ts'
-import { TokenSchema } from './token.ts'
+} from '../core.js'
+import type { IfAny } from '../util/if-any.js'
+import { memoizedOptions } from '../util/memoize.js'
+import { TokenSchema } from './token.js'
 
 /**
  * Configuration options for string schema validation.

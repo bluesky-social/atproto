@@ -1,2 +1,2 @@
-export * from './methods/plc.ts'
-export * from './methods/web.ts'
+export * from './methods/plc.js'
+export * from './methods/web.js'

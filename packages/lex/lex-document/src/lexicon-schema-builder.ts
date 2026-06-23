@@ -1,17 +1,17 @@
-import { type LexValue } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import {
-  type LexiconArray,
-  type LexiconArrayItems,
-  type LexiconDocument,
-  type LexiconError,
-  type LexiconObject,
-  type LexiconParameters,
-  type LexiconPayload,
-  type LexiconRef,
-  type LexiconRefUnion,
-} from './lexicon-document.ts'
-import { type LexiconIndexer } from './lexicon-indexer.ts'
+import type {
+  LexiconArray,
+  LexiconArrayItems,
+  LexiconDocument,
+  LexiconError,
+  LexiconObject,
+  LexiconParameters,
+  LexiconPayload,
+  LexiconRef,
+  LexiconRefUnion,
+} from './lexicon-document.js'
+import type { LexiconIndexer } from './lexicon-indexer.js'
 
 /**
  * Builds validators for Lexicon documents.
@@ -136,7 +136,6 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
   }
 
   #asyncTasks = new AsyncTasks()
-  protected indexer: LexiconIndexer
 
   /**
    * Creates a new LexiconSchemaBuilder instance.
@@ -146,9 +145,7 @@ export class LexiconSchemaBuilder implements AsyncDisposable {
    *
    * @param indexer - The Lexicon indexer to resolve documents from
    */
-  constructor(indexer: LexiconIndexer) {
-    this.indexer = indexer
-  }
+  constructor(protected indexer: LexiconIndexer) {}
 
   /**
    * Waits for all pending reference resolution tasks to complete.

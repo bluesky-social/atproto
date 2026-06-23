@@ -5,7 +5,7 @@ import {
   Schema,
   ValidationContext,
   type Validator,
-} from '../core.ts'
+} from '../core.js'
 
 /**
  * Schema for validating dictionary/map-like objects with dynamic keys.
@@ -35,13 +35,12 @@ export class DictSchema<
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
   readonly type = 'dict' as const
-  readonly keySchema: TKey
-  readonly valueSchema: TValue
 
-  constructor(keySchema: TKey, valueSchema: TValue) {
+  constructor(
+    readonly keySchema: TKey,
+    readonly valueSchema: TValue,
+  ) {
     super()
-    this.keySchema = keySchema
-    this.valueSchema = valueSchema
   }
 
   validateInContext(

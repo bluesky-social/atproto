@@ -1,21 +1,23 @@
 import { once } from 'node:events'
 import {
-  type IncomingHttpHeaders,
   IncomingMessage,
-  type RequestListener,
   Server as HttpServer,
-  type ServerOptions,
   ServerResponse,
   createServer as createHttpServer,
 } from 'node:http'
-import { type ListenOptions } from 'node:net'
+import type {
+  IncomingHttpHeaders,
+  RequestListener,
+  ServerOptions,
+} from 'node:http'
+import type { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
-import type { FetchHandler } from './lex-router.ts'
+import type { FetchHandler } from './lex-router.js'
 
 // @ts-expect-error
 Symbol.asyncDispose ??= Symbol.for('Symbol.asyncDispose')

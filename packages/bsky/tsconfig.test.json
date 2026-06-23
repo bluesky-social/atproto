@@ -2,6 +2,7 @@
   "extends": "../../tsconfig/vitest.tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
+    // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
   },
   "include": ["./tests", "./src/**/*.test.ts"],

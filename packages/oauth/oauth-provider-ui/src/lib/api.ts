@@ -1,37 +1,37 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
-import {
+import type {
   AccountSessionsInput,
-  type ApiEndpoints,
+  ApiEndpoints,
   ConfirmAccountDeletionInput,
   ConfirmEmailUpdateInput,
   ConfirmEmailVerificationInput,
-  type ConfirmResetPasswordInput,
+  ConfirmResetPasswordInput,
   DeactivateAccountInput,
-  type DidString,
-  type HandleUnavailableReason,
+  DidString,
+  HandleUnavailableReason,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailVerificationInput,
-  type InitiatePasswordResetInput,
+  InitiatePasswordResetInput,
   OAuthSessionsInput,
   ReactivateAccountInput,
   RevokeAccountSessionInput,
   RevokeOAuthSessionInput,
-  type SignInInput,
+  SignInInput,
   SignOutInput,
-  type SignUpInput,
-  type UpdateHandleInput,
-  type VerifyHandleAvailabilityInput,
-  isHandleUnavailableReason,
+  SignUpInput,
+  UpdateHandleInput,
+  VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
+import { isHandleUnavailableReason } from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
 import {
-  Json,
+  type Json,
   JsonClient,
-  JsonClientOptions,
+  type JsonClientOptions,
   JsonErrorResponse,
-  Options,
+  type Options,
 } from './json-client.ts'
 
 export type { Options } from './json-client.ts'

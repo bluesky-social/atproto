@@ -1,7 +1,7 @@
 import { type LexMap, isPlainObject } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.ts'
-import { memoizedOptions } from '../util/memoize.ts'
-import { lexValue } from './lex-value.ts'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
+import { lexValue } from './lex-value.js'
 
 const propertyValueSchema = /*#__PURE__*/ lexValue()
 

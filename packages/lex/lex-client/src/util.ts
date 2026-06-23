@@ -1,8 +1,5 @@
-import {
-  type InferRecordKey,
-  type LexiconRecordKey,
-  RecordSchema,
-} from '@atproto/lex-schema'
+import type { InferRecordKey, LexiconRecordKey } from '@atproto/lex-schema'
+import { RecordSchema } from '@atproto/lex-schema'
 import type { DidString, Service } from './types.ts'
 
 export function applyDefaults<

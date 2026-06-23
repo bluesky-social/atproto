@@ -1,6 +1,6 @@
 import {
-  type JSDocStructure,
-  type OptionalKind,
+  JSDocStructure,
+  OptionalKind,
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
@@ -36,8 +36,8 @@ import {
   type RefResolverOptions,
   type ResolvedRef,
   getPublicIdentifiers,
-} from './ref-resolver.ts'
-import { asNamespaceExport } from './ts-lang.ts'
+} from './ref-resolver.js'
+import { asNamespaceExport } from './ts-lang.js'
 
 /**
  * Configuration options for the {@link LexDefBuilder} class.
@@ -68,19 +68,13 @@ export type LexDefBuilderOptions = RefResolverOptions & {
  */
 export class LexDefBuilder {
   private readonly refResolver: RefResolver
-  private readonly options: LexDefBuilderOptions
-  private readonly file: SourceFile
-  private readonly doc: LexiconDocument
 
   constructor(
-    options: LexDefBuilderOptions,
-    file: SourceFile,
-    doc: LexiconDocument,
+    private readonly options: LexDefBuilderOptions,
+    private readonly file: SourceFile,
+    private readonly doc: LexiconDocument,
     indexer: LexiconIndexer,
   ) {
-    this.options = options
-    this.file = file
-    this.doc = doc
     this.refResolver = new RefResolver(doc, file, indexer, options)
   }
 

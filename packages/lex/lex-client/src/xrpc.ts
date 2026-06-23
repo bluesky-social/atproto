@@ -1,30 +1,36 @@
-import { type LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
+import { isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
+import type {
+  InferInput,
+  InferPayload,
+  Main,
+  NsidString,
+  Params,
+  Restricted,
+} from '@atproto/lex-schema'
 import {
-  type InferInput,
-  type InferPayload,
-  type Main,
-  type NsidString,
-  type Params,
   Payload,
   Procedure,
   Query,
-  type Restricted,
   Subscription,
   getMain,
 } from '@atproto/lex-schema'
-import { type Agent, type AgentOptions, buildAgent } from './agent.ts'
-import { type XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.ts'
-import { XrpcResponse, type XrpcResponseOptions } from './response.ts'
-import { type BinaryBodyInit } from './types.ts'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
+import { XrpcFetchError, asXrpcFailure } from './errors.js'
+import type { XrpcResponseOptions } from './response.js'
+import { XrpcResponse } from './response.js'
+import type { BinaryBodyInit } from './types.js'
+import type { XrpcRequestHeadersOptions } from './util.js'
 import {
-  type XrpcRequestHeadersOptions,
   asUint8ArrayArrayBuffer,
   buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
   toReadableStream,
-} from './util.ts'
+} from './util.js'
 
 /**
  * The query/path parameters type for an XRPC method, inferred from its schema.

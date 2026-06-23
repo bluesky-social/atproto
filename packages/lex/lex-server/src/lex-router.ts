@@ -24,8 +24,8 @@ import {
   isDidString,
   isNsidString,
 } from '@atproto/lex-schema'
-import { LexServerError } from './errors.ts'
-import { drainWebsocket } from './lib/drain-websocket.ts'
+import { LexServerError } from './errors.js'
+import { drainWebsocket } from './lib/drain-websocket.js'
 
 const XRPC_PATH_PREFIX = '/xrpc/'
 const XRPC_HEALTH_CHECK_PATH = '/xrpc/_health'

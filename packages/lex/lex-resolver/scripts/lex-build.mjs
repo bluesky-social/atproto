@@ -14,7 +14,7 @@ build({
   lib: '@atproto/lex-schema',
   pretty: true,
   indexFile: true,
-  importExt: '.ts',
+  importExt: '.js',
 }).catch((err) => {
   console.error('Error building lexicon schemas:', err)
   process.exit(1)

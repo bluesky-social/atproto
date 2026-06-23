@@ -5,10 +5,10 @@ import {
   Schema,
   type Unknown$TypedObject,
   ValidationContext,
-} from '../core.ts'
-import { lazyProperty } from '../util/lazy-property.ts'
-import { TypedObjectSchema } from './typed-object.ts'
-import { TypedRefSchema } from './typed-ref.ts'
+} from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
+import { TypedObjectSchema } from './typed-object.js'
+import { TypedRefSchema } from './typed-ref.js'
 
 /**
  * Schema for Lexicon typed unions (unions discriminated by $type).
@@ -44,19 +44,16 @@ export class TypedUnionSchema<
 > {
   readonly type = 'typedUnion' as const
 
-  protected readonly validators: TValidators
-  public readonly closed: TClosed
-
-  constructor(validators: TValidators, closed: TClosed) {
-    super()
-
+  constructor(
+    protected readonly validators: TValidators,
+    public readonly closed: TClosed,
+  ) {
     // @NOTE In order to avoid circular dependency issues, we don't access the
     // refs's schema (or $type) here. Instead, we access them lazily when first
     // needed. The biggest issue with this strategy is that we can't throw
     // early if the refs contain multiple refs with the same $type.
 
-    this.validators = validators
-    this.closed = closed
+    super()
   }
 
   get validatorsMap(): Map<unknown, TValidators[number]> {

@@ -1,12 +1,8 @@
-import { Lexicons } from '../lexicons.ts'
-import {
-  type LexXrpcParameters,
-  ValidationError,
-  type ValidationResult,
-  isObj,
-} from '../types.ts'
-import { array } from './complex.ts'
-import * as PrimitiveValidators from './primitives.ts'
+import { Lexicons } from '../lexicons.js'
+import { ValidationError, isObj } from '../types.js'
+import type { LexXrpcParameters, ValidationResult } from '../types.js'
+import { array } from './complex.js'
+import * as PrimitiveValidators from './primitives.js'
 
 export function params(
   lexicons: Lexicons,

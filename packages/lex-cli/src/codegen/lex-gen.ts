@@ -11,7 +11,7 @@ import {
   type LexToken,
   Lexicons,
 } from '@atproto/lexicon'
-import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util.ts'
+import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util.js'
 
 interface Commentable {
   addJsDoc: ({ description }: { description: string }) => JSDoc
@@ -44,7 +44,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
     })
     .addNamedImports([{ name: 'CID' }])
 
-  //= import { validate as _validate } from '../../lexicons.js'
+  //= import { validate as _validate } from '../../lexicons.ts'
   file
     .addImportDeclaration({
       moduleSpecifier: `${baseNsid

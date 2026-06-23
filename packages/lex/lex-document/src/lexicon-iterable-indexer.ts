@@ -1,5 +1,5 @@
-import { type LexiconDocument } from './lexicon-document.ts'
-import { type LexiconIndexer } from './lexicon-indexer.ts'
+import type { LexiconDocument } from './lexicon-document.js'
+import type { LexiconIndexer } from './lexicon-indexer.js'
 
 /**
  * Lazily indexes Lexicon documents from an iterable source.

@@ -1,24 +1,17 @@
+import type { LexErrorCode, LexErrorData, LexValue } from '@atproto/lex-data'
+import { LexError } from '@atproto/lex-data'
 import {
-  LexError,
-  type LexErrorCode,
-  type LexErrorData,
-  type LexValue,
-} from '@atproto/lex-data'
-import {
-  type InferMethodError,
   LexValidationError,
   Procedure,
   Query,
-  type ResultFailure,
   lexErrorDataSchema,
 } from '@atproto/lex-schema'
+import type { InferMethodError, ResultFailure } from '@atproto/lex-schema'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { type Agent } from './agent.ts'
-import { type XrpcUnknownResponsePayload } from './types.ts'
-import {
-  type WWWAuthenticate,
-  parseWWWAuthenticateHeader,
-} from './www-authenticate.ts'
+import type { Agent } from './agent.js'
+import type { XrpcUnknownResponsePayload } from './types.js'
+import type { WWWAuthenticate } from './www-authenticate.js'
+import { parseWWWAuthenticateHeader } from './www-authenticate.js'
 
 /**
  * Mapping that allows generating an XRPC error code from an HTTP status code
@@ -130,16 +123,13 @@ export abstract class XrpcError<
 {
   name = 'XrpcError'
 
-  readonly method: M
-
   constructor(
-    method: M,
+    readonly method: M,
     error: N,
     message: string = `${error} Lexicon RPC error`,
     options?: ErrorOptions,
   ) {
     super(error, message, options)
-    this.method = method
   }
 
   /**
@@ -193,13 +183,10 @@ export class XrpcResponseError<
 > extends XrpcError<M, LexErrorCode, XrpcResponseError<M>> {
   name = 'XrpcResponseError'
 
-  readonly response: Response
-  readonly payload?: XrpcUnknownResponsePayload
-
   constructor(
     method: M,
-    response: Response,
-    payload?: XrpcUnknownResponsePayload,
+    readonly response: Response,
+    readonly payload?: XrpcUnknownResponsePayload,
     options?: ErrorOptions,
   ) {
     const { error, message } = isXrpcErrorPayload(payload)
@@ -211,8 +198,6 @@ export class XrpcResponseError<
           message: buildResponseOverviewMessage(response),
         }
     super(method, error, message, options)
-    this.response = response
-    this.payload = payload
   }
 
   override get reason(): this {
@@ -332,19 +317,14 @@ export class XrpcInvalidResponseError<
 > extends XrpcError<M, 'InvalidResponse', XrpcInvalidResponseError<M>> {
   name = 'XrpcInvalidResponseError'
 
-  readonly response: Response
-  readonly payload?: XrpcUnknownResponsePayload
-
   constructor(
     method: M,
-    response: Response,
-    payload?: XrpcUnknownResponsePayload,
+    readonly response: Response,
+    readonly payload?: XrpcUnknownResponsePayload,
     message: string = buildResponseOverviewMessage(response),
     options?: ErrorOptions,
   ) {
     super(method, 'InvalidResponse', message, options)
-    this.response = response
-    this.payload = payload
   }
 
   override get reason(): this {
@@ -376,13 +356,11 @@ export class XrpcResponseValidationError<
 > extends XrpcInvalidResponseError<M> {
   name = 'XrpcResponseValidationError'
 
-  readonly cause: LexValidationError
-
   constructor(
     method: M,
     response: Response,
     payload: XrpcUnknownResponsePayload,
-    cause: LexValidationError,
+    readonly cause: LexValidationError,
   ) {
     super(
       method,
@@ -391,7 +369,6 @@ export class XrpcResponseValidationError<
       `Invalid response payload: ${cause.message}`,
       { cause },
     )
-    this.cause = cause
   }
 }
 

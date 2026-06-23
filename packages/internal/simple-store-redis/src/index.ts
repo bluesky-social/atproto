@@ -34,18 +34,16 @@ export type SimpleStoreRedisOptions<K extends string, V extends Value> = {
 export class SimpleStoreRedis<K extends string, V extends Value>
   implements SimpleStore<K, V>
 {
-  protected readonly redis: Redis
-  protected readonly options: SimpleStoreRedisOptions<K, V>
-
-  constructor(redis: Redis, options: SimpleStoreRedisOptions<K, V>) {
+  constructor(
+    protected readonly redis: Redis,
+    protected readonly options: SimpleStoreRedisOptions<K, V>,
+  ) {
     if (!options.keyPrefix) {
       throw new TypeError(`keyPrefix must be a non-empty string`)
     }
     if (options.ttl != null && options.ttl <= 0) {
       throw new TypeError(`ttl must be greater than 0`)
     }
-    this.redis = redis
-    this.options = options
   }
 
   protected encodeKey(key: K): string {

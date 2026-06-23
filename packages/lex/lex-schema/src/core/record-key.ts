@@ -1,8 +1,5 @@
-import {
-  type NsidString,
-  type TidString,
-  isValidRecordKey,
-} from '@atproto/syntax'
+import { isValidRecordKey } from '@atproto/syntax'
+import type { NsidString, TidString } from '@atproto/syntax'
 
 /**
  * The valid record key constraint types in a lexicon definition.

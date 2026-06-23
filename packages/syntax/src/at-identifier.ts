@@ -1,10 +1,11 @@
-import { type DidString, ensureValidDidRegex, isValidDid } from './did.ts'
+import type { DidString } from './did.js'
+import { ensureValidDidRegex, isValidDid } from './did.js'
+import type { HandleString } from './handle.js'
 import {
-  type HandleString,
   InvalidHandleError,
   ensureValidHandleRegex,
   isValidHandle,
-} from './handle.ts'
+} from './handle.js'
 
 /**
  * An "at-identifier" string - either a {@link DidString} or a {@link HandleString}

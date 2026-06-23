@@ -4,8 +4,8 @@ import {
   Schema,
   ValidationContext,
   type Validator,
-} from '../core.ts'
-import { memoizedTransformer } from '../util/memoize.ts'
+} from '../core.js'
+import { memoizedTransformer } from '../util/memoize.js'
 
 /**
  * Configuration options for array schema validation.
@@ -37,13 +37,12 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
   Array<InferOutput<TItem>>
 > {
   readonly type = 'array' as const
-  readonly validator: TItem
-  readonly options: ArraySchemaOptions
 
-  constructor(validator: TItem, options: ArraySchemaOptions = {}) {
+  constructor(
+    readonly validator: TItem,
+    readonly options: ArraySchemaOptions = {},
+  ) {
     super()
-    this.validator = validator
-    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

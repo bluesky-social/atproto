@@ -7,8 +7,8 @@ import {
   isLegacyBlobRef,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.ts'
-import { memoizedOptions } from '../util/memoize.ts'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 /**
  * Configuration options for blob schema validation.
@@ -51,11 +51,9 @@ export class BlobSchema<
   const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
 > extends Schema<BlobRef> {
   readonly type = 'blob' as const
-  readonly options: TOptions
 
-  constructor(options: TOptions) {
+  constructor(readonly options?: TOptions) {
     super()
-    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

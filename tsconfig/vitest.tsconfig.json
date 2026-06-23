@@ -4,7 +4,6 @@
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "allowImportingTsExtensions": true,
-    "noImplicitAny": true,
     "noEmit": true,
   },
 }

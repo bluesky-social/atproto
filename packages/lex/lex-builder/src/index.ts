@@ -1,16 +1,16 @@
 // Must be first
-import './polyfill.ts'
+import './polyfill.js'
 
 import {
   LexBuilder,
-  type LexBuilderLoadOptions,
-  type LexBuilderOptions,
-  type LexBuilderSaveOptions,
-} from './lex-builder.ts'
+  LexBuilderLoadOptions,
+  LexBuilderOptions,
+  LexBuilderSaveOptions,
+} from './lex-builder.js'
 
-export * from './lex-builder.ts'
-export * from './lex-def-builder.ts'
-export * from './lexicon-directory-indexer.ts'
+export * from './lex-builder.js'
+export * from './lex-def-builder.js'
+export * from './lexicon-directory-indexer.js'
 
 /**
  * Combined options for building a TypeScript project from Lexicon documents.

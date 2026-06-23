@@ -1,8 +1,8 @@
 import { type Options as PrettierOptions, format } from 'prettier'
 import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { type LexiconDoc } from '@atproto/lexicon'
-import { type GeneratedFile } from '../types.ts'
-import { toTitleCase } from './util.ts'
+import type { LexiconDoc } from '@atproto/lexicon'
+import type { GeneratedFile } from '../types.js'
+import { toTitleCase } from './util.js'
 
 const PRETTIER_OPTS: PrettierOptions = {
   parser: 'typescript',

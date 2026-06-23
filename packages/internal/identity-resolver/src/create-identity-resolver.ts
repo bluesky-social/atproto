@@ -6,8 +6,8 @@ import {
   type CreateHandleResolverOptions,
   createHandleResolver,
 } from '@atproto-labs/handle-resolver'
-import { AtprotoIdentityResolver } from './atproto-identity-resolver.ts'
-import type { IdentityResolver } from './identity-resolver.ts'
+import { AtprotoIdentityResolver } from './atproto-identity-resolver.js'
+import type { IdentityResolver } from './identity-resolver.js'
 
 export type CreateIdentityResolverOptions = {
   identityResolver?: IdentityResolver

@@ -1,16 +1,13 @@
 import assert from 'node:assert'
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
-import {
-  type LexiconDocument,
-  type LexiconIndexer,
-} from '@atproto/lex-document'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import {
   isGlobalIdentifier,
   isJsKeyword,
   isSafeLocalIdentifier,
   isValidJsIdentifier,
-} from './ts-lang.ts'
+} from './ts-lang.js'
 import {
   asRelativePath,
   memoize,
@@ -18,7 +15,7 @@ import {
   toCamelCase,
   toPascalCase,
   ucFirst,
-} from './util.ts'
+} from './util.js'
 
 /**
  * Configuration options for the {@link RefResolver} class.
@@ -84,21 +81,12 @@ export type ResolvedRef = {
  * ```
  */
 export class RefResolver {
-  private doc: LexiconDocument
-  private file: SourceFile
-  private indexer: LexiconIndexer
-  private options: RefResolverOptions
   constructor(
-    doc: LexiconDocument,
-    file: SourceFile,
-    indexer: LexiconIndexer,
-    options: RefResolverOptions,
-  ) {
-    this.doc = doc
-    this.file = file
-    this.indexer = indexer
-    this.options = options
-  }
+    private doc: LexiconDocument,
+    private file: SourceFile,
+    private indexer: LexiconIndexer,
+    private options: RefResolverOptions,
+  ) {}
 
   public readonly resolve = memoize(
     async (ref: string): Promise<ResolvedRef> => {

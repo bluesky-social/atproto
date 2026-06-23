@@ -10,14 +10,14 @@ import type {
   HandleResolver,
   ResolveHandleOptions,
 } from '@atproto-labs/handle-resolver'
-import { HANDLE_INVALID } from './constants.ts'
-import { IdentityResolverError } from './identity-resolver-error.ts'
+import { HANDLE_INVALID } from './constants.js'
+import { IdentityResolverError } from './identity-resolver-error.js'
 import type {
   IdentityInfo,
   IdentityResolver,
   ResolveIdentityOptions,
-} from './identity-resolver.ts'
-import { asNormalizedHandle, extractNormalizedHandle } from './util.ts'
+} from './identity-resolver.js'
+import { asNormalizedHandle, extractNormalizedHandle } from './util.js'
 
 // @TODO Move this to its own package as soon as we have a distinct
 // implementation based on XRPC calls to the
@@ -30,15 +30,10 @@ import { asNormalizedHandle, extractNormalizedHandle } from './util.ts'
  * - Handle resolution (using the `HandleResolver` interface)
  */
 export class AtprotoIdentityResolver implements IdentityResolver {
-  protected readonly didResolver: DidResolver<AtprotoIdentityDidMethods>
-  protected readonly handleResolver: HandleResolver
   constructor(
-    didResolver: DidResolver<AtprotoIdentityDidMethods>,
-    handleResolver: HandleResolver,
-  ) {
-    this.didResolver = didResolver
-    this.handleResolver = handleResolver
-  }
+    protected readonly didResolver: DidResolver<AtprotoIdentityDidMethods>,
+    protected readonly handleResolver: HandleResolver,
+  ) {}
 
   public async resolve(
     input: string,

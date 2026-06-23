@@ -4,9 +4,9 @@ import {
   Schema,
   type Simplify,
   ValidationContext,
-} from '../core.ts'
-import { DictSchema } from './dict.ts'
-import { ObjectSchema } from './object.ts'
+} from '../core.js'
+import { DictSchema } from './dict.js'
+import { ObjectSchema } from './object.js'
 
 /**
  * Type utility for computing the intersection of two object types.
@@ -58,13 +58,11 @@ export class IntersectionSchema<
 > {
   readonly type = 'intersection' as const
 
-  protected readonly left: Left
-  protected readonly right: Right
-
-  constructor(left: Left, right: Right) {
+  constructor(
+    protected readonly left: Left,
+    protected readonly right: Right,
+  ) {
     super()
-    this.left = left
-    this.right = right
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

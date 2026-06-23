@@ -4,8 +4,8 @@ import {
   ValidationContext,
   type ValidationResult,
   type Validator,
-} from '../core.ts'
-import { type CustomAssertionContext } from './custom.ts'
+} from '../core.js'
+import type { CustomAssertionContext } from './custom.js'
 
 /**
  * Configuration for a refinement check that validates a condition.

@@ -1,4 +1,4 @@
-import { Issue, IssueCustom, Schema, ValidationContext } from '../core.ts'
+import { Issue, IssueCustom, Schema, ValidationContext } from '../core.js'
 
 /**
  * Context object provided to custom assertion functions.
@@ -42,19 +42,12 @@ export type CustomAssertion<TValue> = (
 export class CustomSchema<out TValue = unknown> extends Schema<TValue> {
   readonly type = 'custom' as const
 
-  private readonly assertion: CustomAssertion<TValue>
-  private readonly message: string
-  private readonly path?: PropertyKey | readonly PropertyKey[]
-
   constructor(
-    assertion: CustomAssertion<TValue>,
-    message: string,
-    path?: PropertyKey | readonly PropertyKey[],
+    private readonly assertion: CustomAssertion<TValue>,
+    private readonly message: string,
+    private readonly path?: PropertyKey | readonly PropertyKey[],
   ) {
     super()
-    this.assertion = assertion
-    this.message = message
-    this.path = path
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

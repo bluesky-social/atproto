@@ -1,4 +1,4 @@
-import { type Result, failure, success } from './lib/result.ts'
+import { type Result, failure, success } from './lib/result.js'
 
 /*
 Grammar:

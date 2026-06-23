@@ -1,14 +1,14 @@
-import {
-  type AtIdentifierString,
-  ensureValidAtIdentifier,
-  isDidIdentifier,
-} from './at-identifier.ts'
-import { type AtUriString } from './aturi_validation.ts'
-import { type DidString, InvalidDidError } from './did.ts'
-import { type NsidString, ensureValidNsid } from './nsid.ts'
-import { type RecordKeyString, ensureValidRecordKey } from './recordkey.ts'
+import { ensureValidAtIdentifier, isDidIdentifier } from './at-identifier.js'
+import type { AtIdentifierString } from './at-identifier.js'
+import type { AtUriString } from './aturi_validation.js'
+import type { DidString } from './did.js'
+import { InvalidDidError } from './did.js'
+import type { NsidString } from './nsid.js'
+import { ensureValidNsid } from './nsid.js'
+import type { RecordKeyString } from './recordkey.js'
+import { ensureValidRecordKey } from './recordkey.js'
 
-export * from './aturi_validation.ts'
+export * from './aturi_validation.js'
 
 // Re-export types used in public interface
 export type {

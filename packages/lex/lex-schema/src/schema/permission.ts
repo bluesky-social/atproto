@@ -1,4 +1,4 @@
-import { type Params } from './params.ts'
+import type { Params } from './params.js'
 
 /**
  * Type alias for permission options (same as Params).
@@ -23,13 +23,10 @@ export class Permission<
   const TResource extends string = any,
   const TOptions extends PermissionOptions = any,
 > {
-  readonly resource: TResource
-  readonly options: TOptions
-
-  constructor(resource: TResource, options: TOptions) {
-    this.resource = resource
-    this.options = options
-  }
+  constructor(
+    readonly resource: TResource,
+    readonly options: TOptions,
+  ) {}
 }
 
 /**

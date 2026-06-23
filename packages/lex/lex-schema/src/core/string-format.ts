@@ -21,7 +21,7 @@ import {
   isValidTid,
   isValidUri,
 } from '@atproto/syntax'
-import { type CheckFn } from '../util/assertion-util.ts'
+import type { CheckFn } from '../util/assertion-util.js'
 
 // -----------------------------------------------------------------------------
 // Individual string format types and type guards

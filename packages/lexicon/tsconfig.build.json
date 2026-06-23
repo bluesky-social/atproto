@@ -2,6 +2,7 @@
   "extends": "../../tsconfig/isomorphic.tsconfig.json",
   "compilerOptions": {
     "composite": true,
+    "verbatimModuleSyntax": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },

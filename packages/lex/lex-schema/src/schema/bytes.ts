@@ -1,6 +1,6 @@
 import { asUint8Array, ifUint8Array } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.ts'
-import { memoizedOptions } from '../util/memoize.ts'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 /**
  * Configuration options for bytes schema validation.
@@ -27,11 +27,9 @@ export type BytesSchemaOptions = {
  */
 export class BytesSchema extends Schema<Uint8Array> {
   readonly type = 'bytes' as const
-  readonly options: BytesSchemaOptions
 
-  constructor(options: BytesSchemaOptions = {}) {
+  constructor(readonly options: BytesSchemaOptions = {}) {
     super()
-    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

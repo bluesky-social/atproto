@@ -1,14 +1,9 @@
 import { XrpcError } from '@atproto/lex-client'
-import {
-  LexError,
-  type LexErrorCode,
-  type LexErrorData,
-} from '@atproto/lex-data'
+import type { LexErrorCode, LexErrorData } from '@atproto/lex-data'
+import { LexError } from '@atproto/lex-data'
 import { LexValidationError } from '@atproto/lex-schema'
-import {
-  type WWWAuthenticate,
-  formatWWWAuthenticateHeader,
-} from './lib/www-authenticate.ts'
+import type { WWWAuthenticate } from './lib/www-authenticate.js'
+import { formatWWWAuthenticateHeader } from './lib/www-authenticate.js'
 
 export { LexError }
 export type { LexErrorCode, LexErrorData, WWWAuthenticate }
@@ -24,18 +19,13 @@ export class LexServerError<
 
   readonly headers?: Headers
 
-  readonly status: number
-  readonly body: LexErrorData<N>
-
   constructor(
-    status: number,
-    body: LexErrorData<N>,
+    readonly status: number,
+    readonly body: LexErrorData<N>,
     headers?: HeadersInit,
     options?: ErrorOptions,
   ) {
     super(body.error, body.message, options)
-    this.status = status
-    this.body = body
     this.headers = headers ? new Headers(headers) : undefined
   }
 
@@ -109,8 +99,6 @@ export class LexServerAuthError<
 > extends LexServerError<N> {
   name = 'LexServerAuthError'
 
-  readonly wwwAuthenticate: WWWAuthenticate
-
   /**
    * Creates a new authentication error.
    *
@@ -122,7 +110,7 @@ export class LexServerAuthError<
   constructor(
     error: N,
     message: string,
-    wwwAuthenticate: WWWAuthenticate = {},
+    readonly wwwAuthenticate: WWWAuthenticate = {},
     options?: ErrorOptions,
   ) {
     const headers = Object.keys(wwwAuthenticate).length
@@ -132,7 +120,6 @@ export class LexServerAuthError<
         })
       : undefined
     super(401, { error, message }, headers, options)
-    this.wwwAuthenticate = wwwAuthenticate
   }
 
   /**

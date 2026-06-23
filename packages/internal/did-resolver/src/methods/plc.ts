@@ -1,13 +1,13 @@
-import { type Did, assertDidPlc, didDocumentValidator } from '@atproto/did'
+import { Did, assertDidPlc, didDocumentValidator } from '@atproto/did'
 import {
-  type Fetch,
+  Fetch,
   bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import type { DidMethod, ResolveDidOptions } from '../did-method.ts'
+import { DidMethod, ResolveDidOptions } from '../did-method.js'
 
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),

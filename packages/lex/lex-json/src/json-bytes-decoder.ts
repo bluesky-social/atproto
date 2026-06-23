@@ -1,5 +1,6 @@
-import { type LexValue, fromBase64, parseCid } from '@atproto/lex-data'
-import { parseTypedBlobRef } from './blob.ts'
+import type { LexValue } from '@atproto/lex-data'
+import { fromBase64, parseCid } from '@atproto/lex-data'
+import { parseTypedBlobRef } from './blob.js'
 
 const CHAR_TAB = 0x09
 const CHAR_NEWLINE = 0x0a
@@ -69,13 +70,10 @@ export const BASE64_NATIVE_THRESHOLD = 256 // Use native decoding for base64 str
 export class JsonBytesDecoder {
   private pos = 0
 
-  private readonly data: Uint8Array
-  private readonly strict: boolean
-
-  constructor(data: Uint8Array, strict = true) {
-    this.data = data
-    this.strict = strict
-  }
+  constructor(
+    private readonly data: Uint8Array,
+    private readonly strict = true,
+  ) {}
 
   decode(): LexValue {
     this.skipWhitespace()

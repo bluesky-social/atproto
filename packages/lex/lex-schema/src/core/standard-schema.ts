@@ -1,5 +1,6 @@
-import { type StandardSchemaV1 } from '@standard-schema/spec'
-import { ValidationContext, type Validator } from './validator.ts'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { Validator } from './validator.js'
+import { ValidationContext } from './validator.js'
 
 /**
  * The Standard Schema adapter for {@link Validator} instances.
@@ -12,11 +13,8 @@ export class StandardSchemaAdapter<TInput, TOutput>
   readonly vendor = '@atproto/lex-schema'
 
   declare readonly types: StandardSchemaV1.Types<TInput, TOutput>
-  private readonly validator: Validator<TInput, TOutput>
 
-  constructor(validator: Validator<TInput, TOutput>) {
-    this.validator = validator
-  }
+  constructor(private readonly validator: Validator<TInput, TOutput>) {}
 
   validate(
     value: unknown,

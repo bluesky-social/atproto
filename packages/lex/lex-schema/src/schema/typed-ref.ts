@@ -5,7 +5,7 @@ import {
   Schema,
   ValidationContext,
   type Validator,
-} from '../core.ts'
+} from '../core.js'
 
 /**
  * Interface for validators that have a $type property.

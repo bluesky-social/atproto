@@ -5,7 +5,7 @@ import {
   ValidationContext,
   type Validator,
   type WrappedValidator,
-} from '../core.ts'
+} from '../core.js'
 
 /**
  * Function type that returns a validator, used for lazy schema resolution.

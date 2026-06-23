@@ -6,7 +6,7 @@ import {
   Schema,
   ValidationContext,
   type Validator,
-} from '../core.ts'
+} from '../core.js'
 
 /**
  * Type representing a non-empty tuple of validators for union schemas.
@@ -39,11 +39,8 @@ export class UnionSchema<
 > {
   readonly type = 'union' as const
 
-  protected readonly validators: TValidators
-
-  constructor(validators: TValidators) {
+  constructor(protected readonly validators: TValidators) {
     super()
-    this.validators = validators
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {

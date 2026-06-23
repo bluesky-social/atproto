@@ -5,6 +5,8 @@
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": false, // Conflicts with "paths" aliases; this is a noop with noEmit anyways
+    // @TODO Change this to true to simplify the bundler's work
+    "verbatimModuleSyntax": false,
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,

@@ -1,6 +1,7 @@
 {
   "extends": ["../../../tsconfig/node.tsconfig.json"],
   "compilerOptions": {
+    // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
     "composite": true,
     "outDir": "dist",

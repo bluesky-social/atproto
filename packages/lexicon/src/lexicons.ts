@@ -7,16 +7,16 @@ import {
   ValidationError,
   type ValidationResult,
   isObj,
-} from './types.ts'
-import { toLexUri } from './util.ts'
+} from './types.js'
+import { toLexUri } from './util.js'
 import {
   assertValidRecord,
   assertValidXrpcInput,
   assertValidXrpcMessage,
   assertValidXrpcOutput,
   assertValidXrpcParams,
-} from './validation.ts'
-import { object as validateObject } from './validators/complex.ts'
+} from './validation.js'
+import { object as validateObject } from './validators/complex.js'
 
 /**
  * A collection of compiled lexicons.

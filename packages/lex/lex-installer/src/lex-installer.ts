@@ -1,27 +1,27 @@
 import { join } from 'node:path'
 import { LexiconDirectoryIndexer } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
-import { type Cid, lexEquals } from '@atproto/lex-data'
-import {
-  type LexiconDocument,
-  type LexiconParameters,
-  type LexiconPermission,
-  type LexiconRef,
-  type LexiconRefUnion,
-  type LexiconUnknown,
-  type MainLexiconDefinition,
-  type NamedLexiconDefinition,
+import type { Cid } from '@atproto/lex-data'
+import { lexEquals } from '@atproto/lex-data'
+import type {
+  LexiconDocument,
+  LexiconParameters,
+  LexiconPermission,
+  LexiconRef,
+  LexiconRefUnion,
+  LexiconUnknown,
+  MainLexiconDefinition,
+  NamedLexiconDefinition,
 } from '@atproto/lex-document'
-import { LexResolver, type LexResolverOptions } from '@atproto/lex-resolver'
-import { type AtUriString, type NsidString } from '@atproto/lex-schema'
+import type { LexResolverOptions } from '@atproto/lex-resolver'
+import { LexResolver } from '@atproto/lex-resolver'
+import type { AtUriString, NsidString } from '@atproto/lex-schema'
 import { AtUri, NSID } from '@atproto/syntax'
-import { isEnoentError, writeJsonFile } from './fs.ts'
-import {
-  type LexiconsManifest,
-  normalizeLexiconsManifest,
-} from './lexicons-manifest.ts'
-import { NsidMap } from './nsid-map.ts'
-import { NsidSet } from './nsid-set.ts'
+import { isEnoentError, writeJsonFile } from './fs.js'
+import type { LexiconsManifest } from './lexicons-manifest.js'
+import { normalizeLexiconsManifest } from './lexicons-manifest.js'
+import { NsidMap } from './nsid-map.js'
+import { NsidSet } from './nsid-set.js'
 
 /**
  * Configuration options for the {@link LexInstaller} class.
