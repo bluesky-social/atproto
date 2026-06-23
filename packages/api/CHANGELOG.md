@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.19
+
+### Patch Changes
+
+- [#5127](https://github.com/bluesky-social/atproto/pull/5127) [`a67858d`](https://github.com/bluesky-social/atproto/commit/a67858df5e4c0ca213e345c14b0283b2e930c68c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update required query params for searchPostsV2
+
 ## 0.20.18
 
 ### Patch Changes
