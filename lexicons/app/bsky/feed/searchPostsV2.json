@@ -22,7 +22,7 @@
           },
           "query": {
             "type": "string",
-            "description": "Search query string."
+            "description": "Search query string. A query or at least one filter is required."
           },
           "sort": {
             "type": "string",
