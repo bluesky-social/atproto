@@ -15,7 +15,7 @@ import {
 } from '../../../../pipeline.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
-import { resHeaders } from '../../../util.js'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchStarterPacks = createPipeline(
@@ -35,8 +35,21 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         includeTakedowns,
         skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
       })
-      const results = await searchStarterPacks({ ...params, hydrateCtx }, ctx)
+      const results = await searchStarterPacks(
+        {
+          ...params,
+          hydrateCtx,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
+        },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: results,
@@ -46,7 +59,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -78,6 +91,35 @@ const skeleton = async (
     uris: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const { q } = params
+
+  const res = await ctx.dataplane.searchStarterPacksV2({
+    params: {
+      query: q,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      limit: params.limit,
+      cursor: params.cursor,
+    },
+  })
+  return {
+    uris: res.starterPacks.map(({ uri }) => uri as AtUriString),
+    cursor: parseString(res.pageInfo?.cursor),
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (
@@ -118,6 +160,7 @@ type Context = {
 
 type Params = app.bsky.graph.searchStarterPacks.$Params & {
   hydrateCtx: HydrateCtx
+  isV2Override: boolean
 }
 
 type Skeleton = {

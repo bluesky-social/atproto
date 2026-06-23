@@ -23,7 +23,7 @@ export type ConsentViewProps = {
   account: Account
   scope?: string
 
-  onConsent: (scope?: string) => void
+  onConsent: (data: { scope?: string }) => void
   onReject: () => void
   onBack?: () => void
 }

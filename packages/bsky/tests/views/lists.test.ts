@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyGraphGetLists,
   AppBskyGraphGetListsWithMembership,
@@ -86,7 +86,6 @@ describe('bsky actor likes feed views', () => {
     await sc.block(sc.dids.frankie, sc.dids.greta)
     await sc.block(sc.dids.frankie, sc.dids.eve)
 
-    await network.processAll()
     blockList = newBlockList.uriStr
     curateList = newCurList.uriStr
     referenceList = newRefList.uriStr
@@ -102,9 +101,8 @@ describe('bsky actor likes feed views', () => {
     greta = sc.dids.greta
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('does not include reference lists in getActorLists', async () => {
     const view = await agent.app.bsky.graph.getLists({

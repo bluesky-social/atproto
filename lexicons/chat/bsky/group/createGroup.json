@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Creates a group convo, specifying the members to be added to it. Unlike getConvoForMembers, this isn't idempotent. It will create new groups even if the membership is identical to pre-existing groups. Will create 'pending' membership for all members, except the owner who is 'accepted'.",
+      "description": "Creates a group convo, specifying the members to be added to it. Unlike getConvoForMembers, this isn't idempotent. It will create new groups even if the membership is identical to pre-existing groups. Will create 'request' membership for all members, except the owner who is 'accepted'.",
       "errors": [
         { "name": "AccountSuspended" },
         { "name": "BlockedActor" },
@@ -31,8 +31,8 @@
             "name": {
               "type": "string",
               "minLength": 1,
-              "maxGraphemes": 128,
-              "maxLength": 1280
+              "maxGraphemes": 50,
+              "maxLength": 500
             }
           }
         }

@@ -49,7 +49,7 @@ describe('moderation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows setting a priority score.', async () => {

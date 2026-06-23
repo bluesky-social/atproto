@@ -1,11 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
-import type { ActiveAccountSession } from '@atproto/oauth-provider-api'
+import type {
+  ActiveAccountSession,
+  DidString,
+} from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
-import { Action, Admonition } from '#/components/utils/admonition.tsx'
+import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
-import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import {
   useAccountSessionsQuery,
   useRevokeAccountSessionMutation,
@@ -26,9 +28,9 @@ export function Page() {
       <Admonition
         role="status"
         action={
-          <Action onClick={() => refetch()}>
+          <AdmonitionAction onClick={() => refetch()}>
             <Trans>Retry</Trans>
-          </Action>
+          </AdmonitionAction>
         }
       >
         <Trans>Failed to load connected apps</Trans>
@@ -52,8 +54,8 @@ export function Page() {
 
       {data.map((session) => (
         <AccountSessionCard
-          key={`${account.sub}@${session.deviceId}`}
-          sub={account.sub}
+          key={`${account.did}@${session.deviceId}`}
+          did={account.did}
           session={session}
         />
       ))}
@@ -67,35 +69,17 @@ export function Page() {
 
 function AccountSessionCard({
   session,
-  sub,
+  did,
 }: {
   session: ActiveAccountSession
-  sub: string
+  did: DidString
 }) {
-  const { notify } = useNotificationsContext()
   const { t } = useLingui()
   const { mutateAsync, isPending } = useRevokeAccountSessionMutation()
 
   const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
   const browserName = useBrowserName(userAgent || undefined)
   const lastUsedAgo = useDateAgo(lastSeenAt)
-
-  const remove = async () => {
-    try {
-      await mutateAsync({ sub, deviceId: session.deviceId })
-      notify({
-        variant: 'success',
-        title: t`Successfully removed device`,
-        duration: 2e3,
-      })
-    } catch {
-      notify({
-        variant: 'error',
-        title: t`Failed to remove device`,
-        duration: 2e3,
-      })
-    }
-  }
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
@@ -115,7 +99,11 @@ function AccountSessionCard({
         className="min-w-max shrink-0 grow-0"
         disabled={session.isCurrentDevice}
         loading={isPending}
-        onClick={remove}
+        onClick={(_event) => {
+          void mutateAsync({ did, deviceId: session.deviceId }).catch((err) => {
+            console.warn('Failed to revoke account session', err)
+          })
+        }}
         title={
           session.isCurrentDevice ? t`Cannot remove current device` : undefined
         }

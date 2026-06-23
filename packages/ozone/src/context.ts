@@ -135,7 +135,7 @@ export class AppContext {
         keypair: signingKey,
       })
 
-    const backgroundQueue = new BackgroundQueue(db)
+    const backgroundQueue = new BackgroundQueue(db, { concurrency: 20 })
     const blobDiverter = cfg.blobDivert
       ? new BlobDiverter(db, {
           idResolver,

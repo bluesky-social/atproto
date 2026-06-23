@@ -1,3 +1,4 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import { AtUriString, Client } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
@@ -18,9 +19,10 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
+import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
-import { resHeaders } from '../../../util.js'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -48,7 +50,12 @@ export default function (server: Server, ctx: AppContext) {
         ),
       })
       const results = await searchPosts(
-        { ...params, hydrateCtx, isModService },
+        {
+          ...params,
+          hydrateCtx,
+          isModService,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
+        },
         ctx,
       )
       return {
@@ -60,7 +67,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -105,6 +112,51 @@ const skeleton = async (
     cursor: parseString(res.cursor),
     parsedQuery,
   }
+}
+
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const parsedQuery = parsePostSearchQuery(params.q, {
+    author: params.author,
+  })
+  const res = await ctx.dataplane.searchPostsV2({
+    params: {
+      query: params.q,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      limit: params.limit,
+      cursor: params.cursor,
+    },
+    sort: postSortToV2(params.sort),
+    filters: {
+      authors: params.author ? [params.author] : [],
+      mentions: params.mentions ? [params.mentions] : [],
+      domains: params.domain ? [params.domain] : [],
+      urls: params.url ? [params.url] : [],
+      hashtags: params.tag ?? [],
+    },
+    since: parseTimestamp(params.since),
+    until: parseTimestamp(params.until),
+    language: params.lang,
+  })
+  return {
+    posts: res.posts.map(({ uri }) => uri as AtUriString),
+    cursor: parseString(res.pageInfo?.cursor),
+    hitsTotal: res.pageInfo?.hitsTotal
+      ? Number(res.pageInfo.hitsTotal)
+      : undefined,
+    parsedQuery,
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
 }
 
 const hydration = async (
@@ -191,6 +243,7 @@ type Context = {
 type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
   isModService: boolean
+  isV2Override: boolean
 }
 
 type Skeleton = {
@@ -198,4 +251,17 @@ type Skeleton = {
   hitsTotal?: number
   cursor?: string
   parsedQuery: PostSearchQuery
+}
+
+const postSortToV2 = (sort: string | undefined): SearchSortOrder => {
+  if (sort === 'top') return SearchSortOrder.TOP
+  if (sort === 'latest') return SearchSortOrder.RECENT
+  return SearchSortOrder.UNSPECIFIED
+}
+
+const parseTimestamp = (value: string | undefined): Timestamp | undefined => {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (isNaN(date.getTime())) return undefined
+  return Timestamp.fromDate(date)
 }

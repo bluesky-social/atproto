@@ -25,7 +25,7 @@ describe('oauth', () => {
       // For debugging:
       // headless: false,
       // devtools: true,
-      // slowMo: 250,
+      // slowMo: 25,
     })
 
     network = await TestNetworkNoAppView.create({
@@ -71,7 +71,7 @@ describe('oauth', () => {
 
     await page.navigationClick(`Sign up with ${new URL(network.pds.url).host}`)
 
-    await page.assertTitle("S'inscrire")
+    await page.assertTitle('Inscription')
 
     await page.typeInInput('handle', 'bob')
 
@@ -80,10 +80,10 @@ describe('oauth', () => {
     await page.typeInInput('email', 'bob@test.com')
     await page.typeInInput('password', 'bob-pass')
 
-    await page.clickOnText("S'inscrire")
+    await page.clickOnText('Inscription')
 
     await page.ensureTextVisibility(
-      `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
+      `L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait casser de façon permanente, ou même usurper, votre compte. N'autorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance.`,
     )
 
     // Make sure the new account is propagated to the PLC directory, allowing
@@ -112,7 +112,7 @@ describe('oauth', () => {
 
     await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
 
-    await page.assertTitle("S'identifier")
+    await page.assertTitle('Se connecter')
 
     // Cancel the OAuth flow:
     await page.navigationClick('Annuler')
@@ -160,6 +160,7 @@ describe('oauth', () => {
     const [params] = sendTemplateMock.mock.lastCall!
     expect(params).toEqual({
       handle: 'alice.test',
+      locale: 'fr',
       token: expect.any(String),
     })
 
@@ -226,6 +227,96 @@ describe('oauth', () => {
 
     await page.navigationAction(async () => input.press('Enter'))
 
+    await page.assertTitle('Autoriser')
+
+    await page.navigationClick('Autoriser')
+
+    await page.assertTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Token info', 'h2')
+
+    await page.clickOnAriaLabel('User menu')
+
+    await page.clickOnText('Sign out')
+
+    await page.waitForNetworkIdle()
+  })
+
+  it('revokes OAuth sessions on deactivation & requires re-activation on sign-in', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    // Sign into the client (the device session is remembered, so the flow
+    // jumps straight to the consent screen).
+    await page.goto(appUrl)
+
+    await page.assertTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      const input = await page.typeInInput('identifier', 'alice.test')
+      await input.press('Enter')
+    })
+
+    await page.assertTitle('Autoriser')
+
+    await page.navigationClick('Autoriser')
+
+    await page.assertTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Token info', 'h2')
+
+    // While the client page is still open, deactivate the account through
+    // the account manager in another page.
+    {
+      await using accountPage = await PageHelper.from(browser, { languages })
+
+      await accountPage.goto(new URL('/account', network.pds.url))
+
+      await accountPage.assertTitle('Mon compte Atmosphère')
+
+      await accountPage.clickOnText('Compte utilisateur', 'a')
+
+      await accountPage.clickOnText('Désactiver le compte')
+
+      await accountPage.clickOnText('Oui, désactiver')
+
+      await accountPage.waitForNetworkIdle()
+
+      await accountPage.ensureTextVisibility('Réactiver le compte', 'span')
+
+      await network.processAll()
+    }
+
+    // Back in the client: deactivation revoked every OAuth session, so
+    // refreshing the credentials logs the user out.
+    await page.clickOnText('refresh').catch((_err) => {
+      // The OAuth app may have refreshed the session on it's own, causing the
+      // page to reset before the click is processed, which throws an error.
+    })
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
+
+    // Signing back in with the deactivated account asks the user to
+    // re-activate it before the flow can proceed.
+    // @NOTE The PDS is used directly as issuer (rather than resolving the
+    // handle) because handle resolution does not work for deactivated
+    // accounts.
+
+    await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
+
+    await page.ensureTextVisibility('Se connecter en tant que...')
+
+    await page.clickOnText('alice.test', 'span')
+
+    await page.assertTitle('Heureux de vous revoir!')
+
+    await page.ensureTextVisibility('Vous avez précédemment désactivé')
+
+    await page.clickOnText('Oui, réactiver mon compte')
+
+    // Deactivation also cleared the authorized clients, so consent is
+    // required again.
     await page.assertTitle('Autoriser')
 
     await page.navigationClick('Autoriser')

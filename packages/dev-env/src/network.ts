@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
-import { wait } from '@atproto/common-web'
+import { allFulfilled, wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky.js'
 import { EXAMPLE_LABELER } from './const.js'
@@ -151,12 +151,15 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processFullSubscription(timeout = 5000) {
     const sub = this.bsky.sub
+    // If the subscription is not running, there is no point in
+    // waiting for it to process events
+    if (!sub.running) return
     const start = Date.now()
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
       await sub.processAll()
-      const runnerCursor = await sub.runner.getCursor()
+      const runnerCursor = await sub.getCursor()
       // if subscription claims to be done, ensure we are at the most recent cursor from PDS, else wait to process again
       // (the subscription may claim to be finished before the PDS has even emitted it's event)
       if (runnerCursor && runnerCursor >= lastSeq) {
@@ -202,11 +205,21 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
-    await Promise.all(this.feedGens.map((fg) => fg.close()))
-    await this.ozone.close()
-    await this.bsky.close()
-    await this.pds.close()
-    await this.plc.close()
-    await this.introspect?.close()
+    try {
+      await this.processAll()
+    } finally {
+      await allFulfilled([
+        ...this.feedGens.map(async (fg) => fg.close()),
+        this.ozone.close(),
+        this.bsky.close(),
+        this.pds.close(),
+        this.plc.close(),
+        this.introspect?.close(),
+      ])
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

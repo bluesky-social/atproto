@@ -13,7 +13,7 @@ import { viewQueueStats } from '../report/views.js'
 const MOD_EVENT_REPORT_ACTION = 'tools.ozone.moderation.defs#modEventReport'
 const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
 
-type SubjectType = 'account' | 'record' | 'message'
+type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
 type ResolvedAssignment = {
   queueId: number
@@ -204,7 +204,7 @@ export class QueueService {
     }
 
     if (subjectType !== undefined) {
-      qb = qb.where(sql`"subjectTypes" @> ${jsonb([subjectType])}`)
+      qb = qb.where(sql<boolean>`"subjectTypes" @> ${jsonb([subjectType])}`)
     }
 
     if (collection !== undefined) {
@@ -215,7 +215,7 @@ export class QueueService {
       const conditions = reportTypes.map(
         (t) => sql`"reportTypes" @> ${jsonb([t])}`,
       )
-      qb = qb.where(sql`(${sql.join(conditions, sql` OR `)})`)
+      qb = qb.where(sql<boolean>`(${sql.join(conditions, sql` OR `)})`)
     }
 
     const keyset = new TimeIdKeyset(ref('createdAt'), ref('id'))
@@ -309,9 +309,9 @@ export class QueueService {
       .limit(params.limit)
 
     if (opts?.includeUnmatched) {
-      query = query.where((qb) => {
-        return qb.orWhere('r.queueId', 'is', null).orWhere('r.queueId', '=', -1)
-      })
+      query = query.where((eb) =>
+        eb.or([eb('r.queueId', 'is', null), eb('r.queueId', '=', -1)]),
+      )
     } else {
       query = query.where('r.queueId', 'is', null)
     }
@@ -478,6 +478,7 @@ export class QueueService {
         'subjectDid',
         'subjectUri',
         'subjectMessageId',
+        'subjectConvoId',
         'meta',
         'createdAt',
       ])
@@ -503,9 +504,11 @@ export class QueueService {
     const rows = events.map((event) => {
       const subjectType: SubjectType = event.subjectMessageId
         ? 'message'
-        : event.subjectUri
-          ? 'record'
-          : 'account'
+        : event.subjectConvoId
+          ? 'conversation'
+          : event.subjectUri
+            ? 'record'
+            : 'account'
 
       let collection: string | null = null
       let recordPath = ''
@@ -545,6 +548,7 @@ export class QueueService {
         did: event.subjectDid,
         recordPath,
         subjectMessageId: event.subjectMessageId,
+        subjectConvoId: event.subjectConvoId,
         createdAt: now,
         updatedAt: now,
       }

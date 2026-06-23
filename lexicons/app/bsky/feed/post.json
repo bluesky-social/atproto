@@ -32,6 +32,7 @@
             "refs": [
               "app.bsky.embed.images",
               "app.bsky.embed.video",
+              "app.bsky.embed.gallery",
               "app.bsky.embed.external",
               "app.bsky.embed.record",
               "app.bsky.embed.recordWithMedia"

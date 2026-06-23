@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-api",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "engines": {
     "node": ">=22"
   },
@@ -27,12 +27,11 @@
   },
   "dependencies": {
     "@atproto/jwk": "workspace:^",
-    "@atproto/oauth-types": "workspace:^"
+    "@atproto/oauth-types": "workspace:^",
+    "@atproto/syntax": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

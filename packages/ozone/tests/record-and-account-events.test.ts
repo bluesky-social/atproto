@@ -32,7 +32,7 @@ describe('record and account events on moderation subjects', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getSubjectStatus = async (

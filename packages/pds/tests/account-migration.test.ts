@@ -71,8 +71,8 @@ describe('account migration', () => {
   })
 
   afterAll(async () => {
-    await newPds.close()
-    await network.close()
+    await newPds?.close()
+    await network?.close()
   })
 
   it('migrates an account', async () => {

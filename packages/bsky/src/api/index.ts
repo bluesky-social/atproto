@@ -39,6 +39,7 @@ import getRepostedBy from './app/bsky/feed/getRepostedBy.js'
 import getSuggestedFeeds from './app/bsky/feed/getSuggestedFeeds.js'
 import getTimeline from './app/bsky/feed/getTimeline.js'
 import searchPosts from './app/bsky/feed/searchPosts.js'
+import searchPostsV2 from './app/bsky/feed/searchPostsV2.js'
 import getActorStarterPacks from './app/bsky/graph/getActorStarterPacks.js'
 import getBlocks from './app/bsky/graph/getBlocks.js'
 import getFollowers from './app/bsky/graph/getFollowers.js'
@@ -97,6 +98,7 @@ import resolveHandle from './com/atproto/identity/resolveHandle.js'
 import queryLabels from './com/atproto/label/queryLabels.js'
 import getRecord from './com/atproto/repo/getRecord.js'
 import fetchLabels from './com/atproto/temp/fetchLabels.js'
+import internalGetProfiles from './internal/bsky/actor/getProfiles.js'
 
 export * as health from './health.js'
 
@@ -141,6 +143,7 @@ export default function (server: Server, ctx: AppContext) {
   getPostThreadV2(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)
+  searchPostsV2(server, ctx)
   getActorLikes(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
@@ -208,4 +211,6 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   fetchLabels(server, ctx)
   queryLabels(server, ctx)
+  // internal.bsky
+  internalGetProfiles(server, ctx)
 }

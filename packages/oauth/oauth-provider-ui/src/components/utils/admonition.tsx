@@ -1,6 +1,6 @@
 import {
   CheckCircleIcon,
-  type Icon,
+  type Icon as PhosphorIcon,
   InfoIcon,
   ProhibitIcon,
   WarningIcon,
@@ -14,14 +14,15 @@ import {
   useContext,
   useMemo,
 } from 'react'
+import { Button, ButtonProps } from '#/components/forms/button.tsx'
 import { Override } from '#/lib/util.ts'
-import { Button, ButtonProps } from '../forms/button.tsx'
 
 type Variant = 'info' | 'warning' | 'error' | 'success'
 
 const ROLE_VARIANT_MAP: ReadonlyMap<AriaRole, Variant> = new Map([
   ['note', 'info'],
   ['status', 'warning'],
+  ['warning', 'warning'],
   ['alert', 'error'],
 ])
 
@@ -29,7 +30,7 @@ const roleToVariant = (role?: AriaRole): Variant => {
   return (ROLE_VARIANT_MAP as ReadonlyMap<unknown, Variant>).get(role) ?? 'info'
 }
 
-const icons: Record<Variant, Icon> = {
+const icons: Record<Variant, PhosphorIcon> = {
   // @ts-expect-error
   __proto__: null,
 
@@ -39,7 +40,7 @@ const icons: Record<Variant, Icon> = {
   error: ProhibitIcon,
 }
 
-const cardColors: Record<Variant, string> = {
+const cardColors: Record<Variant, string | string[]> = {
   // @ts-expect-error
   __proto__: null,
 
@@ -88,7 +89,7 @@ export const AdmonitionContext = createContext<AdmonitionContextValue>({
 })
 AdmonitionContext.displayName = 'AdmonitionContext'
 
-export function Card({
+export function AdmonitionCard({
   role,
   className,
   variant = roleToVariant(role),
@@ -101,10 +102,12 @@ export function Card({
       className={clsx(
         'flex items-start space-x-2',
         'rounded-md py-3 pl-3 pr-4',
-        'border-contrast-25 dark:border-contrast-50 border',
-        'shadow-contrast-500/20 dark:shadow-contrast-0/50 shadow-md',
+
+        // Coloring
         'text-gray-900 dark:text-gray-100',
+        'border',
         cardColors[variant],
+
         className,
       )}
       role={role}
@@ -117,17 +120,19 @@ export function Card({
   )
 }
 
-export function Icon({
+export function AdmonitionIcon({
   variant: variantProp,
   children,
+  icon,
 }: {
   variant?: Variant
   children?: ReactNode
+  icon?: PhosphorIcon
 }) {
   const ctx = useContext(AdmonitionContext)
   const variant: Variant = variantProp ?? ctx.variant
 
-  const Icon = icons[variant]
+  const Icon = icon ?? icons[variant]
 
   return (
     <div className={clsx('pt-0.5', iconColors[variant])} aria-hidden>
@@ -136,23 +141,23 @@ export function Icon({
   )
 }
 
-export function Content({ children }: { children: ReactNode }) {
+export function AdmonitionContent({ children }: { children: ReactNode }) {
   return <div className="max-w-full flex-1 space-y-1">{children}</div>
 }
 
-export function Title({ children }: { children: ReactNode }) {
+export function AdmonitionTitle({ children }: { children: ReactNode }) {
   return <h3 className="text-lg font-semibold leading-snug">{children}</h3>
 }
 
-export function Text({ children }: { children: ReactNode }) {
+export function AdmonitionText({ children }: { children: ReactNode }) {
   return <p className="text-md">{children}</p>
 }
 
-export function Actions({ children }: { children: ReactNode }) {
-  return <div className="-my-1 ml-auto flex-shrink-0">{children}</div>
+export function AdmonitionActions({ children }: { children: ReactNode }) {
+  return <div className="-my-0.5 ml-auto flex-shrink-0">{children}</div>
 }
 
-export function Action({
+export function AdmonitionAction({
   children,
   size = 'sm',
   color,
@@ -173,6 +178,7 @@ export type AdmonitionProps = Override<
     title?: ReactNode
     action?: ReactNode
     append?: ReactNode
+    icon?: PhosphorIcon
   }
 >
 
@@ -180,18 +186,19 @@ export function Admonition({
   title,
   action,
   append,
+  icon,
   children,
   ...props
 }: AdmonitionProps) {
   return (
-    <Card {...props}>
-      <Icon />
-      <Content>
-        {title && <Title>{title}</Title>}
-        {children && <Text>{children}</Text>}
+    <AdmonitionCard {...props}>
+      <AdmonitionIcon icon={icon} />
+      <AdmonitionContent>
+        {title && <AdmonitionTitle>{title}</AdmonitionTitle>}
+        {children && <AdmonitionText>{children}</AdmonitionText>}
         {append}
-      </Content>
-      {action && <Actions>{action}</Actions>}
-    </Card>
+      </AdmonitionContent>
+      {action && <AdmonitionActions>{action}</AdmonitionActions>}
+    </AdmonitionCard>
   )
 }

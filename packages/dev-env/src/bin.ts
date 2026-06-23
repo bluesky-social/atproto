@@ -55,9 +55,9 @@ const run = async () => {
     console.log(`🤖 Feed Generator (${fg.did}) http://localhost:${fg.port}`)
   }
 
+  console.time('✅ Dev environment is ready')
   await generateMockSetup(network)
-
-  console.log('✅ Dev environment is ready')
+  console.timeEnd('✅ Dev environment is ready')
 }
 
 run()

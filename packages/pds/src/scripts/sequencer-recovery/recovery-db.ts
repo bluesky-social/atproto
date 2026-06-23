@@ -35,7 +35,7 @@ export const getAndMigrateRecoveryDb = async (
   const pragmas: Record<string, string> = disableWalAutoCheckpoint
     ? { wal_autocheckpoint: '0' }
     : {}
-  const db = Database.sqlite(location, pragmas)
+  const db = Database.sqlite<RecoveryDbSchema>(location, pragmas)
   const migrator = new Migrator(db.db, migrations)
   await migrator.migrateToLatestOrThrow()
   return db

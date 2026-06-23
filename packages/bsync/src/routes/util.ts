@@ -15,7 +15,7 @@ export const validCursor = (cursor: string): number | null => {
   return int
 }
 
-export const combineSignals = (a: AbortSignal, b: AbortSignal) => {
+export const combineSignals = (a: AbortSignal, b: AbortSignal): AbortSignal => {
   const controller = new AbortController()
   for (const signal of [a, b]) {
     if (signal.aborted) {

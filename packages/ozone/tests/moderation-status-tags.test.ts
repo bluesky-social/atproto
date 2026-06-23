@@ -24,7 +24,7 @@ describe('moderation-status-tags', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('manage tags on subject status', () => {
@@ -112,6 +112,29 @@ describe('moderation-status-tags', () => {
       )
       expect(englishOrJapaneseDids).toContain(sc.dids.alice)
       expect(englishOrJapaneseDids).toContain(sc.dids.bob)
+    })
+
+    it('adds tag to conversation', async () => {
+      const subject = {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did: sc.dids.alice,
+        convoId: '123',
+      }
+      await modClient.emitEvent({
+        subject: subject,
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTag',
+          add: ['interaction-churn'],
+          remove: [],
+        },
+      })
+      const status = await network.ozone.ctx.db.db
+        .selectFrom('moderation_subject_status')
+        .selectAll()
+        .where('did', '=', subject.did)
+        .where('convoId', '=', subject.convoId)
+        .executeTakeFirstOrThrow()
+      expect(status.tags).toContain('interaction-churn')
     })
   })
 })

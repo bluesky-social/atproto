@@ -30,7 +30,7 @@ describe('moderation-appeals', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const assertSubjectStatus = async (

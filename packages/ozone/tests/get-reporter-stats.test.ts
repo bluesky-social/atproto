@@ -28,7 +28,7 @@ describe('reporter-stats', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getReporterStats = async (

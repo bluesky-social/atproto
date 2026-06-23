@@ -1,99 +1,66 @@
 import HCaptcha from '@hcaptcha/react-hcaptcha'
-import { ForwardedRef, ReactNode, useCallback, useRef, useState } from 'react'
-import {
-  FormCardAsync,
-  FormCardAsyncProps,
-} from '#/components/forms/form-card-async.tsx'
+import { Trans } from '@lingui/react/macro'
+import { CheckIcon } from '@phosphor-icons/react'
+import { useRef, useState } from 'react'
+import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
 import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
-import { mergeRefs } from '#/lib/ref.ts'
-import { Override } from '#/lib/util.ts'
+import { useCurrentLocale } from '#/locales/locale-provider'
 
-export type SignUpHcaptchaFormProps = Override<
-  Omit<
-    FormCardAsyncProps,
-    'append' | 'onSubmit' | 'submitLabel' | 'onCancel' | 'cancelLabel'
-  >,
-  {
+export type VerifyData = {
+  token: string
+  ekey: string
+}
+
+export type SignUpHcaptchaData = {
+  verify: VerifyData
+}
+
+export type SignUpHcaptchaFormProps =
+  WrappedSmartFormProps<SignUpHcaptchaData> & {
     siteKey: string
-
-    token?: string
-    onToken: (token: string, ekey: string) => void
-
-    prevLabel?: ReactNode
-    onPrev?: () => void
-
-    nextLabel?: ReactNode
-    onNext: (signal: AbortSignal) => void | PromiseLike<void>
-
-    ref?: ForwardedRef<HCaptcha>
   }
->
 
 export function SignUpHcaptchaForm({
   siteKey,
-
-  token: tokenInit,
-  onToken,
-
-  prevLabel,
-  onPrev,
-
-  nextLabel,
-  onNext,
-
-  ref,
-
-  // FormCardProps
-  invalid,
-  children,
   ...props
 }: SignUpHcaptchaFormProps) {
   const captchaRef = useRef<HCaptcha>(null)
   const theme = useBrowserColorScheme()
-  const [token, setToken] = useState<string | undefined>(tokenInit)
+  const locale = useCurrentLocale()
 
-  const onLoad = useCallback(() => {
-    // this reaches out to the hCaptcha JS API and runs the
-    // execute function on it. you can use other functions as
-    // documented here:
-    // https://docs.hcaptcha.com/configuration#jsapi
-    captchaRef.current?.execute()
-  }, [])
-
-  const onVerify = useCallback(
-    (token: string, ekey: string) => {
-      setToken(token)
-      onToken(token, ekey)
-    },
-    [onToken],
-  )
-
-  const doSubmit = useCallback(
-    (signal: AbortSignal) => {
-      if (token) return onNext(signal)
-      else if (captchaRef.current) captchaRef.current.execute()
-      else throw new Error('Unable to load hCaptcha')
-    },
-    [token, onNext],
-  )
+  const [verifiedOnMount] = useState(props.values?.verify != null)
 
   return (
-    <FormCardAsync
+    <SmartForm
       {...props}
-      cancelLabel={prevLabel}
-      onCancel={onPrev}
-      submitLabel={nextLabel}
-      onSubmit={doSubmit}
-      append={children}
-      invalid={invalid || !token}
-    >
-      <HCaptcha
-        theme={theme}
-        sitekey={siteKey}
-        onLoad={onLoad}
-        onVerify={onVerify}
-        ref={mergeRefs([ref, captchaRef])}
-      />
-    </FormCardAsync>
+      validate={({ verify }) => {
+        if (verify) return { verify }
+      }}
+      fields={({ set }) =>
+        verifiedOnMount ? (
+          <div className="flex flex-row items-center justify-start gap-2">
+            <CheckIcon className="text-success size-8" />
+            <Trans>Verification successful!</Trans>
+          </div>
+        ) : (
+          <HCaptcha
+            theme={theme}
+            sitekey={siteKey}
+            ref={captchaRef}
+            languageOverride={locale}
+            onLoad={() => {
+              // this reaches out to the hCaptcha JS API and runs the
+              // execute function on it. you can use other functions as
+              // documented here:
+              // https://docs.hcaptcha.com/configuration#jsapi
+              captchaRef.current?.execute()
+            }}
+            onVerify={(token: string, ekey: string) => {
+              set('verify', { token, ekey })
+            }}
+          />
+        )
+      }
+    />
   )
 }

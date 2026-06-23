@@ -1,60 +1,30 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX, useMemo } from 'react'
-import { JsonErrorResponse } from '#/lib/json-client.ts'
+import { JSX, ReactNode } from 'react'
 import { Override } from '#/lib/util.ts'
-
-export type ParsedError = {
-  name: string
-  code?: string
-  message?: string
-  details?: string
-}
-
-// @TODO this should me moved out of utils and be more specific to API errors
-export function apiErrorParser(error: unknown): ParsedError | void {
-  if (error instanceof JsonErrorResponse) {
-    return {
-      name: error.name,
-      code: error.error,
-      message: error.description,
-      details: toJsonSafe(error.payload),
-    }
-  }
-}
 
 export type ErrorDetailsProps = Override<
   JSX.IntrinsicElements['dl'],
   {
-    error: unknown
-    parser?: (error: unknown) => ParsedError | void
+    name?: string
+    code?: string
+    message?: string
+    payload?: string
+    stack?: string
   }
 >
 
 export function ErrorDetails({
-  error,
-  parser = apiErrorParser,
+  name,
+  code,
+  message,
+  payload,
+  stack,
+
+  // dl
   className,
   ...props
 }: ErrorDetailsProps) {
-  const parsed = useMemo<ParsedError>(() => {
-    const parsed = parser?.(error)
-    if (parsed) return parsed
-
-    if (error instanceof Error) {
-      return {
-        name: error.name,
-        message: error.message,
-        details: error.stack,
-      }
-    }
-
-    return {
-      name: 'UnknownError',
-      details: toJsonSafe(error),
-    }
-  }, [error, parser])
-
   return (
     <dl
       className={clsx(
@@ -63,53 +33,54 @@ export function ErrorDetails({
       )}
       {...props}
     >
-      <dt className="font-semibold">
-        <Trans>Name</Trans>
-      </dt>
-      <dd>
-        <code>{parsed.name}</code>
-      </dd>
-
-      {parsed.code && (
-        <>
-          <dt className="font-semibold">
-            <Trans>Code</Trans>
-          </dt>
-          <dd>
-            <code>{parsed.code}</code>
-          </dd>
-        </>
+      {name && (
+        <DetailRow label={<Trans context="Error">Name</Trans>}>
+          <code>{name}</code>
+        </DetailRow>
       )}
 
-      {parsed.message && (
-        <>
-          <dt className="font-semibold">
-            <Trans>Message</Trans>
-          </dt>
-          <dd>{parsed.message}</dd>
-        </>
+      {code && (
+        <DetailRow label={<Trans context="Error">Code</Trans>}>
+          <code>{code}</code>
+        </DetailRow>
       )}
 
-      {parsed.details && (
-        <>
-          <dt className="font-semibold">
-            <Trans>Stack</Trans>
-          </dt>
-          <dd className="max-h-[200px] overflow-auto">
-            <code>
-              <pre>{parsed.details}</pre>
-            </code>
-          </dd>
-        </>
+      {message && (
+        <DetailRow label={<Trans context="Error">Message</Trans>}>
+          {message}
+        </DetailRow>
+      )}
+
+      {payload && (
+        <DetailRow label={<Trans context="Error">Payload</Trans>}>
+          <code className="max-h-[200px] overflow-auto">
+            <pre>{payload}</pre>
+          </code>
+        </DetailRow>
+      )}
+
+      {stack && (
+        <DetailRow label={<Trans context="Error">Stack</Trans>}>
+          <code className="max-h-[200px] overflow-auto">
+            <pre>{stack}</pre>
+          </code>
+        </DetailRow>
       )}
     </dl>
   )
 }
 
-function toJsonSafe(value: unknown): string | undefined {
-  try {
-    return JSON.stringify(value, null, 2)
-  } catch {
-    return undefined
-  }
+function DetailRow({
+  children,
+  label,
+}: {
+  children: ReactNode
+  label: ReactNode
+}) {
+  return (
+    <>
+      <dt className="font-semibold">{label}</dt>
+      <dd>{children}</dd>
+    </>
+  )
 }

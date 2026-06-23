@@ -1,5 +1,9 @@
 import {
+  $Typed,
   AtpAgent,
+  ChatBskyConvoDefs,
+  ComAtprotoAdminDefs,
+  ComAtprotoRepoStrongRef,
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
@@ -85,7 +89,12 @@ export class ModeratorClient {
   async emitEvent(
     opts: {
       event: TakeActionInput['event']
-      subject: TakeActionInput['subject']
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       reason?: string
       createdBy?: string
@@ -165,7 +174,12 @@ export class ModeratorClient {
 
   async performTakedown(
     opts: {
-      subject: TakeActionInput['subject']
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
       subjectBlobCids?: TakeActionInput['subjectBlobCids']
       durationInHours?: number
       acknowledgeAccountSubjects?: boolean

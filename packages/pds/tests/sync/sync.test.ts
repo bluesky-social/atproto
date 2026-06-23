@@ -39,7 +39,7 @@ describe('repo sync', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('creates and syncs some records', async () => {

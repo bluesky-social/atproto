@@ -1,77 +1,136 @@
+import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, createContext, useContext, useMemo } from 'react'
+import { FormEvent, JSX, MouseEventHandler, ReactNode, useMemo } from 'react'
+import { errorCardRender } from '#/components/utils/error-card.tsx'
+import { apiErrorParser } from '#/lib/api-error-parser.ts'
+import { ErrorParser } from '#/lib/error-parser.ts'
 import { Override } from '#/lib/util.ts'
+import { Button, ButtonColor } from './button.tsx'
+import { FormContext, FormContextValue } from './form-context.tsx'
 
-export type FormContextValue = {
-  disabled: boolean
-}
+export type ErrorRenderer = (props: {
+  error: unknown
+  parser: ErrorParser
+}) => ReactNode
 
-export const FormContext = createContext<FormContextValue>({
-  disabled: false,
-})
-FormContext.displayName = 'FormContext'
-
-export function useFormContext() {
-  return useContext(FormContext)
-}
+export { errorCardRender }
+export type { ErrorParser }
 
 export type FormCardProps = Override<
   JSX.IntrinsicElements['form'],
   {
     disabled?: boolean
-    append?: ReactNode
-    prepend?: ReactNode
-    cancel?: ReactNode
+    loading?: boolean
     actions?: ReactNode
+
+    onSubmit?: (event: FormEvent<HTMLFormElement>) => void
+    submitLabel?: ReactNode
+    submitColor?: ButtonColor
+    submittable?: boolean
+
+    onCancel?: MouseEventHandler<HTMLButtonElement>
+    cancelLabel?: ReactNode
+
+    onBack?: () => void
+    backLabel?: ReactNode
+
+    error?: Error
+    hideError?: boolean
+    errorParser?: ErrorParser
+    errorRender?: ErrorRenderer
   }
 >
 
 export function FormCard({
-  actions,
-  cancel,
-  append,
-  children,
-  prepend,
   disabled: disabledProp = false,
+  loading = false,
+  actions,
+
+  submitLabel = <Trans>Submit</Trans>,
+  submitColor = 'primary',
+  submittable = true,
+
+  onCancel = undefined,
+  cancelLabel = <Trans>Cancel</Trans>,
+
+  onBack,
+  backLabel = <Trans>Back</Trans>,
+
+  error,
+  hideError = false,
+  // @TODO decouple this component from "api" by injecting this as a prop where relevant.
+  errorParser = apiErrorParser,
+  errorRender = errorCardRender,
 
   // form
-  inert = disabledProp,
+  inert,
+  children,
+  onSubmit,
   className,
   ...props
 }: FormCardProps) {
   // The form is disabled when either the `disabled` or `inert` prop is true.
-  const disabled = disabledProp || inert
+  const disabled = Boolean(inert || disabledProp || loading)
 
   const contextValue = useMemo<FormContextValue>(
     () => ({ disabled }),
     [disabled],
   )
 
+  const errorNode =
+    error != null && !hideError
+      ? errorRender({ error, parser: errorParser })
+      : null
+
   return (
     <form
-      inert={inert}
-      className={clsx('flex flex-col gap-4', className)}
       {...props}
+      action={undefined}
+      inert={disabled}
+      className={clsx('flex flex-col gap-4', className)}
+      onSubmit={(event) => {
+        if (!event.defaultPrevented) {
+          // Perform native HTML5 validation.
+          const isValid = event.currentTarget.reportValidity()
+
+          if (disabled || !isValid || !submittable) {
+            event.preventDefault()
+          } else {
+            onSubmit?.(event)
+          }
+        }
+      }}
     >
       <FormContext value={contextValue}>
-        {prepend && <div key="prepend">{prepend}</div>}
-
         <div key="children" className="space-y-4">
           {children}
         </div>
 
-        {append && <div key="append">{append}</div>}
+        {errorNode && <div key="error">{errorNode}</div>}
 
-        {(actions || cancel) && (
-          <div
-            key="buttons"
-            className="flex flex-row-reverse flex-wrap items-center justify-end space-x-2 space-x-reverse"
-          >
-            {actions}
-            <div className="flex-auto" />
-            {cancel}
-          </div>
-        )}
+        <div
+          key="actions"
+          className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
+        >
+          {submitLabel && (
+            <Button
+              type="submit"
+              color={submitColor}
+              loading={loading}
+              disabled={disabled || !submittable}
+            >
+              {submitLabel}
+            </Button>
+          )}
+          {actions}
+          <div className="flex-auto" />
+          {onCancel && cancelLabel ? (
+            <Button onClick={onCancel}>{cancelLabel}</Button>
+          ) : null}
+          {onBack && backLabel ? (
+            <Button onClick={onBack}>{backLabel}</Button>
+          ) : null}
+        </div>
       </FormContext>
     </form>
   )

@@ -88,7 +88,7 @@ export class RecordReader {
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.collection', '=', collection)
-      .if(!includeSoftDeleted, (qb) =>
+      .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
       .orderBy('record.rkey', reverse ? 'asc' : 'desc')
@@ -119,7 +119,7 @@ export class RecordReader {
   }
 
   async getRecord(
-    uri: AtUri,
+    uri: AtUri | AtUriString,
     cid: string | null,
     includeSoftDeleted = false,
   ): Promise<{
@@ -135,7 +135,7 @@ export class RecordReader {
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.uri', '=', uri.toString())
       .selectAll()
-      .if(!includeSoftDeleted, (qb) =>
+      .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
     if (cid) {
@@ -162,7 +162,7 @@ export class RecordReader {
       .selectFrom('record')
       .select('uri')
       .where('record.uri', '=', uri.toString())
-      .if(!includeSoftDeleted, (qb) =>
+      .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
     if (cid) {

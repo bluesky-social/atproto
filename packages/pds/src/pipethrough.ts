@@ -1,7 +1,7 @@
 import { IncomingHttpHeaders, ServerResponse } from 'node:http'
 import { PassThrough, Readable, finished } from 'node:stream'
 import { Request } from 'express'
-import { Dispatcher } from 'undici'
+import { Agent, Dispatcher, Pool, interceptors } from 'undici'
 import {
   decodeStream,
   getServiceEndpoint,
@@ -20,11 +20,48 @@ import {
   excludeErrorResult,
   parseReqNsid,
 } from '@atproto/xrpc-server'
+import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { isAccessPrivileged } from './auth-scope.js'
+import { ProxyConfig } from './config/config.js'
 import { AppContext } from './context.js'
 import { chat, com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger.js'
+
+export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
+  const agent = new Agent({
+    allowH2: cfg.allowHTTP2,
+    headersTimeout: cfg.headersTimeout,
+    maxResponseSize: cfg.maxResponseSize,
+    bodyTimeout: cfg.bodyTimeout,
+    factory: cfg.disableSsrfProtection
+      ? undefined
+      : (origin, opts) => {
+          const { protocol, hostname } =
+            origin instanceof URL ? origin : new URL(origin)
+          if (protocol !== 'https:') {
+            throw new Error(`Forbidden protocol "${protocol}"`)
+          }
+          if (isUnicastIp(hostname) === false) {
+            throw new Error('Hostname resolved to non-unicast address')
+          }
+          return new Pool(origin, opts)
+        },
+    connect: {
+      lookup: cfg.disableSsrfProtection ? undefined : unicastLookup,
+    },
+  })
+
+  return agent.compose(
+    cfg.maxRetries > 0
+      ? interceptors.retry({
+          statusCodes: [], // Only retry on socket errors
+          methods: ['GET', 'HEAD'],
+          maxRetries: cfg.maxRetries,
+        })
+      : (dispatch) => dispatch,
+  )
+}
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({

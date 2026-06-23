@@ -51,7 +51,7 @@ describe('repo subscribe repos', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {

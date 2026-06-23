@@ -1,3 +1,4 @@
+import { atUri } from '@atproto/lex'
 import {
   LegacyBlobRef,
   LexMap,
@@ -5,7 +6,6 @@ import {
   isLegacyBlobRef,
   parseCid,
 } from '@atproto/lex-data'
-import { AtUri } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
@@ -90,7 +90,7 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const uri = AtUri.make(did, collection, rkey)
+      const uri = atUri(did, collection, rkey)
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
       const swapRecordCid =
         typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord

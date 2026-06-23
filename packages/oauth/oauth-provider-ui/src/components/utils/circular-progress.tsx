@@ -93,7 +93,7 @@ export function CircularProgress({
         strokeDasharray={circumference}
         strokeDashoffset={strokeDashoffset}
         strokeLinecap="round"
-        className="transition-all duration-100 ease-linear"
+        className="transition-all duration-1000 ease-linear"
         style={{
           transform:
             progressDirection === 'counter-clockwise'

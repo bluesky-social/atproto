@@ -1,5 +1,24 @@
 # @atproto/common
 
+## 0.6.3
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/lex-cbor@0.1.1
+  - @atproto/lex-data@0.1.2
+  - @atproto/common-web@0.5.1
+
+## 0.6.2
+
+### Patch Changes
+
+- [#5080](https://github.com/bluesky-social/atproto/pull/5080) [`b2c098f`](https://github.com/bluesky-social/atproto/commit/b2c098fdfa26137bb6f7d092ef89757e39748353) Thanks [@devinivy](https://github.com/devinivy)! - Make rmIfExists() more robust to partial failures.
+
+- [#5078](https://github.com/bluesky-social/atproto/pull/5078) [`cc329bf`](https://github.com/bluesky-social/atproto/commit/cc329bf55c658752675d561dba792fedbe9c2626) Thanks [@jcalabro](https://github.com/jcalabro)! - Add `coalesceByteStream` utility to coalesce a byte stream into chunks with a minimal size.
+
 ## 0.6.1
 
 ### Patch Changes

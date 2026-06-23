@@ -37,7 +37,7 @@ describe('admin get multiple subjects with all relevant details', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

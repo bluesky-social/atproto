@@ -65,7 +65,7 @@ describe('account-strikes', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('tracks strikes and exposes them through queryStatuses and queryEvents', async () => {

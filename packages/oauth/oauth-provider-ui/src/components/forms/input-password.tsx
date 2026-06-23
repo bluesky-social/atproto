@@ -1,20 +1,26 @@
 import { useLingui } from '@lingui/react/macro'
 import { KeyIcon } from '@phosphor-icons/react'
-import { ChangeEvent, useCallback, useRef, useState } from 'react'
-import { mergeRefs } from '#/lib/ref.ts'
+import { composeEventHandlers } from '@radix-ui/primitive'
+import { composeRefs } from '@radix-ui/react-compose-refs'
+import { useRef, useState } from 'react'
 import { Override } from '#/lib/util.ts'
 import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputPasswordProps = Override<
-  Omit<InputTextProps, 'type' | 'children'>,
+  Omit<InputTextProps, 'type'> & {
+    value?: string
+    defaultValue?: string
+  },
   {
+    onPassword?: (password: undefined | string) => void
     autoHide?: boolean
   }
 >
 
 export function InputPassword({
   autoHide = true,
+  onPassword,
 
   // InputTextProps
   onBlur,
@@ -22,8 +28,6 @@ export function InputPassword({
   append,
   autoComplete = 'current-password',
   icon = <KeyIcon className="w-5" weight="bold" />,
-  value,
-  defaultValue = value,
   ref,
   title,
   dir = 'auto',
@@ -35,38 +39,23 @@ export function InputPassword({
   const { t } = useLingui()
   const inputRef = useRef<HTMLInputElement>(null)
   const [visible, setVisible] = useState<boolean>(false)
-  const [password, setPassword] = useState<string>(
-    typeof defaultValue === 'string' ? defaultValue : '',
-  )
-
-  const doChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      onChange?.(event)
-      setPassword(event.target.value)
-    },
-    [onChange],
-  )
 
   return (
     <InputText
       {...props}
       title={title ?? t`Password`}
-      ref={mergeRefs([ref, inputRef])}
+      ref={composeRefs(ref, inputRef)}
       dir={dir}
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}
       spellCheck={spellCheck}
       icon={icon}
-      onBlur={
-        autoHide
-          ? (event) => {
-              onBlur?.(event)
-              if (!event.defaultPrevented) setVisible(false)
-            }
-          : onBlur
-      }
-      value={password}
-      onChange={doChange}
+      onBlur={composeEventHandlers(onBlur, () => {
+        if (autoHide) setVisible(false)
+      })}
+      onChange={composeEventHandlers(onChange, ({ target }) => {
+        onPassword?.(target.validity.valid ? target.value : undefined)
+      })}
       type={visible ? 'text' : 'password'}
       autoComplete={autoComplete}
       append={

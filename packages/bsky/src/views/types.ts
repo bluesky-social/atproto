@@ -33,6 +33,13 @@ export const isVideoEmbedType = app.bsky.embed.video.$isTypeOf
 export type VideoEmbed = app.bsky.embed.video.Main
 export type VideoEmbedView = app.bsky.embed.video.View
 
+export const isGalleryEmbedType = app.bsky.embed.gallery.$isTypeOf
+export type GalleryEmbed = app.bsky.embed.gallery.Main
+export type GalleryEmbedView = app.bsky.embed.gallery.View
+export const isGalleryImageEmbedType = app.bsky.embed.gallery.image.$isTypeOf
+export type GalleryImageEmbed = app.bsky.embed.gallery.Image
+export type GalleryImageEmbedView = app.bsky.embed.gallery.ViewImage
+
 export const isExternalEmbedType = app.bsky.embed.external.$isTypeOf
 export type ExternalEmbed = app.bsky.embed.external.Main
 export type ExternalEmbedView = app.bsky.embed.external.View
@@ -57,6 +64,7 @@ export type RecordWithMediaEmbedView = app.bsky.embed.recordWithMedia.View
 export type Embed =
   | ImagesEmbed
   | VideoEmbed
+  | GalleryEmbed
   | ExternalEmbed
   | RecordEmbed
   | RecordWithMedia
@@ -64,6 +72,7 @@ export type Embed =
 export type EmbedView =
   | ImagesEmbedView
   | VideoEmbedView
+  | GalleryEmbedView
   | ExternalEmbedView
   | RecordEmbedView
   | RecordWithMediaView

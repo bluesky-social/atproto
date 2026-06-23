@@ -1,5 +1,73 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.1
+
+### Patch Changes
+
+- [#5111](https://github.com/bluesky-social/atproto/pull/5111) [`abab1ca`](https://github.com/bluesky-social/atproto/commit/abab1ca4c12dba2b3fbaa37c0340aca4c83f861e) Thanks [@nilaallj](https://github.com/nilaallj)! - Add Swedish (`sv`) translations
+
+## 0.8.0
+
+### Minor Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `Account` properties to contain strongly typed `did`
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to deactivate and delete account from the account manager interface
+
+### Patch Changes
+
+- [#5106](https://github.com/bluesky-social/atproto/pull/5106) [`6fcf9b2`](https://github.com/bluesky-social/atproto/commit/6fcf9b20d8ed4b30d63f97b9311e81c25f12b684) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use setTimeout and an HTML anchor as redirect strategy
+
+- [#4537](https://github.com/bluesky-social/atproto/pull/4537) [`61c0066`](https://github.com/bluesky-social/atproto/commit/61c006651b874558c1b24110b01806067b93b49a) Thanks [@quiple](https://github.com/quiple)! - Add Corean (ko) translations
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix credentials error not being displayed in sign-in form
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Keep notifications message in sync with the current locale
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `consentRequired` logic from OAuth consent flow UI
+
+- [#5059](https://github.com/bluesky-social/atproto/pull/5059) [`dd77cdd`](https://github.com/bluesky-social/atproto/commit/dd77cdd4d728c6d9fa0429629cb66266ec88ca96) Thanks [@dolciss](https://github.com/dolciss)! - Add Japanese (ja) translations
+
+- [#4331](https://github.com/bluesky-social/atproto/pull/4331) [`22b0c43`](https://github.com/bluesky-social/atproto/commit/22b0c43401d8c6b8e622e1737333671e8847674f) Thanks [@tdelgado00](https://github.com/tdelgado00)! - Add Spanish (es) translations
+
+- [#5103](https://github.com/bluesky-social/atproto/pull/5103) [`55172ab`](https://github.com/bluesky-social/atproto/commit/55172aba771b54d5eed73e5b314bf7c3a2f7364a) Thanks [@ryanda9910](https://github.com/ryanda9910)! - Fix the OAuth consent screen overstating what an application can do. A request
+  scoped to a few specific `app.bsky.*` collections (e.g. only creating
+  `app.bsky.feed.post` records) no longer claims the app can "Manage your profile,
+  posts, likes and follows". The blanket wording is now reserved for requests that
+  actually grant broad write access (any collection or `transition:generic`);
+  narrowly scoped Bluesky requests are described as accessing specific parts of the
+  account and surface the exact per-collection breakdown instead.
+
+## 0.7.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- [#5105](https://github.com/bluesky-social/atproto/pull/5105) [`1d0f332`](https://github.com/bluesky-social/atproto/commit/1d0f3325e09460586ec2d728410f9cdca9e09714) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Always show consent screen at the end of oauth flows
+
+## 0.7.3
+
+### Patch Changes
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve UX when the browser fails to redirect the user after the OAuth flow ends
+
+- [#5089](https://github.com/bluesky-social/atproto/pull/5089) [`85b4eb8`](https://github.com/bluesky-social/atproto/commit/85b4eb84aefaa293e93dcbf976b7b60cb47747fe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix error page no longer showing "This request has expired" when navigating back to the authorization page
+
+## 0.7.2
+
+### Patch Changes
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Removal of dead and deprecated code
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve form related UX (and DX) by using a unified form component that properly surfaces submission errors.
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to change the user handle through the account manager interface
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Display an error message if "Deny access" causes an error (e.g. network)
+
+- [#4986](https://github.com/bluesky-social/atproto/pull/4986) [`6c63f7d`](https://github.com/bluesky-social/atproto/commit/6c63f7dca6d37c22a8dd5d579ad6a72e532fc372) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove the need to complete the hCaptcha again when there is a form submission error, or when the user navigates "back" to a previous step, then "forward" again to the step with the hCaptcha.
+
 ## 0.7.1
 
 ### Patch Changes

@@ -40,7 +40,7 @@ describe('invertible ops', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('works', async () => {

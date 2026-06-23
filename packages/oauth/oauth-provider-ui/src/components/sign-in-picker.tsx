@@ -1,16 +1,16 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon, CaretRightIcon } from '@phosphor-icons/react'
-import { ReactNode } from 'react'
+import { clsx } from 'clsx'
+import { JSX, ReactNode } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import { Override } from '#/lib/util.ts'
 import { Button } from './forms/button.tsx'
-import { FormCard, FormCardProps } from './forms/form-card.tsx'
 import { InputContainer } from './forms/input-container.tsx'
 import { AccountCard } from './utils/account-card.tsx'
-import { getAccountHandle } from './utils/account-handle.tsx'
+import { stringifyHandle } from './utils/handle.tsx'
 
 export type SignInPickerProps = Override<
-  Omit<FormCardProps, 'cancel' | 'actions' | 'append'>,
+  JSX.IntrinsicElements['div'],
   {
     sessions: readonly Session[]
 
@@ -33,35 +33,21 @@ export function SignInPicker({
 
   backLabel,
 
-  // FormCard
+  // div
   children,
+  className,
   ...props
 }: SignInPickerProps) {
   const { t } = useLingui()
   return (
-    <FormCard
-      {...props}
-      append={children}
-      actions={
-        onSignUp && (
-          <Button onClick={onSignUp} color="primary" transparent>
-            <Trans>Sign up</Trans>
-          </Button>
-        )
-      }
-      cancel={
-        onBack && (
-          <Button onClick={onBack}>{backLabel || <Trans>Back</Trans>}</Button>
-        )
-      }
-    >
+    <div {...props} className={clsx('flex flex-col gap-4', className)}>
       <p className="text-text-light text-sm font-medium">
         <Trans>Sign in as...</Trans>
       </p>
 
       {sessions.map((session) => (
         <AccountCard
-          key={session.account.sub}
+          key={session.account.did}
           account={session.account}
           append={<CaretRightIcon aria-hidden className="h-4" />}
           onAction={(event) => {
@@ -70,7 +56,7 @@ export function SignInPicker({
 
             onSession(session)
           }}
-          aria-label={t`Sign in as ${session.account.name ?? getAccountHandle(session.account) ?? session.account.sub}`}
+          aria-label={t`Sign in as ${session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did}`}
         />
       ))}
 
@@ -87,6 +73,23 @@ export function SignInPicker({
           </span>
         </InputContainer>
       )}
-    </FormCard>
+
+      {children}
+
+      <div
+        key="actions"
+        className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
+      >
+        {onSignUp && (
+          <Button onClick={onSignUp} color="primary" transparent>
+            <Trans>Sign up</Trans>
+          </Button>
+        )}
+        <div className="flex-auto" />
+        {onBack && (
+          <Button onClick={onBack}>{backLabel || <Trans>Back</Trans>}</Button>
+        )}
+      </div>
+    </div>
   )
 }

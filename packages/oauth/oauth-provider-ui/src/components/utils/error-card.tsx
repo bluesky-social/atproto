@@ -1,52 +1,85 @@
+import { msg } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useEffect, useState } from 'react'
-import { useErrorMessage } from '#/hooks/use-error-message.ts'
-import { Action, Admonition } from './admonition.tsx'
+import { composeEventHandlers } from '@radix-ui/primitive'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
+import { Override } from '#/lib/util.ts'
+import { Admonition, AdmonitionAction, AdmonitionProps } from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
 
-export type ErrorCardProps = {
-  className?: string
-  children?: ReactNode
-  error: unknown
-  reset?: () => void
-}
+export type { ErrorParser, ParsedError }
+
+export type ErrorCardProps = Override<
+  Omit<AdmonitionProps, 'role' | 'append' | 'action'>,
+  {
+    error: unknown
+    retry?: () => void
+    retryLabel?: ReactNode
+    parser?: ErrorParser
+  }
+>
 
 export function ErrorCard({
   error,
-  reset,
-  className,
-  children,
-}: ErrorCardProps) {
-  const [inputCount, setInputCount] = useState(0)
-  // Every 5th input will toggle showing the details
-  const showDetails = ((inputCount / 5) | 0) % 2 === 1
+  retry,
+  retryLabel,
+  parser,
 
-  const errorMessage = useErrorMessage(error)
+  // Admonition
+  children,
+  onClick,
+  ...props
+}: ErrorCardProps) {
+  const { _ } = useLingui()
+  const [clickCount, setClickCount] = useState(0)
+
+  // Every 5th click; toggle showing the details
+  const showDetails = ((clickCount / 5) | 0) % 2 === 1
+
+  const parsed = useMemo<ParsedError>(
+    () => parser?.(error) ?? parseError(error),
+    [parser, error],
+  )
 
   useEffect(() => {
     // For debugging purposes
-    console.warn('Displayed error details:', error)
+    console.warn('Displayed error:', parsed)
 
-    // Reset the input count when the error changes
-    setInputCount(0)
-  }, [error])
+    // Reset the click count when the error changes
+    setClickCount(0)
+  }, [parsed])
 
   return (
     <Admonition
+      {...props}
       role="alert"
-      className={className}
-      onClick={() => setInputCount((c) => c + 1)}
-      title={errorMessage}
-      append={showDetails && <ErrorDetails error={error} />}
+      onClick={composeEventHandlers(onClick, () => {
+        setClickCount((c) => c + 1)
+      })}
+      append={
+        <>
+          {children}
+          {showDetails && (
+            <ErrorDetails
+              name={parsed.name}
+              code={parsed.code}
+              message={parsed.message}
+              payload={parsed.payload}
+              stack={parsed.stack}
+            />
+          )}
+        </>
+      }
       action={
-        reset != null && (
-          <Action onClick={() => reset()}>
-            <Trans>Retry</Trans>
-          </Action>
+        retry != null && (
+          <AdmonitionAction onClick={() => retry()}>
+            {retryLabel || <Trans>Retry</Trans>}
+          </AdmonitionAction>
         )
       }
     >
-      {children}
+      {_(parsed.description ?? msg`An unknown error occurred`)}
     </Admonition>
   )
 }

@@ -1,3 +1,4 @@
+import { Did } from '@atproto/did'
 import { Jwks } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -9,11 +10,13 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import {
+  DeleteAccountConfirmInput,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
   UpdateEmailConfirmInput,
   UpdateEmailRequestInput,
+  UpdateHandleData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account/account-store.js'
@@ -37,7 +40,6 @@ import {
 } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable, OmitKey } from './lib/util/type.js'
-import { Sub } from './oidc/sub.js'
 import { RequestId } from './request/request-id.js'
 import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenClaims } from './token/token-claims.js'
@@ -54,6 +56,7 @@ export {
   type ClientId,
   type ClientInfo,
   type DeviceId,
+  type Did,
   type DpopProof,
   type HcaptchaClientTokens,
   type HcaptchaConfig,
@@ -74,8 +77,8 @@ export {
   type SignInData,
   type SignUpData,
   type SignUpInput,
-  type Sub,
   type TokenClaims,
+  type UpdateHandleData,
 }
 
 export type OAuthHooks = {
@@ -181,6 +184,110 @@ export type OAuthHooks = {
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests a handle change, before the change
+   * is performed on the account store. Only triggered with authenticated
+   * sessions, so the `account` is always available.
+   */
+  onUpdateHandle?: (data: {
+    input: UpdateHandleData
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user successfully changed their handle on the
+   * account store.
+   */
+  onUpdatedHandle?: (data: {
+    input: UpdateHandleData
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests account deactivation, before the
+   * account is deactivated on the account store.
+   */
+  onDeactivateAccount?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user successfully deactivated their account on
+   * the account store.
+   */
+  onDeactivatedAccount?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests account reactivation, before the
+   * account is reactivated on the account store.
+   */
+  onReactivateAccount?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user successfully reactivated their account on
+   * the account store.
+   */
+  onReactivatedAccount?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests account deletion, before the
+   * confirmation email is dispatched on the account store.
+   */
+  onDeleteAccountRequest?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user has requested account deletion and the
+   * confirmation email has been dispatched.
+   */
+  onDeleteAccountRequested?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user confirms account deletion, before the
+   * account is actually deleted on the account store.
+   */
+  onDeleteAccountConfirm?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called after a user has successfully deleted their account
+   * on the account store.
+   */
+  onDeleteAccountConfirmed?: (data: {
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+    input: DeleteAccountConfirmInput
   }) => Awaitable<void>
 
   /**
@@ -311,7 +418,7 @@ export type OAuthHooks = {
   onSignInFailed?: (data: {
     data: SignInData
     error: InvalidRequestError
-    sub: Sub | null
+    did: Did | null
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     clientId?: ClientId
