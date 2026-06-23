@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig/jest.tsconfig.json",
   "compilerOptions": {
+    "noImplicitAny": false,
     "rootDir": ".",
   },
   "include": ["./tests"],

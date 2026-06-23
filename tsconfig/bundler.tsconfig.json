@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": false, // Conflicts with "paths" aliases; this is a noop with noEmit anyways
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,

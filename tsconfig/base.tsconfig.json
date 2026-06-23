@@ -8,7 +8,7 @@
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": false,
     "noFallthroughCasesInSwitch": false,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "noImplicitReturns": false,
     "noUnusedLocals": true,
     "noUnusedParameters": false,
@@ -24,6 +24,10 @@
     "lib": [],
     "moduleResolution": "node16",
     "resolveJsonModule": true,
+    // @TODO Configure eslint to force consistent import extensions (.ts)
+    "rewriteRelativeImportExtensions": true,
+    // @TODO We ideally should enable this
+    "verbatimModuleSyntax": false,
     "types": [],
 
     "noErrorTruncation": true,

@@ -66,14 +66,14 @@ function handleError(err: unknown) {
   if (err instanceof TypeError) throw err
 
   // If the hostname does not resolve, return null
-  if (err instanceof Error) {
-    if (err['code'] === 'ENOTFOUND') return null
+  if (err instanceof Error && 'code' in err) {
+    if (err.code === 'ENOTFOUND') return null
 
     // Hostname is not a valid domain name
-    if (err['code'] === 'EBADNAME') throw err
+    if (err.code === 'EBADNAME') throw err
 
     // DNS server unreachable
-    // if (err['code'] === 'ETIMEOUT') throw err
+    // if (err.code === 'ETIMEOUT') throw err
   }
 
   // Historically, errors were not thrown here. A "null" value indicates to the

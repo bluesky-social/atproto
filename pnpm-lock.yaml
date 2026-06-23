@@ -519,6 +519,9 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
+      '@types/compression':
+        specifier: ^1.8.1
+        version: 1.8.1
       '@types/cors':
         specifier: ^2.8.12
         version: 2.8.12
@@ -763,6 +766,12 @@ importers:
       '@jest/globals':
         specifier: ^30.0.0
         version: 30.4.1
+      '@types/cors':
+        specifier: ^2.8.19
+        version: 2.8.19
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.21
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -5584,6 +5593,9 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
+  '@types/compression@1.8.1':
+    resolution: {integrity: sha512-kCFuWS0ebDbmxs0AXYn6e2r2nrGAb5KwQhknjSPSPgJcGd8+HVSILlUyFhGqML2gk39HcG7D1ydW9/qpYkN00Q==}
+
   '@types/connect@3.4.35':
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
 
@@ -5592,6 +5604,9 @@ packages:
 
   '@types/cors@2.8.12':
     resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
+
+  '@types/cors@2.8.19':
+    resolution: {integrity: sha512-mFNylyeyqN93lfe/9CSxOGREz8cpzAhH+E93xJ4xWQf62V8sQ/24reV2nyzUWM6H6Xji+GGHpkbLe7pVoUEskg==}
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
@@ -15760,6 +15775,11 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
+  '@types/compression@1.8.1':
+    dependencies:
+      '@types/express': 4.17.21
+      '@types/node': 22.19.17
+
   '@types/connect@3.4.35':
     dependencies:
       '@types/node': 22.19.17
@@ -15767,6 +15787,10 @@ snapshots:
   '@types/cookie@0.6.0': {}
 
   '@types/cors@2.8.12': {}
+
+  '@types/cors@2.8.19':
+    dependencies:
+      '@types/node': 22.19.17
 
   '@types/deep-eql@4.0.2': {}
 

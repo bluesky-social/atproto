@@ -16,3 +16,6 @@ export function matchesIdentifier<D extends string, I extends string>(
         candidate.startsWith(did) &&
         candidate.endsWith(id)
 }
+
+export const ifNumber = (value: unknown): undefined | number =>
+  typeof value === 'number' ? value : undefined

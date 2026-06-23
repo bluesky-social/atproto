@@ -35,7 +35,6 @@
       "default": "./dist/index.js"
     },
     "./nodejs": {
-      "typescript": "./src/index.ts",
       "types": "./dist/nodejs.d.ts",
       "default": "./dist/nodejs.js"
     }

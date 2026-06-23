@@ -74,7 +74,7 @@ msgstr "2단계 인증"
 msgid "A local app"
 msgstr "로컬 앱"
 
-#: src/lib/api.ts:466
+#: src/lib/api.ts:467
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
@@ -159,7 +159,7 @@ msgstr "기기에 설치된 애플리케이션"
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"
 
-#: src/lib/api.ts:354
+#: src/lib/api.ts:355
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
@@ -391,7 +391,7 @@ msgstr "새 계정 만들기"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "계정에 연결된 공개 데이터를 생성, 갱신, 삭제할 수 있습니다"
 
-#: src/lib/api.ts:435
+#: src/lib/api.ts:436
 msgid "Custom domains are not supported"
 msgstr ""
 
@@ -1119,35 +1119,35 @@ msgstr ""
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "AT 프로토콜 네트워크는 외부 서비스와 통신할 때 사용자를 고유하게 식별할 수 있는 인증 메커니즘을 사용합니다. 이는 일반적으로 대화 메시지, 피드 또는 관리자 콘텐츠와 같이 계정과 연결된 데이터를 검색하거나 변경하는 데 사용됩니다. 애플리케이션은 사용자를 대신하여 다음과 같은 인증된 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
-#: src/lib/api.ts:393
+#: src/lib/api.ts:394
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "제출한 정보가 올바르지 않습니다. 입력 내용을 확인하고 다시 시도해 주세요."
 
-#: src/lib/api.ts:423
+#: src/lib/api.ts:424
 msgid "The domain name is not allowed"
 msgstr "허용되지 않는 도메인 이름입니다"
 
-#: src/lib/api.ts:493
+#: src/lib/api.ts:494
 msgid "The invite code is not valid"
 msgstr "잘못된 초대 코드입니다"
 
-#: src/lib/api.ts:352
+#: src/lib/api.ts:353
 msgid "The server encountered an unexpected error. Please try again."
 msgstr ""
 
-#: src/lib/api.ts:425
+#: src/lib/api.ts:426
 msgid "The username contains inappropriate language"
 msgstr ""
 
-#: src/lib/api.ts:431
+#: src/lib/api.ts:432
 msgid "The username could not be resolved"
 msgstr ""
 
-#: src/lib/api.ts:429
+#: src/lib/api.ts:430
 msgid "The username is already in use"
 msgstr ""
 
-#: src/lib/api.ts:421
+#: src/lib/api.ts:422
 msgid "The username is invalid"
 msgstr ""
 
@@ -1163,21 +1163,21 @@ msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다.
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음과 같은 권한(범위)을 요청합니다:"
 
-#: src/lib/api.ts:378
+#: src/lib/api.ts:379
 msgid "This authorization request has been denied. Please try again."
 msgstr "승인 요청이 거부되었습니다. 다시 시도해 주세요."
 
-#: src/lib/api.ts:557
+#: src/lib/api.ts:558
 msgid "This email is already used"
 msgstr "이미 사용 중인 이메일입니다"
 
-#: src/lib/api.ts:363
-#: src/lib/api.ts:514
-#: src/lib/api.ts:545
+#: src/lib/api.ts:364
+#: src/lib/api.ts:515
+#: src/lib/api.ts:546
 msgid "This sign-in session has expired"
 msgstr "로그인 세션이 만료되었습니다"
 
-#: src/lib/api.ts:427
+#: src/lib/api.ts:428
 msgid "This username is reserved"
 msgstr ""
 
@@ -1361,7 +1361,7 @@ msgstr "이게 무슨 뜻인가요?"
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphere 계정이란?"
 
-#: src/lib/api.ts:529
+#: src/lib/api.ts:530
 msgid "Wrong identifier or password"
 msgstr "잘못된 아이디 또는 비밀번호입니다"
 

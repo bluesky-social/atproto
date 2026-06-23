@@ -1,5 +1,5 @@
 {
-  "extends": ["../../../tsconfig/node-exec.tsconfig.json"],
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {

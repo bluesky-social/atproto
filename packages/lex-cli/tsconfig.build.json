@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig/node-exec.tsconfig.json",
+  "extends": "../../tsconfig/node.tsconfig.json",
   "compilerOptions": {
     "composite": true,
     "rootDir": "./src",

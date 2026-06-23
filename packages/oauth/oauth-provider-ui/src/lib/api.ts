@@ -279,7 +279,7 @@ export class Api extends JsonClient<ApiEndpoints> {
 }
 
 export function parseApiErrorPayload(
-  payload: unknown,
+  payload: Json,
 ): OAuthErrorResponse | undefined {
   if (isOAuthErrorPayload(payload)) {
     for (const ErrorClass of [
@@ -313,14 +313,15 @@ export type OAuthErrorPayload<E extends string = string> = {
 } & Record<string, Json>
 
 export function isOAuthErrorPayload<E extends string = string>(
-  json: unknown,
+  json: Json,
   error: E,
 ): json is OAuthErrorPayload<E>
-export function isOAuthErrorPayload(json: unknown): json is OAuthErrorPayload
-export function isOAuthErrorPayload(json: unknown, error?: string): boolean {
+export function isOAuthErrorPayload(json: Json): json is OAuthErrorPayload
+export function isOAuthErrorPayload(json: Json, error?: string): boolean {
   return (
     json != null &&
     typeof json === 'object' &&
+    'error' in json &&
     typeof json['error'] === 'string' &&
     (error === undefined || json['error'] === error) &&
     (json['error_description'] === undefined ||

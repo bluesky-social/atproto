@@ -80,6 +80,7 @@
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
+    "@types/compression": "^1.8.1",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",

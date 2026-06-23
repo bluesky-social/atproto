@@ -74,7 +74,7 @@ msgstr "Confirmation 2FA"
 msgid "A local app"
 msgstr "Une application locale"
 
-#: src/lib/api.ts:466
+#: src/lib/api.ts:467
 msgid "A second authentication factor is required ({hint})"
 msgstr "Un second facteur d'authentification est requis ({hint})"
 
@@ -159,7 +159,7 @@ msgstr "Une application sur votre appareil"
 msgid "An error occurred"
 msgstr "Une erreur s'est produite"
 
-#: src/lib/api.ts:354
+#: src/lib/api.ts:355
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
 
@@ -391,7 +391,7 @@ msgstr "Créer un nouveau compte"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Créer, mettre à jour et supprimer toutes les données publiques de votre compte"
 
-#: src/lib/api.ts:435
+#: src/lib/api.ts:436
 msgid "Custom domains are not supported"
 msgstr "Les domaines personnalisés ne sont pas pris en charge"
 
@@ -1129,35 +1129,35 @@ msgstr "L'application demande les autorisations nécessaires pour effectuer les 
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "Le réseau AT Protocol utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que les messages privés, les feeds ou le contenu de modération. L'application demande les autorisations nécessaires pour effectuer les actions authentifiées suivantes en votre nom :"
 
-#: src/lib/api.ts:393
+#: src/lib/api.ts:394
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer."
 
-#: src/lib/api.ts:423
+#: src/lib/api.ts:424
 msgid "The domain name is not allowed"
 msgstr "Le nom de domaine n'est pas autorisé"
 
-#: src/lib/api.ts:493
+#: src/lib/api.ts:494
 msgid "The invite code is not valid"
 msgstr "Le code d'invitation n'est pas valide"
 
-#: src/lib/api.ts:352
+#: src/lib/api.ts:353
 msgid "The server encountered an unexpected error. Please try again."
 msgstr "Le serveur a rencontré une erreur inattendue. Veuillez réessayer."
 
-#: src/lib/api.ts:425
+#: src/lib/api.ts:426
 msgid "The username contains inappropriate language"
 msgstr "Le nom d'utilisateur contient un langage inapproprié"
 
-#: src/lib/api.ts:431
+#: src/lib/api.ts:432
 msgid "The username could not be resolved"
 msgstr "Le nom d'utilisateur n'a pas pu être résolu"
 
-#: src/lib/api.ts:429
+#: src/lib/api.ts:430
 msgid "The username is already in use"
 msgstr "Le nom d'utilisateur est déjà utilisé"
 
-#: src/lib/api.ts:421
+#: src/lib/api.ts:422
 msgid "The username is invalid"
 msgstr "Le nom d'utilisateur est invalide"
 
@@ -1173,21 +1173,21 @@ msgstr "Ces applications ont accès à votre compte. Une application peut appara
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
-#: src/lib/api.ts:378
+#: src/lib/api.ts:379
 msgid "This authorization request has been denied. Please try again."
 msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
 
-#: src/lib/api.ts:557
+#: src/lib/api.ts:558
 msgid "This email is already used"
 msgstr "Cette adresse email est déjà utilisée"
 
-#: src/lib/api.ts:363
-#: src/lib/api.ts:514
-#: src/lib/api.ts:545
+#: src/lib/api.ts:364
+#: src/lib/api.ts:515
+#: src/lib/api.ts:546
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/lib/api.ts:427
+#: src/lib/api.ts:428
 msgid "This username is reserved"
 msgstr "Ce nom d'utilisateur est réservé"
 
@@ -1371,7 +1371,7 @@ msgstr "Qu'est-ce que ça signifie ?"
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
-#: src/lib/api.ts:529
+#: src/lib/api.ts:530
 msgid "Wrong identifier or password"
 msgstr "Identifiant ou mot de passe incorrect"
 
