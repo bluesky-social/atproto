@@ -1,6 +1,6 @@
 {
   "name": "@atproto/aws",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Shared AWS cloud API helpers for atproto services",
   "keywords": [
@@ -14,7 +14,7 @@
     "directory": "packages/aws"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "engines": {
     "node": ">=22"
@@ -33,9 +33,7 @@
     "multiformats": "^13.0.0",
     "uint8arrays": "^5.0.0"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "type": "module",
   "exports": {
     ".": {

@@ -1,5 +1,29 @@
 # @atproto/oauth-client
 
+## 0.7.4
+
+### Patch Changes
+
+- [#5101](https://github.com/bluesky-social/atproto/pull/5101) [`9cc6b33`](https://github.com/bluesky-social/atproto/commit/9cc6b3369878fe46554727f2ae9342376f2e41b6) Thanks [@ryanda9910](https://github.com/ryanda9910)! - Avoid relying on `AbortSignal.timeout`, which is not implemented in every runtime this package targets (notably React Native / Expo) and caused `TypeError: AbortSignal.timeout is not a function` during the OAuth login flow. A `timeoutSignal` helper now feature-detects the native static method and falls back to an `AbortController` + `setTimeout` when it is missing.
+
+## 0.7.3
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto-labs/simple-store-memory@0.2.1
+  - @atproto-labs/identity-resolver@0.4.1
+  - @atproto-labs/handle-resolver@0.4.2
+  - @atproto-labs/did-resolver@0.3.2
+  - @atproto-labs/simple-store@0.4.1
+  - @atproto/oauth-types@0.7.2
+  - @atproto-labs/fetch@0.3.1
+  - @atproto/jwk@0.7.1
+  - @atproto/xrpc@0.8.1
+  - @atproto/did@0.5.1
+
 ## 0.7.2
 
 ### Patch Changes

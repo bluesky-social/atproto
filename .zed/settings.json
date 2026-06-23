@@ -1,0 +1,53 @@
+{
+  // Prettier should be configured to handle formatting of all files
+  "format_on_save": "on",
+  "languages": {
+    "JavaScript": {
+      // Formatting (prettier) applied through eslint
+      "formatter": "none",
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true,
+      },
+    },
+    "TypeScript": {
+      // Formatting (prettier) applied through eslint
+      "formatter": "none",
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true,
+      },
+    },
+    "JSON": {
+      "formatter": "prettier",
+    },
+    "JSONC": {
+      "formatter": "prettier",
+    },
+    "Markdown": {
+      "formatter": "prettier",
+    },
+  },
+  "file_types": {
+    "JSON": ["**/lexicons/**/*.json", "**/.prettierrc", "**/.eslintrc"],
+    "JSONC": [
+      "**/tsconfig/*.json",
+      "**/tsconfig.*.json",
+      "**/tsconfig.json",
+      "**/.vscode/*.json",
+      "**/.zed/*.json",
+    ],
+  },
+  "lsp": {
+    "json-language-server": {
+      "settings": {
+        "json": {
+          "schemas": [
+            {
+              "fileMatch": ["**/tsconfig/*.json", "**/tsconfig.*.json"],
+              "url": "https://json.schemastore.org/tsconfig",
+            },
+          ],
+        },
+      },
+    },
+  },
+}

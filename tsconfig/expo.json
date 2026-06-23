@@ -8,7 +8,6 @@
     "moduleResolution": "Bundler",
     "moduleDetection": "force",
     "esModuleInterop": true,
-
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+  },
 }

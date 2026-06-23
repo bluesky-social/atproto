@@ -4,7 +4,11 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import {
+  clearlyBadCursor,
+  resHeaders,
+  resolveSearchV2Override,
+} from '../../../util.js'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
@@ -15,7 +19,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
+      const features = ctx.featureGatesClient.scope(
+        ctx.featureGatesClient.parseUserContextFromHandler({
+          viewer,
+          req,
+        }),
+      )
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers,
+        features,
+      })
 
       if (clearlyBadCursor(params.cursor)) {
         return {
@@ -27,13 +41,28 @@ export default function (server: Server, ctx: AppContext) {
       let uris: AtUriString[]
       let cursor: string | undefined
 
+      const isV2Override = resolveSearchV2Override(req, ctx.cfg)
+
       const query = params.query?.trim() ?? ''
       if (query) {
-        const res = await ctx.dataplane.searchFeedGenerators({
-          query,
-          limit: params.limit,
-        })
-        uris = res.uris as AtUriString[]
+        const useV2 =
+          features.checkGate(features.Gate.SearchV2Enable) || isV2Override
+        if (useV2) {
+          const res = await ctx.dataplane.searchFeedGeneratorsV2({
+            params: {
+              query,
+              viewer: viewer ?? undefined,
+              limit: params.limit,
+            },
+          })
+          uris = res.feedGenerators.map(({ uri }) => uri) as AtUriString[]
+        } else {
+          const res = await ctx.dataplane.searchFeedGenerators({
+            query,
+            limit: params.limit,
+          })
+          uris = res.uris as AtUriString[]
+        }
       } else {
         const res = await ctx.dataplane.getSuggestedFeeds({
           actorDid: viewer ?? undefined,

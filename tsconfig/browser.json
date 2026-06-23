@@ -3,6 +3,6 @@
   "extends": "./base.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable", "ESNext.Disposable"],
-    "jsx": "react-jsx"
-  }
+    "jsx": "react-jsx",
+  },
 }

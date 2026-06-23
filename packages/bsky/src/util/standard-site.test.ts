@@ -275,4 +275,149 @@ describe(validateStandardSiteForUrl, () => {
       })
     }
   })
+
+  describe('subpath-friendly hosts', () => {
+    // Allowlist of hosts where each record's author owns the full subpath
+    // space under their canonical record URL. These platforms typically
+    // serve dynamic per-record subpaths (page numbers, revision ids,
+    // comment threads, etc.) under the same slug, so an `assumedUrl` with
+    // extra path segments past the record URL is still authentic content.
+    for (const { note, baseUrl, path, assumedUrl, expected } of [
+      // Allowlisted apex domain (subdomain) — extra path segments accepted.
+      {
+        note: 'pckt.blog subdomain accepts extra path segments past the record URL',
+        baseUrl: 'https://waow-tech.pckt.blog',
+        path: '/typeahead-more-like-typebehind-amirite-tzgmqge',
+        assumedUrl:
+          'https://waow-tech.pckt.blog/typeahead-more-like-typebehind-amirite-tzgmqge/589/621',
+        expected: true,
+      },
+      {
+        note: 'leaflet.pub subdomain with one extra segment',
+        baseUrl: 'https://author.leaflet.pub',
+        path: '/post-slug',
+        assumedUrl: 'https://author.leaflet.pub/post-slug/v2',
+        expected: true,
+      },
+      {
+        note: 'offprint.app at apex with multi-segment extension',
+        baseUrl: 'https://offprint.app',
+        path: '/story/abc',
+        assumedUrl: 'https://offprint.app/story/abc/chapter/3',
+        expected: true,
+      },
+      // Allowlisted host but the assumed URL diverges from the path —
+      // still rejected; subpath is "extends with extra segments after a
+      // path-segment boundary," not "any URL on the same host."
+      {
+        note: 'pckt.blog rejects assumed URLs that diverge before the boundary',
+        baseUrl: 'https://blog.pckt.blog',
+        path: '/post-slug',
+        assumedUrl: 'https://blog.pckt.blog/different-post',
+        expected: false,
+      },
+      {
+        note: 'pckt.blog rejects partial-segment matches (no slash boundary)',
+        baseUrl: 'https://blog.pckt.blog',
+        path: '/foo',
+        assumedUrl: 'https://blog.pckt.blog/foobar',
+        expected: false,
+      },
+      // Non-allowlisted hosts — exact match still required.
+      {
+        note: 'arbitrary host rejects extra path segments',
+        baseUrl: 'https://example.com',
+        path: '/article',
+        assumedUrl: 'https://example.com/article/extra',
+        expected: false,
+      },
+      {
+        note: 'lookalike host (pckt.blog.evil.com) is NOT allowlisted',
+        baseUrl: 'https://pckt.blog.evil.com',
+        path: '/post',
+        assumedUrl: 'https://pckt.blog.evil.com/post/extra',
+        expected: false,
+      },
+      {
+        note: 'evilpckt.blog is NOT allowlisted (no subdomain dot before pckt.blog)',
+        baseUrl: 'https://evilpckt.blog',
+        path: '/post',
+        assumedUrl: 'https://evilpckt.blog/post/extra',
+        expected: false,
+      },
+      // Allowlist host with exact match still works (no regression).
+      {
+        note: 'pckt.blog still accepts exact match without subpath',
+        baseUrl: 'https://author.pckt.blog',
+        path: '/post-slug',
+        assumedUrl: 'https://author.pckt.blog/post-slug',
+        expected: true,
+      },
+      // Allowlist host with cross-host mismatch — still rejected.
+      {
+        note: 'allowlisted record host vs different host on assumed URL is rejected',
+        baseUrl: 'https://author.pckt.blog',
+        path: '/post',
+        assumedUrl: 'https://example.com/author.pckt.blog/post/extra',
+        expected: false,
+      },
+    ]) {
+      it(`doc + pub: ${note}`, () => {
+        const doc = makeDoc(
+          path === undefined ? { site: pubUri } : { site: pubUri, path },
+        )
+        const pub = makePub({ url: baseUrl })
+        expect(validateStandardSiteForUrl(doc, pub, assumedUrl)).toBe(expected)
+      })
+      it(`loose doc: ${note}`, () => {
+        const doc = makeDoc(
+          path === undefined ? { site: baseUrl } : { site: baseUrl, path },
+        )
+        expect(validateStandardSiteForUrl(doc, undefined, assumedUrl)).toBe(
+          expected,
+        )
+      })
+    }
+
+    // Publication-only validation never accepts subpaths — `assumedUrl`
+    // for a publication is the home-page URL, not an article underneath
+    // it. Subpath relaxation belongs to documents.
+    it('publication-only: allowlisted host still requires exact match', () => {
+      const pub = makePub({ url: 'https://author.pckt.blog' })
+      expect(
+        validateStandardSiteForUrl(
+          undefined,
+          pub,
+          'https://author.pckt.blog/some/sub/path',
+        ),
+      ).toBe(false)
+    })
+
+    it('publication-only: non-allowlisted host rejects subpath', () => {
+      const pub = makePub({ url: 'https://example.com' })
+      expect(
+        validateStandardSiteForUrl(
+          undefined,
+          pub,
+          'https://example.com/some/sub/path',
+        ),
+      ).toBe(false)
+    })
+
+    // Case-insensitivity on the host.
+    it('host comparison is case-insensitive', () => {
+      const doc = makeDoc({
+        site: pubUri,
+        path: '/post',
+      })
+      const pub = makePub({ url: 'https://Author.PCKT.blog' })
+      expect(
+        validateStandardSiteForUrl(
+          doc,
+          pub,
+          'https://author.pckt.BLOG/post/extra',
+        ),
+      ).toBe(true)
+    })
+  })
 })

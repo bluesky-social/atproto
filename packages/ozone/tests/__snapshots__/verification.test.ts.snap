@@ -122,6 +122,8 @@ exports[`verification list returns paginated list of verifications 1`] = `
           "createdAt": "1970-01-01T00:00:00.000Z",
           "isValid": true,
           "issuer": "user(0)",
+          "issuerDisplayName": "ali",
+          "issuerHandle": "alice.test",
           "uri": "record(0)",
         },
       ],

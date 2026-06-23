@@ -29,7 +29,7 @@ describe('report-muting', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const assertSubjectStatus = async (

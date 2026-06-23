@@ -12,7 +12,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -284,7 +283,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -320,7 +318,6 @@ describe('RecordSchema', () => {
       'tid',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -356,7 +353,6 @@ describe('RecordSchema', () => {
       'nsid',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -395,7 +391,6 @@ describe('RecordSchema', () => {
         'literal:self',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -426,7 +421,6 @@ describe('RecordSchema', () => {
         'literal:customKey',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -453,7 +447,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post#main',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -488,7 +481,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string({ maxLength: 300 }),
         createdAt: string({ format: 'datetime' }),
       }),
@@ -527,7 +519,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -592,7 +583,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.complex',
         object({
-          $type: string(),
           nested: object({
             deep: object({
               value: string(),
@@ -618,7 +608,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -639,7 +628,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -656,7 +644,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
         author: string(),
       }),
@@ -682,35 +669,32 @@ describe('RecordSchema', () => {
 
   describe('different record key types', () => {
     it('constructs with key type "any"', () => {
-      const schema = record('any', 'app.bsky.test', object({ $type: string() }))
+      const schema = record('any', 'app.bsky.test', object({}))
       expect(schema.key).toBe('any')
       expect(schema.keySchema).toBeDefined()
     })
 
     it('constructs with key type "tid"', () => {
-      const schema = record('tid', 'app.bsky.test', object({ $type: string() }))
+      const schema = record('tid', 'app.bsky.test', object({}))
       expect(schema.key).toBe('tid')
       expect(schema.keySchema).toBeDefined()
     })
 
     it('constructs with key type "nsid"', () => {
-      const schema = record(
-        'nsid',
-        'app.bsky.test',
-        object({ $type: string() }),
-      )
+      const schema = record('nsid', 'app.bsky.test', object({}))
       expect(schema.key).toBe('nsid')
       expect(schema.keySchema).toBeDefined()
+      expect(schema.keySchema.safeParse('app.bsky.post').success).toBe(true)
+      expect(schema.keySchema.safeParse('invalid-nsid').success).toBe(false)
     })
 
     it('constructs with literal key type', () => {
-      const schema = record(
-        'literal:custom',
-        'app.bsky.test',
-        object({ $type: string() }),
-      )
+      const schema = record('literal:custom', 'app.bsky.test', object({}))
       expect(schema.key).toBe('literal:custom')
       expect(schema.keySchema).toBeDefined()
+      // Applies default value in parse mode
+      expect(schema.keySchema.parse(undefined)).toBe('custom')
+      expect(schema.keySchema.safeParse('not-custom').success).toBe(false)
     })
   })
 
@@ -719,7 +703,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )
@@ -755,7 +738,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -774,7 +756,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -791,7 +772,6 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post#reply123',
         object({
-          $type: string(),
           text: string(),
         }),
       )
@@ -809,7 +789,6 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       object({
-        $type: string(),
         text: string(),
       }),
     )

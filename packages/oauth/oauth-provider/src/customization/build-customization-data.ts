@@ -5,6 +5,7 @@ export function buildCustomizationData({
   branding,
   availableUserDomains,
   inviteCodeRequired,
+  show2FaWarningOnEmailUpdate,
   hcaptcha,
 }: Customization): CustomizationData {
   // @NOTE the front end does not need colors here as they will be injected as
@@ -14,6 +15,7 @@ export function buildCustomizationData({
   return {
     availableUserDomains,
     inviteCodeRequired,
+    show2FaWarningOnEmailUpdate,
     hcaptchaSiteKey: hcaptcha?.siteKey,
     name: branding?.name,
     logo: branding?.logo,

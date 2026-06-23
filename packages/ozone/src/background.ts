@@ -9,9 +9,19 @@ import {
 
 type Task = (db: Database, signal: AbortSignal) => Promise<void>
 
+export type BackgroundQueueOptions = NonNullable<
+  ConstructorParameters<typeof PQueue>[0]
+> & {
+  concurrency: number
+}
+
 /**
  * A simple queue for in-process, out-of-band/backgrounded work
  */
+// @NOTE Keep this in sync with the BackgroundQueue in
+// - packages/bsky/src/data-plane/server/background.ts
+// - packages/ozone/src/background.ts
+// - packages/pds/src/background.ts
 export class BackgroundQueue {
   private abortController = new AbortController()
   private queue: PQueue
@@ -26,9 +36,9 @@ export class BackgroundQueue {
 
   constructor(
     protected db: Database,
-    queueOpts?: { concurrency?: number },
+    options: BackgroundQueueOptions,
   ) {
-    this.queue = new PQueue(queueOpts ?? { concurrency: 20 })
+    this.queue = new PQueue(options)
   }
 
   getStats() {
@@ -76,7 +86,8 @@ export class BackgroundQueue {
   }
 
   async processAll() {
-    await this.queue.onIdle()
+    const { queue } = this
+    while (queue.size || queue.pending) await queue.onIdle()
   }
 
   /**
@@ -86,8 +97,12 @@ export class BackgroundQueue {
    * only once http connections have drained (tasks no longer being added).
    */
   async destroy() {
+    if (this.destroyed) {
+      dbLogger.warn('BackgroundQueue.destroy() called multiple times')
+    }
+
     this.abortController.abort()
-    await this.queue.onIdle()
+    return this.processAll()
   }
 }
 

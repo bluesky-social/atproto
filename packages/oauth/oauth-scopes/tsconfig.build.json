@@ -2,8 +2,8 @@
   "extends": ["../../../tsconfig/isomorphic.json"],
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts"]
+  "exclude": ["**/*.test.ts"],
 }

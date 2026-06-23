@@ -54,6 +54,52 @@ const joinPath = (base: string, path: string): string => {
 }
 
 /**
+ * Apex domains whose authors own the full subpath space under their
+ * record-claimed URL. Each entry matches itself and any subdomain; e.g.
+ * `pckt.blog` matches `pckt.blog` and `waow-tech.pckt.blog`.
+ *
+ * On these domains, an `assumedUrl` whose pathname extends the canonical
+ * record URL with extra segments is treated as valid. Adding to this list
+ * is a trust call — only platforms where each record's URL space is
+ * authoritatively owned by its author belong here.
+ */
+const SUBPATH_FRIENDLY_DOMAINS = ['pckt.blog', 'leaflet.pub', 'offprint.app']
+
+const isSubpathFriendlyHost = (host: string): boolean => {
+  const lower = host.toLowerCase()
+  return SUBPATH_FRIENDLY_DOMAINS.some(
+    (domain) => lower === domain || lower.endsWith(`.${domain}`),
+  )
+}
+
+/**
+ * Return whether `recordUrl` and `assumedUrl` should validate as the same
+ * canonical content. Strictly equal canonical forms always match. On
+ * subpath-friendly hosts (see `SUBPATH_FRIENDLY_DOMAINS`), an `assumedUrl`
+ * whose path extends `recordUrl`'s with extra segments is also accepted.
+ *
+ * Both inputs are pre-canonicalized strings (`canonicalizeHttpUrl` output)
+ * with no trailing slash and no query/fragment.
+ */
+const canonicalUrlMatchesAssumed = (
+  canonicalRecordUrl: string,
+  canonicalAssumedUrl: string,
+): boolean => {
+  if (canonicalRecordUrl === canonicalAssumedUrl) return true
+  // Subpath fallback. Both strings are canonicalized, so a real
+  // path-segment boundary at `recordUrl + '/'` (e.g. `/foo` vs `/foo-bar`
+  // never matches; `/foo` vs `/foo/bar` does).
+  if (!canonicalAssumedUrl.startsWith(`${canonicalRecordUrl}/`)) return false
+  let host: string
+  try {
+    host = new URL(canonicalAssumedUrl).host
+  } catch {
+    return false
+  }
+  return isSubpathFriendlyHost(host)
+}
+
+/**
  * Confirm that the supplied SS records actually back `assumedUrl`. The
  * record-side URL is built by concatenating the publication URL (or the
  * loose-doc site) with the document's `path` field, then both sides are
@@ -74,13 +120,21 @@ const joinPath = (base: string, path: string): string => {
  * function runs the pair is already known to be structurally consistent,
  * so we only check whether the records back the URL.
  *
+ * For document validation, `SUBPATH_FRIENDLY_DOMAINS` (and their
+ * subdomains) accept an assumed URL whose path extends the canonical
+ * record URL with additional segments — these are platforms where each
+ * record's author owns the full subpath space under their claimed URL.
+ * Publication-only validation always requires exact match: there's no
+ * coherent "subpath" of a publication's home page.
+ *
  * Cases:
  * - Document + publication: `publication.url + document.path` must
- *   canonicalize to `assumedUrl`.
+ *   canonicalize to `assumedUrl` (or be a subpath-friendly prefix of it).
  * - Loose document (web-URL `site`): `document.site + document.path`
- *   must canonicalize to `assumedUrl`. (Doc with at-uri `site` but no
- *   publication can't reach this function — the lookups reject it.)
- * - Publication only: `publication.url` must canonicalize to
+ *   must canonicalize to `assumedUrl` (or be a subpath-friendly prefix).
+ *   (Doc with at-uri `site` but no publication can't reach this function
+ *   — the lookups reject it.)
+ * - Publication only: `publication.url` must canonicalize exactly to
  *   `assumedUrl`.
  * - Neither: vacuously valid; the caller short-circuits before we get
  *   here.
@@ -104,15 +158,22 @@ export const validateStandardSiteForUrl = (
     const joined = canonicalizeHttpUrl(
       joinPath(publication.info.record.url, document.info.record.path ?? ''),
     )
-    return joined === canonicalAssumed
+    return (
+      joined !== null && canonicalUrlMatchesAssumed(joined, canonicalAssumed)
+    )
   }
   if (document) {
     const joined = canonicalizeHttpUrl(
       joinPath(document.info.record.site, document.info.record.path ?? ''),
     )
-    return joined === canonicalAssumed
+    return (
+      joined !== null && canonicalUrlMatchesAssumed(joined, canonicalAssumed)
+    )
   }
   if (publication) {
+    // Publication-only matches are exact: `assumedUrl` represents the
+    // publication's home page, not an article underneath it. Subpath
+    // extensions belong to document validation.
     return canonicalizeHttpUrl(publication.info.record.url) === canonicalAssumed
   }
   return true

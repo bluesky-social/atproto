@@ -815,20 +815,12 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationInclude {
-  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
-  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
-}
-
-message ChatNotificationPreference {
-  ChatNotificationInclude include = 1;
-  NotificationChannelPush push = 2;
-}
-
 message NotificationPreferences {
   bytes entry = 1;
-  ChatNotificationPreference chat = 2;
+
+  reserved 2; // formerly "chat". This is now stored on the chat service.
+  reserved "chat";
+
   FilterableNotificationPreference follow = 3;
   FilterableNotificationPreference like = 4;
   FilterableNotificationPreference like_via_repost = 5;
@@ -1086,7 +1078,7 @@ message GetThreadResponse {
 }
 
 //
-// Search
+// Search V1
 //
 
 // - Return DIDs of actors matching term, paginated
@@ -1126,6 +1118,174 @@ message SearchStarterPacksRequest {
 message SearchStarterPacksResponse {
   repeated string uris = 1;
   string cursor = 2;
+}
+
+//
+// Search V2
+//
+
+enum SearchSortOrder {
+  SEARCH_SORT_ORDER_UNSPECIFIED = 0;
+  SEARCH_SORT_ORDER_RECENT = 1;
+  SEARCH_SORT_ORDER_TOP = 2;
+}
+
+enum SearchQueryLanguage {
+  SEARCH_QUERY_LANGUAGE_UNSPECIFIED = 0;
+  SEARCH_QUERY_LANGUAGE_JA = 1; // Japanese (Kuromoji)
+  SEARCH_QUERY_LANGUAGE_ZH = 2; // Chinese (smartcn)
+  SEARCH_QUERY_LANGUAGE_KO = 3; // Korean (nori)
+  SEARCH_QUERY_LANGUAGE_TH = 4; // Thai
+  SEARCH_QUERY_LANGUAGE_AR = 5; // Arabic
+}
+
+// Shared request params for paginated methods
+message SearchParams {
+  string query = 1;
+  string viewer = 2;
+
+  // Pagination
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+// Shared params for typeahead-style searches, which aren't paginated.
+message SearchTypeaheadParams {
+  string query = 1;
+  string viewer = 2;
+  int32 limit = 3;
+}
+
+// Shared result types
+
+// SearchRecordResult represents a generic result hit corresponding to a record.
+message SearchRecordResult {
+  // AT URI of the record, e.g. "at://did:example:alice/app.bsky.feed.post/12345"
+  string uri = 1;
+  double score = 2;
+}
+
+message SearchActorResult {
+  string did = 1;
+  double score = 2;
+}
+
+message PageInfo {
+  string cursor = 1;
+  int64 hits_total = 2;
+}
+
+// Search queries
+
+// PostFilters are logical filters that should be used to match or exclude posts.
+// Each repeated field is applied as OR within the field with all fields applied together as AND.
+// example:
+//  filters: {
+//    authors: [alice, bob]
+//    mentions: [carol]
+//  }
+// => (author is alice OR bob) AND (mentions carol)
+//
+message PostsFilters {
+  // Author/mention filters
+  repeated string authors = 1;
+  repeated string mentions = 2;
+
+  // Content filters
+  repeated string domains = 3;
+  repeated string urls = 4;
+  // Canonical request field for posts embedding these AT-URI records.
+  repeated string embedded_at_uris = 5;
+  repeated string hashtags = 6;
+}
+
+message SearchPostsV2Request {
+  // Required fields
+  SearchParams params = 1;
+  SearchSortOrder sort = 2;
+
+  // Logical filters and exclude fields applied together as AND
+  //
+  // filters: include posts matching the filters
+  PostsFilters filters = 3;
+
+  // Exclude filters: exclude posts matching the filters
+  PostsFilters exclude = 4;
+
+  // Date range filters
+  optional google.protobuf.Timestamp since = 5;
+  optional google.protobuf.Timestamp until = 6; // defaults to "now"
+  // If false, will only query against last 30 days of posts
+  // so `since` and `until` will silently be capped
+  optional bool all_time = 7;
+
+  // Language filter - match posts in this language
+  // Supports 2-char ISO prefixes ("en", "ja, "fr", etc")
+  // and compares against the 2-char prefix of any `langs` field values of the post record
+  // e.g. a post with langs=["en-US", "fr"] would match "en" or "fr" but not "ja"
+  optional string language = 8;
+
+  // Media filters
+  optional bool has_media = 9;
+  optional bool has_video = 10;
+
+  // Reply filters
+  optional string reply_parent_uri = 11;
+  optional string thread_root_uri = 12;
+  optional bool exclude_replies = 13;
+  optional bool replies_only = 14;
+
+  // Social filters
+  optional bool following = 15;
+
+  // Query analysis hint — forces a specific language analyzer.
+  // Auto-detects from query text when unset.
+  optional SearchQueryLanguage query_language = 16;
+}
+
+message SearchPostsV2Response {
+  repeated SearchRecordResult posts = 1;
+  PageInfo page_info = 2;
+  // Detected CJK/Thai/Arabic languages of the query, usually one. Han-only text
+  // returns ["zh", "ja"] since it's ambiguous between Chinese and Japanese.
+  // set query_language on the request to disambiguate.
+  // Currently left empty for other scripts (e.g. Latin-based languages like English).
+  repeated string detected_query_languages = 3;
+}
+
+message SearchActorsV2Request {
+  SearchParams params = 1;
+}
+
+message SearchActorsV2Response {
+  repeated SearchActorResult actors = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchActorsTypeaheadRequest {
+  SearchTypeaheadParams params = 1;
+}
+
+message SearchActorsTypeaheadResponse {
+  repeated SearchActorResult actors = 1;
+}
+
+message SearchFeedGeneratorsV2Request {
+  SearchParams params = 1;
+}
+
+message SearchFeedGeneratorsV2Response {
+  repeated SearchRecordResult feed_generators = 1;
+  PageInfo page_info = 2;
+}
+
+message SearchStarterPacksV2Request {
+  SearchParams params = 1;
+}
+
+message SearchStarterPacksV2Response {
+  repeated SearchRecordResult starter_packs = 1;
+  PageInfo page_info = 2;
 }
 
 //
@@ -1532,10 +1692,17 @@ service Service {
   // Threads
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
 
-  // Search
+  // Search (V1)
   rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
   rpc SearchPosts(SearchPostsRequest) returns (SearchPostsResponse);
   rpc SearchStarterPacks(SearchStarterPacksRequest) returns (SearchStarterPacksResponse);
+
+  // Search V2
+  rpc SearchPostsV2(SearchPostsV2Request) returns (SearchPostsV2Response);
+  rpc SearchActorsV2(SearchActorsV2Request) returns (SearchActorsV2Response);
+  rpc SearchActorsTypeahead(SearchActorsTypeaheadRequest) returns (SearchActorsTypeaheadResponse);
+  rpc SearchFeedGeneratorsV2(SearchFeedGeneratorsV2Request) returns (SearchFeedGeneratorsV2Response);
+  rpc SearchStarterPacksV2(SearchStarterPacksV2Request) returns (SearchStarterPacksV2Response);
 
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);

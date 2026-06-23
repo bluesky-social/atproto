@@ -15,7 +15,7 @@ import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
-import { combineSignals } from './util.js'
+import { combineSignals, timeoutSignal } from './util.js'
 
 export type Session = {
   dpopKey: Key
@@ -247,7 +247,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
       async () => {
         // Make sure, even if there is no signal in the options, that the
         // request will be cancelled after at most 30 seconds.
-        const signal = AbortSignal.timeout(30e3)
+        const signal = timeoutSignal(30e3)
 
         using abortController = combineSignals([options?.signal, signal])
 

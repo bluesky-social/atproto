@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
@@ -65,12 +65,10 @@ describe('pds views with blocking', () => {
       sc.getHeaders(dan),
     )
     danBlockUri = danBlockCarol.uri
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('blocks thread post', async () => {
     const { data: threadAlice } = await agent.api.app.bsky.feed.getPostThread(

@@ -2,7 +2,9 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
   AtpAgent,
@@ -83,14 +85,11 @@ describe('getSuggestedOnboardingUsers', () => {
 
     const result = await seed(sc)
     seededUsers = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-    await mockServer.stop()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => mockServer?.stop())
 
   describe(`basic handling`, () => {
     beforeAll(() => {
@@ -150,12 +149,16 @@ describe('getSuggestedOnboardingUsers', () => {
 class MockServer {
   app: Application
   server: Server
+  terminator: httpTerminator.HttpTerminator
 
   mockedDids = new Map<string, string>()
 
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
+    this.terminator = httpTerminator.createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -164,8 +167,7 @@ class MockServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   get url() {

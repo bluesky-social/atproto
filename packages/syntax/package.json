@@ -1,6 +1,6 @@
 {
   "name": "@atproto/syntax",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "engines": {
     "node": ">=22"
   },
@@ -20,14 +20,13 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "iso-datestring-validator": "^2.2.2",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },
   "browser": {

@@ -25,6 +25,7 @@ import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { Runtime } from './runtime.js'
 import { ClientMetadata } from './types.js'
+import { timeoutSignal } from './util.js'
 
 export type { AtprotoOAuthScope, AtprotoOAuthTokenResponse }
 
@@ -189,7 +190,7 @@ export class OAuthServerAgent {
     const resolved = await this.oauthResolver.resolveFromIdentity(sub, {
       noCache: true,
       allowStale: false,
-      signal: AbortSignal.timeout(10e3),
+      signal: timeoutSignal(10e3),
     })
 
     if (this.issuer !== resolved.metadata.issuer) {

@@ -10,9 +10,9 @@ export interface LexiconStore {
 }
 
 export const isLexiconStore = buildInterfaceChecker<LexiconStore>([
+  'deleteLexicon',
   'findLexicon',
   'storeLexicon',
-  'deleteLexicon',
 ])
 
 export function ifLexiconStore<V extends Partial<LexiconStore>>(

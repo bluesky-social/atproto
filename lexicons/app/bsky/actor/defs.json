@@ -269,6 +269,15 @@
           "description": "The user who issued this verification.",
           "format": "did"
         },
+        "issuerDisplayName": {
+          "type": "string",
+          "description": "The display name of the issuer."
+        },
+        "issuerHandle": {
+          "type": "string",
+          "description": "The handle of the issuer.",
+          "format": "handle"
+        },
         "uri": {
           "type": "string",
           "description": "The AT-URI of the verification record.",

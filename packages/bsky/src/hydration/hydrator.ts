@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { dedupeStrs, mapDefined } from '@atproto/common'
+import { atUri } from '@atproto/lex'
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client/index.js'
 import {
@@ -277,6 +278,30 @@ export class Hydrator {
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
+    // Hydrate verification issuer actors so the verification view can expose
+    // the issuer's current handle and displayName. Skipped when no hydrated
+    // actor has any verifications, which is the common case.
+    const issuerDids: DidString[] = []
+    const issuerDidSet = new Set<DidString>()
+    for (const actor of actors.values()) {
+      if (!actor) continue
+      for (const verification of actor.verifications) {
+        const issuer = verification.issuer
+        if (actors.has(issuer) || issuerDidSet.has(issuer)) continue
+        issuerDidSet.add(issuer)
+        issuerDids.push(issuer)
+      }
+    }
+    if (issuerDids.length > 0) {
+      const issuerActors = await this.actor.getActors(issuerDids, {
+        includeTakedowns,
+      })
+      // Merge into actors without overwriting existing entries (the original
+      // dids may have been fetched with skipCacheForDids, etc.).
+      for (const [did, actor] of issuerActors) {
+        if (!actors.has(did)) actors.set(did, actor)
+      }
+    }
     if (!includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
@@ -309,29 +334,31 @@ export class Hydrator {
   async hydrateProfilesDetailed(
     dids: DidString[],
     ctx: HydrateCtx,
+    opts?: {
+      // when set, restricts known followers hydration to this subset of dids
+      knownFollowersDids?: DidString[]
+    },
   ): Promise<HydrationState> {
-    let knownFollowers: KnownFollowersStates = new HydrationMap()
-    try {
-      knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get known followers for profiles',
-      )
-    }
-
-    let activitySubscriptions: ActivitySubscriptionStates = new HydrationMap()
-    try {
-      activitySubscriptions = await this.actor.getActivitySubscriptions(
-        dids,
-        ctx.viewer,
-      )
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get activity subscriptions state for profiles',
-      )
-    }
+    const [knownFollowers, activitySubscriptions] = await Promise.all([
+      this.actor
+        .getKnownFollowers(opts?.knownFollowersDids ?? dids, ctx.viewer)
+        .catch((err): KnownFollowersStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get known followers for profiles',
+          )
+          return new HydrationMap()
+        }),
+      this.actor
+        .getActivitySubscriptions(dids, ctx.viewer)
+        .catch((err): ActivitySubscriptionStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get activity subscriptions state for profiles',
+          )
+          return new HydrationMap()
+        }),
+    ])
 
     const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
 
@@ -1026,12 +1053,11 @@ export class Hydrator {
         )
       },
     )
-    const blocks = await this.hydrateBidirectionalBlocks(
-      pairsToMap(listCreatorMemberPairs),
-      ctx,
-    )
-    // sample top list items per starter pack based on their follows
-    const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
+    const [blocks, listMemberAggs] = await Promise.all([
+      this.hydrateBidirectionalBlocks(pairsToMap(listCreatorMemberPairs), ctx),
+      // sample top list items per starter pack based on their follows
+      this.actor.getProfileAggregates(listMemberDids),
+    ])
     const listItemUris: AtUriString[] = []
     uris.forEach((uri) => {
       const sp = starterPackState.starterPacks?.get(uri)
@@ -1551,12 +1577,8 @@ const isModList = (
 const labelSubjectsForDid = (dids: DidString[]) => {
   return [
     ...dids,
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
-    ),
-    ...dids.map((did) =>
-      AtUri.make(did, app.bsky.actor.status.$type, 'self').toString(),
-    ),
+    ...dids.map((did) => atUri(did, app.bsky.actor.profile)),
+    ...dids.map((did) => atUri(did, app.bsky.actor.status)),
   ]
 }
 

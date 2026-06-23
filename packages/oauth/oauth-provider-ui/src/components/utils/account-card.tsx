@@ -1,12 +1,12 @@
 import type { Account } from '@atproto/oauth-provider-api'
-import type { Override } from '#/lib/util'
 import {
   InputContainer,
   InputContainerProps,
-} from '../forms/input-container.js'
-import { AccountIdentifier } from './account-identifier.js'
-import { AccountImage } from './account-image.js'
-import { AccountName } from './account-name.js'
+} from '#/components/forms/input-container.tsx'
+import type { Override } from '#/lib/util.ts'
+import { AccountIdentifier } from './account-identifier.tsx'
+import { AccountImage } from './account-image.tsx'
+import { AccountName } from './account-name.tsx'
 
 export type AccountCardProps = Override<
   InputContainerProps,
@@ -18,11 +18,7 @@ export type AccountCardProps = Override<
 
 export function AccountCard({ account, ...props }: AccountCardProps) {
   return (
-    <InputContainer
-      key={account.sub}
-      icon={<AccountImage account={account} />}
-      {...props}
-    >
+    <InputContainer icon={<AccountImage account={account} />} {...props}>
       <div className="min-w-0 flex-1">
         {account.name && (
           <AccountName

@@ -1,11 +1,14 @@
 import type { SignedJwt } from '@atproto/jwk'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import type { DidString, HandleString } from '@atproto/syntax'
 import type {
   Account,
   DeviceMetadata,
   ISODateString,
   Session,
 } from './types.js'
+
+export type { DidString }
 
 // These are the endpoints implemented by the OAuth provider, for its UI to
 // call.
@@ -94,7 +97,7 @@ export type ApiEndpoints = {
   '/update-email-confirm': {
     method: 'POST'
     input: ConfirmEmailUpdateInput
-    output: { success: true }
+    output: ConfirmEmailUpdateOutput
   }
   '/verify-email-request': {
     method: 'POST'
@@ -104,6 +107,51 @@ export type ApiEndpoints = {
   '/verify-email-confirm': {
     method: 'POST'
     input: ConfirmEmailVerificationInput
+    output: ConfirmEmailVerificationOutput
+  }
+  '/update-handle': {
+    method: 'POST'
+    input: UpdateHandleInput
+    output: UpdateHandleOutput
+  }
+  /**
+   * Marks the account as deactivated. The account remains recoverable — the
+   * user can sign back in to reactivate via {@link ApiEndpoints['/reactivate-account']}.
+   * Profile, posts, feeds and lists are hidden across the network until then.
+   */
+  '/deactivate-account': {
+    method: 'POST'
+    input: DeactivateAccountInput
+    output: DeactivateAccountOutput
+  }
+  /**
+   * Reactivates a previously-deactivated account. No-op when the account is
+   * already active.
+   */
+  '/reactivate-account': {
+    method: 'POST'
+    input: ReactivateAccountInput
+    output: ReactivateAccountOutput
+  }
+  /**
+   * Initiates account deletion by sending a confirmation code to the account's
+   * email address. The account is NOT deleted until
+   * {@link ApiEndpoints['/delete-account-confirm']} is called with the matching
+   * token and the user's current password.
+   */
+  '/delete-account-request': {
+    method: 'POST'
+    input: InitiateAccountDeletionInput
+    output: { success: true }
+  }
+  /**
+   * Confirms and finalizes account deletion. Requires both the email
+   * confirmation token issued by {@link ApiEndpoints['/delete-account-request']}
+   * and the user's current password. Deletion is irreversible.
+   */
+  '/delete-account-confirm': {
+    method: 'POST'
+    input: ConfirmAccountDeletionInput
     output: { success: true }
   }
   '/consent': {
@@ -140,7 +188,6 @@ export type SignInInput = {
 export type SignInOutput = {
   account: Account
   ephemeralToken?: EphemeralToken
-  consentRequired?: boolean
 }
 
 export type SignUpInput = {
@@ -158,7 +205,7 @@ export type SignUpOutput = {
 }
 
 export type SignOutInput = {
-  sub: string | string[]
+  did: DidString | DidString[]
 }
 
 export type InitiatePasswordResetInput = {
@@ -172,7 +219,7 @@ export type ConfirmResetPasswordInput = {
 }
 
 export type InitiateEmailUpdateInput = {
-  sub: string
+  did: DidString
   locale?: string
 }
 
@@ -181,51 +228,95 @@ export type InitiateEmailUpdateOutput = {
 }
 
 export type ConfirmEmailUpdateInput = {
-  sub: string
+  did: DidString
   token?: string
   email: string
   locale?: string
 }
 
+export type ConfirmEmailUpdateOutput = {
+  account: Account
+}
+
 export type InitiateEmailVerificationInput = {
-  sub: string
+  did: DidString
   locale?: string
 }
 
 export type ConfirmEmailVerificationInput = {
-  sub: string
+  did: DidString
   token: string
   email: string
 }
 
+export type ConfirmEmailVerificationOutput = {
+  account: Account
+}
+
 export type VerifyHandleAvailabilityInput = {
-  handle: string
+  handle: HandleString
+}
+
+export type UpdateHandleInput = {
+  did: DidString
+  handle: HandleString
+}
+
+export type UpdateHandleOutput = {
+  account: Account
+}
+
+export type DeactivateAccountInput = {
+  did: DidString
+}
+
+export type DeactivateAccountOutput = {
+  account: Account
+}
+
+export type ReactivateAccountInput = {
+  did: DidString
+}
+
+export type ReactivateAccountOutput = {
+  account: Account
+}
+
+export type InitiateAccountDeletionInput = {
+  did: DidString
+  locale?: string
+}
+
+export type ConfirmAccountDeletionInput = {
+  did: DidString
+  token: string
+  password: string
 }
 
 export type RevokeAccountSessionInput = {
-  sub: string
+  did: DidString
   deviceId: string
 }
 
 export type OAuthSessionsInput = {
-  sub: string
+  did: DidString
 }
 
 export type OAuthSessionsOutput = ActiveOAuthSession[]
 
 export type AccountSessionsInput = {
-  sub: string
+  did: DidString
 }
 
 export type AccountSessionsOutput = ActiveAccountSession[]
 
 export type RevokeOAuthSessionInput = {
-  sub: string
+  did: DidString
   tokenId: string
 }
 
 export type ConsentInput = {
-  sub: string
+  did: DidString
   scope?: string
 }
 

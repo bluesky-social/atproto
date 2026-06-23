@@ -25,7 +25,7 @@ describe('pds posts record creation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows for creating posts with tags', async () => {

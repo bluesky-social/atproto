@@ -1,0 +1,66 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.queryActivities",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Query report activities across all reports, ordered by createdAt. Used by downstream pollers; for per-report activity history use listActivities.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "activityTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Filter to specific activity types (e.g. closeActivity, escalationActivity). If omitted, all types are returned."
+          },
+          "createdAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Retrieve activities created at or after a given timestamp"
+          },
+          "createdBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Retrieve activities created at or before a given timestamp"
+          },
+          "sortDirection": {
+            "type": "string",
+            "default": "desc",
+            "enum": ["asc", "desc"]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Cursor of the form `<createdAtMs>::<activityId>`."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["activities"],
+          "properties": {
+            "activities": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.report.defs#reportActivityView"
+              }
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

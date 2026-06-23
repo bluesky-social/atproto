@@ -1,12 +1,18 @@
+import { Did } from '@atproto/did'
 import type {
   Account,
+  ConfirmAccountDeletionInput,
   ConfirmEmailUpdateInput,
   ConfirmEmailVerificationInput,
   ConfirmResetPasswordInput,
+  DeactivateAccountInput,
+  InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailUpdateOutput,
   InitiateEmailVerificationInput,
   InitiatePasswordResetInput,
+  ReactivateAccountInput,
+  UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
 import { OAuthScope } from '@atproto/oauth-types'
 import { ClientId } from '../client/client-id.js'
@@ -20,7 +26,6 @@ import {
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
 } from '../oauth-errors.js'
-import { Sub } from '../oidc/sub.js'
 import { InviteCode } from '../types/invite-code.js'
 import { SignUpInput } from './sign-up-input.js'
 
@@ -29,11 +34,11 @@ import { SignUpInput } from './sign-up-input.js'
 export * from '../client/client-id.js'
 export * from '../device/device-data.js'
 export * from '../device/device-id.js'
-export * from '../oidc/sub.js'
 export * from '../request/request-id.js'
 
 export type {
   Account,
+  Did,
   HcaptchaVerifyResult,
   InviteCode,
   OAuthScope,
@@ -55,6 +60,12 @@ export type UpdateEmailRequestOutput = InitiateEmailUpdateOutput
 export type UpdateEmailConfirmInput = ConfirmEmailUpdateInput
 export type VerifyEmailRequestInput = InitiateEmailVerificationInput
 export type VerifyEmailConfirmInput = ConfirmEmailVerificationInput
+export type UpdateHandleData = UpdateHandleInput
+
+export type DeactivateAccountData = DeactivateAccountInput
+export type ReactivateAccountData = ReactivateAccountInput
+export type DeleteAccountRequestInput = InitiateAccountDeletionInput
+export type DeleteAccountConfirmInput = ConfirmAccountDeletionInput
 
 export type CreateAccountData = {
   locale: string
@@ -122,7 +133,7 @@ export interface AccountStore {
 
   /**
    * @throws {InvalidCredentialsError} - When the credentials are not valid.
-   * Populate {@link InvalidCredentialsError.sub} with the subject identifier
+   * Populate {@link InvalidCredentialsError.did} with the subject identifier
    * when the identifier matched an existing account (e.g. wrong password for
    * a known user); omit it when the identifier was not found. Throwing the
    * generic {@link InvalidRequestError} is also accepted for backward
@@ -136,7 +147,7 @@ export interface AccountStore {
    * Add a client & scopes to the list of authorized clients for the given account.
    */
   setAuthorizedClient(
-    sub: Sub,
+    did: Did,
     clientId: ClientId,
     data: AuthorizedClientData,
   ): Awaitable<void>
@@ -144,7 +155,7 @@ export interface AccountStore {
   /**
    * @throws {InvalidRequestError} - When the credentials are not valid
    */
-  getAccount(sub: Sub): Awaitable<{
+  getAccount(did: Did): Awaitable<{
     account: Account
     authorizedClients: AuthorizedClients
   }>
@@ -160,7 +171,7 @@ export interface AccountStore {
    * {@link RequestStore.deleteRequest}), all accounts bound to that request
    * should be deleted as well.
    */
-  upsertDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  upsertDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
    * @param requestId - If provided, the result must either have the same
@@ -171,7 +182,7 @@ export interface AccountStore {
    */
   getDeviceAccount(
     deviceId: DeviceId,
-    sub: Sub,
+    did: Did,
   ): Awaitable<DeviceAccount | null>
 
   /**
@@ -180,14 +191,14 @@ export interface AccountStore {
    *
    * @note Noop if the device-account is not found.
    */
-  removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  removeDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
    * @returns **all** the device accounts that match the {@link requestId}
    * criteria and given {@link filter}.
    */
   listDeviceAccounts(
-    filter: { sub: Sub } | { deviceId: DeviceId },
+    filter: { did: Did } | { deviceId: DeviceId },
   ): Awaitable<DeviceAccount[]>
 
   resetPasswordRequest(
@@ -204,8 +215,8 @@ export interface AccountStore {
   /**
    * Must trigger a verification email to be sent to the new email address, that
    * will then be confirmed through {@link updateEmailConfirm}. The account's
-   * `email_verified` field is expected to become `false` until the new email is
-   * confirmed.
+   * {@link Account['emailVerified'] emailVerified} field is expected to become
+   * `false` until the new email is confirmed.
    */
   updateEmailConfirm(data: UpdateEmailConfirmInput): Awaitable<Account | null>
 
@@ -216,23 +227,70 @@ export interface AccountStore {
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
   verifyHandleAvailability(handle: string): Awaitable<void>
+
+  /**
+   * @throws {HandleUnavailableError} - To indicate that the handle is already taken
+   * @throws {InvalidRequestError} - To indicate that the handle is invalid or
+   * cannot be used
+   */
+  updateHandle(data: UpdateHandleData): Awaitable<Account>
+
+  /**
+   * Mark the account as deactivated. The account remains recoverable. Should
+   * be a no-op when the account is already deactivated.
+   *
+   * @throws {InvalidRequestError} - When the account cannot be deactivated
+   * (e.g. unknown account)
+   */
+  deactivateAccount(data: DeactivateAccountData): Awaitable<Account>
+
+  /**
+   * Reactivate a previously-deactivated account. Should be a no-op when the
+   * account is already active.
+   *
+   * @throws {InvalidRequestError} - When the account cannot be reactivated
+   * (e.g. unknown account)
+   */
+  reactivateAccount(data: ReactivateAccountData): Awaitable<Account>
+
+  /**
+   * Initiate account deletion: typically sends a confirmation token to the
+   * account's email address. The account is NOT deleted until
+   * {@link deleteAccountConfirm} is called with the matching token and the
+   * user's current password.
+   */
+  deleteAccountRequest(data: DeleteAccountRequestInput): Awaitable<void>
+
+  /**
+   * Finalize account deletion. Implementations MUST verify both the email
+   * confirmation `token` issued by {@link deleteAccountRequest} and the user's
+   * current `password` before deleting any data. Deletion is irreversible.
+   *
+   * @throws {InvalidRequestError} - When the token or password is invalid.
+   */
+  deleteAccountConfirm(data: DeleteAccountConfirmInput): Awaitable<void>
 }
 
 export const isAccountStore = buildInterfaceChecker<AccountStore>([
-  'createAccount',
   'authenticateAccount',
-  'setAuthorizedClient',
+  'createAccount',
+  'deactivateAccount',
+  'deleteAccountConfirm',
+  'deleteAccountRequest',
   'getAccount',
-  'upsertDeviceAccount',
   'getDeviceAccount',
-  'removeDeviceAccount',
   'listDeviceAccounts',
-  'resetPasswordRequest',
+  'reactivateAccount',
+  'removeDeviceAccount',
   'resetPasswordConfirm',
-  'updateEmailRequest',
+  'resetPasswordRequest',
+  'setAuthorizedClient',
   'updateEmailConfirm',
-  'verifyEmailRequest',
+  'updateEmailRequest',
+  'updateHandle',
+  'upsertDeviceAccount',
   'verifyEmailConfirm',
+  'verifyEmailRequest',
   'verifyHandleAvailability',
 ])
 

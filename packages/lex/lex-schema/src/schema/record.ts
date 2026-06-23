@@ -6,8 +6,8 @@ import {
   InferOutput,
   LexiconRecordKey,
   NsidString,
+  RecordKeyValue,
   Schema,
-  TidString,
   Unknown$TypedObject,
   ValidationContext,
   Validator,
@@ -15,6 +15,7 @@ import {
 import { lazyProperty } from '../util/lazy-property.js'
 import { literal } from './literal.js'
 import { string } from './string.js'
+import { withDefault } from './with-default.js'
 
 /**
  * Infers the record key type from a RecordSchema.
@@ -22,7 +23,7 @@ import { string } from './string.js'
  * @template R - The RecordSchema type
  */
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
+  R extends RecordSchema<infer TKey> ? RecordKeyValue<TKey> : never
 
 export type TypedRecord<
   TType extends NsidString,
@@ -120,24 +121,16 @@ export class RecordSchema<
 }
 
 export type RecordKeySchemaOutput<Key extends LexiconRecordKey> =
-  Key extends 'any'
-    ? string
-    : Key extends 'tid'
-      ? TidString
-      : Key extends 'nsid'
-        ? NsidString
-        : Key extends `literal:${infer L extends string}`
-          ? L
-          : never
+  RecordKeyValue<Key>
 
 export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
-  RecordKeySchemaOutput<Key>
+  RecordKeyValue<Key>
 >
 
-const keySchema = string({ minLength: 1 })
+const keySchema = string({ format: 'record-key' })
 const tidSchema = string({ format: 'tid' })
 const nsidSchema = string({ format: 'nsid' })
-const selfLiteralSchema = literal('self')
+const selfLiteralSchema = withDefault(literal('self'), 'self')
 
 function recordKey<Key extends LexiconRecordKey>(
   key: Key,
@@ -147,9 +140,9 @@ function recordKey<Key extends LexiconRecordKey>(
   if (key === 'tid') return tidSchema as any
   if (key === 'nsid') return nsidSchema as any
   if (key.startsWith('literal:')) {
-    const value = key.slice(8) as RecordKeySchemaOutput<Key>
+    const value = key.slice(8) as RecordKeyValue<Key>
     if (value === 'self') return selfLiteralSchema as any
-    return literal(value)
+    return withDefault(literal(value), value)
   }
 
   throw new Error(`Unsupported record key type: ${key}`)

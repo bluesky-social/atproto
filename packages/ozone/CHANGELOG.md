@@ -1,5 +1,86 @@
 # @atproto/ozone
 
+## 0.2.6
+
+### Patch Changes
+
+- [#5116](https://github.com/bluesky-social/atproto/pull/5116) [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update undici dependency to v8.5.0
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make BackgroundQueue implementation more resilient
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5030](https://github.com/bluesky-social/atproto/pull/5030) [`7011bdb`](https://github.com/bluesky-social/atproto/commit/7011bdb1905cb81b10a3ca6ddbc0a6afffc23a70) Thanks [@foysalit](https://github.com/foysalit)! - Add tools.ozone.report.queryActivities endpoint to ozone
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use http-terminator to close http server
+
+- Updated dependencies [[`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b), [`cab3ac3`](https://github.com/bluesky-social/atproto/commit/cab3ac321bf939a4c8ba29aed3f632d8a91790bf)]:
+  - @atproto/api@0.20.17
+  - @atproto/ws-client@0.1.2
+
+## 0.2.5
+
+### Patch Changes
+
+- [#5086](https://github.com/bluesky-social/atproto/pull/5086) [`20665c1`](https://github.com/bluesky-social/atproto/commit/20665c18322effe648f73d70fc1a8dcc7e312992) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade kysely from 0.22 to 0.29
+
+## 0.2.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/xrpc-server@0.11.2
+  - @atproto/ws-client@0.1.1
+  - @atproto/identity@0.5.1
+  - @atproto/lexicon@0.7.2
+  - @atproto/common@0.6.3
+  - @atproto/crypto@0.5.1
+  - @atproto/syntax@0.6.2
+  - @atproto/xrpc@0.8.1
+  - @atproto/api@0.20.16
+
+## 0.2.3
+
+### Patch Changes
+
+- [#5061](https://github.com/bluesky-social/atproto/pull/5061) [`67a0ee8`](https://github.com/bluesky-social/atproto/commit/67a0ee88de1227c9b663b04148993d93083a051a) Thanks [@gcwill70](https://github.com/gcwill70)! - register chat.bsky.moderation.getConvos handler
+
+- Updated dependencies [[`24c7311`](https://github.com/bluesky-social/atproto/commit/24c7311427b8ccd5d8529a70ed93b4d77f38a516), [`1f89abb`](https://github.com/bluesky-social/atproto/commit/1f89abb908ce1214638f91c19ef957553b7ebc03)]:
+  - @atproto/api@0.20.12
+
+## 0.2.2
+
+### Patch Changes
+
+- [#5054](https://github.com/bluesky-social/atproto/pull/5054) [`dfce9df`](https://github.com/bluesky-social/atproto/commit/dfce9dfe3584ea3057b06a21526b033b0adbd4c1) Thanks [@gcwill70](https://github.com/gcwill70)! - add chat.bsky.moderation.getConvos to ozone
+
+- Updated dependencies [[`da8818f`](https://github.com/bluesky-social/atproto/commit/da8818f13577c91a5001a9998279d695fccb7bcf)]:
+  - @atproto/api@0.20.11
+
+## 0.2.1
+
+### Patch Changes
+
+- [#4848](https://github.com/bluesky-social/atproto/pull/4848) [`8f0c19f`](https://github.com/bluesky-social/atproto/commit/8f0c19f18072e8d2aebf57c055c8679cf38a8356) Thanks [@foysalit](https://github.com/foysalit)! - Cast large numbers in metadata to strings in ozone events
+
+- Updated dependencies [[`07014df`](https://github.com/bluesky-social/atproto/commit/07014df290b489fe63b10ad5d65d854fe3b6c849), [`b4aa930`](https://github.com/bluesky-social/atproto/commit/b4aa9308386011d85cd17395d5989c026c44f8d8)]:
+  - @atproto/api@0.20.8
+
+## 0.2.0
+
+### Minor Changes
+
+- [#4941](https://github.com/bluesky-social/atproto/pull/4941) [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow conversations to be reported in ozone
+
+  This change extends ozone's moderation system to handle conversation reporting alongside existing reporting subject types.
+
+### Patch Changes
+
+- Updated dependencies [[`8a9e757`](https://github.com/bluesky-social/atproto/commit/8a9e7578eb0f6afcb460061550e435ea9ed125ff), [`682e325`](https://github.com/bluesky-social/atproto/commit/682e325b2bce62216d034a8f5b9429f485b9360d), [`47c71fc`](https://github.com/bluesky-social/atproto/commit/47c71fcc157258c2f5dbe43ba2b27a5af7856341), [`3affdd5`](https://github.com/bluesky-social/atproto/commit/3affdd5eeee30b09cbb7a92e8296a6cda55022a3)]:
+  - @atproto/api@0.20.7
+
 ## 0.1.176
 
 ### Patch Changes

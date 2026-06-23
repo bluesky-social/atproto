@@ -2,6 +2,8 @@ import events from 'node:events'
 import http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { IdResolver, MemoryCache } from '@atproto/identity'
 import { Database, DatabaseSchema } from './db/index.js'
 import createRoutes from './routes/index.js'
@@ -11,10 +13,14 @@ export type { DatabaseSchema }
 export { RepoSubscription } from './subscription.js'
 
 export class DataPlaneServer {
+  private terminator: httpTerminator.HttpTerminator
+
   constructor(
     public server: http.Server,
     public idResolver: IdResolver,
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async create(db: Database, port: number, plcUrl?: string) {
     const app = express()
@@ -28,14 +34,10 @@ export class DataPlaneServer {
   }
 
   async destroy() {
-    return new Promise<void>((resolve, reject) => {
-      this.server.close((err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
-      })
-    })
+    await this.terminator.terminate()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }

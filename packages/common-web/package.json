@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common-web",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "engines": {
     "node": ">=22"
   },
@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/lex-data": "workspace:^",
@@ -26,8 +26,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "type": "module",
   "exports": {

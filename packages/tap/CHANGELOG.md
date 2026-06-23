@@ -1,5 +1,26 @@
 # @atproto/tap
 
+## 0.3.2
+
+### Patch Changes
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- Updated dependencies [[`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b)]:
+  - @atproto/ws-client@0.1.2
+
+## 0.3.1
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/ws-client@0.1.1
+  - @atproto/lex@0.1.4
+  - @atproto/common@0.6.3
+  - @atproto/syntax@0.6.2
+
 ## 0.3.0
 
 ### Minor Changes

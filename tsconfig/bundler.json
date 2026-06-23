@@ -6,6 +6,6 @@
     "allowImportingTsExtensions": true,
     "declaration": false,
     "declarationMap": false,
-    "noEmit": true
-  }
+    "noEmit": true,
+  },
 }

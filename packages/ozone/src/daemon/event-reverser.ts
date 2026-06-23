@@ -87,6 +87,7 @@ export class EventReverser {
           .selectFrom('moderation_subject_status')
           .where('did', '=', group.did)
           .where('recordPath', '=', group.recordPath)
+          .where('convoId', '=', group.convoId)
           .selectAll()
           .executeTakeFirst()
 

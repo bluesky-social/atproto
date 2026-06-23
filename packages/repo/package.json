@@ -1,6 +1,6 @@
 {
   "name": "@atproto/repo",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "license": "MIT",
   "description": "atproto repo and MST implementation",
   "keywords": [
@@ -19,7 +19,7 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -32,8 +32,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "type": "module",
   "exports": {

@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/xrpc-utils",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "node": ">=22"
   },
@@ -36,10 +36,8 @@
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^6.0.3"
-  },
+  "devDependencies": {},
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

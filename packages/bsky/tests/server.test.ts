@@ -3,7 +3,7 @@ import { AddressInfo } from 'node:net'
 import { finished } from 'node:stream/promises'
 import express from 'express'
 import { request } from 'undici'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error.js'
 import { startServer } from './_util.js'
@@ -18,13 +18,11 @@ describe('server', () => {
     })
     const sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('preserves 404s.', async () => {
     const response = await fetch(`${network.bsky.url}/unknown`)
@@ -37,17 +35,14 @@ describe('server', () => {
       throw new Error('Oops!')
     })
     app.use(errorHandler)
-    const { origin, stop } = await startServer(app)
-    try {
-      const response = await fetch(new URL(`/oops`, origin))
-      expect(response.status).toEqual(500)
-      await expect(response.json()).resolves.toEqual({
-        error: 'InternalServerError',
-        message: 'Internal Server Error',
-      })
-    } finally {
-      await stop()
-    }
+    await using server = await startServer(app)
+
+    const response = await fetch(`http://localhost:${server.port}/oops`)
+    expect(response.status).toEqual(500)
+    await expect(response.json()).resolves.toEqual({
+      error: 'InternalServerError',
+      message: 'Internal Server Error',
+    })
   })
 
   it('healthcheck succeeds when database is available.', async () => {

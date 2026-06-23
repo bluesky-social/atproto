@@ -1,11 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import type { ActiveOAuthSession } from '@atproto/oauth-provider-api'
+import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
-import { Action, Admonition } from '#/components/utils/admonition.tsx'
+import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
-import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import {
   useOAuthSessionsQuery,
   useRevokeOAuthSessionMutation,
@@ -15,8 +14,8 @@ import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
 export function Page() {
   const { account } = useAuthenticatedSession()
-  const { sub } = account
-  const { data, isLoading, refetch } = useOAuthSessionsQuery({ sub })
+  const { did } = account
+  const { data, isLoading, refetch } = useOAuthSessionsQuery({ did })
 
   if (!data) {
     if (isLoading) {
@@ -27,9 +26,9 @@ export function Page() {
       <Admonition
         role="status"
         action={
-          <Action onClick={() => refetch()}>
+          <AdmonitionAction onClick={() => refetch()}>
             <Trans>Retry</Trans>
-          </Action>
+          </AdmonitionAction>
         }
       >
         <Trans>Failed to load connected apps</Trans>
@@ -50,7 +49,7 @@ export function Page() {
       {data.map((session) => (
         <ApplicationSessionCard
           key={session.tokenId}
-          sub={sub}
+          did={did}
           session={session}
         />
       ))}
@@ -83,13 +82,12 @@ function ApplicationSessionCard({
     updatedAt,
     scope: _scope = clientMetadata?.scope, // @TODO Display scopes using <ScopeDescription />
   },
-  sub,
+  did,
 }: {
   session: ActiveOAuthSession
-  sub: string
+  did: DidString
 }) {
-  const { t, i18n } = useLingui()
-  const { notify } = useNotificationsContext()
+  const { i18n } = useLingui()
   const { mutateAsync: revokeSessions, isPending } =
     useRevokeOAuthSessionMutation()
 
@@ -100,24 +98,6 @@ function ApplicationSessionCard({
     clientId,
     clientMetadata,
   })
-
-  const revoke = async () => {
-    try {
-      await revokeSessions({ sub, tokenId })
-      notify({
-        variant: 'success',
-        title: t`Successfully revoked access`,
-        duration: 2e3,
-      })
-    } catch (err) {
-      console.error('Failed to revoke OAuth session', err)
-      notify({
-        variant: 'error',
-        title: t`Failed to revoke access`,
-        duration: 2e3,
-      })
-    }
-  }
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
@@ -143,7 +123,11 @@ function ApplicationSessionCard({
         size="sm"
         className="min-w-max shrink-0 grow-0"
         loading={isPending}
-        onClick={revoke}
+        onClick={(_event) => {
+          void revokeSessions({ did, tokenId }).catch((err) => {
+            console.warn('Failed to revoke OAuth session', err)
+          })
+        }}
       >
         <Trans context="OAuthApp">Revoke access</Trans>
       </Button>

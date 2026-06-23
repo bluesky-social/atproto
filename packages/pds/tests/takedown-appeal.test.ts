@@ -25,7 +25,7 @@ describe('appeal account takedown', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('actor takedown allows appeal request.', async () => {

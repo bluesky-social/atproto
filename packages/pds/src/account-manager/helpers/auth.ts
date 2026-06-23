@@ -164,8 +164,8 @@ export const addRefreshGracePeriod = async (
     db.db
       .updateTable('refresh_token')
       .where('id', '=', id)
-      .where((inner) =>
-        inner.where('nextId', 'is', null).orWhere('nextId', '=', nextId),
+      .where((eb) =>
+        eb.or([eb('nextId', 'is', null), eb('nextId', '=', nextId)]),
       )
       .set({ expiresAt, nextId })
       .returningAll(),

@@ -1,13 +1,16 @@
-// @TODO replace with OidcUserinfo
-export type Account = {
-  sub: string
-  aud: string | [string, ...string[]]
+import type { DidString, HandleString } from '@atproto/syntax'
 
+export type { DidString }
+
+export type Account = {
+  did: DidString
+  pds: DidString
+  deactivated: boolean
   locale?: string
   email?: string
-  email_verified?: boolean
+  emailVerified?: boolean
   name?: string
-  preferred_username?: string
+  handle?: HandleString
   picture?: string
 }
 
@@ -21,7 +24,6 @@ export type Session = {
   info?: never // Prevent relying on this in the frontend
 
   loginRequired: boolean
-  consentRequired?: boolean
 }
 
 export type MultiLangString = Record<string, string | undefined>

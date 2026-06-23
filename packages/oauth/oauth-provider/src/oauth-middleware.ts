@@ -41,13 +41,13 @@ export function oauthMiddleware<
         }
       : onError
 
-  return asHandler(
-    combineMiddlewares([
-      assetsMiddleware,
-      createOAuthMiddleware(server, options),
-      createApiMiddleware(server, options),
-      createAuthorizationPageMiddleware(server, options),
-      createAccountPageMiddleware(server, options),
-    ]),
-  )
+  const middleware = combineMiddlewares([
+    assetsMiddleware,
+    createOAuthMiddleware(server, options),
+    createApiMiddleware(server, options),
+    createAuthorizationPageMiddleware(server, options),
+    createAccountPageMiddleware(server, options),
+  ])
+
+  return asHandler(middleware)
 }

@@ -9,6 +9,7 @@ test.sqlite
 .DS_Store
 *.log
 *.tsbuildinfo
+/.playwright-mcp
 .*.env
 .env.*
 .env

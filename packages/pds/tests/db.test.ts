@@ -14,7 +14,7 @@ describe('db', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('commits changes', async () => {

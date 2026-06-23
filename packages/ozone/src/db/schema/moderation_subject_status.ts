@@ -10,8 +10,12 @@ export const subjectStatusTableName = 'moderation_subject_status'
 
 export interface ModerationSubjectStatus {
   id: Generated<number>
+
+  // unique columns
   did: string
   recordPath: string
+  convoId: string
+
   recordCid: string | null
   blobCids: string[] | null
   reviewState:

@@ -45,7 +45,7 @@ describe('proxies view requests', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('actor.getProfile', async () => {

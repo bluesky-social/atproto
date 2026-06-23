@@ -100,13 +100,13 @@ const rotateKeysForRepos = async (
         return
       }
       try {
-        await ctx.sequencer.sequenceIdentityEvt(did)
+        await ctx.sequencer.sequenceIdentity(did)
       } catch (err) {
         console.error(`failed to sequence new identity evt for ${did}: ${err}`)
         return
       }
       try {
-        await ctx.sequencer.sequenceSyncEvt(did, syncData)
+        await ctx.sequencer.sequenceSync(did, syncData)
       } catch (err) {
         console.error(`failed to sequence for ${did}: ${err}`)
         return

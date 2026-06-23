@@ -8,6 +8,6 @@
     "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"]
-  }
+    "types": ["node"],
+  },
 }

@@ -37,7 +37,7 @@ type Notif = Insertable<Notification>
 export class RecordProcessor<TSchema extends l.RecordSchema, TRow> {
   constructor(
     private appDb: Database,
-    private background: BackgroundQueue,
+    private background: BackgroundQueue<Database>,
     private options: RecordProcessorOptions<TSchema, TRow>,
   ) {}
 

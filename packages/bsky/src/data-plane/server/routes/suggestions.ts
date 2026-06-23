@@ -41,7 +41,7 @@ const getFollowSuggestionsGlobal = async (
   const suggestions = await db.db
     .selectFrom('suggested_follow')
     .innerJoin('actor', 'actor.did', 'suggested_follow.did')
-    .if(alreadyIncluded.length > 0, (qb) =>
+    .$if(alreadyIncluded.length > 0, (qb) =>
       qb.where('suggested_follow.order', 'not in', alreadyIncluded),
     )
     .selectAll()
@@ -116,7 +116,7 @@ const getFollowSuggestionsRelativeTo = async (
       .where('follow.creator', '=', input.actorDid)
       .where('follow.subjectDid', '!=', input.relativeToDid)
       .where('follow.subjectDid', 'not in', actorsViewerFollows)
-      .if(resultDids.length > 0, (qb) =>
+      .$if(resultDids.length > 0, (qb) =>
         qb.where(
           'subjectDid',
           'not in',

@@ -468,6 +468,11 @@
           "ref": "tools.ozone.team.defs#member",
           "description": "Full member record of the moderator who created this activity"
         },
+        "report": {
+          "type": "ref",
+          "ref": "#reportView",
+          "description": "Full view of the report this activity belongs to."
+        },
         "createdAt": {
           "type": "string",
           "format": "datetime",

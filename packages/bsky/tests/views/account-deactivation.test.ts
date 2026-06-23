@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -22,12 +22,10 @@ describe('bsky account deactivation', () => {
       {},
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('does not return deactivated profiles', async () => {
     const attempt = agent.api.app.bsky.actor.getProfile({

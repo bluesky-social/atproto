@@ -1,5 +1,27 @@
 # @atproto/bsync
 
+## 0.0.30
+
+### Patch Changes
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use http-terminator to close http server
+
+## 0.0.29
+
+### Patch Changes
+
+- [#5086](https://github.com/bluesky-social/atproto/pull/5086) [`20665c1`](https://github.com/bluesky-social/atproto/commit/20665c18322effe648f73d70fc1a8dcc7e312992) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade kysely from 0.22 to 0.29
+
+## 0.0.28
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/common@0.6.3
+  - @atproto/syntax@0.6.2
+
 ## 0.0.27
 
 ### Patch Changes

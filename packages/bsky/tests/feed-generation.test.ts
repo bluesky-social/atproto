@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetActorFeeds,
@@ -46,6 +46,7 @@ describe('feed generation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
     })
+
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -103,10 +104,9 @@ describe('feed generation', () => {
       .execute()
   })
 
-  afterAll(async () => {
-    await gen.close()
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => gen?.close())
 
   it('feed gen records can be created.', async () => {
     const all = await pdsAgent.api.app.bsky.feed.generator.create(

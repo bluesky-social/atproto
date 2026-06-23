@@ -110,6 +110,7 @@ export interface ServerConfigValues {
   kws?: KwsConfig
   debugFieldAllowedDids: Set<string>
   draftsLimit: number
+  searchV2OverrideHeader?: string
 }
 
 export class ServerConfig {
@@ -331,6 +332,9 @@ export class ServerConfig {
       ? parseInt(process.env.BSKY_DRAFTS_LIMIT || '', 10)
       : 500
 
+    const searchV2OverrideHeader =
+      process.env.BSKY_SEARCH_V2_OVERRIDE_HEADER || undefined
+
     return new ServerConfig({
       version,
       debugMode,
@@ -399,6 +403,7 @@ export class ServerConfig {
       kws,
       debugFieldAllowedDids,
       draftsLimit,
+      searchV2OverrideHeader,
       ...noUndefinedVals(overrides ?? {}),
     })
   }
@@ -674,6 +679,10 @@ export class ServerConfig {
 
   get draftsLimit() {
     return this.cfg.draftsLimit
+  }
+
+  get searchV2OverrideHeader() {
+    return this.cfg.searchV2OverrideHeader
   }
 }
 

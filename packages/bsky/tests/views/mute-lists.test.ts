@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtUri, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util.js'
@@ -29,12 +29,10 @@ describe('bsky views with mutes from mute lists', () => {
     // add follows to ensure mutes work even w follows
     await sc.follow(carol, dan)
     await sc.follow(dan, carol)
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   let listUri: string
   let listCid: string

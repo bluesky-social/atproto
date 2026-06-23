@@ -51,7 +51,7 @@ describe('feedgen proxy view', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('performs basic proxy of getFeed', async () => {

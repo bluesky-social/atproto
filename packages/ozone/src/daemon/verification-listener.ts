@@ -156,9 +156,14 @@ export class VerificationListener {
     })
   }
 
-  stop() {
-    this.jetstream?.close()
-    this.backgroundQueue.destroy()
-    this.destroyed = true
+  async stop() {
+    if (!this.destroyed) {
+      this.destroyed = true
+      try {
+        await this.jetstream?.close()
+      } finally {
+        await this.backgroundQueue.destroy()
+      }
+    }
   }
 }

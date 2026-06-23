@@ -20,7 +20,7 @@ describe('pds admin invite views', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   let alice: string

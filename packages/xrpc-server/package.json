@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) server library",
   "keywords": [
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -51,8 +51,7 @@
     "jest": "^30.0.0",
     "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
-    "multiformats": "^13.0.0",
-    "typescript": "^6.0.3"
+    "multiformats": "^13.0.0"
   },
   "type": "module",
   "exports": {

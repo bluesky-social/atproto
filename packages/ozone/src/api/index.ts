@@ -41,6 +41,7 @@ import getLatestReport from './report/getLatestReport.js'
 import getLiveStats from './report/getLiveStats.js'
 import getReport from './report/getReport.js'
 import listActivities from './report/listActivities.js'
+import queryActivities from './report/queryActivities.js'
 import queryReports from './report/queryReports.js'
 import reassignQueue from './report/reassignQueue.js'
 import refreshStats from './report/refreshStats.js'
@@ -139,6 +140,7 @@ export default function (server: Server, ctx: AppContext) {
   getReportAssignments(server, ctx)
   createActivity(server, ctx)
   listActivities(server, ctx)
+  queryActivities(server, ctx)
   reassignQueue(server, ctx)
   return server
 }

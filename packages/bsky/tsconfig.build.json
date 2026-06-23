@@ -3,8 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
   },
   "include": ["./src"],
-  "exclude": ["./src/**/*.test.ts"]
+  "exclude": ["./src/**/*.test.ts"],
 }

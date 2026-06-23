@@ -29,7 +29,7 @@ describe('ozone-get-report', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('returns a single report by id', async () => {

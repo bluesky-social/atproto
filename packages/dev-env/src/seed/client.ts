@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CID } from 'multiformats/cid'
 import {
+  $Typed,
   AppBskyActorProfile,
   AppBskyFeedLike,
   AppBskyFeedPost,
@@ -13,7 +14,10 @@ import {
   AppBskyGraphVerification,
   AppBskyRichtextFacet,
   AtpAgent,
+  ChatBskyConvoDefs,
+  ComAtprotoAdminDefs,
   ComAtprotoModerationCreateReport,
+  ComAtprotoRepoStrongRef,
 } from '@atproto/api'
 import { CidString, Client } from '@atproto/lex'
 import { BlobRef } from '@atproto/lexicon'
@@ -577,12 +581,27 @@ export class SeedClient<
     delete foundList.items[subject]
   }
 
+  // override public signature to add support for convos and messages
   async createReport(opts: {
     reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
-    subject: ComAtprotoModerationCreateReport.InputSchema['subject']
+    subject:
+      | $Typed<ComAtprotoAdminDefs.RepoRef>
+      | $Typed<ComAtprotoRepoStrongRef.Main>
+      | $Typed<ChatBskyConvoDefs.MessageRef>
+      | $Typed<ChatBskyConvoDefs.ConvoRef>
+      | { $type: string }
     reason?: string
     reportedBy: string
-  }) {
+  }): Promise<
+    ComAtprotoModerationCreateReport.OutputSchema & {
+      subject:
+        | $Typed<ComAtprotoAdminDefs.RepoRef>
+        | $Typed<ComAtprotoRepoStrongRef.Main>
+        | $Typed<ChatBskyConvoDefs.MessageRef>
+        | $Typed<ChatBskyConvoDefs.ConvoRef>
+        | { $type: string }
+    }
+  > {
     const { reasonType, subject, reason, reportedBy } = opts
     const result = await this.agent.com.atproto.moderation.createReport(
       { reasonType, subject, reason },

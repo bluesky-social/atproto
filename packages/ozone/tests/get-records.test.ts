@@ -37,7 +37,7 @@ describe('admin get records view', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

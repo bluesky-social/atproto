@@ -28,6 +28,7 @@ type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type PostEmbedVideo = DatabaseSchemaType['post_embed_video']
+type PostEmbedGalleryImage = DatabaseSchemaType['post_embed_gallery_image']
 type PostAncestor = {
   uri: string
   height: number
@@ -47,6 +48,7 @@ type IndexedPost = {
     | PostEmbedExternal
     | PostEmbedRecord
     | PostEmbedVideo
+    | PostEmbedGalleryImage[]
   )[]
   ancestors?: PostAncestor[]
   descendents?: PostDescendent[]
@@ -144,6 +146,7 @@ const insertFn = async (
     | PostEmbedExternal
     | PostEmbedRecord
     | PostEmbedVideo
+    | PostEmbedGalleryImage[]
   )[] = []
   const postEmbeds = separateEmbeds(obj.embed)
   for (const postEmbed of postEmbeds) {
@@ -238,6 +241,27 @@ const insertFn = async (
       embeds.push(videoEmbed)
 
       await db.insertInto('post_embed_video').values(videoEmbed).execute()
+    } else if (app.bsky.embed.gallery.$matches(postEmbed)) {
+      // Gallery items are a union; today only `#image` exists, but we
+      // defensively skip unknown variants for forward-compat.
+      const galleryImages: PostEmbedGalleryImage[] = []
+      postEmbed.items.forEach((item, i) => {
+        if (app.bsky.embed.gallery.image.$matches(item)) {
+          galleryImages.push({
+            postUri: uri.toString(),
+            position: i,
+            imageCid: getBlobCidString(item.image),
+            alt: item.alt,
+          })
+        }
+      })
+      if (galleryImages.length > 0) {
+        embeds.push(galleryImages)
+        await db
+          .insertInto('post_embed_gallery_image')
+          .values(galleryImages)
+          .execute()
+      }
     }
   }
 
@@ -381,8 +405,16 @@ const deleteFn = async (
     | PostEmbedImage[]
     | PostEmbedExternal
     | PostEmbedRecord
+    | PostEmbedVideo
+    | PostEmbedGalleryImage[]
   )[] = []
-  const [deletedImgs, deletedExternals, deletedPosts] = await Promise.all([
+  const [
+    deletedImgs,
+    deletedExternals,
+    deletedPosts,
+    deletedVideo,
+    deletedGalleryImgs,
+  ] = await Promise.all([
     db
       .deleteFrom('post_embed_image')
       .where('postUri', '=', uriStr)
@@ -398,12 +430,28 @@ const deleteFn = async (
       .where('postUri', '=', uriStr)
       .returningAll()
       .executeTakeFirst(),
+    db
+      .deleteFrom('post_embed_video')
+      .where('postUri', '=', uriStr)
+      .returningAll()
+      .executeTakeFirst(),
+    db
+      .deleteFrom('post_embed_gallery_image')
+      .where('postUri', '=', uriStr)
+      .returningAll()
+      .execute(),
   ])
   if (deletedImgs.length) {
     deletedEmbeds.push(deletedImgs)
   }
   if (deletedExternals) {
     deletedEmbeds.push(deletedExternals)
+  }
+  if (deletedVideo) {
+    deletedEmbeds.push(deletedVideo)
+  }
+  if (deletedGalleryImgs.length) {
+    deletedEmbeds.push(deletedGalleryImgs)
   }
   if (deletedPosts) {
     const embedUri = new AtUri(deletedPosts.embedUri)
@@ -457,10 +505,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
           replyCount: db
             .selectFrom('post')
             .where('post.replyParent', '=', postIdx.post.replyParent)
-            .where((qb) =>
-              qb
-                .where('post.violatesThreadGate', 'is', null)
-                .orWhere('post.violatesThreadGate', '=', false),
+            .where((eb) =>
+              eb.or([
+                eb('post.violatesThreadGate', 'is', null),
+                eb('post.violatesThreadGate', '=', false),
+              ]),
             )
             .select(countAll.as('count')),
         })
@@ -486,7 +535,10 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: app.bsky.feed.post.main,
     insertFn,

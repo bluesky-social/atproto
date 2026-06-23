@@ -1,51 +1,62 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useAsyncAction } from './use-async-action.ts'
+import { useCountdown } from './use-countdown.ts'
+import { useStableCallback } from './use-stable-callback.ts'
 
-export type Action = (...args: unknown[]) => unknown
-
-export type RateLimitedActionOptions<TAction extends Action = Action> = {
-  action: TAction
-  cooldownSeconds?: number
-  initialCooldown?: number
+export type RateLimitedActionOptions = {
+  action: () => void | PromiseLike<void>
+  cooldown?: number
+  startWithCooldown?: boolean
 }
 
-export type RateLimitedHandler<TAction extends Action> = {
-  disabled: boolean
-  trigger: (...args: Parameters<TAction>) => void | ReturnType<TAction>
+export type RateLimitedHandler = {
+  isRateLimited: boolean
+  isPending: boolean
+  trigger: () => Promise<void>
   clear: () => void
   remaining: number
   total: number
 }
 
-export function useRateLimitedAction<TAction extends Action>({
+export function useRateLimitedAction({
   action,
-  cooldownSeconds = 30,
-  initialCooldown = 0,
-}: RateLimitedActionOptions<TAction>): RateLimitedHandler<TAction> {
-  const [remaining, setRemaining] = useState(initialCooldown)
-  const disabled = remaining > 0
-
-  const trigger = useCallback(
-    (...args: Parameters<TAction>): void | ReturnType<TAction> => {
-      if (disabled) throw new Error('Action is on cooldown')
-      setRemaining(cooldownSeconds)
-      return action?.(...args) as void | ReturnType<TAction>
-    },
-    [action, cooldownSeconds, disabled],
+  cooldown = 30,
+  startWithCooldown = false,
+}: RateLimitedActionOptions): RateLimitedHandler {
+  const [remaining, setRemaining] = useCountdown(
+    startWithCooldown ? cooldown : 0,
   )
 
-  useEffect(() => {
-    if (remaining > 0) {
-      const timer = setTimeout(() => {
-        setRemaining(remaining - 1)
-      }, 1000)
-      return () => clearTimeout(timer)
+  const { loading, run, reset } = useAsyncAction(async () => {
+    await action()
+    // Only set the cooldown if the action was successful
+    setRemaining(cooldown)
+  })
+
+  const trigger = useStableCallback(async () => {
+    if (loading || remaining > 0) {
+      throw new Error('Action is already running or rate limited')
     }
-  }, [remaining])
+    return run()
+  })
 
-  const clear = useCallback(() => setRemaining(0), [])
+  const clear = useStableCallback(() => {
+    setRemaining(0)
+    reset()
+  })
 
-  return useMemo<RateLimitedHandler<TAction>>(
-    () => ({ disabled, trigger, clear, remaining, total: cooldownSeconds }),
-    [disabled, trigger, clear, remaining, cooldownSeconds],
+  const isPending = loading
+  const isRateLimited = remaining > 0
+
+  return useMemo<RateLimitedHandler>(
+    () => ({
+      isRateLimited,
+      isPending,
+      trigger,
+      clear,
+      remaining,
+      total: cooldown,
+    }),
+    [remaining, isRateLimited, isPending, trigger, clear, cooldown],
   )
 }

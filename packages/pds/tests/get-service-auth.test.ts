@@ -23,7 +23,7 @@ describe('com.atproto.server.getServiceAuth', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('issues a token whose aud matches a bare-DID input', async () => {

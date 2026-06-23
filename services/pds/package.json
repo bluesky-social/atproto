@@ -1,5 +1,5 @@
 {
-  "name": "plc-service",
+  "name": "pds-service",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@8.15.9",

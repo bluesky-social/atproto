@@ -1,9 +1,9 @@
+import { Did } from '@atproto/did'
 import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { NonNullableKeys } from '../lib/util/type.js'
-import { Sub } from '../oidc/sub.js'
 import { Code } from './code.js'
 
 export type {
@@ -12,8 +12,8 @@ export type {
   ClientId,
   Code,
   DeviceId,
+  Did,
   OAuthAuthorizationRequestParameters,
-  Sub,
 }
 
 export type RequestData = {
@@ -22,15 +22,15 @@ export type RequestData = {
   parameters: Readonly<OAuthAuthorizationRequestParameters>
   expiresAt: Date
   deviceId: DeviceId | null
-  sub: Sub | null
+  did: Did | null
   code: Code | null
 }
 
 export type RequestDataAuthorized = NonNullableKeys<
   RequestData,
-  'sub' | 'deviceId'
+  'did' | 'deviceId'
 >
 
 export const isRequestDataAuthorized = (
   data: RequestData,
-): data is RequestDataAuthorized => data.sub !== null && data.deviceId !== null
+): data is RequestDataAuthorized => data.did !== null && data.deviceId !== null

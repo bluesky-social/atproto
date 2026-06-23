@@ -1,7 +1,15 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyEmbedExternal,
   AtpAgent,
@@ -77,7 +85,6 @@ describe('pds profile views', () => {
       password: 'noprofile-pass',
     })
 
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -86,9 +93,8 @@ describe('pds profile views', () => {
     noprofile = sc.dids.noprofile
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
 

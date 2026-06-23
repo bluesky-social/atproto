@@ -3,6 +3,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -43,7 +44,6 @@ describe('appview bookmarks views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -51,15 +51,15 @@ describe('appview bookmarks views', () => {
     dan = sc.dids.dan
   })
 
+  beforeEach(async () => network.processAll())
+
   afterEach(async () => {
     vi.resetAllMocks()
     await clearPrivateData(db)
     await clearBookmarks(db)
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  afterAll(async () => network?.close())
 
   const get = async (actor: string, limit?: number, cursor?: string) =>
     agent.app.bsky.bookmark.getBookmarks(

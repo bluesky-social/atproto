@@ -2,9 +2,9 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { XIcon } from '@phosphor-icons/react'
 import * as Popover from '@radix-ui/react-popover'
 import { ReactNode } from 'react'
+import { Button, ButtonProps } from '#/components/forms/button.tsx'
 import { useAuthenticationContext } from '#/contexts/authentication.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
-import { Button, ButtonProps } from '../forms/button.tsx'
 import { AccountImage } from './account-image.tsx'
 import { AccountOverview } from './account-overview.tsx'
 
@@ -16,7 +16,7 @@ export type AccountSelectorProps = Omit<
 export function AccountSelector(props: AccountSelectorProps): ReactNode {
   const { t } = useLingui()
   const { session, canSwitchAccounts } = useAuthenticationContext()
-  const { setSession, doSignOut } = useSessionContext()
+  const { setSession, api } = useSessionContext()
 
   return (
     <Popover.Root>
@@ -47,7 +47,9 @@ export function AccountSelector(props: AccountSelectorProps): ReactNode {
             />
             <Button
               key="signout"
-              onClick={() => doSignOut(session.account)}
+              onClick={async (_event) => {
+                await api.signOut(session.account)
+              }}
               color="primary"
             >
               <Trans>Sign out</Trans>

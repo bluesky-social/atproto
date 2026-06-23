@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtUri, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util.js'
@@ -36,12 +36,10 @@ describe('pds views with blocking from block lists', () => {
       sc.posts[dan][0].ref,
       'alice replies to dan',
     )
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   let listUri: string
 

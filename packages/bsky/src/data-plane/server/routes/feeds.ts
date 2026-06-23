@@ -21,33 +21,50 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         // only your own posts
         .where('type', '=', 'post')
         // only posts with media
-        .whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+        .where((eb) =>
+          eb.or([
+            eb.exists(
+              eb
+                .selectFrom('post_embed_image')
+                .select('post_embed_image.postUri')
+                .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            ),
+            eb.exists(
+              eb
+                .selectFrom('post_embed_gallery_image')
+                .select('post_embed_gallery_image.postUri')
+                .whereRef(
+                  'post_embed_gallery_image.postUri',
+                  '=',
+                  'feed_item.postUri',
+                ),
+            ),
+          ]),
         )
     } else if (feedType === FeedType.POSTS_WITH_VIDEO) {
       builder = builder
         // only your own posts
         .where('type', '=', 'post')
         // only posts with video
-        .whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_video')
-            .select('post_embed_video.postUri')
-            .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
+        .where(({ eb, exists }) =>
+          exists(
+            eb
+              .selectFrom('post_embed_video')
+              .select('post_embed_video.postUri')
+              .whereRef('post_embed_video.postUri', '=', 'feed_item.postUri'),
+          ),
         )
     } else if (feedType === FeedType.POSTS_NO_REPLIES) {
-      builder = builder.where((qb) =>
-        qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+      builder = builder.where((eb) =>
+        eb.or([eb('post.replyParent', 'is', null), eb('type', '=', 'repost')]),
       )
     } else if (feedType === FeedType.POSTS_AND_AUTHOR_THREADS) {
-      builder = builder.where((qb) =>
-        qb
-          .where('type', '=', 'repost')
-          .orWhere('post.replyParent', 'is', null)
-          .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`),
+      builder = builder.where((eb) =>
+        eb.or([
+          eb('type', '=', 'repost'),
+          eb('post.replyParent', 'is', null),
+          eb('post.replyRoot', 'like', `at://${actorDid}/%`),
+        ]),
       )
     }
 

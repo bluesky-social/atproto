@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyActorDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, verificationsSeed } from '@atproto/dev-env'
 
@@ -41,7 +41,6 @@ describe('verification views', () => {
     sc = network.getSeedClient()
 
     await verificationsSeed(sc)
-    await network.processAll()
 
     labelerDid = network.bsky.ctx.cfg.modServiceDid
     alice = sc.dids.alice
@@ -63,11 +62,10 @@ describe('verification views', () => {
       .set({ trustedVerifier: true })
       .where('did', 'in', [verifier1, verifier2, verifier3])
       .execute()
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('profile views', () => {
     const testCases: ProfileViewTestCase[] = [
@@ -78,6 +76,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: true,
               issuer: verifier2,
               uri: expect.any(String),
@@ -115,12 +115,16 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
             },
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: true,
               issuer: verifier2,
               uri: expect.any(String),
@@ -141,12 +145,16 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
             },
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: false,
               issuer: verifier2,
               uri: expect.any(String),
@@ -167,6 +175,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),
@@ -193,6 +203,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier2',
+              issuerHandle: 'verifier2.test',
               isValid: false,
               issuer: verifier2,
               uri: expect.any(String),
@@ -219,6 +231,8 @@ describe('verification views', () => {
           verifications: [
             {
               createdAt: expect.any(String),
+              issuerDisplayName: 'display-verifier1',
+              issuerHandle: 'verifier1.test',
               isValid: true,
               issuer: verifier1,
               uri: expect.any(String),

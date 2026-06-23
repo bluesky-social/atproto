@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "module": "Node18",
-    "noEmit": true
+    "noEmit": true,
   },
-  "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts", "./*.cts", "./*.mts"]
+  "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts", "./*.cts", "./*.mts"],
 }

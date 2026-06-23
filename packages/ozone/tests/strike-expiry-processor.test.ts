@@ -68,7 +68,7 @@ describe('strike expiry processor', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('processes expired strikes and updates active strike count', async () => {

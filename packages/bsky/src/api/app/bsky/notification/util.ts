@@ -1,7 +1,5 @@
 import { app } from '../../../../lexicons/index.js'
 import {
-  ChatNotificationInclude,
-  ChatNotificationPreference,
   FilterableNotificationPreference,
   NotificationInclude,
   NotificationPreference,
@@ -71,15 +69,11 @@ const ensurePreferences = (
   }
 }
 
-const protobufChatPreferenceToLex = (
-  p?: DeepPartial<ChatNotificationPreference>,
-): Partial<app.bsky.notification.defs.ChatPreference> => {
-  return {
-    include:
-      p?.include === ChatNotificationInclude.ACCEPTED ? 'accepted' : 'all',
-    push: p?.push?.enabled,
+export const DEFAULT_CHAT_PREFERENCE: app.bsky.notification.defs.ChatPreference =
+  {
+    include: 'all',
+    push: true,
   }
-}
 
 const protobufFilterablePreferenceToLex = (
   p?: DeepPartial<FilterableNotificationPreference>,
@@ -104,7 +98,9 @@ export const protobufToLex = (
   res: DeepPartial<NotificationPreferences>,
 ): app.bsky.notification.defs.Preferences => {
   return ensurePreferences({
-    chat: protobufChatPreferenceToLex(res.chat),
+    // NOTE: See the deprecation notice on the lexicon. This field returns a static default value and shouldn't be used.
+    // Use the chat.bsky.notification.defs#preferences type instead.
+    chat: DEFAULT_CHAT_PREFERENCE,
     follow: protobufFilterablePreferenceToLex(res.follow),
     like: protobufFilterablePreferenceToLex(res.like),
     likeViaRepost: protobufFilterablePreferenceToLex(res.likeViaRepost),

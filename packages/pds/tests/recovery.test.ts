@@ -31,7 +31,7 @@ describe('recovery', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getStats = (did: string) => {

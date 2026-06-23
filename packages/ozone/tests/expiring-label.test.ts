@@ -25,7 +25,7 @@ describe('expiring label', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const emitExpiringLabel = async (did: string) =>

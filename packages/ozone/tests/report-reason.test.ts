@@ -45,7 +45,7 @@ describe('report reason', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('createReport', () => {

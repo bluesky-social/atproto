@@ -1,3 +1,4 @@
+import type { Did } from '@atproto/did'
 import { SignedJwt, isSignedJwt } from '@atproto/jwk'
 import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -20,7 +21,6 @@ import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { Sub } from '../oidc/sub.js'
 import { Code, isCode } from '../request/code.js'
 import { AccessTokenPayload } from '../signer/access-token-payload.js'
 import { Signer } from '../signer/signer.js'
@@ -61,10 +61,10 @@ export class TokenManager {
   ): Promise<OAuthAccessToken> {
     const claims: TokenClaims = {
       jti: tokenId,
-      sub: account.sub,
+      sub: account.did,
       iat: dateToEpoch(issuedAt),
       exp: dateToEpoch(expiresAt),
-      aud: account.aud,
+      aud: account.pds,
 
       ...(parameters.dpop_jkt && {
         cnf: { jkt: parameters.dpop_jkt },
@@ -136,7 +136,7 @@ export class TokenManager {
       accessToken,
       refreshToken,
       expiresAt,
-      account.sub,
+      account.did,
       scope,
     )
 
@@ -147,7 +147,7 @@ export class TokenManager {
       clientId: client.id,
       clientAuth,
       deviceId,
-      sub: account.sub,
+      did: account.did,
       parameters,
       details: null,
       scope,
@@ -191,7 +191,7 @@ export class TokenManager {
     accessToken: OAuthAccessToken,
     refreshToken: string | undefined,
     expiresAt: Date,
-    sub: Sub,
+    did: Did,
     scope: string,
   ): OAuthTokenResponse {
     return {
@@ -209,7 +209,7 @@ export class TokenManager {
       // ATPROTO extension: add the sub claim to the token response to allow
       // clients to resolve the PDS url (audience) using the did resolution
       // mechanism.
-      sub,
+      sub: did,
     }
   }
 
@@ -263,7 +263,7 @@ export class TokenManager {
       accessToken,
       nextRefreshToken,
       expiresAt,
-      account.sub,
+      account.did,
       scope,
     )
 
@@ -305,10 +305,10 @@ export class TokenManager {
     if (!tokenInfo) return null
 
     // Fool-proof: Invalid store implementation ?
-    if (payload.sub !== tokenInfo.account.sub) {
+    if (payload.sub !== tokenInfo.account.did) {
       await this.deleteToken(tokenInfo.id)
       throw new Error(
-        `Account sub (${tokenInfo.account.sub}) does not match token sub (${payload.sub})`,
+        `Account sub (${tokenInfo.account.did}) does not match token sub (${payload.sub})`,
       )
     }
 
@@ -395,20 +395,20 @@ export class TokenManager {
 
     return {
       jti: tokenId,
-      sub: account.sub,
+      sub: account.did,
       iat: dateToEpoch(data.updatedAt),
       exp: dateToEpoch(data.expiresAt),
-      aud: account.aud,
+      aud: account.pds,
       scope: data.scope ?? data.parameters.scope,
       // https://datatracker.ietf.org/doc/html/rfc8693#section-4.3
       client_id: data.clientId,
     }
   }
 
-  async listAccountTokens(sub: Sub): Promise<TokenInfo[]> {
-    const results = await this.store.listAccountTokens(sub)
+  async listAccountTokens(did: Did): Promise<TokenInfo[]> {
+    const results = await this.store.listAccountTokens(did)
     return results
-      .filter((tokenInfo) => tokenInfo.account.sub === sub) // Fool proof
+      .filter((tokenInfo) => tokenInfo.account.did === did) // Fool proof
       .filter((tokenInfo) => !isCurrentTokenExpired(tokenInfo))
   }
 }

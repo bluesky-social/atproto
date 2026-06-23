@@ -27,15 +27,14 @@ describe('proxy read after write', () => {
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
-    await network.processAll()
     alice = sc.dids.alice
     carol = sc.dids.carol
-    await network.bsky.sub.destroy()
+    await network.processAll()
+    await network.bsky.sub.stop()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('handles read after write on profiles', async () => {
     await sc.updateProfile(alice, { displayName: 'blah' })

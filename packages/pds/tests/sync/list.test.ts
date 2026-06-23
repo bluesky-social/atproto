@@ -17,7 +17,7 @@ describe('sync listing', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('lists hosted repos in order of creation', async () => {

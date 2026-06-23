@@ -48,6 +48,7 @@
             "app.bsky.feed.getSuggestedFeeds",
             "app.bsky.feed.getTimeline",
             "app.bsky.feed.searchPosts",
+            "app.bsky.feed.searchPostsV2",
             "app.bsky.feed.sendInteractions",
             "app.bsky.graph.getActorStarterPacks",
             "app.bsky.graph.getBlocks",

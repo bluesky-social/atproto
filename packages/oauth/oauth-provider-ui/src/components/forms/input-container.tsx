@@ -82,11 +82,11 @@ export function InputContainer({
 
         // Outline
         'outline-none',
-        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-primary',
-        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-2',
-        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-1',
-        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-white',
-        'dark:has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-black',
+        'has-[input[type="text"]:focus,input[type="email"]:focus,input[type="password"]:focus]:ring-primary',
+        'has-[input[type="text"]:focus,input[type="email"]:focus,input[type="password"]:focus]:ring-2',
+        'has-[input[type="text"]:focus,input[type="email"]:focus,input[type="password"]:focus]:ring-offset-1',
+        'has-[input[type="text"]:focus,input[type="email"]:focus,input[type="password"]:focus]:ring-offset-white',
+        'dark:has-[input[type="text"]:focus,input[type="email"]:focus,input[type="password"]:focus]:ring-offset-black',
         tabIndex !== -1 && [
           'cursor-pointer',
           'focus:ring-primary',

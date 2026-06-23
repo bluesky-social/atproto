@@ -88,12 +88,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const { ref } = db.db.dynamic
     let builder = db.db
       .selectFrom('list')
-      .whereExists(
-        db.db
-          .selectFrom('list_mute')
-          .where('list_mute.mutedByDid', '=', actorDid)
-          .whereRef('list_mute.listUri', '=', ref('list.uri'))
-          .selectAll(),
+      .where(({ exists }) =>
+        exists(
+          db.db
+            .selectFrom('list_mute')
+            .where('list_mute.mutedByDid', '=', actorDid)
+            .whereRef('list_mute.listUri', '=', ref('list.uri'))
+            .selectAll(),
+        ),
       )
       .selectAll('list')
 

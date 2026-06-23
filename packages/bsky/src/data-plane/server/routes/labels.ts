@@ -19,8 +19,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('label')
       .where('uri', 'in', subjects)
       .where('src', 'in', issuers)
-      .where((qb) =>
-        qb.where('exp', 'is', null).orWhere(sql`exp::timestamp > now()`),
+      .where((eb) =>
+        eb.or([eb('exp', 'is', null), sql<boolean>`exp::timestamp > now()`]),
       )
       .selectAll()
       .execute()

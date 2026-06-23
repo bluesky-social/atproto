@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyActorSearchActors, AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
@@ -21,7 +21,8 @@ describe.skip('pds actor search views', () => {
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.sub.destroy()
+    await network.processAll()
+    await network.bsky.sub.stop()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
@@ -41,7 +42,6 @@ describe.skip('pds actor search views', () => {
 
     // Process remaining profiles
     await network.bsky.sub.restart()
-    await network.processAll(50000)
     headers = await network.serviceHeaders(
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActors,
@@ -50,11 +50,10 @@ describe.skip('pds actor search views', () => {
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActorsTypeahead,
     )
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll(50_000), 50_100)
+  afterAll(async () => network?.close())
 
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(

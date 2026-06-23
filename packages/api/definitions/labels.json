@@ -92,12 +92,7 @@
     "behaviors": {
       "account": {
         "avatar": "blur",
-        "banner": "blur",
-        "profileList": "blur",
-        "profileView": "blur",
-        "contentList": "blur",
-        "contentView": "blur",
-        "contentMedia": "blur"
+        "banner": "blur"
       },
       "profile": {
         "avatar": "blur",
@@ -118,12 +113,7 @@
     "behaviors": {
       "account": {
         "avatar": "blur",
-        "banner": "blur",
-        "profileList": "blur",
-        "profileView": "blur",
-        "contentList": "blur",
-        "contentView": "blur",
-        "contentMedia": "blur"
+        "banner": "blur"
       },
       "profile": {
         "avatar": "blur",
@@ -144,8 +134,7 @@
     "behaviors": {
       "account": {
         "avatar": "blur",
-        "banner": "blur",
-        "contentMedia": "blur"
+        "banner": "blur"
       },
       "profile": {
         "avatar": "blur",
@@ -167,12 +156,7 @@
     "behaviors": {
       "account": {
         "avatar": "blur",
-        "banner": "blur",
-        "profileList": "blur",
-        "profileView": "blur",
-        "contentList": "blur",
-        "contentView": "blur",
-        "contentMedia": "blur"
+        "banner": "blur"
       },
       "profile": {
         "avatar": "blur",

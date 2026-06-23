@@ -68,7 +68,7 @@ describe('ozone-settings', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('upsertOption', () => {

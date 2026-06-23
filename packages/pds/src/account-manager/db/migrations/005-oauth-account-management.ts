@@ -85,13 +85,14 @@ export async function up(
         .select('authenticatedAt as createdAt') // Best we can do
         .select('authenticatedAt as updatedAt')
         .where('remember', '=', 1)
-        .whereExists((qb) =>
+        .where(({ exists, selectFrom }) =>
           // device_account does not have fkey on account.did,
           // so we satisfy account_device_did_fk with this condition.
-          qb
-            .selectFrom('account')
-            .selectAll()
-            .whereRef('account.did', '=', 'device_account.did'),
+          exists(
+            selectFrom('account')
+              .selectAll()
+              .whereRef('account.did', '=', 'device_account.did'),
+          ),
         ),
     )
     .onConflict((oc) => oc.doNothing())

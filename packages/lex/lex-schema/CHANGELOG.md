@@ -1,5 +1,21 @@
 # @atproto/lex-schema
 
+## 0.1.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/lex-data@0.1.2
+  - @atproto/syntax@0.6.2
+
+## 0.1.3
+
+### Patch Changes
+
+- [#5037](https://github.com/bluesky-social/atproto/pull/5037) [`7b8ca6e`](https://github.com/bluesky-social/atproto/commit/7b8ca6e0aace79cca38e880429317fde8268ba50) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `atUri()` helper for safely building `AtUriString` values from raw components or record schemas. Also fixes validation of `'any'` record-key strings.
+
 ## 0.1.2
 
 ### Patch Changes

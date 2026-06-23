@@ -4,18 +4,18 @@ import {
   ClientAuthLegacy,
   Code,
   DeviceId,
+  Did,
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
   OAuthClientId,
   RefreshToken,
-  Sub,
   TokenId,
 } from '@atproto/oauth-provider'
 import { DateISO, JsonEncoded } from '../../../db/cast.js'
 
 export interface Token {
   id: Generated<number>
-  did: Sub
+  did: Did
 
   tokenId: TokenId
   createdAt: DateISO
