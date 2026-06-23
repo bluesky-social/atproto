@@ -1,7 +1,7 @@
 import {
-  type DecodeOptions,
-  type EncodeOptions,
-  type TagDecoder,
+  DecodeOptions,
+  EncodeOptions,
+  TagDecoder,
   Token,
   Type,
   decode as cborgDecode,
@@ -9,7 +9,7 @@ import {
   encode as cborgEncode,
 } from 'cborg'
 import type { OptionalTypeEncoder } from 'cborg/interface'
-import { type Cid, type LexValue, decodeCid, ifCid } from '@atproto/lex-data'
+import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
 
 // @NOTE "cborg" version 4 is required to support multi-decoding via the
 // "decodeFirst" function. However, that version only exposes ES modules.

@@ -4,9 +4,9 @@
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "composite": true,
-    "verbatimModuleSyntax": true,
-    "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
+    "target": "ES2023",
+    "verbatimModuleSyntax": true,
   },
 }

@@ -4,9 +4,9 @@
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "composite": true,
-    "verbatimModuleSyntax": true,
     "rootDir": "./src",
     "outDir": "./dist",
+    "verbatimModuleSyntax": true,
     "types": ["node"],
   },
   "references": [

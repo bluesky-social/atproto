@@ -4,8 +4,8 @@
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "composite": true,
-    "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
+    "target": "ES2023",
   },
 }

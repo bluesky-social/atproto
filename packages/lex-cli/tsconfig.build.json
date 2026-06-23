@@ -2,9 +2,9 @@
   "extends": "../../tsconfig/node.tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "verbatimModuleSyntax": true,
     "rootDir": "./src",
     "outDir": "./dist",
+    "verbatimModuleSyntax": true,
   },
   "include": ["./src"],
   "references": [

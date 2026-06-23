@@ -1,4 +1,4 @@
-import { type CborCid, type LexValue, cidForCbor } from '@atproto/lex-data'
+import { CborCid, LexValue, cidForCbor } from '@atproto/lex-data'
 import { encode } from './encoding.js'
 
 export type { Cid } from '@atproto/lex-data'

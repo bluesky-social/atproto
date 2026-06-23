@@ -141,11 +141,13 @@ export const asyncFilter = async <T>(
 export const isErrnoException = (
   err: unknown,
 ): err is NodeJS.ErrnoException => {
-  return !!err && (err as any)['code']
+  // @TODO This implementation does not actually safely checks if the error is
+  // an ErrnoException.
+  return !!(err as any)?.code
 }
 
 export const errHasMsg = (err: unknown, msg: string): boolean => {
-  return !!err && typeof err === 'object' && (err as any)['message'] === msg
+  return typeof err === 'object' && err != null && (err as any).message === msg
 }
 
 export const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
