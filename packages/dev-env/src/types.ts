@@ -51,6 +51,7 @@ export type TestServerParams = {
   bsky: Partial<BskyConfig>
   ozone: Partial<OzoneConfig>
   introspect: Partial<IntrospectConfig>
+  extraPdses: number
 }
 
 export type DidAndKey = {

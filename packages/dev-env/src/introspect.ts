@@ -20,31 +20,45 @@ export class IntrospectServer {
   static async start(
     port: number,
     plc: TestPlc,
-    pds: TestPds,
-    bsky: TestBsky,
-    ozone: TestOzone,
+    pds: TestPds | TestPds[],
+    bsky?: TestBsky,
+    ozone?: TestOzone,
   ) {
+    const pdses = Array.isArray(pds) ? pds : [pds]
     const app = express()
     app.get('/', (_req, res) => {
       res.status(200).send({
         plc: {
           url: plc.url,
         },
+        // For backwards compat the first PDS is exposed at "pds"; all PDSes
+        // (including the first) are exposed at "pdses".
         pds: {
-          url: pds.url,
-          did: pds.ctx.cfg.service.did,
+          url: pdses[0].url,
+          did: pdses[0].ctx.cfg.service.did,
         },
-        bsky: {
-          url: bsky.url,
-          did: bsky.ctx.cfg.serverDid,
-        },
-        ozone: {
-          url: ozone.url,
-          did: ozone.ctx.cfg.service.did,
-        },
-        db: {
-          url: ozone.ctx.cfg.db.postgresUrl,
-        },
+        pdses: pdses.map((p) => ({
+          url: p.url,
+          did: p.ctx.cfg.service.did,
+          handleDomains: p.ctx.cfg.identity.serviceHandleDomains,
+        })),
+        bsky: bsky
+          ? {
+              url: bsky.url,
+              did: bsky.ctx.cfg.serverDid,
+            }
+          : undefined,
+        ozone: ozone
+          ? {
+              url: ozone.url,
+              did: ozone.ctx.cfg.service.did,
+            }
+          : undefined,
+        db: ozone
+          ? {
+              url: ozone.ctx.cfg.db.postgresUrl,
+            }
+          : undefined,
       })
     })
     const server = app.listen(port)
