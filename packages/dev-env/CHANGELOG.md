@@ -1,5 +1,14 @@
 # @atproto/dev-env
 
+## 0.5.18
+
+### Patch Changes
+
+- [#5139](https://github.com/bluesky-social/atproto/pull/5139) [`fcd5797`](https://github.com/bluesky-social/atproto/commit/fcd57974d361d91695f80daf1ad38fd1ab6eacad) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add return type of `SeedClient.createAccount()` method
+
+- Updated dependencies [[`ec8c90c`](https://github.com/bluesky-social/atproto/commit/ec8c90c88963155f471fd25ad266ab29f91f27fc)]:
+  - @atproto/api@0.20.20
+
 ## 0.5.17
 
 ### Patch Changes
