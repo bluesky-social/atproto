@@ -401,6 +401,7 @@ export class AccountManager {
       deviceMetadata,
       input,
       account: updatedAccount,
+      prevEmail: account.email,
     })
 
     return updatedAccount
