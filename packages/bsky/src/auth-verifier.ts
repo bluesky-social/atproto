@@ -49,6 +49,7 @@ type NullOutput = {
 type StandardOutput = {
   credentials: {
     type: 'standard'
+    /** @note we don't validate this to be a {@link DidString} (we might want to in the future) */
     aud: string
     iss: DidString | `${DidString}#${string}`
   }
@@ -64,8 +65,8 @@ type RoleOutput = {
 type ModServiceOutput = {
   credentials: {
     type: 'mod_service'
-    aud: string
-    iss: string
+    aud: DidString
+    iss: DidString | `${DidString}#${string}`
   }
 }
 
@@ -138,7 +139,10 @@ export class AuthVerifier {
           iss: null,
           aud: null,
         })
-        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
+        if (
+          !opts.skipAudCheck &&
+          !(this.standardAudienceDids as Set<string>).has(aud)
+        ) {
           throw new AuthRequiredError(
             'jwt audience does not match service did',
             'BadJwtAudience',
@@ -299,17 +303,13 @@ export class AuthVerifier {
     return { status: Invalid, admin: false }
   }
 
-  async verifyServiceJwt(
-    reqCtx: ReqCtx,
-    opts: {
+  async verifyServiceJwt<
+    TOptions extends {
       iss: string[] | null
-      aud: DidString | null
+      aud: string | null
       lxmCheck?: (method?: string) => boolean
     },
-  ): Promise<{
-    iss: DidString | `${DidString}#${string}`
-    aud: DidString | `${DidString}#${string}`
-  }> {
+  >(reqCtx: ReqCtx, opts: TOptions) {
     const getSigningKey = async (
       iss: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
@@ -318,6 +318,10 @@ export class AuthVerifier {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
       const [did, serviceId] = iss.split('#')
+      if (!isDidString(did)) {
+        throw new AuthRequiredError('identity unknown')
+      }
+
       const keyId =
         serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
       let identity: GetIdentityByDidResponse
@@ -371,20 +375,16 @@ export class AuthVerifier {
       // we'll allow ozone self-hosters to upgrade before removing this condition.
       assertLxmCheck()
     }
-    const audHashIndex = payload.aud.indexOf('#')
-    const audDid =
-      audHashIndex !== -1 ? payload.aud.slice(0, audHashIndex) : payload.aud
-    if (!isDidString(audDid)) {
-      throw new AuthRequiredError('bad jwt audience', 'BadJwtAudience')
-    }
 
     return {
-      iss: payload.iss,
-      aud: payload.aud as DidString | `${DidString}#${string}`,
+      iss: payload.iss as (DidString | `${DidString}#${string}`) &
+        (TOptions extends { iss: ReadonlyArray<infer I> } ? I : unknown),
+      aud: payload.aud as string &
+        (TOptions extends { aud: infer A extends string } ? A : unknown),
     }
   }
 
-  isModService(iss: string): iss is DidString | `${DidString}#${string}` {
+  isModService(iss: string): iss is DidString | `${DidString}#atproto_labeler` {
     return [
       this.modServiceDid,
       `${this.modServiceDid}#atproto_labeler`,
