@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.19.2
+
+### Patch Changes
+
+- [#5129](https://github.com/bluesky-social/atproto/pull/5129) [`3fd1168`](https://github.com/bluesky-social/atproto/commit/3fd11680d1d9f10a813ec93a79373e3ac567d7c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type `handle` in `CreateAccountData` as `HandleString`
+
 ## 0.19.1
 
 ### Patch Changes
