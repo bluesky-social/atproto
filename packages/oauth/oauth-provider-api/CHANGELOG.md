@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-api
 
+## 0.7.1
+
+### Patch Changes
+
+- [#5140](https://github.com/bluesky-social/atproto/pull/5140) [`0b165ca`](https://github.com/bluesky-social/atproto/commit/0b165ca96c460d3a30207f81e13eebfe9e8c7a1c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `deleteAfter` field to account deactivation data
+
 ## 0.7.0
 
 ### Minor Changes
