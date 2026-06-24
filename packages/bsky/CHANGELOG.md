@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.0.247
+
+### Patch Changes
+
+- [#5131](https://github.com/bluesky-social/atproto/pull/5131) [`84dd93c`](https://github.com/bluesky-social/atproto/commit/84dd93c14b14390bd3838954f8a0bfe231aab3c1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type handle as `HandleString` and did as `DidString` in seed user data
+
+- [#5131](https://github.com/bluesky-social/atproto/pull/5131) [`84dd93c`](https://github.com/bluesky-social/atproto/commit/84dd93c14b14390bd3838954f8a0bfe231aab3c1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Validate `aud` of service auth tokens to be valid DIDs
+
 ## 0.0.246
 
 ### Patch Changes
