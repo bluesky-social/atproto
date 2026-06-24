@@ -138,6 +138,7 @@ export type OAuthHooks = {
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account
+    prevAccount: Account
   }) => Awaitable<void>
 
   /**

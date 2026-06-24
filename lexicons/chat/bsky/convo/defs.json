@@ -95,7 +95,11 @@
         "replyTo": {
           "description": "If set, the message this message is replying to. The full view of the referenced message is embedded so the client can render it inline. Only a single level is embedded: the embedded message will not itself have a populated 'replyTo' field even if it was also a reply.",
           "type": "union",
-          "refs": ["#messageView", "#deletedMessageView"]
+          "refs": [
+            "#messageView",
+            "#deletedMessageView",
+            "#messageBeforeUserJoinedGroupView"
+          ]
         },
         "sender": { "type": "ref", "ref": "#messageViewSender" },
         "sentAt": { "type": "string", "format": "datetime" }
@@ -284,6 +288,11 @@
         "sender": { "type": "ref", "ref": "#messageViewSender" },
         "sentAt": { "type": "string", "format": "datetime" }
       }
+    },
+    "messageBeforeUserJoinedGroupView": {
+      "description": "Placeholder embedded in place of a reply's parent message when that parent was sent before the viewer joined the group convo. The viewer has no access to that history, so no message data is carried.",
+      "type": "object",
+      "properties": {}
     },
     "messageViewSender": {
       "type": "object",

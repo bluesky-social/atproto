@@ -1,5 +1,13 @@
 # @atproto/oauth-provider
 
+## 0.19.3
+
+### Patch Changes
+
+- [#5136](https://github.com/bluesky-social/atproto/pull/5136) [`4d164c8`](https://github.com/bluesky-social/atproto/commit/4d164c8df5d1c39ff56a0f386010820f1e04f75e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `deleteAfter` field to account deactivation data
+
+- [#5136](https://github.com/bluesky-social/atproto/pull/5136) [`4d164c8`](https://github.com/bluesky-social/atproto/commit/4d164c8df5d1c39ff56a0f386010820f1e04f75e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `prevAccount` to `onUpdateEmailConfirmed` hook data
+
 ## 0.19.2
 
 ### Patch Changes
