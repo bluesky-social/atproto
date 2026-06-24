@@ -135,10 +135,10 @@ const skeletonV2 = async (
       domains: params.domain ? [params.domain] : [],
       urls: params.url ? [params.url] : [],
       hashtags: params.tag ?? [],
+      languages: params.lang ? [params.lang] : [],
     },
     since: parseTimestamp(params.since),
     until: parseTimestamp(params.until),
-    language: params.lang,
   })
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
