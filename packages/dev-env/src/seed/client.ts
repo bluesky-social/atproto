@@ -176,6 +176,7 @@ export class SeedClient<
     const did = account.did as DidString
     this.dids[shortName] = did
     this.accounts[account.did] = {
+      // @NOTE type case needed until we move test to lex-sdk
       ...(account as typeof account & { handle: HandleString }),
       did,
       email: params.email,
