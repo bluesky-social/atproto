@@ -13,11 +13,23 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/aws"
   },
-  "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "engines": {
     "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -33,12 +45,5 @@
     "multiformats": "^13.0.0",
     "uint8arrays": "^5.0.0"
   },
-  "devDependencies": {},
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  }
+  "devDependencies": {}
 }

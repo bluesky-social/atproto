@@ -13,6 +13,22 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "./bin",
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
@@ -24,9 +40,6 @@
     "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
     "migration:create": "ts-node ./bin/migration-create.ts",
     "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
-  },
-  "engines": {
-    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
@@ -87,12 +100,5 @@
     "@types/qs": "^6.9.7",
     "ts-node": "^10.8.2",
     "vitest": "^4.0.16"
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

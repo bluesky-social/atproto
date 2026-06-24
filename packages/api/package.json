@@ -17,6 +17,19 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/api"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "./dist",
+    "./OAUTH.md",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "scripts": {
     "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
     "codegen:code": "node ./scripts/generate-code.mjs",
@@ -40,12 +53,5 @@
     "http-terminator": "^3.2.0",
     "jest": "^30.0.0",
     "prettier": "^3.2.5"
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

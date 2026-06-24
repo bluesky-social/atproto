@@ -1,9 +1,6 @@
 {
   "name": "@atproto-labs/did-resolver",
   "version": "0.3.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [
@@ -27,6 +24,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch": "workspace:^",

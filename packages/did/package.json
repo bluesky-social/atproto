@@ -1,9 +1,6 @@
 {
   "name": "@atproto/did",
   "version": "0.5.1",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [
@@ -25,15 +22,22 @@
       "default": "./dist/index.js"
     }
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsgo --build tsconfig.build.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
   "dependencies": {
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@swc/jest": "^0.2.24",
     "jest": "^30.0.0"
-  },
-  "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   }
 }
