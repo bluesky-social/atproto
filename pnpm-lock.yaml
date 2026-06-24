@@ -229,11 +229,14 @@ importers:
       '@swc/jest':
         specifier: ^0.2.24
         version: 0.2.24(@swc/core@1.11.18)
+      '@tsconfig/node22':
+        specifier: ^22.0.5
+        version: 22.0.5
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0
       '@types/node':
-        specifier: ^22.0.0
+        specifier: ^22.x
         version: 22.19.17
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.59.2
@@ -5568,6 +5571,9 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+
+  '@tsconfig/node22@22.0.5':
+    resolution: {integrity: sha512-hLf2ld+sYN/BtOJjHUWOk568dvjFQkHnLNa6zce25GIH+vxKfvTgm3qpaH6ToF5tu/NN0IH66s+Bb5wElHrLcw==}
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -15734,6 +15740,8 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
+
+  '@tsconfig/node22@22.0.5': {}
 
   '@tybys/wasm-util@0.10.2':
     dependencies:

@@ -1,13 +1,14 @@
 {
-  "extends": ["../../../tsconfig/node.tsconfig.json"],
+  "extends": [
+    "../../../tsconfig/node.tsconfig.json",
+    "../../../tsconfig/verbatim.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "verbatimModuleSyntax": true,
-    "types": ["node"],
   },
   "references": [
     { "path": "../../crypto/tsconfig.build.json" },

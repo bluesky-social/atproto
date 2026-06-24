@@ -1,12 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./base.tsconfig.json",
+  // We currently support Node 22+
+  "extends": ["./base.tsconfig.json", "@tsconfig/node22/tsconfig.json"],
   "compilerOptions": {
     "types": ["node"],
-    // We currently target Node 22
-    // https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping
-    "lib": ["ES2023"],
-    "module": "NodeNext",
-    "target": "ES2023",
   },
 }

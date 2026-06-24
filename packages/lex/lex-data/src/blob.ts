@@ -1,11 +1,5 @@
-import {
-  type CheckCidOptions,
-  type Cid,
-  type RawCid,
-  ifCid,
-  parseCid,
-  validateCidString,
-} from './cid.js'
+import type { CheckCidOptions, Cid, RawCid } from './cid.js'
+import { ifCid, parseCid, validateCidString } from './cid.js'
 import type { LexValue } from './lex.js'
 import { isPlainObject, isPlainProto } from './object.js'
 

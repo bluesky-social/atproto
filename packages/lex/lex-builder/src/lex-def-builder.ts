@@ -1,9 +1,5 @@
-import {
-  JSDocStructure,
-  OptionalKind,
-  SourceFile,
-  VariableDeclarationKind,
-} from 'ts-morph'
+import type { JSDocStructure, OptionalKind } from 'ts-morph'
+import { SourceFile, VariableDeclarationKind } from 'ts-morph'
 import type {
   LexiconArray,
   LexiconArrayItems,

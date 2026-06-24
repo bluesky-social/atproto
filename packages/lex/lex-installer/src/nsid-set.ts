@@ -45,7 +45,7 @@ export class MappedSet<K, I = any> implements Set<K> {
     return this.set.delete(this.encodeValue(val))
   }
 
-  *values(): IterableIterator<K> {
+  *values(): SetIterator<K> {
     for (const val of this.set.values()) {
       yield this.decodeValue(val)
     }
@@ -55,7 +55,7 @@ export class MappedSet<K, I = any> implements Set<K> {
     return this.values()
   }
 
-  *entries(): IterableIterator<[K, K]> {
+  *entries(): SetIterator<[K, K]> {
     for (const val of this) yield [val, val]
   }
 
@@ -68,7 +68,75 @@ export class MappedSet<K, I = any> implements Set<K> {
     }
   }
 
-  [Symbol.iterator](): IterableIterator<K> {
+  union<U>(other: ReadonlySetLike<U>): Set<K | U> {
+    const result = new Set<K | U>(this)
+    const it = other.keys()
+    let res: IteratorResult<U>
+    while (!(res = it.next()).done) result.add(res.value)
+    return result
+  }
+
+  intersection<U>(other: ReadonlySetLike<U>): Set<K & U> {
+    const result = new Set<K & U>()
+    for (const val of this) {
+      if (other.has(val as unknown as U)) {
+        result.add(val as unknown as K & U)
+      }
+    }
+    return result
+  }
+
+  difference<U>(other: ReadonlySetLike<U>): Set<K> {
+    const result = new Set<K>()
+    for (const val of this) {
+      if (!other.has(val as unknown as U)) {
+        result.add(val)
+      }
+    }
+    return result
+  }
+
+  symmetricDifference<U>(other: ReadonlySetLike<U>): Set<K | U> {
+    const result = new Set<K | U>(this)
+    const it = other.keys()
+    let res: IteratorResult<U>
+    while (!(res = it.next()).done) {
+      const val = res.value
+      if (result.has(val as unknown as K)) {
+        result.delete(val as unknown as K)
+      } else {
+        result.add(val)
+      }
+    }
+    return result
+  }
+
+  isSubsetOf(other: ReadonlySetLike<unknown>): boolean {
+    for (const val of this) {
+      if (!other.has(val)) return false
+    }
+    return true
+  }
+
+  isSupersetOf(other: ReadonlySetLike<unknown>): boolean {
+    const it = other.keys()
+    let res: IteratorResult<unknown>
+    while (!(res = it.next()).done) {
+      if (!this.has(res.value as K)) return false
+    }
+    return true
+  }
+
+  isDisjointFrom(other: ReadonlySetLike<unknown>): boolean {
+    const it = other.keys()
+    let res: IteratorResult<unknown>
+    while (!(res = it.next()).done) {
+      if (this.has(res.value as K)) return false
+    }
+    return true
+  }
+
+  [Symbol.iterator](): SetIterator<K> {
     return this.values()
   }
 

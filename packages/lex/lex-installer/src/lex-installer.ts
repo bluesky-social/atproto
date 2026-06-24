@@ -102,7 +102,6 @@ export type LexInstallerOptions = LexResolverOptions & {
  * ```
  */
 export class LexInstaller implements AsyncDisposable {
-  protected readonly options: LexInstallerOptions
   protected readonly lexiconResolver: LexResolver
   protected readonly indexer: LexiconDirectoryIndexer
   protected readonly documents = new NsidMap<LexiconDocument>()
@@ -112,8 +111,7 @@ export class LexInstaller implements AsyncDisposable {
     resolutions: {},
   }
 
-  constructor(options: LexInstallerOptions) {
-    this.options = options
+  constructor(protected readonly options: LexInstallerOptions) {
     this.lexiconResolver = new LexResolver(options)
     this.indexer = new LexiconDirectoryIndexer({
       lexicons: options.lexicons,

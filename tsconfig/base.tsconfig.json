@@ -19,6 +19,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "preserveSymlinks": false,
+    // @TODO We should change this to true to match the upcoming ECMA runtime behavior
     "useDefineForClassFields": false,
 
     "lib": [],
@@ -40,7 +41,8 @@
     "sourceMap": true,
     "jsx": "preserve",
     "module": "Node20",
-    "target": "ES2022",
+    // https://caniuse.com/?search=ES2023
+    "target": "ES2023",
   },
   "typeAcquisition": {
     "enable": false,

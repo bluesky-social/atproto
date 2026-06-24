@@ -1,12 +1,14 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "extends": [
+    "../../../tsconfig/isomorphic.tsconfig.json",
+    "../../../tsconfig/verbatim.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
     "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "target": "ES2023",
   },
   "references": [
     { "path": "../lex-client/tsconfig.build.json" },
