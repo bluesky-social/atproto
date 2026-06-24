@@ -401,7 +401,7 @@ export class AccountManager {
       deviceMetadata,
       input,
       account: updatedAccount,
-      prevEmail: account.email,
+      prevAccount: account,
     })
 
     return updatedAccount
@@ -496,7 +496,11 @@ export class AccountManager {
     })
 
     const updatedAccount = await callAsync(() =>
-      this.store.deactivateAccount({ did: account.did }),
+      this.store.deactivateAccount({
+        did: account.did,
+        // @TODO support setting this from the UI/API
+        deleteAfter: undefined,
+      }),
     ).catch((err) => {
       throw InvalidRequestError.from(err, 'Account deactivation failed')
     })
