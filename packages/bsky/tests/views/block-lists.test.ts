@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtUri, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSnapshot } from '../_util.js'
 
 describe('pds views with blocking from block lists', () => {
@@ -10,10 +11,10 @@ describe('pds views with blocking from block lists', () => {
   let sc: SeedClient
   let aliceReplyToDan: { ref: RecordRef }
 
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -232,7 +233,7 @@ describe('pds views with blocking from block lists', () => {
     )
     expect(
       resDan.data.feed.some((post) =>
-        [bob, carol].includes(post.post.author.did),
+        [bob, carol].includes(post.post.author.did as DidString),
       ),
     ).toBeFalsy()
   })
@@ -616,7 +617,7 @@ describe('pds views with blocking from block lists', () => {
     )
     expect(
       resDan.data.feed.some((post) =>
-        [bob, carol].includes(post.post.author.did),
+        [bob, carol].includes(post.post.author.did as DidString),
       ),
     ).toBeTruthy()
   })
@@ -653,7 +654,7 @@ describe('pds views with blocking from block lists', () => {
     )
     expect(
       resDan.data.feed.some((post) =>
-        [bob, carol].includes(post.post.author.did),
+        [bob, carol].includes(post.post.author.did as DidString),
       ),
     ).toBeTruthy()
   })

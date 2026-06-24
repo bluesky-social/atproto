@@ -1,5 +1,24 @@
 # @atproto/dev-env
 
+## 0.5.17
+
+### Patch Changes
+
+- [#5131](https://github.com/bluesky-social/atproto/pull/5131) [`84dd93c`](https://github.com/bluesky-social/atproto/commit/84dd93c14b14390bd3838954f8a0bfe231aab3c1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type handle as `HandleString` and did as `DidString` in seed user data
+
+- Updated dependencies [[`84dd93c`](https://github.com/bluesky-social/atproto/commit/84dd93c14b14390bd3838954f8a0bfe231aab3c1), [`84dd93c`](https://github.com/bluesky-social/atproto/commit/84dd93c14b14390bd3838954f8a0bfe231aab3c1)]:
+  - @atproto/bsky@0.0.247
+  - @atproto/pds@0.5.8
+
+## 0.5.16
+
+### Patch Changes
+
+- Updated dependencies [[`a67858d`](https://github.com/bluesky-social/atproto/commit/a67858df5e4c0ca213e345c14b0283b2e930c68c)]:
+  - @atproto/bsky@0.0.246
+  - @atproto/api@0.20.19
+  - @atproto/pds@0.5.7
+
 ## 0.5.15
 
 ### Patch Changes

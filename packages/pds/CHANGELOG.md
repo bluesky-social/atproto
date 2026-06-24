@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.5.8
+
+### Patch Changes
+
+- [#5131](https://github.com/bluesky-social/atproto/pull/5131) [`84dd93c`](https://github.com/bluesky-social/atproto/commit/84dd93c14b14390bd3838954f8a0bfe231aab3c1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type handle as `HandleString` and did as `DidString` in seed user data
+
+- Updated dependencies [[`3fd1168`](https://github.com/bluesky-social/atproto/commit/3fd11680d1d9f10a813ec93a79373e3ac567d7c3)]:
+  - @atproto/oauth-provider@0.19.2
+
 ## 0.5.7
 
 ### Patch Changes

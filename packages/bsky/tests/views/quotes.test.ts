@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSnapshot } from '../_util.js'
 
 describe('pds quote views', () => {
@@ -9,10 +10,10 @@ describe('pds quote views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let eve: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let eve: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({

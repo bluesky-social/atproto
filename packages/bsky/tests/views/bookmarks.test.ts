@@ -20,6 +20,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSnapshot, paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
@@ -31,10 +32,10 @@ describe('appview bookmarks views', () => {
   let db: Database
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({

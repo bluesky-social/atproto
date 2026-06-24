@@ -62,6 +62,9 @@ export default function (server: Server, ctx: AppContext) {
       const results = await searchPostsV2(
         {
           ...params,
+          // Default to curated 'top' ranking when unset; the backend rejects an
+          // unspecified sort order.
+          sort: params.sort ?? 'top',
           hydrateCtx,
           isModService,
         },
@@ -207,7 +210,7 @@ type Skeleton = {
   parsedQuery: PostSearchQuery
 }
 
-const postSortToV2 = (sort: string): SearchSortOrder => {
+const postSortToV2 = (sort?: string): SearchSortOrder => {
   if (sort === 'top') return SearchSortOrder.TOP
   if (sort === 'recent') return SearchSortOrder.RECENT
   return SearchSortOrder.UNSPECIFIED

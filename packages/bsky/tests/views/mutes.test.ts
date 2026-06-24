@@ -6,18 +6,23 @@ import {
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
+import type {
+  AtIdentifierString,
+  DidString,
+  HandleString,
+} from '@atproto/syntax'
 import { forSnapshot, paginateAll } from '../_util.js'
 
 describe('mute views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
-  let mutes: string[]
+  let mutes: AtIdentifierString[]
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -87,7 +92,9 @@ describe('mute views', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -102,7 +109,9 @@ describe('mute views', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -121,7 +130,9 @@ describe('mute views', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -167,7 +178,7 @@ describe('mute views', () => {
     )
     expect(
       res.data.notifications.some((notif) =>
-        [bob, carol].includes(notif.author.did),
+        [bob, carol].includes(notif.author.did as DidString),
       ),
     ).toBeFalsy()
   })
@@ -191,7 +202,10 @@ describe('mute views', () => {
       },
     )
     for (const actor of res.data.actors) {
-      if (mutes.includes(actor.did) || mutes.includes(actor.handle)) {
+      if (
+        mutes.includes(actor.did as DidString) ||
+        mutes.includes(actor.handle as HandleString)
+      ) {
         expect(actor.viewer?.muted).toBe(true)
       } else {
         expect(actor.viewer?.muted).toBe(false)

@@ -1,4 +1,5 @@
 import { chunkArray } from '@atproto/common-web'
+import type { HandleString } from '@atproto/syntax'
 import { SeedClient } from './client.js'
 
 export default async function usersBulkSeed(sc: SeedClient, max = Infinity) {
@@ -11,7 +12,7 @@ export default async function usersBulkSeed(sc: SeedClient, max = Infinity) {
       chunk.map(async (user) => {
         const { handle, displayName } = user
         await sc.createAccount(handle, {
-          handle: handle,
+          handle,
           password: 'password',
           email: `${handle}@bsky.app`,
         })
@@ -24,7 +25,7 @@ export default async function usersBulkSeed(sc: SeedClient, max = Infinity) {
   return sc
 }
 
-const users = [
+const users: { handle: HandleString; displayName: string | null }[] = [
   { handle: 'silas77.test', displayName: 'Tanya Denesik' },
   { handle: 'nicolas-krajcik10.test', displayName: null },
   { handle: 'lennie-strosin.test', displayName: null },

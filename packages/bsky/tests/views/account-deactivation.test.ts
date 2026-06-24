@@ -1,13 +1,14 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('bsky account deactivation', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import {
   constantDate,
   forSnapshot,
@@ -14,10 +15,10 @@ describe('pds like views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let frankie: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let frankie: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
