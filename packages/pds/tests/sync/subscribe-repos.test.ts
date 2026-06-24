@@ -12,6 +12,7 @@ import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
+import type { DidString } from '@atproto/syntax'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
 import { AccountStatus } from '../../src/account-manager/account-manager.js'
 import { AppContext } from '../../src/index.js'
@@ -26,10 +27,10 @@ describe('repo subscribe repos', () => {
 
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -219,7 +220,7 @@ describe('repo subscribe repos', () => {
     }
   }
 
-  const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
+  const randomPost = (by: DidString) => sc.post(by, randomStr(8, 'base32'))
   const makePosts = async () => {
     for (let i = 0; i < 10; i++) {
       await Promise.all([

@@ -5,6 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client } from '@atproto/lex'
+import type { DidString } from '@atproto/syntax'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import { BskyConfig } from './types.js'
 export * from '@atproto/bsky'
@@ -29,13 +30,13 @@ export class TestBsky {
 
     const port = cfg.port || (await getPort())
     const url = `http://localhost:${port}`
-    const serverDid = await plcClient.createDid({
+    const serverDid = (await plcClient.createDid({
       signingKey: serviceKeypair.did(),
       rotationKeys: [serviceKeypair.did()],
       handle: 'bsky.test',
       pds: `http://localhost:${port}`,
       signer: serviceKeypair,
-    })
+    })) as DidString
 
     const endpoint = `http://localhost:${port}`
 

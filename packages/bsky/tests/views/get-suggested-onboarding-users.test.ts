@@ -11,12 +11,13 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString, HandleString } from '@atproto/syntax'
 
 type User = {
   id: string
-  did: string
+  did: DidString
   email: string
-  handle: string
+  handle: HandleString
   password: string
   displayName: string
   description: string

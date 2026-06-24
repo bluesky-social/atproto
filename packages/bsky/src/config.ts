@@ -39,8 +39,8 @@ export interface ServerConfigValues {
   debugMode?: boolean
   port?: number
   publicUrl?: string
-  serverDid: string
-  alternateAudienceDids: string[]
+  serverDid: DidString
+  alternateAudienceDids: DidString[]
   entrywayJwtPublicKeyHex?: string
   liveNowConfig?: LiveNowConfig
   // external services
@@ -76,9 +76,9 @@ export interface ServerConfigValues {
   didPlcUrl: string
   handleResolveNameservers?: string[]
   // moderation and administration
-  modServiceDid: string
+  modServiceDid: DidString
   adminPasswords: string[]
-  labelsFromIssuerDids?: string[]
+  labelsFromIssuerDids?: DidString[]
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
@@ -124,10 +124,12 @@ export class ServerConfig {
       process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
+    assert(isDidString(serverDid))
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
     const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
+    assert(alternateAudienceDids.every(isDidString))
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
     let liveNowConfig: LiveNowConfig | undefined
@@ -184,6 +186,7 @@ export class ServerConfig {
     const labelsFromIssuerDids = envList(
       process.env.BSKY_LABELS_FROM_ISSUER_DIDS,
     )
+    assert(labelsFromIssuerDids.every(isDidString))
     const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
     assert(bsyncUrl)
     const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
@@ -215,7 +218,7 @@ export class ServerConfig {
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
-    assert(modServiceDid)
+    assert(modServiceDid != null && isDidString(modServiceDid))
 
     const eventProxyTrackingEndpoint =
       process.env.BSKY_EVENT_PROXY_TRACKING_ENDPOINT || undefined

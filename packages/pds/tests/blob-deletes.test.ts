@@ -1,5 +1,6 @@
 import { AtpAgent, BlobRef } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { AppContext } from '../src/index.js'
 
 describe('blob deletes', () => {
@@ -9,8 +10,8 @@ describe('blob deletes', () => {
 
   let ctx: AppContext
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -184,7 +185,7 @@ describe('blob deletes', () => {
 
 async function updateProfile(
   sc: SeedClient,
-  did: string,
+  did: DidString,
   avatar?: BlobRef,
   banner?: BlobRef,
 ) {

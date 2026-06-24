@@ -1,14 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('thread mutes', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   let rootPost: RecordRef
   let replyPost: RecordRef

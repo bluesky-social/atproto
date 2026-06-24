@@ -14,6 +14,7 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
@@ -32,11 +33,11 @@ describe('pds author feed views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
-  let eve: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
+  let eve: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({

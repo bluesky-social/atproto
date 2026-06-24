@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedGetListFeed, AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import {
   forSnapshot,
   paginateAll,
@@ -14,9 +15,9 @@ describe('list feed views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   let listRef: RecordRef
 
@@ -52,7 +53,9 @@ describe('list feed views', () => {
 
     // all posts are from alice or bob
     expect(
-      res.data.feed.every((row) => [alice, bob].includes(row.post.author.did)),
+      res.data.feed.every((row) =>
+        [alice, bob].includes(row.post.author.did as DidString),
+      ),
     ).toBeTruthy()
   })
 
