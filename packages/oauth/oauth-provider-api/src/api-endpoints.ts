@@ -1,6 +1,6 @@
 import type { SignedJwt } from '@atproto/jwk'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { DidString, HandleString } from '@atproto/syntax'
+import type { DatetimeString, DidString, HandleString } from '@atproto/syntax'
 import type {
   Account,
   DeviceMetadata,
@@ -268,6 +268,7 @@ export type UpdateHandleOutput = {
 
 export type DeactivateAccountInput = {
   did: DidString
+  deleteAfter?: DatetimeString
 }
 
 export type DeactivateAccountOutput = {

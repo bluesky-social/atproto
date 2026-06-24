@@ -690,9 +690,13 @@ export class OAuthStore
     }
   }
 
-  async deactivateAccount({ did }: DeactivateAccountData): Promise<Account> {
+  async deactivateAccount({
+    did,
+    deleteAfter,
+  }: DeactivateAccountData): Promise<Account> {
     const { account } = await this.accountManager.deactivateAccount(did, {
       deleteCredentials: true,
+      deleteAfter,
     })
 
     return this.buildAccount(account)
