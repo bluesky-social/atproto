@@ -78,10 +78,10 @@ export type XrpcRequestHeadersOptions = {
   headers?: HeadersInit
 
   /** Labeler DIDs to request labels from for content moderation. */
-  labelers?: Iterable<DidString>
+  labelers?: Iterable<DidString> | null
 
   /** Service proxy identifier for routing requests through a specific service. */
-  service?: Service
+  service?: Service | null
 }
 
 /**
