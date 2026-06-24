@@ -5,7 +5,8 @@ import {
   oauthAuthorizationServerMetadataValidator,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
-import { VERIFY_ALGOS } from '../lib/util/crypto.js'
+
+const METADATA_SIGNING_ALGOS = ['ES256'] as const
 
 export type CustomMetadata = {
   authorization_details_types_supported?: string[]
@@ -36,11 +37,6 @@ export function buildMetadata(
 
       // Other atproto scopes can't be enumerated as they are dynamic.
     ],
-    subject_types_supported: [
-      //
-      'public', // The same "sub" is returned for all clients
-      // 'pairwise', // A different "sub" is returned for each client
-    ],
     response_types_supported: [
       // OAuth
       'code',
@@ -55,11 +51,7 @@ export function buildMetadata(
       // 'id_token',
     ],
     response_modes_supported: [
-      // https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes
       'query',
-      'fragment',
-      // https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html#FormPostResponseMode
-      'form_post',
     ],
     grant_types_supported: [
       //
@@ -98,7 +90,10 @@ export function buildMetadata(
     authorization_response_iss_parameter_supported: true,
 
     // https://datatracker.ietf.org/doc/html/rfc9101#section-4
-    request_object_signing_alg_values_supported: [...VERIFY_ALGOS, 'none'],
+    request_object_signing_alg_values_supported: [
+      ...METADATA_SIGNING_ALGOS,
+      'none',
+    ],
     request_object_encryption_alg_values_supported: [], // None
     request_object_encryption_enc_values_supported: [], // None
 
@@ -112,7 +107,9 @@ export function buildMetadata(
 
     token_endpoint: new URL('/oauth/token', issuer).href,
     token_endpoint_auth_methods_supported: [...Client.AUTH_METHODS_SUPPORTED],
-    token_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
+    token_endpoint_auth_signing_alg_values_supported: [
+      ...METADATA_SIGNING_ALGOS,
+    ],
 
     revocation_endpoint: new URL('/oauth/revoke', issuer).href,
 
@@ -126,7 +123,7 @@ export function buildMetadata(
     require_pushed_authorization_requests: true,
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-5.1
-    dpop_signing_alg_values_supported: [...VERIFY_ALGOS],
+    dpop_signing_alg_values_supported: [...METADATA_SIGNING_ALGOS],
 
     // https://datatracker.ietf.org/doc/html/rfc9396#section-14.4
     authorization_details_types_supported:
