@@ -17,6 +17,9 @@ export class TestBsync {
       port,
       apiKeys: cfg.apiKeys ?? ['api-key'],
       dbSchema: 'bsync',
+      // Keep the pool small: a bsync runs alongside every test network, so a
+      // default-sized pool per network quickly exhausts postgres connections.
+      dbPoolSize: cfg.dbPoolSize ?? 5,
       ...cfg,
     })
 

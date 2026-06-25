@@ -607,6 +607,8 @@ describe('age assurance v2 views', () => {
       })
       expect(res.status).toEqual('assured')
       expect(res.access).toEqual('safe')
+      // Drain the begin op so it doesn't leak into the next test.
+      await network.processAll()
     })
 
     /*

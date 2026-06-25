@@ -14,7 +14,7 @@ import {
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
 import { Database } from './db/index.js'
-import { excluded } from './db/util.js'
+import { countAll, excluded } from './db/util.js'
 
 export type BsyncCursors = {
   op?: string
@@ -280,16 +280,29 @@ export class BsyncSubscription {
       // Index all items into private_data.
       await handleGenericOperation(this.db, op, now)
 
-      // Maintain bespoke indexes for certain namespaces.
-      if (
-        namespace ===
-        Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type
-      ) {
-        await handleSubjectActivitySubscriptionOperation(this.db, op, now)
-      } else if (
-        namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent.$type
-      ) {
-        await handleAgeAssuranceEventOperation(this.db, op, now)
+      // Maintain bespoke indexes for certain namespaces. A failure here must
+      // not stall the stream, so log and move on (matching bsync behavior).
+      try {
+        if (
+          namespace ===
+          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type
+        ) {
+          await handleSubjectActivitySubscriptionOperation(this.db, op, now)
+        } else if (
+          namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent.$type
+        ) {
+          await handleAgeAssuranceEventOperation(this.db, op, now)
+        } else if (
+          namespace === Namespaces.AppBskyAgeassuranceDefsEvent.$type
+        ) {
+          await handleAgeAssuranceV2EventOperation(this.db, op, now)
+        } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark.$type) {
+          await handleBookmarkOperation(this.db, op, now)
+        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId.$type) {
+          await handleDraftOperation(this.db, op, now)
+        }
+      } catch (err) {
+        log.warn({ err, namespace }, 'bsync put operation indexing failed')
       }
     }
   }
@@ -354,9 +367,10 @@ const handleSubjectActivitySubscriptionOperation: HandleOperation = async (
     return
   }
 
-  const parsed = lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
-    Buffer.from(payload).toString('utf8'),
-  )
+  const parsed =
+    lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
+      Buffer.from(payload).toString('utf8'),
+    )
   const {
     subject,
     activitySubscription: { post, reply },
@@ -413,6 +427,149 @@ const handleAgeAssuranceEventOperation: HandleOperation = async (
     .execute()
 }
 
+const handleAgeAssuranceV2EventOperation: HandleOperation = async (
+  db: Database,
+  op: Operation,
+) => {
+  const { actorDid, method, payload } = op
+  if (method !== Method.CREATE) return
+
+  const parsed = lexParse<app.bsky.ageassurance.defs.Event>(
+    Buffer.from(payload).toString('utf8'),
+  )
+  const { status, createdAt, access, countryCode, regionCode } = parsed
+
+  const update = {
+    ageAssuranceStatus: status,
+    ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
+    ageAssuranceAccess: access,
+    ageAssuranceCountryCode: countryCode,
+    ageAssuranceRegionCode: regionCode,
+  }
+
+  await db.db
+    .updateTable('actor')
+    .set(update)
+    .where('did', '=', actorDid)
+    .execute()
+}
+
+const handleBookmarkOperation: HandleOperation = async (
+  db: Database,
+  op: Operation,
+  now: string,
+) => {
+  const { actorDid, key, method, payload } = op
+
+  const updateAgg = (uri: string, dbTxn: Database) => {
+    return dbTxn.db
+      .insertInto('post_agg')
+      .values({
+        uri,
+        bookmarkCount: dbTxn.db
+          .selectFrom('bookmark')
+          .where('bookmark.subjectUri', '=', uri)
+          .select(countAll.as('count')),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({ bookmarkCount: excluded(dbTxn.db, 'bookmarkCount') }),
+      )
+      .execute()
+  }
+
+  if (method === Method.CREATE) {
+    const parsed = lexParse<app.bsky.bookmark.defs.Bookmark>(
+      Buffer.from(payload).toString('utf8'),
+    )
+    const {
+      subject: { uri, cid },
+    } = parsed
+
+    await db.transaction(async (dbTxn) => {
+      await dbTxn.db
+        .insertInto('bookmark')
+        .values({
+          creator: actorDid,
+          key,
+          indexedAt: now,
+          subjectUri: uri,
+          subjectCid: cid,
+        })
+        .execute()
+
+      await updateAgg(uri, dbTxn)
+    })
+  }
+
+  if (method === Method.DELETE) {
+    await db.transaction(async (dbTxn) => {
+      const bookmark = await dbTxn.db
+        .selectFrom('bookmark')
+        .selectAll()
+        .where('creator', '=', actorDid)
+        .where('key', '=', key)
+        .executeTakeFirst()
+
+      if (bookmark) {
+        await dbTxn.db
+          .deleteFrom('bookmark')
+          .where('creator', '=', actorDid)
+          .where('key', '=', key)
+          .execute()
+
+        await updateAgg(bookmark.subjectUri, dbTxn)
+      }
+    })
+  }
+}
+
+const handleDraftOperation: HandleOperation = async (
+  db: Database,
+  op: Operation,
+  now: string,
+) => {
+  const { actorDid, key, method, payload } = op
+
+  if (method === Method.CREATE) {
+    const payloadString = Buffer.from(payload).toString('utf8')
+
+    await db.db
+      .insertInto('draft')
+      .values({
+        creator: actorDid,
+        key,
+        createdAt: now,
+        updatedAt: now,
+        payload: payloadString,
+      })
+      .execute()
+  }
+
+  if (method === Method.UPDATE) {
+    const payloadString = Buffer.from(payload).toString('utf8')
+
+    await db.db
+      .updateTable('draft')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .set({
+        updatedAt: now,
+        payload: payloadString,
+      })
+      .execute()
+  }
+
+  if (method === Method.DELETE) {
+    await db.db
+      .deleteFrom('draft')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .execute()
+  }
+}
+
 // compares numeric (bigint) cursor ids; an undefined target is always satisfied
 const gteCursor = (current: string | undefined, target: string | undefined) => {
   if (!target) return true
@@ -423,12 +580,11 @@ const gteCursor = (current: string | undefined, target: string | undefined) => {
 const wait = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve) => {
     if (signal?.aborted) return resolve()
-    let timer: ReturnType<typeof setTimeout>
     const done = () => {
       clearTimeout(timer)
       signal?.removeEventListener('abort', done)
       resolve()
     }
-    timer = setTimeout(done, ms)
+    const timer = setTimeout(done, ms)
     signal?.addEventListener('abort', done, { once: true })
   })
