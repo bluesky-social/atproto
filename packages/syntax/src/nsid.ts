@@ -1,4 +1,11 @@
+import { MAX_FQDN_LENGTH } from './constants.js'
 import { Result, failure, success } from './lib/result.js'
+
+/**
+ * @see {@link https://atproto.com/specs/nsid | ATProto NSID Spec}
+ */
+export const MAX_ATPROTO_NSID_LENGTH =
+  MAX_FQDN_LENGTH - 9 /* "_lexicon." prefix for resolution */ + 1 + 63
 
 /*
 Grammar:
@@ -87,8 +94,8 @@ export function isValidNsid<I extends string>(
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
 export function validateNsid(input: string): Result<string[]> {
-  if (input.length > 253 + 1 + 63) {
-    return failure('NSID is too long (317 chars max)')
+  if (input.length > MAX_ATPROTO_NSID_LENGTH) {
+    return failure(`NSID is too long (${MAX_ATPROTO_NSID_LENGTH} chars max)`)
   }
   if (hasDisallowedCharacters(input)) {
     return failure(
@@ -162,8 +169,8 @@ export function ensureValidNsidRegex(nsid: string): asserts nsid is NsidString {
  * provides less detailed error messages (while being 20% to 50% faster).
  */
 export function validateNsidRegex(value: string): Result<NsidString> {
-  if (value.length > 253 + 1 + 63) {
-    return failure('NSID is too long (317 chars max)')
+  if (value.length > 308) {
+    return failure('NSID is too long (308 chars max)')
   }
 
   if (

@@ -15,7 +15,7 @@ export const MIN_LENGTH = 3
 /**
  * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
  */
-export const MAX_FULL_LENGTH = 253
+export const MAX_FULL_LENGTH = 244
 
 export type ValidDomain = `.${string}`
 export const isValidDomain = (domain: string): domain is ValidDomain =>

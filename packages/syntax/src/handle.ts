@@ -1,3 +1,8 @@
+import { MAX_FQDN_LENGTH } from './constants.js'
+
+export const MIN_ATPROTO_HANDLE_LENGTH = 3 // Per ATProto Spec
+export const MAX_ATPROTO_HANDLE_LENGTH = MAX_FQDN_LENGTH - 9 // "_atproto." prefix needed for DNS resolution
+
 export const INVALID_HANDLE = 'handle.invalid'
 
 export type HandleString = `${string}.${string}`
@@ -30,7 +35,7 @@ export const DISALLOWED_TLDS = [
 //    - TLD (last component) should not start with a digit
 //    - can't end with a hyphen (can end with digit)
 //    - each segment must be between 1 and 63 characters (not including any periods)
-//    - overall length can't be more than 253 characters
+//    - overall length can't be more than 244 characters
 //    - separated by (ASCII) periods; does not start or end with period
 //    - case insensitive
 //    - domains (handles) are equal if they are the same lower-case
@@ -49,8 +54,10 @@ export function ensureValidHandle<I extends string>(
     )
   }
 
-  if (input.length > 253) {
-    throw new InvalidHandleError('Handle is too long (253 chars max)')
+  if (input.length > MAX_ATPROTO_HANDLE_LENGTH) {
+    throw new InvalidHandleError(
+      `Handle is too long (${MAX_ATPROTO_HANDLE_LENGTH} chars max)`,
+    )
   }
   const labels = input.split('.')
   if (labels.length < 2) {
@@ -84,8 +91,10 @@ const HANDLE_REGEX =
 export function ensureValidHandleRegex<I extends string>(
   input: I,
 ): asserts input is I & HandleString {
-  if (input.length > 253) {
-    throw new InvalidHandleError('Handle is too long (253 chars max)')
+  if (input.length > MAX_ATPROTO_HANDLE_LENGTH) {
+    throw new InvalidHandleError(
+      `Handle is too long (${MAX_ATPROTO_HANDLE_LENGTH} chars max)`,
+    )
   }
   if (!HANDLE_REGEX.test(input)) {
     throw new InvalidHandleError("Handle didn't validate via regex")
@@ -107,7 +116,7 @@ export function normalizeAndEnsureValidHandle(handle: string): HandleString {
 export function isValidHandle<I extends string>(
   input: I,
 ): input is I & HandleString {
-  return input.length <= 253 && HANDLE_REGEX.test(input)
+  return input.length <= MAX_ATPROTO_HANDLE_LENGTH && HANDLE_REGEX.test(input)
 }
 
 export function isValidTld(handle: string): boolean {

@@ -112,8 +112,8 @@ function bench(name, expectedResult, cases) {
 /** @param value {string} */
 function validateNsidOptimized(value) {
   const { length } = value
-  if (length > 253 + 1 + 63) {
-    return { success: false, message: 'NSID is too long (317 chars max)' }
+  if (length > 308) {
+    return { success: false, message: 'NSID is too long (308 chars max)' }
   }
 
   let partCount = 1
