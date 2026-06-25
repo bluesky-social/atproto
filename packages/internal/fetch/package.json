@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "engines": {
     "node": ">=22"
   },
