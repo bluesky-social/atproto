@@ -6,4 +6,4 @@
 '@atproto/pds': patch
 ---
 
-Update `pino` logger to version 11
+Update `pino` logger to version 10

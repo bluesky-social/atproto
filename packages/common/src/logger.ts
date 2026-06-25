@@ -1,6 +1,6 @@
 import { type Logger, destination, pino } from 'pino'
 
-const enabled = /^(test|t|1)$/i.test(process.env.LOG_ENABLED ?? '0')
+const enabled = /^(true|t|1)$/i.test(process.env.LOG_ENABLED ?? '0')
 const dest = process.env.LOG_DESTINATION
 const level = process.env.LOG_LEVEL || 'info'
 const systems = process.env.LOG_SYSTEMS?.trim()
