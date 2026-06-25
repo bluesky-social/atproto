@@ -334,6 +334,7 @@ describe('bsky views with mutes from mute lists', () => {
         ),
       },
     )
+    await network.processAll()
 
     const res = await agent.api.app.bsky.graph.getListMutes(
       {},
@@ -392,6 +393,7 @@ describe('bsky views with mutes from mute lists', () => {
         ),
       },
     )
+    await network.processAll()
 
     const res = await agent.api.app.bsky.graph.getListMutes(
       {},

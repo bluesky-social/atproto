@@ -43,6 +43,7 @@ describe('thread mutes', () => {
         ),
       },
     )
+    await network.processAll()
   })
 
   it('notes that threads are muted in viewer state', async () => {
@@ -137,6 +138,7 @@ describe('thread mutes', () => {
         ),
       },
     )
+    await network.processAll()
   })
 
   it('no longer notes that threads are muted in viewer state after unmuting', async () => {

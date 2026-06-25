@@ -56,6 +56,9 @@ describe('appview bookmarks views', () => {
 
   afterEach(async () => {
     vi.resetAllMocks()
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
     await clearPrivateData(db)
     await clearBookmarks(db)
   })

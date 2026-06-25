@@ -275,6 +275,7 @@ describe('mute views', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
 
     const { data: final } = await agent.api.app.bsky.graph.getMutes(
       {},
