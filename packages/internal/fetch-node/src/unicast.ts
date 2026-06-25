@@ -41,6 +41,7 @@ export function unicastFetchWrap<C = FetchContext>({
     nodeUndiciVersion == null ||
     compareVersions(nodeUndiciVersion, MIN_SUPPORTED_UNDICI_VERSION) < 0
   ) {
+    // The actual min version is Node 20.6+ but all @atproto packages require Node 22+
     throw new Error(
       'Unicast SSRF protection unavailable on your platform. Update to Node.js 22+.',
     )
