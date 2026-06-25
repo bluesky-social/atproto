@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.19.6
+
+### Patch Changes
+
+- [#5147](https://github.com/bluesky-social/atproto/pull/5147) [`af02ea1`](https://github.com/bluesky-social/atproto/commit/af02ea14e710f5930d78b49836aa460cfe168941) Thanks [@joefitter](https://github.com/joefitter)! - Allow same-site OAuth authorization page requests.
+
 ## 0.19.5
 
 ### Patch Changes
