@@ -4,6 +4,7 @@ import express from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { TestBsky } from './bsky.js'
+import { TestBsync } from './bsync.js'
 import { TestOzone } from './ozone.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
@@ -21,6 +22,7 @@ export class IntrospectServer {
     port: number,
     plc: TestPlc,
     pds: TestPds,
+    bsync: TestBsync,
     bsky: TestBsky,
     ozone: TestOzone,
   ) {
@@ -33,6 +35,9 @@ export class IntrospectServer {
         pds: {
           url: pds.url,
           did: pds.ctx.cfg.service.did,
+        },
+        bsync: {
+          url: bsync.url,
         },
         bsky: {
           url: bsky.url,

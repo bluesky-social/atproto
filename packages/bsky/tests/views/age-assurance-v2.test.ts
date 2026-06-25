@@ -170,6 +170,9 @@ describe('age assurance v2 views', () => {
 
   afterEach(async () => {
     vi.resetAllMocks()
+    // Drain in-flight bsync ops before resetting state directly, so an op from
+    // a test that doesn't read it back can't leak into the next test.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })

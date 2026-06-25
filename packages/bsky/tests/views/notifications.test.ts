@@ -1036,6 +1036,9 @@ describe('notification views', () => {
 
   describe('preferences v2', () => {
     beforeEach(async () => {
+      // Drain pending bsync ops before clearing, so a stale op can't land
+      // after the reset.
+      await network.processAll()
       await clearPrivateData(db)
     })
 
@@ -1354,6 +1357,9 @@ describe('notification views', () => {
     })
 
     beforeEach(async () => {
+      // Drain pending bsync ops before clearing, so a stale op can't land
+      // after the reset.
+      await network.processAll()
       await clearActivitySubscription(db)
     })
 
@@ -1383,6 +1389,7 @@ describe('notification views', () => {
         subject: subjectDid,
         activitySubscription: val,
       })
+      await network.processAll()
 
       const { data: listData } = await list(actorDid)
       expect(listData).toEqual({
@@ -1413,6 +1420,7 @@ describe('notification views', () => {
         subject: subjectDid,
         activitySubscription: valUpdate,
       })
+      await network.processAll()
 
       const { data: listData } = await list(actorDid)
       expect(listData).toEqual({
@@ -1435,10 +1443,12 @@ describe('notification views', () => {
       const valDelete = { post: false, reply: false }
 
       await put(actorDid, subjectDid, valCreate)
+      await network.processAll()
       const { data: list0 } = await list(actorDid)
       expect(list0.subscriptions).toHaveLength(1)
 
       await put(actorDid, subjectDid, valDelete)
+      await network.processAll()
       const { data: list1 } = await list(actorDid)
       expect(list1.subscriptions).toHaveLength(0)
     })
@@ -1454,6 +1464,7 @@ describe('notification views', () => {
       await put(actorDid, eve, val)
       await put(actorDid, fred, val)
       await put(actorDid, blocked, val) // blocked is removed from the list.
+      await network.processAll()
 
       const results = (
         results: AppBskyNotificationListActivitySubscriptions.OutputSchema[],
@@ -1507,24 +1518,29 @@ describe('notification views', () => {
 
         // 'none' declaration.
         await put(viewer, bob, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, bob)).resolves.toBeUndefined()
 
         // 'mutuals' declaration and both follow.
         await put(viewer, carol, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, carol)).resolves.toStrictEqual(
           val,
         )
 
         // 'mutuals' declaration but only actor follows.
         await put(viewer, dan, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, dan)).resolves.toBeUndefined()
 
         // 'mutuals' declaration but only subject follows.
         await put(viewer, eve, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, eve)).resolves.toBeUndefined()
 
         // 'followers' declaration and viewer follows.
         await put(viewer, fred, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, carol)).resolves.toStrictEqual(
           val,
         )
