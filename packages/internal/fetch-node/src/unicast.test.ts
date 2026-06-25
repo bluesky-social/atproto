@@ -56,15 +56,15 @@ describe(unicastFetchWrap, () => {
   describe('expected failures', () => {
     it('should reject private IPv4 hostnames', async () => {
       const fetch = unicastFetchWrap()
-      await expect(fetch('http://127.0.0.1/test')).rejects.toThrowError(
-        'Hostname is a non-unicast address',
+      await expect(fetch('http://127.0.0.1/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname is a non-unicast address'),
       )
     })
 
     it('should reject private IPv6 hostnames', async () => {
       const fetch = unicastFetchWrap()
-      await expect(fetch('http://[::1]/test')).rejects.toThrowError(
-        'Hostname is a non-unicast address',
+      await expect(fetch('http://[::1]/test')).rejects.toSatisfy(
+        fetchFailedErrorCauseBy('Hostname is a non-unicast address'),
       )
     })
 

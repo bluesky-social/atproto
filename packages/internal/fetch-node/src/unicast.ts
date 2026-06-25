@@ -73,11 +73,14 @@ export function unicastFetchWrap<C = FetchContext>({
     if (init != null && 'dispatcher' in init && init.dispatcher != null) {
       const request = asRequest(input, init)
       await request.body?.cancel()
-      throw new FetchRequestError(
+      const cause = new FetchRequestError(
         request,
         500,
         'SSRF protection cannot be used with a custom request dispatcher',
       )
+      // @NOTE Use Whatwg style errors so that the error is similar whether
+      // caused by this line of an error caused by the lookup function
+      throw new TypeError('fetch failed', { cause })
     }
 
     const url = extractUrl(input)
@@ -85,11 +88,14 @@ export function unicastFetchWrap<C = FetchContext>({
     if (url.hostname && isUnicastIpHostname(url.hostname) === false) {
       const request = asRequest(input, init)
       await request.body?.cancel()
-      throw new FetchRequestError(
+      const cause = new FetchRequestError(
         request,
         400,
         'Hostname is a non-unicast address',
       )
+      // @NOTE Use Whatwg style errors so that the error is similar whether
+      // caused by this line of an error caused by the lookup function
+      throw new TypeError('fetch failed', { cause })
     }
 
     return fetch.call(this, input, {
