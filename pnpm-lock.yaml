@@ -815,7 +815,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       undici_v6:
-        specifier: npm:undici@^6.X
+        specifier: npm:undici@^6.x
         version: undici@6.19.8
       undici_v7:
         specifier: npm:undici@^7.x
