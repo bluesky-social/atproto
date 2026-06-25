@@ -1,5 +1,12 @@
 # @atproto/dev-env
 
+## 0.5.21
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.5.10
+
 ## 0.5.20
 
 ### Patch Changes
