@@ -46,8 +46,8 @@
   },
   "devDependencies": {
     "@atproto/dev-env": "workspace:^",
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.7",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
     "@jest/globals": "^30.0.0",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
