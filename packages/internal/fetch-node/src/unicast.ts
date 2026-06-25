@@ -1,10 +1,10 @@
-import { lookup } from 'node:dns'
 import type { LookupAddress, LookupOptions } from 'node:dns'
+import { lookup } from 'node:dns'
 import type { LookupFunction } from 'node:net'
 import ipaddr from 'ipaddr.js'
-import { Agent as Agent6 } from 'undici_v6'
-import { Agent as Agent7 } from 'undici_v7'
-import { Agent as Agent8 } from 'undici_v8'
+import { Agent as Undici6Agent } from 'undici_v6' // NodeJS 22
+import { Agent as Undici7Agent } from 'undici_v7' // NodeJS 24
+import { Agent as Undici8Agent } from 'undici_v8' // NodeJS 26
 import {
   Fetch,
   FetchContext,
@@ -12,21 +12,13 @@ import {
   asRequest,
   extractUrl,
 } from '@atproto-labs/fetch'
-import {
-  Version,
-  compareVersions,
-  isUnicastIpHostname,
-  parseVersion,
-} from './util.js'
+import { compareVersions, isUnicastIpHostname, parseVersion } from './util.js'
 
 const { IPv4, IPv6 } = ipaddr
 
 export type UnicastFetchWrapOptions<C = FetchContext> = {
   fetch?: Fetch<C>
 }
-
-// https://github.com/nodejs/undici/pull/2928
-const MIN_SUPPORTED_UNDICI_VERSION: Version = [6, 11, 1]
 
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
@@ -38,13 +30,11 @@ export function unicastFetchWrap<C = FetchContext>({
   const nodeUndiciVersion = parseVersion(process.versions.undici)
 
   if (
-    nodeUndiciVersion == null ||
-    compareVersions(nodeUndiciVersion, MIN_SUPPORTED_UNDICI_VERSION) < 0
+    !nodeUndiciVersion ||
+    // https://github.com/nodejs/undici/pull/2928
+    compareVersions(nodeUndiciVersion, [6, 11, 1]) < 0
   ) {
-    // The actual min version is Node 20.6+ but all @atproto packages require Node 22+
-    throw new Error(
-      'Unicast SSRF protection unavailable on your platform. Update to Node.js 22+.',
-    )
+    throw new Error('Unicast SSRF protection requires Node.js 20.6+')
   }
 
   // @NOTE Since major versions of undici are not guaranteed to be backwards
@@ -53,11 +43,11 @@ export function unicastFetchWrap<C = FetchContext>({
   // compatible with the version of undici being used.
   const dispatcher =
     nodeUndiciVersion[0] === 6
-      ? new Agent6({ connect: { lookup: unicastLookup } })
+      ? new Undici6Agent({ connect: { lookup: unicastLookup } })
       : nodeUndiciVersion[0] === 7
-        ? new Agent7({ connect: { lookup: unicastLookup } })
+        ? new Undici7Agent({ connect: { lookup: unicastLookup } })
         : nodeUndiciVersion[0] === 8
-          ? new Agent8({ connect: { lookup: unicastLookup } })
+          ? new Undici8Agent({ connect: { lookup: unicastLookup } })
           : null
 
   // @NOTE Because this is a security feature, we don't want to fallback to
@@ -66,11 +56,11 @@ export function unicastFetchWrap<C = FetchContext>({
   // to assume that and risk a security issue.
   if (!dispatcher) {
     throw new Error(
-      'This version of @atproto-labs/fetch-node does not support your version of undici. Please upgrade @atproto-labs/fetch-node or use an older version of NodeJS.',
+      'This version of @atproto-labs/fetch-node does not support your version of undici. Please upgrade @atproto-labs/fetch-node, and use a version of NodeJS that uses undici 6, 7, or 8 internally.',
     )
   }
 
-  return async function (input, init): Promise<Response> {
+  return async function (this: C, input, init): Promise<Response> {
     if (init != null && 'dispatcher' in init && init.dispatcher != null) {
       const request = asRequest(input, init)
       await request.body?.cancel()
