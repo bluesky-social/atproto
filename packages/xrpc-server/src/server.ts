@@ -737,9 +737,9 @@ function createErrorMiddleware({
 
     const isInternalError = xrpcError instanceof InternalServerError
 
-    const msgPrefix = isInternalError ? 'unhandled exception' : 'error'
-    const msgSuffix = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
-    const msg = `${msgPrefix} in ${msgSuffix}`
+    const msgDetail = xrpcError.message ? ` (${xrpcError.message})` : ''
+    const msgLoc = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
+    const msg = `${xrpcError.error} error${msgDetail} in ${msgLoc}`
 
     logger.error(
       {
