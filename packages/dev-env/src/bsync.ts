@@ -16,6 +16,7 @@ export class TestBsync {
     const config = bsync.envToCfg({
       port,
       apiKeys: cfg.apiKeys ?? ['api-key'],
+      dbSchema: 'bsync',
       ...cfg,
     })
 
@@ -28,6 +29,32 @@ export class TestBsync {
 
   get ctx(): bsync.AppContext {
     return this.service.ctx
+  }
+
+  /**
+   * Current head (max id) of each operation stream. Used to wait for the bsky
+   * bsync subscription to catch up in tests, without waiting for the long-poll
+   * timeout.
+   */
+  async getSubscriptionCursors(): Promise<{
+    op?: string
+    mute?: string
+    notif?: string
+  }> {
+    const db = this.ctx.db.db
+    const max = async (table: 'operation' | 'mute_op' | 'notif_op') => {
+      const row = await db
+        .selectFrom(table)
+        .select((eb) => eb.fn.max('id').as('id'))
+        .executeTakeFirst()
+      return row?.id != null ? String(row.id) : undefined
+    }
+    const [op, mute, notif] = await Promise.all([
+      max('operation'),
+      max('mute_op'),
+      max('notif_op'),
+    ])
+    return { op, mute, notif }
   }
 
   async close() {
