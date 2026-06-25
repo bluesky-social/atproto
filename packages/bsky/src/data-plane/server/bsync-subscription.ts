@@ -59,7 +59,7 @@ export class BsyncSubscription {
   /**
    * Waits until the subscription has processed every operation that existed in
    * bsync at the time `targets` was read (one cursor per stream). Returns as
-   * soon as the cursors catch up — it does not wait for the bsync long-poll
+   * soon as the cursors catch up - it does not wait for the bsync long-poll
    * timeout. Intended for tests/dev.
    */
   async processAll(targets: BsyncCursors, timeout = 5000) {

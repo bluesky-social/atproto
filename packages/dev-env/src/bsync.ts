@@ -39,7 +39,7 @@ export class TestBsync {
    * bsync subscription to catch up in tests, without waiting for the long-poll
    * timeout.
    */
-  async getSubscriptionCursors(): Promise<{
+  async getStreamHeads(): Promise<{
     op?: string
     mute?: string
     notif?: string

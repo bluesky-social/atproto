@@ -136,7 +136,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await pds.processAll()
     await ozone.processAll()
     await bsky.sub.processAll()
-    await bsky.bsyncSub.processAll(await bsync.getSubscriptionCursors())
+    await bsky.bsyncSub.processAll(await bsync.getStreamHeads())
     await thirdPartyPds.close()
 
     // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
@@ -187,7 +187,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.ozone.processAll()
     await this.bsky.sub.processAll()
     await this.bsky.bsyncSub.processAll(
-      await this.bsync.getSubscriptionCursors(),
+      await this.bsync.getStreamHeads(),
       timeout,
     )
     await this.processFullSubscription(timeout)
