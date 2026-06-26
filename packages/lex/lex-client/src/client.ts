@@ -1127,8 +1127,8 @@ export class Client implements Agent {
             const reset = err.headers.get('RateLimit-Reset')
             if (reset != null && /^\d+(?:\.\d*)?$/.test(reset)) {
               const resetsIn = Math.max(Number(reset) * 1000 - Date.now(), 0)
-              if (resetsIn > 0) {
-                await wait(resetsIn, options)
+              if (resetsIn >= 0) {
+                await wait(Math.max(resetsIn, 1e3), options)
                 continue
               }
             }
@@ -1145,7 +1145,7 @@ export class Client implements Agent {
                 Math.abs(new Date(retryAfter).getTime() - Date.now())
 
             if (waitTime >= 0) {
-              await wait(waitTime, options)
+              await wait(Math.max(waitTime, 1e3), options)
               continue
             }
 
