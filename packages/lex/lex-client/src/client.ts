@@ -1124,15 +1124,14 @@ export class Client implements Agent {
 
           // Rate limit error
           if (err.status === 429 || err.error === 'RateLimitExceeded') {
-            const reset = err.headers.get('RateLimit-Reset')
-            if (reset != null && /^\d+(?:\.\d*)?$/.test(reset)) {
-              const resetsIn = Math.max(Number(reset) * 1000 - Date.now(), 0)
-              if (resetsIn >= 0) {
-                await wait(Math.max(resetsIn, 1e3), options)
-                continue
-              }
+            const resetsAt = err.headers.get('RateLimit-Reset') // epoch
+            if (resetsAt != null && /^\s*\d+(?:\.\d*)\s*?$/.test(resetsAt)) {
+              const resetsIn = Number(resetsAt) * 1000 - Date.now()
+              await wait(Math.max(resetsIn, 1e3), options)
+              continue
             }
-            // Unable to parse the reset time; fall through
+
+            // Unable to determine when to retry; fall through
           }
 
           // Server asks to retry after a certain time
@@ -1149,7 +1148,7 @@ export class Client implements Agent {
               continue
             }
 
-            // Invalid date, fall through
+            // Invalid date; fall through
           }
         }
 
