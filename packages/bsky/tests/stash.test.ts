@@ -44,7 +44,12 @@ describe('private data', () => {
   })
 
   beforeEach(async () => network.processAll())
-  afterEach(async () => clearPrivateData(network.bsky.db))
+  afterEach(async () => {
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
+    await clearPrivateData(network.bsky.db)
+  })
   afterAll(async () => network?.close())
 
   describe('create', () => {

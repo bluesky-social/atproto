@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ws-client",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "description": "Websocket client library",
   "keywords": [

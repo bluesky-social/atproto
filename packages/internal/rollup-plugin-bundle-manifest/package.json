@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/rollup-plugin-bundle-manifest",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "description": "Library for generating a manifest of bundled files from a Rollup build",
   "keywords": [

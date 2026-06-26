@@ -1,5 +1,38 @@
 # @atproto/bsky
 
+## 0.0.249
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `pino` logger to version 10
+
+- Updated dependencies [[`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb)]:
+  - @atproto-labs/fetch-node@0.3.3
+  - @atproto/common@0.6.4
+  - @atproto/api@0.20.22
+  - @atproto/crypto@0.5.2
+  - @atproto/did@0.5.2
+  - @atproto/identity@0.5.2
+  - @atproto-labs/xrpc-utils@0.1.2
+  - @atproto/lex@0.1.5
+  - @atproto/repo@0.10.2
+  - @atproto/sync@0.3.4
+  - @atproto/syntax@0.6.3
+  - @atproto/xrpc-server@0.11.3
+
+## 0.0.248
+
+### Patch Changes
+
+- [#5146](https://github.com/bluesky-social/atproto/pull/5146) [`e4e6e84`](https://github.com/bluesky-social/atproto/commit/e4e6e84b486234686dd995f516a95098e4785a90) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable filtering by multiple languages in search V2
+
+- [#5143](https://github.com/bluesky-social/atproto/pull/5143) [`cf429ac`](https://github.com/bluesky-social/atproto/commit/cf429ac0ee3a76244304aad344d38e88bc643887) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Match V1 search date handling with V2 date handling
+
+- Updated dependencies [[`e4e6e84`](https://github.com/bluesky-social/atproto/commit/e4e6e84b486234686dd995f516a95098e4785a90), [`cf429ac`](https://github.com/bluesky-social/atproto/commit/cf429ac0ee3a76244304aad344d38e88bc643887), [`2e8ab4b`](https://github.com/bluesky-social/atproto/commit/2e8ab4bb08bd754f1f3f20722e028294a2169d6b)]:
+  - @atproto/api@0.20.21
+
 ## 0.0.247
 
 ### Patch Changes

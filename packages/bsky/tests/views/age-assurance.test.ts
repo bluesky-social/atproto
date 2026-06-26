@@ -97,6 +97,9 @@ describe('age assurance views', () => {
   })
 
   afterEach(async () => {
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -225,6 +228,7 @@ describe('age assurance views', () => {
       externalPayload,
       status,
     })
+    await network.processAll()
     const finalizedState = await getAgeAssurance(actor)
     expect(finalizedState).toStrictEqual({
       status: 'assured',
@@ -264,6 +268,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?actorDid=${encodeURIComponent(actorDid)}&result=success`,
       )
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -288,6 +293,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?result=unknown`,
       )
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -323,6 +329,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(200)
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -346,6 +353,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(500)
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',

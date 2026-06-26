@@ -1,5 +1,42 @@
 # @atproto/pds
 
+## 0.5.10
+
+### Patch Changes
+
+- Updated dependencies [[`af02ea1`](https://github.com/bluesky-social/atproto/commit/af02ea14e710f5930d78b49836aa460cfe168941)]:
+  - @atproto/oauth-provider@0.19.6
+
+## 0.5.9
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `pino` logger to version 10
+
+- Updated dependencies [[`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb)]:
+  - @atproto-labs/fetch-node@0.3.3
+  - @atproto/common@0.6.4
+  - @atproto/aws@0.3.2
+  - @atproto/crypto@0.5.2
+  - @atproto/did@0.5.2
+  - @atproto/identity@0.5.2
+  - @atproto-labs/simple-store@0.4.2
+  - @atproto-labs/simple-store-memory@0.2.2
+  - @atproto-labs/simple-store-redis@0.1.2
+  - @atproto-labs/xrpc-utils@0.1.2
+  - @atproto/lex@0.1.5
+  - @atproto/lex-cbor@0.1.2
+  - @atproto/lex-data@0.1.3
+  - @atproto/lex-json@0.1.2
+  - @atproto/oauth-provider@0.19.5
+  - @atproto/oauth-scopes@0.5.2
+  - @atproto/repo@0.10.2
+  - @atproto/syntax@0.6.3
+  - @atproto/xrpc@0.8.2
+  - @atproto/xrpc-server@0.11.3
+
 ## 0.5.8
 
 ### Patch Changes

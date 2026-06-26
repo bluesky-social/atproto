@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch-node",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "MIT",
   "description": "SSRF protection for fetch() in Node.js",
   "keywords": [
@@ -28,10 +28,15 @@
     "@atproto-labs/fetch": "workspace:^",
     "@atproto-labs/pipe": "workspace:^",
     "ipaddr.js": "^2.1.0",
-    "undici": "^8.5.0"
+    "undici_v6": "npm:undici@^6.x",
+    "undici_v7": "npm:undici@^7.x",
+    "undici_v8": "npm:undici@^8.x"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "^4.0.16"
+  },
   "scripts": {
-    "build": "tsgo --build tsconfig.json"
+    "build": "tsgo --build tsconfig.json",
+    "test": "vitest run"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/did",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [

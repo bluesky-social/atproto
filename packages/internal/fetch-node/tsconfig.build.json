@@ -5,7 +5,8 @@
     "outDir": "dist",
     "rootDir": "src",
   },
-  "include": ["src"],
+  "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
   "references": [
     { "path": "../fetch/tsconfig.build.json" },
     { "path": "../pipe/tsconfig.build.json" },

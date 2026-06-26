@@ -1,5 +1,22 @@
 # @atproto/oauth-provider-api
 
+## 0.7.2
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/jwk@0.7.2
+  - @atproto/oauth-types@0.7.3
+  - @atproto/syntax@0.6.3
+
+## 0.7.1
+
+### Patch Changes
+
+- [#5140](https://github.com/bluesky-social/atproto/pull/5140) [`0b165ca`](https://github.com/bluesky-social/atproto/commit/0b165ca96c460d3a30207f81e13eebfe9e8c7a1c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `deleteAfter` field to account deactivation data
+
 ## 0.7.0
 
 ### Minor Changes
