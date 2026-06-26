@@ -1142,9 +1142,9 @@ export class Client implements Agent {
               ? // Retry-After is in seconds
                 Number(retryAfter) * 1000
               : // Retry-After is an http-date
-                Math.abs(new Date(retryAfter).getTime() - Date.now())
+                new Date(retryAfter).getTime() - Date.now()
 
-            if (waitTime >= 0) {
+            if (!Number.isNaN(waitTime)) {
               await wait(Math.max(waitTime, 1e3), options)
               continue
             }
