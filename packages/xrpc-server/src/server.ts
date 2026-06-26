@@ -735,19 +735,18 @@ function createErrorMiddleware({
     // (id, timing) and logging configuration (serialization, etc.).
     const logger = isPinoHttpRequest(req) ? req.log : log
 
-    const isInternalError = xrpcError instanceof InternalServerError
-
-    const msgError = xrpcError.error ?? 'Unknown'
-    const msgDetail = xrpcError.message ? ` (${xrpcError.message})` : ''
+    const msgError = xrpcError.error || 'Unknown'
     const msgLoc = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
-    const msg = `${msgError} error${msgDetail} in ${msgLoc}`
+    const msgDetail = xrpcError.message ? `: ${xrpcError.message}` : ''
+    const msg = `${msgError} error in ${msgLoc}${msgDetail}`
 
     logger.error(
       {
         // @NOTE Computation of error stack is an expensive operation, so
-        // we strip it for expected errors.
+        // we strip it for expected (non-server) errors.
         err:
-          isInternalError || process.env.NODE_ENV === 'development'
+          xrpcError instanceof InternalServerError ||
+          process.env.NODE_ENV === 'development'
             ? err
             : toSimplifiedErrorLike(err),
 
