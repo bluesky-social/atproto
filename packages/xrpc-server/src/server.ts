@@ -737,7 +737,7 @@ function createErrorMiddleware({
 
     const msgError = xrpcError.error || 'Unknown'
     const msgLoc = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
-    const msgDetail = xrpcError.message ? `: ${xrpcError.message}` : ''
+    const msgDetail = xrpcError.message ? ` (${xrpcError.message})` : ''
     const msg = `${msgError} error in ${msgLoc}${msgDetail}`
 
     logger.error(
