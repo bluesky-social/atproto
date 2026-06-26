@@ -737,9 +737,10 @@ function createErrorMiddleware({
 
     const isInternalError = xrpcError instanceof InternalServerError
 
+    const msgError = xrpcError.error ?? 'Unknown'
     const msgDetail = xrpcError.message ? ` (${xrpcError.message})` : ''
     const msgLoc = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
-    const msg = `${xrpcError.error} error${msgDetail} in ${msgLoc}`
+    const msg = `${msgError} error${msgDetail} in ${msgLoc}`
 
     logger.error(
       {
