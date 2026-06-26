@@ -19,7 +19,7 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure, XrpcFetchError, XrpcResponseError } from './errors.js'
+import { XrpcError, XrpcFailure, XrpcResponseError } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -1111,12 +1111,12 @@ export class Client implements Agent {
 
         options.cursor = body.cursor
       } catch (err) {
-        if (err instanceof XrpcResponseError) {
-          // Method not implemented on server
-          if (err.status === 501 || err.error === 'MethodNotImplemented') {
-            throw err
-          }
+        currentErrorCount++
+        if (currentErrorCount > maxRetries) {
+          throw err
+        }
 
+        if (err instanceof XrpcResponseError) {
           // Page not found, return empty iterator
           if (err.status === 404 || err.error === 'NotFound') {
             return
@@ -1135,44 +1135,32 @@ export class Client implements Agent {
             // Unable to parse the reset time; fall through
           }
 
-          // Server error
-          if (err.status >= 500) {
-            const retryAfter = err.headers.get('Retry-After')
+          // Server asks to retry after a certain time
+          const retryAfter = err.headers.get('Retry-After')
+          if (retryAfter != null) {
+            const waitTime = /^\s*\d+\s*$/.test(retryAfter)
+              ? // Retry-After is in seconds
+                Number(retryAfter) * 1000
+              : // Retry-After is an http-date
+                Math.abs(new Date(retryAfter).getTime() - Date.now())
 
-            // Retry-After is in seconds
-            if (retryAfter != null && /^\s*\d+\s*$/.test(retryAfter)) {
-              await wait(Number(retryAfter.trim()) * 1000, options)
+            if (waitTime >= 0) {
+              await wait(waitTime, options)
               continue
             }
 
-            // Retry-After is an http-date
-            if (retryAfter != null) {
-              const waitTime = new Date(retryAfter).getTime() - Date.now()
-              if (!Number.isNaN(waitTime)) {
-                await wait(Math.abs(waitTime), options)
-                continue
-              }
-              // Invalid date, fall through
-            }
+            // Invalid date, fall through
           }
         }
 
-        // Exponential backoff with a maximum wait of 30 seconds (signal
-        // controlled)
-        if (
-          // Network error
-          err instanceof XrpcFetchError ||
-          // Server error
-          (err instanceof XrpcResponseError && err.status >= 500)
-        ) {
-          currentErrorCount++
-          if (currentErrorCount > maxRetries) throw err
+        // Exponential backoff for transient errors
+        if (err instanceof XrpcError && err.shouldRetry()) {
           const waitTime = Math.min(2 ** currentErrorCount * 1000, 30_000)
           await wait(waitTime, options)
           continue
         }
 
-        // Propagate unexpected errors
+        // Propagate unexpected and non-retryable errors
         throw err
       }
     } while (options.cursor)
