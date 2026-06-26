@@ -1,13 +1,14 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('bsky account deactivation', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -22,12 +23,10 @@ describe('bsky account deactivation', () => {
       {},
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('does not return deactivated profiles', async () => {
     const attempt = agent.api.app.bsky.actor.getProfile({

@@ -18,7 +18,7 @@ export const rowToRequestData = (
   parameters: fromJson(row.parameters),
   expiresAt: fromDateISO(row.expiresAt),
   deviceId: row.deviceId,
-  sub: row.did,
+  did: row.did,
   code: row.code,
 })
 
@@ -34,7 +34,7 @@ const requestDataToRow = (
   data: RequestData,
 ): Insertable<AuthorizationRequest> => ({
   id,
-  did: data.sub,
+  did: data.did,
   deviceId: data.deviceId,
 
   clientId: data.clientId,
@@ -53,16 +53,20 @@ export const readQB = (db: AccountDb, id: RequestId) =>
 export const updateQB = (
   db: AccountDb,
   id: RequestId,
-  { code, sub, deviceId, expiresAt, parameters, ...rest }: UpdateRequestData,
+  { code, did, deviceId, expiresAt, parameters, ...rest }: UpdateRequestData,
 ) => {
   assert(!Object.keys(rest).length, 'Unexpected fields in UpdateRequestData')
   return db.db
     .updateTable('authorization_request')
-    .if(code !== undefined, (qb) => qb.set({ code }))
-    .if(sub !== undefined, (qb) => qb.set({ did: sub }))
-    .if(deviceId !== undefined, (qb) => qb.set({ deviceId }))
-    .if(expiresAt != null, (qb) => qb.set({ expiresAt: toDateISO(expiresAt!) }))
-    .if(parameters != null, (qb) => qb.set({ parameters: toJson(parameters!) }))
+    .$if(code !== undefined, (qb) => qb.set({ code }))
+    .$if(did !== undefined, (qb) => qb.set({ did }))
+    .$if(deviceId !== undefined, (qb) => qb.set({ deviceId }))
+    .$if(expiresAt != null, (qb) =>
+      qb.set({ expiresAt: toDateISO(expiresAt!) }),
+    )
+    .$if(parameters != null, (qb) =>
+      qb.set({ parameters: toJson(parameters!) }),
+    )
     .where('id', '=', id)
 }
 

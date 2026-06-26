@@ -1,18 +1,16 @@
 FROM node:24.15-alpine3.23 AS build
 
-RUN corepack enable
+RUN npm install -g pnpm@11.5.2
 
 WORKDIR /app
 
 COPY ./.npmrc ./
 COPY ./.nvmrc ./
 COPY ./package.json ./
-RUN corepack install
 
 # Move files into the image and install
 COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
-COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.

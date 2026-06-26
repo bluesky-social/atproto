@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Adds members to a group. The members are added in 'request' status, so they have to accept it. This creates convo memberships.",
+      "description": "Adds members to a group. The members are added in 'request' status, so they have to accept it. This creates convo memberships.",
       "errors": [
         { "name": "AccountSuspended" },
         { "name": "BlockedActor" },

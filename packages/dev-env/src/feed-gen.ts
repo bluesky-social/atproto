@@ -2,19 +2,28 @@ import events from 'node:events'
 import http from 'node:http'
 import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import httpTerminator from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SkeletonHandler, app } from '@atproto/pds'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
 
 export class TestFeedGen {
-  destroyed = false
+  private terminator: httpTerminator.HttpTerminator
+  private terminatorPromise?: Promise<void>
+
+  get destroyed() {
+    return this.terminatorPromise != null
+  }
 
   constructor(
     public port: number,
     public server: http.Server,
     public did: string,
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async create(
     plcUrl: string,
@@ -50,14 +59,11 @@ export class TestFeedGen {
   }
 
   close(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.destroyed) return resolve()
-      this.server.close((err) => {
-        if (err) return reject(err)
-        this.destroyed = true
-        resolve()
-      })
-    })
+    return (this.terminatorPromise ??= this.terminator.terminate())
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 

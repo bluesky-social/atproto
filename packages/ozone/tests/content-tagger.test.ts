@@ -23,7 +23,7 @@ describe('moderation subject content tagging', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getStatus = async (subject: string) => {

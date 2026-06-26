@@ -1,3 +1,4 @@
+import { Did } from '@atproto/did'
 import {
   OAuthIssuerIdentifier,
   isOAuthClientIdLoopback,
@@ -12,12 +13,14 @@ import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
 import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
 import { Customization } from '../oauth-provider.js'
-import { Sub } from '../oidc/sub.js'
 import {
   Account,
   AccountStore,
   AuthorizedClientData,
+  DeleteAccountConfirmInput,
+  DeleteAccountRequestInput,
   DeviceAccount,
+  HandleString,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
@@ -152,7 +155,7 @@ export class AccountManager {
 
         return account
       } catch (err) {
-        await this.removeDeviceAccount(deviceId, account.sub)
+        await this.removeDeviceAccount(deviceId, account.did)
 
         throw InvalidRequestError.from(
           err,
@@ -190,7 +193,7 @@ export class AccountManager {
           // This information is only exposed to the hook and is never
           // surfaced to the client.
           const isCredentialsError = err instanceof InvalidCredentialsError
-          const sub = isCredentialsError ? err.sub ?? null : null
+          const did = isCredentialsError ? err.did ?? null : null
 
           // Swallow any error from the hook itself so that it does not mask
           // the underlying authentication failure being reported.
@@ -198,7 +201,7 @@ export class AccountManager {
             await this.hooks.onSignInFailed?.call(null, {
               data,
               error: err,
-              sub,
+              did,
               deviceId,
               deviceMetadata,
               clientId,
@@ -235,16 +238,16 @@ export class AccountManager {
 
   public async upsertDeviceAccount(
     deviceId: DeviceId,
-    sub: Sub,
+    did: Did,
   ): Promise<void> {
-    await this.store.upsertDeviceAccount(deviceId, sub)
+    await this.store.upsertDeviceAccount(deviceId, did)
   }
 
   public async getDeviceAccount(
     deviceId: DeviceId,
-    sub: Sub,
+    did: Did,
   ): Promise<DeviceAccount> {
-    const deviceAccount = await this.store.getDeviceAccount(deviceId, sub)
+    const deviceAccount = await this.store.getDeviceAccount(deviceId, did)
     if (!deviceAccount) throw new InvalidRequestError(`Account not found`)
 
     return deviceAccount
@@ -258,15 +261,15 @@ export class AccountManager {
     // "Loopback" clients are not distinguishable from one another.
     if (isOAuthClientIdLoopback(client.id)) return
 
-    await this.store.setAuthorizedClient(account.sub, client.id, data)
+    await this.store.setAuthorizedClient(account.did, client.id, data)
   }
 
-  public async getAccount(sub: Sub) {
-    return this.store.getAccount(sub)
+  public async getAccount(did: Did) {
+    return this.store.getAccount(did)
   }
 
-  public async removeDeviceAccount(deviceId: DeviceId, sub: Sub) {
-    return this.store.removeDeviceAccount(deviceId, sub)
+  public async removeDeviceAccount(deviceId: DeviceId, did: Did) {
+    return this.store.removeDeviceAccount(deviceId, did)
   }
 
   public async listDeviceAccounts(
@@ -280,13 +283,13 @@ export class AccountManager {
       .filter((deviceAccount) => deviceAccount.deviceId === deviceId)
   }
 
-  public async listAccountDevices(sub: Sub): Promise<DeviceAccount[]> {
+  public async listAccountDevices(did: Did): Promise<DeviceAccount[]> {
     const deviceAccounts = await this.store.listDeviceAccounts({
-      sub,
+      did,
     })
 
     return deviceAccounts // Fool proof
-      .filter((deviceAccount) => deviceAccount.account.sub === sub)
+      .filter((deviceAccount) => deviceAccount.account.did === did)
   }
 
   public async resetPasswordRequest(
@@ -343,7 +346,7 @@ export class AccountManager {
     })
   }
 
-  public async verifyHandleAvailability(handle: string): Promise<void> {
+  public async verifyHandleAvailability(handle: HandleString): Promise<void> {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       return this.store.verifyHandleAvailability(handle)
     })
@@ -398,6 +401,7 @@ export class AccountManager {
       deviceMetadata,
       input,
       account: updatedAccount,
+      prevAccount: account,
     })
 
     return updatedAccount
@@ -412,8 +416,8 @@ export class AccountManager {
     await this.hooks.onVerifyEmailRequest?.call(null, {
       deviceId,
       deviceMetadata,
-      input,
       account,
+      input,
     })
 
     await this.store.verifyEmailRequest(input)
@@ -421,8 +425,8 @@ export class AccountManager {
     await this.hooks.onVerifyEmailRequested?.call(null, {
       deviceId,
       deviceMetadata,
-      input,
       account,
+      input,
     })
   }
 
@@ -435,8 +439,8 @@ export class AccountManager {
     await this.hooks.onVerifyEmailConfirm?.call(null, {
       deviceId,
       deviceMetadata,
-      input,
       account,
+      input,
     })
 
     const updatedAccount = await this.store.verifyEmailConfirm(input)
@@ -448,8 +452,8 @@ export class AccountManager {
     await this.hooks.onVerifyEmailConfirmed?.call(null, {
       deviceId,
       deviceMetadata,
-      input,
       account: updatedAccount,
+      input,
     })
 
     return updatedAccount
@@ -478,5 +482,110 @@ export class AccountManager {
     })
 
     return updatedAccount
+  }
+
+  public async deactivateAccount(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onDeactivateAccount?.call(null, {
+      deviceId,
+      deviceMetadata,
+      account,
+    })
+
+    const updatedAccount = await callAsync(() =>
+      this.store.deactivateAccount({
+        did: account.did,
+        // @TODO support setting this from the UI/API
+        deleteAfter: undefined,
+      }),
+    ).catch((err) => {
+      throw InvalidRequestError.from(err, 'Account deactivation failed')
+    })
+
+    await this.hooks.onDeactivatedAccount?.call(null, {
+      deviceId,
+      deviceMetadata,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
+  }
+
+  public async reactivateAccount(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onReactivateAccount?.call(null, {
+      deviceId,
+      deviceMetadata,
+      account,
+    })
+
+    const updatedAccount = await callAsync(() =>
+      this.store.reactivateAccount({ did: account.did }),
+    ).catch((err) => {
+      throw InvalidRequestError.from(err, 'Account reactivation failed')
+    })
+
+    await this.hooks.onReactivatedAccount?.call(null, {
+      deviceId,
+      deviceMetadata,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
+  }
+
+  public async deleteAccountRequest(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: DeleteAccountRequestInput,
+    account: Account,
+  ): Promise<void> {
+    await this.hooks.onDeleteAccountRequest?.call(null, {
+      deviceId,
+      deviceMetadata,
+      account,
+    })
+
+    await this.store.deleteAccountRequest(input)
+
+    await this.hooks.onDeleteAccountRequested?.call(null, {
+      deviceId,
+      deviceMetadata,
+      account,
+    })
+  }
+
+  public async deleteAccountConfirm(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: DeleteAccountConfirmInput,
+    account: Account,
+  ): Promise<void> {
+    return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
+      await this.hooks.onDeleteAccountConfirm?.call(null, {
+        deviceId,
+        deviceMetadata,
+        account,
+      })
+
+      await callAsync(() => this.store.deleteAccountConfirm(input)).catch(
+        (err) => {
+          throw InvalidRequestError.from(err, 'Account deletion failed')
+        },
+      )
+
+      await this.hooks.onDeleteAccountConfirmed?.call(null, {
+        deviceId,
+        deviceMetadata,
+        account,
+        input,
+      })
+    })
   }
 }

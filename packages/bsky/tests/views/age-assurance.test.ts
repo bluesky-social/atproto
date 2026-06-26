@@ -2,7 +2,9 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
+import express, { Application, RequestHandler } from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import {
   afterAll,
   afterEach,
@@ -41,8 +43,17 @@ describe('age assurance views', () => {
   let actorDid: string
 
   let kwsServer: MockKwsServer
-  const authMock = vi.fn<MockHandler>()
-  const sendEmailMock = vi.fn<MockHandler>()
+
+  const authMock = vi.fn<RequestHandler>((req, res) =>
+    res.json({
+      access_token:
+        'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
+      expires_in: 3600,
+    }),
+  )
+  const sendEmailMock = vi.fn<RequestHandler>((req, res) => {
+    res.json({})
+  })
 
   beforeAll(async () => {
     kwsServer = new MockKwsServer({
@@ -74,38 +85,27 @@ describe('age assurance views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
-
     actorDid = sc.dids.alice
   })
 
+  beforeEach(async () => network.processAll())
+
   beforeEach(async () => {
-    // Default mocks for KWS endpoints.
-    authMock.mockImplementation(
-      (_req: express.Request, res: express.Response) =>
-        res.json({
-          access_token:
-            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.INVALID',
-          expires_in: 3600,
-        }),
-    )
-    sendEmailMock.mockImplementation(
-      (_req: express.Request, res: express.Response) => {
-        res.json({})
-      },
-    )
+    // @TODO Use the clearMocks setting in the configuration instead of:
+    authMock.mockClear()
+    sendEmailMock.mockClear()
   })
 
   afterEach(async () => {
-    vi.resetAllMocks()
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
 
-  afterAll(async () => {
-    await network.close()
-    await kwsServer.stop()
-  })
+  afterAll(async () => network?.close())
+  afterAll(async () => kwsServer?.stop())
 
   const getAgeAssurance = async (did: string) => {
     const { data } = await agent.app.bsky.unspecced.getAgeAssuranceState(
@@ -228,6 +228,7 @@ describe('age assurance views', () => {
       externalPayload,
       status,
     })
+    await network.processAll()
     const finalizedState = await getAgeAssurance(actor)
     expect(finalizedState).toStrictEqual({
       status: 'assured',
@@ -267,6 +268,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?actorDid=${encodeURIComponent(actorDid)}&result=success`,
       )
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -291,6 +293,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?result=unknown`,
       )
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -326,6 +329,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(200)
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -349,6 +353,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(500)
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -372,13 +377,12 @@ const clearActorAgeAssurance = async (db: Database) => {
     .execute()
 }
 
-type MockHandler = (req: express.Request, res: express.Response) => void
-
 class MockKwsServer {
   private verificationSecret: string
   private webhookSecret: string
   private app: Application
   private server: Server
+  private terminator: httpTerminator.HttpTerminator
 
   constructor({
     verificationSecret,
@@ -388,21 +392,20 @@ class MockKwsServer {
   }: {
     verificationSecret: string
     webhookSecret: string
-    authMock: ReturnType<typeof vi.fn<MockHandler>>
-    sendEmailMock: ReturnType<typeof vi.fn<MockHandler>>
+    authMock: RequestHandler
+    sendEmailMock: RequestHandler
   }) {
     this.verificationSecret = verificationSecret
     this.webhookSecret = webhookSecret
 
     this.app = express()
-      .post('/auth/realms/kws/protocol/openid-connect/token', (req, res) =>
-        authMock(req, res),
-      )
-      .post('/v1/verifications/send-email', (req, res) =>
-        sendEmailMock(req, res),
-      )
+      .post('/auth/realms/kws/protocol/openid-connect/token', authMock)
+      .post('/v1/verifications/send-email', sendEmailMock)
 
     this.server = createServer(this.app)
+    this.terminator = httpTerminator.createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -411,8 +414,7 @@ class MockKwsServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   callVerificationResponse(

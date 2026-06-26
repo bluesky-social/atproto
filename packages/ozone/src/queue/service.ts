@@ -204,7 +204,7 @@ export class QueueService {
     }
 
     if (subjectType !== undefined) {
-      qb = qb.where(sql`"subjectTypes" @> ${jsonb([subjectType])}`)
+      qb = qb.where(sql<boolean>`"subjectTypes" @> ${jsonb([subjectType])}`)
     }
 
     if (collection !== undefined) {
@@ -215,7 +215,7 @@ export class QueueService {
       const conditions = reportTypes.map(
         (t) => sql`"reportTypes" @> ${jsonb([t])}`,
       )
-      qb = qb.where(sql`(${sql.join(conditions, sql` OR `)})`)
+      qb = qb.where(sql<boolean>`(${sql.join(conditions, sql` OR `)})`)
     }
 
     const keyset = new TimeIdKeyset(ref('createdAt'), ref('id'))
@@ -309,9 +309,9 @@ export class QueueService {
       .limit(params.limit)
 
     if (opts?.includeUnmatched) {
-      query = query.where((qb) => {
-        return qb.orWhere('r.queueId', 'is', null).orWhere('r.queueId', '=', -1)
-      })
+      query = query.where((eb) =>
+        eb.or([eb('r.queueId', 'is', null), eb('r.queueId', '=', -1)]),
+      )
     } else {
       query = query.where('r.queueId', 'is', null)
     }

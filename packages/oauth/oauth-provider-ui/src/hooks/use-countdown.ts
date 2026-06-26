@@ -13,7 +13,7 @@ export function useCountdown(initial: number) {
     }
   }, [remaining])
 
-  const setRemainingSafe = useStableCallback((value: number) => {
+  const setRemainingSafe = useStableCallback((value: number = initial) => {
     setRemaining(fixCountdownValue(value))
   })
 

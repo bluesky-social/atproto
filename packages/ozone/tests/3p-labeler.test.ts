@@ -53,8 +53,8 @@ describe('labels from 3p labelers', () => {
   })
 
   afterAll(async () => {
-    await network.close()
-    await thirdPartyLabeler.close()
+    await network?.close()
+    await thirdPartyLabeler?.close()
   })
 
   const getPostSubject = () => ({

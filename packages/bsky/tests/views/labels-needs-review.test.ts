@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
@@ -39,14 +39,11 @@ describe('bsky needs-review labels', () => {
 
     await sc.follow(sc.dids.bob, sc.dids.geoff)
 
-    await network.processAll()
-
     AtpAgent.configure({ appLabelers: [network.ozone.ctx.cfg.service.did] })
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('account-level', () => {
     beforeAll(async () => {

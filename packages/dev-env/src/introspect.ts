@@ -1,21 +1,28 @@
 import events from 'node:events'
 import http from 'node:http'
 import express from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { TestBsky } from './bsky.js'
+import { TestBsync } from './bsync.js'
 import { TestOzone } from './ozone.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 
 export class IntrospectServer {
+  private terminator: httpTerminator.HttpTerminator
   constructor(
     public port: number,
     public server: http.Server,
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async start(
     port: number,
     plc: TestPlc,
     pds: TestPds,
+    bsync: TestBsync,
     bsky: TestBsky,
     ozone: TestOzone,
   ) {
@@ -28,6 +35,9 @@ export class IntrospectServer {
         pds: {
           url: pds.url,
           did: pds.ctx.cfg.service.did,
+        },
+        bsync: {
+          url: bsync.url,
         },
         bsky: {
           url: bsky.url,
@@ -48,7 +58,6 @@ export class IntrospectServer {
   }
 
   async close() {
-    this.server.close()
-    await events.once(this.server, 'close')
+    await this.terminator.terminate()
   }
 }

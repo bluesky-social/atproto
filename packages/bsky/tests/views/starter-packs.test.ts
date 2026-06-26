@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyGraphGetStarterPacksWithMembership,
@@ -80,13 +80,10 @@ describe('starter packs', () => {
       [sc.dids.alice, sc.dids.frankie],
       [],
     )
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('gets actor starter packs.', async () => {
     const { data } = await agent.api.app.bsky.graph.getActorStarterPacks({

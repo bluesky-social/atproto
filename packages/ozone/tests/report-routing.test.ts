@@ -122,7 +122,7 @@ describe('queue-router', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('routes unassigned AND unmatched reports to a newly created queue', async () => {

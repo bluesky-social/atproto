@@ -80,7 +80,7 @@ describe('moderation-statuses', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('query statuses', () => {

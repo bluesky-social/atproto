@@ -1,6 +1,9 @@
 import { SeedClient } from '@atproto/dev-env'
 
-export default async (sc: SeedClient, opts?: { inviteCode?: string }) => {
+export default async function usersSeed(
+  sc: SeedClient,
+  opts?: { inviteCode?: string },
+) {
   await sc.createAccount('alice', {
     ...users.alice,
     inviteCode: opts?.inviteCode,
@@ -61,4 +64,4 @@ export const users = {
     description: undefined,
     selfLabels: undefined,
   },
-}
+} as const

@@ -22,7 +22,7 @@ describe('Record resolution', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('resolves record by AT-URI object.', async () => {

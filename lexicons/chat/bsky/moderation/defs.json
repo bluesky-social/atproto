@@ -3,7 +3,7 @@
   "id": "chat.bsky.moderation.defs",
   "defs": {
     "convoView": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. A view of a conversation for moderation purposes. Unlike chat.bsky.convo.defs#convoView, it does not include viewer-specific data (such as muted, unreadCount, status, lastMessage, lastReaction), since the requester is a moderator and not a member of the conversation. The member list is not included; use chat.bsky.moderation.getConvoMembers to list members.",
+      "description": "A view of a conversation for moderation purposes. Unlike chat.bsky.convo.defs#convoView, it does not include viewer-specific data (such as muted, unreadCount, status, lastMessage, lastReaction), since the requester is a moderator and not a member of the conversation. The member list is not included; use chat.bsky.moderation.getConvoMembers to list members.",
       "type": "object",
       "required": ["id", "rev"],
       "properties": {
@@ -17,12 +17,12 @@
       }
     },
     "directConvo": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Data specific to a direct conversation, for moderation purposes.",
+      "description": "Data specific to a direct conversation, for moderation purposes.",
       "type": "object",
       "properties": {}
     },
     "groupConvo": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Data specific to a group conversation, for moderation purposes. Unlike chat.bsky.convo.defs#groupConvo, it does not include viewer-specific data (such as unreadJoinRequestCount), since the requester is a moderator and not a member of the conversation.",
+      "description": "Data specific to a group conversation, for moderation purposes. Unlike chat.bsky.convo.defs#groupConvo, it does not include viewer-specific data (such as unreadJoinRequestCount), since the requester is a moderator and not a member of the conversation.",
       "type": "object",
       "required": [
         "createdAt",
@@ -61,8 +61,8 @@
         "name": {
           "type": "string",
           "description": "The display name of the group conversation.",
-          "maxGraphemes": 128,
-          "maxLength": 1280
+          "maxGraphemes": 50,
+          "maxLength": 500
         }
       }
     }

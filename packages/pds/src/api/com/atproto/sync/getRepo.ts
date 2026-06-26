@@ -1,5 +1,9 @@
 import stream from 'node:stream'
-import { byteIterableToStream, coalesceByteStream } from '@atproto/common'
+import {
+  MINUTE,
+  byteIterableToStream,
+  coalesceByteStream,
+} from '@atproto/common'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -21,6 +25,10 @@ export default function (server: Server, ctx: AppContext) {
         // always allow
       },
     }),
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 6000,
+    },
     handler: async ({ req, params, auth }) => {
       const { did, since } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))

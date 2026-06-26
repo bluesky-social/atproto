@@ -1,5 +1,79 @@
 # @atproto/api
 
+## 0.20.22
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/common-web@0.5.2
+  - @atproto/lexicon@0.7.3
+  - @atproto/syntax@0.6.3
+  - @atproto/xrpc@0.8.2
+
+## 0.20.21
+
+### Patch Changes
+
+- [#5146](https://github.com/bluesky-social/atproto/pull/5146) [`e4e6e84`](https://github.com/bluesky-social/atproto/commit/e4e6e84b486234686dd995f516a95098e4785a90) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable filtering by multiple languages in search V2
+
+- [#5143](https://github.com/bluesky-social/atproto/pull/5143) [`cf429ac`](https://github.com/bluesky-social/atproto/commit/cf429ac0ee3a76244304aad344d38e88bc643887) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Match V1 search date handling with V2 date handling
+
+- [#5145](https://github.com/bluesky-social/atproto/pull/5145) [`2e8ab4b`](https://github.com/bluesky-social/atproto/commit/2e8ab4bb08bd754f1f3f20722e028294a2169d6b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.20
+
+### Patch Changes
+
+- [#5137](https://github.com/bluesky-social/atproto/pull/5137) [`ec8c90c`](https://github.com/bluesky-social/atproto/commit/ec8c90c88963155f471fd25ad266ab29f91f27fc) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.19
+
+### Patch Changes
+
+- [#5127](https://github.com/bluesky-social/atproto/pull/5127) [`a67858d`](https://github.com/bluesky-social/atproto/commit/a67858df5e4c0ca213e345c14b0283b2e930c68c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update required query params for searchPostsV2
+
+## 0.20.18
+
+### Patch Changes
+
+- [#5124](https://github.com/bluesky-social/atproto/pull/5124) [`ef3adfa`](https://github.com/bluesky-social/atproto/commit/ef3adfaa0731a57780ccf6f1f81183c1938e1af4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5114](https://github.com/bluesky-social/atproto/pull/5114) [`5206b3a`](https://github.com/bluesky-social/atproto/commit/5206b3aae30b1efe39cff8cccbabb5932cd49a3d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add searchPostsV2 endpoint
+
+## 0.20.17
+
+### Patch Changes
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5123](https://github.com/bluesky-social/atproto/pull/5123) [`cab3ac3`](https://github.com/bluesky-social/atproto/commit/cab3ac321bf939a4c8ba29aed3f632d8a91790bf) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.16
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/common-web@0.5.1
+  - @atproto/lexicon@0.7.2
+  - @atproto/syntax@0.6.2
+  - @atproto/xrpc@0.8.1
+
+## 0.20.15
+
+### Patch Changes
+
+- [#5090](https://github.com/bluesky-social/atproto/pull/5090) [`b3c4bc6`](https://github.com/bluesky-social/atproto/commit/b3c4bc6dbcb31340de6c0a0a618a17a8a7bc8a94) Thanks [@ds-boyce](https://github.com/ds-boyce)! - update chat lexicons
+
+## 0.20.14
+
+### Patch Changes
+
+- [#5084](https://github.com/bluesky-social/atproto/pull/5084) [`385c7be`](https://github.com/bluesky-social/atproto/commit/385c7be0f31f11c17f1668f09b5badb6485f9bc3) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.13
 
 ### Patch Changes

@@ -18,11 +18,7 @@ export type AccountCardProps = Override<
 
 export function AccountCard({ account, ...props }: AccountCardProps) {
   return (
-    <InputContainer
-      key={account.sub}
-      icon={<AccountImage account={account} />}
-      {...props}
-    >
+    <InputContainer icon={<AccountImage account={account} />} {...props}>
       <div className="min-w-0 flex-1">
         {account.name && (
           <AccountName

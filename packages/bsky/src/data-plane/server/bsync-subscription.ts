@@ -1,57 +1,164 @@
 import assert from 'node:assert'
-import events from 'node:events'
-import http from 'node:http'
-import { ConnectRouter } from '@connectrpc/connect'
-import { expressConnectMiddleware } from '@connectrpc/connect-express'
-import express from 'express'
-import { TID } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
+import { BsyncClient, authWithApiKey, createBsyncClient } from '../../bsync.js'
+import { ServerConfig } from '../../config.js'
 import { app } from '../../lexicons/index.js'
-import { httpLogger } from '../../logger.js'
-import { Service } from '../../proto/bsync_connect.js'
+import { subLogger as log } from '../../logger.js'
 import {
   Method,
+  MuteOperation,
   MuteOperation_Type,
-  PutOperationRequest,
+  NotifOperation,
+  Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
-import { Database } from '../server/db/index.js'
-import { countAll, excluded } from '../server/db/util.js'
+import { Database } from './db/index.js'
+import { countAll, excluded } from './db/util.js'
 
-export class MockBsync {
-  constructor(public server: http.Server) {}
+export type BsyncCursors = {
+  op?: string
+  mute?: string
+  notif?: string
+}
 
-  static async create(db: Database, port: number) {
-    const app = express()
-    const routes = createRoutes(db)
-    app.use(expressConnectMiddleware({ routes }))
-    const server = app.listen(port)
-    await events.once(server, 'listening')
-    return new MockBsync(server)
+export class BsyncSubscription {
+  private ac: AbortController | undefined
+  private pendingScans = new Set<Promise<void>>()
+  private bsyncClient: BsyncClient
+  private db: Database
+  // Latest cursor processed for each stream, used to wait until caught up.
+  private cursors: BsyncCursors = {}
+
+  constructor(public opts: { db: Database; config: ServerConfig }) {
+    const { config, db } = opts
+
+    this.db = db
+    this.bsyncClient = createBsyncClient({
+      baseUrl: config.bsyncUrl,
+      httpVersion: config.bsyncHttpVersion ?? '2',
+      nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
+      interceptors: config.bsyncApiKey
+        ? [authWithApiKey(config.bsyncApiKey)]
+        : [],
+    })
+  }
+
+  get running() {
+    return !!this.ac
+  }
+
+  start() {
+    if (this.ac) return
+    this.ac = new AbortController()
+    this.scanMuteOperations()
+    this.scanNotifOperations()
+    this.scanOperations()
+  }
+
+  /**
+   * Waits until the subscription has processed every operation that existed in
+   * bsync at the time `targets` was read (one cursor per stream). Returns as
+   * soon as the cursors catch up - it does not wait for the bsync long-poll
+   * timeout. Intended for tests/dev.
+   */
+  async processAll(targets: BsyncCursors, timeout = 5000) {
+    if (!this.ac) return
+    const start = Date.now()
+    while (!this.isCaughtUp(targets)) {
+      if (Date.now() - start > timeout) {
+        throw new Error(
+          `bsync subscription was not caught up within ${timeout}ms`,
+        )
+      }
+      await wait(5)
+    }
+  }
+
+  private isCaughtUp(targets: BsyncCursors) {
+    return (
+      gteCursor(this.cursors.op, targets.op) &&
+      gteCursor(this.cursors.mute, targets.mute) &&
+      gteCursor(this.cursors.notif, targets.notif)
+    )
   }
 
   async destroy() {
-    return new Promise<void>((resolve, reject) => {
-      this.server.close((err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
+    // Aborting cancels any in-flight long-poll scan immediately, so we don't
+    // have to wait for the bsync long-poll timeout to elapse.
+    this.ac?.abort()
+    this.ac = undefined
+    // Wait for the ongoing scans to unwind cleanly.
+    await Promise.all(this.pendingScans)
+  }
+
+  /**
+   * starts a scanner in the background, killing it when this instance is
+   * destroyed, and storing its promise in `this.pendingScans` to allow
+   * awaiting.
+   */
+  private startScanning(
+    scanner: (
+      cursor: undefined | string,
+      signal: AbortSignal,
+    ) => Promise<string | undefined>,
+  ) {
+    if (!this.ac) return
+    const signal = this.ac.signal
+
+    const scanPromise = this.runScanner(scanner, signal)
+
+    this.pendingScans.add(scanPromise)
+    void scanPromise
+      .catch(() => {})
+      .finally(() => {
+        this.pendingScans.delete(scanPromise)
       })
+  }
+
+  private async runScanner(
+    scanner: (
+      cursor: undefined | string,
+      signal: AbortSignal,
+    ) => Promise<string | undefined>,
+    signal: AbortSignal,
+  ) {
+    let cursor: undefined | string
+
+    while (!signal.aborted) {
+      try {
+        cursor = await scanner(cursor, signal)
+      } catch (err) {
+        if (signal.aborted) break
+
+        log.error({ err }, 'error in bsync scan')
+
+        // retry in a bit, but bail out early if we're shutting down
+        await wait(100, signal)
+      }
+    }
+  }
+
+  private scanMuteOperations() {
+    this.startScanning(async (cursor, signal) => {
+      const res = await this.bsyncClient.scanMuteOperations(
+        { cursor },
+        { signal },
+      )
+
+      await this.processMuteOperations(res.operations)
+      this.cursors.mute = res.cursor
+
+      return res.cursor
     })
   }
-}
 
-const createRoutes = (db: Database) => (router: ConnectRouter) =>
-  router.service(Service, {
-    async addMuteOperation(req) {
-      const { type, actorDid, subject } = req
+  private async processMuteOperations(operations: MuteOperation[]) {
+    for (const op of operations) {
+      const { type, actorDid, subject } = op
       if (type === MuteOperation_Type.ADD) {
         if (subject.startsWith('did:')) {
-          assert(actorDid !== subject, 'cannot mute yourself') // @TODO pass message through in http error
-          await db.db
+          await this.db.db
             .insertInto('mute')
             .values({
               mutedByDid: actorDid,
@@ -63,7 +170,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
         } else {
           const uri = new AtUri(subject)
           if (uri.collection === app.bsky.graph.list.$type) {
-            await db.db
+            await this.db.db
               .insertInto('list_mute')
               .values({
                 mutedByDid: actorDid,
@@ -73,7 +180,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
               .onConflict((oc) => oc.doNothing())
               .execute()
           } else {
-            await db.db
+            await this.db.db
               .insertInto('thread_mute')
               .values({
                 mutedByDid: actorDid,
@@ -86,7 +193,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
         }
       } else if (type === MuteOperation_Type.REMOVE) {
         if (subject.startsWith('did:')) {
-          await db.db
+          await this.db.db
             .deleteFrom('mute')
             .where('mutedByDid', '=', actorDid)
             .where('subjectDid', '=', subject)
@@ -94,13 +201,13 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
         } else {
           const uri = new AtUri(subject)
           if (uri.collection === app.bsky.graph.list.$type) {
-            await db.db
+            await this.db.db
               .deleteFrom('list_mute')
               .where('mutedByDid', '=', actorDid)
               .where('listUri', '=', subject)
               .execute()
           } else {
-            await db.db
+            await this.db.db
               .deleteFrom('thread_mute')
               .where('mutedByDid', '=', actorDid)
               .where('rootUri', '=', subject)
@@ -108,27 +215,37 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           }
         }
       } else if (type === MuteOperation_Type.CLEAR) {
-        await db.db
+        await this.db.db
           .deleteFrom('mute')
           .where('mutedByDid', '=', actorDid)
           .execute()
-        await db.db
+        await this.db.db
           .deleteFrom('list_mute')
           .where('mutedByDid', '=', actorDid)
           .execute()
       }
+    }
+  }
 
-      return {}
-    },
+  private scanNotifOperations() {
+    this.startScanning(async (cursor, signal) => {
+      const res = await this.bsyncClient.scanNotifOperations(
+        { cursor },
+        { signal },
+      )
 
-    async scanMuteOperations() {
-      throw new Error('not implemented')
-    },
+      await this.processNotifOperations(res.operations)
+      this.cursors.notif = res.cursor
 
-    async addNotifOperation(req) {
-      const { actorDid, priority } = req
+      return res.cursor
+    })
+  }
+
+  private async processNotifOperations(operations: NotifOperation[]) {
+    for (const op of operations) {
+      const { actorDid, priority } = op
       if (priority !== undefined) {
-        await db.db
+        await this.db.db
           .insertInto('actor_state')
           .values({
             did: actorDid,
@@ -140,79 +257,70 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           )
           .execute()
       }
-      return {}
-    },
+    }
+  }
 
-    async scanNotifOperations() {
-      throw new Error('not implemented')
-    },
+  private scanOperations() {
+    this.startScanning(async (cursor, signal) => {
+      const res = await this.bsyncClient.scanOperations({ cursor }, { signal })
 
-    async putOperation(req) {
-      const { actorDid, namespace, key, method, payload } = req
-      assert(
-        method === Method.CREATE ||
-          method === Method.UPDATE ||
-          method === Method.DELETE,
-        `Unsupported method: ${method}`,
-      )
+      await this.processOperations(res.operations)
+      this.cursors.op = res.cursor
+
+      return res.cursor
+    })
+  }
+
+  private async processOperations(operations: Operation[]) {
+    for (const op of operations) {
+      const { namespace } = op
 
       const now = new Date().toISOString()
 
       // Index all items into private_data.
-      await handleGenericOperation(db, req, now)
+      await handleGenericOperation(this.db, op, now)
 
-      // Maintain bespoke indexes for certain namespaces.
+      // Maintain bespoke indexes for certain namespaces. A failure here must
+      // not stall the stream, so log and move on (matching bsync behavior).
       try {
         if (
           namespace ===
           Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type
         ) {
-          await handleSubjectActivitySubscriptionOperation(db, req, now)
+          await handleSubjectActivitySubscriptionOperation(this.db, op, now)
         } else if (
           namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent.$type
         ) {
-          await handleAgeAssuranceEventOperation(db, req, now)
+          await handleAgeAssuranceEventOperation(this.db, op, now)
         } else if (
           namespace === Namespaces.AppBskyAgeassuranceDefsEvent.$type
         ) {
-          await handleAgeAssuranceV2EventOperation(db, req, now)
+          await handleAgeAssuranceV2EventOperation(this.db, op, now)
         } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark.$type) {
-          await handleBookmarkOperation(db, req, now)
+          await handleBookmarkOperation(this.db, op, now)
         } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId.$type) {
-          await handleDraftOperation(db, req, now)
+          await handleDraftOperation(this.db, op, now)
         }
       } catch (err) {
-        httpLogger.warn({ err, namespace }, 'mock bsync put operation failed')
+        log.warn({ err, namespace }, 'bsync put operation indexing failed')
       }
+    }
+  }
+}
 
-      return {
-        operation: {
-          id: TID.nextStr(),
-          actorDid,
-          namespace,
-          key,
-          method,
-          payload,
-        },
-      }
-    },
-
-    async scanOperations() {
-      throw new Error('not implemented')
-    },
-
-    async ping() {
-      return {}
-    },
-  })
+type HandleOperation = (
+  db: Database,
+  op: Operation,
+  now: string,
+) => Promise<void>
 
 // upsert into or remove from private_data
-const handleGenericOperation = async (
+const handleGenericOperation: HandleOperation = async (
   db: Database,
-  req: PutOperationRequest,
+  op: Operation,
   now: string,
 ) => {
-  const { actorDid, namespace, key, method, payload } = req
+  const { actorDid, namespace, key, method, payload } = op
   if (method === Method.CREATE || method === Method.UPDATE) {
     await db.db
       .insertInto('private_data')
@@ -243,31 +351,33 @@ const handleGenericOperation = async (
   }
 }
 
-const handleSubjectActivitySubscriptionOperation = async (
+const handleSubjectActivitySubscriptionOperation: HandleOperation = async (
   db: Database,
-  req: PutOperationRequest,
+  op: Operation,
   now: string,
 ) => {
-  const { actorDid, key, method, payload } = req
+  const { actorDid, key, method, payload } = op
 
   if (method === Method.DELETE) {
-    return db.db
+    await db.db
       .deleteFrom('activity_subscription')
       .where('creator', '=', actorDid)
       .where('key', '=', key)
       .execute()
+    return
   }
 
-  const json = Buffer.from(payload).toString('utf8')
   const parsed =
-    lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(json)
+    lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
+      Buffer.from(payload).toString('utf8'),
+    )
   const {
     subject,
     activitySubscription: { post, reply },
   } = parsed
 
   if (method === Method.CREATE) {
-    return db.db
+    await db.db
       .insertInto('activity_subscription')
       .values({
         creator: actorDid,
@@ -278,9 +388,10 @@ const handleSubjectActivitySubscriptionOperation = async (
         reply,
       })
       .execute()
+    return
   }
 
-  return db.db
+  await db.db
     .updateTable('activity_subscription')
     .where('creator', '=', actorDid)
     .where('key', '=', key)
@@ -292,18 +403,16 @@ const handleSubjectActivitySubscriptionOperation = async (
     .execute()
 }
 
-const handleAgeAssuranceEventOperation = async (
+const handleAgeAssuranceEventOperation: HandleOperation = async (
   db: Database,
-  req: PutOperationRequest,
-  _now: string,
+  op: Operation,
 ) => {
-  const { actorDid, method, payload } = req
+  const { actorDid, method, payload } = op
   if (method !== Method.CREATE) return
 
   const parsed = lexParse<app.bsky.unspecced.defs.AgeAssuranceEvent>(
     Buffer.from(payload).toString('utf8'),
   )
-
   const { status, createdAt } = parsed
 
   const update = {
@@ -311,25 +420,23 @@ const handleAgeAssuranceEventOperation = async (
     ageAssuranceLastInitiatedAt: status === 'pending' ? createdAt : undefined,
   }
 
-  return db.db
+  await db.db
     .updateTable('actor')
     .set(update)
     .where('did', '=', actorDid)
     .execute()
 }
 
-const handleAgeAssuranceV2EventOperation = async (
+const handleAgeAssuranceV2EventOperation: HandleOperation = async (
   db: Database,
-  req: PutOperationRequest,
-  _now: string,
+  op: Operation,
 ) => {
-  const { actorDid, method, payload } = req
+  const { actorDid, method, payload } = op
   if (method !== Method.CREATE) return
 
   const parsed = lexParse<app.bsky.ageassurance.defs.Event>(
     Buffer.from(payload).toString('utf8'),
   )
-
   const { status, createdAt, access, countryCode, regionCode } = parsed
 
   const update = {
@@ -340,19 +447,19 @@ const handleAgeAssuranceV2EventOperation = async (
     ageAssuranceRegionCode: regionCode,
   }
 
-  return db.db
+  await db.db
     .updateTable('actor')
     .set(update)
     .where('did', '=', actorDid)
     .execute()
 }
 
-const handleBookmarkOperation = async (
+const handleBookmarkOperation: HandleOperation = async (
   db: Database,
-  req: PutOperationRequest,
+  op: Operation,
   now: string,
 ) => {
-  const { actorDid, key, method, payload } = req
+  const { actorDid, key, method, payload } = op
 
   const updateAgg = (uri: string, dbTxn: Database) => {
     return dbTxn.db
@@ -418,12 +525,12 @@ const handleBookmarkOperation = async (
   }
 }
 
-const handleDraftOperation = async (
+const handleDraftOperation: HandleOperation = async (
   db: Database,
-  req: PutOperationRequest,
+  op: Operation,
   now: string,
 ) => {
-  const { actorDid, key, method, payload } = req
+  const { actorDid, key, method, payload } = op
 
   if (method === Method.CREATE) {
     const payloadString = Buffer.from(payload).toString('utf8')
@@ -462,3 +569,22 @@ const handleDraftOperation = async (
       .execute()
   }
 }
+
+// compares numeric (bigint) cursor ids; an undefined target is always satisfied
+const gteCursor = (current: string | undefined, target: string | undefined) => {
+  if (!target) return true
+  return BigInt(current || '0') >= BigInt(target)
+}
+
+// resolves after `ms`, or early if `signal` aborts
+const wait = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    if (signal?.aborted) return resolve()
+    const done = () => {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', done)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    signal?.addEventListener('abort', done, { once: true })
+  })

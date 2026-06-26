@@ -4,6 +4,7 @@ import { request } from 'undici'
 import { AtUri, AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { handler as errorHandler } from '../src/error.js'
 import { startServer } from './_util.js'
 import basicSeed from './seeds/basic.js'
@@ -12,7 +13,7 @@ describe('server', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -28,7 +29,7 @@ describe('server', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('preserves 404s.', async () => {
@@ -43,17 +44,14 @@ describe('server', () => {
       })
       .use(errorHandler)
 
-    const { origin, stop } = await startServer(app)
-    try {
-      const res = await fetch(new URL(`/oops`, origin))
-      expect(res.status).toEqual(500)
-      await expect(res.json()).resolves.toEqual({
-        error: 'InternalServerError',
-        message: 'Internal Server Error',
-      })
-    } finally {
-      await stop()
-    }
+    await using server = await startServer(app)
+
+    const res = await fetch(`http://localhost:${server.port}/oops`)
+    expect(res.status).toEqual(500)
+    await expect(res.json()).resolves.toEqual({
+      error: 'InternalServerError',
+      message: 'Internal Server Error',
+    })
   })
 
   it('limits size of json input.', async () => {

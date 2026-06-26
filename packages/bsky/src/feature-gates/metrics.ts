@@ -38,24 +38,24 @@ export class MetricsClient<M extends Record<string, any> = Events> {
     if (this.started) return
     this.started = true
     this.flushInterval = setInterval(() => {
-      this.flush()
+      void this.flush()
     }, 10_000)
   }
 
-  stop() {
+  async stop() {
     if (this.flushInterval) {
       clearInterval(this.flushInterval)
       this.flushInterval = null
     }
-    this.flush()
+    await this.flush()
   }
 
-  track<E extends keyof M>(
+  async track<E extends keyof M>(
     event: E,
     payload: M[E],
     metadata: Record<string, any> = {},
   ) {
-    this.start()
+    await this.start()
 
     const e = {
       source: 'appview',
@@ -67,14 +67,14 @@ export class MetricsClient<M extends Record<string, any> = Events> {
     this.queue.push(e)
 
     if (this.queue.length > this.maxBatchSize) {
-      this.flush()
+      await this.flush()
     }
   }
 
-  flush() {
+  async flush() {
     if (!this.queue.length) return
     const events = this.queue.splice(0, this.queue.length)
-    this.sendBatch(events)
+    await this.sendBatch(events)
   }
 
   private async sendBatch(events: Event<M>[]) {

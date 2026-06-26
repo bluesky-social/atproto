@@ -74,7 +74,9 @@ export async function queryReports(
     const collectionConditions = params.collections.map(
       (collection) => sql`r."recordPath" LIKE ${`${collection}/%`}`,
     )
-    builder = builder.where(sql`(${sql.join(collectionConditions, sql` OR `)})`)
+    builder = builder.where(
+      sql<boolean>`(${sql.join(collectionConditions, sql` OR `)})`,
+    )
   }
 
   if (params.reportTypes?.length) {
@@ -112,12 +114,12 @@ export async function queryReports(
     const [sortValue, id] = params.cursor.split('::')
     const sortCol = sortField === 'updatedAt' ? 'r.updatedAt' : 'r.createdAt'
     if (sortDirection === 'desc') {
-      builder = builder.where(sql`(
+      builder = builder.where(sql<boolean>`(
         ${sql.ref(sortCol)} < ${sortValue}
         OR (${sql.ref(sortCol)} = ${sortValue} AND r.id < ${Number(id)})
       )`)
     } else {
-      builder = builder.where(sql`(
+      builder = builder.where(sql<boolean>`(
         ${sql.ref(sortCol)} > ${sortValue}
         OR (${sql.ref(sortCol)} = ${sortValue} AND r.id > ${Number(id)})
       )`)
@@ -171,6 +173,25 @@ export async function getReportById(
       'me.meta',
     ])
     .executeTakeFirst()
+}
+
+export async function getReportsByIds(
+  db: Database,
+  ids: number[],
+): Promise<ReportWithEvent[]> {
+  if (!ids.length) return []
+  return reportQuery(db)
+    .where('r.id', 'in', ids)
+    .selectAll('r')
+    .select([
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.createdBy as reportedBy',
+      'me.comment',
+      'me.meta',
+    ])
+    .execute()
 }
 
 export async function getLatestReport(

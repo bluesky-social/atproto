@@ -139,8 +139,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => {
 
     async searchActorsTypeahead(req) {
       const { dids } = await searchActorsImpl({
-        term: req.query,
-        limit: req.limit || 10,
+        term: req.params?.query ?? '',
+        limit: req.params?.limit || 10,
       })
       return {
         actors: dids.map((did) => ({ did, score: 0 })),
@@ -159,6 +159,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => {
       return {
         posts: uris.map((uri) => ({ uri, score: 0 })),
         pageInfo: { cursor: cursor ?? '', hitsTotal: 0n },
+        detectedQueryLanguages: [],
       }
     },
 

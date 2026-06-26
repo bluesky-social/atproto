@@ -2,6 +2,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -16,7 +17,7 @@ import {
   ids,
 } from '@atproto/api'
 import { TID } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
@@ -26,8 +27,6 @@ const LIMIT = 10
 describe('appview drafts views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let sc: SeedClient
-  let db: Database
 
   // account dids, for convenience
   let alice: string
@@ -40,24 +39,23 @@ describe('appview drafts views', () => {
         draftsLimit: LIMIT,
       },
     })
-    db = network.bsky.db
     agent = network.bsky.getAgent()
-    sc = network.getSeedClient()
+    const sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
 
+  beforeEach(async () => network.processAll())
   afterEach(async () => {
     vi.resetAllMocks()
-    await clearDrafts(db)
+    // Drain in-flight bsync operations before resetting state directly,
+    // otherwise a late-applied op can resurrect state after the reset.
+    await network.processAll()
+    await clearDrafts(network.bsky.db)
   })
-
-  afterAll(async () => {
-    await network.close()
-  })
+  afterAll(async () => network?.close())
 
   const makeDraft = (): AppBskyDraftDefs.Draft => ({
     posts: [{ text: 'Hello, world!' }],
@@ -120,6 +118,7 @@ describe('appview drafts views', () => {
 
       await create(bob, makeDraft())
       await create(bob, makeDraft())
+      await network.processAll()
 
       const { data: dataAlice } = await get(alice)
       expect(dataAlice.drafts).toHaveLength(3)
@@ -138,6 +137,7 @@ describe('appview drafts views', () => {
       }
 
       await create(alice, draft)
+      await network.processAll()
       const { data } = await get(alice)
       expect(data.drafts).toHaveLength(1)
       expect(data.drafts[0].draft.posts).toHaveLength(3)
@@ -166,6 +166,7 @@ describe('appview drafts views', () => {
       }
 
       await create(alice, draft1)
+      await network.processAll()
       const { data: data0 } = await get(alice)
       expect(data0.drafts).toHaveLength(1)
       expect(data0.drafts[0].draft.posts[0].text).toBe('First version')
@@ -177,6 +178,7 @@ describe('appview drafts views', () => {
       }
 
       await update(alice, draft2)
+      await network.processAll()
       const { data: data1 } = await get(alice)
       expect(data1.drafts).toHaveLength(1)
       expect(data1.drafts[0].draft.posts[0].text).toBe('Updated version')
@@ -189,6 +191,7 @@ describe('appview drafts views', () => {
       }
 
       await update(alice, nonExistingDraft)
+      await network.processAll()
       const { data } = await get(alice)
       expect(data.drafts).toHaveLength(0)
     })
@@ -199,6 +202,7 @@ describe('appview drafts views', () => {
       await create(alice, makeDraft())
       await create(alice, makeDraft())
       await create(alice, makeDraft())
+      await network.processAll()
 
       const { data: dataBefore } = await get(alice)
       expect(dataBefore.drafts).toHaveLength(3)
@@ -209,6 +213,7 @@ describe('appview drafts views', () => {
 
       await del(alice, draft1Id)
       await del(alice, draft3Id)
+      await network.processAll()
 
       const { data: dataAfter } = await get(alice)
       expect(dataAfter.drafts).toHaveLength(1)
@@ -217,16 +222,19 @@ describe('appview drafts views', () => {
 
     it('is idempotent', async () => {
       await create(alice, makeDraft())
+      await network.processAll()
 
       const { data: data0 } = await get(alice)
       expect(data0.drafts).toHaveLength(1)
       const draftId = data0.drafts[0].id
 
       await del(alice, draftId)
+      await network.processAll()
       const { data: data1 } = await get(alice)
       expect(data1.drafts).toHaveLength(0)
 
       await del(alice, draftId)
+      await network.processAll()
       const { data: data2 } = await get(alice)
       expect(data2.drafts).toHaveLength(0)
     })
@@ -242,6 +250,7 @@ describe('appview drafts views', () => {
       await create(alice, makeDraft())
       await create(alice, makeDraft())
       await create(bob, makeDraft())
+      await network.processAll()
 
       const { data: dataAlice } = await get(alice)
       expect(dataAlice.drafts).toHaveLength(2)
@@ -253,6 +262,7 @@ describe('appview drafts views', () => {
     it('includes timestamps', async () => {
       const beforeCreate = new Date()
       await create(alice, makeDraft())
+      await network.processAll()
       const afterCreate = new Date()
 
       const { data } = await get(alice)
@@ -271,6 +281,7 @@ describe('appview drafts views', () => {
       for (let i = 0; i < 7; i++) {
         await create(alice, makeDraft())
       }
+      await network.processAll()
 
       const results = (out: AppBskyDraftGetDrafts.OutputSchema[]) =>
         out.flatMap((res) => res.drafts)
@@ -326,6 +337,7 @@ describe('appview drafts views', () => {
 
     it('round-trips a draft with embedGallery', async () => {
       await create(alice, galleryDraft(3))
+      await network.processAll()
       const { data } = await get(alice)
       expect(data.drafts).toHaveLength(1)
 
@@ -342,6 +354,7 @@ describe('appview drafts views', () => {
 
     it('updates a draft to add a gallery', async () => {
       await create(alice, { posts: [{ text: 'text only' }] })
+      await network.processAll()
       const { data: before } = await get(alice)
       expect(before.drafts).toHaveLength(1)
       expect(before.drafts[0].draft.posts[0].embedGallery).toBeUndefined()
@@ -351,6 +364,7 @@ describe('appview drafts views', () => {
         id: draftId,
         draft: galleryDraft(2),
       })
+      await network.processAll()
 
       const { data: after } = await get(alice)
       expect(after.drafts).toHaveLength(1)
@@ -360,6 +374,7 @@ describe('appview drafts views', () => {
 
     it('updates a draft to change gallery items', async () => {
       await create(alice, galleryDraft(2))
+      await network.processAll()
       const { data: before } = await get(alice)
       expect(before.drafts[0].draft.posts[0].embedGallery?.items).toHaveLength(
         2,
@@ -370,6 +385,7 @@ describe('appview drafts views', () => {
         id: draftId,
         draft: galleryDraft(5),
       })
+      await network.processAll()
 
       const { data: after } = await get(alice)
       const post = after.drafts[0].draft.posts[0]

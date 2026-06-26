@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.2",
+  "version": "0.5.10",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -19,7 +19,7 @@
   "scripts": {
     "codegen": "lex build --clear --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run codegen",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "postbuild": "node ./build.templates.cjs",
     "dev": "node ./build.templates.cjs --watch",
     "pretest": "puppeteer browsers install chrome",
@@ -67,15 +67,15 @@
     "ioredis": "^5.3.2",
     "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
-    "kysely": "^0.22.0",
+    "kysely": "^0.29.2",
     "nodemailer": "^6.8.0",
     "nodemailer-html-to-text": "^3.2.0",
     "p-queue": "^8.0.0",
-    "pino": "^8.21.0",
-    "pino-http": "^8.2.1",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "^5.0.0",
-    "undici": "^6.19.8",
+    "undici": "^8.5.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -96,7 +96,6 @@
     "jest": "^30.0.0",
     "puppeteer": "^23.11.1",
     "ts-node": "^10.8.2",
-    "typescript": "^6.0.3",
     "ws": "^8.12.0"
   },
   "type": "module",

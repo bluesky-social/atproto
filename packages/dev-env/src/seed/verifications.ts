@@ -226,7 +226,7 @@ const users = {
     handle: 'handleempty.test',
     password: 'handleempty-pass',
   },
-}
+} as const
 
 const createLabel = async (
   sc: SeedClient<TestNetwork>,

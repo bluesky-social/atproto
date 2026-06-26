@@ -3,14 +3,19 @@ import { msg } from '@lingui/core/macro'
 import {
   AccountSessionsInput,
   type ApiEndpoints,
+  ConfirmAccountDeletionInput,
   ConfirmEmailUpdateInput,
   ConfirmEmailVerificationInput,
   type ConfirmResetPasswordInput,
+  DeactivateAccountInput,
+  type DidString,
   type HandleUnavailableReason,
+  InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailVerificationInput,
   type InitiatePasswordResetInput,
   OAuthSessionsInput,
+  ReactivateAccountInput,
   RevokeAccountSessionInput,
   RevokeOAuthSessionInput,
   type SignInInput,
@@ -96,36 +101,36 @@ export class Api extends JsonClient<ApiEndpoints> {
 
   // Account sessions
 
-  async accountSessions({ sub }: AccountSessionsInput, options?: Options) {
-    return this.fetch('GET', '/account-sessions', { sub }, options)
+  async accountSessions({ did }: AccountSessionsInput, options?: Options) {
+    return this.fetch('GET', '/account-sessions', { did }, options)
   }
 
   async revokeAccountSession(
-    { sub, deviceId }: RevokeAccountSessionInput,
+    { did, deviceId }: RevokeAccountSessionInput,
     options?: Options,
   ) {
     return this.fetch(
       'POST',
       '/revoke-account-session',
-      { sub, deviceId },
+      { did, deviceId },
       options,
     )
   }
 
   // OAuth sessions
 
-  async oauthSessions({ sub }: OAuthSessionsInput, options?: Options) {
-    return this.fetch('GET', '/oauth-sessions', { sub }, options)
+  async oauthSessions({ did }: OAuthSessionsInput, options?: Options) {
+    return this.fetch('GET', '/oauth-sessions', { did }, options)
   }
 
   async revokeOAuthSession(
-    { sub, tokenId }: RevokeOAuthSessionInput,
+    { did, tokenId }: RevokeOAuthSessionInput,
     options?: Options,
   ) {
     return this.fetch(
       'POST',
       '/revoke-oauth-session',
-      { sub, tokenId },
+      { did, tokenId },
       options,
     )
   }
@@ -152,15 +157,15 @@ export class Api extends JsonClient<ApiEndpoints> {
   }
 
   async updateEmailRequest(
-    { sub, locale = this.locale }: WithOptionalLocale<InitiateEmailUpdateInput>,
+    { did, locale = this.locale }: WithOptionalLocale<InitiateEmailUpdateInput>,
     options?: Options,
   ) {
-    return this.fetch('POST', '/update-email-request', { sub, locale }, options)
+    return this.fetch('POST', '/update-email-request', { did, locale }, options)
   }
 
   async updateEmailConfirm(
     {
-      sub,
+      did,
       token,
       email,
       locale = this.locale,
@@ -170,35 +175,70 @@ export class Api extends JsonClient<ApiEndpoints> {
     await this.fetch(
       'POST',
       '/update-email-confirm',
-      { sub, token, email, locale },
+      { did, token, email, locale },
       options,
     )
   }
 
   async verifyEmailRequest(
     {
-      sub,
+      did,
       locale = this.locale,
     }: WithOptionalLocale<InitiateEmailVerificationInput>,
     options?: Options,
   ) {
-    await this.fetch('POST', '/verify-email-request', { sub, locale }, options)
+    await this.fetch('POST', '/verify-email-request', { did, locale }, options)
   }
 
   async verifyEmailConfirm(
-    { sub, token, email }: ConfirmEmailVerificationInput,
+    { did, token, email }: ConfirmEmailVerificationInput,
     options?: Options,
   ) {
     await this.fetch(
       'POST',
       '/verify-email-confirm',
-      { sub, token, email },
+      { did, token, email },
       options,
     )
   }
 
-  async updateHandle({ sub, handle }: UpdateHandleInput, options?: Options) {
-    return this.fetch('POST', '/update-handle', { sub, handle }, options)
+  async updateHandle({ did, handle }: UpdateHandleInput, options?: Options) {
+    return this.fetch('POST', '/update-handle', { did, handle }, options)
+  }
+
+  async deactivateAccount({ did }: DeactivateAccountInput, options?: Options) {
+    await this.fetch('POST', '/deactivate-account', { did }, options)
+  }
+
+  async reactivateAccount({ did }: ReactivateAccountInput, options?: Options) {
+    return this.fetch('POST', '/reactivate-account', { did }, options)
+  }
+
+  async deleteAccountRequest(
+    {
+      did,
+      locale = this.locale,
+    }: WithOptionalLocale<InitiateAccountDeletionInput>,
+    options?: Options,
+  ) {
+    await this.fetch(
+      'POST',
+      '/delete-account-request',
+      { did, locale },
+      options,
+    )
+  }
+
+  async deleteAccountConfirm(
+    { did, token, password }: ConfirmAccountDeletionInput,
+    options?: Options,
+  ) {
+    await this.fetch(
+      'POST',
+      '/delete-account-confirm',
+      { did, token, password },
+      options,
+    )
   }
 
   async signUp(
@@ -220,12 +260,12 @@ export class Api extends JsonClient<ApiEndpoints> {
     )
   }
 
-  async signOut({ sub }: SignOutInput, options?: Options) {
-    return this.fetch('POST', '/sign-out', { sub }, options)
+  async signOut({ did }: SignOutInput, options?: Options) {
+    return this.fetch('POST', '/sign-out', { did }, options)
   }
 
-  async consent(sub: string, scope?: string, options?: Options) {
-    return this.fetch('POST', '/consent', { sub, scope }, options)
+  async consent(did: DidString, scope?: string, options?: Options) {
+    return this.fetch('POST', '/consent', { did, scope }, options)
   }
 
   async reject(options?: Options) {
@@ -234,32 +274,36 @@ export class Api extends JsonClient<ApiEndpoints> {
 
   // and transform them into instances of the corresponding error classes.
   protected override parseError(response: Response, payload: Json): Error {
-    if (isOAuthErrorPayload(payload)) {
-      for (const ErrorClass of [
-        // @NOTE Most specific errors must come first!
-        SecondAuthenticationFactorRequiredError,
-        InvalidCredentialsError,
-        InvalidInviteCodeError,
-        HandleUnavailableError,
-        EmailTakenError,
-        UnknownRequestUriError,
-        RequestExpiredError,
-        UnauthorizedError,
-        InvalidRequestError,
-        AccessDeniedError,
-      ] as Array<{
-        is(payload: OAuthErrorPayload): boolean
-        new (payload: any): Error
-      }>) {
-        if (ErrorClass.is(payload)) {
-          return new ErrorClass(payload)
-        }
-      }
+    return parseApiErrorPayload(payload) ?? super.parseError(response, payload)
+  }
+}
 
-      return new OAuthErrorResponse(payload)
+export function parseApiErrorPayload(
+  payload: unknown,
+): OAuthErrorResponse | undefined {
+  if (isOAuthErrorPayload(payload)) {
+    for (const ErrorClass of [
+      // @NOTE Most specific errors must come first!
+      UnknownRequestUriError,
+      SecondAuthenticationFactorRequiredError,
+      InvalidCredentialsError,
+      InvalidInviteCodeError,
+      HandleUnavailableError,
+      EmailTakenError,
+      RequestExpiredError,
+      UnauthorizedError,
+      InvalidRequestError,
+      AccessDeniedError,
+    ] as Array<{
+      is(payload: OAuthErrorPayload): boolean
+      new (payload: any): OAuthErrorResponse
+    }>) {
+      if (ErrorClass.is(payload)) {
+        return new ErrorClass(payload)
+      }
     }
 
-    return super.parseError(response, payload)
+    return new OAuthErrorResponse(payload)
   }
 }
 

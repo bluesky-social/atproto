@@ -5,6 +5,7 @@ import {
   RawBuilder,
   ReferenceExpression,
   SelectQueryBuilder,
+  SqlBool,
   SqliteAdapter,
   SqliteIntrospector,
   SqliteQueryCompiler,
@@ -14,7 +15,7 @@ import { retry } from '@atproto/common'
 
 // Applies to repo_root or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
-  return sql`${alias}."takedownRef" is null`
+  return sql<SqlBool>`${alias}."takedownRef" is null`
 }
 
 export const softDeleted = (repoOrRecord: { takedownRef: string | null }) => {
@@ -92,7 +93,9 @@ const RETRY_ERRORS = new Set([
 
 export type Ref = ReferenceExpression<any, any>
 
-export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
+export type DbRef =
+  | RawBuilder<unknown>
+  | ReturnType<DynamicModule<unknown>['ref']>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>
 

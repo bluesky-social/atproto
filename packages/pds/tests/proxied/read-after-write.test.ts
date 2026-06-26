@@ -9,6 +9,7 @@ import {
   AtpAgent,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic.js'
 
@@ -17,8 +18,8 @@ describe('proxy read after write', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let carol: string
+  let alice: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -27,15 +28,14 @@ describe('proxy read after write', () => {
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
-    await network.processAll()
     alice = sc.dids.alice
     carol = sc.dids.carol
-    await network.bsky.sub.destroy()
+    await network.processAll()
+    await network.bsky.sub.stop()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('handles read after write on profiles', async () => {
     await sc.updateProfile(alice, { displayName: 'blah' })

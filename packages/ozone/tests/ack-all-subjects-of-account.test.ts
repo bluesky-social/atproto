@@ -93,7 +93,7 @@ describe('acknowledge all subjects of account', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('acknowledges all open/escalated review subjects with takedown.', async () => {

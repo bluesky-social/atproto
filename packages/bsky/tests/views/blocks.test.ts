@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
@@ -8,6 +8,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { assertIsThreadViewPost, forSnapshot } from '../_util.js'
 
 describe('pds views with blocking', () => {
@@ -19,10 +20,10 @@ describe('pds views with blocking', () => {
   let aliceReplyToDan: { ref: RecordRef }
   let carolReplyToDan: { ref: RecordRef }
 
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
   let danBlockUri: string
 
   beforeAll(async () => {
@@ -65,12 +66,10 @@ describe('pds views with blocking', () => {
       sc.getHeaders(dan),
     )
     danBlockUri = danBlockCarol.uri
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('blocks thread post', async () => {
     const { data: threadAlice } = await agent.api.app.bsky.feed.getPostThread(

@@ -3,7 +3,6 @@ import EventEmitter from 'node:events'
 import {
   Kysely,
   KyselyPlugin,
-  Migrator,
   PluginTransformQueryArgs,
   PluginTransformResultArgs,
   PostgresDialect,
@@ -11,6 +10,7 @@ import {
   RootOperationNode,
   UnknownRow,
 } from 'kysely'
+import { Migrator } from 'kysely/migration'
 // eslint-disable-next-line import/default
 import pg from 'pg'
 // eslint-disable-next-line import/no-named-as-default-member

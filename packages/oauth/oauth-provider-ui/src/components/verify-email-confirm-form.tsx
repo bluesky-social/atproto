@@ -6,9 +6,14 @@ import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
 export type VerifyEmailConfirmData = { token: string }
 
 export type VerifyEmailConfirmFormProps =
-  WrappedSmartFormProps<VerifyEmailConfirmData>
+  WrappedSmartFormProps<VerifyEmailConfirmData> & {
+    onResend?: () => void | PromiseLike<void>
+  }
 
-export function VerifyEmailConfirmForm(props: VerifyEmailConfirmFormProps) {
+export function VerifyEmailConfirmForm({
+  onResend,
+  ...props
+}: VerifyEmailConfirmFormProps) {
   return (
     <SmartForm
       {...props}
@@ -24,6 +29,7 @@ export function VerifyEmailConfirmForm(props: VerifyEmailConfirmFormProps) {
             autoFocus={true}
             defaultValue={values.token}
             onToken={(value) => set('token', value ?? undefined)}
+            onResend={onResend}
           />
         </FormField>
       )}

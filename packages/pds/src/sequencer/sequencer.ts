@@ -24,6 +24,7 @@ import {
   formatSeqCommit,
   formatSeqIdentityEvt,
   formatSeqSyncEvt,
+  syncEvtDataFromCommit,
 } from './events.js'
 
 export * from './events.js'
@@ -161,51 +162,77 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await wait(waitTime)
   }
 
-  async sequenceEvt(evt: RepoSeqInsert): Promise<number> {
-    const [{ seq }] = await this.db.executeWithRetry(
-      this.db.db.insertInto('repo_seq').values(evt).returning('seq'),
+  async sequenceEvts(events: readonly RepoSeqInsert[]): Promise<number[]> {
+    if (!events.length) return []
+    const rows = await this.db.executeWithRetry(
+      this.db.db.insertInto('repo_seq').values(events).returning('seq'),
     )
     this.crawlers.notifyOfUpdate()
-    return seq
+    return rows.map((row) => row.seq)
   }
 
-  async sequenceCommit(
+  public async sequenceCommit(
     did: DidString,
     commitData: CommitDataWithOps,
-  ): Promise<number> {
-    const evt = await formatSeqCommit(did, commitData)
-    return this.sequenceEvt(evt)
+  ): Promise<void> {
+    await this.sequenceEvts([await formatSeqCommit(did, commitData)])
   }
 
-  async sequenceSyncEvt(did: DidString, data: SyncEvtData) {
-    const evt = await formatSeqSyncEvt(did, data)
-    return this.sequenceEvt(evt)
+  public async sequenceSync(did: DidString, data: SyncEvtData): Promise<void> {
+    await this.sequenceEvts([await formatSeqSyncEvt(did, data)])
   }
 
-  async sequenceIdentityEvt(
+  public async sequenceIdentity(
     did: DidString,
     handle?: HandleString,
-  ): Promise<number> {
-    const evt = await formatSeqIdentityEvt(did, handle)
-    return this.sequenceEvt(evt)
+  ): Promise<void> {
+    await this.sequenceEvts([await formatSeqIdentityEvt(did, handle)])
   }
 
-  async sequenceAccountEvt(
+  public async sequenceAccount(
     did: DidString,
     status: AccountStatus,
-  ): Promise<number> {
-    const evt = await formatSeqAccountEvt(did, status)
-    return this.sequenceEvt(evt)
+  ): Promise<void> {
+    await this.sequenceEvts([await formatSeqAccountEvt(did, status)])
   }
 
-  async deleteAllForUser(did: string, excludingSeqs: number[] = []) {
+  public async sequenceAccountCreation(
+    did: DidString,
+    handle: HandleString,
+    commit: CommitDataWithOps,
+  ): Promise<void> {
+    // Atomically sequence all events
+    await this.sequenceEvts([
+      await formatSeqIdentityEvt(did, handle),
+      await formatSeqAccountEvt(did, AccountStatus.Active),
+      await formatSeqCommit(did, commit),
+      await formatSeqSyncEvt(did, syncEvtDataFromCommit(commit)),
+    ])
+  }
+
+  public async sequenceAccountActivation(
+    did: DidString,
+    handle: HandleString,
+    status: AccountStatus,
+    syncData: SyncEvtData,
+  ): Promise<void> {
+    // Atomically sequence all events
+    await this.sequenceEvts([
+      await formatSeqAccountEvt(did, status),
+      await formatSeqIdentityEvt(did, handle),
+      await formatSeqSyncEvt(did, syncData),
+    ])
+  }
+
+  public async sequenceAccountDeletion(did: DidString) {
+    const [seq] = await this.sequenceEvts([
+      await formatSeqAccountEvt(did, AccountStatus.Deleted),
+    ])
     await this.db.executeWithRetry(
       this.db.db
         .deleteFrom('repo_seq')
         .where('did', '=', did)
-        .if(excludingSeqs.length > 0, (qb) =>
-          qb.where('seq', 'not in', excludingSeqs),
-        ),
+        .where('seq', '!=', seq),
     )
   }
 }

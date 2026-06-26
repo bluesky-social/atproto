@@ -5,10 +5,10 @@ import { TestNetwork } from '../network.js'
 import { SeedClient } from './client.js'
 import usersSeed from './users.js'
 
-export default async (
+export default async function basicSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
   users = true,
-) => {
+) {
   if (users) await usersSeed(sc)
 
   const alice = sc.dids.alice

@@ -23,6 +23,7 @@ import {
   basicSeed,
   seedThreadV2,
 } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications.js'
 import { Namespaces } from '../../src/stash.js'
 import { forSnapshot, paginateAll } from '../_util.js'
@@ -38,15 +39,15 @@ describe('notification views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
-  let eve: string
-  let fred: string
-  let greg: string
-  let han: string
-  let blocked: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
+  let eve: DidString
+  let fred: DidString
+  let greg: DidString
+  let han: DidString
+  let blocked: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -91,8 +92,6 @@ describe('notification views', () => {
       password: 'blocked-pass',
     })
 
-    await network.processAll()
-
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -104,9 +103,8 @@ describe('notification views', () => {
     blocked = sc.dids.blocked
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   const sortNotifs = (
     notifs: AppBskyNotificationListNotifications.Notification[],
@@ -728,12 +726,12 @@ describe('notification views', () => {
     await network.processAll()
   })
 
-  // @NOTE there is some flakyness between these tests. We sometimes get
-  // "priority": true when the snapshot expects false.
-
   it('filters notifications by reason', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
+        // Pin priority so the snapshot doesn't race with the viewer's stored
+        // priority preference, which neighbouring tests mutate.
+        priority: false,
         reasons: ['mention'],
       },
       {
@@ -750,6 +748,9 @@ describe('notification views', () => {
   it('filters notifications by multiple reasons', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
+        // Pin priority so the snapshot doesn't race with the viewer's stored
+        // priority preference, which neighbouring tests mutate.
+        priority: false,
         reasons: ['mention', 'reply'],
       },
       {
@@ -853,7 +854,7 @@ describe('notification views', () => {
     let delayNetwork: TestNetwork
     let delayAgent: AtpAgent
     let delaySc: SeedClient
-    let delayAlice: string
+    let delayAlice: DidString
 
     beforeAll(async () => {
       delayNetwork = await TestNetwork.create({
@@ -1035,6 +1036,9 @@ describe('notification views', () => {
 
   describe('preferences v2', () => {
     beforeEach(async () => {
+      // Drain pending bsync ops before clearing, so a stale op can't land
+      // after the reset.
+      await network.processAll()
       await clearPrivateData(db)
     })
 
@@ -1203,7 +1207,8 @@ describe('notification views', () => {
         },
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
-        chat: input0.chat,
+        // chat is deprecated: input is ignored and the default is always returned.
+        chat: cp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1227,8 +1232,8 @@ describe('notification views', () => {
         },
       }
       const expected1: AppBskyNotificationDefs.Preferences = {
-        // Kept from the previous call.
-        chat: input0.chat,
+        // chat is deprecated: input is ignored and the default is always returned.
+        chat: cp,
         follow: fp,
         like: fp,
         likeViaRepost: fp,
@@ -1251,7 +1256,7 @@ describe('notification views', () => {
       return profiles.sort((a, b) => (a.handle > b.handle ? 1 : -1))
     }
 
-    const declare = async (actor: string, value: string) => {
+    const declare = async (actor: DidString, value: string) => {
       await pdsAgent.com.atproto.repo.createRecord(
         {
           repo: actor,
@@ -1266,8 +1271,8 @@ describe('notification views', () => {
     }
 
     const put = async (
-      actor: string,
-      subject: string,
+      actor: DidString,
+      subject: DidString,
       val: AppBskyNotificationDefs.ActivitySubscription,
     ) =>
       agent.app.bsky.notification.putActivitySubscription(
@@ -1284,7 +1289,7 @@ describe('notification views', () => {
       )
 
     const list = async (
-      actor: string,
+      actor: DidString,
       params?: AppBskyNotificationListActivitySubscriptions.QueryParams,
     ) =>
       agent.app.bsky.notification.listActivitySubscriptions(params ?? {}, {
@@ -1352,6 +1357,9 @@ describe('notification views', () => {
     })
 
     beforeEach(async () => {
+      // Drain pending bsync ops before clearing, so a stale op can't land
+      // after the reset.
+      await network.processAll()
       await clearActivitySubscription(db)
     })
 
@@ -1381,6 +1389,7 @@ describe('notification views', () => {
         subject: subjectDid,
         activitySubscription: val,
       })
+      await network.processAll()
 
       const { data: listData } = await list(actorDid)
       expect(listData).toEqual({
@@ -1411,6 +1420,7 @@ describe('notification views', () => {
         subject: subjectDid,
         activitySubscription: valUpdate,
       })
+      await network.processAll()
 
       const { data: listData } = await list(actorDid)
       expect(listData).toEqual({
@@ -1433,10 +1443,12 @@ describe('notification views', () => {
       const valDelete = { post: false, reply: false }
 
       await put(actorDid, subjectDid, valCreate)
+      await network.processAll()
       const { data: list0 } = await list(actorDid)
       expect(list0.subscriptions).toHaveLength(1)
 
       await put(actorDid, subjectDid, valDelete)
+      await network.processAll()
       const { data: list1 } = await list(actorDid)
       expect(list1.subscriptions).toHaveLength(0)
     })
@@ -1452,6 +1464,7 @@ describe('notification views', () => {
       await put(actorDid, eve, val)
       await put(actorDid, fred, val)
       await put(actorDid, blocked, val) // blocked is removed from the list.
+      await network.processAll()
 
       const results = (
         results: AppBskyNotificationListActivitySubscriptions.OutputSchema[],
@@ -1505,24 +1518,29 @@ describe('notification views', () => {
 
         // 'none' declaration.
         await put(viewer, bob, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, bob)).resolves.toBeUndefined()
 
         // 'mutuals' declaration and both follow.
         await put(viewer, carol, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, carol)).resolves.toStrictEqual(
           val,
         )
 
         // 'mutuals' declaration but only actor follows.
         await put(viewer, dan, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, dan)).resolves.toBeUndefined()
 
         // 'mutuals' declaration but only subject follows.
         await put(viewer, eve, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, eve)).resolves.toBeUndefined()
 
         // 'followers' declaration and viewer follows.
         await put(viewer, fred, val)
+        await network.processAll()
         await expect(viewerActivitySub(viewer, carol)).resolves.toStrictEqual(
           val,
         )

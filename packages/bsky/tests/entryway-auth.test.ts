@@ -3,7 +3,7 @@ import * as nodeCrypto from 'node:crypto'
 import * as jose from 'jose'
 import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtUri, AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
@@ -51,13 +51,12 @@ describe('entryway auth', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
+
     alice = sc.dids.alice
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('works', async () => {
     const signer = new jose.SignJWT({ scope: 'com.atproto.access' })

@@ -6,5 +6,6 @@
     "vitest.explorer",
     "wengerk.highlight-bad-chars",
     "yzhang.markdown-all-in-one",
+    "typescriptteam.native-preview",
   ],
 }

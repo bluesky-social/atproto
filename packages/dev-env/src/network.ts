@@ -1,9 +1,10 @@
 import assert from 'node:assert'
 import getPort from 'get-port'
 import * as uint8arrays from 'uint8arrays'
-import { wait } from '@atproto/common-web'
+import { allFulfilled, wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky.js'
+import { TestBsync } from './bsync.js'
 import { EXAMPLE_LABELER } from './const.js'
 import { IntrospectServer } from './introspect.js'
 import { TestNetworkNoAppView } from './network-no-appview.js'
@@ -22,6 +23,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   constructor(
     public plc: TestPlc,
     public pds: TestPds,
+    public bsync: TestBsync,
     public bsky: TestBsky,
     public ozone: TestOzone,
     public introspect?: IntrospectServer,
@@ -63,10 +65,18 @@ export class TestNetwork extends TestNetworkNoAppView {
     const lexiconAuthorityProfile =
       await LexiconAuthorityProfile.create(thirdPartyPds)
 
+    const bsyncApiKey = 'bsync-api-key'
+    const bsync = await TestBsync.create({
+      apiKeys: [bsyncApiKey],
+      dbUrl: dbPostgresUrl,
+    })
+
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
       pdsPort,
+      bsyncApiKey,
+      bsyncUrl: bsync.url,
       rolodexUrl: process.env.BSKY_ROLODEX_URL,
       rolodexIgnoreBadTls: true,
       repoProvider: `ws://localhost:${pdsPort}`,
@@ -126,6 +136,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await pds.processAll()
     await ozone.processAll()
     await bsky.sub.processAll()
+    await bsky.bsyncSub.processAll(await bsync.getStreamHeads())
     await thirdPartyPds.close()
 
     // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
@@ -141,22 +152,26 @@ export class TestNetwork extends TestNetworkNoAppView {
         params.introspect.port,
         plc,
         pds,
+        bsync,
         bsky,
         ozone,
       )
     }
 
-    return new TestNetwork(plc, pds, bsky, ozone, introspect)
+    return new TestNetwork(plc, pds, bsync, bsky, ozone, introspect)
   }
 
   async processFullSubscription(timeout = 5000) {
     const sub = this.bsky.sub
+    // If the subscription is not running, there is no point in
+    // waiting for it to process events
+    if (!sub.running) return
     const start = Date.now()
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
       await sub.processAll()
-      const runnerCursor = await sub.runner.getCursor()
+      const runnerCursor = await sub.getCursor()
       // if subscription claims to be done, ensure we are at the most recent cursor from PDS, else wait to process again
       // (the subscription may claim to be finished before the PDS has even emitted it's event)
       if (runnerCursor && runnerCursor >= lastSeq) {
@@ -170,6 +185,11 @@ export class TestNetwork extends TestNetworkNoAppView {
   async processAll(timeout?: number) {
     await this.pds.processAll()
     await this.ozone.processAll()
+    await this.bsky.sub.processAll()
+    await this.bsky.bsyncSub.processAll(
+      await this.bsync.getStreamHeads(),
+      timeout,
+    )
     await this.processFullSubscription(timeout)
   }
 
@@ -202,11 +222,22 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
-    await Promise.all(this.feedGens.map((fg) => fg.close()))
-    await this.ozone.close()
-    await this.bsky.close()
-    await this.pds.close()
-    await this.plc.close()
-    await this.introspect?.close()
+    try {
+      await this.processAll()
+    } finally {
+      await allFulfilled([
+        ...this.feedGens.map(async (fg) => fg.close()),
+        this.ozone.close(),
+        this.bsky.close(),
+        this.bsync.close(),
+        this.pds.close(),
+        this.plc.close(),
+        this.introspect?.close(),
+      ])
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

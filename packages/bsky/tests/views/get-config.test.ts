@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 
@@ -12,13 +12,10 @@ describe('get config', () => {
         dbPostgresSchema: 'bsky_tests_live_now_config_off',
       })
       agent = network.bsky.getAgent()
-
-      await network.processAll()
     })
 
-    afterAll(async () => {
-      await network.close()
-    })
+    beforeEach(async () => network.processAll())
+    afterAll(async () => network?.close())
 
     it('omits the live now config', async () => {
       const res = await agent.app.bsky.unspecced.getConfig()
@@ -55,7 +52,7 @@ describe('get config', () => {
     })
 
     afterAll(async () => {
-      await network.close()
+      await network?.close()
     })
 
     it(`returns the config`, async () => {
