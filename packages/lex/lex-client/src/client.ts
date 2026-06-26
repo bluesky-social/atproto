@@ -27,11 +27,12 @@ import applyWrites from './lexicons/com/atproto/repo/applyWrites.js'
 import createRecord from './lexicons/com/atproto/repo/createRecord.js'
 import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.js'
 import getRecord from './lexicons/com/atproto/repo/getRecord.js'
-import listRecords from './lexicons/com/atproto/repo/listRecords.js'
+import listRecords, {
+  type Record as ListRecordsRecord,
+} from './lexicons/com/atproto/repo/listRecords.js'
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import { com } from './lexicons/index.js'
 import {
   XrpcResponse,
   XrpcResponseBody,
@@ -359,14 +360,14 @@ export type ListOutput<T extends RecordSchema> = Omit<
   'records'
 > & {
   /** Records that successfully validated against the schema. */
-  records: ListRecord<Infer<T>>[]
+  records: ListRecordItem<Infer<T>>[]
 }
 
 /**
- * A record from a list operation with its value typed to the schema.
- * @typeParam Value - The validated record value type
+ * A discriminated union type representing the result of a record listing
+ * operation.
  */
-export type ListRecord<Value extends LexMap> =
+export type ListRecordItem<Value extends LexMap> =
   | { uri: AtUriString; cid: CidString; valid: true; value: Value }
   | { uri: AtUriString; cid: CidString; valid: false; value: LexMap }
 
@@ -1083,7 +1084,7 @@ export class Client implements Agent {
   async *listAll<const T extends RecordSchema>(
     ns: Main<T>,
     { maxRetries = 3, ...options }: ListOptions & { maxRetries?: number } = {},
-  ): AsyncGenerator<ListRecord<Infer<T>>, void, unknown> {
+  ): AsyncGenerator<ListRecordItem<Infer<T>>, void, unknown> {
     const schema = getMain(ns)
     let currentErrorCount = 0
 
@@ -1180,8 +1181,8 @@ export class Client implements Agent {
 
 function processListRecord<T extends RecordSchema>(
   this: T,
-  record: com.atproto.repo.listRecords.Record,
-): ListRecord<Infer<T>> {
+  record: ListRecordsRecord,
+): ListRecordItem<Infer<T>> {
   const result = this.safeValidate(record.value)
   if (result.success) {
     return { ...record, valid: true, value: result.value }
