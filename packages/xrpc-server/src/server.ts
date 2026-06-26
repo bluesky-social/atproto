@@ -202,6 +202,13 @@ export class Server {
     schema: M,
     config: LexMethodConfig<M, A>,
   ): void {
+    this.routes.get(`/xrpc/${schema.nsid}`, (req, res, next) => {
+      next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected POST`,
+        ),
+      )
+    })
     this.routes.post(
       `/xrpc/${schema.nsid}`,
       this.createHandlerInternal<
@@ -224,6 +231,13 @@ export class Server {
     schema: M,
     config: LexMethodConfig<M, A>,
   ): void {
+    this.routes.post(`/xrpc/${schema.nsid}`, (req, res, next) => {
+      next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected GET`,
+        ),
+      )
+    })
     this.routes.get(
       `/xrpc/${schema.nsid}`,
       this.createHandlerInternal<
