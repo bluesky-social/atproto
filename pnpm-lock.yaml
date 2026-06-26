@@ -1411,6 +1411,9 @@ importers:
       '@atproto/oauth-client-browser':
         specifier: workspace:^
         version: link:../oauth-client-browser
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@tailwindcss/vite':
         specifier: ^4.1.3
         version: 4.1.3(vite@6.2.0(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1))

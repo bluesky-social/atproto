@@ -1,24 +1,14 @@
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { ReactNode, createContext, useContext, useMemo } from 'react'
 import { Client, DidString } from '@atproto/lex'
 import { AtmosphereSignInDialog } from '../components/AtmosphereSignInDialog.tsx'
 import { Layout } from '../components/Layout.tsx'
 import { Spinner } from '../components/Spinner.tsx'
-import { SIGN_UP_URL } from '../constants.ts'
-import * as app from '../lexicons/app.ts'
-import { useAbortableEffect } from '../lib/use-abortable-effect.ts'
+import { PDS_OPERATOR_URL } from '../constants.ts'
+import { useFlip } from '../lib/use-flip.ts'
 import { OAuthProvider, useOAuthContext } from './OAuthProvider.tsx'
 
 export type AuthenticatedClient = Client & { did: DidString }
-export type AuthenticationContextType = {
-  client: AuthenticatedClient
-}
+export type AuthenticationContextType = AuthenticatedClient
 
 export const AuthenticationContext =
   createContext<AuthenticationContextType | null>(null)
@@ -40,69 +30,48 @@ function AuthenticationProviderInternal({
   children?: ReactNode
 }) {
   const { isLoading, session, signIn, signUp } = useOAuthContext()
-  const [initialized, setInitialized] = useState(false)
-  const [configuredClient, setConfiguredClient] =
-    useState<AuthenticatedClient | null>(null)
 
-  // As soon as initial loading/configuration is done, we are "initialized"
-  const isConfiguring = session != null && configuredClient == null
-  useEffect(() => {
-    if (!isLoading && !isConfiguring) setInitialized(true)
-  }, [isLoading, isConfiguring])
+  const client = useMemo<AuthenticationContextType | null>(() => {
+    if (!session) return null
 
-  const client = useMemo(
-    () => (session ? new Client(session) : null),
-    [session],
-  )
+    const client: Client = new Client(session)
+    client.assertAuthenticated()
+    return client
+  }, [session])
 
-  useAbortableEffect(
-    (signal) => {
-      if (client) {
-        void configureClient(client, signal).then(
-          (client) => {
-            if (!signal.aborted) setConfiguredClient(client)
-          },
-          () => {
-            // Most likely aborted, ignore
-          },
-        )
-      } else {
-        setConfiguredClient(null)
-      }
-    },
-    [client],
-  )
+  // Create artificial delay (demo purposes)
+  const ready = useFlip(client != null || !isLoading, { delay: 333 })
 
-  const valueClient =
-    session && client && configuredClient === client ? configuredClient : null
-  const value = useMemo<AuthenticationContextType | null>(() => {
-    if (valueClient) return { client: valueClient }
-    return null
-  }, [valueClient])
-
-  if (value) {
+  if (!ready) {
     return (
-      <AuthenticationContext.Provider value={value}>
-        {children}
-      </AuthenticationContext.Provider>
+      <Layout>
+        <div className="flex flex-grow flex-col items-center justify-center">
+          <Spinner />
+          Loading authentication status...
+        </div>
+      </Layout>
+    )
+  }
+
+  if (!client) {
+    return (
+      <Layout>
+        <div className="flex flex-grow flex-col items-center justify-center">
+          <AtmosphereSignInDialog
+            signUpUrl={PDS_OPERATOR_URL}
+            loading={isLoading}
+            signIn={signIn}
+            signUp={signUp}
+          />
+        </div>
+      </Layout>
     )
   }
 
   return (
-    <Layout>
-      <div className="flex flex-grow flex-col items-center justify-center">
-        {initialized ? (
-          <AtmosphereSignInDialog
-            signUpUrl={SIGN_UP_URL}
-            loading={isLoading || isConfiguring}
-            signIn={signIn}
-            signUp={signUp}
-          />
-        ) : (
-          <Spinner />
-        )}
-      </div>
-    </Layout>
+    <AuthenticationContext.Provider value={client}>
+      {children}
+    </AuthenticationContext.Provider>
   )
 }
 
@@ -117,35 +86,8 @@ export function useAuthenticationContext(
   )
 }
 
-async function configureClient(
-  client: Client,
-  signal: AbortSignal,
-): Promise<AuthenticatedClient> {
-  const { preferences } = await getPreferences(client, signal)
-
-  const labelers = preferences
-    .findLast((v) => app.bsky.actor.defs.labelersPref.matches(v))
-    ?.labelers.map((l) => l.did)
-
-  client.setLabelers(labelers)
+export function useAuthenticatedClient(): AuthenticatedClient {
+  const client: Client = useAuthenticationContext('useAuthenticatedClient')
   client.assertAuthenticated()
-
-  console.info('Configured client with labelers:', labelers)
-
   return client
-}
-
-async function getPreferences(client: Client, signal: AbortSignal) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await client.call(app.bsky.actor.getPreferences, {}, { signal })
-    } catch (err) {
-      // TODO handle 403 ?
-      console.warn('Failed to get preferences, retrying...', err)
-      signal.throwIfAborted()
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.min(200 * 1.5 ** attempt, 5000)),
-      )
-    }
-  }
 }

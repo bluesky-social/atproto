@@ -1,5 +1,6 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
 import {
+  Client,
   Query,
   Restricted,
   XrpcFailure,
@@ -7,9 +8,9 @@ import {
   XrpcResponse,
   getMain,
 } from '@atproto/lex'
-import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 
 export function useLexQuery<S extends Query>(
+  client: Client,
   ns: NonNullable<unknown> extends XrpcRequestParams<S>
     ? S | { main: S }
     : Restricted<'This XRPC method requires a "params" argument'>,
@@ -18,15 +19,16 @@ export function useLexQuery<
   S extends Query,
   P extends false | XrpcRequestParams<S>,
 >(
+  client: Client,
   ns: S | { main: S },
   params: P,
 ): UseQueryResult<P extends false ? null : XrpcResponse<S>, XrpcFailure<S>>
 export function useLexQuery<S extends Query>(
+  client: Client,
   ns: S | { main: S },
   params: false | XrpcRequestParams<S> = {} as XrpcRequestParams<S>,
 ): UseQueryResult<null | XrpcResponse<S>, XrpcFailure<S>> {
   const schema = getMain(ns)
-  const client = useBskyClient()
 
   const queryString =
     params === false
