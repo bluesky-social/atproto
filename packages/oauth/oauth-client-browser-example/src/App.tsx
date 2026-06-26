@@ -28,7 +28,7 @@ export function App() {
 }
 
 export function DevTools({ children }: { children?: ReactNode }) {
-  const pdsClient = useAuthenticationContext().client
+  const pdsClient = useAuthenticationContext()
   const bskyClient = useBskyClient()
 
   useEffect(() => {
