@@ -251,6 +251,11 @@ const skeletonFromFeedGen = async (
       app.bsky.feed.defs.skeletonReasonRepost.$isTypeOf(item.reason)
         ? { uri: item.reason.repost }
         : undefined,
+    authorPinned:
+      item.reason != null &&
+      app.bsky.feed.defs.skeletonReasonPin.$isTypeOf(item.reason)
+        ? true
+        : undefined,
     feedContext: item.feedContext,
   }))
 
