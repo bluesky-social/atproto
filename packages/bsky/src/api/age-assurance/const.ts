@@ -159,6 +159,28 @@ export const AGE_ASSURANCE_CONFIG = app.bsky.ageassurance.defs.config.$build({
       ],
     },
     {
+      countryCode: 'US',
+      regionCode: 'NE',
+      minAccessAge: 18,
+      rules: [
+        app.bsky.ageassurance.defs.configRegionRuleIfAccountNewerThan.$build({
+          date: '2026-07-01T00:00:00Z',
+          access: 'none',
+        }),
+        app.bsky.ageassurance.defs.configRegionRuleIfAssuredOverAge.$build({
+          age: 18,
+          access: 'full',
+        }),
+        app.bsky.ageassurance.defs.configRegionRuleIfDeclaredOverAge.$build({
+          age: 13,
+          access: 'safe',
+        }),
+        app.bsky.ageassurance.defs.configRegionRuleDefault.$build({
+          access: 'none',
+        }),
+      ],
+    },
+    {
       countryCode: 'BR',
       regionCode: undefined,
       minAccessAge: 13,
