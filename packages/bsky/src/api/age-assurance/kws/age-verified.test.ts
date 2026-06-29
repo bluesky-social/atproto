@@ -57,6 +57,18 @@ describe('parseKWSAgeVerifiedStatus', () => {
     })
   })
 
+  it('strips a truly unknown field', () => {
+    const raw = JSON.stringify({
+      verified: true,
+      verifiedMinimumAge: 18,
+      somethingNew: 'ignored',
+    })
+    expect(parseKWSAgeVerifiedStatus(raw)).toEqual({
+      verified: true,
+      verifiedMinimumAge: 18,
+    })
+  })
+
   it('throws on malformed JSON', () => {
     expect(() => parseKWSAgeVerifiedStatus('not json')).toThrow(
       /Invalid KWS age-verified status/,
