@@ -68,19 +68,16 @@ describe(timeoutSignal, () => {
     })
 
     it('falls back to a plain Error when DOMException is unavailable', () => {
-      const originalDomException = globalThis.DOMException
-      try {
-        // @ts-expect-error intentionally removing a built-in to emulate RN
-        globalThis.DOMException = undefined
+      using _ = vi
+        .spyOn(globalThis, 'DOMException', 'get')
+        // @ts-expect-error intentionally removing a built-in to emulate React Native
+        .mockImplementation(() => undefined)
 
-        const signal = timeoutSignal(1000)
-        vi.advanceTimersByTime(1000)
+      const signal = timeoutSignal(1000)
+      vi.advanceTimersByTime(1000)
 
-        expect(signal.aborted).toBe(true)
-        expect(signal.reason).toBeInstanceOf(Error)
-      } finally {
-        globalThis.DOMException = originalDomException
-      }
+      expect(signal.aborted).toBe(true)
+      expect(signal.reason).toBeInstanceOf(Error)
     })
   })
 })

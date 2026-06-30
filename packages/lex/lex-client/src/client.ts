@@ -18,6 +18,7 @@ import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
 import type { Agent, AgentOptions } from './agent.js'
 import { buildAgent } from './agent.js'
 import type { XrpcFailure } from './errors.js'
+import { XrpcError, XrpcResponseError } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -25,7 +26,9 @@ import applyWrites from './lexicons/com/atproto/repo/applyWrites.js'
 import createRecord from './lexicons/com/atproto/repo/createRecord.js'
 import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.js'
 import getRecord from './lexicons/com/atproto/repo/getRecord.js'
-import listRecords from './lexicons/com/atproto/repo/listRecords.js'
+import listRecords, {
+  type Record as ListRecordsRecord,
+} from './lexicons/com/atproto/repo/listRecords.js'
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
@@ -42,6 +45,7 @@ import {
   buildXrpcRequestHeaders,
   getDefaultRecordKey,
   getLiteralRecordKey,
+  wait,
 } from './util.js'
 import {
   type WriteOperation,
@@ -350,28 +354,21 @@ export type ListOptions = ListRecordsOptions
  * Contains validated records and any invalid records that failed schema validation.
  * @typeParam T - The record schema type
  */
-export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
-  typeof listRecords,
-  Uint8Array
+export type ListOutput<T extends RecordSchema> = Omit<
+  InferMethodOutputBody<typeof listRecords>,
+  'records'
 > & {
   /** Records that successfully validated against the schema. */
-  records: ListRecord<Infer<T>>[]
-  // @NOTE Because the schema uses "type": "unknown" instead of an open union,
-  // we have to use LexMap instead of Unknown$TypedObject here, which is
-  // unfortunate.
-  /** Records that failed schema validation. */
-  invalid: LexMap[]
+  records: ListRecordItem<Infer<T>>[]
 }
 
 /**
- * A record from a list operation with its value typed to the schema.
- * @typeParam Value - The validated record value type
+ * A discriminated union type representing the result of a record listing
+ * operation.
  */
-export type ListRecord<Value extends LexMap> = {
-  uri: AtUriString
-  cid: CidString
-  value: Value
-}
+export type ListRecordItem<Value extends LexMap> =
+  | { uri: AtUriString; cid: CidString; valid: true; value: Value }
+  | { uri: AtUriString; cid: CidString; valid: false; value: LexMap }
 
 /**
  * The Client class is the primary interface for interacting with AT Protocol
@@ -1051,13 +1048,18 @@ export class Client implements Agent {
    *
    * @param ns - The record schema definition
    * @param options - List options
-   * @returns Records split into valid (matching schema) and invalid arrays
+   * @returns Records validated against the schema, with invalid records included as LexMap
    *
    * @example
    * ```typescript
    * const result = await client.list(app.bsky.feed.post.main, { limit: 100 })
-   * console.log(`Found ${result.records.length} valid posts`)
-   * console.log(`Found ${result.invalid.length} invalid records`)
+   * for (const record of result.records) {
+   *   if (record.valid) {
+   *     record.value // Fully typed
+   *   } else {
+   *     record.value // Invalid record, typed as LexMap
+   *   }
+   * }
    * ```
    */
   async list<const T extends RecordSchema>(
@@ -1066,19 +1068,111 @@ export class Client implements Agent {
   ): Promise<ListOutput<T>> {
     const schema = getMain(ns)
     const { body } = await this.listRecords(schema.$type, options)
+    const records = body.records.map(processListRecord, schema)
+    return { ...body, records }
+  }
 
-    const records: ListRecord<Infer<T>>[] = []
-    const invalid: LexMap[] = []
+  /**
+   * Asynchronously iterates over all records in a collection, handling
+   * pagination automatically.
+   *
+   * @param ns - The record schema definition
+   * @param options - List options including limit and cursor
+   * @returns An async generator yielding each record validated against the schema
+   */
+  async *listAll<const T extends RecordSchema>(
+    ns: Main<T>,
+    { maxRetries = 3, ...options }: ListOptions & { maxRetries?: number } = {},
+  ): AsyncGenerator<ListRecordItem<Infer<T>>, void, unknown> {
+    const schema = getMain(ns)
+    let currentErrorCount = 0
 
-    for (const record of body.records) {
-      const parsed = schema.safeValidate(record.value)
-      if (parsed.success) {
-        records.push({ ...record, value: parsed.value })
-      } else {
-        invalid.push(record.value)
+    do {
+      options.signal?.throwIfAborted()
+
+      try {
+        const { body } = await this.listRecords(schema.$type, options)
+
+        // We got a successful response, reset error count
+        currentErrorCount = 0
+
+        // We don't use this.list() here so that we can lazily process records as
+        // they come in, rather than mapping and yielding the entire page at once.
+        for (const record of body.records) {
+          yield processListRecord.call(schema, record)
+        }
+
+        // If the server returns the same cursor, we may be in a loop. Stop
+        // iteration.
+        if (body.cursor && body.cursor === options.cursor) {
+          return
+        }
+
+        options.cursor = body.cursor
+      } catch (err) {
+        currentErrorCount++
+        if (currentErrorCount > maxRetries) {
+          throw err
+        }
+
+        if (err instanceof XrpcResponseError) {
+          // Page not found, return empty iterator
+          if (err.status === 404 || err.error === 'NotFound') {
+            return
+          }
+
+          // Rate limit error
+          if (err.status === 429 || err.error === 'RateLimitExceeded') {
+            const resetsAt = err.headers.get('RateLimit-Reset') // epoch
+            if (resetsAt != null && /^\s*\d+\s*$/.test(resetsAt)) {
+              const resetsIn = Number(resetsAt) * 1000 - Date.now()
+              await wait(Math.max(resetsIn, 1e3), options)
+              continue
+            }
+
+            // Unable to determine when to retry; fall through
+          }
+
+          // Server asks to retry after a certain time
+          const retryAfter = err.headers.get('Retry-After')
+          if (retryAfter != null) {
+            const waitTime = /^\s*\d+\s*$/.test(retryAfter)
+              ? // Retry-After is in seconds
+                Number(retryAfter) * 1000
+              : // Retry-After is an http-date
+                new Date(retryAfter).getTime() - Date.now()
+
+            if (!Number.isNaN(waitTime)) {
+              await wait(Math.max(waitTime, 1e3), options)
+              continue
+            }
+
+            // Invalid date; fall through
+          }
+        }
+
+        // Exponential backoff for transient errors
+        if (err instanceof XrpcError && err.shouldRetry()) {
+          const waitTime = Math.min(2 ** currentErrorCount * 1000, 30_000)
+          await wait(waitTime, options)
+          continue
+        }
+
+        // Propagate unexpected and non-retryable errors
+        throw err
       }
-    }
+    } while (options.cursor)
+  }
+}
 
-    return { ...body, records, invalid }
+function processListRecord<T extends RecordSchema>(
+  this: T,
+  record: ListRecordsRecord,
+): ListRecordItem<Infer<T>> {
+  const result = this.safeValidate(record.value)
+  if (result.success) {
+    return { ...record, valid: true, value: result.value }
+  } else {
+    return { ...record, valid: false }
   }
 }
