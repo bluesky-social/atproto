@@ -1,8 +1,6 @@
 {
-  "name": "pds-service",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/pds": "workspace:^",
     "@opentelemetry/api": "^1.9.1",
