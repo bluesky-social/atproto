@@ -61,8 +61,7 @@
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
     "@types/ws": "^8.18.1",
-    "jest": "^30.0.0",
-    "ts-node": "^10.8.2"
+    "jest": "^30.0.0"
   },
   "scripts": {
     "codegen:lex": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
@@ -72,6 +71,6 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts"
+    "migration:create": "node ./bin/migration-create.ts"
   }
 }

@@ -23,7 +23,6 @@
   "engines": {
     "node": ">=22"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.json"
   }

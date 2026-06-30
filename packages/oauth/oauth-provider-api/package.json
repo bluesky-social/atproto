@@ -34,7 +34,6 @@
     "@atproto/oauth-types": "workspace:^",
     "@atproto/syntax": "workspace:^"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }

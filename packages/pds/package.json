@@ -93,7 +93,6 @@
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
     "puppeteer": "^23.11.1",
-    "ts-node": "^10.8.2",
     "ws": "^8.12.0"
   },
   "scripts": {
@@ -108,6 +107,6 @@
     "test:sqlite-only": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts"
+    "migration:create": "node ./bin/migration-create.ts"
   }
 }

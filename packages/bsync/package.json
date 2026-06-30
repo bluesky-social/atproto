@@ -47,8 +47,7 @@
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@types/pg": "^8.15.5",
     "get-port": "^5.1.1",
-    "jest": "^30.0.0",
-    "ts-node": "^10.8.2"
+    "jest": "^30.0.0"
   },
   "scripts": {
     "codegen:buf": "buf generate proto",
@@ -58,7 +57,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts",
+    "migration:create": "node ./bin/migration-create.ts",
     "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   }
 }

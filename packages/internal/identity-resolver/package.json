@@ -33,7 +33,6 @@
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.json"
   }

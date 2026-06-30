@@ -30,7 +30,6 @@
   "dependencies": {
     "@atproto-labs/pipe": "workspace:^"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.json"
   }
