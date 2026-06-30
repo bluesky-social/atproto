@@ -1,5 +1,13 @@
 # @atproto/ozone
 
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies [[`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b), [`45278fd`](https://github.com/bluesky-social/atproto/commit/45278fd367ee50654ac5d09bd6da1451c8b0cd98), [`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b)]:
+  - @atproto/xrpc-server@0.11.4
+  - @atproto/api@0.20.23
+
 ## 0.2.7
 
 ### Patch Changes
