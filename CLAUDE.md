@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-This is the TypeScript reference implementation of [AT Protocol](https://atproto.com), the decentralized social media protocol behind Bluesky. It is a pnpm monorepo (runtime floor Node.js ≥22; local dev and CI build/verify default to Node 26 via `.nvmrc` — only the test matrix runs on 22) containing client libraries, schema/codegen tooling, and the two main service implementations: the Personal Data Server (PDS) and the `app.bsky` AppView.
+This is the TypeScript reference implementation of [AT Protocol](https://atproto.com), the decentralized social media protocol behind Bluesky. It is a pnpm monorepo (runtime floor Node.js ≥22; local dev and CI build/verify default to Node 24 via `.nvmrc` — only the test matrix runs on 22) containing client libraries, schema/codegen tooling, and the two main service implementations: the Personal Data Server (PDS) and the `app.bsky` AppView.
 
 Workspace layout (see [pnpm-workspace.yaml](./pnpm-workspace.yaml) and [tsconfig.json](./tsconfig.json)):
 
@@ -66,7 +66,7 @@ For everything else lexicon-related — `lex install` / `lex build`, the per-pac
 
 ## Conventions
 
-- Node ≥22 runtime floor; build/dev default to Node 26 (`.nvmrc`). ESM only (`"type": "module"` in every package). Use `node --enable-source-maps` for production-style runs.
+- Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). ESM only (`"type": "module"` in every package). Use `node --enable-source-maps` for production-style runs.
 - TypeScript compilation uses `tsgo` (TS7, `@typescript/native-preview`), not `tsc`. There is no per-package `typescript` devDependency — `tsgo` is hoisted at the root.
 - Import paths use workspace protocol (`workspace:^`). Don't pin internal packages to a published version.
 - Don't refactor unrelated code; this project's contribution guidelines explicitly discourage large refactors and unsolicited tooling changes (see [README.md](README.md) "Contributions").
