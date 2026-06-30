@@ -55,7 +55,7 @@
     "@swc/jest": "^0.2.24",
     "@tsconfig/node22": "^22.0.5",
     "@types/jest": "^30.0.0",
-    "@types/node": "^22.x",
+    "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
     "@typescript/native-preview": "^7.0.0-beta",
