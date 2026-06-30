@@ -25,14 +25,6 @@ export const externalPayloadSchema = z
 
 export type KwsStatus = {
   verified: boolean
-  // A unique reference ID for the verification transaction.
-  transactionId?: string
-  // A code indicating the reason for failure, or null when verification
-  // succeeded.
-  errorCode?: string | null
-  // Epoch seconds indicating when KWS generated the payload. Optional so we
-  // remain compatible with payloads sent before this field was introduced.
-  timestamp?: number
 }
 
 export type KwsVerificationIntermediateQuery = {
@@ -64,9 +56,6 @@ export type KwsWebhookBody = {
 // Not `.strict()` to avoid breaking if KWS adds fields.
 export const statusSchema = z.object({
   verified: z.boolean(),
-  transactionId: z.string().optional(),
-  errorCode: z.string().nullable().optional(),
-  timestamp: z.number().optional(),
 })
 
 // Not `.strict()` to avoid breaking if KWS adds fields.
