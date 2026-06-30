@@ -19,11 +19,11 @@ Jest packages extend [tsconfig/jest.tsconfig.json](../../../../tsconfig/jest.tsc
 
 ```jsonc
 {
-  "extends": "../../tsconfig/jest.tsconfig.json",
+  "extends": ["../../tsconfig/jest.tsconfig.json"],
+  "include": ["./tests", "./src/**/*.test.ts"],
   "compilerOptions": {
     "rootDir": ".",
   },
-  "include": ["./tests", "./src/**/*.test.ts"],
   "references": [
     { "path": "./tsconfig.build.json" },
     // [Add references to any local packages imported from tests]

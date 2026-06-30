@@ -1,10 +1,5 @@
 {
-  "extends": "../../../tsconfig/node.tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-  },
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "references": [
     { "path": "../../did/tsconfig.build.json" },
@@ -17,4 +12,9 @@
     { "path": "../oauth-client/tsconfig.build.json" },
     { "path": "../oauth-types/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
 }

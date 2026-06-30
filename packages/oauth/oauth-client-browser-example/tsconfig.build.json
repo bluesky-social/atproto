@@ -3,14 +3,14 @@
     "../../../tsconfig/browser.tsconfig.json",
     "../../../tsconfig/bundler.tsconfig.json",
   ],
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "rootDir": "./src",
-    "outDir": "./dist",
-  },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
   "references": [
     { "path": "../../lex/lex/tsconfig.build.json" },
     { "path": "../oauth-client-browser/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
 }

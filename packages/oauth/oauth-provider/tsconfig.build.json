@@ -1,13 +1,6 @@
 {
   "extends": ["../../../tsconfig/node.tsconfig.json"],
-  "compilerOptions": {
-    "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    // @TODO Change to true and fix implicit any errors
-    "noImplicitAny": false,
-  },
-  "include": ["src"],
+  "include": ["./src"],
   "references": [
     { "path": "../../common/tsconfig.build.json" },
     { "path": "../../did/tsconfig.build.json" },
@@ -28,4 +21,11 @@
     { "path": "../oauth-scopes/tsconfig.build.json" },
     { "path": "../oauth-types/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
+  },
 }

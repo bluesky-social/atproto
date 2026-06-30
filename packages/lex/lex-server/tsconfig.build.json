@@ -5,11 +5,6 @@
   ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-  },
   "references": [
     { "path": "../../crypto/tsconfig.build.json" },
     { "path": "../../did/tsconfig.build.json" },
@@ -20,4 +15,9 @@
     { "path": "../lex-json/tsconfig.build.json" },
     { "path": "../lex-schema/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
 }

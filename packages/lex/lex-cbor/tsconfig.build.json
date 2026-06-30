@@ -5,10 +5,10 @@
   ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
+  "references": [{ "path": "../lex-data/tsconfig.build.json" }],
   "compilerOptions": {
     "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "references": [{ "path": "../lex-data/tsconfig.build.json" }],
 }

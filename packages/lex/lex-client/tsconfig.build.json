@@ -5,14 +5,14 @@
   ],
   "include": ["./src"],
   "exclude": ["**/*.bench.ts", "**/*.test.ts"],
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-  },
   "references": [
     { "path": "../lex-data/tsconfig.build.json" },
     { "path": "../lex-json/tsconfig.build.json" },
     { "path": "../lex-schema/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
 }

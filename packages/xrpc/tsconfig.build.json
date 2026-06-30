@@ -1,5 +1,7 @@
 {
   "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "references": [{ "path": "../lexicon/tsconfig.build.json" }],
   "compilerOptions": {
     "composite": true,
     "rootDir": "./src",
@@ -7,6 +9,4 @@
     // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
   },
-  "include": ["./src"],
-  "references": [{ "path": "../lexicon/tsconfig.build.json" }],
 }

@@ -36,11 +36,11 @@ When a package doesn't yet have vitest set up:
 
    ```json
    {
-     "extends": "../../tsconfig/vitest.tsconfig.json",
+     "extends": ["../../tsconfig/vitest.tsconfig.json"],
+     "include": ["./tests", "./src/**/*.test.ts"],
      "compilerOptions": {
        "rootDir": "."
      },
-     "include": ["./tests", "./src/**/*.test.ts"],
      "references": [
        { "path": "./tsconfig.build.json" }
        // [Add references to any local packages imported from tests]

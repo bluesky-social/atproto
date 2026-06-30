@@ -1,14 +1,14 @@
 {
   "extends": ["../../../tsconfig/node.tsconfig.json"],
-  "compilerOptions": {
-    "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
-  },
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [
     { "path": "../fetch/tsconfig.build.json" },
     { "path": "../pipe/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+  },
 }

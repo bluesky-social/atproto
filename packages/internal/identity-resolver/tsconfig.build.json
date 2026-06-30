@@ -1,13 +1,13 @@
 {
   "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
-  "compilerOptions": {
-    "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
-  },
-  "include": ["src"],
+  "include": ["./src"],
   "references": [
     { "path": "../did-resolver/tsconfig.build.json" },
     { "path": "../handle-resolver/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+  },
 }

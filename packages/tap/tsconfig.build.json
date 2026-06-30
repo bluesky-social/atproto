@@ -1,10 +1,5 @@
 {
-  "extends": "../../tsconfig/node.tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-  },
+  "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "references": [
     { "path": "../common/tsconfig.build.json" },
@@ -12,4 +7,9 @@
     { "path": "../syntax/tsconfig.build.json" },
     { "path": "../ws-client/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
 }

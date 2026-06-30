@@ -1,10 +1,10 @@
 {
   "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "references": [{ "path": "../pipe/tsconfig.build.json" }],
   "compilerOptions": {
     "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "./dist",
+    "rootDir": "./src",
   },
-  "include": ["src"],
-  "references": [{ "path": "../pipe/tsconfig.build.json" }],
 }

@@ -1,12 +1,12 @@
 {
   "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./examples/**/*.ts"],
-  "compilerOptions": {
-    "noEmit": true,
-    "rootDir": "./",
-  },
   "references": [
     { "path": "../lex/tsconfig.build.json" },
     { "path": "../lex-server/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "./",
+  },
 }

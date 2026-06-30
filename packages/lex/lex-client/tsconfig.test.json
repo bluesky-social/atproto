@@ -1,11 +1,11 @@
 {
-  "extends": "../../../tsconfig/vitest.tsconfig.json",
+  "extends": ["../../../tsconfig/vitest.tsconfig.json"],
   "include": ["./tests", "./src/**/*.test.ts"],
-  "compilerOptions": {
-    "rootDir": "./",
-  },
   "references": [
     { "path": "../lex-cbor/tsconfig.build.json" },
     { "path": "./tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "rootDir": "./",
+  },
 }

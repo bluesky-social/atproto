@@ -1,12 +1,5 @@
 {
   "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-    // @TODO Change to true and fix implicit any errors
-    "noImplicitAny": false,
-  },
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [
@@ -21,4 +14,11 @@
     { "path": "../jwk/tsconfig.build.json" },
     { "path": "../oauth-types/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
+  },
 }

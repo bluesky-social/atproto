@@ -1,12 +1,5 @@
 {
-  "extends": "../../tsconfig/node.tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-    // @TODO Change to true and fix implicit any errors
-    "noImplicitAny": false,
-  },
+  "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "references": [
     { "path": "../common-web/tsconfig.build.json" },
@@ -16,4 +9,11 @@
     { "path": "../lex/lex-data/tsconfig.build.json" },
     { "path": "../syntax/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
+  },
 }

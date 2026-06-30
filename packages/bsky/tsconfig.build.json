@@ -1,14 +1,5 @@
 {
-  "extends": "../../tsconfig/node.tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-    // Needed because of lex-cli
-    "noUnusedLocals": false,
-    // @TODO Change to true and fix implicit any errors
-    "noImplicitAny": false,
-  },
+  "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["./src/**/*.test.ts"],
   "references": [
@@ -25,4 +16,13 @@
     { "path": "../syntax/tsconfig.build.json" },
     { "path": "../xrpc-server/tsconfig.build.json" },
   ],
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // Needed because of lex-cli
+    "noUnusedLocals": false,
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
+  },
 }
