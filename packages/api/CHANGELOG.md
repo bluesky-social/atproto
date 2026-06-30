@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.23
+
+### Patch Changes
+
+- [#5166](https://github.com/bluesky-social/atproto/pull/5166) [`45278fd`](https://github.com/bluesky-social/atproto/commit/45278fd367ee50654ac5d09bd6da1451c8b0cd98) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `additionalVerificationMethods` to Age Assurance config and add required config for Texas
+
 ## 0.20.22
 
 ### Patch Changes
