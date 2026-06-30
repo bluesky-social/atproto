@@ -1,6 +1,9 @@
 {
   "name": "@atproto/ozone",
   "version": "0.2.8",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -13,18 +16,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/ozone"
   },
-  "scripts": {
-    "codegen:lex": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
-    "prebuild": "[ -f ./src/lexicon/index.ts ] && [ -z \"$(find ../../lexicons -newer ./src/lexicon/index.ts -type f -print -quit)\" ] || pnpm run codegen:lex",
-    "build": "tsgo --build tsconfig.build.json",
-    "start": "node --enable-source-maps dist/bin.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
-    "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts"
-  },
-  "engines": {
-    "node": ">=22"
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -67,11 +64,14 @@
     "jest": "^30.0.0",
     "ts-node": "^10.8.2"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "codegen:lex": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "prebuild": "[ -f ./src/lexicon/index.ts ] && [ -z \"$(find ../../lexicons -newer ./src/lexicon/index.ts -type f -print -quit)\" ] || pnpm run codegen:lex",
+    "build": "tsgo --build tsconfig.build.json",
+    "start": "node --enable-source-maps dist/bin.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
+    "migration:create": "ts-node ./bin/migration-create.ts"
   }
 }

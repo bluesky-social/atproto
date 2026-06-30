@@ -1,9 +1,6 @@
 {
   "name": "@atproto/oauth-client-expo",
   "version": "0.1.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [
@@ -26,11 +23,23 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-expo"
   },
+  "files": [
+    "./expo-module.config.json",
+    "./android",
+    "./ios",
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:^",
@@ -47,6 +56,5 @@
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
-  },
-  "type": "module"
+  }
 }

@@ -1,9 +1,6 @@
 {
   "name": "@atproto/xrpc",
   "version": "0.8.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) client library",
   "keywords": [
@@ -16,19 +13,27 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/xrpc"
   },
-  "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
-  },
-  "dependencies": {
-    "@atproto/lexicon": "workspace:^",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {},
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@atproto/lexicon": "workspace:^",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

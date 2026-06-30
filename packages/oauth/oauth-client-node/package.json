@@ -15,6 +15,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-node"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -25,9 +30,6 @@
   "engines": {
     "node": ">=22"
   },
-  "files": [
-    "dist"
-  ],
   "dependencies": {
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/handle-resolver-node": "workspace:^",

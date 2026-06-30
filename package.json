@@ -5,6 +5,7 @@
   "author": "Bluesky Social PBC <hello@blueskyweb.xyz>",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=22"
   },
@@ -87,6 +88,5 @@
       "packages/oauth/*",
       "packages/internal/*"
     ]
-  },
-  "type": "module"
+  }
 }

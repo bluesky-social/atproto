@@ -15,14 +15,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/sync"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
-    "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsgo --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -38,11 +44,10 @@
     "@types/ws": "^8.5.4",
     "jest": "^30.0.0"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsgo --build tsconfig.build.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"
   }
 }

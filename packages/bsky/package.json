@@ -13,6 +13,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
+  "files": [
+    "./bin",
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -20,26 +26,8 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "./bin",
-    "./dist",
-    "./README.md",
-    "./CHANGELOG.md"
-  ],
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
-    "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsgo --build tsconfig.build.json",
-    "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
-    "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
-    "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
@@ -100,5 +88,17 @@
     "@types/qs": "^6.9.7",
     "ts-node": "^10.8.2",
     "vitest": "^4.0.16"
+  },
+  "scripts": {
+    "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsgo --build tsconfig.build.json",
+    "start": "node --enable-source-maps dist/bin.js",
+    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
+    "migration:create": "ts-node ./bin/migration-create.ts",
+    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   }
 }

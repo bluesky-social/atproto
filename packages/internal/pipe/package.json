@@ -1,9 +1,6 @@
 {
   "name": "@atproto-labs/pipe",
   "version": "0.2.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Library for combining multiple functions into a single function.",
   "keywords": [
@@ -22,6 +19,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "devDependencies": {},
   "scripts": {

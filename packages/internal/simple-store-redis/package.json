@@ -1,9 +1,6 @@
 {
   "name": "@atproto-labs/simple-store-redis",
   "version": "0.1.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Redis based simple-store implementation",
   "keywords": [
@@ -28,10 +25,12 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:^"
   },
-  "devDependencies": {},
   "peerDependencies": {
     "ioredis": "^5.3.2"
   },

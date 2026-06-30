@@ -1,9 +1,6 @@
 {
   "name": "@atproto/jwk-jose",
   "version": "0.2.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "`jose` based implementation of @atproto/jwk Key's",
   "keywords": [
@@ -17,6 +14,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/jwk-jose"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -24,11 +25,13 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/jwk": "workspace:^",
     "jose": "^5.2.0"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }

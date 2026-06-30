@@ -13,6 +13,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsync"
   },
+  "files": [
+    "./bin",
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -20,25 +26,8 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "./bin",
-    "./dist",
-    "./README.md",
-    "./CHANGELOG.md"
-  ],
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "codegen:buf": "buf generate proto",
-    "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsgo --build tsconfig.build.json",
-    "start": "node --enable-source-maps dist/bin.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
-    "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -60,5 +49,16 @@
     "get-port": "^5.1.1",
     "jest": "^30.0.0",
     "ts-node": "^10.8.2"
+  },
+  "scripts": {
+    "codegen:buf": "buf generate proto",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsgo --build tsconfig.build.json",
+    "start": "node --enable-source-maps dist/bin.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-db.sh jest",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "jest --updateSnapshot",
+    "migration:create": "ts-node ./bin/migration-create.ts",
+    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   }
 }

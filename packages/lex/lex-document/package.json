@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-document",
   "version": "0.1.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Lexicon document validation tools for AT",
   "keywords": [
@@ -29,6 +26,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/lex-schema": "workspace:^",

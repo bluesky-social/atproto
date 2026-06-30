@@ -1,9 +1,6 @@
 {
   "name": "@atproto/oauth-provider-api",
   "version": "0.7.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Shared data types for the @atproto/oauth-provider and @atproto/oauth-provider-ui packages",
   "keywords": [
@@ -18,12 +15,19 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-provider-api"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/jwk": "workspace:^",

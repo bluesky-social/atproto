@@ -9,9 +9,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-provider-ui"
   },
-  "engines": {
-    "node": ">=22"
-  },
+  "files": [
+    "./hydration-data.d.ts",
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     "./bundle-manifest.json": {
@@ -21,11 +23,10 @@
       "types": "./hydration-data.d.ts"
     }
   },
-  "files": [
-    "dist",
-    "hydration-data.d.ts"
-  ],
-  "optionalDependencies": {
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
     "@atproto/oauth-provider-api": "workspace:*"
   },
   "devDependencies": {

@@ -1,9 +1,6 @@
 {
   "name": "@atproto/oauth-types",
   "version": "0.7.3",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "OAuth typing & validation library",
   "keywords": [
@@ -18,12 +15,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-types"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/did": "workspace:^",

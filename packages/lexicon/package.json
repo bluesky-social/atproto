@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lexicon",
   "version": "0.7.3",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "atproto Lexicon schema language library",
   "keywords": [
@@ -20,9 +17,15 @@
     "./dist",
     "./CHANGELOG.md"
   ],
-  "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
@@ -33,11 +36,8 @@
   "devDependencies": {
     "jest": "^30.0.0"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

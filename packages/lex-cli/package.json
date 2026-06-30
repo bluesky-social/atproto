@@ -1,6 +1,9 @@
 {
   "name": "@atproto/lex-cli",
   "version": "0.10.2",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "TypeScript codegen tool for atproto Lexicon schemas",
   "keywords": [
@@ -13,19 +16,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lex-cli"
   },
-  "bin": {
-    "lex": "bin.js"
-  },
   "files": [
     "./bin.js",
     "./dist",
     "./CHANGELOG.md"
   ],
-  "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+  "bin": {
+    "lex": "bin.js"
   },
-  "engines": {
-    "node": ">=22"
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@atproto/lexicon": "workspace:^",
@@ -38,11 +42,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {},
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

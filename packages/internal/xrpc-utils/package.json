@@ -1,9 +1,6 @@
 {
   "name": "@atproto-labs/xrpc-utils",
   "version": "0.1.3",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "XRPC server utilities for Node.JS",
   "keywords": [
@@ -32,11 +29,13 @@
       "default": "./dist/accept.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "tsgo --build tsconfig.build.json"
   }

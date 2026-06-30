@@ -12,6 +12,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/common"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -19,17 +24,8 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "./dist",
-    "./README.md",
-    "./CHANGELOG.md"
-  ],
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
@@ -41,5 +37,9 @@
   "devDependencies": {
     "jest": "^30.0.0",
     "uint8arrays": "^5.0.0"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

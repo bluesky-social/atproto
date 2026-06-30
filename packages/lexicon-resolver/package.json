@@ -4,25 +4,19 @@
   "engines": {
     "node": ">=22"
   },
-  "type": "module",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
     "atproto",
     "lexicon"
   ],
-  "scripts": {
-    "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json",
-    "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
-  },
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon-resolver"
   },
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -40,5 +34,11 @@
   "devDependencies": {
     "@atproto/lex-cbor": "workspace:^",
     "vitest": "^4.0.16"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsgo --build tsconfig.build.json",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
   }
 }

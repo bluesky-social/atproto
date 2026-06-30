@@ -1,9 +1,6 @@
 {
   "name": "@atproto/syntax",
   "version": "0.6.3",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
   "keywords": [
@@ -18,6 +15,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/syntax"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -25,13 +26,8 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "./dist",
-    "./CHANGELOG.md"
-  ],
-  "scripts": {
-    "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json"
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "iso-datestring-validator": "^2.2.2",
@@ -39,5 +35,9 @@
   },
   "devDependencies": {
     "vitest": "^4.0.16"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

@@ -1,9 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser-example",
   "version": "0.1.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Example single page application app using ATPROTO OAuth",
   "keywords": [
@@ -21,6 +18,14 @@
     "directory": "packages/oauth/oauth-client-browser"
   },
   "bin": "./bin.js",
+  "files": [
+    "./bin.js",
+    "./server.js",
+    "./files.d.ts",
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -31,12 +36,9 @@
       "default": "./server.js"
     }
   },
-  "files": [
-    "bin.js",
-    "server.js",
-    "files.d.ts",
-    "dist"
-  ],
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "http-terminator": "^3.2.0"
   },

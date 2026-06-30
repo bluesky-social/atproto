@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex",
   "version": "0.1.5",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [
@@ -34,6 +31,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:^",
