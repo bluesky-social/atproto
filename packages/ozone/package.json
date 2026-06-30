@@ -1,9 +1,6 @@
 {
   "name": "@atproto/ozone",
   "version": "0.2.8",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -16,12 +13,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/ozone"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",

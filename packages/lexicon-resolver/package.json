@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lexicon-resolver",
   "version": "0.4.3",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
@@ -16,12 +13,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon-resolver"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",

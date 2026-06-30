@@ -15,6 +15,7 @@
   },
   "files": [
     "./dist",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "type": "module",
