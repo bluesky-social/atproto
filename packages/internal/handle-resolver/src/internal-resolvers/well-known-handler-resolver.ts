@@ -43,11 +43,23 @@ export class WellKnownHandleResolver implements HandleResolver {
 
       return null
     } catch (err) {
-      // The the request failed, assume the handle does not resolve to a DID,
-      // unless the failure was due to the signal being aborted.
+      // If the request was aborted, propagate the abort error.
       options?.signal?.throwIfAborted()
 
-      return null
+      // The WHATWG fetch standard rejects with a `TypeError` for genuine
+      // network failures (DNS failure, connection refused, blocked redirect,
+      // …). Those mean the handle's well-known endpoint is unreachable, so we
+      // treat the handle as unresolved and return `null`.
+      //
+      // Any other error type is unexpected (e.g. the SSRF/unicast protection
+      // added by `safeFetchWrap` throws before any network exchange, a custom
+      // `fetch` implementation misbehaving, or a programming error). Per the
+      // `HandleResolver` contract, `null` must only be returned when no
+      // unexpected behavior occurred, so we re-throw to surface the real cause
+      // instead of silently hiding it.
+      if (err instanceof TypeError) return null
+
+      throw err
     }
   }
 }

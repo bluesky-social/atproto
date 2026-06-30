@@ -12,6 +12,7 @@ export default defineConfig({
       ],
     },
     projects: [
+      'packages/internal/handle-resolver',
       'packages/lex/*',
       'packages/oauth/oauth-client',
       'packages/syntax',
