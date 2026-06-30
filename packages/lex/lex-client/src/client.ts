@@ -1125,7 +1125,7 @@ export class Client implements Agent {
           // Rate limit error
           if (err.status === 429 || err.error === 'RateLimitExceeded') {
             const resetsAt = err.headers.get('RateLimit-Reset') // epoch
-            if (resetsAt != null && /^\s*\d+(?:\.\d*)\s*?$/.test(resetsAt)) {
+            if (resetsAt != null && /^\s*\d+\s*$/.test(resetsAt)) {
               const resetsIn = Number(resetsAt) * 1000 - Date.now()
               await wait(Math.max(resetsIn, 1e3), options)
               continue
