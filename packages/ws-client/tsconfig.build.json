@@ -3,7 +3,6 @@
   "include": ["./src"],
   "references": [{ "path": "../common/tsconfig.build.json" }],
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },

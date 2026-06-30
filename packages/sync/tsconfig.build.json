@@ -10,7 +10,6 @@
     { "path": "../xrpc-server/tsconfig.build.json" },
   ],
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },

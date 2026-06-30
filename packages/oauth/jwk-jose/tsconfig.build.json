@@ -3,7 +3,6 @@
   "include": ["./src"],
   "references": [{ "path": "../jwk/tsconfig.build.json" }],
   "compilerOptions": {
-    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
   },

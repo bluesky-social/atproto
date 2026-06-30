@@ -6,7 +6,6 @@
     { "path": "../handle-resolver/tsconfig.build.json" },
   ],
   "compilerOptions": {
-    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
   },

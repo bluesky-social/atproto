@@ -6,7 +6,6 @@
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },

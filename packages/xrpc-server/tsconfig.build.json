@@ -14,7 +14,6 @@
     { "path": "../xrpc/tsconfig.build.json" },
   ],
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
     // @TODO Change to true and fix implicit any errors

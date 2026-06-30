@@ -7,5 +7,6 @@
     "module": "NodeNext",
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "composite": false,
   },
 }

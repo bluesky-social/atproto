@@ -3,7 +3,6 @@
   "include": ["./src"],
   "references": [{ "path": "../simple-store/tsconfig.build.json" }],
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },

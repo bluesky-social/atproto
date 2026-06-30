@@ -8,7 +8,6 @@
     { "path": "../xrpc/tsconfig.build.json" },
   ],
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
     "outDir": "./dist",
     // Needed because of lex-cli generated files

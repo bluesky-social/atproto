@@ -22,7 +22,6 @@
     { "path": "../oauth-types/tsconfig.build.json" },
   ],
   "compilerOptions": {
-    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
     // @TODO Change to true and fix implicit any errors

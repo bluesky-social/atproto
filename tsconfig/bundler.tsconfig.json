@@ -19,5 +19,6 @@
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,
+    "composite": false,
   },
 }
