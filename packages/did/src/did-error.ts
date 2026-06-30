@@ -1,4 +1,4 @@
-import { ifNumber } from './utils.js'
+import { ifNumber } from './lib/number.js'
 
 export class DidError extends Error {
   constructor(
