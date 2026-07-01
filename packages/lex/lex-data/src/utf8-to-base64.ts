@@ -1,6 +1,6 @@
 import { toString } from 'uint8arrays/to-string'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
-import { Base64Alphabet } from './uint8array-base64.js'
+import type { Base64Alphabet } from './uint8array-base64.js'
 import { toBase64Node } from './uint8array-to-base64.js'
 
 const Buffer = NodeJSBuffer

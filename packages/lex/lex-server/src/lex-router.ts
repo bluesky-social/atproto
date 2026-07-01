@@ -1,22 +1,22 @@
 import { encode } from '@atproto/lex-cbor'
 import {
   LexError,
-  LexErrorData,
-  LexValue,
+  type LexErrorData,
+  type LexValue,
   isPlainObject,
   ui8Concat,
 } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
-  DidString,
-  InferMethodInput,
-  InferMethodMessage,
-  InferMethodOutput,
-  InferMethodOutputBody,
-  InferMethodOutputEncoding,
-  InferMethodParams,
-  Main,
-  NsidString,
+  type DidString,
+  type InferMethodInput,
+  type InferMethodMessage,
+  type InferMethodOutput,
+  type InferMethodOutputBody,
+  type InferMethodOutputEncoding,
+  type InferMethodParams,
+  type Main,
+  type NsidString,
   Procedure,
   Query,
   Subscription,
@@ -568,12 +568,16 @@ export class LexRouter {
   /** Map of NSID strings to their fetch handlers. */
   readonly handlers: Map<NsidString, FetchHandler> = new Map()
 
+  options: LexRouterOptions
+
   /**
    * Creates a new XRPC router.
    *
    * @param options - Router configuration options
    */
-  constructor(readonly options: LexRouterOptions = {}) {}
+  constructor(options: LexRouterOptions = {}) {
+    this.options = options
+  }
 
   /**
    * Registers a subscription handler without authentication.

@@ -1,10 +1,10 @@
 import {
-  $Typed,
-  InferInput,
-  InferOutput,
+  type $Typed,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
+  type Validator,
 } from '../core.js'
 
 /**

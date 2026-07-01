@@ -1,5 +1,5 @@
-import { NsidString } from './string-format.js'
-import { OmitKey, Simplify } from './types.js'
+import type { NsidString } from './string-format.js'
+import type { OmitKey, Simplify } from './types.js'
 
 /**
  * Constructs the `$type` string type for a given NSID and hash.

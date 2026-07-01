@@ -1,25 +1,21 @@
-import { LexParseOptions, jsonToLex } from '@atproto/lex-json'
-import {
+import type { LexParseOptions } from '@atproto/lex-json'
+import { jsonToLex } from '@atproto/lex-json'
+import type {
   InferMethodOutputEncoding,
   InferOutput,
   LexValue,
-  Payload,
-  Procedure,
-  Query,
   ResultSuccess,
   Validator,
 } from '@atproto/lex-schema'
+import { Payload, Procedure, Query } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
   XrpcInvalidResponseError,
   XrpcResponseError,
   XrpcResponseValidationError,
 } from './errors.js'
-import {
-  EncodingString,
-  XrpcUnknownResponsePayload,
-  isEncodingString,
-} from './types.js'
+import { isEncodingString } from './types.js'
+import type { EncodingString, XrpcUnknownResponsePayload } from './types.js'
 
 const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'

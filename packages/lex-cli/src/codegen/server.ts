@@ -6,7 +6,7 @@ import {
 } from 'ts-morph'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { type GeneratedAPI } from '../types.js'
+import type { GeneratedAPI } from '../types.js'
 import { gen, lexiconsTs, utilTs } from './common.js'
 import {
   genCommonImports,
@@ -258,7 +258,11 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
   }
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+const lexiconTs = (
+  project: Project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,

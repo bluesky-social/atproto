@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import {
   isGlobalIdentifier,
   isJsKeyword,

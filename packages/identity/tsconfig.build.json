@@ -1,8 +1,12 @@
 {
-  "extends": "../../tsconfig/isomorphic.json",
+  "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "references": [
+    { "path": "../common-web/tsconfig.build.json" },
+    { "path": "../crypto/tsconfig.build.json" },
+  ],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "include": ["./src"],
 }

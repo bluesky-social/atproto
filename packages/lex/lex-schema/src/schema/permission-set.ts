@@ -1,4 +1,4 @@
-import { NsidString } from '../core.js'
+import type { NsidString } from '../core.js'
 import { Permission } from './permission.js'
 
 /**

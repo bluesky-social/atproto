@@ -1,9 +1,6 @@
-import {
-  InferRecordKey,
-  LexiconRecordKey,
-  RecordSchema,
-} from '@atproto/lex-schema'
-import type { DidString, Service } from './types.js'
+import type { InferRecordKey, LexiconRecordKey } from '@atproto/lex-schema'
+import { RecordSchema } from '@atproto/lex-schema'
+import type { DidString, Service } from './types.ts'
 
 export function applyDefaults<
   TDefaults extends Record<string, unknown>,
@@ -179,4 +176,37 @@ export function getLiteralRecordKey<const T extends RecordSchema>(
   throw new TypeError(
     `An "rkey" must be provided for record key type "${schema.key}" (${schema.$type})`,
   )
+}
+
+export function wait(
+  ms: number,
+  { signal }: { signal?: AbortSignal } = {},
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    signal?.throwIfAborted()
+
+    const cleanup = () => {
+      clearTimeout(timeout)
+      signal?.removeEventListener('abort', onAbort)
+    }
+
+    const timeout = setTimeout(() => {
+      cleanup()
+      resolve()
+    }, ms)
+
+    const onAbort = () => {
+      cleanup()
+      reject(
+        // @NOTE the signal exists, and the reason should be set at this point.
+        signal?.reason ??
+          // React Native does not have DOMException
+          (typeof DOMException !== 'undefined'
+            ? new DOMException('Aborted', 'AbortError')
+            : new Error('Aborted')),
+      )
+    }
+
+    signal?.addEventListener('abort', onAbort)
+  })
 }

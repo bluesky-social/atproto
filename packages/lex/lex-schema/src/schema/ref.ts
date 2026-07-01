@@ -1,10 +1,10 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
   ValidationContext,
-  Validator,
-  WrappedValidator,
+  type Validator,
+  type WrappedValidator,
 } from '../core.js'
 
 /**

@@ -164,6 +164,13 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    // Tags that are hidden from all search surfaces (Top and Latest),
+    // regardless of curation or author filtering.
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) =>
+      post.tags.has(t),
+    )
+    if (alwaysHidden) return false
+
     const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
 
     if (isCuratedSearch && tagged) return false

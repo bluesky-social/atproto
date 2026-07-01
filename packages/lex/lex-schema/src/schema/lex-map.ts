@@ -1,4 +1,4 @@
-import { LexMap, isPlainObject } from '@atproto/lex-data'
+import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { lexValue } from './lex-value.js'

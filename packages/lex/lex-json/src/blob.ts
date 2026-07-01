@@ -1,9 +1,9 @@
-import {
+import type {
   BlobRefCheckOptions,
   LexMap,
   TypedBlobRef,
-  isTypedBlobRef,
 } from '@atproto/lex-data'
+import { isTypedBlobRef } from '@atproto/lex-data'
 import { parseLexLink } from './link.js'
 
 /**

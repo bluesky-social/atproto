@@ -1,0 +1,8 @@
+{
+  "extends": ["../../../tsconfig/vitest.tsconfig.json"],
+  "include": ["./tests", "./src/**/*.test.ts", "./src/core-js.d.ts"],
+  "references": [{ "path": "./tsconfig.build.json" }],
+  "compilerOptions": {
+    "rootDir": "./",
+  },
+}

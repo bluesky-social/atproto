@@ -1,15 +1,14 @@
-import {
+import type {
   BlobRef,
   Cid,
   LexArray,
   LexMap,
   LexValue,
-  isCid,
-  utf8FromBytes,
 } from '@atproto/lex-data'
+import { isCid, utf8FromBytes } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { JsonObject, JsonValue } from './json.js'
+import type { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
 /**

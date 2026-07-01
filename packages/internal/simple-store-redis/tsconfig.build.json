@@ -1,8 +1,9 @@
 {
-  "extends": "../../../tsconfig/node.json",
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
+  "include": ["./src"],
+  "references": [{ "path": "../simple-store/tsconfig.build.json" }],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "include": ["./src"],
 }

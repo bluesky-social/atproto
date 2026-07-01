@@ -1,13 +1,13 @@
 import { CID } from 'multiformats/cid'
 import { graphemeLen, utf8Len } from '@atproto/common-web'
 import { Lexicons } from '../lexicons.js'
-import {
+import { ValidationError } from '../types.js'
+import type {
   LexBoolean,
   LexBytes,
   LexInteger,
   LexString,
   LexUserType,
-  ValidationError,
   ValidationResult,
 } from '../types.js'
 import * as formats from './formats.js'

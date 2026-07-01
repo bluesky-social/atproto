@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-builder",
   "version": "0.1.4",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "TypeScript schema builder for AT Lexicons",
   "keywords": [
@@ -19,10 +16,6 @@
     "directory": "packages/lex/lex-builder"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
   ],
@@ -33,6 +26,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/lex-document": "workspace:^",

@@ -36,7 +36,7 @@ export class IndexedDBStore<
         fn(tx.objectStore(storeName)),
       )
     } finally {
-      await db[Symbol.dispose]()
+      await db[Symbol.asyncDispose]()
     }
   }
 

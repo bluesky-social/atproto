@@ -1,10 +1,12 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": [
+    "../../../tsconfig/isomorphic.tsconfig.json",
+    "../../../tsconfig/verbatim.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
+  "references": [{ "path": "../lex-data/tsconfig.build.json" }],
   "compilerOptions": {
-    "noImplicitAny": true,
-    "importHelpers": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
