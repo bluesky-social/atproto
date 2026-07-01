@@ -23,9 +23,9 @@ describe('oauth', () => {
       browser: 'chrome', // "firefox"
 
       // For debugging:
-      headless: false,
+      // headless: false,
       // devtools: true,
-      slowMo: 25,
+      // slowMo: 25,
     })
 
     network = await TestNetwork.create({
