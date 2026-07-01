@@ -2,6 +2,7 @@ import { Lexicons } from '../lexicons.js'
 import { ValidationError, isDiscriminatedObject, isObj } from '../types.js'
 import type {
   LexArray,
+  LexRecord,
   LexRefVariant,
   LexUserType,
   ValidationResult,
@@ -23,6 +24,8 @@ export function validate(
       return array(lexicons, path, def, value)
     case 'blob':
       return blob(lexicons, path, def, value)
+    case 'record':
+      return record(lexicons, path, def, value)
     default:
       return validatePrimitive(lexicons, path, def, value)
   }
@@ -150,6 +153,23 @@ export function object(
   }
 
   return { success: true, value: resultValue }
+}
+
+export function record(
+  lexicons: Lexicons,
+  path: string,
+  def: LexRecord,
+  value: unknown,
+): ValidationResult {
+  if (!isDiscriminatedObject(value)) {
+    return {
+      success: false,
+      error: new ValidationError(
+        `${path} must be a record with a "$type" property`,
+      ),
+    }
+  }
+  return validateOneOf(lexicons, path, def.record, value)
 }
 
 export function validateOneOf(
