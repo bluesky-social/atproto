@@ -86,7 +86,7 @@ CMD [
   "--heapsnapshot-signal=SIGUSR2",
   "--enable-source-maps",
   "--experimental-loader=@opentelemetry/instrumentation/hook.mjs",
-  "--import=./telemetry.ts",
+  "--import=@atproto/pds/telemetry",
   "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
