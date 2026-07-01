@@ -1,9 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "checkJs": true,
+    // In order to benefit from TS7's parallelized build, we use "references" to
+    // split the project into multiple sub-projects. This requires "composite"
+    // to be set to true for each sub-project and greatly improves the build
+    // time of the project (as opposed to a pnpm topological build). This comes
+    // at the cost of some additional complexity in the project structure: each
+    // sub-project must reference its dependencies in its tsconfig.json file in
+    // addition to their package.json file.
+    //
+    // @TODO We should implement an eslint rule that verifies that every import
+    // is referenced from the tsconfig.json file of the sub-project, just like
+    // "n/no-extraneous-import" does.
+    //
+    // See https://www.typescriptlang.org/docs/handbook/project-references.html
     "composite": true,
 
+    "checkJs": true,
     "strict": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
