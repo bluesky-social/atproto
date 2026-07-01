@@ -4,7 +4,7 @@ import { AtmosphereSignInDialog } from '../components/AtmosphereSignInDialog.tsx
 import { Layout } from '../components/Layout.tsx'
 import { Spinner } from '../components/Spinner.tsx'
 import { PDS_OPERATOR_URL } from '../constants.ts'
-import { useFlip } from '../lib/use-flip.ts'
+import { useDebounced } from '../lib/use-debounced.ts'
 import { OAuthProvider, useOAuthContext } from './OAuthProvider.tsx'
 
 export type AuthenticatedClient = Client & { did: DidString }
@@ -39,19 +39,10 @@ function AuthenticationProviderInternal({
     return client
   }, [session])
 
-  // Create artificial delay (demo purposes)
-  const ready = useFlip(client != null || !isLoading, { delay: 333 })
-
-  if (!ready) {
-    return (
-      <Layout>
-        <div className="flex flex-grow flex-col items-center justify-center">
-          <Spinner />
-          Loading authentication status...
-        </div>
-      </Layout>
-    )
-  }
+  // Create artificial delay so that if a loading state is initially shown, it
+  // does not disappear too quickly, causing a flicker effect.
+  const ready = client != null && !isLoading
+  const readyDebounced = useDebounced(ready, !ready ? 0 : 333)
 
   if (!client) {
     return (
@@ -63,6 +54,17 @@ function AuthenticationProviderInternal({
             signIn={signIn}
             signUp={signUp}
           />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (!ready || !readyDebounced) {
+    return (
+      <Layout>
+        <div className="flex flex-grow flex-col items-center justify-center">
+          <Spinner />
+          Loading authentication status...
         </div>
       </Layout>
     )

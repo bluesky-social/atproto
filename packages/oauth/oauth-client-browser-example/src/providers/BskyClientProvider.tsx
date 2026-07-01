@@ -6,7 +6,7 @@ import { Spinner } from '../components/Spinner.tsx'
 import { BSKY_API_DID, BSKY_API_URL } from '../constants.ts'
 import * as app from '../lexicons/app.ts'
 import { useAbortableEffect } from '../lib/use-abortable-effect.ts'
-import { useFlip } from '../lib/use-flip.ts'
+import { useDebounced } from '../lib/use-debounced.ts'
 import {
   AuthenticatedClient,
   useAuthenticatedClient,
@@ -29,22 +29,14 @@ export function BskyClientProvider({
   // labelers, etc.) on the PDS client is preserved and applied to the
   // BskyClient context value as well.
   const agent = useAuthenticatedClient()
+  const client = useBuiltClient(agent)
 
-  const [client, setClient] = useState<AuthenticatedClient | null>(null)
+  // Create artificial delay so that if a loading state is initially shown, it
+  // does not disappear too quickly, causing a flicker effect.
+  const ready = client != null
+  const readyDebounced = useDebounced(ready, !ready ? 0 : 333)
 
-  // Create artificial delay (demo purposes)
-  const ready = useFlip(client != null, { delay: 333 })
-
-  useAbortableEffect(
-    (signal) => {
-      void buildClient(agent, signal).then((client) => {
-        if (!signal.aborted) setClient(client)
-      })
-    },
-    [agent],
-  )
-
-  if (!client || !ready) {
+  if (!ready || !readyDebounced) {
     return (
       <Layout>
         <div className="flex flex-grow flex-col items-center justify-center">
@@ -77,6 +69,26 @@ export function useUnauthenticatedBskyClient() {
 export function useAuthenticatedBskyClient() {
   const client: Client = useBskyClient()
   client.assertAuthenticated()
+  return client
+}
+
+function useBuiltClient(agent: Agent | null): AuthenticatedClient | null {
+  const [client, setClient] = useState<AuthenticatedClient | null>(null)
+
+  useAbortableEffect(
+    (signal) => {
+      if (!agent) {
+        setClient(null)
+        return
+      }
+
+      void buildClient(agent, signal).then((client) => {
+        if (!signal.aborted) setClient(client)
+      })
+    },
+    [agent],
+  )
+
   return client
 }
 
