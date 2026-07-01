@@ -42,7 +42,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     // links
     const re = URL_REGEX
     while ((match = re.exec(text.utf16))) {
-      let uri = match[2]
+      let uri = match[2].toLowerCase()
       if (!uri.startsWith('http')) {
         const domain = match.groups?.domain
         if (!domain || !isValidDomain(domain)) {
