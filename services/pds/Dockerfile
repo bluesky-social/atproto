@@ -14,10 +14,13 @@ COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
-COPY ./packages/internal ./packages/internal
-COPY ./packages/lex ./packages/lex
+
+# bsync is not a runtime dep but bsky's "codegen:buf" script reads ../bsync/proto at build time
+COPY ./packages/bsync/proto ./packages/bsync/proto
 
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./packages/internal ./packages/internal
+COPY ./packages/lex ./packages/lex
 # pnpm list --filter '@atproto/pds...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | grep -v 'packages/pds"' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
@@ -46,11 +49,6 @@ COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
-
-COPY ./packages/pds ./packages/pds
-
-# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
-COPY ./packages/bsync ./packages/bsync
 
 COPY ./services/pds ./services/pds
 
@@ -83,7 +81,13 @@ ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "index.ts"]
+CMD [
+  "node",
+  "--heapsnapshot-signal=SIGUSR2",
+  "--enable-source-maps",
+  "--experimental-loader=@opentelemetry/instrumentation/hook.mjs",
+  "--import=./telemetry.ts",
+  "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"

@@ -52,6 +52,7 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",
     "@hapi/address": "^5.1.1",
+    "@opentelemetry/api": "^1.9.0",
     "better-sqlite3": "^12.0.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
