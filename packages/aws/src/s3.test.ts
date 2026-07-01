@@ -1,7 +1,13 @@
 import http from 'node:http'
 import { AddressInfo } from 'node:net'
+import { setTimeout as sleep } from 'node:timers/promises'
+import { CID } from 'multiformats/cid'
 import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest'
 import { S3BlobStore } from './s3.js'
+
+const testCid = CID.parse(
+  'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+)
 
 type RequestHandler = (
   req: http.IncomingMessage,
@@ -159,5 +165,73 @@ describe(S3BlobStore, () => {
         return true
       },
     )
+  })
+
+  describe('downloads (getBytes)', () => {
+    // The following tests characterize the behavior of the socket idle
+    // timeout ("requestTimeoutMs") on the download direction, which -- unlike
+    // uploads -- streams client-paced data from S3 (a slow blob consumer can
+    // leave the S3 socket idle mid-transfer).
+    //
+    // With the installed @smithy/node-http-handler, when requestTimeout is
+    // >= 6s its registration is deferred by 3s and cancelled as soon as the
+    // response headers arrive. Since S3 sends response headers well within
+    // 3s (unless stalled), the idle timeout does not apply while the response
+    // body is being streamed.
+
+    it('does not reap slow downloads mid-stream (requestTimeoutMs >= 6s)', async () => {
+      const idleMs = 7_000
+      server.handlers.push((req, res) => {
+        req.resume()
+        res.writeHead(200, { 'content-length': '6' })
+        res.write('foo') // Headers + first bytes sent immediately
+        sleep(idleMs).then(() => res.end('bar')) // Idle > requestTimeoutMs
+      })
+
+      const store = createBlobStore({ requestTimeoutMs: 6_000 })
+
+      const start = Date.now()
+      await expect(store.getBytes(testCid)).resolves.toEqual(
+        new Uint8Array(Buffer.from('foobar')),
+      )
+      expect(Date.now() - start).toBeGreaterThanOrEqual(idleMs)
+    }, 15_000)
+
+    it('reaps stalled downloads that never receive response headers', async () => {
+      server.handlers.push(stallHandler)
+
+      const store = createBlobStore({
+        requestTimeoutMs: 500,
+        maxAttempts: 1,
+      })
+
+      const start = Date.now()
+      await expect(store.getBytes(testCid)).rejects.toSatisfy((err) => {
+        assert(err instanceof Error)
+        expect(err.name).toBe('TimeoutError')
+        return true
+      })
+      expect(Date.now() - start).toBeLessThan(6_000)
+    })
+
+    it('reaps slow downloads mid-stream when requestTimeoutMs < 6s', async () => {
+      // @NOTE This characterizes why "requestTimeoutMs" should be kept above
+      // 6s: below that threshold, @smithy/node-http-handler arms the socket
+      // idle timeout immediately and keeps it armed while the response body
+      // is being streamed, causing slow (but legitimate) downloads to fail.
+      server.handlers.push((req, res) => {
+        req.resume()
+        res.writeHead(200, { 'content-length': '6' })
+        res.write('foo')
+        sleep(2_000).then(() => res.end('bar')) // Idle > requestTimeoutMs
+      })
+
+      const store = createBlobStore({
+        requestTimeoutMs: 500,
+        maxAttempts: 1,
+      })
+
+      await expect(store.getBytes(testCid)).rejects.toThrow()
+    })
   })
 })

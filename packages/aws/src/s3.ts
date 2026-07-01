@@ -17,7 +17,25 @@ export type S3Config = {
    * memory before each S3 request is dispatched (uploads to S3 are never
    * client-paced).
    *
-   * Defaults to `min(uploadTimeoutMs, 15_000)`.
+   * @note Do not set this below 6 seconds. For values >= 6s, the SDK's socket
+   * idle timeout is only armed if the response headers take more than 3s to
+   * arrive, so blob *downloads* streamed to slow (client-paced) consumers are
+   * unaffected. Below 6s, the timeout is armed immediately and stays armed
+   * while the response body is streamed, causing slow-but-legitimate
+   * downloads to be reaped mid-transfer (see "downloads" tests in
+   * s3.test.ts).
+   *
+   * @note Maintenance context: the 6s threshold and 3s deferral are
+   * *undocumented internals* of `@smithy/node-http-handler` (the AWS SDK's
+   * node request handler; see `setSocketTimeout` in its `set-socket-timeout`
+   * module, `DEFER_EVENT_LISTENER_TIME`). They are not part of any public API
+   * contract and could change in a future SDK release. The "downloads" tests
+   * in s3.test.ts characterize this behavior and will fail if it drifts — if
+   * they break after a dependency bump, re-read the handler source and
+   * re-evaluate the 6s floor below.
+   *
+   * Defaults to `min(uploadTimeoutMs, 15_000)`, clamped to a minimum of
+   * `6_000`.
    */
   requestTimeoutMs?: number
   /**
@@ -49,8 +67,13 @@ export class S3BlobStore implements BlobStore {
       uploadTimeoutMs = 10 * SECOND,
       // @NOTE The request timeout acts as a stall detector (socket idle
       // timeout) and should stay short even when uploadTimeoutMs is large,
-      // so that stalled S3 connections are reaped and retried quickly.
-      requestTimeoutMs = Math.min(uploadTimeoutMs, 15 * SECOND),
+      // so that stalled S3 connections are reaped and retried quickly. The 6s
+      // floor keeps the idle timeout from applying to streamed (client-paced)
+      // blob downloads (see S3Config.requestTimeoutMs).
+      requestTimeoutMs = Math.max(
+        Math.min(uploadTimeoutMs, 15 * SECOND),
+        6 * SECOND,
+      ),
       connectionTimeoutMs = 5 * SECOND,
       ...rest
     } = cfg
