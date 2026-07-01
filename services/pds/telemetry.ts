@@ -1,6 +1,5 @@
 /* eslint-env node */
 
-import { register } from 'node:module'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'

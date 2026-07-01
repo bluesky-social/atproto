@@ -14,6 +14,7 @@
     "@opentelemetry/instrumentation-undici": "^0.29.0",
     "@opentelemetry/resource-detector-container": "^0.8.10",
     "@opentelemetry/sdk-node": "^0.219.0",
+    "@opentelemetry/semantic-conventions": "^1.41.1",
     "opentelemetry-plugin-better-sqlite3": "^1.13.0"
   }
 }
