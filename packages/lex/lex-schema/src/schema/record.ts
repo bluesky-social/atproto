@@ -1,16 +1,16 @@
-import { LexMap } from '@atproto/lex-data'
+import type { LexMap } from '@atproto/lex-data'
 import {
-  $Typed,
+  type $Typed,
   $typed,
-  InferInput,
-  InferOutput,
-  LexiconRecordKey,
-  NsidString,
-  RecordKeyValue,
+  type InferInput,
+  type InferOutput,
+  type LexiconRecordKey,
+  type NsidString,
+  type RecordKeyValue,
   Schema,
-  Unknown$TypedObject,
+  type Unknown$TypedObject,
   ValidationContext,
-  Validator,
+  type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import { literal } from './literal.js'

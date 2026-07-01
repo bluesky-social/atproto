@@ -74,7 +74,7 @@ msgstr "2FA-bekräftelse"
 msgid "A local app"
 msgstr "En lokal app"
 
-#: src/lib/api.ts:466
+#: src/lib/api.ts:467
 msgid "A second authentication factor is required ({hint})"
 msgstr "En andra autentiseringsfaktor krävs ({hint})"
 
@@ -123,7 +123,8 @@ msgstr "Kontonamn"
 msgid "Account overview"
 msgstr "Kontoöversikt"
 
-#: src/authorization-page.tsx:228 src/data/account.ts:46
+#: src/authorization-page.tsx:228
+#: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Konto återaktiverat"
 
@@ -153,11 +154,12 @@ msgstr "Har du redan en kod?"
 msgid "An application on your device"
 msgstr "En applikation på din enhet"
 
-#: src/contexts/notifications.tsx:123 src/components/error-view.tsx:25
+#: src/contexts/notifications.tsx:123
+#: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "Ett fel uppstod"
 
-#: src/lib/api.ts:354
+#: src/lib/api.ts:355
 msgid "An unexpected error occurred. Please try again."
 msgstr "Ett oväntat fel uppstod. Försök igen."
 
@@ -204,7 +206,8 @@ msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Autentisera"
 
-#: src/components/consent-view.tsx:39 src/components/consent-form.tsx:84
+#: src/components/consent-view.tsx:39
+#: src/components/consent-form.tsx:84
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
@@ -302,7 +305,8 @@ msgstr "Titta i din inkorg efter bekräftelsekoden."
 msgid "Check your inbox for the verification code."
 msgstr "Titta efter verifieringskoden i din inkorg."
 
-#: src/data/password.ts:22 src/data/email.ts:23
+#: src/data/password.ts:22
+#: src/data/email.ts:23
 msgid "Check your inbox."
 msgstr "Titta i din inkorg."
 
@@ -362,7 +366,8 @@ msgstr "Ett e-postmeddelande för bekräftelse har skickats"
 msgid "Continue"
 msgstr "Fortsätt"
 
-#: src/cookie-error-page.tsx:36 src/cookie-error-page.tsx:49
+#: src/cookie-error-page.tsx:36
+#: src/cookie-error-page.tsx:49
 msgid "Cookie Error"
 msgstr "Cookie-fel"
 
@@ -386,7 +391,7 @@ msgstr "Skapa ett nytt konto"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Skapa, ändra och radera vilken publik data som helst som är kopplad till ditt konto"
 
-#: src/lib/api.ts:435
+#: src/lib/api.ts:436
 msgid "Custom domains are not supported"
 msgstr "Anpassade domäner stöds inte"
 
@@ -510,7 +515,8 @@ msgstr "Ange ditt nya lösenord"
 msgid "Enter your password"
 msgstr "Ange ditt lösenord"
 
-#: src/components/sign-in-view.tsx:92 src/components/sign-in-view.tsx:110
+#: src/components/sign-in-view.tsx:92
+#: src/components/sign-in-view.tsx:110
 msgid "Enter your username and password"
 msgstr "Ange ditt användarnamn och lösenord"
 
@@ -892,7 +898,8 @@ msgstr "Utföra autentiserade åtgärder gentemot <0>vilken tjänst som helst</0
 msgid "Please authenticate to continue"
 msgstr "Autentisera för att fortsätta"
 
-#: src/data/password.ts:28 src/data/email.ts:29
+#: src/data/password.ts:28
+#: src/data/email.ts:29
 msgid "Please check the email address and try again."
 msgstr "Kontrollera e-postadressen och försök igen."
 
@@ -904,7 +911,8 @@ msgstr "Kontrollera användarnamnet och försök igen."
 msgid "Please check your code and password, then try again."
 msgstr "Kontrollera din kod och ditt lösenord. Försök sedan igen."
 
-#: src/data/password.ts:51 src/data/email.ts:52
+#: src/data/password.ts:51
+#: src/data/email.ts:52
 msgid "Please check your reset code and try again."
 msgstr "Kontrollera din återställningskod och försök igen."
 
@@ -916,7 +924,9 @@ msgstr "Kontrollera din verifieringskod och försök igen."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Ange den säkerhetskod som har skickats till din e-postadress."
 
-#: src/data/email.ts:75 src/data/account.ts:30 src/data/account.ts:53
+#: src/data/email.ts:75
+#: src/data/account.ts:30
+#: src/data/account.ts:53
 #: src/data/account.ts:76
 msgid "Please try again in a moment."
 msgstr "Försök igen om en stund."
@@ -960,7 +970,8 @@ msgstr "Läsa ditt kontos e-postadress"
 msgid "Read your private preferences"
 msgstr "Läsa dina privata inställningar"
 
-#: src/components/sign-in-form.tsx:231 src/components/sign-in-form.tsx:236
+#: src/components/sign-in-form.tsx:231
+#: src/components/sign-in-form.tsx:236
 msgid "Remember this account on this device"
 msgstr "Kom ihåg det här kontot på den här enheten"
 
@@ -1053,7 +1064,8 @@ msgstr "Logga ut"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/components/sign-up-view.tsx:51 src/components/sign-up-view.tsx:56
+#: src/components/sign-up-view.tsx:51
+#: src/components/sign-up-view.tsx:56
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Registrera dig"
@@ -1117,35 +1129,35 @@ msgstr "Applikationen begär de behörigheter som krävs för att utföra följa
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "AT‑protokollnätverket använder en autentiserings­mekanism som gör det möjligt att entydigt identifiera användare vid kommunikation med externa tjänster. Den används vanligtvis för att hämta eller ändra data som är kopplad till ditt konto, till exempel chattmeddelanden, flöden eller modererat innehåll. Applikationen begär de behörigheter som krävs för att utföra följande autentiserade åtgärder å dina vägnar:"
 
-#: src/lib/api.ts:393
+#: src/lib/api.ts:394
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "Uppgifterna du skickade in är ogiltiga. Kontrollera formuläret och försök igen."
 
-#: src/lib/api.ts:423
+#: src/lib/api.ts:424
 msgid "The domain name is not allowed"
 msgstr "Domännamnet är inte tillåtet"
 
-#: src/lib/api.ts:493
+#: src/lib/api.ts:494
 msgid "The invite code is not valid"
 msgstr "Inbjudningskoden är ogiltig"
 
-#: src/lib/api.ts:352
+#: src/lib/api.ts:353
 msgid "The server encountered an unexpected error. Please try again."
 msgstr "Servern stötte på ett oväntat fel. Försök igen."
 
-#: src/lib/api.ts:425
+#: src/lib/api.ts:426
 msgid "The username contains inappropriate language"
 msgstr "Användarnamnet innehåller olämpligt språk"
 
-#: src/lib/api.ts:431
+#: src/lib/api.ts:432
 msgid "The username could not be resolved"
 msgstr "Användarnamnet kunde inte slås upp"
 
-#: src/lib/api.ts:429
+#: src/lib/api.ts:430
 msgid "The username is already in use"
 msgstr "Användarnamnet används redan"
 
-#: src/lib/api.ts:421
+#: src/lib/api.ts:422
 msgid "The username is invalid"
 msgstr "Användarnamnet är ogiltigt"
 
@@ -1161,19 +1173,21 @@ msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gå
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Den här applikationen begär följande behörigheter (omfång) för att få åtkomst till ditt konto:"
 
-#: src/lib/api.ts:378
+#: src/lib/api.ts:379
 msgid "This authorization request has been denied. Please try again."
 msgstr "Denna auktoriseringsbegäran har nekats. Försök igen."
 
-#: src/lib/api.ts:557
+#: src/lib/api.ts:558
 msgid "This email is already used"
 msgstr "Den här e-postadressen används redan"
 
-#: src/lib/api.ts:363 src/lib/api.ts:514 src/lib/api.ts:545
+#: src/lib/api.ts:364
+#: src/lib/api.ts:515
+#: src/lib/api.ts:546
 msgid "This sign-in session has expired"
 msgstr "Inloggningssessionen har gått ut"
 
-#: src/lib/api.ts:427
+#: src/lib/api.ts:428
 msgid "This username is reserved"
 msgstr "Det här användarnamnet är reserverat"
 
@@ -1357,7 +1371,7 @@ msgstr "Vad innebär det?"
 msgid "What is an Atmosphere Account?"
 msgstr "Vad är ett Atmosphere-konto?"
 
-#: src/lib/api.ts:529
+#: src/lib/api.ts:530
 msgid "Wrong identifier or password"
 msgstr "Fel identifierare eller lösenord"
 
@@ -1397,7 +1411,8 @@ msgstr "Du kan när som helst inaktivera ditt konto igen från den här sidan."
 msgid "You can now sign in with your new email."
 msgstr "Du kan nu logga in med din nya e-postadress."
 
-#: src/data/password.ts:45 src/components/reset-password-view.tsx:107
+#: src/data/password.ts:45
+#: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "Du kan nu logga in med ditt nya lösenord."
 

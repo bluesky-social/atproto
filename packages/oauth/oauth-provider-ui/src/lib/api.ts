@@ -1,37 +1,37 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
-import {
+import type {
   AccountSessionsInput,
-  type ApiEndpoints,
+  ApiEndpoints,
   ConfirmAccountDeletionInput,
   ConfirmEmailUpdateInput,
   ConfirmEmailVerificationInput,
-  type ConfirmResetPasswordInput,
+  ConfirmResetPasswordInput,
   DeactivateAccountInput,
-  type DidString,
-  type HandleUnavailableReason,
+  DidString,
+  HandleUnavailableReason,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailVerificationInput,
-  type InitiatePasswordResetInput,
+  InitiatePasswordResetInput,
   OAuthSessionsInput,
   ReactivateAccountInput,
   RevokeAccountSessionInput,
   RevokeOAuthSessionInput,
-  type SignInInput,
+  SignInInput,
   SignOutInput,
-  type SignUpInput,
-  type UpdateHandleInput,
-  type VerifyHandleAvailabilityInput,
-  isHandleUnavailableReason,
+  SignUpInput,
+  UpdateHandleInput,
+  VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
+import { isHandleUnavailableReason } from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
 import {
-  Json,
+  type Json,
   JsonClient,
-  JsonClientOptions,
+  type JsonClientOptions,
   JsonErrorResponse,
-  Options,
+  type Options,
 } from './json-client.ts'
 
 export type { Options } from './json-client.ts'
@@ -279,7 +279,7 @@ export class Api extends JsonClient<ApiEndpoints> {
 }
 
 export function parseApiErrorPayload(
-  payload: unknown,
+  payload: Json,
 ): OAuthErrorResponse | undefined {
   if (isOAuthErrorPayload(payload)) {
     for (const ErrorClass of [
@@ -313,14 +313,15 @@ export type OAuthErrorPayload<E extends string = string> = {
 } & Record<string, Json>
 
 export function isOAuthErrorPayload<E extends string = string>(
-  json: unknown,
+  json: Json,
   error: E,
 ): json is OAuthErrorPayload<E>
-export function isOAuthErrorPayload(json: unknown): json is OAuthErrorPayload
-export function isOAuthErrorPayload(json: unknown, error?: string): boolean {
+export function isOAuthErrorPayload(json: Json): json is OAuthErrorPayload
+export function isOAuthErrorPayload(json: Json, error?: string): boolean {
   return (
     json != null &&
     typeof json === 'object' &&
+    'error' in json &&
     typeof json['error'] === 'string' &&
     (error === undefined || json['error'] === error) &&
     (json['error_description'] === undefined ||

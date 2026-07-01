@@ -1,13 +1,22 @@
 {
-  "extends": ["../../../tsconfig/node.json"],
+  "extends": [
+    "../../../tsconfig/node.tsconfig.json",
+    "../../../tsconfig/verbatim.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
+  "references": [
+    { "path": "../../crypto/tsconfig.build.json" },
+    { "path": "../../internal/did-resolver/tsconfig.build.json" },
+    { "path": "../../repo/tsconfig.build.json" },
+    { "path": "../../syntax/tsconfig.build.json" },
+    { "path": "../lex-client/tsconfig.build.json" },
+    { "path": "../lex-data/tsconfig.build.json" },
+    { "path": "../lex-document/tsconfig.build.json" },
+    { "path": "../lex-schema/tsconfig.build.json" },
+  ],
   "compilerOptions": {
-    "noImplicitAny": true,
-    "importHelpers": true,
-    "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"],
   },
 }

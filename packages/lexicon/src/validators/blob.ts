@@ -1,6 +1,7 @@
 import { BlobRef } from '../blob-refs.js'
 import { Lexicons } from '../lexicons.js'
-import { LexUserType, ValidationError, ValidationResult } from '../types.js'
+import type { LexUserType, ValidationResult } from '../types.js'
+import { ValidationError } from '../types.js'
 
 export function blob(
   lexicons: Lexicons,

@@ -100,8 +100,7 @@ export type FeedItem = {
   post: ItemRef
   repost?: ItemRef
   /**
-   * If true, overrides the `reason` with `app.bsky.feed.defs#reasonPin`. Used
-   * only in author feeds.
+   * If true, overrides the `reason` with `app.bsky.feed.defs#reasonPin`.
    */
   authorPinned?: boolean
 }

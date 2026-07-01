@@ -1,8 +1,18 @@
 {
-  "extends": "../../../tsconfig/isomorphic.json",
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "references": [
+    { "path": "../../did/tsconfig.build.json" },
+    { "path": "../../internal/did-resolver/tsconfig.build.json" },
+    { "path": "../../internal/handle-resolver/tsconfig.build.json" },
+    { "path": "../../internal/simple-store/tsconfig.build.json" },
+    { "path": "../jwk-webcrypto/tsconfig.build.json" },
+    { "path": "../jwk/tsconfig.build.json" },
+    { "path": "../oauth-client/tsconfig.build.json" },
+    { "path": "../oauth-types/tsconfig.build.json" },
+  ],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "include": ["./src"],
 }

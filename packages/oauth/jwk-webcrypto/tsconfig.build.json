@@ -1,8 +1,12 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "references": [
+    { "path": "../jwk-jose/tsconfig.build.json" },
+    { "path": "../jwk/tsconfig.build.json" },
+  ],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "include": ["./src"],
 }

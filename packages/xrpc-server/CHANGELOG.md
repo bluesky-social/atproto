@@ -1,5 +1,20 @@
 # @atproto/xrpc-server
 
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies [[`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63), [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63)]:
+  - @atproto/lex-client@0.2.0
+
+## 0.11.4
+
+### Patch Changes
+
+- [#5156](https://github.com/bluesky-social/atproto/pull/5156) [`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add more details to the xrpc-server log errors
+
+- [#5156](https://github.com/bluesky-social/atproto/pull/5156) [`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add explicit error message when using invalid HTTP verb with xrpc methods defined using `.add()`
+
 ## 0.11.3
 
 ### Patch Changes

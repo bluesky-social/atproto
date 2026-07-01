@@ -13,9 +13,17 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/crypto"
   },
-  "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "engines": {
     "node": ">=22"
@@ -29,11 +37,8 @@
     "@atproto/common": "workspace:^",
     "jest": "^30.0.0"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

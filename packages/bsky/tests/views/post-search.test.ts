@@ -5,6 +5,7 @@ import type { DidString } from '@atproto/syntax'
 import { DatabaseSchema } from '../../src/index.js'
 
 const TAG_HIDE = 'hide'
+const TAG_ALWAYS_HIDE = 'always-hide'
 
 describe('appview search', () => {
   let network: TestNetwork
@@ -14,6 +15,10 @@ describe('appview search', () => {
   let post0: Awaited<ReturnType<SeedClient['post']>>
   let post1: Awaited<ReturnType<SeedClient['post']>>
   let post2: Awaited<ReturnType<SeedClient['post']>>
+  // 'unicorn' term, kept separate from the 'doggo' posts above so the
+  // always-hide cases don't perturb the existing expectations.
+  let unicornPost: Awaited<ReturnType<SeedClient['post']>>
+  let unicornPostAlwaysHidden: Awaited<ReturnType<SeedClient['post']>>
   let allResults: string[]
   let nonTaggedResults: string[]
 
@@ -27,6 +32,7 @@ describe('appview search', () => {
       dbPostgresSchema: 'bsky_views_search',
       bsky: {
         searchTagsHide: new Set([TAG_HIDE]),
+        searchTagsHideAll: new Set([TAG_ALWAYS_HIDE]),
       },
     })
     agent = network.bsky.getAgent()
@@ -43,9 +49,17 @@ describe('appview search', () => {
     post2 = await sc.post(alice, 'cute doggo')
     await network.processAll()
 
+    unicornPost = await sc.post(alice, 'a unicorn')
+    unicornPostAlwaysHidden = await sc.post(alice, 'another unicorn')
+    await network.processAll()
+
     await createTag(network.bsky.db.db, {
       uri: post1.ref.uriStr,
       val: TAG_HIDE,
+    })
+    await createTag(network.bsky.db.db, {
+      uri: unicornPostAlwaysHidden.ref.uriStr,
+      val: TAG_ALWAYS_HIDE,
     })
 
     allResults = [post2.ref.uriStr, post1.ref.uriStr, post0.ref.uriStr]
@@ -178,6 +192,73 @@ describe('appview search', () => {
 
       expect(resTop.data.posts.map((p) => p.uri)).toStrictEqual(allResults)
       expect(resLatest.data.posts.map((p) => p.uri)).toStrictEqual(allResults)
+    })
+  })
+
+  describe('searchTagsHideAll', () => {
+    // Unlike searchTagsHide, an always-hide tag is filtered from every
+    // surface: both 'top' and 'latest', and even when an author is specified.
+    it.each(['top', 'latest'] as const)(
+      `with '%s' sort, hides always-hidden posts`,
+      async (sort) => {
+        const res = await agent.app.bsky.feed.searchPosts(
+          { q: 'unicorn', sort },
+          {
+            headers: await network.serviceHeaders(
+              carol,
+              ids.AppBskyFeedSearchPosts,
+            ),
+          },
+        )
+        expect(res.data.posts.map((p) => p.uri)).toStrictEqual([
+          unicornPost.ref.uriStr,
+        ])
+      },
+    )
+
+    it.each(['top', 'latest'] as const)(
+      `with '%s' sort, hides always-hidden posts even when specifying author`,
+      async (sort) => {
+        const res = await agent.app.bsky.feed.searchPosts(
+          { q: 'unicorn', author: alice, sort },
+          {
+            headers: await network.serviceHeaders(
+              carol,
+              ids.AppBskyFeedSearchPosts,
+            ),
+          },
+        )
+        expect(res.data.posts.map((p) => p.uri)).toStrictEqual([
+          unicornPost.ref.uriStr,
+        ])
+      },
+    )
+
+    it('includes always-hidden posts from the viewer', async () => {
+      const res = await agent.app.bsky.feed.searchPosts(
+        { q: 'unicorn', sort: 'latest' },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedSearchPosts,
+          ),
+        },
+      )
+      expect(res.data.posts.map((p) => p.uri)).toStrictEqual([
+        unicornPostAlwaysHidden.ref.uriStr,
+        unicornPost.ref.uriStr,
+      ])
+    })
+
+    it('mod service finds even always-hidden posts', async () => {
+      const res = await ozoneAgent.app.bsky.feed.searchPosts(
+        { q: 'unicorn', sort: 'latest' },
+        { headers: await network.ozone.modHeaders(ids.AppBskyFeedSearchPosts) },
+      )
+      expect(res.data.posts.map((p) => p.uri)).toStrictEqual([
+        unicornPostAlwaysHidden.ref.uriStr,
+        unicornPost.ref.uriStr,
+      ])
     })
   })
 })

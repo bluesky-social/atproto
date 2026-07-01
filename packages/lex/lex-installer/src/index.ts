@@ -1,9 +1,8 @@
 import { isEnoentError, readJsonFile } from './fs.js'
-import { LexInstaller, LexInstallerOptions } from './lex-installer.js'
-import {
-  LexiconsManifest,
-  lexiconsManifestSchema,
-} from './lexicons-manifest.js'
+import type { LexInstallerOptions } from './lex-installer.js'
+import { LexInstaller } from './lex-installer.js'
+import type { LexiconsManifest } from './lexicons-manifest.js'
+import { lexiconsManifestSchema } from './lexicons-manifest.js'
 
 /**
  * Options for the {@link install} function.

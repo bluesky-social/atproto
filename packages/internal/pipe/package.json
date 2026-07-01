@@ -1,9 +1,6 @@
 {
   "name": "@atproto-labs/pipe",
   "version": "0.2.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Library for combining multiple functions into a single function.",
   "keywords": [
@@ -23,7 +20,9 @@
       "default": "./dist/index.js"
     }
   },
-  "devDependencies": {},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsgo --build tsconfig.json"
   }

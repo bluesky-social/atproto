@@ -1,9 +1,23 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
+  "references": [
+    { "path": "../../did/tsconfig.build.json" },
+    { "path": "../../internal/did-resolver/tsconfig.build.json" },
+    { "path": "../../internal/fetch/tsconfig.build.json" },
+    { "path": "../../internal/handle-resolver/tsconfig.build.json" },
+    { "path": "../../internal/identity-resolver/tsconfig.build.json" },
+    { "path": "../../internal/simple-store-memory/tsconfig.build.json" },
+    { "path": "../../internal/simple-store/tsconfig.build.json" },
+    { "path": "../../xrpc/tsconfig.build.json" },
+    { "path": "../jwk/tsconfig.build.json" },
+    { "path": "../oauth-types/tsconfig.build.json" },
+  ],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    // @TODO Change to true and fix implicit any errors
+    "noImplicitAny": false,
   },
-  "include": ["./src"],
-  "exclude": ["**/*.test.ts"],
 }

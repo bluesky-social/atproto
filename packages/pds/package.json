@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.10",
+  "version": "0.5.12",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -13,22 +13,21 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/pds"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons",
-    "prebuild": "pnpm run codegen",
-    "build": "tsgo --build tsconfig.build.json",
-    "postbuild": "node ./build.templates.cjs",
-    "dev": "node ./build.templates.cjs --watch",
-    "pretest": "puppeteer browsers install chrome",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
-    "test:sqlite": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:sqlite-only": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns /tests/proxied/*",
-    "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
@@ -94,15 +93,20 @@
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
     "puppeteer": "^23.11.1",
-    "ts-node": "^10.8.2",
     "ws": "^8.12.0"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
+  "scripts": {
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "codegen:templates": "node ./build.templates.cjs",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsgo --build tsconfig.build.json",
+    "dev": "node ./build.templates.cjs --watch",
+    "pretest": "puppeteer browsers install chrome",
+    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
+    "test:sqlite": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:sqlite-only": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns /tests/proxied/*",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
+    "migration:create": "node ./bin/migration-create.ts"
   }
 }

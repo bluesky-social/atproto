@@ -1,4 +1,4 @@
-import { Base64Alphabet } from './uint8array-base64.js'
+import type { Base64Alphabet } from './uint8array-base64.js'
 import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
 import {
   fromBase64Native,

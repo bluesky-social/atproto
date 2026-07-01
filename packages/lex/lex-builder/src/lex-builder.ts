@@ -2,15 +2,16 @@ import assert from 'node:assert'
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { IndentationText, Project } from 'ts-morph'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
-import { BuildFilterOptions, buildFilter } from './filter.js'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { BuildFilterOptions } from './filter.js'
+import { buildFilter } from './filter.js'
 import { FilteredIndexer } from './filtered-indexer.js'
-import { Formatter, FormatterOptions } from './formatter.js'
-import { LexDefBuilder, LexDefBuilderOptions } from './lex-def-builder.js'
-import {
-  LexiconDirectoryIndexer,
-  LexiconDirectoryIndexerOptions,
-} from './lexicon-directory-indexer.js'
+import type { FormatterOptions } from './formatter.js'
+import { Formatter } from './formatter.js'
+import type { LexDefBuilderOptions } from './lex-def-builder.js'
+import { LexDefBuilder } from './lex-def-builder.js'
+import type { LexiconDirectoryIndexerOptions } from './lexicon-directory-indexer.js'
+import { LexiconDirectoryIndexer } from './lexicon-directory-indexer.js'
 import { asNamespaceExport } from './ts-lang.js'
 
 /**

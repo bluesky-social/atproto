@@ -1,8 +1,13 @@
 {
-  "extends": ["../../../tsconfig/node.json"],
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
+  "include": ["./src"],
+  "references": [
+    { "path": "../../did/tsconfig.build.json" },
+    { "path": "../fetch-node/tsconfig.build.json" },
+    { "path": "../handle-resolver/tsconfig.build.json" },
+  ],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "include": ["./src"],
 }

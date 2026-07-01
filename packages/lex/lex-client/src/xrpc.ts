@@ -1,24 +1,30 @@
-import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
+import { isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
-import {
+import type {
   InferInput,
   InferPayload,
   Main,
   NsidString,
   Params,
+  Restricted,
+} from '@atproto/lex-schema'
+import {
   Payload,
   Procedure,
   Query,
-  Restricted,
   Subscription,
   getMain,
 } from '@atproto/lex-schema'
-import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.js'
-import { XrpcResponse, XrpcResponseOptions } from './response.js'
-import { BinaryBodyInit } from './types.js'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
+import { XrpcFetchError, asXrpcFailure } from './errors.js'
+import type { XrpcResponseOptions } from './response.js'
+import { XrpcResponse } from './response.js'
+import type { BinaryBodyInit } from './types.js'
+import type { XrpcRequestHeadersOptions } from './util.js'
 import {
-  XrpcRequestHeadersOptions,
   asUint8ArrayArrayBuffer,
   buildXrpcRequestHeaders,
   isAsyncIterable,

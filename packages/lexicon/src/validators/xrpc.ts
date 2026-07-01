@@ -1,9 +1,6 @@
 import { Lexicons } from '../lexicons.js'
-import {
-  LexXrpcParameters,
-  ValidationError,
-  ValidationResult,
-} from '../types.js'
+import { ValidationError, isObj } from '../types.js'
+import type { LexXrpcParameters, ValidationResult } from '../types.js'
 import { array } from './complex.js'
 import * as PrimitiveValidators from './primitives.js'
 
@@ -14,7 +11,7 @@ export function params(
   val: unknown,
 ): ValidationResult<Record<string, unknown>> {
   // type
-  const value = val && typeof val === 'object' ? val : {}
+  const value: Record<string, unknown> = isObj(val) ? val : {}
 
   const requiredProps = new Set(def.required ?? [])
 

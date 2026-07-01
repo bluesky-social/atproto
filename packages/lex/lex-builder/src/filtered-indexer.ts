@@ -1,5 +1,5 @@
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
-import { Filter } from './filter.js'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { Filter } from './filter.js'
 
 /**
  * A lexicon indexer that filters documents based on a provided filter.

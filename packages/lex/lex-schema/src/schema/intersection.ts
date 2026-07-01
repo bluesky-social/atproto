@@ -1,8 +1,8 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  Simplify,
+  type Simplify,
   ValidationContext,
 } from '../core.js'
 import { DictSchema } from './dict.js'

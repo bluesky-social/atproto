@@ -1,14 +1,14 @@
 import { validateCidString } from '@atproto/lex-data'
 import {
-  AtIdentifierString,
-  AtUriString,
-  DatetimeString,
-  DidString,
-  HandleString,
-  NsidString,
-  RecordKeyString,
-  TidString,
-  UriString,
+  type AtIdentifierString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  type NsidString,
+  type RecordKeyString,
+  type TidString,
+  type UriString,
   isAtIdentifierString,
   isAtUriString,
   isDatetimeString,
@@ -21,7 +21,7 @@ import {
   isValidTid,
   isValidUri,
 } from '@atproto/syntax'
-import { CheckFn } from '../util/assertion-util.js'
+import type { CheckFn } from '../util/assertion-util.js'
 
 // -----------------------------------------------------------------------------
 // Individual string format types and type guards

@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-resolver",
-  "version": "0.1.2",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.1.3",
   "license": "MIT",
   "description": "Lexicon document resolver utility for AT Lexicons",
   "keywords": [
@@ -19,10 +16,6 @@
     "directory": "packages/lex/lex-resolver"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
   ],
@@ -33,6 +26,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/did-resolver": "workspace:^",
@@ -50,7 +46,8 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "prebuild": "node ./scripts/lex-build.mjs",
+    "codegen:lex": "node ./scripts/lex-build.mjs",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }
