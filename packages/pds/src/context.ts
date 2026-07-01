@@ -141,6 +141,7 @@ export class AppContext {
             forcePathStyle: cfg.blobstore.forcePathStyle,
             credentials: cfg.blobstore.credentials,
             uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
+            requestTimeoutMs: cfg.blobstore.requestTimeoutMs,
           })
         : DiskBlobStore.creator(
             cfg.blobstore.location,

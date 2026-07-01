@@ -69,6 +69,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       provider: 's3',
       bucket: env.blobstoreS3Bucket,
       uploadTimeoutMs: env.blobstoreS3UploadTimeoutMs || 20000,
+      requestTimeoutMs: env.blobstoreS3RequestTimeoutMs,
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
@@ -436,6 +437,7 @@ export type S3BlobstoreConfig = {
   endpoint?: string
   forcePathStyle?: boolean
   uploadTimeoutMs?: number
+  requestTimeoutMs?: number
   credentials?: {
     accessKeyId: string
     secretAccessKey: string
