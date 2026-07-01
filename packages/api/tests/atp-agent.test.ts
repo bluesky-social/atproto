@@ -1586,7 +1586,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1660,7 +1659,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1735,7 +1733,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1806,7 +1803,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1877,7 +1873,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1948,7 +1943,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -2030,7 +2024,6 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two', 'three'],
           nuxs: [],
-          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -2050,7 +2043,6 @@ describe('agent', () => {
         [
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
-            isBetaUser: false,
             queuedNudges: ['two', 'three'],
           },
           {
