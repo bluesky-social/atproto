@@ -11,6 +11,9 @@ describe(isValidLanguage, () => {
     expect(isValidLanguage('sl-IT-nedis')).toEqual(true)
     expect(isValidLanguage('mn-Cyrl-MN')).toEqual(true)
     expect(isValidLanguage('x-fr-CH')).toEqual(true)
+    // private-use subtags are case-insensitive (RFC 5646 §2.1.1)
+    expect(isValidLanguage('X-fr-CH')).toEqual(true)
+    expect(isValidLanguage('de-X-foo')).toEqual(true)
     expect(
       isValidLanguage('en-GB-boont-r-extended-sequence-x-private'),
     ).toEqual(true)
@@ -56,6 +59,14 @@ describe(parseLanguageString, () => {
     })
     expect(parseLanguageString('x-fr-CH')).toEqual({
       privateUse: 'x-fr-CH',
+    })
+    // private-use subtags are case-insensitive (RFC 5646 §2.1.1)
+    expect(parseLanguageString('X-fr-CH')).toEqual({
+      privateUse: 'X-fr-CH',
+    })
+    expect(parseLanguageString('de-X-foo')).toEqual({
+      language: 'de',
+      privateUse: 'X-foo',
     })
     expect(
       parseLanguageString('en-GB-boont-r-extended-sequence-x-private'),
