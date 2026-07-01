@@ -53,8 +53,13 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function throwAbortAsUpstreamError(err: unknown): never {
-  if (err?.['name'] === 'AbortError') {
-    throw new UpstreamTimeoutError('Operation timed out, please try again.')
+  // Blob store timeouts surface as AbortError (total upload timeout) or
+  // TimeoutError (stalled connection), possibly wrapped as an error cause
+  // (e.g. S3BlobStore's "Blob upload timed out" error).
+  for (let e = err; e instanceof Error; e = e.cause) {
+    if (e.name === 'AbortError' || e.name === 'TimeoutError') {
+      throw new UpstreamTimeoutError('Operation timed out, please try again.')
+    }
   }
   throw err
 }

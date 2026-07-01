@@ -9,12 +9,28 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 export type S3Config = {
   bucket: string
   /**
-   * The maximum time any request to S3 (including individual blob chunks
-   * uploads) can take, in milliseconds.
+   * The maximum time any single HTTP request to S3 can remain idle (socket
+   * idle timeout), in milliseconds. This acts as a stall detector: a stalled
+   * or dead connection is reaped after this delay and the request is retried
+   * by the SDK. It should be kept short, independently of
+   * {@link S3Config.uploadTimeoutMs}, because blob bytes are buffered in
+   * memory before each S3 request is dispatched (uploads to S3 are never
+   * client-paced).
+   *
+   * Defaults to `min(uploadTimeoutMs, 15_000)`.
    */
   requestTimeoutMs?: number
   /**
-   * The maximum total time a blob upload can take, in milliseconds.
+   * The maximum time establishing a connection to S3 can take, in
+   * milliseconds.
+   *
+   * Defaults to 5_000.
+   */
+  connectionTimeoutMs?: number
+  /**
+   * The maximum total time a blob upload can take, in milliseconds. Since
+   * uploaded bytes are streamed from the client, this timeout should be large
+   * enough to accommodate slow clients uploading large blobs.
    */
   uploadTimeoutMs?: number
 } & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
@@ -31,7 +47,11 @@ export class S3BlobStore implements BlobStore {
     const {
       bucket,
       uploadTimeoutMs = 10 * SECOND,
-      requestTimeoutMs = uploadTimeoutMs,
+      // @NOTE The request timeout acts as a stall detector (socket idle
+      // timeout) and should stay short even when uploadTimeoutMs is large,
+      // so that stalled S3 connections are reaped and retried quickly.
+      requestTimeoutMs = Math.min(uploadTimeoutMs, 15 * SECOND),
+      connectionTimeoutMs = 5 * SECOND,
       ...rest
     } = cfg
     this.bucket = bucket
@@ -41,9 +61,14 @@ export class S3BlobStore implements BlobStore {
       apiVersion: '2006-03-01',
       // Ensures that all requests timeout under "requestTimeoutMs".
       //
-      // @NOTE This will also apply to the upload of each individual chunk
-      // when using Upload from @aws-sdk/lib-storage.
-      requestHandler: { requestTimeout: requestTimeoutMs },
+      // @NOTE This will also apply to the upload of each individual blob
+      // chunk when using Upload from @aws-sdk/lib-storage. This is fine
+      // because chunks are buffered in memory before being sent, meaning that
+      // requests to S3 are not client-paced.
+      requestHandler: {
+        requestTimeout: requestTimeoutMs,
+        connectionTimeout: connectionTimeoutMs,
+      },
     })
   }
 
@@ -96,8 +121,13 @@ export class S3BlobStore implements BlobStore {
     try {
       await upload.done()
     } catch (err) {
-      // Translate aws-sdk's abort error to something more specific
-      if (err instanceof Error && err.name === 'AbortError') {
+      // Translate aws-sdk's abort error (total upload timeout) and timeout
+      // errors (stalled connections, after the SDK exhausted its retries) to
+      // something more specific
+      if (
+        err instanceof Error &&
+        (err.name === 'AbortError' || err.name === 'TimeoutError')
+      ) {
         throw new Error('Blob upload timed out', { cause: err })
       }
 
