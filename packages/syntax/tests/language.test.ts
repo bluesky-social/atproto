@@ -22,16 +22,15 @@ describe(isValidLanguage, () => {
     expect(isValidLanguage('i-klingon')).toEqual(true)
     expect(isValidLanguage('sl-rozaj-biske')).toEqual(true)
     expect(isValidLanguage('en-u-co-phonebk-t-en-US')).toEqual(true)
+    // duplicate variant / extension singleton subtags are well-formed
+    // syntax (§2.1) — semantic rejection is left to parseLanguageString
+    expect(isValidLanguage('de-DE-1901-1901')).toEqual(true)
+    expect(isValidLanguage('en-a-foo-a-bar')).toEqual(true)
     // invalid
     expect(isValidLanguage('')).toEqual(false)
     expect(isValidLanguage('x')).toEqual(false)
     expect(isValidLanguage('de-CH-')).toEqual(false)
     expect(isValidLanguage('i-bad-grandfathered')).toEqual(false)
-    // duplicate variant / extension singleton subtags (RFC 5646 §4.1)
-    expect(isValidLanguage('de-DE-1901-1901')).toEqual(false)
-    expect(isValidLanguage('en-rozaj-ROZAJ')).toEqual(false)
-    expect(isValidLanguage('en-a-foo-a-bar')).toEqual(false)
-    expect(isValidLanguage('en-u-co-phonebk-U-ca-buddhist')).toEqual(false)
   })
 })
 

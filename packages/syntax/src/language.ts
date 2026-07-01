@@ -102,10 +102,14 @@ export function parseLanguageString(input: string): LanguageTag | null {
 }
 
 /**
- * Validates well-formed BCP 47 syntax
+ * Validates well-formed BCP 47 syntax.
+ *
+ * Only checks the ABNF grammar of RFC 5646 §2.1. Semantic constraints from
+ * §4.1 (e.g. no repeated variant subtags) are NOT enforced — use
+ * {@link parseLanguageString} for strict validation.
  *
  * @see {@link https://www.rfc-editor.org/rfc/rfc5646.html#section-2.1}
  */
 export function isValidLanguage(input: string): boolean {
-  return matchValidLanguage(input) !== null
+  return BCP47_REGEXP.test(input)
 }
