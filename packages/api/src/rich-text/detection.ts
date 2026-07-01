@@ -1,4 +1,5 @@
 import TLDs from 'tlds' with { type: 'json' }
+import { graphemeLen } from '@atproto/common-web'
 import { AppBskyRichtextFacet } from '../client/index.js'
 import { UnicodeString } from './unicode.js'
 import {
@@ -86,7 +87,10 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       // strip ending punctuation and any spaces
       tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
 
-      if (tag.length === 0 || tag.length > 64) continue
+      // tag.length (UTF-16) is always >= graphemeLen(tag), so only pay for
+      // the grapheme count when the UTF-16 length already exceeds the limit.
+      if (tag.length === 0 || (tag.length > 64 && graphemeLen(tag) > 64))
+        continue
 
       const index = match.index + leading.length
 
