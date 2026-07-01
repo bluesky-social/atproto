@@ -1,5 +1,15 @@
 # @atproto/lex-client
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `list()` interface to return `{ valid: boolean; value: InferredType }`
+
+### Patch Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `listAll()` method
+
 ## 0.1.5
 
 ### Patch Changes

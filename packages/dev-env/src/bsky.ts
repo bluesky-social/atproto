@@ -83,6 +83,7 @@ export class TestBsky {
       maxThreadParents: cfg.maxThreadParents ?? 50,
       disableSsrfProtection: true,
       searchTagsHide: new Set(),
+      searchTagsHideAll: new Set(),
       threadTagsBumpDown: new Set(),
       threadTagsHide: new Set(),
       visibilityTagHide: '',

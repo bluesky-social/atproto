@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.5.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.1.6
+  - @atproto/xrpc-server@0.11.5
+  - @atproto/oauth-provider@0.19.7
+  - @atproto-labs/xrpc-utils@0.1.4
+
 ## 0.5.11
 
 ### Patch Changes
