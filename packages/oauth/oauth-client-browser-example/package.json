@@ -46,6 +46,7 @@
     "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/oauth-client-browser": "workspace:^",
+    "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.1.3",
     "@tanstack/react-query": "^5.71.10",
     "@types/react": "^19.0.10",

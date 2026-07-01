@@ -14,7 +14,7 @@ export const PLC_DIRECTORY_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2582' : undefined
 export const HANDLE_RESOLVER_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2584' : 'https://bsky.social'
-export const SIGN_UP_URL_DEFAULT =
+export const PDS_OPERATOR_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2583' : 'https://bsky.social'
 export const BSKY_API_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2584' : 'https://api.bsky.app'
@@ -32,7 +32,10 @@ export const HANDLE_RESOLVER_URL = getParam(
   'handle_resolver',
   HANDLE_RESOLVER_URL_DEFAULT,
 )
-export const SIGN_UP_URL = getParam('sign_up_url', SIGN_UP_URL_DEFAULT)
+export const PDS_OPERATOR_URL = getParam(
+  'pds_operator_url',
+  PDS_OPERATOR_URL_DEFAULT,
+)
 
 export const OAUTH_SCOPE_DEFAULT: string =
   ENV === 'development'
@@ -79,7 +82,15 @@ export const LOOPBACK_CANONICAL_LOCATION = Object.assign(
       ...(HANDLE_RESOLVER_URL !== HANDLE_RESOLVER_URL_DEFAULT && {
         handle_resolver: HANDLE_RESOLVER_URL,
       }),
-      ...(SIGN_UP_URL !== SIGN_UP_URL_DEFAULT && { sign_up_url: SIGN_UP_URL }),
+      ...(PDS_OPERATOR_URL !== PDS_OPERATOR_URL_DEFAULT && {
+        pds_operator_url: PDS_OPERATOR_URL,
+      }),
+      ...(BSKY_API_URL !== BSKY_API_URL_DEFAULT && {
+        bsky_api_url: BSKY_API_URL,
+      }),
+      ...(BSKY_API_DID !== BSKY_API_DID_DEFAULT && {
+        bsky_api_did: BSKY_API_DID,
+      }),
       ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
     }).toString(),
   },

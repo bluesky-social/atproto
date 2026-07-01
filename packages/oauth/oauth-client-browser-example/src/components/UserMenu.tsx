@@ -1,20 +1,30 @@
+import {
+  ArrowSquareOutIcon,
+  ClipboardIcon,
+  UserGearIcon,
+} from '@phosphor-icons/react'
+import { PDS_OPERATOR_URL } from '../constants.ts'
 import { app, com } from '../lexicons.ts'
+import { useAuthenticatedClient } from '../providers/AuthenticationProvider.tsx'
 import {
   useOAuthContext,
   useOAuthSession,
 } from '../providers/OAuthProvider.tsx'
+import { useGetTokenInfoQuery } from '../queries/use-get-token-info-query.ts'
 import { useLexQuery } from '../queries/use-lex-query.ts'
 import { useLexRecord } from '../queries/use-lex-record.ts'
 import { ButtonDropdown } from './ButtonDropdown.tsx'
-import { ClipboardIcon, SquareArrowTopRightIcon } from './Icons.tsx'
 
 export function UserMenu() {
   const { signOut } = useOAuthContext()
+  const client = useAuthenticatedClient()
   const session = useOAuthSession()
 
-  const profileQuery = useLexRecord(app.bsky.actor.profile.main)
-  const sessionQuery = useLexQuery(com.atproto.server.getSession.main)
+  const tokenInfoQuery = useGetTokenInfoQuery()
+  const profileQuery = useLexRecord(client, app.bsky.actor.profile)
+  const sessionQuery = useLexQuery(client, com.atproto.server.getSession)
 
+  const iss = tokenInfoQuery.data?.iss
   const displayName = profileQuery.data?.value?.displayName
   const handle = sessionQuery.data?.body.handle
 
@@ -33,18 +43,29 @@ export function UserMenu() {
               label: (
                 <>
                   <span className="flex-1">{session.did}</span>
-                  <ClipboardIcon className="w-4" />
+                  <ClipboardIcon weight="bold" className="size-4" />
                 </>
               ),
               onClick: () => {
                 navigator.clipboard.writeText(session.did)
               },
             },
+            iss === PDS_OPERATOR_URL && {
+              label: (
+                <>
+                  <span className="flex-1">Account manager</span>
+                  <UserGearIcon weight="bold" className="size-4" />
+                </>
+              ),
+              onClick: () => {
+                window.open(`${iss}/account`, '_blank')
+              },
+            },
             {
               label: (
                 <>
                   <span className="flex-1">Profile</span>
-                  <SquareArrowTopRightIcon className="w-4" />
+                  <ArrowSquareOutIcon weight="bold" className="size-4" />
                 </>
               ),
               onClick: () => {

@@ -1,10 +1,12 @@
 import { com } from '../lexicons.ts'
+import { useAuthenticatedClient } from '../providers/AuthenticationProvider.tsx'
 import { useLexQuery } from '../queries/use-lex-query.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function SessionInfo() {
-  const result = useLexQuery(com.atproto.server.getSession.main)
+  const client = useAuthenticatedClient()
+  const result = useLexQuery(client, com.atproto.server.getSession)
 
   return (
     <div>

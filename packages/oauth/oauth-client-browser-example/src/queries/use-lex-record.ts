@@ -1,22 +1,23 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
-import { GetOptions, GetOutput, XrpcError, l } from '@atproto/lex'
-import { useBskyClient } from '../providers/BskyClientProvider.tsx'
+import { Client, GetOptions, GetOutput, XrpcError, l } from '@atproto/lex'
 
 export function useLexRecord<S extends l.RecordSchema>(
+  client: Client,
   ns: NonNullable<unknown> extends GetOptions<S>
     ? S | { main: S }
     : l.Restricted<'This record schema requires a "rkey" argument'>,
 ): UseQueryResult<GetOutput<S>>
 export function useLexRecord<S extends l.RecordSchema>(
+  client: Client,
   ns: S | { main: S },
   options: GetOptions<S>,
 ): UseQueryResult<GetOutput<S>>
 export function useLexRecord<S extends l.RecordSchema>(
+  client: Client,
   ns: S | { main: S },
   options: GetOptions<S> = {} as GetOptions<S>,
 ): UseQueryResult<GetOutput<S>> {
   const schema = 'main' in ns ? ns.main : ns
-  const client = useBskyClient()
 
   return useQuery({
     queryKey: [
