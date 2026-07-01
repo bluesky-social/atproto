@@ -83,7 +83,13 @@ export const LOOPBACK_CANONICAL_LOCATION = Object.assign(
         handle_resolver: HANDLE_RESOLVER_URL,
       }),
       ...(PDS_OPERATOR_URL !== PDS_OPERATOR_URL_DEFAULT && {
-        sign_up_url: PDS_OPERATOR_URL,
+        pds_operator_url: PDS_OPERATOR_URL,
+      }),
+      ...(BSKY_API_URL !== BSKY_API_URL_DEFAULT && {
+        bsky_api_url: BSKY_API_URL,
+      }),
+      ...(BSKY_API_DID !== BSKY_API_DID_DEFAULT && {
+        bsky_api_did: BSKY_API_DID,
       }),
       ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
     }).toString(),
