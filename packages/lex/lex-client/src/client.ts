@@ -282,6 +282,8 @@ export type UploadBlobOptions = Omit<XrpcOptions<typeof uploadBlob>, 'body'>
 
 export type GetBlobOptions = Omit<XrpcOptions<typeof getBlob>, 'params'>
 
+const xrpcDefaultHeaderOptOut = '__atproto_client_default_header_opt_out__'
+
 /**
  * Type-safe options for {@link Client.create}, combining record options with key requirements.
  * @typeParam T - The record schema type
@@ -417,8 +419,8 @@ export class Client implements Agent {
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent = buildAgent(agent)
-    this.service = options.service
-    this.labelers = new Set(options.labelers)
+    this.service = options.service ?? undefined
+    this.labelers = new Set(options.labelers ?? undefined)
     this.headers = new Headers(options.headers)
     this.xrpcDefaults = Object.freeze({
       validateRequest: options.validateRequest ?? false,
@@ -497,15 +499,26 @@ export class Client implements Agent {
     path: `/${string}`,
     init: RequestInit,
   ): Promise<Response> {
+    const requestHeaders = new Headers(init.headers)
+    const skipService =
+      requestHeaders.get('atproto-proxy') === xrpcDefaultHeaderOptOut
+    const skipLabelers =
+      requestHeaders.get('atproto-accept-labelers') === xrpcDefaultHeaderOptOut
+
+    if (skipService) requestHeaders.delete('atproto-proxy')
+    if (skipLabelers) requestHeaders.delete('atproto-accept-labelers')
+
     const headers = buildXrpcRequestHeaders({
-      headers: init.headers,
-      service: this.service,
-      labelers: [
-        ...(this.constructor as typeof Client).appLabelers.map(
-          (l) => `${l};redact` as const,
-        ),
-        ...this.labelers,
-      ],
+      headers: requestHeaders,
+      service: skipService ? undefined : this.service,
+      labelers: skipLabelers
+        ? undefined
+        : [
+            ...(this.constructor as typeof Client).appLabelers.map(
+              (l) => `${l};redact` as const,
+            ),
+            ...this.labelers,
+          ],
     })
 
     // Incoming headers take precedence
@@ -559,7 +572,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M>> {
-    return xrpc(this, ns, applyDefaults(options, this.xrpcDefaults))
+    return xrpc(this, ns, this.applyXrpcDefaults(options))
   }
 
   /**
@@ -598,7 +611,28 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
-    return xrpcSafe(this, ns, applyDefaults(options, this.xrpcDefaults))
+    return xrpcSafe(this, ns, this.applyXrpcDefaults(options))
+  }
+
+  private applyXrpcDefaults<const M extends Query | Procedure>(
+    options: XrpcOptions<M>,
+  ): XrpcOptions<M> & typeof this.xrpcDefaults {
+    const optionsWithDefaults = applyDefaults(options, this.xrpcDefaults)
+
+    if (options.service !== null && options.labelers !== null) {
+      return optionsWithDefaults
+    }
+
+    const headers = new Headers(optionsWithDefaults.headers)
+    if (options.service === null) {
+      headers.set('atproto-proxy', xrpcDefaultHeaderOptOut)
+    }
+    if (options.labelers === null) {
+      headers.set('atproto-accept-labelers', xrpcDefaultHeaderOptOut)
+    }
+
+    optionsWithDefaults.headers = headers
+    return optionsWithDefaults
   }
 
   /**

@@ -59,6 +59,35 @@ describe('utils', () => {
 })
 
 describe('Client', () => {
+  describe('xrpc defaults', () => {
+    it('allows default proxy and labeler headers to be disabled per request', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+      const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+      const calls: Headers[] = []
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, init) => {
+        calls.push(new Headers(init?.headers))
+        return Response.json({ preferences: [] })
+      })
+      const client = new Client(
+        { fetchHandler },
+        { service, labelers: [labeler] },
+      )
+
+      await client.xrpcSafe(app.bsky.actor.getPreferences, {})
+
+      expect(calls[0].get('atproto-proxy')).toBe(service)
+      expect(calls[0].get('atproto-accept-labelers')).toBe(labeler)
+
+      await client.xrpcSafe(app.bsky.actor.getPreferences, {
+        service: null,
+        labelers: null,
+      })
+
+      expect(calls[1].has('atproto-proxy')).toBe(false)
+      expect(calls[1].has('atproto-accept-labelers')).toBe(false)
+    })
+  })
+
   describe('actions', () => {
     it('updatePreferences', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
