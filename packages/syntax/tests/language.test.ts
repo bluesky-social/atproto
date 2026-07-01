@@ -20,6 +20,12 @@ describe(isValidLanguage, () => {
     expect(isValidLanguage('sr-Cyrl')).toEqual(true)
     expect(isValidLanguage('hy-Latn-IT-arevela')).toEqual(true)
     expect(isValidLanguage('i-klingon')).toEqual(true)
+    expect(isValidLanguage('sl-rozaj-biske')).toEqual(true)
+    expect(isValidLanguage('en-u-co-phonebk-t-en-US')).toEqual(true)
+    // duplicate variant / extension singleton subtags are well-formed
+    // syntax (§2.1) — semantic rejection is left to parseLanguageString
+    expect(isValidLanguage('de-DE-1901-1901')).toEqual(true)
+    expect(isValidLanguage('en-a-foo-a-bar')).toEqual(true)
     // invalid
     expect(isValidLanguage('')).toEqual(false)
     expect(isValidLanguage('x')).toEqual(false)
@@ -90,10 +96,23 @@ describe(parseLanguageString, () => {
     expect(parseLanguageString('i-klingon')).toEqual({
       grandfathered: 'i-klingon',
     })
+    expect(parseLanguageString('sl-rozaj-biske')).toEqual({
+      language: 'sl',
+      variant: 'biske',
+    })
+    expect(parseLanguageString('en-u-co-phonebk-t-en-US')).toEqual({
+      language: 'en',
+      extension: 't-en-US',
+    })
     // invalid
     expect(parseLanguageString('')).toEqual(null)
     expect(parseLanguageString('x')).toEqual(null)
     expect(parseLanguageString('de-CH-')).toEqual(null)
     expect(parseLanguageString('i-bad-grandfathered')).toEqual(null)
+    // duplicate variant / extension singleton subtags (RFC 5646 §4.1)
+    expect(parseLanguageString('de-DE-1901-1901')).toEqual(null)
+    expect(parseLanguageString('en-rozaj-ROZAJ')).toEqual(null)
+    expect(parseLanguageString('en-a-foo-a-bar')).toEqual(null)
+    expect(parseLanguageString('en-u-co-phonebk-U-ca-buddhist')).toEqual(null)
   })
 })
