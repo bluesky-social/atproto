@@ -1,9 +1,6 @@
 {
   "name": "@atproto/oauth-scopes",
   "version": "0.5.2",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "A library for manipulating and validating ATproto OAuth scopes in TypeScript.",
   "keywords": [
@@ -18,12 +15,19 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/auth-scopes"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/did": "workspace:^",

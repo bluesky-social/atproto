@@ -1,5 +1,5 @@
 import type { Redis } from 'ioredis'
-import {
+import type {
   Awaitable,
   GetOptions,
   SimpleStore,

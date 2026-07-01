@@ -505,8 +505,8 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
     }
   }
 
-  dispose() {
-    this[Symbol.dispose]()
+  async dispose() {
+    await this[Symbol.asyncDispose]()
   }
 }
 

@@ -225,8 +225,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testImplicitMain', {
       union: {
@@ -234,8 +234,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testExplicitMain', {
       union: {
@@ -243,8 +243,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
 
     result = lexicon.validate('com.example.testExplicitMain', {
       union: {
@@ -252,8 +252,8 @@ describe('General validation', () => {
         test: 123,
       },
     })
-    expect(result.success).toBeFalsy()
-    expect(result['error']?.message).toBe('Object/union/test must be a string')
+    assert(!result.success)
+    expect(result.error.message).toBe('Object/union/test must be a string')
   })
 })
 

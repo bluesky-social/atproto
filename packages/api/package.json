@@ -1,9 +1,6 @@
 {
   "name": "@atproto/api",
   "version": "0.20.23",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [
@@ -17,12 +14,21 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/api"
   },
-  "scripts": {
-    "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
-    "codegen:code": "node ./scripts/generate-code.mjs",
-    "prebuild": "pnpm run codegen:code && if [ ! -f ./src/client/index.ts ] || [ -n \"$(find ../../lexicons -name '*.json' -newer ./src/client/index.ts -type f -print -quit)\" ]; then pnpm run codegen:lex; fi",
-    "build": "tsgo --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  "files": [
+    "./dist",
+    "./OAUTH.md",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
@@ -41,11 +47,11 @@
     "jest": "^30.0.0",
     "prettier": "^3.2.5"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "codegen:lex": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/* ../../lexicons/com/germnetwork/*",
+    "codegen:code": "node ./scripts/generate-code.mjs",
+    "prebuild": "pnpm run codegen:code && if [ ! -f ./src/client/index.ts ] || [ -n \"$(find ../../lexicons -name '*.json' -newer ./src/client/index.ts -type f -print -quit)\" ]; then pnpm run codegen:lex; fi",
+    "build": "tsgo --build tsconfig.build.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   }
 }

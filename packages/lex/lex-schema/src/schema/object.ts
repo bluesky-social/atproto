@@ -1,9 +1,8 @@
 import { isPlainObject } from '@atproto/lex-data'
-import {
+import { Schema, ValidationContext } from '../core.js'
+import type {
   InferInput,
   InferOutput,
-  Schema,
-  ValidationContext,
   Validator,
   WithOptionalProperties,
 } from '../core.js'

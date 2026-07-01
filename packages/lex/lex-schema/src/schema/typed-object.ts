@@ -1,18 +1,18 @@
-import { LexMap, isPlainObject } from '@atproto/lex-data'
+import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import {
-  $Type,
-  $TypeOf,
-  $Typed,
-  $TypedMaybe,
+  type $Type,
+  type $TypeOf,
+  type $Typed,
+  type $TypedMaybe,
   $type,
   $typed,
-  InferInput,
-  InferOutput,
-  NsidString,
+  type InferInput,
+  type InferOutput,
+  type NsidString,
   Schema,
-  Unknown$TypedObject,
+  type Unknown$TypedObject,
   ValidationContext,
-  Validator,
+  type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 

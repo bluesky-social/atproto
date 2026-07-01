@@ -68,14 +68,20 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
 
       if (typeof json === 'string') return json
       if (typeof json === 'object' && json != null) {
-        const errorDescription = ifString(json['error_description'])
-        if (errorDescription) return errorDescription
+        if ('error_description' in json) {
+          const errorDescription = ifString(json.error_description)
+          if (errorDescription) return errorDescription
+        }
 
-        const error = ifString(json['error'])
-        if (error) return error
+        if ('error' in json) {
+          const error = ifString(json.error)
+          if (error) return error
+        }
 
-        const message = ifString(json['message'])
-        if (message) return message
+        if ('message' in json) {
+          const message = ifString(json.message)
+          if (message) return message
+        }
       }
     }
   } catch {

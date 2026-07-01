@@ -4,7 +4,7 @@ import { AddressInfo } from 'node:net'
 import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { oauthClientAssetsMiddleware } from './_oauth_client_assets_middleware.js'
+import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
 import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {

@@ -1,4 +1,5 @@
-import { LexValue, fromBase64, parseCid } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
+import { fromBase64, parseCid } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 
 const CHAR_TAB = 0x09

@@ -1,4 +1,4 @@
-import { $type, NsidString, Schema, ValidationContext } from '../core.js'
+import { $type, type NsidString, Schema, ValidationContext } from '../core.js'
 
 /**
  * Schema for Lexicon token values.

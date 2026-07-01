@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-installer",
   "version": "0.1.3",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "Lexicon document packet manager for AT Lexicons",
   "keywords": [
@@ -19,10 +16,6 @@
     "directory": "packages/lex/lex-installer"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
   ],
@@ -33,6 +26,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/lex-builder": "workspace:^",

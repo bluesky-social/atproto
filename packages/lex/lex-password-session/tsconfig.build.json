@@ -1,11 +1,15 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": [
+    "../../../tsconfig/isomorphic.tsconfig.json",
+    "../../../tsconfig/verbatim.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
+  "references": [
+    { "path": "../lex-client/tsconfig.build.json" },
+    { "path": "../lex-schema/tsconfig.build.json" },
+  ],
   "compilerOptions": {
-    "noImplicitAny": true,
-    "importHelpers": true,
-    "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
   },

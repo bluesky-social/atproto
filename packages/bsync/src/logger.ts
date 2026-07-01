@@ -13,9 +13,9 @@ export const loggerMiddleware = pinoHttp({
     paths: ['req.headers.authorization'],
   },
   serializers: {
-    err: (err: unknown) => ({
-      code: err?.['code'],
-      message: err?.['message'],
+    err: (err: any) => ({
+      code: err?.code,
+      message: err?.message,
     }),
     req: (req: IncomingMessage) => {
       const serialized = stdSerializers.req(req)

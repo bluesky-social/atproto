@@ -1,9 +1,8 @@
-import {
+import { Schema, ValidationContext } from '../core.js'
+import type {
   InferInput,
   InferOutput,
-  Schema,
   UnwrapValidator,
-  ValidationContext,
   Validator,
 } from '../core.js'
 import { memoizedTransformer } from '../util/memoize.js'

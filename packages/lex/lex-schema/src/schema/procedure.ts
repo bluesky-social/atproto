@@ -1,4 +1,4 @@
-import { NsidString } from '../core.js'
+import type { NsidString } from '../core.js'
 import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
 

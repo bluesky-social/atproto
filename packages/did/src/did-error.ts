@@ -1,3 +1,5 @@
+import { ifNumber } from './lib/number.js'
+
 export class DidError extends Error {
   constructor(
     public readonly did: string,
@@ -33,10 +35,10 @@ export class DidError extends Error {
           : 'An unknown error occurred'
 
     const status =
-      (typeof cause?.['statusCode'] === 'number'
-        ? cause['statusCode']
-        : undefined) ??
-      (typeof cause?.['status'] === 'number' ? cause['status'] : undefined)
+      typeof cause === 'object' && cause != null
+        ? ('statusCode' in cause ? ifNumber(cause.statusCode) : undefined) ??
+          ('status' in cause ? ifNumber(cause.status) : undefined)
+        : undefined
 
     return new DidError(did, message, 'did-unknown-error', status, cause)
   }

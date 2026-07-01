@@ -1,5 +1,5 @@
 import { fromBase64, toBase64 } from '@atproto/lex-data'
-import { JsonValue } from './json.js'
+import type { JsonValue } from './json.js'
 
 /**
  * Parses a `{$bytes: string}` JSON object into a `Uint8Array`.

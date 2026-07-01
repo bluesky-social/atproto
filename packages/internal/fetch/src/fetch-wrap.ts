@@ -11,7 +11,7 @@ export function loggedFetch<C = FetchContext>({
   logResponse = true as boolean | LogFn<[response: Response, request: Request]>,
   logError = true as boolean | LogFn<[error: unknown, request: Request]>,
 }) {
-  const onRequest =
+  const onRequest: undefined | LogFn<[request: Request]> =
     logRequest === true
       ? async (request) => {
           const requestMessage = await stringifyMessage(request)
@@ -21,7 +21,7 @@ export function loggedFetch<C = FetchContext>({
         }
       : logRequest || undefined
 
-  const onResponse =
+  const onResponse: undefined | LogFn<[response: Response, request: Request]> =
     logResponse === true
       ? async (response) => {
           const responseMessage = await stringifyMessage(response.clone())
@@ -31,7 +31,7 @@ export function loggedFetch<C = FetchContext>({
         }
       : logResponse || undefined
 
-  const onError =
+  const onError: undefined | LogFn<[error: unknown, request: Request]> =
     logError === true
       ? async (error) => {
           console.error(`< Error:`, error)

@@ -1,5 +1,5 @@
 import { ifCid, isCid } from './cid.js'
-import { LexValue } from './lex.js'
+import type { LexValue } from './lex.js'
 import { isPlainObject } from './object.js'
 import { ui8Equals } from './uint8array.js'
 

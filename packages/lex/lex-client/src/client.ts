@@ -1,5 +1,5 @@
-import { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
-import {
+import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import type {
   AtIdentifierString,
   AtUriString,
   CidString,
@@ -12,14 +12,13 @@ import {
   Main,
   NsidString,
   Params,
-  Procedure,
-  Query,
-  RecordSchema,
   Restricted,
-  getMain,
 } from '@atproto/lex-schema'
-import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcError, XrpcFailure, XrpcResponseError } from './errors.js'
+import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
+import { XrpcError, XrpcResponseError } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -35,13 +34,13 @@ import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
 import {
   XrpcResponse,
-  XrpcResponseBody,
-  XrpcResponseOptions,
+  type XrpcResponseBody,
+  type XrpcResponseOptions,
 } from './response.js'
-import { BinaryBodyInit, Service } from './types.js'
+import type { BinaryBodyInit, Service } from './types.js'
 import {
-  RecordKeyOptions,
-  XrpcRequestHeadersOptions,
+  type RecordKeyOptions,
+  type XrpcRequestHeadersOptions,
   applyDefaults,
   buildXrpcRequestHeaders,
   getDefaultRecordKey,
@@ -49,17 +48,17 @@ import {
   wait,
 } from './util.js'
 import {
-  WriteOperation,
-  WriteOperationCreateOptions,
-  WriteOperationDeleteOptions,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
   WriteOperationHelper,
-  WriteOperationUpdateOptions,
-  WriteOperationsFactory,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
 } from './write-operation-builder.js'
 import {
-  XrpcOptions,
-  XrpcRequestParams,
-  XrpcRequestProcessingOptions,
+  type XrpcOptions,
+  type XrpcRequestParams,
+  type XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
 } from './xrpc.js'

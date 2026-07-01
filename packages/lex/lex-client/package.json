@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-client",
   "version": "0.2.0",
-  "engines": {
-    "node": ">=22"
-  },
   "license": "MIT",
   "description": "HTTP client for interacting with Lexicon based APIs",
   "keywords": [
@@ -19,10 +16,6 @@
     "directory": "packages/lex/lex-client"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
     "./CHANGELOG.md"
   ],
@@ -33,6 +26,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto/lex-data": "workspace:^",
@@ -46,7 +42,8 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "prebuild": "node ./scripts/lex-build.mjs",
+    "codegen:lex": "node ./scripts/lex-build.mjs",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
     "test": "vitest run"
   }

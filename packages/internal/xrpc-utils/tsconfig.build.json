@@ -1,8 +1,12 @@
 {
-  "extends": ["../../../tsconfig/node.json"],
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
+  "include": ["./src"],
+  "references": [
+    { "path": "../../xrpc-server/tsconfig.build.json" },
+    { "path": "../../xrpc/tsconfig.build.json" },
+  ],
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "./dist",
+    "rootDir": "./src",
   },
-  "include": ["src"],
 }

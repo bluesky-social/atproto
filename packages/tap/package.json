@@ -16,12 +16,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/tap"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
-    "test": "vitest run"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -38,11 +46,8 @@
     "http-terminator": "^3.2.0",
     "vitest": "^4.0.16"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "build": "tsgo --build tsconfig.build.json",
+    "test": "vitest run"
   }
 }

@@ -1,14 +1,14 @@
 import { graphemeLen, ifCid, utf8Len } from '@atproto/lex-data'
 import {
-  InferStringFormat,
-  Restricted,
+  type InferStringFormat,
+  type Restricted,
   Schema,
-  StringFormat,
-  UnknownString,
+  type StringFormat,
+  type UnknownString,
   ValidationContext,
   isStringFormat,
 } from '../core.js'
-import { IfAny } from '../util/if-any.js'
+import type { IfAny } from '../util/if-any.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
 

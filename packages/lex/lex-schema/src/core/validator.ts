@@ -8,7 +8,7 @@ import {
   IssueRequiredKey,
   IssueTooBig,
   IssueTooSmall,
-  MeasurableType,
+  type MeasurableType,
 } from './validation-issue.js'
 
 /**
