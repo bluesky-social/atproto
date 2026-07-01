@@ -155,6 +155,7 @@ export interface BskyPreferences {
     queuedNudges: string[]
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
     nuxs: AppBskyActorDefs.Nux[]
+    isBetaUser?: boolean
   }
   postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
   verificationPrefs: AppBskyActorDefs.VerificationPrefs
