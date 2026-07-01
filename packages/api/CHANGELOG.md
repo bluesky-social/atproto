@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.25
+
+### Patch Changes
+
+- [#5179](https://github.com/bluesky-social/atproto/pull/5179) [`f6409db`](https://github.com/bluesky-social/atproto/commit/f6409dbcefdd5565b1ba23c52dc71ec7e791e2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support the new timestamp field, along with transactionId and errorCode, on KWS age verification status payloads. Add additionalVerificationMethods to Age Assurance config.
+
 ## 0.20.24
 
 ### Patch Changes

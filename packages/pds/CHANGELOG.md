@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5044](https://github.com/bluesky-social/atproto/pull/5044) [`4f1e203`](https://github.com/bluesky-social/atproto/commit/4f1e20387bb2a212e263590ac7a3458e8f939091) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Proxy `app.bsky.notification.unregisterPush` to the notification service identified by `serviceDid`, matching the behavior of `registerPush`.
+
 ## 0.5.13
 
 ### Patch Changes
