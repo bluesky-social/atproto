@@ -26,7 +26,7 @@
             },
             "links": {
               "type": "ref",
-              "description": "URLs of service policy documents.",
+              "description": "URLs of service interfaces and policy documents.",
               "ref": "#links"
             },
             "contact": {
@@ -45,6 +45,11 @@
     "links": {
       "type": "object",
       "properties": {
+        "accountManagement": {
+          "type": "string",
+          "format": "uri",
+          "description": "web interface for account self-management"
+        },
         "privacyPolicy": { "type": "string", "format": "uri" },
         "termsOfService": { "type": "string", "format": "uri" }
       }
