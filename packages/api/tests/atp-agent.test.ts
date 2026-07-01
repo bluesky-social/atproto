@@ -1586,6 +1586,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1659,6 +1660,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1733,6 +1735,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1803,6 +1806,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1873,6 +1877,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -1943,6 +1948,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -2024,6 +2030,7 @@ describe('agent', () => {
           activeProgressGuide: undefined,
           queuedNudges: ['two', 'three'],
           nuxs: [],
+          isBetaUser: false,
         },
         postInteractionSettings: {
           threadgateAllowRules: undefined,
@@ -2043,6 +2050,7 @@ describe('agent', () => {
         [
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            isBetaUser: false,
             queuedNudges: ['two', 'three'],
           },
           {
@@ -3605,6 +3613,52 @@ describe('agent', () => {
           'bskyAppState.activeProgressGuide',
           undefined,
         )
+      })
+    })
+
+    describe('beta user', () => {
+      it('setIsBetaUser', async () => {
+        const agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'betauser.test',
+          email: 'betauser@test.com',
+          password: 'password',
+        })
+
+        // unset by default
+        await expect(agent.getPreferences()).resolves.not.toHaveProperty(
+          'bskyAppState.isBetaUser',
+        )
+
+        await agent.setIsBetaUser(true)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.isBetaUser',
+          true,
+        )
+
+        await agent.setIsBetaUser(false)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.isBetaUser',
+          false,
+        )
+      })
+
+      it('preserves other bskyAppState fields', async () => {
+        const agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'betauser2.test',
+          email: 'betauser2@test.com',
+          password: 'password',
+        })
+
+        await agent.bskyAppQueueNudges(['keepme'])
+        await agent.setIsBetaUser(true)
+
+        const prefs = await agent.getPreferences()
+        expect(prefs.bskyAppState.isBetaUser).toEqual(true)
+        expect(prefs.bskyAppState.queuedNudges).toEqual(['keepme'])
       })
     })
 

@@ -572,6 +572,10 @@
           "type": "ref",
           "ref": "#bskyAppProgressGuide"
         },
+        "isBetaUser": {
+          "description": "Indicates if the user is participating in the Bluesky Beta program.",
+          "type": "boolean"
+        },
         "queuedNudges": {
           "description": "An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user.",
           "type": "array",
