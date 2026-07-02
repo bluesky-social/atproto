@@ -4,10 +4,10 @@
   "defs": {
     "spaceConfig": {
       "type": "object",
-      "description": "Configuration for a space managed by the simplespace implementation. A credential is minted only when the user is authorized by `mintPolicy` and their app by `appAccess`.",
-      "required": ["mintPolicy", "appAccess"],
+      "description": "Configuration for a space managed by the simplespace implementation. A credential is minted only when the user is authorized by `policy` and their app by `appAccess`.",
+      "required": ["policy", "appAccess"],
       "properties": {
-        "mintPolicy": {
+        "policy": {
           "type": "string",
           "knownValues": ["public", "member-list", "managing-app"],
           "description": "How the authority decides whether to authorize a requesting user. 'member-list' (default) consults the member list, 'public' authorizes anyone, 'managing-app' asks the managingApp via checkUserAccess."
@@ -19,7 +19,7 @@
         },
         "managingApp": {
           "type": "string",
-          "description": "Service identifier (e.g. did:web:example.com#forum) of the app that manages this space. Routes application-level requests and is the checkUserAccess target when mintPolicy is 'managing-app'."
+          "description": "Service identifier (e.g. did:web:example.com#forum) of the app that manages this space. Routes application-level requests and is the checkUserAccess target when policy is 'managing-app'."
         }
       }
     },

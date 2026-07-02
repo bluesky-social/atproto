@@ -56,6 +56,7 @@
       "properties": {
         "uri": {
           "type": "string",
+          "format": "at-uri",
           "description": "URI of the space."
         },
         "isOwner": {

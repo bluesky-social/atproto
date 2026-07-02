@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.space.getRepoState",
+  "id": "com.atproto.space.getLatestCommit",
   "defs": {
     "main": {
       "type": "query",
@@ -11,13 +11,13 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-uri",
+            "format": "at-uri",
             "description": "Reference to the space."
           },
           "repo": {
             "type": "string",
             "format": "did",
-            "description": "The DID of the account whose repo state to retrieve."
+            "description": "The DID of the account whose latest commit to retrieve."
           }
         }
       },
@@ -29,7 +29,7 @@
             "commit": {
               "type": "ref",
               "ref": "com.atproto.space.defs#signedCommit",
-              "description": "The account's current signed commit. Absent when the repo has never been written to."
+              "description": "The account's current signed commit."
             }
           }
         }

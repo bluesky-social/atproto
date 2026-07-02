@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-uri",
+              "format": "at-uri",
               "description": "Reference to the space."
             },
             "repo": {
@@ -112,7 +112,7 @@
       "properties": {
         "uri": {
           "type": "string",
-          "format": "space-uri"
+          "format": "at-uri"
         },
         "cid": {
           "type": "string",
@@ -130,7 +130,7 @@
       "properties": {
         "uri": {
           "type": "string",
-          "format": "space-uri"
+          "format": "at-uri"
         },
         "cid": {
           "type": "string",

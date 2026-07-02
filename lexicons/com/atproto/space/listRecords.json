@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the record keys (collection, rkey, cid) in an account's repo within a permissioned space, optionally filtered by collection. Fetch values via getRecord. Used for full-state recovery. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
+      "description": "List the records in an account's repo within a permissioned space, optionally filtered by collection. By default each record's value is inlined; set excludeValues for a metadata-only listing (collection, rkey, cid). Used for full-state recovery. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-uri",
+            "format": "at-uri",
             "description": "Reference to the space."
           },
           "repo": {
@@ -37,6 +37,11 @@
           "reverse": {
             "type": "boolean",
             "description": "Flag to reverse the order of the returned records."
+          },
+          "excludeValues": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, omit inlined record values and return only metadata (collection, rkey, cid)."
           }
         }
       },
@@ -81,6 +86,10 @@
         "cid": {
           "type": "string",
           "format": "cid"
+        },
+        "value": {
+          "type": "unknown",
+          "description": "The record's value. Inlined by default; omitted when excludeValues is set."
         }
       }
     }

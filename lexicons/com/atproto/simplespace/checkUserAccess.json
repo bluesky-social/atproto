@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Ask a space's managing app whether to authorize a requesting user for a space credential. Served by the managingApp (not the PDS), called by the space authority at mint time when mintPolicy is 'managing-app'. Authenticated with service auth from the authority.",
+      "description": "Ask a space's managing app whether to authorize a requesting user for a space credential. Served by the managingApp (not the PDS), called by the space authority at mint time when policy is 'managing-app'. Authenticated with service auth from the authority.",
       "parameters": {
         "type": "params",
         "required": ["space", "user"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-uri",
+            "format": "at-uri",
             "description": "Reference to the space."
           },
           "user": {

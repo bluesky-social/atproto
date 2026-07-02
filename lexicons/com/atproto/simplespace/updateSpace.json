@@ -13,10 +13,10 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-uri",
+              "format": "at-uri",
               "description": "Reference to the space to update."
             },
-            "mintPolicy": {
+            "policy": {
               "type": "string",
               "knownValues": ["public", "member-list", "managing-app"],
               "description": "How the authority decides whether to authorize a requesting user."

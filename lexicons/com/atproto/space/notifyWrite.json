@@ -9,11 +9,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["space", "repo", "rev"],
+          "required": ["space", "repo", "rev", "hash"],
           "properties": {
             "space": {
               "type": "string",
-              "format": "space-uri",
+              "format": "at-uri",
               "description": "Reference to the space."
             },
             "repo": {
@@ -24,6 +24,10 @@
             "rev": {
               "type": "string",
               "description": "The revision of the write."
+            },
+            "hash": {
+              "type": "bytes",
+              "description": "The repo's current commit hash (sha256 of the LtHash state) after the write. Lets the space host maintain each repo's hash for listRepos."
             }
           }
         }

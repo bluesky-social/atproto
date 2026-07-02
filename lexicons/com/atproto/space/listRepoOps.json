@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the operation log for an account's permissioned repo within a space, returning operations after a given revision. Primary incremental sync mechanism. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
+      "description": "List the operation log for an account's permissioned repo within a space, returning operations after a given revision. Primary incremental sync mechanism. By default each created or updated operation inlines the record's current value; set excludeValues for metadata-only entries. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "space-uri",
+            "format": "at-uri",
             "description": "Reference to the space."
           },
           "repo": {
@@ -29,6 +29,11 @@
             "maximum": 1000,
             "default": 100,
             "description": "Maximum number of operations to return."
+          },
+          "excludeValues": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, omit inlined record values and return only operation metadata."
           }
         }
       },
@@ -65,7 +70,7 @@
     },
     "opEntry": {
       "type": "object",
-      "description": "A single operation in a permissioned repo's oplog. cid is null for deletes; prev is null for creates. Operations sharing the same rev belong to the same batch.",
+      "description": "A single operation in a permissioned repo's oplog. cid is null for deletes; prev is null for creates. Operations sharing the same rev belong to the same batch. value carries the record's current value for creates and updates, unless excludeValues was set or the value is stale (superseded by a later operation).",
       "required": ["rev", "collection", "rkey", "cid", "prev"],
       "nullable": ["cid", "prev"],
       "properties": {
@@ -73,7 +78,11 @@
         "collection": { "type": "string", "format": "nsid" },
         "rkey": { "type": "string", "format": "record-key" },
         "cid": { "type": "string", "format": "cid" },
-        "prev": { "type": "string", "format": "cid" }
+        "prev": { "type": "string", "format": "cid" },
+        "value": {
+          "type": "unknown",
+          "description": "The record's current value, inlined for create and update operations. Omitted when excludeValues is set, for deletes, or when the value has been superseded by a later operation."
+        }
       }
     }
   }
