@@ -10,7 +10,7 @@ import {
   Restricted,
   XrpcFailure,
   XrpcRequestParams,
-  XrpcResponseBody,
+  XrpcResponse,
   getMain,
 } from '@atproto/lex'
 
@@ -21,12 +21,12 @@ export type UseLexQueryKey = [
 ]
 
 export type UseLexQueryOptions<S extends Query> = Omit<
-  UseQueryOptions<XrpcResponseBody<S>, XrpcFailure<S>>,
+  UseQueryOptions<XrpcResponse<S>, XrpcFailure<S>>,
   'queryKey' | 'queryFn' | 'retry' | 'retryDelay'
 >
 
 export type UseLexQueryResult<S extends Query> = UseQueryResult<
-  XrpcResponseBody<S>,
+  XrpcResponse<S>,
   XrpcFailure<S>
 >
 
@@ -60,8 +60,7 @@ export function useLexQuery<S extends Query>(
     enabled: params === false ? false : options?.enabled,
     queryKey: [client.did ?? null, schema.nsid, queryString],
     queryFn: async ({ signal }) => {
-      const response = await client.xrpc(schema, { signal, params } as any)
-      return response.body
+      return client.xrpc(schema, { signal, params } as any)
     },
     retry: () => false, // Performed by client.xrpc()
   })

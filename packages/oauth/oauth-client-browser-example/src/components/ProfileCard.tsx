@@ -18,8 +18,13 @@ export function ProfileCard({
 }: ProfileCardProps) {
   // Getting a user's profile from the Bluesky API
   const client = useBskyClient()
-  const profileQuery = useLexQuery(client, app.bsky.actor.getProfile, { actor })
-  const profileData = profileQuery.data
+  const profileQuery = useLexQuery(
+    client,
+    app.bsky.actor.getProfile,
+    { actor },
+    { refetchOnWindowFocus: true },
+  )
+  const profileData = profileQuery.data?.body
 
   return (
     <div

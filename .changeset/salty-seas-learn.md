@@ -2,4 +2,4 @@
 '@atproto/xrpc-server': patch
 ---
 
-Add `Reply-After` header to rate limited responses
+Add `Retry-After` header to rate limited responses

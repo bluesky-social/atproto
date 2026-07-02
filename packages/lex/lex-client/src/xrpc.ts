@@ -236,8 +236,11 @@ export async function xrpcSafe<const M extends Query | Procedure>(
     } catch (cause) {
       const failure = asXrpcFailure(method, cause)
 
-      // Cannot retry a request with a ReadableStream body
-      if (options.body instanceof ReadableStream) {
+      // Cannot retry a request with a consumable body
+      if (
+        options.body instanceof ReadableStream ||
+        isAsyncIterable(options.body)
+      ) {
         return failure
       }
 

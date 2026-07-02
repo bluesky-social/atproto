@@ -21,7 +21,7 @@ export function SessionInfo() {
           refresh
         </Button>
       </h2>
-      <JsonQueryResult result={result} />
+      <JsonQueryResult result={result} transform={(data) => data.body} />
     </div>
   )
 }

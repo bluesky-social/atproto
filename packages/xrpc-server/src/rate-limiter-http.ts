@@ -45,6 +45,11 @@ export class HttpRateLimiter<
     } catch (err) {
       if (err instanceof RateLimitExceededError) {
         setStatusHeaders(ctx, err.status)
+
+        ctx.res?.setHeader(
+          'Retry-After',
+          Math.ceil(err.status.msBeforeNext / 1e3),
+        )
       }
 
       throw err
@@ -79,9 +84,4 @@ function setStatusHeaders<
   ctx.res?.setHeader('RateLimit-Reset', resetAt)
   ctx.res?.setHeader('RateLimit-Remaining', status.remainingPoints)
   ctx.res?.setHeader('RateLimit-Policy', `${status.limit};w=${status.duration}`)
-
-  // If limits are exceeded, set the Retry-After header to indicate when the client can retry
-  if (status.remainingPoints <= 0 && !ctx.res?.hasHeader('Retry-After')) {
-    ctx.res?.setHeader('Retry-After', Math.ceil(status.msBeforeNext / 1e3))
-  }
 }
