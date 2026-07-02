@@ -1,24 +1,35 @@
 import type { InferRecordKey, LexiconRecordKey } from '@atproto/lex-schema'
 import { RecordSchema } from '@atproto/lex-schema'
-import type { DidString, Service } from './types.ts'
+import type { Labeler, Service } from './types.ts'
+
+export type WithDefaults<
+  TOptions extends Record<string, unknown>,
+  TDefaults extends Record<string, unknown>[],
+> = TDefaults extends [infer First, ...infer Rest extends any[]]
+  ? WithDefaults<TOptions & { -readonly [K in keyof First]: First[K] }, Rest>
+  : TOptions
 
 export function applyDefaults<
-  TDefaults extends Record<string, unknown>,
-  TOptions extends {
-    [K in keyof TDefaults]?: TDefaults[K]
-  },
->(options: TOptions, defaults: TDefaults): TOptions & TDefaults {
-  const combined: Partial<TDefaults> = { ...options }
+  TOptions extends Readonly<Record<string, unknown>>,
+  TDefaults extends Readonly<Record<string, unknown>>[],
+>(
+  options: TOptions,
+  ...defaults: TDefaults
+): WithDefaults<TOptions, TDefaults> {
+  const combined: Record<string, unknown> = { ...options }
 
   // @NOTE We make sure that options with an explicit `undefined` value get the
-  // default, since spreading doesn't override with `undefined`.
-  for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
-    if (options[key] === undefined) {
-      combined[key] = defaults[key]
+  // default, since spreading doesn't override with `undefined`. When multiple
+  // defaults define the same key, the first defined value wins.
+  for (const def of defaults) {
+    for (const key of Object.keys(def) as (keyof typeof def)[]) {
+      if (combined[key] === undefined) {
+        combined[key] = def[key]
+      }
     }
   }
 
-  return combined as TOptions & TDefaults
+  return combined as WithDefaults<TOptions, TDefaults>
 }
 
 /**
@@ -71,20 +82,23 @@ export function asUint8ArrayArrayBuffer(
 }
 
 export type XrpcRequestHeadersOptions = {
-  /** Additional HTTP headers to include in the request. */
+  /**
+   * Additional custom HTTP headers to include in the request. `atproto-*`
+   * headers are reserved and should be set through the appropriate options.
+   */
   headers?: HeadersInit
 
   /** Labeler DIDs to request labels from for content moderation. */
-  labelers?: Iterable<DidString>
+  labelers?: null | Iterable<Labeler>
 
   /** Service proxy identifier for routing requests through a specific service. */
-  service?: Service
+  service?: null | Service
 }
 
 /**
  * Builds HTTP headers for AT Protocol requests.
  *
- * Adds the following headers when applicable:
+ * Adds or removes the following headers based on the provided options:
  * - `atproto-proxy`: Service routing header (if service is specified)
  * - `atproto-accept-labelers`: Comma-separated list of labeler DIDs
  *
@@ -94,19 +108,25 @@ export type XrpcRequestHeadersOptions = {
 export function buildXrpcRequestHeaders(
   options: XrpcRequestHeadersOptions,
 ): Headers {
-  const headers = new Headers(options?.headers)
+  const headers = new Headers(options.headers)
 
-  if (options.service && !headers.has('atproto-proxy')) {
+  // Custom headers starting with "atproto-" are reserved and cannot be set
+  // directly.
+  // @NOTE Copying the keys before deleting, as deleting entries while
+  // iterating causes entries to be skipped.
+  for (const key of Array.from(headers.keys())) {
+    if (key.startsWith('atproto-')) {
+      headers.delete(key)
+    }
+  }
+
+  if (options.service) {
     headers.set('atproto-proxy', options.service)
   }
 
-  if (options.labelers) {
-    headers.set(
-      'atproto-accept-labelers',
-      [...options.labelers, headers.get('atproto-accept-labelers')?.trim()]
-        .filter(Boolean)
-        .join(', '),
-    )
+  const labelers = options.labelers && [...options.labelers].join(', ')
+  if (labelers) {
+    headers.set('atproto-accept-labelers', labelers)
   }
 
   return headers

@@ -59,6 +59,270 @@ describe('utils', () => {
 })
 
 describe('Client', () => {
+  describe('atproto-* headers', () => {
+    it('ignores atproto-* headers set through the headers option', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, {
+        headers: {
+          'atproto-proxy': 'did:plc:existing#service',
+          'atproto-accept-labelers': 'did:plc:existing',
+        },
+      })
+
+      await client.xrpc(app.bsky.actor.getPreferences)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+
+      expect(headers.get('atproto-proxy')).toBeNull()
+      expect(headers.get('atproto-accept-labelers')).toBeNull()
+    })
+
+    it('ignores atproto-* headers set through the per-request headers option', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler)
+
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        headers: {
+          'atproto-proxy': 'did:plc:existing#service',
+          'atproto-accept-labelers': 'did:plc:existing',
+        },
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+
+      expect(headers.get('atproto-proxy')).toBeNull()
+      expect(headers.get('atproto-accept-labelers')).toBeNull()
+    })
+
+    it('uses global "service" and "labelers" options for requests', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+      const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, { service, labelers: [labeler] })
+
+      await client.xrpc(app.bsky.actor.getPreferences)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('atproto-proxy')).toBe(service)
+      expect(headers.get('atproto-accept-labelers')).toBe(labeler)
+    })
+
+    it('allows default proxy and labeler headers to be overridden per request', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+      const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, { service, labelers: [labeler] })
+
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        service: 'did:plc:new#service',
+        labelers: ['did:plc:new'],
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('atproto-proxy')).toBe('did:plc:new#service')
+      expect(headers.get('atproto-accept-labelers')).toBe('did:plc:new')
+    })
+
+    it('allows default proxy and labeler headers to be disabled per request', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+      const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, { service, labelers: [labeler] })
+
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        service: null,
+        labelers: null,
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.has('atproto-proxy')).toBe(false)
+      expect(headers.has('atproto-accept-labelers')).toBe(false)
+    })
+
+    it('applies defaults when "service" and "labelers" are explicitly undefined', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+      const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, { service, labelers: [labeler] })
+
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        service: undefined,
+        labelers: undefined,
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('atproto-proxy')).toBe(service)
+      expect(headers.get('atproto-accept-labelers')).toBe(labeler)
+    })
+
+    it('does not mix "service" and "labelers" defaults when composing clients', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const baseClient = new Client(fetchHandler, {
+        service: 'did:plc:base#base_service',
+        labelers: ['did:plc:baselabeler'],
+      })
+
+      const childClient = new Client(baseClient, {
+        labelers: ['did:plc:childlabeler'],
+      })
+
+      await childClient.xrpc(app.bsky.actor.getPreferences)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+
+      // The base client's defaults only apply to requests initiated through
+      // the base client, not to requests initiated through child clients.
+      expect(headers.has('atproto-proxy')).toBe(false)
+      expect(headers.get('atproto-accept-labelers')).toBe(
+        'did:plc:childlabeler',
+      )
+    })
+
+    it('propagates custom (non atproto-*) headers when composing clients', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const baseClient = new Client(fetchHandler, {
+        headers: { 'x-base': 'base', 'x-shared': 'base' },
+      })
+
+      const childClient = new Client(baseClient, {
+        headers: { 'x-child': 'child', 'x-shared': 'child' },
+      })
+
+      await childClient.xrpc(app.bsky.actor.getPreferences)
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+
+      expect(headers.get('x-base')).toBe('base')
+      expect(headers.get('x-child')).toBe('child')
+      // The child client's headers take precedence over the base client's
+      expect(headers.get('x-shared')).toBe('child')
+    })
+
+    it('always adds the static labelers as "redact" labelers', async () => {
+      using _ = vi
+        .spyOn(Client, 'appLabelers', 'get')
+        .mockReturnValue(['did:plc:staticlabeler'])
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler)
+
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        labelers: ['did:plc:dynamiclabeler'],
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+
+      expect(headers.get('atproto-accept-labelers')).toBe(
+        'did:plc:staticlabeler;redact, did:plc:dynamiclabeler',
+      )
+    })
+
+    it('inherits parents appLabelers', async () => {
+      Client.configure({
+        appLabelers: ['did:plc:staticlabeler1', 'did:plc:staticlabeler2'],
+      })
+      // Reset at end of test
+      using _ = { [Symbol.dispose]: () => void (Client.appLabelers = []) }
+
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, {
+        labelers: ['did:plc:dynamiclabeler1', 'did:plc:dynamiclabeler2'],
+      })
+
+      class SubClient extends Client {
+        static {
+          this.configure({
+            appLabelers: ['did:plc:staticlabeler2', 'did:plc:staticlabeler3'],
+          })
+        }
+      }
+
+      const subClient = new SubClient(client, {
+        labelers: ['did:plc:dynamiclabeler2', 'did:plc:dynamiclabeler3'],
+      })
+
+      await subClient.xrpc(app.bsky.actor.getPreferences, {
+        labelers: ['did:plc:dynamiclabeler3', 'did:plc:dynamiclabeler4'],
+      })
+
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [_url, init] = fetchHandler.mock.calls[0]
+      const headers = new Headers(init?.headers)
+
+      expect(headers.get('atproto-accept-labelers')).toBe(
+        [
+          'did:plc:staticlabeler1;redact',
+          'did:plc:staticlabeler2;redact',
+          'did:plc:staticlabeler3;redact',
+          'did:plc:dynamiclabeler3',
+          'did:plc:dynamiclabeler4',
+        ].join(', '),
+      )
+    })
+  })
+
   describe('actions', () => {
     it('updatePreferences', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
@@ -86,7 +350,7 @@ describe('Client', () => {
         }
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       const updatePreferences: Action<
         (pref: Preference[]) => false | Preference[],
@@ -215,7 +479,7 @@ describe('Client', () => {
         })
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       const { preferences } = await client.call(app.bsky.actor.getPreferences)
 
@@ -252,7 +516,7 @@ describe('Client', () => {
         )
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
@@ -270,7 +534,7 @@ describe('Client', () => {
         return new Response(null, { status: 429 })
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
@@ -287,7 +551,7 @@ describe('Client', () => {
         return new Response(null, { status: 302 })
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
@@ -306,7 +570,7 @@ describe('Client', () => {
         })
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
@@ -335,7 +599,7 @@ describe('Client', () => {
         )
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
@@ -369,7 +633,7 @@ describe('Client', () => {
         )
       })
 
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
 
       const response = await client.xrpcSafe(app.bsky.actor.getPreferences)
 
@@ -575,7 +839,7 @@ describe('Client', () => {
     )
 
     it('allows uploading blobs', async () => {
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
       const blob = new Blob(['hello world'], { type: 'text/plain' })
 
       const { body } = await client.uploadBlob(blob)
@@ -591,7 +855,7 @@ describe('Client', () => {
     })
 
     it('allows uploading blobs from Uint8Array', async () => {
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
       const data = new TextEncoder().encode('hello world')
 
       const { body } = await client.uploadBlob(data)
@@ -607,7 +871,7 @@ describe('Client', () => {
     })
 
     it('allows uploading blobs from ArrayBuffer', async () => {
-      const client = new Client({ fetchHandler })
+      const client = new Client(fetchHandler)
       const data = new TextEncoder().encode('hello world').buffer
 
       const { body } = await client.uploadBlob(data)

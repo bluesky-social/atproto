@@ -50,18 +50,21 @@ const client = new Client(session, {
 })
 ```
 
-### From another client (config inheritance)
+### From another client (composition)
 
-A child client merges its config with the base client's at request time —
-changes to the base client (`setLabelers`, headers) propagate to children.
+A child client shares the base client's agent (auth) and inherits its custom
+(non `atproto-*`) headers at request time. `service` and `labelers` are scoped
+per client — the child's own config applies, not the base's. Static
+`appLabelers` (via `Client.configure()`) are the exception: always applied,
+with `;redact`, across composed clients.
 
 ```ts
 const baseClient = new Client(session)
-baseClient.setLabelers(['did:plc:labelerA'])
 baseClient.headers.set('x-app-version', '1.0.0')
 
 const proxied = new Client(baseClient, {
   service: 'did:web:api.bsky.app#bsky_appview',
+  labelers: ['did:plc:labelerA'],
   headers: { 'x-trace-id': 'abc' },
 })
 ```

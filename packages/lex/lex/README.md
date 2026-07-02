@@ -1020,6 +1020,28 @@ client.setLabelers(['did:plc:labeler5'])
 client.clearLabelers()
 ```
 
+The client's `labelers` act as a default for its requests. A per-request `labelers` option replaces that default for that request, and `labelers: null` disables the `atproto-accept-labelers` header entirely:
+
+```typescript
+// Uses the client's labelers
+await client.call(app.bsky.actor.getProfile, { actor })
+
+// Uses only 'did:plc:other' for this request
+await client.xrpc(app.bsky.actor.getProfile, {
+  params: { actor },
+  labelers: ['did:plc:other'],
+})
+
+// No atproto-accept-labelers header for this request (except appLabelers,
+// which are always applied)
+await client.xrpc(app.bsky.actor.getProfile, {
+  params: { actor },
+  labelers: null,
+})
+```
+
+The same defaulting logic applies to the `service` option (`atproto-proxy` header): a per-request `service` replaces the client's default, and `service: null` disables proxying for that request.
+
 ### Low-Level XRPC
 
 For advanced use cases, use `client.xrpc()` to get the full response (headers, status, body):
@@ -1514,11 +1536,11 @@ await client.call(enableAdultContent)
 
 ### Creating a Client from Another Client
 
-You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.
+You can create a new `Client` instance from an existing client. The new client will share the same underlying agent (authentication) and inherit the base client's custom headers, while defining its own `service` and `labelers` configuration.
 
 > [!NOTE]
 >
-> When you create a client from another client, the child client inherits the base client's configuration. On every request, the child client merges its own configuration with the base client's current configuration, with the child's settings taking precedence. Changes to the base client's configuration (like `baseClient.setLabelers()`) will be reflected in child client requests, but changes to child clients do not affect the base client.
+> When you create a client from another client, the base client's custom (non `atproto-*`) headers are applied to child client requests (with the child's own headers taking precedence). The `service` and `labelers` options, however, are scoped to each client: requests made through the child client use the child's `service` and `labelers`, not the base client's. The one exception is static `appLabelers` (set via `Client.configure()`), which are always applied — with the `;redact` param — to every request passing through a `Client`, including composed ones.
 
 ```typescript
 import { Client } from '@atproto/lex'
@@ -1526,12 +1548,12 @@ import { Client } from '@atproto/lex'
 // Base client with authentication
 const baseClient = new Client(session)
 
-baseClient.setLabelers(['did:plc:labelerA', 'did:plc:labelerB'])
 baseClient.headers.set('x-app-version', '1.0.0')
 
-// Create a new client with additional configuration that will get merged with
-// baseClient's settings on every request.
+// Create a new client with its own service and labelers configuration. The
+// base client's custom headers (like 'x-app-version') still apply.
 const configuredClient = new Client(baseClient, {
+  service: 'did:web:api.bsky.app#bsky_appview',
   labelers: ['did:plc:labelerC'],
   headers: { 'x-trace-id': 'abc123' },
 })
@@ -1573,14 +1595,13 @@ async function createBaseClient(session: OAuthSession) {
 // Usage
 const baseClient = await createBaseClient(session)
 
-// Create a new client with a different service, but reusing the labelers
-// from the base client.
+// Create a new client with a different service, initialized with a copy of
+// the base client's labelers. Note that later updates to the base client's
+// labelers will not affect the other client.
 const otherClient = new Client(baseClient, {
   service: 'did:web:com.example.other#other_service',
+  labelers: baseClient.labelers,
 })
-
-// Whenever you update labelers on the base client, the other client will automatically
-// receive the same updates, since they share the same labeler set.
 ```
 
 ### Building Library-Style APIs with Actions

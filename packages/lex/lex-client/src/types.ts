@@ -22,6 +22,8 @@ export type DidServiceIdentifier = 'atproto_labeler' | UnknownString
  */
 export type Service = `${DidString}#${DidServiceIdentifier}`
 
+export type Labeler = DidString | `${DidString};redact`
+
 /**
  * Valid input types for binary request bodies.
  *

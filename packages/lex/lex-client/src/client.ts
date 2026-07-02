@@ -36,12 +36,11 @@ import {
   type XrpcResponseBody,
   type XrpcResponseOptions,
 } from './response.js'
-import type { BinaryBodyInit, Service } from './types.js'
+import type { BinaryBodyInit, Labeler, Service } from './types.js'
 import {
   type RecordKeyOptions,
   type XrpcRequestHeadersOptions,
   applyDefaults,
-  buildXrpcRequestHeaders,
   getDefaultRecordKey,
   getLiteralRecordKey,
 } from './util.js'
@@ -398,27 +397,24 @@ export class Client implements Agent {
   /** The underlying agent used for making requests. */
   public readonly agent: Agent
 
-  /** Custom headers included in all requests. */
+  /** Default header values to include in all requests made by this client instance. */
   public readonly headers: Headers
 
-  /** Optional service identifier for routing requests. */
-  public readonly service?: Service
-
-  /** Set of labeler DIDs specific to this client instance. */
-  public readonly labelers: Set<DidString>
-
-  public readonly xrpcDefaults: {
-    readonly validateRequest: boolean
-    readonly validateResponse: boolean
-    readonly strictResponseProcessing: boolean
-  }
+  /** Default {@link XrpcOptions} for this client instance. */
+  public readonly xrpcDefaults: Readonly<{
+    service: Service | null
+    labelers: Set<Labeler>
+    validateRequest: boolean
+    validateResponse: boolean
+    strictResponseProcessing: boolean
+  }>
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent = buildAgent(agent)
-    this.service = options.service
-    this.labelers = new Set(options.labelers)
     this.headers = new Headers(options.headers)
     this.xrpcDefaults = Object.freeze({
+      service: options.service ?? null,
+      labelers: new Set(options.labelers),
       validateRequest: options.validateRequest ?? false,
       validateResponse: options.validateResponse ?? true,
       strictResponseProcessing: options.strictResponseProcessing ?? true,
@@ -439,6 +435,14 @@ export class Client implements Agent {
   get assertDid(): DidString {
     this.assertAuthenticated()
     return this.did
+  }
+
+  get service(): Service | null {
+    return this.xrpcDefaults.service
+  }
+
+  get labelers(): Set<Labeler> {
+    return this.xrpcDefaults.labelers
   }
 
   /**
@@ -462,7 +466,7 @@ export class Client implements Agent {
    * Replaces all labelers with the given set.
    * @param labelers - Iterable of labeler DIDs
    */
-  public setLabelers(labelers: Iterable<DidString> = []) {
+  public setLabelers(labelers: Iterable<Labeler> = []) {
     this.clearLabelers()
     this.addLabelers(labelers)
   }
@@ -471,15 +475,15 @@ export class Client implements Agent {
    * Adds labelers to the current set.
    * @param labelers - Iterable of labeler DIDs to add
    */
-  public addLabelers(labelers: Iterable<DidString>) {
-    for (const labeler of labelers) this.labelers.add(labeler)
+  public addLabelers(labelers: Iterable<Labeler>) {
+    for (const labeler of labelers) this.xrpcDefaults.labelers.add(labeler)
   }
 
   /**
    * Removes all labelers from this client instance.
    */
   public clearLabelers() {
-    this.labelers.clear()
+    this.xrpcDefaults.labelers.clear()
   }
 
   /**
@@ -495,20 +499,41 @@ export class Client implements Agent {
     path: `/${string}`,
     init: RequestInit,
   ): Promise<Response> {
-    const headers = buildXrpcRequestHeaders({
-      headers: init.headers,
-      service: this.service,
-      labelers: [
-        ...(this.constructor as typeof Client).appLabelers.map(
-          (l) => `${l};redact` as const,
-        ),
-        ...this.labelers,
-      ],
-    })
+    // Lazily copy headers
+    const headers = new Headers(init.headers)
 
     // Incoming headers take precedence
     for (const [key, value] of this.headers) {
-      if (!headers.has(key)) headers.set(key, value)
+      // "atproto-*" are configured via options
+      if (key.startsWith('atproto-')) continue
+
+      if (!headers.has(key)) {
+        headers.set(key, value)
+      }
+    }
+
+    // If "appLabelers" are configured, they are always added to the request
+    // (with the ";redact" param).
+    const { appLabelers } = this.constructor as typeof Client
+    if (appLabelers.length > 0) {
+      const redactLabeler = new Set<DidString | `${DidString};redact`>()
+
+      for (const l of appLabelers) {
+        redactLabeler.add(`${l};redact` as const)
+      }
+
+      const existingLabelers = headers.get('atproto-accept-labelers')?.trim()
+      if (existingLabelers) {
+        for (const value of existingLabelers.split(',')) {
+          const l = value.trim()
+          if (l) redactLabeler.add(l as DidString | `${DidString};redact`)
+        }
+      }
+
+      headers.set(
+        'atproto-accept-labelers',
+        Array.from(redactLabeler).join(', '),
+      )
     }
 
     // @NOTE The agent here could be another Client instance.
