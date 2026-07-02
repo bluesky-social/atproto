@@ -1,5 +1,27 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import { isValidLanguage, parseLanguageString } from '../src/index.js'
+import { readInteropFile } from './_utils.ts'
+
+describe('valid interop', () => {
+  test.each(readInteropFile('language_syntax_valid.txt'))('%s', (value) => {
+    expect(isValidLanguage(value)).toBe(true)
+    expect(parseLanguageString(value)).not.toBeNull()
+  })
+})
+
+describe('invalid interop', () => {
+  test.each(readInteropFile('language_syntax_invalid.txt'))('%s', (value) => {
+    expect(isValidLanguage(value)).toBe(false)
+    expect(parseLanguageString(value)).toBeNull()
+  })
+})
+
+describe('invalid parse interop', () => {
+  test.each(readInteropFile('language_parse_invalid.txt'))('%s', (value) => {
+    expect(isValidLanguage(value)).toBe(true)
+    expect(parseLanguageString(value)).toBeNull()
+  })
+})
 
 describe(isValidLanguage, () => {
   it('validates BCP 47', () => {
