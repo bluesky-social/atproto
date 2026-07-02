@@ -10,7 +10,7 @@ export function Home() {
   const { did } = useOAuthSession()
   return (
     <Layout nav={<UserMenu />}>
-      <ProfileCard actor={did} className="rounded-md bg-white shadow-md">
+      <ProfileCard actor={did}>
         <div className="p-4">
           <ProfileInfo />
           <SessionInfo />

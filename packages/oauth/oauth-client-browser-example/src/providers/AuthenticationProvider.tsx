@@ -1,56 +1,52 @@
-import { ReactNode, createContext, useContext, useMemo } from 'react'
-import { Client, DidString } from '@atproto/lex'
-import { AtmosphereSignInDialog } from '../components/AtmosphereSignInDialog.tsx'
+import { ReactNode, createContext, useContext } from 'react'
+import { OAuthSession } from '@atproto/oauth-client-browser'
+import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
 import { Layout } from '../components/Layout.tsx'
 import { Spinner } from '../components/Spinner.tsx'
 import { PDS_OPERATOR_URL } from '../constants.ts'
 import { useDebounced } from '../lib/use-debounced.ts'
-import { OAuthProvider, useOAuthContext } from './OAuthProvider.tsx'
+import { useOAuthContext } from './OAuthProvider.tsx'
 
-export type AuthenticatedClient = Client & { did: DidString }
-export type AuthenticationContextType = AuthenticatedClient
-
-export const AuthenticationContext =
-  createContext<AuthenticationContextType | null>(null)
-AuthenticationContext.displayName = 'AuthenticationContext'
-
-export function AuthenticationProvider({ children }: { children?: ReactNode }) {
-  return (
-    <OAuthProvider>
-      <AuthenticationProviderInternal>
-        {children}
-      </AuthenticationProviderInternal>
-    </OAuthProvider>
-  )
+export type AuthenticationValue = {
+  session: OAuthSession
+  signOut: () => Promise<void>
 }
 
-function AuthenticationProviderInternal({
-  children,
-}: {
-  children?: ReactNode
-}) {
-  const { isLoading, session, signIn, signUp } = useOAuthContext()
+export const AuthenticationContext = createContext<AuthenticationValue | null>(
+  null,
+)
+AuthenticationContext.displayName = 'AuthenticationContext'
 
-  const client = useMemo<AuthenticationContextType | null>(() => {
-    if (!session) return null
+/**
+ * Provides a context that ensures that the user is signed in and has a valid
+ * session. If the user is not signed in, a sign-in dialog will be displayed.
+ */
+export function AuthenticationProvider({ children }: { children?: ReactNode }) {
+  const { isInitialized, session, signIn, signUp, signOut } = useOAuthContext(
+    AuthenticationProvider.name,
+  )
 
-    const client: Client = new Client(session)
-    client.assertAuthenticated()
-    return client
-  }, [session])
-
-  // Create artificial delay so that if a loading state is initially shown, it
-  // does not disappear too quickly, causing a flicker effect.
-  const ready = client != null && !isLoading
+  // Create an artificial delay so that if a loading state is initially shown,
+  // it does not disappear too quickly, causing a flicker effect.
+  const ready = isInitialized
   const readyDebounced = useDebounced(ready, !ready ? 0 : 333)
+  if (!readyDebounced) {
+    return (
+      <Layout>
+        <div className="flex flex-grow flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+          <Spinner />
+          Authenticating...
+        </div>
+      </Layout>
+    )
+  }
 
-  if (!client) {
+  if (!session) {
     return (
       <Layout>
         <div className="flex flex-grow flex-col items-center justify-center">
-          <AtmosphereSignInDialog
-            signUpUrl={PDS_OPERATOR_URL}
-            loading={isLoading}
+          <AtmosphereSignInForm
+            pdsOperatorUrl={PDS_OPERATOR_URL}
             signIn={signIn}
             signUp={signUp}
           />
@@ -59,37 +55,20 @@ function AuthenticationProviderInternal({
     )
   }
 
-  if (!ready || !readyDebounced) {
-    return (
-      <Layout>
-        <div className="flex flex-grow flex-col items-center justify-center">
-          <Spinner />
-          Loading authentication status...
-        </div>
-      </Layout>
-    )
-  }
-
   return (
-    <AuthenticationContext.Provider value={client}>
+    <AuthenticationContext.Provider value={{ session, signOut }}>
       {children}
     </AuthenticationContext.Provider>
   )
 }
 
 export function useAuthenticationContext(
-  debugName = 'useAuthenticationContext',
+  hookName = useAuthenticationContext.name,
 ) {
   const context = useContext(AuthenticationContext)
   if (context) return context
 
   throw new Error(
-    `${debugName} must be used within a ${AuthenticationContext.displayName}`,
+    `${hookName} must be used within a ${AuthenticationContext.displayName}`,
   )
-}
-
-export function useAuthenticatedClient(): AuthenticatedClient {
-  const client: Client = useAuthenticationContext('useAuthenticatedClient')
-  client.assertAuthenticated()
-  return client
 }

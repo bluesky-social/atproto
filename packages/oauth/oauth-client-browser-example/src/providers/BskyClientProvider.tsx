@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import { Agent, Client } from '@atproto/lex'
 import { asDid } from '@atproto/oauth-client-browser'
 import { Layout } from '../components/Layout.tsx'
@@ -7,10 +7,7 @@ import { BSKY_API_DID, BSKY_API_URL } from '../constants.ts'
 import * as app from '../lexicons/app.ts'
 import { useAbortableEffect } from '../lib/use-abortable-effect.ts'
 import { useDebounced } from '../lib/use-debounced.ts'
-import {
-  AuthenticatedClient,
-  useAuthenticatedClient,
-} from './AuthenticationProvider.tsx'
+import { useOAuthContext } from './OAuthProvider.tsx'
 
 const BSKY_APPVIEW_DID_SERVICE = `${asDid(BSKY_API_DID)}#bsky_appview` as const
 
@@ -28,20 +25,19 @@ export function BskyClientProvider({
   // OAuthProvider "session" as agent to ensure that any configuration (e.g.
   // labelers, etc.) on the PDS client is preserved and applied to the
   // BskyClient context value as well.
-  const agent = useAuthenticatedClient()
-  const client = useBuiltClient(agent)
+  const { session } = useOAuthContext(BskyClientProvider.name)
+  const { client, configuring } = useConfiguredClient(session)
 
-  // Create artificial delay so that if a loading state is initially shown, it
-  // does not disappear too quickly, causing a flicker effect.
-  const ready = client != null
+  // Create an artificial delay so that if a loading state is initially shown,
+  // it does not disappear too quickly, causing a flicker effect.
+  const ready = !configuring
   const readyDebounced = useDebounced(ready, !ready ? 0 : 333)
-
-  if (!ready || !readyDebounced) {
+  if (!readyDebounced) {
     return (
       <Layout>
-        <div className="flex flex-grow flex-col items-center justify-center">
+        <div className="flex flex-grow flex-col items-center justify-center text-gray-500 dark:text-gray-400">
           <Spinner />
-          Loading Bluesky preferences...
+          Loading preferences...
         </div>
       </Layout>
     )
@@ -54,6 +50,12 @@ export function BskyClientProvider({
   )
 }
 
+/**
+ * Returns a {@link Client} instance that is configured with the current user's
+ * session (if any). If the user is not signed in, an unauthenticated client
+ * will be returned. Use {@link Client.did} to check if the client is
+ * authenticated.
+ */
 export function useBskyClient() {
   return useContext(BskyClientContext)
 }
@@ -72,70 +74,50 @@ export function useAuthenticatedBskyClient() {
   return client
 }
 
-function useBuiltClient(agent: Agent | null): AuthenticatedClient | null {
-  const [client, setClient] = useState<AuthenticatedClient | null>(null)
+function useConfiguredClient(agent: Agent | null) {
+  const client = useMemo(() => {
+    return agent
+      ? new Client(agent, { service: BSKY_APPVIEW_DID_SERVICE })
+      : unauthenticatedClient
+  }, [agent, unauthenticatedClient])
+
+  const [configuring, setConfiguring] = useState(
+    client !== unauthenticatedClient,
+  )
 
   useAbortableEffect(
     (signal) => {
-      if (!agent) {
-        setClient(null)
-        return
+      setConfiguring(true)
+      if (client.did) {
+        void configureClient(client, signal)
+          .catch((err) => {
+            console.error('Failed to configure Bsky client', err)
+          })
+          .finally(() => {
+            if (!signal.aborted) setConfiguring(false)
+          })
       }
-
-      void buildClient(agent, signal).then((client) => {
-        if (!signal.aborted) setClient(client)
-      })
     },
-    [agent],
+    [client],
   )
 
-  return client
+  return {
+    client,
+    configuring: client === unauthenticatedClient ? false : configuring,
+  }
 }
 
-async function buildClient(
-  agent: Agent,
-  signal: AbortSignal,
-): Promise<AuthenticatedClient> {
-  const client: Client = new Client(agent, {
-    service: BSKY_APPVIEW_DID_SERVICE,
+async function configureClient(client: Client, signal: AbortSignal) {
+  // Fetch preferences and configure the client with labelers
+
+  const { body } = await client.xrpc(app.bsky.actor.getPreferences, {
+    signal,
+    maxRetries: 5,
   })
 
-  client.assertAuthenticated()
+  const labelers = body.preferences
+    .findLast(app.bsky.actor.defs.labelersPref.$isTypeOf)
+    ?.labelers.map((l) => l.did)
 
-  // Fetch preferences and configure the client with labelers
-  try {
-    const { preferences } = await getPreferences(client, signal)
-
-    const labelers = preferences
-      .findLast(app.bsky.actor.defs.labelersPref.$isTypeOf)
-      ?.labelers.map((l) => l.did)
-
-    client.setLabelers(labelers)
-
-    console.info('Configured client with labelers:', labelers)
-  } catch (err) {
-    console.error('Failed to get preferences, using default labelers', err)
-  }
-
-  return client
-}
-
-async function getPreferences(client: Client, signal: AbortSignal) {
-  const start = Date.now()
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await client.call(app.bsky.actor.getPreferences, {}, { signal })
-    } catch (err) {
-      if (signal.aborted) throw err
-      if (Date.now() - start > 7_000) throw err
-
-      // TODO handle 403 ?
-      console.warn('Failed to get preferences, retrying...', err)
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.min(200 * 1.5 ** attempt, 5000)),
-      )
-
-      signal.throwIfAborted()
-    }
-  }
+  client.setLabelers(labelers)
 }

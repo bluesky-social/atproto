@@ -1,12 +1,24 @@
-import { FormEvent, JSX, useEffect, useRef, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { JSX, useEffect, useState } from 'react'
+import { HandleString, isHandleString } from '@atproto/lex'
+import { com } from '../lexicons.ts'
+import { useDebounced } from '../lib/use-debounced.ts'
+import { useBskyClient } from '../providers/BskyClientProvider.tsx'
+import { useLexQuery } from '../queries/use-lex-query.ts'
 import { Button } from './Button.tsx'
 
-export type AtmosphereSignInFormProps = JSX.IntrinsicElements['form'] & {
+function ifHandleString<T extends string>(
+  value: T,
+): undefined | (T & HandleString) {
+  return isHandleString(value) ? (value as T & HandleString) : undefined
+}
+
+export type AtmosphereSignInFormProps = JSX.IntrinsicElements['div'] & {
   placeholder?: string
   autoFocus?: boolean
-  disabled?: boolean
-  loading?: boolean
   signIn: (input: string) => Promise<void>
+  signUp: (input: string) => Promise<void>
+  pdsOperatorUrl?: string
 }
 
 /**
@@ -15,91 +27,133 @@ export type AtmosphereSignInFormProps = JSX.IntrinsicElements['form'] & {
  */
 export function AtmosphereSignInForm({
   signIn,
+  signUp,
+  pdsOperatorUrl,
   autoFocus = true,
   placeholder,
-  loading: forceLoading,
 
   // form
   className,
-  onSubmit,
+  role = 'dialog',
   ...props
 }: AtmosphereSignInFormProps) {
+  const client = useBskyClient()
   const [value, setValue] = useState('')
-  const [error, setError] = useState<Error | undefined>(undefined)
-  const [loading, setLoading] = useState(false)
-  const formRef = useRef<HTMLFormElement>(null)
 
-  const disabled = props.disabled || forceLoading || loading
+  const handleInput =
+    !value.includes(':') && value.includes('.') && value.length > 3
+      ? ifHandleString(value.replace('@', '').toLowerCase())
+      : undefined
+  const handle = useDebounced(handleInput, 750)
+  const handleDebouncing = handle != null && handle !== handleInput
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    if (disabled) return
+  const resolveMutation = useLexQuery(
+    client,
+    com.atproto.identity.resolveHandle,
+    handle ? { handle } : false,
+    { enabled: !handleDebouncing },
+  )
 
-    onSubmit?.(event)
-    if (!event.defaultPrevented) {
-      event.preventDefault()
-
-      const invalid = !formRef.current?.reportValidity()
-      if (invalid) return
-
-      try {
-        setLoading(true)
-
-        await signIn(value.replace('@', '').toLowerCase())
-      } catch (err) {
-        console.warn('Error during sign-in:', err)
-        setError(err as Error)
-      } finally {
-        setLoading(false)
-      }
-    }
-  }
+  const signInMutation = useMutation({
+    mutationFn: signIn,
+  })
 
   useEffect(() => {
-    setError(undefined)
+    signInMutation.reset()
   }, [value])
 
   return (
-    <form
+    <div
+      role={role}
+      className={`flex w-[450px] max-w-full flex-col items-stretch space-y-4 rounded-md bg-white p-4 text-slate-900 shadow-md dark:bg-slate-900 dark:text-slate-100 ${className}`}
       {...props}
-      ref={formRef}
-      className={`${className || ''} w-full`}
-      onSubmit={handleSubmit}
     >
-      <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
-        <div className="relative flex flex-wrap items-center justify-stretch space-x-2 p-1">
-          <input
-            name="identifier"
-            type="text"
-            className="relative mx-1 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder={placeholder}
-            aria-label={placeholder}
-            disabled={disabled}
-            required
-            min={3}
-            max={2048}
-            autoCapitalize="off"
-            autoComplete="username"
-            autoCorrect="off"
-            spellCheck="false"
-            autoFocus={autoFocus}
-            pattern={
-              value.startsWith('http:') || value.startsWith('https:')
-                ? '^https?:\\/\\/([a-z0-9\\-]+\\.)*[a-z]{2,}(:\\d{1,5})?$'
-                : value.startsWith('did:')
-                  ? '^(did:plc:[a-z2-7]{24}|did:web:[a-z0-9._\\-]+)$'
-                  : '^@?[a-zA-Z0-9\\-]+(\\.[a-zA-Z0-9_\\-]+)+$'
-            }
-            title={error ? String(error) : undefined}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-          <Button type="submit" loading={loading || forceLoading} transparent>
-            Login
-          </Button>
-        </div>
-      </fieldset>
+      <h2 className="text-center text-2xl font-medium">
+        Login with the Atmosphere
+      </h2>
+      <p>Enter your handle to continue</p>
+      <form
+        className={`${className || ''} w-full`}
+        inert={signInMutation.isPending}
+        onSubmit={(event) => {
+          event.preventDefault()
 
-      {error ? <div>{String(error)}</div> : null}
-    </form>
+          // handle does not resolve to a DID, no point in submitting
+          if (handle && !resolveMutation.data) {
+            return
+          }
+
+          if (event.currentTarget.reportValidity()) {
+            signInMutation.mutate(value.replace('@', '').toLowerCase())
+          }
+        }}
+      >
+        <fieldset className="rounded-md border border-solid border-slate-200 text-neutral-700 dark:border-slate-700 dark:text-neutral-100">
+          <div className="relative flex flex-wrap items-center justify-stretch space-x-2 p-1">
+            <input
+              name="identifier"
+              type="text"
+              className="relative mx-1 block w-[1px] min-w-0 flex-auto bg-transparent bg-clip-padding text-base text-inherit outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+              placeholder={placeholder}
+              aria-label={placeholder}
+              required
+              min={3}
+              max={2048}
+              autoCapitalize="off"
+              autoComplete="username"
+              autoCorrect="off"
+              spellCheck="false"
+              autoFocus={autoFocus}
+              pattern={
+                value.startsWith('http:') || value.startsWith('https:')
+                  ? '^https?:\\/\\/([a-z0-9\\-]+\\.)*[a-z]{2,}(:\\d{1,5})?$'
+                  : value.startsWith('did:')
+                    ? '^(did:plc:[a-z2-7]{24}|did:web:[a-z0-9._\\-]+)$'
+                    : '^@?[a-zA-Z0-9\\-]+(\\.[a-zA-Z0-9_\\-]+)+$'
+              }
+              title={
+                signInMutation.error ? String(signInMutation.error) : undefined
+              }
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+            <Button
+              type="submit"
+              loading={
+                signInMutation.isPending ||
+                resolveMutation.isLoading ||
+                handleDebouncing
+              }
+              disabled={!value || (handle && !resolveMutation.data)}
+            >
+              Login
+            </Button>
+          </div>
+        </fieldset>
+
+        {signInMutation.error ? (
+          <p>{String(signInMutation.error)}</p>
+        ) : handle != null &&
+          handle === handleInput &&
+          !resolveMutation.isLoading &&
+          resolveMutation.error ? (
+          <p>{resolveMutation.error.message}</p>
+        ) : null}
+      </form>
+
+      {pdsOperatorUrl && (
+        <Button
+          key="login"
+          type="button"
+          disabled={signInMutation.isPending}
+          transparent
+          size="large"
+          action={() => signIn(pdsOperatorUrl)}
+          name="login-button"
+        >
+          Login with {new URL(pdsOperatorUrl).host}
+        </Button>
+      )}
+    </div>
   )
 }

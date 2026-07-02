@@ -2,33 +2,39 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode, useEffect } from 'react'
 import { Home } from './Home.tsx'
 import * as lexicons from './lexicons.ts'
-import {
-  AuthenticationProvider,
-  useAuthenticationContext,
-} from './providers/AuthenticationProvider.tsx'
+import { AuthenticationProvider } from './providers/AuthenticationProvider.tsx'
 import {
   BskyClientProvider,
   useBskyClient,
 } from './providers/BskyClientProvider.tsx'
+import { OAuthProvider } from './providers/OAuthProvider.tsx'
+import {
+  PdsClientProvider,
+  usePdsClient,
+} from './providers/PdsClientProvider.tsx'
 
 const queryClient = new QueryClient()
 
 export function App() {
   return (
-    <AuthenticationProvider>
-      <BskyClientProvider>
-        <QueryClientProvider client={queryClient}>
-          <DevTools>
-            <Home />
-          </DevTools>
-        </QueryClientProvider>
-      </BskyClientProvider>
-    </AuthenticationProvider>
+    <OAuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <BskyClientProvider>
+          <AuthenticationProvider>
+            <PdsClientProvider>
+              <DevTools>
+                <Home />
+              </DevTools>
+            </PdsClientProvider>
+          </AuthenticationProvider>
+        </BskyClientProvider>
+      </QueryClientProvider>
+    </OAuthProvider>
   )
 }
 
 export function DevTools({ children }: { children?: ReactNode }) {
-  const pdsClient = useAuthenticationContext()
+  const pdsClient = usePdsClient()
   const bskyClient = useBskyClient()
 
   useEffect(() => {

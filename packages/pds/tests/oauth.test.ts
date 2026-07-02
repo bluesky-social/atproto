@@ -76,7 +76,9 @@ describe('oauth', () => {
 
     await page.assertTitle('OAuth Client Example')
 
-    await page.navigationClick(`Sign up with ${new URL(network.pds.url).host}`)
+    await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
+
+    await page.clickOnText('Créer un nouveau compte')
 
     await page.assertTitle('Inscription')
 

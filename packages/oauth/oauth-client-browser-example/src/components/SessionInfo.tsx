@@ -1,11 +1,11 @@
 import { com } from '../lexicons.ts'
-import { useAuthenticatedClient } from '../providers/AuthenticationProvider.tsx'
+import { usePdsClient } from '../providers/PdsClientProvider.tsx'
 import { useLexQuery } from '../queries/use-lex-query.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function SessionInfo() {
-  const client = useAuthenticatedClient()
+  const client = usePdsClient()
   const result = useLexQuery(client, com.atproto.server.getSession)
 
   return (
@@ -21,7 +21,7 @@ export function SessionInfo() {
           refresh
         </Button>
       </h2>
-      <JsonQueryResult result={result} transform={(data) => data.body} />
+      <JsonQueryResult result={result} />
     </div>
   )
 }

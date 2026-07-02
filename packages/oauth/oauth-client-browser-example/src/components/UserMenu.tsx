@@ -5,11 +5,11 @@ import {
 } from '@phosphor-icons/react'
 import { PDS_OPERATOR_URL } from '../constants.ts'
 import { app, com } from '../lexicons.ts'
-import { useAuthenticatedClient } from '../providers/AuthenticationProvider.tsx'
 import {
   useOAuthContext,
   useOAuthSession,
 } from '../providers/OAuthProvider.tsx'
+import { usePdsClient } from '../providers/PdsClientProvider.tsx'
 import { useGetTokenInfoQuery } from '../queries/use-get-token-info-query.ts'
 import { useLexQuery } from '../queries/use-lex-query.ts'
 import { useLexRecord } from '../queries/use-lex-record.ts'
@@ -17,7 +17,7 @@ import { ButtonDropdown } from './ButtonDropdown.tsx'
 
 export function UserMenu() {
   const { signOut } = useOAuthContext()
-  const client = useAuthenticatedClient()
+  const client = usePdsClient()
   const session = useOAuthSession()
 
   const tokenInfoQuery = useGetTokenInfoQuery()
@@ -26,7 +26,7 @@ export function UserMenu() {
 
   const iss = tokenInfoQuery.data?.iss
   const displayName = profileQuery.data?.value?.displayName
-  const handle = sessionQuery.data?.body.handle
+  const handle = sessionQuery.data?.handle
 
   return (
     <ButtonDropdown

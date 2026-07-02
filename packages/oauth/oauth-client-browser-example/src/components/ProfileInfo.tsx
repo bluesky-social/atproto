@@ -1,11 +1,11 @@
 import { app } from '../lexicons.ts'
-import { useBskyClient } from '../providers/BskyClientProvider.tsx'
+import { usePdsClient } from '../providers/PdsClientProvider.tsx'
 import { useLexRecord } from '../queries/use-lex-record.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function ProfileInfo() {
-  const client = useBskyClient()
+  const client = usePdsClient()
   const result = useLexRecord(client, app.bsky.actor.profile)
 
   return (

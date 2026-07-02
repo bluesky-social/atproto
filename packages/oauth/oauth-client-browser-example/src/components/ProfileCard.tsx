@@ -9,20 +9,25 @@ export type ProfileCardProps = JSX.IntrinsicElements['div'] & {
 }
 
 export function ProfileCard({
-  className = '',
-  children,
   actor,
+
+  // div
+  children,
+  className = '',
   ...props
 }: ProfileCardProps) {
   // Getting a user's profile from the Bluesky API
   const client = useBskyClient()
   const profileQuery = useLexQuery(client, app.bsky.actor.getProfile, { actor })
-  const profileData = profileQuery.data?.body
+  const profileData = profileQuery.data
 
   return (
-    <div className={`overflow-hidden ${className}`} {...props}>
+    <div
+      className={`rounded-md bg-white text-slate-900 shadow-md dark:bg-slate-900 dark:text-slate-100 ${className}`}
+      {...props}
+    >
       {profileData?.banner && (
-        <div className="h-32 w-full overflow-hidden">
+        <div className="h-32 w-full overflow-hidden rounded-t-md">
           <img
             src={profileData?.banner}
             alt="Banner"
@@ -38,16 +43,23 @@ export function ProfileCard({
             <img
               src={profileData?.avatar}
               alt={profileData?.displayName || 'Avatar'}
-              className="absolute -top-12 left-4 h-24 w-24 rounded-full border-4 border-white bg-white object-cover"
+              className="absolute -top-12 left-4 h-24 w-24 rounded-full border-4 border-white bg-white object-cover dark:border-slate-900 dark:bg-slate-900"
             />
           )}
-          <div className="ml-28">
-            <h2 className="text-2xl font-bold">{profileData?.displayName}</h2>
-            {profileData?.pronouns && (
-              <p className="text-sm text-gray-500">{profileData?.pronouns}</p>
+          <div>
+            {profileData?.displayName && (
+              <h2
+                className={`text-2xl font-bold ${profileData?.avatar ? 'ml-28' : undefined}`}
+              >
+                {profileData?.displayName}
+              </h2>
             )}
             {profileData?.description && (
-              <p className="mt-2">{profileData?.description}</p>
+              <p
+                className={`mt-2 ${profileData?.avatar && !profileData?.displayName ? 'ml-28' : undefined}`}
+              >
+                {profileData?.description}
+              </p>
             )}
           </div>
         </div>
