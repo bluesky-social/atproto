@@ -47,12 +47,12 @@ describe('ScopesSet', () => {
 
   it('should match space scopes via the dispatcher', () => {
     const set = new ScopesSet([
-      'space:com.example.group?did=did:plc:abc&skey=default&collection=com.example.event',
+      'space:com.example.group?authority=did:plc:abc&skey=default&collection=com.example.event',
     ])
     expect(
       set.matches('space', {
         type: 'com.example.group',
-        did: 'did:plc:abc',
+        authority: 'did:plc:abc',
         skey: 'default',
         action: 'read',
       }),
@@ -60,7 +60,7 @@ describe('ScopesSet', () => {
     expect(
       set.matches('space', {
         type: 'com.example.group',
-        did: 'did:plc:other',
+        authority: 'did:plc:other',
         skey: 'default',
         action: 'read',
       }),

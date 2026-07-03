@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Credential space mismatch')
       }
 
-      const authorityDid = new SpaceUri(space).spaceDid
+      const authorityDid = new SpaceUri(space).authorityDid
 
       // The writer set: accounts that have written to the space, maintained by
       // the authority from incoming notifyWrite calls. This is the sync
@@ -39,6 +39,8 @@ export default function (server: Server, ctx: AppContext) {
           cursor: writers.at(-1)?.did,
           repos: writers.map((w) => ({
             did: w.did as l.DidString,
+            rev: w.rev,
+            hash: w.hash,
           })),
         },
       }

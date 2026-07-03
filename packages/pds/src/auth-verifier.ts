@@ -411,7 +411,6 @@ export class AuthVerifier {
             type: 'space_credential' as const,
             iss: verified.iss,
             space: verified.sub,
-            clientId: verified.client_id,
           },
         }
       } catch (err) {

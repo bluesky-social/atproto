@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       // Membership management is a space-level "manage" (update) operation.
       assertSpaceScope(auth, space, { manage: 'update' })
 
-      const spaceDid = new SpaceUri(space).spaceDid
+      const spaceDid = new SpaceUri(space).authorityDid
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }

@@ -6,7 +6,7 @@ import {
   verifySignature,
 } from '@atproto/crypto'
 import { LtHash } from './lthash.js'
-import { SignedCommit, SpaceContext } from './types.js'
+import { COMMIT_VERSION, SignedCommit, SpaceContext } from './types.js'
 
 export const createCommit = async (
   setHash: LtHash,
@@ -18,7 +18,7 @@ export const createCommit = async (
   const ctx = encodeCtx(space, ikm)
   const mac = deriveKeyAndMac(ikm, ctx, hash)
   const sig = Buffer.from(await keypair.sign(ctx))
-  return { hash, mac, ikm, sig, rev: space.rev }
+  return { ver: COMMIT_VERSION, hash, mac, ikm, sig, rev: space.rev }
 }
 
 // Integrity check: recompute the MAC and compare. Symmetric — anyone holding
@@ -50,9 +50,10 @@ const deriveKeyAndMac = (ikm: Buffer, ctx: Buffer, data: Buffer): Buffer => {
 }
 
 // ctx = "atproto-space-v1"
-//    || uint16be(len(space)) || space   // space URI: ats://authority/type/skey
-//    || uint16be(len(rev))   || rev     // commit revision (TID)
-//    || uint16be(len(ikm))   || ikm     // per-commit nonce
+//    || uint16be(len(space))  || space   // space URI: at://authority/space/type/skey
+//    || uint16be(len(author)) || author  // author DID of the repo
+//    || uint16be(len(rev))    || rev     // commit revision (TID)
+//    || uint16be(len(ikm))    || ikm     // per-signature nonce
 //
 // Length prefixes are big-endian, following the TLS 1.3 (§3.4) variable-length
 // vector convention. This is the opposite byte order from the little-endian
@@ -61,6 +62,7 @@ const DOMAIN_PREFIX = Buffer.from('atproto-space-v1')
 const encodeCtx = (space: SpaceContext, ikm: Buffer): Buffer => {
   const fields: Buffer[] = [
     Buffer.from(space.space),
+    Buffer.from(space.author),
     Buffer.from(space.rev),
     ikm,
   ]

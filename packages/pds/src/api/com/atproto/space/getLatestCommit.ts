@@ -4,7 +4,7 @@ import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.getRepoState, {
+  server.add(com.atproto.space.getLatestCommit, {
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
       authorize: () => {
         // Performed in the handler as it requires the `space` param
@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         const keypair = await store.keypair()
         return buildSignedCommit({
           spaceUri: space,
+          author: repo,
           state,
           keypair,
         })

@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       // whole-space access and so cannot be exchanged for a credential.
       assertSpaceScope(auth, space, { action: 'read' })
 
-      const authorityDid = new SpaceUri(space).spaceDid
+      const authorityDid = new SpaceUri(space).authorityDid
       const keypair = await ctx.actorStore.keypair(userDid)
 
       const token = await createDelegationToken(

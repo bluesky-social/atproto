@@ -7,14 +7,12 @@ import {
   HandleString,
   NsidString,
   RecordKeyString,
-  SpaceUriString,
   TidString,
   UriString,
   isAtIdentifierString,
   isAtUriString,
   isDatetimeString,
   isDatetimeStringLenient,
-  isSpaceUriString,
   isValidDid,
   isValidHandle,
   isValidLanguage,
@@ -73,26 +71,6 @@ export {
  */
 export function isAtUriStringLenient<I>(input: I): input is I & AtUriString {
   return isAtUriString(input, { strict: false })
-}
-
-export {
-  type SpaceUriString,
-  asSpaceUriString,
-  assertSpaceUriString,
-  ifSpaceUriString,
-  isSpaceUriString,
-} from '@atproto/syntax'
-
-/**
- * Lenient version of {@link isSpaceUriString} that does not enforce validity of
- * NSID / DID / record-key path components.
- *
- * @see {@link isSpaceUriString}
- */
-export function isSpaceUriStringLenient<I>(
-  input: I,
-): input is I & SpaceUriString {
-  return isSpaceUriString(input, { strict: false })
 }
 
 /**
@@ -241,7 +219,6 @@ type StringFormats = {
   language: LanguageString
   nsid: NsidString
   'record-key': RecordKeyString
-  'space-uri': SpaceUriString
   tid: TidString
   uri: UriString
 }
@@ -268,7 +245,6 @@ const stringFormatVerifiers: {
   language: [isLanguageString],
   nsid: [isNsidString],
   'record-key': [isRecordKeyString],
-  'space-uri': [isSpaceUriString, isSpaceUriStringLenient],
   tid: [isTidString],
   uri: [isUriString],
 })

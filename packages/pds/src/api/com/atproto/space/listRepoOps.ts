@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo, since, limit } = params
+      const { space, repo, since, limit, excludeValues } = params
 
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
@@ -23,7 +23,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const result = await ctx.actorStore.read(repo, async (store) => {
-        const oplog = await store.space.getRepoOplog(space, { since, limit })
+        const oplog = await store.space.getRepoOplog(space, {
+          since,
+          limit,
+          includeValues: !excludeValues,
+        })
         // Only sign a commit when this batch drains the oplog to head —
         // otherwise the rev we'd bind into the commit may be ahead of the
         // ops we returned to the client. They'll get the commit on the
@@ -32,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         const commit = caughtUp
           ? await buildSignedCommit({
               spaceUri: space,
+              author: repo,
               state: { setHash: oplog.setHash, rev: oplog.rev },
               keypair: await store.keypair(),
             })
@@ -48,6 +53,7 @@ export default function (server: Server, ctx: AppContext) {
             rkey: op.rkey as l.RecordKeyString,
             cid: op.cid ? (op.cid as l.CidString) : null,
             prev: op.prev ? (op.prev as l.CidString) : null,
+            value: op.value,
           })),
           commit: result.commit,
         },

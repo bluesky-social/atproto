@@ -72,8 +72,9 @@ function extractSpaceDids(scope?: string): Set<string> {
   for (const value of scope.split(' ')) {
     const parsed = SpacePermission.fromString(value)
     if (!parsed) continue
-    if (parsed.did === '*') continue
-    dids.add(parsed.did)
+    // `*` and `self` name no concrete authority to resolve to a handle.
+    if (parsed.authority === '*' || parsed.authority === 'self') continue
+    dids.add(parsed.authority)
   }
   return dids
 }

@@ -66,7 +66,6 @@ export type SpaceCredentialOutput = {
     iss: string
     // The space URI the credential reads (the credential's `sub`).
     space: string
-    clientId?: string
   }
 }
 

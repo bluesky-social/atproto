@@ -1,7 +1,7 @@
 import { SeedClient, TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
 import { Client, DidString, xrpc } from '@atproto/lex'
 import { LtHash } from '@atproto/space'
-import { NsidString, SpaceUriString } from '@atproto/syntax'
+import { NsidString, AtUriString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
 
@@ -61,7 +61,7 @@ describe('spaces', () => {
   }
 
   type CreateSpaceConfig = {
-    mintPolicy?: 'public' | 'member-list' | 'managing-app'
+    policy?: 'public' | 'member-list' | 'managing-app'
     managingApp?: string
     appAccess?: com.atproto.simplespace.defs.SpaceConfig['appAccess']
   }
@@ -70,7 +70,7 @@ describe('spaces', () => {
     skey: string,
     members: DidString[] = [],
     config?: CreateSpaceConfig,
-  ): Promise<SpaceUriString> => {
+  ): Promise<AtUriString> => {
     const res = await pds1Client.call(
       com.atproto.simplespace.createSpace,
       {
@@ -79,17 +79,16 @@ describe('spaces', () => {
         skey,
         config: config
           ? com.atproto.simplespace.defs.spaceConfig.build({
-              mintPolicy: config.mintPolicy ?? 'member-list',
+              policy: config.policy ?? 'member-list',
               appAccess:
-                config.appAccess ??
-                com.atproto.simplespace.defs.open.build({}),
+                config.appAccess ?? com.atproto.simplespace.defs.open.build({}),
               managingApp: config.managingApp,
             })
           : undefined,
       },
       { headers: aliceHeaders },
     )
-    const uri = res.uri as SpaceUriString
+    const uri = res.uri as AtUriString
     for (const did of members) {
       await pds1Client.call(
         com.atproto.simplespace.addMember,
@@ -105,7 +104,7 @@ describe('spaces', () => {
   const credentialFor = async (
     memberPds: TestPds,
     memberHeaders: { authorization: string },
-    space: SpaceUriString,
+    space: AtUriString,
   ): Promise<{ authorization: string }> => {
     const memberClient = memberPds.getClient()
     const tokenRes = await memberClient.call(
@@ -167,7 +166,7 @@ describe('spaces', () => {
 
   it('creates a space', async () => {
     const spaceUri = await createSpace('create')
-    expect(spaceUri).toBe(`ats://${aliceDid}/app.bsky.group/create`)
+    expect(spaceUri).toBe(`at://${aliceDid}/space/app.bsky.group/create`)
 
     const res = await pds1Client.call(
       com.atproto.space.listSpaces,
@@ -563,7 +562,7 @@ describe('spaces', () => {
     const credHeaders = await credentialFor(pds3, carolHeaders, targetSpace)
 
     const ok = await pds1Client.call(
-      com.atproto.space.getRepoState,
+      com.atproto.space.getLatestCommit,
       { space: targetSpace, repo: aliceDid },
       { headers: credHeaders },
     )
@@ -582,7 +581,7 @@ describe('spaces', () => {
 
   it('createSpace persists config (managing-app + allowList)', async () => {
     const spaceUri = await createSpace('config-create', [], {
-      mintPolicy: 'managing-app',
+      policy: 'managing-app',
       managingApp: 'did:web:example.com#forum',
       appAccess: com.atproto.simplespace.defs.allowList.build({
         allowed: ['app:one', 'app:two'],
@@ -597,7 +596,7 @@ describe('spaces', () => {
     expect(got.uri).toBe(spaceUri)
     const config = asSpaceConfig(got.config)
     expect(config).toMatchObject({
-      mintPolicy: 'managing-app',
+      policy: 'managing-app',
       managingApp: 'did:web:example.com#forum',
     })
     expect(config.appAccess).toMatchObject({
@@ -615,7 +614,7 @@ describe('spaces', () => {
     )
     const config = asSpaceConfig(got.config)
     expect(config).toMatchObject({
-      mintPolicy: 'member-list',
+      policy: 'member-list',
     })
     expect(config.appAccess).toMatchObject({
       $type: 'com.atproto.simplespace.defs#open',
@@ -635,12 +634,12 @@ describe('spaces', () => {
     ).rejects.toThrow()
   })
 
-  it('updateSpace patches mintPolicy and appAccess', async () => {
+  it('updateSpace patches policy and appAccess', async () => {
     const spaceUri = await createSpace('config-update-each')
 
     await pds1Client.call(
       com.atproto.simplespace.updateSpace,
-      { space: spaceUri, mintPolicy: 'public' },
+      { space: spaceUri, policy: 'public' },
       { headers: aliceHeaders },
     )
     let got = await pds1Client.call(
@@ -648,7 +647,7 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got.config).toMatchObject({ mintPolicy: 'public' })
+    expect(got.config).toMatchObject({ policy: 'public' })
 
     await pds1Client.call(
       com.atproto.simplespace.updateSpace,
@@ -665,9 +664,9 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    // mintPolicy untouched; appAccess replaced.
+    // policy untouched; appAccess replaced.
     const config = asSpaceConfig(got.config)
-    expect(config).toMatchObject({ mintPolicy: 'public' })
+    expect(config).toMatchObject({ policy: 'public' })
     expect(config.appAccess).toMatchObject({
       $type: 'com.atproto.simplespace.defs#allowList',
       allowed: ['app:x'],
@@ -676,7 +675,7 @@ describe('spaces', () => {
 
   it('updateSpace clears managingApp on empty string', async () => {
     const spaceUri = await createSpace('config-clear-managing', [], {
-      mintPolicy: 'member-list',
+      policy: 'member-list',
       managingApp: 'did:web:example.com#forum',
     })
 
@@ -698,7 +697,7 @@ describe('spaces', () => {
     await expect(
       pds2Client.call(
         com.atproto.simplespace.updateSpace,
-        { space: spaceUri, mintPolicy: 'public' },
+        { space: spaceUri, policy: 'public' },
         { headers: bobHeaders },
       ),
     ).rejects.toThrow()
@@ -706,10 +705,10 @@ describe('spaces', () => {
 
   // ---------------- Credential mint: config gates ----------------
 
-  it('mints a credential for a non-member when mintPolicy is public', async () => {
-    // Carol is NOT a member, but mintPolicy=public bypasses the member check.
+  it('mints a credential for a non-member when policy is public', async () => {
+    // Carol is NOT a member, but policy=public bypasses the member check.
     const spaceUri = await createSpace('config-public-mint', [], {
-      mintPolicy: 'public',
+      policy: 'public',
     })
 
     const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
@@ -735,10 +734,10 @@ describe('spaces', () => {
   })
 
   it('refuses credential mint when appAccess is allowList and no attestation', async () => {
-    // mintPolicy public so the user passes; appAccess allowList requires an
+    // policy public so the user passes; appAccess allowList requires an
     // attested client_id, which the test flow does not supply.
     const spaceUri = await createSpace('config-app-allowlist', [], {
-      mintPolicy: 'public',
+      policy: 'public',
       appAccess: com.atproto.simplespace.defs.allowList.build({
         allowed: ['https://app.example.com/client-metadata.json'],
       }),
@@ -764,7 +763,7 @@ describe('spaces', () => {
     // Tells the full-resync story: when the oplog no longer reaches back to
     // a consumer's cursor, an incremental pull yields an incomplete diff,
     // which is detectable via setHash mismatch. Recovery uses listRecords +
-    // getRepoState — no new endpoint needed.
+    // getLatestCommit — no new endpoint needed.
     const spaceUri = await createSpace('prune', [bobDid])
 
     const writePost = (text: string) =>
@@ -865,7 +864,7 @@ describe('spaces', () => {
       xrpc(pds1.url, com.atproto.space.notifyWrite, {
         headers,
         body: {
-          space: spaceUri as SpaceUriString,
+          space: spaceUri as AtUriString,
           repo: carolDid,
           rev: 'spoof',
         },
@@ -888,7 +887,7 @@ describe('spaces', () => {
       xrpc(pds1.url, com.atproto.space.notifyWrite, {
         headers,
         body: {
-          space: spaceUri as SpaceUriString,
+          space: spaceUri as AtUriString,
           repo: carolDid,
           rev: 'spoof',
         },

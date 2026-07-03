@@ -1,7 +1,7 @@
 import { getServiceEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
 import { createSpaceCredential, parseClientAttestation } from '@atproto/space'
-import { DidString, SpaceUri, SpaceUriString } from '@atproto/syntax'
+import { DidString, SpaceUri, AtUriString } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const authorityDid = new SpaceUri(space).spaceDid
+      const authorityDid = new SpaceUri(space).authorityDid
 
       // Parse the client attestation if present. Structural validation only —
       // the attested client_id is taken as advisory until JWKS verification is
@@ -56,9 +56,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Space has been deleted', 'SpaceDeleted')
       }
 
-      // User perimeter (mintPolicy).
+      // User perimeter (policy).
       const userAuthorized = await checkUserAuthorized(ctx, {
-        mintPolicy: spaceRow.mintPolicy,
+        policy: spaceRow.policy,
         managingApp: spaceRow.managingApp,
         authorityDid,
         space,
@@ -89,7 +89,6 @@ export default function (server: Server, ctx: AppContext) {
         {
           iss: authorityDid,
           sub: space,
-          clientId,
         },
         keypair,
       )
@@ -105,7 +104,7 @@ export default function (server: Server, ctx: AppContext) {
 async function checkUserAuthorized(
   ctx: AppContext,
   opts: {
-    mintPolicy: string
+    policy: string
     managingApp: string | null
     authorityDid: string
     space: string
@@ -114,7 +113,7 @@ async function checkUserAuthorized(
     isMember: boolean
   },
 ): Promise<boolean> {
-  switch (opts.mintPolicy) {
+  switch (opts.policy) {
     case 'public':
       return true
     case 'member-list':
@@ -160,7 +159,7 @@ async function checkManagingApp(
     const res = await xrpc(endpoint, com.atproto.simplespace.checkUserAccess, {
       headers,
       params: {
-        space: space as SpaceUriString,
+        space: space as AtUriString,
         user: userDid as DidString,
         clientId,
       },

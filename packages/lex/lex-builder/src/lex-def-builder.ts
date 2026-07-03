@@ -846,8 +846,6 @@ export class LexDefBuilder {
         return 'l.LanguageString'
       case 'record-key':
         return 'l.RecordKeyString'
-      case 'space-uri':
-        return 'l.SpaceUriString'
       default:
         throw new Error(`Unknown string format: ${def.format}`)
     }

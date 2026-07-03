@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { action: 'delete', collection })
 
-      const rev = await ctx.actorStore.transact(did, async (actorTxn) => {
+      const result = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new SqlRepoStorage(actorTxn.space, space)
         const repoStore = await SpaceRepo.loadOrCreate(storage, did)
         const commit = await repoStore.formatCommit({
@@ -29,10 +29,11 @@ export default function (server: Server, ctx: AppContext) {
           collection,
           rkey,
         })
-        return actorTxn.space.applyRepoCommit(space, commit)
+        const rev = await actorTxn.space.applyRepoCommit(space, commit)
+        return { rev, setHash: commit.setHash }
       })
 
-      await fireNotifyWrite(ctx, space, did, rev)
+      await fireNotifyWrite(ctx, space, did, result.rev, result.setHash)
 
       return {
         encoding: 'application/json' as const,

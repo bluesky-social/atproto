@@ -13,7 +13,8 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo, collection, limit, cursor, reverse } = params
+      const { space, repo, collection, limit, cursor, reverse, excludeValues } =
+        params
 
       if (auth.credentials.type === 'space_credential') {
         if (auth.credentials.space !== space) {
@@ -29,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
           cursor,
           reverse,
           collection,
+          includeValues: !excludeValues,
         }),
       )
 
@@ -45,6 +47,7 @@ export default function (server: Server, ctx: AppContext) {
             collection: r.collection as NsidString,
             rkey: r.rkey,
             cid: r.cid,
+            value: r.value,
           })),
         },
       }

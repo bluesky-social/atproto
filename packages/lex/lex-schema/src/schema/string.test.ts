@@ -380,46 +380,41 @@ describe('StringSchema', () => {
     })
   })
 
-  describe('format: space-uri', () => {
-    const schema = string({ format: 'space-uri' })
+  // Space URIs (proposal 0016) validate through the at-uri format — they reuse
+  // the at:// scheme with a `space` marker segment.
+  describe('format: at-uri (space URIs)', () => {
+    const schema = string({ format: 'at-uri' })
 
-    it('accepts a space-only URI (3 segments)', () => {
+    it('accepts a space-only URI', () => {
       const result = schema.safeParse(
-        'ats://did:plc:abc123/com.example.group/default',
+        'at://did:plc:abc123/space/com.example.group/default',
       )
       expect(result.success).toBe(true)
     })
 
-    it('accepts a fully-qualified record URI (6 segments)', () => {
+    it('accepts a fully-qualified record URI', () => {
       const result = schema.safeParse(
-        'ats://did:plc:abc123/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(true)
     })
 
-    it('rejects a fully-qualified URI with an invalid user DID', () => {
+    it('rejects a fully-qualified URI with an invalid author DID', () => {
       const result = schema.safeParse(
-        'ats://did:plc:abc123/com.example.group/default/notadid/app.bsky.feed.post/3jzfcijpj2z2a',
+        'at://did:plc:abc123/space/com.example.group/default/notadid/app.bsky.feed.post/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(false)
     })
 
     it('rejects a fully-qualified URI with an invalid collection NSID', () => {
       const result = schema.safeParse(
-        'ats://did:plc:abc123/com.example.group/default/did:plc:user1/short/3jzfcijpj2z2a',
-      )
-      expect(result.success).toBe(false)
-    })
-
-    it('rejects an at-uri', () => {
-      const result = schema.safeParse(
-        'at://did:plc:abc123/app.bsky.feed.post/xyz',
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/short/3jzfcijpj2z2a',
       )
       expect(result.success).toBe(false)
     })
 
     it('rejects plain strings', () => {
-      const result = schema.safeParse('not a space-uri')
+      const result = schema.safeParse('not a uri')
       expect(result.success).toBe(false)
     })
   })

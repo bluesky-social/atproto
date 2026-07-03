@@ -1,4 +1,4 @@
-import { SpaceUriString } from '@atproto/syntax'
+import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${repo}/${collection}/${rkey}` as SpaceUriString,
+          uri: `${space}/${repo}/${collection}/${rkey}` as AtUriString,
           cid: record.cid,
           value: record.value,
         },

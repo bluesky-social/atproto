@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const callerDid = auth.credentials.did
       const { space } = params
 
-      const authorityDid = new SpaceUri(space).spaceDid
+      const authorityDid = new SpaceUri(space).authorityDid
       // Served by the space host (the authority's PDS).
       if (authorityDid !== callerDid) {
         throw new InvalidRequestError(

@@ -433,21 +433,6 @@ const lexicons: LexiconDoc[] = [
   },
   {
     lexicon: 1,
-    id: 'com.example.spaceUri',
-    defs: {
-      main: {
-        type: 'record',
-        record: {
-          type: 'object',
-          properties: {
-            spaceUri: { type: 'string', format: 'space-uri' },
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
     id: 'com.example.did',
     defs: {
       main: {

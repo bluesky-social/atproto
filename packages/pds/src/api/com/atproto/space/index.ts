@@ -5,8 +5,9 @@ import createRecord from './createRecord.js'
 import deleteRecord from './deleteRecord.js'
 import getBlob from './getBlob.js'
 import getDelegationToken from './getDelegationToken.js'
+import getLatestCommit from './getLatestCommit.js'
 import getRecord from './getRecord.js'
-import getRepoState from './getRepoState.js'
+import getRepo from './getRepo.js'
 import getSpace from './getSpace.js'
 import getSpaceCredential from './getSpaceCredential.js'
 import listRecords from './listRecords.js'
@@ -24,8 +25,9 @@ export default function (server: Server, ctx: AppContext) {
   deleteRecord(server, ctx)
   getBlob(server, ctx)
   getDelegationToken(server, ctx)
+  getLatestCommit(server, ctx)
   getRecord(server, ctx)
-  getRepoState(server, ctx)
+  getRepo(server, ctx)
   getSpace(server, ctx)
   getSpaceCredential(server, ctx)
   listRecords(server, ctx)

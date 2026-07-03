@@ -12,10 +12,10 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyWrite, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input, auth }) => {
-      const { space, repo, rev } = input.body
+      const { space, repo, rev, hash } = input.body
 
       const spaceUri = new SpaceUri(space)
-      const ownerDid = spaceUri.spaceDid
+      const ownerDid = spaceUri.authorityDid
 
       // The JWT is signed by the writer's keypair, so iss is the authoritative
       // identity of the caller. Require it to match the claimed writer so a
@@ -48,9 +48,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Record the writer in the space's writer set (the sync boundary that
-      // listRepos enumerates), advancing its latest known rev.
+      // listRepos enumerates), advancing its latest known rev and commit hash.
       await ctx.actorStore.transact(ownerDid, (txn) =>
-        txn.space.recordWriter(space, repo, rev),
+        txn.space.recordWriter(space, repo, rev, hash),
       )
 
       const keypair = await ctx.actorStore.keypair(ownerDid)
@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
         })
         xrpc(recipient.serviceEndpoint, com.atproto.space.notifyWrite, {
           headers,
-          body: { space, repo, rev },
+          body: { space, repo, rev, hash },
         }).catch(() => {
           // Best effort — notification delivery is not guaranteed
         })

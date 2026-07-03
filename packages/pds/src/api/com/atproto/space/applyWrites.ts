@@ -1,6 +1,6 @@
 import { TID } from '@atproto/common'
 import { RecordWriteOp, SpaceRepo, WriteOpAction } from '@atproto/space'
-import { SpaceUriString } from '@atproto/syntax'
+import { AtUriString } from '@atproto/syntax'
 import {
   ForbiddenError,
   InvalidRequestError,
@@ -63,18 +63,18 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const { results, rev } = await ctx.actorStore.transact(
+      const { results, rev, setHash } = await ctx.actorStore.transact(
         did,
         async (actorTxn) => {
           const storage = new SqlRepoStorage(actorTxn.space, space)
           const repoStore = await SpaceRepo.loadOrCreate(storage, did)
           const commit = await repoStore.formatCommit(ops)
           const rev = await actorTxn.space.applyRepoCommit(space, commit)
-          return { results: commit.writes, rev }
+          return { results: commit.writes, rev, setHash: commit.setHash }
         },
       )
 
-      await fireNotifyWrite(ctx, space, did, rev)
+      await fireNotifyWrite(ctx, space, did, rev, setHash)
 
       return {
         encoding: 'application/json' as const,
@@ -89,8 +89,7 @@ export default function (server: Server, ctx: AppContext) {
                   ? com.atproto.space.applyWrites.createResult
                   : com.atproto.space.applyWrites.updateResult
               return resultType.build({
-                uri:
-                  `${space}/${did}/${w.collection}/${w.rkey}` as SpaceUriString,
+                uri: `${space}/${did}/${w.collection}/${w.rkey}` as AtUriString,
                 cid: w.cid.toString(),
               })
             }

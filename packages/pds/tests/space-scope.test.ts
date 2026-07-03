@@ -8,7 +8,7 @@ import {
 } from '../src/auth-output.js'
 import { AuthScope } from '../src/auth-scope.js'
 
-const SPACE = 'ats://did:plc:owner/com.atmoboards.forum/default'
+const SPACE = 'at://did:plc:owner/space/com.atmoboards.forum/default'
 const DID = 'did:plc:user' as DidString
 
 const oauthAuth = (scope: string): OAuthOutput => ({
@@ -32,7 +32,6 @@ const credentialAuth = (): SpaceCredentialOutput => ({
     type: 'space_credential',
     iss: 'did:plc:owner',
     space: SPACE,
-    clientId: 'test-client',
   },
 })
 
@@ -65,37 +64,48 @@ describe('assertSpaceScope', () => {
   })
 
   describe('OAuth — read', () => {
-    it('passes when the grant covers the (type, did, skey) tuple', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?did=did:plc:owner')
+    it('passes when the grant covers the (type, authority, skey) tuple', () => {
+      const auth = oauthAuth(
+        'space:com.atmoboards.forum?authority=did:plc:owner',
+      )
       expect(() =>
         assertSpaceScope(auth, SPACE, { action: 'read' }),
       ).not.toThrow()
     })
 
     it('passes with type wildcard', () => {
-      const auth = oauthAuth('space:*?did=did:plc:owner')
+      const auth = oauthAuth('space:*?authority=did:plc:owner')
       expect(() =>
         assertSpaceScope(auth, SPACE, { action: 'read' }),
       ).not.toThrow()
     })
 
-    it('passes with did wildcard (modality grant)', () => {
+    it('passes with authority wildcard (any-authority grant)', () => {
+      const auth = oauthAuth('space:com.atmoboards.forum?authority=*')
+      expect(() =>
+        assertSpaceScope(auth, SPACE, { action: 'read' }),
+      ).not.toThrow()
+    })
+
+    it('rejects a bare grant (authority defaults to self) against another owner', () => {
+      // A bare `space:<type>` defaults authority to the granting user; it does
+      // not cover a space owned by did:plc:owner.
       const auth = oauthAuth('space:com.atmoboards.forum')
-      expect(() =>
-        assertSpaceScope(auth, SPACE, { action: 'read' }),
-      ).not.toThrow()
-    })
-
-    it('rejects when the type does not match', () => {
-      const auth = oauthAuth('space:com.example.different')
       expect(() => assertSpaceScope(auth, SPACE, { action: 'read' })).toThrow(
         ScopeMissingError,
       )
     })
 
-    it('rejects when the did does not match', () => {
+    it('rejects when the type does not match', () => {
+      const auth = oauthAuth('space:com.example.different?authority=*')
+      expect(() => assertSpaceScope(auth, SPACE, { action: 'read' })).toThrow(
+        ScopeMissingError,
+      )
+    })
+
+    it('rejects when the authority does not match', () => {
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?did=did:plc:somebody-else',
+        'space:com.atmoboards.forum?authority=did:plc:somebody-else',
       )
       expect(() => assertSpaceScope(auth, SPACE, { action: 'read' })).toThrow(
         ScopeMissingError,
@@ -110,7 +120,9 @@ describe('assertSpaceScope', () => {
     })
 
     it('passes read_self when the grant has read (read implies read_self)', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?action=read')
+      const auth = oauthAuth(
+        'space:com.atmoboards.forum?authority=*&action=read',
+      )
       expect(() =>
         assertSpaceScope(auth, SPACE, {
           action: 'read_self',
@@ -122,7 +134,9 @@ describe('assertSpaceScope', () => {
     it('rejects when the grant explicitly excludes read', () => {
       // `?action=create` lists only create — read is not in the action list
       // and the grant does not include manage either.
-      const auth = oauthAuth('space:com.atmoboards.forum?action=create')
+      const auth = oauthAuth(
+        'space:com.atmoboards.forum?authority=*&action=create',
+      )
       expect(() => assertSpaceScope(auth, SPACE, { action: 'read' })).toThrow(
         ScopeMissingError,
       )
@@ -132,7 +146,7 @@ describe('assertSpaceScope', () => {
   describe('OAuth — writes', () => {
     it('passes when action and collection are both covered', () => {
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?collection=com.atmoboards.thread&action=create',
+        'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
       )
       expect(() =>
         assertSpaceScope(auth, SPACE, {
@@ -143,7 +157,9 @@ describe('assertSpaceScope', () => {
     })
 
     it('passes for any collection when collection=*', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?collection=*')
+      const auth = oauthAuth(
+        'space:com.atmoboards.forum?authority=*&collection=*',
+      )
       expect(() =>
         assertSpaceScope(auth, SPACE, {
           action: 'update',
@@ -153,7 +169,7 @@ describe('assertSpaceScope', () => {
     })
 
     it('rejects when the grant has no write targets (omitted collection)', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum')
+      const auth = oauthAuth('space:com.atmoboards.forum?authority=*')
       expect(() =>
         assertSpaceScope(auth, SPACE, {
           action: 'create',
@@ -164,7 +180,7 @@ describe('assertSpaceScope', () => {
 
     it('rejects when the action is not in the action list', () => {
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?collection=com.atmoboards.thread&action=create',
+        'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=create',
       )
       expect(() =>
         assertSpaceScope(auth, SPACE, {
@@ -176,7 +192,7 @@ describe('assertSpaceScope', () => {
 
     it('rejects when the collection is not in the collection list', () => {
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?collection=com.atmoboards.thread',
+        'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread',
       )
       expect(() =>
         assertSpaceScope(auth, SPACE, {
@@ -188,7 +204,7 @@ describe('assertSpaceScope', () => {
 
     it('rejects when action=read alone (read-only grant cannot write)', () => {
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?collection=com.atmoboards.thread&action=read',
+        'space:com.atmoboards.forum?authority=*&collection=com.atmoboards.thread&action=read',
       )
       expect(() =>
         assertSpaceScope(auth, SPACE, {
@@ -201,33 +217,37 @@ describe('assertSpaceScope', () => {
 
   describe('OAuth — manage', () => {
     it('passes when the grant lists the manage verb', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?manage=update')
+      const auth = oauthAuth(
+        'space:com.atmoboards.forum?authority=*&manage=update',
+      )
       expect(() =>
         assertSpaceScope(auth, SPACE, { manage: 'update' }),
       ).not.toThrow()
     })
 
     it('rejects a different manage verb', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum?manage=update')
-      expect(() =>
-        assertSpaceScope(auth, SPACE, { manage: 'delete' }),
-      ).toThrow(ScopeMissingError)
+      const auth = oauthAuth(
+        'space:com.atmoboards.forum?authority=*&manage=update',
+      )
+      expect(() => assertSpaceScope(auth, SPACE, { manage: 'delete' })).toThrow(
+        ScopeMissingError,
+      )
     })
 
     it('rejects when the default grant has no manage verbs', () => {
-      const auth = oauthAuth('space:com.atmoboards.forum')
-      expect(() =>
-        assertSpaceScope(auth, SPACE, { manage: 'update' }),
-      ).toThrow(ScopeMissingError)
+      const auth = oauthAuth('space:com.atmoboards.forum?authority=*')
+      expect(() => assertSpaceScope(auth, SPACE, { manage: 'update' })).toThrow(
+        ScopeMissingError,
+      )
     })
 
     it('rejects when the grant lists only record actions', () => {
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?action=create&action=update',
+        'space:com.atmoboards.forum?authority=*&action=create&action=update',
       )
-      expect(() =>
-        assertSpaceScope(auth, SPACE, { manage: 'update' }),
-      ).toThrow(ScopeMissingError)
+      expect(() => assertSpaceScope(auth, SPACE, { manage: 'update' })).toThrow(
+        ScopeMissingError,
+      )
     })
   })
 
@@ -235,7 +255,7 @@ describe('assertSpaceScope', () => {
     it('any matching scope satisfies the check', () => {
       // Two unrelated grants — only the second one matches. Should still pass.
       const auth = oauthAuth(
-        'space:com.example.other space:com.atmoboards.forum?action=read',
+        'space:com.example.other space:com.atmoboards.forum?authority=*&action=read',
       )
       expect(() =>
         assertSpaceScope(auth, SPACE, { action: 'read' }),
@@ -245,7 +265,7 @@ describe('assertSpaceScope', () => {
     it('multiple narrow grants combine correctly', () => {
       // Read on any forum; write to threads on this specific forum.
       const auth = oauthAuth(
-        'space:com.atmoboards.forum?action=read space:com.atmoboards.forum?did=did:plc:owner&collection=com.atmoboards.thread&action=create',
+        'space:com.atmoboards.forum?authority=*&action=read space:com.atmoboards.forum?authority=did:plc:owner&collection=com.atmoboards.thread&action=create',
       )
       expect(() =>
         assertSpaceScope(auth, SPACE, { action: 'read' }),

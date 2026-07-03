@@ -6,7 +6,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('isOwner', 'integer', (col) => col.notNull())
     // simplespace config (only meaningful when isOwner)
-    .addColumn('mintPolicy', 'varchar', (col) =>
+    .addColumn('policy', 'varchar', (col) =>
       col.notNull().defaultTo('member-list'),
     )
     .addColumn('managingApp', 'varchar')
@@ -77,6 +77,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('rev', 'varchar', (col) => col.notNull())
+    .addColumn('hash', 'blob', (col) => col.notNull())
     .addPrimaryKeyConstraint('space_writer_pkey', ['space', 'did'])
     .execute()
 

@@ -1,99 +1,89 @@
 import { describe, expect, test } from 'vitest'
-import {
-  InvalidSpaceUriError,
-  assertSpaceUriString,
-  isSpaceUriString,
-} from '../src'
+import { InvalidSpaceUriError, SpaceUri, createSpaceUri } from '../src/index.js'
 
-describe('custom cases', () => {
-  describe('valid spec basics', () => {
-    testValid('ats://did:plc:asdf123')
-    testValid('ats://did:plc:asdf123/com.example.group')
-    testValid('ats://did:plc:asdf123/com.example.group/default')
-    testValid('ats://did:plc:asdf123/com.example.group/default/did:plc:user1')
-    testValid(
-      'ats://did:plc:asdf123/com.example.group/default/did:plc:user1/com.atproto.feed.post',
-    )
-    testValid(
-      'ats://did:plc:asdf123/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
-    )
+describe('SpaceUri', () => {
+  describe('parses space + record URIs', () => {
+    test('space URI', () => {
+      const uri = new SpaceUri(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+      expect(uri.authorityDid).toBe('did:plc:asdf123')
+      expect(uri.spaceType).toBe('com.example.group')
+      expect(uri.skey).toBe('default')
+      expect(uri.space).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+      expect(uri.authorDid).toBe('')
+      expect(uri.collection).toBe('')
+      expect(uri.rkey).toBe('')
+    })
+
+    test('full record URI', () => {
+      const uri = new SpaceUri(
+        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+      )
+      expect(uri.authorityDid).toBe('did:plc:asdf123')
+      expect(uri.spaceType).toBe('com.example.group')
+      expect(uri.skey).toBe('default')
+      expect(uri.authorDid).toBe('did:plc:user1')
+      expect(uri.collection).toBe('com.atproto.feed.post')
+      expect(uri.rkey).toBe('abc123')
+      // the space portion drops the record segments
+      expect(uri.space).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+    })
   })
 
-  describe('invalid spec basics', () => {
-    testInvalid('a://did:plc:asdf123')
-    testInvalid('ats//did:plc:asdf123')
-    testInvalid('ats:/did:plc:asdf123')
-    testInvalid('ats:///did:plc:asdf123')
-    testInvalid('://did:plc:asdf123')
-    testInvalid('//did:plc:asdf123')
-    testInvalid('http://did:plc:asdf123')
-    testInvalid('at://did:plc:asdf123') // ats, not at
-    testInvalid(' ats://did:plc:asdf123')
-    testInvalid('ats://did:plc:asdf123 ')
+  describe('rejects non-space URIs', () => {
+    test('missing space marker (public at-uri)', () => {
+      expect(
+        () => new SpaceUri('at://did:plc:asdf123/com.example.group/default'),
+      ).toThrow(InvalidSpaceUriError)
+    })
+
+    test('missing type/skey', () => {
+      expect(() => new SpaceUri('at://did:plc:asdf123/space')).toThrow(
+        InvalidSpaceUriError,
+      )
+      expect(
+        () => new SpaceUri('at://did:plc:asdf123/space/com.example.group'),
+      ).toThrow(InvalidSpaceUriError)
+    })
+
+    test('authority must be a DID', () => {
+      expect(
+        () =>
+          new SpaceUri('at://user.bsky.social/space/com.example.group/default'),
+      ).toThrow()
+    })
   })
 
-  describe('authority must be a DID', () => {
-    testInvalid('ats://user.bsky.social')
-    testInvalid('ats://name')
-    testInvalid('ats://')
-    testInvalid('ats://did:plc:')
-  })
+  describe('createSpaceUri', () => {
+    test('builds a space URI', () => {
+      const uri = createSpaceUri(
+        'did:plc:asdf123',
+        'com.example.group',
+        'default',
+      )
+      expect(uri.toString()).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+    })
 
-  describe('strict path validation', () => {
-    // spaceType must be a valid NSID
-    testInvalid('ats://did:plc:asdf123/short')
-    testInvalid('ats://did:plc:asdf123/12345.foo.bar')
-
-    // userDid must be a valid DID
-    testInvalid('ats://did:plc:asdf123/com.example.group/default/notadid')
-
-    // collection must be a valid NSID
-    testInvalid(
-      'ats://did:plc:asdf123/com.example.group/default/did:plc:user1/short',
-    )
-
-    // rkey must be a valid record-key
-    testInvalid(
-      'ats://did:plc:asdf123/com.example.group/default/did:plc:user1/com.atproto.feed.post/bad rkey',
-    )
-  })
-
-  describe('non-strict accepts loose path components', () => {
-    testLoose('ats://did:plc:asdf123/short')
-    testLoose('ats://did:plc:asdf123/com.example.group/default/notadid')
-  })
-
-  describe('disallowed characters', () => {
-    testInvalid('ats://did:plc:asdf123/com.example.g$oup')
-    testInvalid('ats://did:plc:asdf123/com.example.g oup/default')
-  })
-
-  describe('very long strings', () => {
-    testInvalid(`ats://did:plc:${'a'.repeat(8200)}/com.example.group/default`)
+    test('builds a full record URI', () => {
+      const uri = createSpaceUri(
+        'did:plc:asdf123',
+        'com.example.group',
+        'default',
+        'did:plc:user1',
+        'com.atproto.feed.post',
+        'abc123',
+      )
+      expect(uri.toString()).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+      )
+      expect(new SpaceUri(uri).rkey).toBe('abc123')
+    })
   })
 })
-
-function testValid(value: string) {
-  test(value, () => {
-    expect(isSpaceUriString(value)).toBe(true)
-    expect(isSpaceUriString(value, { strict: false })).toBe(true)
-    expect(() => assertSpaceUriString(value)).not.toThrow()
-    expect(() => assertSpaceUriString(value, { strict: false })).not.toThrow()
-  })
-}
-
-function testInvalid(value: string) {
-  test(value, () => {
-    expect(isSpaceUriString(value)).toBe(false)
-    expect(() => assertSpaceUriString(value)).toThrow(InvalidSpaceUriError)
-  })
-}
-
-function testLoose(value: string) {
-  test(value, () => {
-    expect(isSpaceUriString(value)).toBe(false)
-    expect(isSpaceUriString(value, { strict: false })).toBe(true)
-    expect(() => assertSpaceUriString(value)).toThrow()
-    expect(() => assertSpaceUriString(value, { strict: false })).not.toThrow()
-  })
-}

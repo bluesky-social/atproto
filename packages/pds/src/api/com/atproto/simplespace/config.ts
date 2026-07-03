@@ -36,14 +36,13 @@ export function fromLexAppAccess(appAccess: LexAppAccess): {
 // inferred from `.build()` so it carries a definite `$type` (the handler output
 // union requires it).
 export function toLexSpaceConfig(row: {
-  mintPolicy: string
+  policy: string
   managingApp: string | null
   appAccessType: string
   appAllowed: string[]
 }) {
   return com.atproto.simplespace.defs.spaceConfig.build({
-    mintPolicy:
-      row.mintPolicy as com.atproto.simplespace.defs.SpaceConfig['mintPolicy'],
+    policy: row.policy as com.atproto.simplespace.defs.SpaceConfig['policy'],
     appAccess: toLexAppAccess(row.appAccessType, row.appAllowed),
     managingApp: row.managingApp ?? undefined,
   })

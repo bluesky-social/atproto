@@ -37,13 +37,19 @@ export class LexiconManager {
    * composed solely of granular permission scopes, transforming any NSID
    * into its corresponding permission scopes.
    */
-  public async buildTokenScope(scope: string): Promise<string> {
+  public async buildTokenScope(
+    scope: string,
+    userDid: string,
+  ): Promise<string> {
     const { includeScopes, otherScopes } = parseScope(scope)
 
     // 1. Expand any "include:<nsid>" permission-set scopes into concrete scopes.
     const concreteScopes = includeScopes.length
       ? Array.from(includeScopes)
-          .flatMap(nsidToPermissionScopes, await this.extractPermissionSets(includeScopes))
+          .flatMap(
+            nsidToPermissionScopes,
+            await this.extractPermissionSets(includeScopes),
+          )
           .concat(otherScopes)
       : otherScopes
 
@@ -53,7 +59,13 @@ export class LexiconManager {
     //    materialized (mirrors how include: scopes are expanded above).
     const expanded = await this.expandSpaceCollections(concreteScopes)
 
-    return expanded.join(' ')
+    // 3. Resolve `authority=self` on `space:` grants to the granting user's DID
+    //    — likewise at issuance, since the matcher can't resolve `self` itself.
+    const resolved = expanded.map((value) =>
+      resolveSpaceSelfAuthority(value, userDid),
+    )
+
+    return resolved.join(' ')
   }
 
   /**
@@ -161,6 +173,19 @@ export class LexiconManager {
 
     return lexicon.defs.main
   }
+}
+
+/**
+ * Resolve `authority=self` on a `space:` scope to the granting user's DID. Any
+ * non-space scope, or a space scope naming a concrete authority or `*`, passes
+ * through unchanged.
+ */
+function resolveSpaceSelfAuthority(value: string, userDid: string): string {
+  const parsed = SpacePermission.fromString(value)
+  if (!parsed?.isSelfAuthority) return value
+  return parsed
+    .withResolvedAuthority(userDid as `did:${string}:${string}`)
+    .toString()
 }
 
 function extractSpaceTypeNsids(scope?: string): Set<Nsid> {

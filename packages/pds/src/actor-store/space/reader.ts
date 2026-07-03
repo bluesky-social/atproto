@@ -28,7 +28,7 @@ const parseStringArray = (raw: string): string[] => {
 export type SpaceRow = {
   uri: string
   isOwner: boolean
-  mintPolicy: string
+  policy: string
   managingApp: string | null
   appAccessType: string
   appAllowed: string[]
@@ -48,7 +48,7 @@ export class SpaceReader {
     return {
       uri: row.uri,
       isOwner: row.isOwner === 1,
-      mintPolicy: row.mintPolicy,
+      policy: row.policy,
       managingApp: row.managingApp,
       appAccessType: row.appAccessType,
       appAllowed: parseStringArray(row.appAllowed),
@@ -70,14 +70,14 @@ export class SpaceReader {
       .where('deletedAt', 'is', null)
       .orderBy('uri', 'asc')
       .limit(limit)
-    // Filter by URI shape `ats://<did>/<type>/<skey>`. DIDs can't contain `/`
-    // so a `%/<type>/%` LIKE is unambiguous.
+    // Filter by URI shape `at://<did>/space/<type>/<skey>`. DIDs can't contain
+    // `/` so a `%/space/<type>/%` LIKE is unambiguous.
     if (did && type) {
-      builder = builder.where('uri', 'like', `ats://${did}/${type}/%`)
+      builder = builder.where('uri', 'like', `at://${did}/space/${type}/%`)
     } else if (did) {
-      builder = builder.where('uri', 'like', `ats://${did}/%`)
+      builder = builder.where('uri', 'like', `at://${did}/space/%`)
     } else if (type) {
-      builder = builder.where('uri', 'like', `ats://%/${type}/%`)
+      builder = builder.where('uri', 'like', `at://%/space/${type}/%`)
     }
     if (cursor !== undefined) {
       builder = builder.where('uri', '>', cursor)
@@ -142,15 +142,21 @@ export class SpaceReader {
       cursor?: string
       reverse?: boolean
       collection?: string
+      includeValues?: boolean
     },
-  ): Promise<{ collection: string; rkey: string; cid: string }[]> {
-    const { limit, cursor, reverse, collection } = opts
+  ): Promise<
+    { collection: string; rkey: string; cid: string; value?: LexMap }[]
+  > {
+    const { limit, cursor, reverse, collection, includeValues } = opts
     // Pagination is ordered by (collection, rkey) so a single cursor works
     // across collections. Cursor format: `${collection}/${rkey}`.
     const direction = reverse ? 'asc' : 'desc'
+    const columns = includeValues
+      ? (['collection', 'rkey', 'cid', 'value'] as const)
+      : (['collection', 'rkey', 'cid'] as const)
     let builder = this.db.db
       .selectFrom('space_record')
-      .select(['collection', 'rkey', 'cid'])
+      .select(columns)
       .where('space', '=', space)
       .orderBy('collection', direction)
       .orderBy('rkey', direction)
@@ -177,6 +183,7 @@ export class SpaceReader {
       collection: r.collection,
       rkey: r.rkey,
       cid: r.cid,
+      ...(includeValues ? { value: cborToLexRecord(r.value) } : {}),
     }))
   }
 
@@ -200,10 +207,10 @@ export class SpaceReader {
   async listWriters(
     space: string,
     opts: { limit: number; cursor?: string },
-  ): Promise<{ did: string; rev: string }[]> {
+  ): Promise<{ did: string; rev: string; hash: Uint8Array }[]> {
     let builder = this.db.db
       .selectFrom('space_writer')
-      .select(['did', 'rev'])
+      .select(['did', 'rev', 'hash'])
       .where('space', '=', space)
       .orderBy('did', 'asc')
       .limit(opts.limit)
@@ -258,7 +265,7 @@ export class SpaceReader {
 
   async getRepoOplog(
     space: string,
-    opts: { since?: string; limit?: number },
+    opts: { since?: string; limit?: number; includeValues?: boolean },
   ): Promise<{
     ops: Array<{
       rev: string
@@ -268,34 +275,60 @@ export class SpaceReader {
       rkey: string
       cid: string | null
       prev: string | null
+      value?: LexMap
     }>
     setHash: Buffer | null
     rev: string | null
   }> {
+    const { since, limit, includeValues } = opts
     let builder = this.db.db
       .selectFrom('space_record_oplog')
-      .selectAll()
       .where('space', '=', space)
       .orderBy('rev', 'asc')
       .orderBy('idx', 'asc')
-    if (opts.since) {
-      builder = builder.where('rev', '>', opts.since)
+      .selectAll('space_record_oplog')
+    // Inline the record's current value, but only when the op's cid still
+    // matches the live record — a value superseded by a later op is stale and
+    // must be omitted. The join self-filters to the current row by cid.
+    if (includeValues) {
+      builder = builder
+        .leftJoin('space_record', (join) =>
+          join
+            .onRef('space_record.space', '=', 'space_record_oplog.space')
+            .onRef(
+              'space_record.collection',
+              '=',
+              'space_record_oplog.collection',
+            )
+            .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
+            .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
+        )
+        .select('space_record.value as value')
     }
-    if (opts.limit) {
-      builder = builder.limit(opts.limit)
+    if (since) {
+      builder = builder.where('rev', '>', since)
+    }
+    if (limit) {
+      builder = builder.limit(limit)
     }
     const rows = await builder.execute()
     const state = await this.getRepoState(space)
     return {
-      ops: rows.map((r) => ({
-        rev: r.rev,
-        idx: r.idx,
-        action: r.action,
-        collection: r.collection,
-        rkey: r.rkey,
-        cid: r.cid,
-        prev: r.prev,
-      })),
+      ops: rows.map((r) => {
+        // `value` is only present on the joined rows (includeValues); the
+        // conditional select isn't reflected in kysely's row type.
+        const value = (r as { value?: Uint8Array | null }).value
+        return {
+          rev: r.rev,
+          idx: r.idx,
+          action: r.action,
+          collection: r.collection,
+          rkey: r.rkey,
+          cid: r.cid,
+          prev: r.prev,
+          ...(value != null ? { value: cborToLexRecord(value) } : {}),
+        }
+      }),
       setHash: state?.setHash ?? null,
       rev: state?.rev ?? null,
     }

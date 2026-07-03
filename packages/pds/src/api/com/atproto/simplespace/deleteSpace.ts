@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { manage: 'delete' })
 
-      const spaceDid = new SpaceUri(space).spaceDid
+      const spaceDid = new SpaceUri(space).authorityDid
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }

@@ -17,12 +17,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Credential space mismatch')
       }
 
-      const authorityDid = new SpaceUri(space).spaceDid
+      const authorityDid = new SpaceUri(space).authorityDid
 
-      // Key the registration by the requesting service. The space credential
-      // carries the attested client_id when present; fall back to the endpoint
-      // as a stable key otherwise.
-      const serviceKey = auth.credentials.clientId ?? endpoint
+      // Key the registration by the endpoint it delivers to. (The space
+      // credential no longer carries an attested client_id.)
+      const serviceKey = endpoint
 
       const spaceRow = await ctx.actorStore.read(authorityDid, (store) =>
         store.space.getSpace(space),

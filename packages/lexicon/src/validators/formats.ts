@@ -3,7 +3,6 @@ import {
   isAtIdentifierString,
   isAtUriString,
   isDatetimeStringLenient,
-  isSpaceUriString,
   isValidDid,
   isValidHandle,
   isValidLanguage,
@@ -20,10 +19,6 @@ export const datetime = createValidator(
 )
 export const uri = createValidator(isValidUri, 'must be a uri')
 export const atUri = createValidator(isAtUriString, 'must be a valid at-uri')
-export const spaceUri = createValidator(
-  isSpaceUriString,
-  'must be a valid space-uri',
-)
 export const did = createValidator(isValidDid, 'must be a valid did')
 export const handle = createValidator(isValidHandle, 'must be a valid handle')
 export const atIdentifier = createValidator(

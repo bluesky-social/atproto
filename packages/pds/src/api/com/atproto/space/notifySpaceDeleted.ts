@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { space } = input.body
 
-      const spaceDid = new SpaceUri(space).spaceDid
+      const spaceDid = new SpaceUri(space).authorityDid
       if (auth.credentials.iss !== spaceDid) {
         throw new AuthRequiredError(
           'JWT issuer must be the space DID',

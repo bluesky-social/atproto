@@ -190,6 +190,19 @@ const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
 const AT_URI_REGEXP =
   /^(?<uri>at:\/\/(?<authority>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?(?<trailingSlash>\/)?)(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
+// Permissioned "space" URIs reuse the at:// scheme with a literal `space`
+// marker sitting where a collection NSID would (proposal 0016). They carry more
+// path segments than a canonical at-uri, so they need their own grammar:
+//
+//   at://{authority}/space/{spaceType}/{skey}                            (space)
+//   at://{authority}/space/{spaceType}/{skey}/{author}/{collection}/{rkey} (record)
+//
+// The two are unambiguous — a canonical collection is an NSID (≥2 dots) whereas
+// the `space` marker has none.
+const SPACE_MARKER = 'space'
+const SPACE_AT_URI_REGEXP =
+  /^at:\/\/(?<authority>[^/?#\s]+)\/space\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<author>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?$/
+
 /**
  * Parses a valid {@link AtUriString} into a {@link AtUriParts} object, or
  * returns a failure with a detailed error message if the string is not a valid
@@ -210,6 +223,13 @@ export function parseAtUriString(
   const invalidChar = input.match(INVALID_CHAR_REGEXP)
   if (invalidChar) {
     return failure('Disallowed characters in ATURI (ASCII)')
+  }
+
+  // Permissioned space URIs (proposal 0016) reuse the at:// scheme but carry a
+  // `space` marker and extra path segments the canonical grammar disallows.
+  // Route them to their own validation.
+  if (input.startsWith(`at://`) && isSpaceMarkerUri(input)) {
+    return parseSpaceAtUriString(input, options)
   }
 
   const match = input.match(AT_URI_REGEXP)
@@ -284,6 +304,56 @@ export function parseAtUriString(
   }
 
   return success(groups as AtUriParts)
+}
+
+/** True when the first path segment under the authority is the `space` marker. */
+function isSpaceMarkerUri(input: string): boolean {
+  const pathStart = input.indexOf('/', 5) // after "at://"
+  if (pathStart === -1) return false
+  const rest = input.slice(pathStart + 1)
+  return rest === SPACE_MARKER || rest.startsWith(`${SPACE_MARKER}/`)
+}
+
+/**
+ * Validate a permissioned space URI. In strict mode the spaceType/collection
+ * are checked as NSIDs, the author as a DID, and the rkey as a record key. The
+ * authority may be any at-identifier (a DID in practice, per proposal 0016).
+ */
+function parseSpaceAtUriString(
+  input: string,
+  options?: ParseAtUriStringOptions,
+): Result<AtUriParts> {
+  const groups = input.match(SPACE_AT_URI_REGEXP)?.groups
+  if (!groups) {
+    return failure('Space ATURI does not match expected format')
+  }
+
+  if (!isAtIdentifierString(groups.authority)) {
+    return failure('Space ATURI has invalid authority')
+  }
+
+  if (options?.strict !== false) {
+    if (!isValidNsid(groups.spaceType)) {
+      return failure('Space ATURI has invalid space type')
+    }
+    if (groups.author != null) {
+      if (!isAtIdentifierString(groups.author)) {
+        return failure('Space ATURI has invalid author')
+      }
+      if (!isValidNsid(groups.collection)) {
+        return failure('Space ATURI has invalid collection')
+      }
+      if (!isValidRecordKey(groups.rkey)) {
+        return failure('Space ATURI has invalid record key')
+      }
+    }
+  }
+
+  // Space URIs don't map onto the canonical {collection, rkey} shape; surface
+  // the parts we have under the closest-fitting fields for the return type.
+  return success({
+    authority: groups.authority as AtIdentifierString,
+  } as AtUriParts)
 }
 
 const BASIC_JSON_POINTER_REGEXP = /^\/[a-zA-Z0-9._~:@!$&')(*+,;=%[\]/-]*$/

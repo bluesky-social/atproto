@@ -59,10 +59,16 @@ export type CommitData = {
   setHash: Buffer
 }
 
+// The commit format version. Fixed at 1 for this version of the protocol; it
+// corresponds to the version in the ctx protocol tag (atproto-space-v1).
+export const COMMIT_VERSION = 1
+
 // The context bound into a commit's signature and MAC. `space` is the 3-part
-// space URI (ats://authority/type/skey); `rev` is the commit revision (TID).
+// space URI (at://authority/space/type/skey); `author` is the DID of the repo
+// whose records the commit summarizes; `rev` is the commit revision (TID).
 export type SpaceContext = {
   space: string
+  author: string
   rev: string
 }
 
@@ -75,6 +81,7 @@ export type UnsignedCommit = {
 // `rev` rides along on the commit because it's bound into the signing context —
 // a reader needs it to reconstruct the ctx used for signature & MAC verification.
 export type SignedCommit = UnsignedCommit & {
+  ver: number
   sig: Buffer
   rev: string
 }

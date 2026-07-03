@@ -1,3 +1,4 @@
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -7,8 +8,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { params }) => {
         const type = (params.type as string | undefined) ?? '*'
-        const did = (params.did as string | undefined) ?? '*'
-        permissions.assertSpace({ type, did, skey: '*', action: 'read' })
+        const authority = (params.did as string | undefined) ?? '*'
+        permissions.assertSpace({ type, authority, skey: '*', action: 'read' })
       },
     }),
     handler: async ({ params, auth }) => {
@@ -29,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           cursor: spaces.at(-1)?.uri,
           spaces: spaces.map((s) => ({
-            uri: s.uri,
+            uri: s.uri as AtUriString,
             isOwner: s.isOwner,
           })),
         },

@@ -189,6 +189,40 @@ describe('custom cases', () => {
     testInvalid('#at://did:plc:asdf123')
     testInvalid('at://did:plc:asdf123#/asdf#/asdf')
   })
+
+  // Permissioned space URIs reuse the at:// scheme with a `space` marker and
+  // extra path segments (proposal 0016).
+  describe('space URIs', () => {
+    // space reference (authority/space/type/skey)
+    testValid('at://did:plc:asdf123/space/com.example.group/default')
+    // full record (…/author/collection/rkey)
+    testValid(
+      'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+    )
+
+    // spaceType must be an NSID
+    testInvalid('at://did:plc:asdf123/space/short/default')
+    // authority must be an at-identifier
+    testInvalid('at://not a did/space/com.example.group/default')
+    // missing skey
+    testInvalid('at://did:plc:asdf123/space/com.example.group')
+    // bare marker
+    testInvalid('at://did:plc:asdf123/space')
+    // partial record tail (author without collection/rkey)
+    testInvalid(
+      'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1',
+    )
+    // record with non-NSID collection
+    testInvalid(
+      'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/short/abc123',
+    )
+
+    // strict enforces NSID spaceType; lenient still requires the shape but
+    // relaxes the record key
+    testLoose(
+      'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/%%%',
+    )
+  })
 })
 
 function testValid(value: string) {

@@ -45,13 +45,20 @@ export type SpaceTypeParam = '*' | Nsid
 export const isSpaceTypeParam = (value: unknown): value is SpaceTypeParam =>
   value === '*' || isNsid(value)
 
-/** Did param value: a DID (did:method:id) or "*" for any owner. */
+/**
+ * Authority param value: a space-authority DID, `self` for the granting user's
+ * own DID, or `*` for any authority. `self` is resolved to the user's DID at
+ * token-issuance time (see {@link SpacePermission.withResolvedAuthority}), so
+ * the runtime matcher only ever sees a concrete DID or `*`.
+ */
 type DidString = `did:${string}:${string}`
 const isDidString = (value: unknown): value is DidString =>
   typeof value === 'string' && isValidDid(value)
-export type SpaceDidParam = '*' | DidString
-export const isSpaceDidParam = (value: unknown): value is SpaceDidParam =>
-  value === '*' || isDidString(value)
+export type SpaceAuthorityParam = '*' | 'self' | DidString
+export const isSpaceAuthorityParam = (
+  value: unknown,
+): value is SpaceAuthorityParam =>
+  value === '*' || value === 'self' || isDidString(value)
 
 /** Skey param value: any non-empty string up to 512 chars, or "*". */
 export type SpaceSkeyParam = string
@@ -84,12 +91,16 @@ export const isSpaceCollectionParam = (
  */
 export type SpacePermissionMatch = {
   type: string
-  did: string
+  authority: string
   skey: string
 } & (
   | { action: 'read'; collection?: never; manage?: never }
   | { action: 'read_self'; collection: string; manage?: never }
-  | { action: 'create' | 'update' | 'delete'; collection: string; manage?: never }
+  | {
+      action: 'create' | 'update' | 'delete'
+      collection: string
+      manage?: never
+    }
   | { action?: never; collection?: never; manage: SpaceManageOp }
 )
 
@@ -98,7 +109,7 @@ export class SpacePermission
 {
   constructor(
     public readonly type: SpaceTypeParam,
-    public readonly did: SpaceDidParam,
+    public readonly authority: SpaceAuthorityParam,
     public readonly skey: SpaceSkeyParam | '*',
     public readonly collection: NeRoArray<SpaceCollectionParam>,
     public readonly action: NeRoArray<SpaceAction>,
@@ -106,9 +117,13 @@ export class SpacePermission
   ) {}
 
   matches(target: SpacePermissionMatch) {
-    // Tuple match: (type, did, skey) must all overlap.
+    // Tuple match: (type, authority, skey) must all overlap. `self` should have
+    // been resolved to a concrete DID at issuance; if it wasn't, it matches
+    // nothing (fail closed).
     if (this.type !== '*' && this.type !== target.type) return false
-    if (this.did !== '*' && this.did !== target.did) return false
+    if (this.authority !== '*' && this.authority !== target.authority) {
+      return false
+    }
     if (this.skey !== '*' && this.skey !== target.skey) return false
 
     // Space management — governed by the separate `manage` list.
@@ -160,9 +175,32 @@ export class SpacePermission
     if (this.hasCollections || collections.length === 0) return this
     return new SpacePermission(
       this.type,
-      this.did,
+      this.authority,
       this.skey,
       collections as NeRoArray<SpaceCollectionParam>,
+      this.action,
+      this.manage,
+    )
+  }
+
+  /** True when `authority` is the `self` sentinel (needs issuance-time resolution). */
+  get isSelfAuthority(): boolean {
+    return this.authority === 'self'
+  }
+
+  /**
+   * Returns a copy of this permission with an `authority` of `self` resolved to
+   * the granting user's DID. Called at token-issuance time (the matcher is
+   * context-free and can't resolve `self` itself). A grant naming a concrete
+   * DID or `*` is returned unchanged.
+   */
+  withResolvedAuthority(userDid: DidString): SpacePermission {
+    if (this.authority !== 'self') return this
+    return new SpacePermission(
+      this.type,
+      userDid,
+      this.skey,
+      this.collection,
       this.action,
       this.manage,
     )
@@ -180,11 +218,11 @@ export class SpacePermission
         required: true,
         validate: isSpaceTypeParam,
       },
-      did: {
+      authority: {
         multiple: false,
         required: false,
-        default: '*' as const,
-        validate: isSpaceDidParam,
+        default: 'self' as const,
+        validate: isSpaceAuthorityParam,
       },
       skey: {
         multiple: false,
@@ -249,7 +287,7 @@ export class SpacePermission
 
     return new SpacePermission(
       result.type,
-      result.did,
+      result.authority,
       result.skey,
       result.collection,
       result.action,
@@ -260,7 +298,7 @@ export class SpacePermission
   static scopeNeededFor(options: SpacePermissionMatch): string {
     const base = {
       type: options.type as SpaceTypeParam,
-      did: options.did as SpaceDidParam,
+      authority: options.authority as SpaceAuthorityParam,
       skey: options.skey as SpaceSkeyParam | '*',
     }
     // Space management grant.
@@ -274,11 +312,11 @@ export class SpacePermission
     }
     // Record grant. `read` is collection-independent; the rest carry a target
     // collection.
-    const collection = (
-      options.action === 'read'
-        ? []
-        : [options.collection as SpaceCollectionParam]
-    ) as unknown as NeRoArray<SpaceCollectionParam>
+    const collection = (options.action === 'read'
+      ? []
+      : [
+          options.collection as SpaceCollectionParam,
+        ]) as unknown as NeRoArray<SpaceCollectionParam>
     return SpacePermission.parser.format({
       ...base,
       collection,

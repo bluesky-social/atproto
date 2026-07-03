@@ -16,7 +16,8 @@ import {
 } from '../src/index.js'
 
 const testSpace: SpaceContext = {
-  space: 'ats://did:example:space/app.bsky.group/test',
+  space: 'at://did:example:space/space/app.bsky.group/test',
+  author: 'did:example:alice',
   rev: '3kbcq3p7ad400',
 }
 
@@ -223,6 +224,7 @@ describe('commits', () => {
       record: { text: 'hello' },
     })
     const commit = await repo.commit(testSpace, keypair)
+    expect(commit.ver).toBe(1)
     expect(commit.hash).toBeInstanceOf(Buffer)
     expect(commit.mac).toBeInstanceOf(Buffer)
     expect(commit.ikm).toBeInstanceOf(Buffer)
@@ -303,7 +305,8 @@ describe('commits', () => {
     })
     const commit = await repo.commit(testSpace, keypair)
     const otherSpace: SpaceContext = {
-      space: 'ats://did:example:space/app.bsky.group/other',
+      space: 'at://did:example:space/space/app.bsky.group/other',
+      author: testSpace.author,
       rev: testSpace.rev,
     }
     expect(repo.verifyCommit(otherSpace, commit)).toBe(false)
@@ -431,7 +434,7 @@ describe('commits', () => {
 describe('credentials', () => {
   let keypairA: Secp256k1Keypair
   let keypairB: Secp256k1Keypair
-  const spaceUri = 'ats://did:plc:authority/app.bsky.group/myspace'
+  const spaceUri = 'at://did:plc:authority/space/app.bsky.group/myspace'
 
   beforeAll(async () => {
     keypairA = await Secp256k1Keypair.create()
@@ -509,7 +512,6 @@ describe('credentials', () => {
         {
           iss: 'did:plc:authority',
           sub: spaceUri,
-          clientId: 'https://example.com/client',
         },
         keypairA,
       )
@@ -517,16 +519,6 @@ describe('credentials', () => {
       const payload = await verifySpaceCredential(credential, keypairA.did())
       expect(payload.iss).toBe('did:plc:authority')
       expect(payload.sub).toBe(spaceUri)
-      expect(payload.client_id).toBe('https://example.com/client')
-    })
-
-    it('omits client_id when no attestation was presented', async () => {
-      const credential = await createSpaceCredential(
-        { iss: 'did:plc:authority', sub: spaceUri },
-        keypairA,
-      )
-      const payload = await verifySpaceCredential(credential, keypairA.did())
-      expect(payload.client_id).toBeUndefined()
     })
 
     it('defaults to a 2-hour expiry and uses #atproto_space kid', async () => {

@@ -1,6 +1,6 @@
 import { cidForLex } from '@atproto/lex-cbor'
 import { SpaceRepo, WriteOpAction } from '@atproto/space'
-import { SpaceUriString } from '@atproto/syntax'
+import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
@@ -37,15 +37,15 @@ export default function (server: Server, ctx: AppContext) {
         })
         const rev = await actorTxn.space.applyRepoCommit(space, commit)
         const cid = await cidForLex(record)
-        return { cid: cid.toString(), rev }
+        return { cid: cid.toString(), rev, setHash: commit.setHash }
       })
 
-      await fireNotifyWrite(ctx, space, did, result.rev)
+      await fireNotifyWrite(ctx, space, did, result.rev, result.setHash)
 
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${did}/${collection}/${rkey}` as SpaceUriString,
+          uri: `${space}/${did}/${collection}/${rkey}` as AtUriString,
           cid: result.cid,
         },
       }

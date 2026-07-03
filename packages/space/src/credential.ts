@@ -12,7 +12,7 @@ export const CLIENT_ATTESTATION_TYP = 'atproto-client-attestation+jwt'
 export type DelegationTokenPayload = {
   iss: string // user DID
   aud: string // space host (service fragment of the authority DID)
-  sub: string // space URI being requested (ats://authority/type/skey)
+  sub: string // space URI being requested (at://authority/space/type/skey)
   iat: number // seconds since epoch
   exp: number // iat + 60 (60 seconds)
   jti: string // random nonce
@@ -21,7 +21,6 @@ export type DelegationTokenPayload = {
 export type SpaceCredentialPayload = {
   iss: string // space authority DID
   sub: string // space URI the credential reads
-  client_id?: string // attested application (omitted if no attestation)
   iat: number
   exp: number // iat + 7200 (2 hours default)
   jti: string // random nonce
@@ -108,8 +107,8 @@ export async function verifyDelegationToken(
 export type CreateSpaceCredentialOpts = {
   iss: string
   sub: string
-  clientId?: string
   expSeconds?: number
+  kid?: string
 }
 
 export async function createSpaceCredential(
@@ -127,11 +126,15 @@ export async function createSpaceCredential(
     exp,
     jti,
   }
-  if (opts.clientId) {
-    payload.client_id = opts.clientId
-  }
 
-  return createJwt(SPACE_CREDENTIAL_TYP, payload, keypair, '#atproto_space')
+  // Signed by the authority's #atproto_space key, or #atproto when the
+  // authority publishes no dedicated space key (proposal 0016).
+  return createJwt(
+    SPACE_CREDENTIAL_TYP,
+    payload,
+    keypair,
+    opts.kid ?? '#atproto_space',
+  )
 }
 
 export async function verifySpaceCredential(

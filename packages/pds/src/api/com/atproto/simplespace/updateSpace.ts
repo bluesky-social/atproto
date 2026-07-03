@@ -14,11 +14,11 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const ownerDid = auth.credentials.did
-      const { space, mintPolicy, managingApp, appAccess } = input.body
+      const { space, policy, managingApp, appAccess } = input.body
 
       assertSpaceScope(auth, space, { manage: 'update' })
 
-      const spaceDid = new SpaceUri(space).spaceDid
+      const spaceDid = new SpaceUri(space).authorityDid
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         await actorTxn.space.updateSpaceConfig(space, {
-          mintPolicy,
+          policy,
           // Empty string clears managingApp; any other string sets it.
           managingApp:
             managingApp === undefined

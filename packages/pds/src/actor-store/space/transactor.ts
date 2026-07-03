@@ -5,7 +5,7 @@ import { ActorDb } from '../db/index.js'
 import { SpaceReader } from './reader.js'
 
 export type SpaceConfig = {
-  mintPolicy?: string
+  policy?: string
   managingApp?: string | null
   appAccessType?: string
   appAllowed?: string[]
@@ -28,7 +28,7 @@ export class SpaceTransactor extends SpaceReader {
       .values({
         uri,
         isOwner: isOwner ? 1 : 0,
-        mintPolicy: config.mintPolicy ?? 'member-list',
+        policy: config.policy ?? 'member-list',
         managingApp: config.managingApp ?? null,
         appAccessType: config.appAccessType ?? 'open',
         appAllowed: JSON.stringify(config.appAllowed ?? []),
@@ -69,8 +69,8 @@ export class SpaceTransactor extends SpaceReader {
 
   async updateSpaceConfig(uri: string, patch: SpaceConfig): Promise<void> {
     const set: Record<string, unknown> = {}
-    if (patch.mintPolicy !== undefined) {
-      set.mintPolicy = patch.mintPolicy
+    if (patch.policy !== undefined) {
+      set.policy = patch.policy
     }
     if (patch.managingApp !== undefined) {
       set.managingApp = patch.managingApp
@@ -121,12 +121,17 @@ export class SpaceTransactor extends SpaceReader {
   // Record (or advance) a writer in the space's writer set. Called by the
   // authority when it receives a notifyWrite. The writer set is what listRepos
   // enumerates as the sync boundary.
-  async recordWriter(space: string, did: string, rev: string): Promise<void> {
+  async recordWriter(
+    space: string,
+    did: string,
+    rev: string,
+    hash: Uint8Array,
+  ): Promise<void> {
     await this.db.db
       .insertInto('space_writer')
-      .values({ space, did, rev })
+      .values({ space, did, rev, hash })
       .onConflict((oc) =>
-        oc.columns(['space', 'did']).doUpdateSet({ rev }),
+        oc.columns(['space', 'did']).doUpdateSet({ rev, hash }),
       )
       .execute()
   }
