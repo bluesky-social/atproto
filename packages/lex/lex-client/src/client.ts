@@ -380,7 +380,7 @@ export type ListRecordItem<Value extends LexMap> =
  *
  * const client = new Client(oauthSession)
  *
- * const response = await client.xrpc(app.bsky.feed.getTimeline.main, {
+ * const response = await client.xrpc(app.bsky.feed.getTimeline, {
  *   params: { limit: 50 }
  * })
  * ```
@@ -594,7 +594,7 @@ export class Client implements Agent {
    *
    * @example
    * ```typescript
-   * const result = await client.xrpcSafe(app.bsky.actor.getProfile.main, {
+   * const result = await client.xrpcSafe(app.bsky.actor.getProfile, {
    *   params: { actor: 'alice.bsky.social' }
    * })
    *
@@ -900,17 +900,24 @@ export class Client implements Agent {
    *
    * @example Query
    * ```typescript
-   * const profile = await client.call(app.bsky.actor.getProfile.main, {
+   * const profile = await client.call(app.bsky.actor.getProfile, {
    *   actor: 'alice.bsky.social'
    * })
    * ```
    *
    * @example Procedure
    * ```typescript
-   * const result = await client.call(com.atproto.repo.createRecord.main, {
+   * const result = await client.call(com.atproto.repo.createRecord, {
    *   repo: did,
    *   collection: 'app.bsky.feed.post',
    *   record: { text: 'Hello!' }
+   * })
+   * ```
+   *
+   * @example Action
+   * ```typescript
+   * const result = await client.call(updateProfile, (profile) => {
+   *   profile.displayName = 'Alice'
    * })
    * ```
    */
@@ -986,7 +993,7 @@ export class Client implements Agent {
    *
    * @example Creating a post
    * ```typescript
-   * const result = await client.create(app.bsky.feed.post.main, {
+   * const result = await client.create(app.bsky.feed.post, {
    *   text: 'Hello, world!',
    *   createdAt: new Date().toISOString()
    * })
@@ -995,10 +1002,12 @@ export class Client implements Agent {
    *
    * @example Creating a record with explicit rkey
    * ```typescript
-   * const result = await client.create(app.bsky.actor.profile.main, {
+   * const result = await client.create(app.bsky.actor.profile, {
    *   displayName: 'Alice'
    * }, { rkey: 'self' })
    * ```
+   *
+   * @see {@link createRecord} for a lower-level method that returns the raw response without schema validation
    */
   public async create<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends CreateOptions<T>
@@ -1031,6 +1040,8 @@ export class Client implements Agent {
    * @param ns - The record schema definition
    * @param options - Delete options (rkey required for non-literal keys)
    * @returns The delete output
+   *
+   * @see {@link deleteRecord} for a lower-level method that returns the raw response without schema validation
    */
   public async delete<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends DeleteOptions<T>
@@ -1062,10 +1073,12 @@ export class Client implements Agent {
    *
    * @example
    * ```typescript
-   * const profile = await client.get(app.bsky.actor.profile.main)
+   * const profile = await client.get(app.bsky.actor.profile)
    * // profile.value is typed as app.bsky.actor.profile.Record
    * console.log(profile.value.displayName)
    * ```
+   *
+   * @see {@link getRecord} for a lower-level method that returns the raw record without schema validation
    */
   public async get<const T extends RecordSchema>(
     ns: T['key'] extends `literal:${string}`
@@ -1096,6 +1109,24 @@ export class Client implements Agent {
    * @param input - The record data
    * @param options - Put options (rkey required for non-literal keys)
    * @returns The put output including URI and CID
+   *
+   * @example Creating a new record
+   * ```typescript
+   * const result = await client.put(app.bsky.feed.post, {
+   *   text: 'Hello, world!',
+   *   createdAt: new Date().toISOString()
+   * })
+   * console.log(result.uri)
+   * ```
+   *
+   * @example Updating an existing record with explicit rkey
+   * ```typescript
+   * const result = await client.put(app.bsky.actor.profile, {
+   *   displayName: 'Alice'
+   * }, { rkey: 'self' })
+   * ```
+   *
+   * @see {@link putRecord} for a lower-level method that returns the raw record without schema validation
    */
   public async put<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends PutOptions<T>
@@ -1130,7 +1161,7 @@ export class Client implements Agent {
    *
    * @example
    * ```typescript
-   * const result = await client.list(app.bsky.feed.post.main, { limit: 100 })
+   * const result = await client.list(app.bsky.feed.post, { limit: 100 })
    * for (const record of result.records) {
    *   if (record.valid) {
    *     record.value // Fully typed
@@ -1139,6 +1170,8 @@ export class Client implements Agent {
    *   }
    * }
    * ```
+   *
+   * @see {@link listRecords} for a lower-level method that returns the raw records without schema validation
    */
   async list<const T extends RecordSchema>(
     ns: Main<T>,
@@ -1157,6 +1190,9 @@ export class Client implements Agent {
    * @param ns - The record schema definition
    * @param options - List options including limit and cursor
    * @returns An async generator yielding each record validated against the schema
+   *
+   * @see {@link list} for a method that returns a single page of records
+   * @see {@link listRecords} for a lower-level method that returns raw records without schema validation
    */
   async *listAll<const T extends RecordSchema>(
     ns: Main<T>,
