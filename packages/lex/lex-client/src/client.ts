@@ -871,15 +871,19 @@ export class Client implements Agent {
    * @param cid - The CID of the blob
    * @param options - Call options
    *
-   * @note Unlike other AT Protocol repo specific methods (e.g., {@link
-   * uploadBlob}, {@link createRecord}, {@link applyWrites}, etc.), this method
-   * will **not** perform the request on the PDS by default (by setting
-   * `service` to `null` by default). Instead, it will use the default service
-   * routing.
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
-  async getBlob(did: DidString, cid: CidString, options?: GetBlobOptions) {
+  async getBlob(
+    did: DidString,
+    cid: CidString,
+    { service = null, labelers = null, ...options }: GetBlobOptions = {},
+  ) {
     return this.xrpc(getBlob, {
       ...options,
+      service,
+      labelers,
       params: { did, cid },
     })
   }
