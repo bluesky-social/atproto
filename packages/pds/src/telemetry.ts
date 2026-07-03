@@ -20,8 +20,6 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // @NOTE This is similar to "@opentelemetry/auto-instrumentations-node"'s
 // register script. We provide our own telemetry script because:
 //
-// 0) auto-instrumentations-node does not allow to easily disable the
-//    node:module hook when the SDK is disabled.
 // 1) auto-instrumentations-node does not provide instrumentation for
 //    better-sqlite3.
 // 2) we want to customize the HttpInstrumentation to provide better span name
@@ -91,11 +89,11 @@ const { shutdown } = start({
   ],
 })
 
-const onExit = async () => {
+const onExit = () => {
   process.off('SIGTERM', onExit)
   process.off('SIGINT', onExit)
   process.off('beforeExit', onExit)
-  await shutdown()
+  void shutdown()
 }
 
 process.on('SIGTERM', onExit)
