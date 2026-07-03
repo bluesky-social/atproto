@@ -18,6 +18,9 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
+  "bin": {
+    "pds": "./bin/pds"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -25,8 +28,8 @@
       "default": "./dist/index.js"
     },
     "./telemetry": {
-      "types": "./dist/telemetry/index.d.ts",
-      "default": "./dist/telemetry/index.js"
+      "types": "./dist/telemetry.d.ts",
+      "default": "./dist/telemetry.js"
     },
     "./package.json": "./package.json"
   },
