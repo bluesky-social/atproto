@@ -88,10 +88,20 @@ export type XrpcRequestHeadersOptions = {
    */
   headers?: HeadersInit
 
-  /** Labeler DIDs to request labels from for content moderation. */
+  /**
+   * Labeler DIDs to request labels from for content moderation.
+   *
+   * @default null, unless the client instance has default labelers set, in
+   * which case those defaults are used.
+   */
   labelers?: null | Iterable<Labeler>
 
-  /** Service proxy identifier for routing requests through a specific service. */
+  /**
+   * Service proxy identifier for routing requests through a specific service.
+   *
+   * @default null, unless the client instance has a default service set, in
+   * which case that default is used.
+   */
   service?: null | Service
 }
 
@@ -124,9 +134,9 @@ export function buildXrpcRequestHeaders(
     headers.set('atproto-proxy', options.service)
   }
 
-  const labelers = options.labelers && [...options.labelers].join(', ')
-  if (labelers) {
-    headers.set('atproto-accept-labelers', labelers)
+  const labelers = new Set(options.labelers)
+  if (labelers.size > 0) {
+    headers.set('atproto-accept-labelers', Array.from(labelers).join(', '))
   }
 
   return headers
@@ -229,4 +239,8 @@ export function wait(
 
     signal?.addEventListener('abort', onAbort)
   })
+}
+
+export function trim(value: string): string {
+  return value.trim()
 }

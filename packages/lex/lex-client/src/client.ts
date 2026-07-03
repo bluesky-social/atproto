@@ -43,6 +43,7 @@ import {
   applyDefaults,
   getDefaultRecordKey,
   getLiteralRecordKey,
+  trim,
 } from './util.js'
 import {
   type WriteOperation,
@@ -499,10 +500,10 @@ export class Client implements Agent {
     path: `/${string}`,
     init: RequestInit,
   ): Promise<Response> {
-    // Lazily copy headers
     const headers = new Headers(init.headers)
 
-    // Incoming headers take precedence
+    // Add non "atproto-*" headers from the client instance if they are not
+    // already set on the request.
     for (const [key, value] of this.headers) {
       // "atproto-*" are configured via options
       if (key.startsWith('atproto-')) continue
@@ -516,23 +517,21 @@ export class Client implements Agent {
     // (with the ";redact" param).
     const { appLabelers } = this.constructor as typeof Client
     if (appLabelers.length > 0) {
-      const redactLabeler = new Set<DidString | `${DidString};redact`>()
-
-      for (const l of appLabelers) {
-        redactLabeler.add(`${l};redact` as const)
-      }
-
-      const existingLabelers = headers.get('atproto-accept-labelers')?.trim()
-      if (existingLabelers) {
-        for (const value of existingLabelers.split(',')) {
-          const l = value.trim()
-          if (l) redactLabeler.add(l as DidString | `${DidString};redact`)
-        }
-      }
-
       headers.set(
         'atproto-accept-labelers',
-        Array.from(redactLabeler).join(', '),
+        Array.from(
+          new Set<Labeler>([
+            // Prepend appLabelers with ";redact" param
+            ...appLabelers.map(appendRedactParam),
+            // And keep any labelers that was set on the request (likely through
+            // the "labelers" option)
+            ...((headers
+              .get('atproto-accept-labelers')
+              ?.split(',')
+              .map(trim)
+              .filter(Boolean) ?? []) as Labeler[]),
+          ]),
+        ).join(', '),
       )
     }
 
@@ -643,14 +642,20 @@ export class Client implements Agent {
    * ```
    *
    * @see {@link create} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   public async createRecord(
     record: TypedLexMap<NsidString>,
     rkey?: string,
-    options?: CreateRecordOptions,
+    { service = null, labelers = null, ...options }: CreateRecordOptions = {},
   ) {
     return this.xrpc(createRecord, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,
@@ -670,14 +675,20 @@ export class Client implements Agent {
    * @param options - Delete options including repo, swapCommit, swapRecord
    *
    * @see {@link delete} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   async deleteRecord(
     collection: NsidString,
     rkey: string,
-    options?: DeleteRecordOptions,
+    { service = null, labelers = null, ...options }: DeleteRecordOptions = {},
   ) {
     return this.xrpc(deleteRecord, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         collection,
@@ -696,14 +707,20 @@ export class Client implements Agent {
    * @param options - Get options including repo
    *
    * @see {@link get} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   public async getRecord(
     collection: NsidString,
     rkey: string,
-    options?: GetRecordOptions,
+    { service = null, labelers = null, ...options }: GetRecordOptions = {},
   ) {
     return this.xrpc(getRecord, {
       ...options,
+      service,
+      labelers,
       params: {
         repo: options?.repo ?? this.assertDid,
         collection,
@@ -720,14 +737,20 @@ export class Client implements Agent {
    * @param options - Put options including repo, swapCommit, swapRecord, validate
    *
    * @see {@link put} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   async putRecord(
     record: TypedLexMap<NsidString>,
     rkey: string,
-    options?: PutRecordOptions,
+    { service = null, labelers = null, ...options }: PutRecordOptions = {},
   ) {
     return this.xrpc(putRecord, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,
@@ -747,10 +770,19 @@ export class Client implements Agent {
    * @param options - List options including repo, limit, cursor, reverse
    *
    * @see {@link list} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
-  async listRecords(nsid: NsidString, options?: ListRecordsOptions) {
+  async listRecords(
+    nsid: NsidString,
+    { service = null, labelers = null, ...options }: ListRecordsOptions = {},
+  ) {
     return this.xrpc(listRecords, {
       ...options,
+      service,
+      labelers,
       params: {
         repo: options?.repo ?? this.assertDid,
         collection: nsid,
@@ -783,13 +815,19 @@ export class Client implements Agent {
    *   console.log(result.uri)
    * }
    * ```
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   async applyWrites(
     factory: WriteOperationsFactory,
-    options?: ApplyWritesOptions,
+    { service = null, labelers = null, ...options }: ApplyWritesOptions = {},
   ) {
     return this.xrpc(applyWrites, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         writes: WriteOperationHelper.build(factory),
@@ -814,9 +852,16 @@ export class Client implements Agent {
    * })
    * console.log(response.body.blob) // Use this ref in records
    * ```
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
-  async uploadBlob(body: BinaryBodyInit, options?: UploadBlobOptions) {
-    return this.xrpc(uploadBlob, { ...options, body })
+  async uploadBlob(
+    body: BinaryBodyInit,
+    { service = null, labelers = null, ...options }: UploadBlobOptions = {},
+  ) {
+    return this.xrpc(uploadBlob, { ...options, service, labelers, body })
   }
 
   /**
@@ -825,6 +870,12 @@ export class Client implements Agent {
    * @param did - The DID of the repository containing the blob
    * @param cid - The CID of the blob
    * @param options - Call options
+   *
+   * @note Unlike other AT Protocol repo specific methods (e.g., {@link
+   * uploadBlob}, {@link createRecord}, {@link applyWrites}, etc.), this method
+   * will **not** perform the request on the PDS by default (by setting
+   * `service` to `null` by default). Instead, it will use the default service
+   * routing.
    */
   async getBlob(did: DidString, cid: CidString, options?: GetBlobOptions) {
     return this.xrpc(getBlob, {
@@ -1144,4 +1195,8 @@ function processListRecord<T extends RecordSchema>(
   } else {
     return { ...record, valid: false }
   }
+}
+
+function appendRedactParam(labeler: DidString): Labeler {
+  return `${labeler};redact`
 }
