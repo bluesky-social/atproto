@@ -81,13 +81,7 @@ ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD [
-  "node",
-  "--heapsnapshot-signal=SIGUSR2",
-  "--enable-source-maps",
-  "--experimental-loader=@opentelemetry/instrumentation/hook.mjs",
-  "--import=@atproto/pds/telemetry",
-  "index.ts"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--experimental-loader=@opentelemetry/instrumentation/hook.mjs", "--import=@atproto/pds/telemetry", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"
