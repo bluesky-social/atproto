@@ -2,6 +2,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@atproto/pds": "workspace:^"
+    "@atproto/pds": "workspace:^",
+    "@opentelemetry/instrumentation": "^0.219.0"
   }
 }
