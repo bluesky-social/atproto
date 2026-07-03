@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, Suspense, useEffect } from 'react'
 import { Home } from './Home.tsx'
+import { Spinner } from './components/Spinner.js'
 import * as lexicons from './lexicons.ts'
 import { AuthenticationProvider } from './providers/AuthenticationProvider.tsx'
 import {
@@ -17,23 +18,38 @@ const queryClient = new QueryClient()
 
 export function App() {
   return (
-    <OAuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <BskyClientProvider>
-          <AuthenticationProvider>
-            <PdsClientProvider>
-              <DevTools>
-                <Home />
-              </DevTools>
-            </PdsClientProvider>
-          </AuthenticationProvider>
-        </BskyClientProvider>
-      </QueryClientProvider>
-    </OAuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<LoadingView message="Authenticating..." />}>
+        <OAuthProvider>
+          <Suspense fallback={<LoadingView message="Loading preferences..." />}>
+            <BskyClientProvider>
+              <AuthenticationProvider>
+                <PdsClientProvider>
+                  <DevTools>
+                    <Suspense fallback={<LoadingView />}>
+                      <Home />
+                    </Suspense>
+                  </DevTools>
+                </PdsClientProvider>
+              </AuthenticationProvider>
+            </BskyClientProvider>
+          </Suspense>
+        </OAuthProvider>
+      </Suspense>
+    </QueryClientProvider>
   )
 }
 
-export function DevTools({ children }: { children?: ReactNode }) {
+function LoadingView({ message }: { message?: string }) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+      <Spinner />
+      {message}
+    </div>
+  )
+}
+
+function DevTools({ children }: { children?: ReactNode }) {
   const pdsClient = usePdsClient()
   const bskyClient = useBskyClient()
 

@@ -1,15 +1,16 @@
+import { JSX } from 'react'
 import { app } from '../lexicons.ts'
 import { usePdsClient } from '../providers/PdsClientProvider.tsx'
 import { useLexRecord } from '../queries/use-lex-record.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
-export function ProfileInfo() {
+export function ProfileInfo(props: JSX.IntrinsicElements['div']) {
   const client = usePdsClient()
   const result = useLexRecord(client, app.bsky.actor.profile)
 
   return (
-    <div>
+    <div {...props}>
       <h2>
         Profile record
         <Button
