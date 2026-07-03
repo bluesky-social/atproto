@@ -20,14 +20,18 @@ export type SignUpFunction = (
 ) => Promise<void>
 export type SignOutFunction = () => Promise<void>
 
-export const OAuthContext = createContext<null | {
+export type OAuthValue = {
   session: null | OAuthSession
+  isInitialized: boolean
   isLoading: boolean
   isSignedIn: boolean
   signIn: SignInFunction
   signUp: SignUpFunction
   signOut: SignOutFunction
-}>(null)
+}
+
+export const OAuthContext = createContext<null | OAuthValue>(null)
+OAuthContext.displayName = 'OAuthContext'
 
 export function OAuthProvider({ children }: PropsWithChildren) {
   const [initialized, setInitialized] = useState(false)
@@ -158,6 +162,7 @@ export function OAuthProvider({ children }: PropsWithChildren) {
       value={{
         session,
 
+        isInitialized: initialized,
         isLoading: !initialized || loading,
         isSignedIn: !!session,
 
@@ -171,14 +176,18 @@ export function OAuthProvider({ children }: PropsWithChildren) {
   )
 }
 
-export function useOAuthContext() {
+export function useOAuthContext(hookName = useOAuthContext.name) {
   const value = useContext(OAuthContext)
-  if (!value) throw new Error('useOAuth must be used within an OAuthProvider')
-  return value
+  if (value) return value
+
+  throw new Error(
+    `${hookName} must be used within an ${OAuthContext.displayName}`,
+  )
 }
 
-export function useOAuthSession(): OAuthSession {
-  const { session } = useOAuthContext()
-  if (!session) throw new Error('User is not logged in')
-  return session
+export function useOAuthSession(hookName = useOAuthSession.name): OAuthSession {
+  const { session } = useOAuthContext(hookName)
+  if (session) return session
+
+  throw new Error(`${hookName} must be used within an authenticated context`)
 }

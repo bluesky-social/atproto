@@ -1,5 +1,31 @@
 # @atproto/oauth-provider
 
+## 0.19.8
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto-labs/simple-store-memory@0.2.3
+  - @atproto/oauth-provider-api@0.7.3
+  - @atproto/oauth-provider-ui@0.8.4
+  - @atproto-labs/simple-store@0.4.3
+  - @atproto-labs/fetch-node@0.3.4
+  - @atproto/oauth-scopes@0.5.3
+  - @atproto/oauth-types@0.7.4
+  - @atproto/lex-document@0.1.3
+  - @atproto/lex-resolver@0.1.4
+  - @atproto-labs/fetch@0.3.3
+  - @atproto/jwk-jose@0.2.3
+  - @atproto-labs/pipe@0.2.3
+  - @atproto/jwk@0.7.3
+  - @atproto/common@0.6.5
+  - @atproto/did@0.5.3
+
 ## 0.19.7
 
 ### Patch Changes

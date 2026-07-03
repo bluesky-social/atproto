@@ -2,4 +2,4 @@
 '@atproto/oauth-client-browser-example': patch
 ---
 
-Properly type the `default` export
+Add account manager link in user menu

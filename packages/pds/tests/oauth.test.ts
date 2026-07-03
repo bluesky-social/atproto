@@ -3,13 +3,13 @@ import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
 import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {
   let browser: Browser
-  let network: TestNetworkNoAppView
+  let network: TestNetwork
   let server: Server
 
   let appUrl: string
@@ -28,7 +28,7 @@ describe('oauth', () => {
       // slowMo: 25,
     })
 
-    network = await TestNetworkNoAppView.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'oauth',
     })
 
@@ -46,13 +46,20 @@ describe('oauth', () => {
 
     const { port } = server.address() as AddressInfo
 
-    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
+    const appConfig: Record<string, string | undefined> = {
+      bsky_api_did: network.bsky.serverDid,
       plc_directory_url: network.plc.url,
+      pds_operator_url: network.pds.url,
       handle_resolver: network.pds.url,
-      sign_up_url: network.pds.url,
       env: 'test',
       scope: `account:email identity:* repo:*`,
-    })}`
+    }
+
+    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams(
+      Object.entries(appConfig).filter(
+        (e): e is [string, string] => e[1] != null,
+      ),
+    )}`
   })
 
   afterAll(async () => {
@@ -69,7 +76,9 @@ describe('oauth', () => {
 
     await page.assertTitle('OAuth Client Example')
 
-    await page.navigationClick(`Sign up with ${new URL(network.pds.url).host}`)
+    await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
+
+    await page.clickOnText('Créer un nouveau compte')
 
     await page.assertTitle('Inscription')
 

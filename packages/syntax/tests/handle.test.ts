@@ -1,12 +1,11 @@
-import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import {
   InvalidHandleError,
   ensureValidHandle,
   ensureValidHandleRegex,
   normalizeAndEnsureValidHandle,
 } from '../src/index.js'
+import { readInteropFile } from './_utils.ts'
 
 describe('handle validation', () => {
   const expectValid = (h: string) => {
@@ -194,34 +193,12 @@ describe('handle validation', () => {
     badStackoverflow.forEach(expectInvalid)
   })
 
-  it('conforms to interop valid handles', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/handle_syntax_valid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectValid(line)
-    })
+  describe('valid interop', () => {
+    test.each(readInteropFile(`handle_syntax_valid.txt`))('%s', expectValid)
   })
 
-  it('conforms to interop invalid handles', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/handle_syntax_invalid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectInvalid(line)
-    })
+  describe('invalid interop', () => {
+    test.each(readInteropFile(`handle_syntax_invalid.txt`))('%s', expectInvalid)
   })
 })
 

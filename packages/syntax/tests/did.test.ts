@@ -1,11 +1,10 @@
-import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import {
   InvalidDidError,
   ensureValidDid,
   ensureValidDidRegex,
 } from '../src/index.js'
+import { readInteropFile } from './_utils.ts'
 
 describe('DID permissive validation', () => {
   const expectValid = (h: string) => {
@@ -72,33 +71,11 @@ describe('DID permissive validation', () => {
     expectValid('did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a')
   })
 
-  it('conforms to interop valid DIDs', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/did_syntax_valid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectValid(line)
-    })
+  describe('valid interop', () => {
+    test.each(readInteropFile(`did_syntax_valid.txt`))('%s', expectValid)
   })
 
-  it('conforms to interop invalid DIDs', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/did_syntax_invalid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectInvalid(line)
-    })
+  describe('invalid interop', () => {
+    test.each(readInteropFile(`did_syntax_invalid.txt`))('%s', expectInvalid)
   })
 })

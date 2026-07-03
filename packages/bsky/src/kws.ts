@@ -12,7 +12,17 @@ export const createKwsClient = (cfg: KwsConfig): KwsClient => {
 // Not `.strict()` to avoid breaking if KWS adds fields.
 const authResponseSchema = z.object({
   access_token: z.string(),
+  // Seconds the token remains valid. KWS notes this varies with usage, and
+  // it's optional here: if absent we can't anticipate expiry, so we skip
+  // caching and lean on the reactive re-auth-on-401 path instead.
+  expires_in: z.number().optional(),
 })
+
+// Re-authenticate once the token has burned through this fraction of its
+// advertised lifetime, so we never send a token that's on the edge of expiry.
+const TOKEN_LIFETIME_REFRESH_RATIO = 0.9
+
+type CachedToken = { accessToken: string; expiresAt: number }
 
 const EXTERNAL_PAYLOAD_CHAR_LIMIT = 200
 /**
@@ -40,9 +50,32 @@ export type KWSSendEmailRequest =
     })
 
 export class KwsClient {
+  private cachedToken?: CachedToken
+  // In-flight auth request, so concurrent callers share a single token fetch
+  // rather than each hitting the token endpoint (which the WAF rate-limits).
+  private pendingAuth?: Promise<string>
+
   constructor(public cfg: KwsConfig) {}
 
-  private async auth() {
+  /**
+   * Returns a valid access token, reusing the cached one until it nears
+   * expiry. Pass `force` to bypass the cache and mint a fresh token, e.g.
+   * after a 401 from the API indicates the current token was rejected.
+   */
+  private async auth(force = false): Promise<string> {
+    if (!force && this.cachedToken && Date.now() < this.cachedToken.expiresAt) {
+      return this.cachedToken.accessToken
+    }
+    // Coalesce concurrent (re-)auth attempts onto one request.
+    if (!this.pendingAuth) {
+      this.pendingAuth = this.fetchToken().finally(() => {
+        this.pendingAuth = undefined
+      })
+    }
+    return this.pendingAuth
+  }
+
+  private async fetchToken(): Promise<string> {
     try {
       const res = await fetch(
         `${this.cfg.authOrigin}/auth/realms/kws/protocol/openid-connect/token`,
@@ -68,8 +101,23 @@ export class KwsClient {
 
       const auth = await res.json()
       const authResponse = authResponseSchema.parse(auth)
+      if (authResponse.expires_in == null) {
+        // Without a lifetime we can't proactively refresh, but we still cache
+        // the token and reuse it until a 401 triggers the re-auth-on-401 path.
+        log.error('KWS auth response missing expires_in; caching without a TTL')
+      }
+      this.cachedToken = {
+        accessToken: authResponse.access_token,
+        expiresAt:
+          authResponse.expires_in == null
+            ? Infinity
+            : Date.now() +
+              authResponse.expires_in * 1000 * TOKEN_LIFETIME_REFRESH_RATIO,
+      }
       return authResponse.access_token
     } catch (err) {
+      // Drop any stale cache so the next call retries the token fetch.
+      this.cachedToken = undefined
       log.error({ err }, 'Failed to authenticate with KWS')
       throw err
     }
@@ -79,15 +127,27 @@ export class KwsClient {
     url: string,
     init: RequestInit,
   ): Promise<Response> {
-    const accessToken = await this.auth()
-
-    return fetch(url, {
+    const res = await fetch(url, {
       ...init,
       headers: {
         ...(init.headers ?? {}),
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${await this.auth()}`,
       },
     })
+
+    // A 401 means the token expired (KWS token TTL is variable). Re-auth once
+    // with a fresh token and retry, per the KWS integration docs.
+    if (res.status === 401) {
+      return fetch(url, {
+        ...init,
+        headers: {
+          ...(init.headers ?? {}),
+          Authorization: `Bearer ${await this.auth(true)}`,
+        },
+      })
+    }
+
+    return res
   }
 
   /**

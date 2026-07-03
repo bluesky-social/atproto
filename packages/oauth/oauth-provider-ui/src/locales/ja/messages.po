@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-06-18 01:45+0900\n"
+"PO-Revision-Date: 2026-07-02 00:00+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
@@ -246,7 +246,7 @@ msgstr "ブランディング"
 
 #: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その利用規約とプライバシーポリシーに従って付与します。"
+msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その<1>利用規約</1>と<2>プライバシーポリシー</2>に従って付与します。"
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )

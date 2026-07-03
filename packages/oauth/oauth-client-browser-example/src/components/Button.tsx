@@ -64,7 +64,7 @@ export function Button({
         'focus:outline-none focus:ring-2 focus:ring-offset-2',
         'transition duration-300 ease-in-out',
         transparent
-          ? 'bg-transparent text-purple-600 hover:bg-purple-100 focus:ring-purple-500'
+          ? 'bg-transparent text-purple-600 hover:bg-purple-100 focus:ring-purple-500 dark:text-purple-400 dark:hover:bg-purple-950'
           : 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-800',
         sizeClass,
         className,

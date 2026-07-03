@@ -45,6 +45,11 @@ export class HttpRateLimiter<
     } catch (err) {
       if (err instanceof RateLimitExceededError) {
         setStatusHeaders(ctx, err.status)
+
+        ctx.res?.setHeader(
+          'Retry-After',
+          Math.ceil(err.status.msBeforeNext / 1e3),
+        )
       }
 
       throw err
