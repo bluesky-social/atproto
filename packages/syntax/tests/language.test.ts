@@ -53,6 +53,10 @@ describe(isValidLanguage, () => {
     expect(isValidLanguage('x')).toEqual(false)
     expect(isValidLanguage('de-CH-')).toEqual(false)
     expect(isValidLanguage('i-bad-grandfathered')).toEqual(false)
+    // the primary language subtag must be lowercase (RFC 5646 §2.1.1)
+    expect(isValidLanguage('JA')).toEqual(false)
+    // a bare 4-letter run is not a well-formed language tag
+    expect(isValidLanguage('jaja')).toEqual(false)
   })
 })
 
@@ -131,6 +135,10 @@ describe(parseLanguageString, () => {
     expect(parseLanguageString('x')).toEqual(null)
     expect(parseLanguageString('de-CH-')).toEqual(null)
     expect(parseLanguageString('i-bad-grandfathered')).toEqual(null)
+    // the primary language subtag must be lowercase (RFC 5646 §2.1.1)
+    expect(parseLanguageString('JA')).toEqual(null)
+    // a bare 4-letter run is not a well-formed language tag
+    expect(parseLanguageString('jaja')).toEqual(null)
     // duplicate variant / extension singleton subtags (RFC 5646 §4.1)
     expect(parseLanguageString('de-DE-1901-1901')).toEqual(null)
     expect(parseLanguageString('en-rozaj-ROZAJ')).toEqual(null)
