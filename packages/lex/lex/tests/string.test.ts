@@ -455,5 +455,17 @@ describe('com.example.language', () => {
         language: 'not-a-language-',
       }),
     ).toThrow('Invalid language (got "not-a-language-") at $.language')
+    expect(() =>
+      com.example.language.$parse({
+        $type: 'com.example.language',
+        language: 'JA',
+      }),
+    ).toThrow('Invalid language (got "JA") at $.language')
+    expect(() =>
+      com.example.language.$parse({
+        $type: 'com.example.language',
+        language: 'jaja',
+      }),
+    ).toThrow('Invalid language (got "jaja") at $.language')
   })
 })

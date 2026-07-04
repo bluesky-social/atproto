@@ -1077,6 +1077,18 @@ describe('Record validation', () => {
         language: 'not-a-language-',
       }),
     ).toThrow('Record/language must be a well-formed BCP 47 language tag')
+    expect(() =>
+      lex.assertValidRecord('com.example.language', {
+        $type: 'com.example.language',
+        language: 'JA',
+      }),
+    ).toThrow('Record/language must be a well-formed BCP 47 language tag')
+    expect(() =>
+      lex.assertValidRecord('com.example.language', {
+        $type: 'com.example.language',
+        language: 'jaja',
+      }),
+    ).toThrow('Record/language must be a well-formed BCP 47 language tag')
   })
 
   it('Applies bytes length constraints', () => {

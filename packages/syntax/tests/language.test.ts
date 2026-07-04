@@ -51,6 +51,8 @@ describe(isValidLanguage, () => {
     // invalid
     expect(isValidLanguage('')).toEqual(false)
     expect(isValidLanguage('x')).toEqual(false)
+    expect(isValidLanguage('JA')).toEqual(false)
+    expect(isValidLanguage('jaja')).toEqual(false)
     expect(isValidLanguage('de-CH-')).toEqual(false)
     expect(isValidLanguage('i-bad-grandfathered')).toEqual(false)
   })
@@ -129,6 +131,8 @@ describe(parseLanguageString, () => {
     // invalid
     expect(parseLanguageString('')).toEqual(null)
     expect(parseLanguageString('x')).toEqual(null)
+    expect(parseLanguageString('JA')).toEqual(null)
+    expect(parseLanguageString('jaja')).toEqual(null)
     expect(parseLanguageString('de-CH-')).toEqual(null)
     expect(parseLanguageString('i-bad-grandfathered')).toEqual(null)
     // duplicate variant / extension singleton subtags (RFC 5646 §4.1)
