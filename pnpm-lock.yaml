@@ -1517,9 +1517,6 @@ importers:
 
   packages/oauth/oauth-provider:
     dependencies:
-      '@atproto-labs/fetch':
-        specifier: workspace:^
-        version: link:../../internal/fetch
       '@atproto-labs/fetch-node':
         specifier: workspace:^
         version: link:../../internal/fetch-node

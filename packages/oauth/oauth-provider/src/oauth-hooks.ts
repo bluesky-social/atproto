@@ -32,7 +32,6 @@ import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
 import { InvalidCredentialsError } from './errors/invalid-credentials-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
-import { OAuthError } from './errors/oauth-error.js'
 import {
   HcaptchaClientTokens,
   HcaptchaConfig,
@@ -45,40 +44,43 @@ import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenClaims } from './token/token-claims.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
+export type {
+  AccessTokenPayload,
+  Account,
+  Awaitable,
+  Client,
+  ClientAuth,
+  ClientId,
+  ClientInfo,
+  DeviceId,
+  Did,
+  DpopProof,
+  HcaptchaClientTokens,
+  HcaptchaConfig,
+  HcaptchaVerifyResult,
+  Jwks,
+  OAuthAccessToken,
+  OAuthAuthorizationDetails,
+  OAuthAuthorizationRequestParameters,
+  OAuthClientMetadata,
+  OAuthTokenResponse,
+  OAuthTokenType,
+  RequestMetadata,
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
+  SignInData,
+  SignUpData,
+  SignUpInput,
+  TokenClaims,
+  UpdateHandleData,
+}
+
+// Allows implementation to instantiate these errors
 export {
   AccessDeniedError,
-  type AccessTokenPayload,
-  type Account,
   AuthorizationError,
-  type Awaitable,
-  Client,
-  type ClientAuth,
-  type ClientId,
-  type ClientInfo,
-  type DeviceId,
-  type Did,
-  type DpopProof,
-  type HcaptchaClientTokens,
-  type HcaptchaConfig,
-  type HcaptchaVerifyResult,
   InvalidCredentialsError,
   InvalidRequestError,
-  type Jwks,
-  type OAuthAccessToken,
-  type OAuthAuthorizationDetails,
-  type OAuthAuthorizationRequestParameters,
-  type OAuthClientMetadata,
-  OAuthError,
-  type OAuthTokenResponse,
-  type OAuthTokenType,
-  type RequestMetadata,
-  type ResetPasswordConfirmInput,
-  type ResetPasswordRequestInput,
-  type SignInData,
-  type SignUpData,
-  type SignUpInput,
-  type TokenClaims,
-  type UpdateHandleData,
 }
 
 export type OAuthHooks = {

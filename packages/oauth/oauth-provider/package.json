@@ -33,7 +33,6 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@atproto-labs/fetch": "workspace:^",
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/pipe": "workspace:^",
     "@atproto-labs/simple-store": "workspace:^",

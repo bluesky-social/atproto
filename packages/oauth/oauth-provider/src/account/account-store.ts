@@ -19,15 +19,13 @@ import type { HandleString } from '@atproto/syntax'
 import type { ClientId } from '../client/client-id.js'
 import type { DeviceId } from '../device/device-id.js'
 import type { DeviceData } from '../device/device-store.js'
+import { HandleUnavailableError } from '../errors/handle-unavailable-error.js'
+import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
+import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { SecondAuthenticationFactorRequiredError } from '../errors/second-authentication-factor-required-error.js'
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
-import type {
-  HandleUnavailableError,
-  InvalidCredentialsError,
-  InvalidRequestError,
-  SecondAuthenticationFactorRequiredError,
-} from '../oauth-errors.js'
 import type { InviteCode } from '../types/invite-code.js'
 import type { SignUpInput } from './sign-up-input.js'
 
