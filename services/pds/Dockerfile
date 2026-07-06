@@ -86,3 +86,6 @@ CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--experim
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"
 LABEL org.opencontainers.image.licenses=MIT
+
+# Allows consumer to distinguish pre-otel builds
+LABEL social.bsky.pds.telemetry=otel
