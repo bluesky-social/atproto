@@ -1,5 +1,14 @@
 # @atproto/aws
 
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112)]:
+  - @atproto/common@0.7.0
+  - @atproto/common-web@0.5.4
+  - @atproto/repo@0.10.4
+
 ## 0.3.3
 
 ### Patch Changes

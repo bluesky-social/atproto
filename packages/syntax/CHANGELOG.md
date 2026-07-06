@@ -1,5 +1,15 @@
 # @atproto/syntax
 
+## 0.7.0
+
+### Minor Changes
+
+- [#5162](https://github.com/bluesky-social/atproto/pull/5162) [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112) Thanks [@nnabeyang](https://github.com/nnabeyang)! - `parseLanguageString` now rejects BCP 47 tags with duplicate variant subtags or duplicate extension singleton subtags, per RFC 5646 §4.1. `isValidLanguage` continues to check only well-formed syntax (§2.1) and is unchanged.
+
+### Patch Changes
+
+- [#5183](https://github.com/bluesky-social/atproto/pull/5183) [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Test language syntax against atproto interop test files
+
 ## 0.6.4
 
 ### Patch Changes

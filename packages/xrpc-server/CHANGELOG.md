@@ -1,5 +1,19 @@
 # @atproto/xrpc-server
 
+## 0.11.7
+
+### Patch Changes
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `Retry-After` header to rate limited responses
+
+- Updated dependencies [[`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37)]:
+  - @atproto/lex-client@0.2.2
+  - @atproto/common@0.7.0
+  - @atproto/lex-schema@0.2.0
+  - @atproto/lexicon@0.7.5
+  - @atproto/ws-client@0.1.5
+  - @atproto/xrpc@0.8.4
+
 ## 0.11.6
 
 ### Patch Changes
