@@ -2366,7 +2366,7 @@ importers:
   services/pds:
     dependencies:
       '@atproto/pds':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/pds
       '@opentelemetry/instrumentation':
         specifier: ^0.219.0
