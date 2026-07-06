@@ -16,7 +16,7 @@ COPY ./lexicons ./lexicons
 COPY ./packages/bsync ./packages/bsync
 
 # NOTE ozones's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter 'ozone...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
+# pnpm list --filter 'ozone-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/bsky ./packages/bsky
@@ -72,7 +72,7 @@ COPY ./services/ozone ./services/ozone
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --filter 'ozone...' build --force
+RUN pnpm run --recursive --stream --filter 'ozone-service...' build --force
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 

@@ -13,7 +13,7 @@ COPY ./tsconfig ./tsconfig
 # COPY ./lexicons ./lexicons
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter 'bsync...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
+# pnpm list --filter 'bsync-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
@@ -26,7 +26,7 @@ COPY ./services/bsync ./services/bsync
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --filter 'bsync...' build --force
+RUN pnpm run --recursive --stream --filter 'bsync-service...' build --force
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 

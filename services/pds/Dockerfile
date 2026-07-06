@@ -17,7 +17,7 @@ COPY ./lexicons ./lexicons
 COPY ./packages/bsync/proto ./packages/bsync/proto
 
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter 'pds...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
+# pnpm list --filter 'pds-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/bsky ./packages/bsky
@@ -72,7 +72,7 @@ COPY ./services/pds ./services/pds
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --filter 'pds...' build --force
+RUN pnpm run --recursive --stream --filter 'pds-service...' build --force
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 

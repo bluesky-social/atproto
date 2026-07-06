@@ -1,5 +1,5 @@
 {
-  "name": "bsync",
+  "name": "bsync-service",
   "private": true,
   "type": "module",
   "dependencies": {

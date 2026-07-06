@@ -1,5 +1,5 @@
 {
-  "name": "pds",
+  "name": "pds-service",
   "private": true,
   "type": "module",
   "dependencies": {
