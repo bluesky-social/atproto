@@ -1,7 +1,6 @@
 /* eslint-env node */
 
 import { register } from 'node:module'
-import { addListener, env, removeListener } from 'node:process'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
@@ -47,11 +46,11 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // startNodeSDK, which will load the configuration from a YAML file.
 // Otherwise, we use new NodeSDK, which will load the configuration from
 // environment variables (and supports creating an HTTP prometheus exporter).
-const enabled = env.OTEL_SDK_DISABLED?.toLowerCase() !== 'true'
+const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() !== 'true'
 if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
-  const start = env.OTEL_CONFIG_FILE ? startNodeSDK : startNodeSDKClass
+  const start = process.env.OTEL_CONFIG_FILE ? startNodeSDK : startNodeSDKClass
   const { shutdown } = start({
     // @NOTE We use getResourceDetectors from
     // @opentelemetry/auto-instrumentations-node (instead of the default from
@@ -95,17 +94,17 @@ if (enabled) {
   })
 
   const onExit = () => {
-    removeListener('SIGTERM', onExit)
-    removeListener('SIGINT', onExit)
-    removeListener('beforeExit', onExit)
+    process.removeListener('SIGTERM', onExit)
+    process.removeListener('SIGINT', onExit)
+    process.removeListener('beforeExit', onExit)
     void shutdown().catch((err) => {
       diag.error('Error terminating OpenTelemetry SDK', err)
     })
   }
 
-  addListener('SIGTERM', onExit)
-  addListener('SIGINT', onExit)
-  addListener('beforeExit', onExit)
+  process.addListener('SIGTERM', onExit)
+  process.addListener('SIGINT', onExit)
+  process.addListener('beforeExit', onExit)
 }
 
 /**
