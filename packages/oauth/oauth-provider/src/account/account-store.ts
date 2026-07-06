@@ -17,8 +17,9 @@ import type {
 import type { OAuthScope } from '@atproto/oauth-types'
 import type { HandleString } from '@atproto/syntax'
 import type { ClientId } from '../client/client-id.js'
+import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
-import type { DeviceData } from '../device/device-store.js'
+import type { SessionId } from '../device/session-id.js'
 import { HandleUnavailableError } from '../errors/handle-unavailable-error.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
@@ -40,6 +41,7 @@ export type {
   HcaptchaVerifyResult,
   InviteCode,
   OAuthScope,
+  SessionId,
   SignUpInput,
 }
 
