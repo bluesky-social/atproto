@@ -1,10 +1,13 @@
-node_modules
-**/dist
 .DS_Store
 .git
-Dockerfile
-*.tsbuildinfo
 *.log
+node_modules
+
+**/Dockerfile
+**/node_modules
+**/dist
+**/.DS_Store
+**/*.tsbuildinfo
 
 # buf
 packages/bsky/src/proto
