@@ -1,7 +1,5 @@
 import assert from 'node:assert'
-import { EventEmitter, once } from 'node:events'
 import * as plc from '@did-plc/lib'
-import type { SendMailOptions } from 'nodemailer'
 import type { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
@@ -12,15 +10,14 @@ import {
 } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
+import { MailCatcher } from './_mailcatcher.js'
 
 describe('plc operations', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let sc: SeedClient
-
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
+  let mailCatcher: MailCatcher
 
   let alice: DidString
 
@@ -31,7 +28,8 @@ describe('plc operations', () => {
       dbPostgresSchema: 'plc_operations',
     })
     ctx = network.pds.ctx
-    const mailer = ctx.mailer
+    // Catch emails for use in tests
+    mailCatcher = new MailCatcher(ctx.mailer)
 
     sc = network.getSeedClient()
     agent = network.pds.getAgent()
@@ -41,27 +39,12 @@ describe('plc operations', () => {
     await network.processAll()
 
     sampleKey = (await Secp256k1Keypair.create()).did()
-
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
   })
 
   afterAll(async () => {
+    await mailCatcher.restore()
     await network?.close()
   })
-
-  const getMailFrom = async (promise): Promise<SendMailOptions> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: SendMailOptions) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   const signOp = async (did: string, op: Partial<plc.Operation>) => {
     const lastOp = await ctx.plcClient.getLastOp(did)
@@ -168,7 +151,7 @@ describe('plc operations', () => {
   let token: string
 
   it('requests a plc signature', async () => {
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.identity.requestPlcOperationSignature(undefined, {
         headers: sc.getHeaders(alice),
       }),
@@ -177,7 +160,7 @@ describe('plc operations', () => {
     expect(mail.to).toEqual(sc.accounts[alice].email)
     expect(mail.html).toContain('PLC update requested')
 
-    const gotToken = getTokenFromMail(mail)
+    const gotToken = mailCatcher.getTokenFromMail(mail)
     assert(gotToken)
     token = gotToken
   })

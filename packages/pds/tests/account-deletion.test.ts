@@ -1,6 +1,4 @@
-import { EventEmitter, once } from 'node:events'
 import type { Selectable } from 'kysely'
-import type Mail from 'nodemailer/lib/mailer'
 import type { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
@@ -13,8 +11,8 @@ import type {
   RepoRoot,
 } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/index.js'
-import type { ServerMailer } from '../src/mailer/index.js'
 import type { RepoSeq } from '../src/sequencer/db/index.js'
+import { MailCatcher } from './_mailcatcher.js'
 import basicSeed from './seeds/basic.js'
 
 describe('account deletion', () => {
@@ -23,11 +21,9 @@ describe('account deletion', () => {
   let sc: SeedClient
 
   let ctx: AppContext
-  let mailer: ServerMailer
   let initialDbContents: DbContents
   let updatedDbContents: DbContents
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
+  let mailCatcher: MailCatcher
 
   // chose carol because she has blobs
   let carol
@@ -37,40 +33,26 @@ describe('account deletion', () => {
       dbPostgresSchema: 'account_deletion',
     })
     ctx = network.pds.ctx
-    mailer = ctx.mailer
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]
 
     // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+    mailCatcher = new MailCatcher(ctx.mailer)
 
     initialDbContents = await getDbContents(ctx)
   })
 
   afterAll(async () => {
-    mailer.transporter.sendMail = _origSendMail
+    await mailCatcher.restore()
     await network?.close()
   })
-
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   let token
 
   it('requests account deletion', async () => {
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(carol.did),
       }),
@@ -79,7 +61,7 @@ describe('account deletion', () => {
     expect(mail.to).toEqual(carol.email)
     expect(mail.html).toContain('To permanently delete your account')
 
-    token = getTokenFromMail(mail)
+    token = mailCatcher.getTokenFromMail(mail)
     if (!token) {
       return expect(token).toBeDefined()
     }
@@ -204,13 +186,13 @@ describe('account deletion', () => {
       password: 'eve-test',
     })
 
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(eve.did),
       }),
     )
 
-    const token = getTokenFromMail(mail)
+    const token = mailCatcher.getTokenFromMail(mail)
     if (!token) {
       return expect(token).toBeDefined()
     }
