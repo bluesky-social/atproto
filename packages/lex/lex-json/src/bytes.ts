@@ -29,7 +29,7 @@ import type { JsonValue } from './json.js'
  */
 export function parseLexBytes(
   input?: Record<string, unknown>,
-): Uint8Array | undefined {
+): Uint8Array<ArrayBuffer> | undefined {
   if (!input || !('$bytes' in input)) {
     return undefined
   }
