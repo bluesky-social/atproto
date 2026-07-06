@@ -573,7 +573,7 @@
           "ref": "#bskyAppProgressGuide"
         },
         "isBetaUser": {
-          "description": "Indicates if the user is participating in the Bluesky Beta program.",
+          "description": "Indicates if the user is participating in the beta features program.",
           "type": "boolean"
         },
         "queuedNudges": {

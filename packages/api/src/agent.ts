@@ -1279,7 +1279,7 @@ export class Agent extends XrpcClient {
   }
 
   /**
-   * Set the flag for participating in the Bluesky Beta program
+   * Set the flag for participating in the beta features program
    */
   async setIsBetaUser(isBetaUser: boolean) {
     await this.updatePreferences((prefs) => {
