@@ -88,4 +88,4 @@ LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"
 LABEL org.opencontainers.image.licenses=MIT
 
 # Allows consumer to distinguish pre-otel builds
-LABEL social.bsky.pds.telemetry=otel
+LABEL social.bsky.pds.telemetry="otel"
