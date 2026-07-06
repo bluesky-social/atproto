@@ -1,5 +1,7 @@
 /* eslint-env node */
 
+import { register } from 'node:module'
+import { addListener, env, removeListener } from 'node:process'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
@@ -45,60 +47,66 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // startNodeSDK, which will load the configuration from a YAML file.
 // Otherwise, we use new NodeSDK, which will load the configuration from
 // environment variables (and supports creating an HTTP prometheus exporter).
-const start = process.env.OTEL_CONFIG_FILE ? startNodeSDK : startNodeSDKClass
+const enabled = env.OTEL_SDK_DISABLED?.toLowerCase() !== 'true'
+if (enabled) {
+  register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
-const { shutdown } = start({
-  // @NOTE We use getResourceDetectors from
-  // @opentelemetry/auto-instrumentations-node (instead of the default from
-  // @opentelemetry/sdk-node) because it supports the "container" resource
-  // detector, which is not included in the default NodeSDK resource
-  // detectors.
-  resourceDetectors: getResourceDetectors(),
-  instrumentations: [
-    // @NOTE We *DON'T* use getNodeAutoInstrumentations from
-    // @opentelemetry/auto-instrumentations-node because it loads a lot of
-    // un-necessary instrumentations with no easy way to filter them out.
-    new RuntimeNodeInstrumentation(),
-    new HttpInstrumentation({
-      // Sets the "http.route" attribute for XRPC requests (both incoming and
-      // outgoing) based on the normalized XRPC path.
-      //
-      // @TODO replace with dedicated XrpcClient/XrpcServer instrumentations
-      requestHook: (span, request) => {
-        const url = 'path' in request ? request.path : request.url
-        if (url != null) {
-          const endpoint = extractNormalizedXrpcEndpoint(url)
-          // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
-          // HttpInstrumentation to update the incoming server request span
-          // name to: "${method ?? 'GET'} ${route}".
+  const start = env.OTEL_CONFIG_FILE ? startNodeSDK : startNodeSDKClass
+  const { shutdown } = start({
+    // @NOTE We use getResourceDetectors from
+    // @opentelemetry/auto-instrumentations-node (instead of the default from
+    // @opentelemetry/sdk-node) because it supports the "container" resource
+    // detector, which is not included in the default NodeSDK resource
+    // detectors.
+    resourceDetectors: getResourceDetectors(),
+    instrumentations: [
+      // @NOTE We *DON'T* use getNodeAutoInstrumentations from
+      // @opentelemetry/auto-instrumentations-node because it loads a lot of
+      // un-necessary instrumentations with no easy way to filter them out.
+      new RuntimeNodeInstrumentation(),
+      new HttpInstrumentation({
+        // Sets the "http.route" attribute for XRPC requests (both incoming and
+        // outgoing) based on the normalized XRPC path.
+        //
+        // @TODO replace with dedicated XrpcClient/XrpcServer instrumentations
+        requestHook: (span, request) => {
+          const url = 'path' in request ? request.path : request.url
+          if (url != null) {
+            const endpoint = extractNormalizedXrpcEndpoint(url)
+            // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
+            // HttpInstrumentation to update the incoming server request span
+            // name to: "${method ?? 'GET'} ${route}".
+            if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
+          }
+        },
+      }),
+      new ExpressInstrumentation(),
+      new UndiciInstrumentation({
+        requestHook: (span, request) => {
+          const endpoint = extractNormalizedXrpcEndpoint(request.path)
           if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
-        }
-      },
-    }),
-    new ExpressInstrumentation(),
-    new UndiciInstrumentation({
-      requestHook: (span, request) => {
-        const endpoint = extractNormalizedXrpcEndpoint(request.path)
-        if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
-      },
-    }),
-    new AwsInstrumentation(),
-    new IORedisInstrumentation(),
-    new BetterSqlite3Instrumentation(),
-    new PinoInstrumentation(),
-  ],
-})
+        },
+      }),
+      new AwsInstrumentation(),
+      new IORedisInstrumentation(),
+      new BetterSqlite3Instrumentation(),
+      new PinoInstrumentation(),
+    ],
+  })
 
-const onExit = () => {
-  process.off('SIGTERM', onExit)
-  process.off('SIGINT', onExit)
-  process.off('beforeExit', onExit)
-  void shutdown()
+  const onExit = () => {
+    removeListener('SIGTERM', onExit)
+    removeListener('SIGINT', onExit)
+    removeListener('beforeExit', onExit)
+    void shutdown().catch((err) => {
+      diag.error('Error terminating OpenTelemetry SDK', err)
+    })
+  }
+
+  addListener('SIGTERM', onExit)
+  addListener('SIGINT', onExit)
+  addListener('beforeExit', onExit)
 }
-
-process.on('SIGTERM', onExit)
-process.on('SIGINT', onExit)
-process.on('beforeExit', onExit)
 
 /**
  * Wrapper that exposes an api similar to {@link startNodeSDK}, but uses the
