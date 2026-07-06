@@ -8,8 +8,6 @@ WORKDIR /app
 COPY ./.npmrc ./
 COPY ./.nvmrc ./
 COPY ./package.json ./
-
-# Move files into the image and install
 COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
 COPY ./tsconfig ./tsconfig
@@ -50,6 +48,7 @@ COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
+COPY ./packages/pds ./packages/pds
 COPY ./services/pds ./services/pds
 
 # install all deps
