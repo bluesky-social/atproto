@@ -48,7 +48,9 @@
     "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
+    "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
+    "@atproto/pds": "workspace:^",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
     "@jest/globals": "^30.0.0",

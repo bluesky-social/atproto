@@ -4,7 +4,6 @@ export * from '@atproto-labs/fetch-node'
 export * from '@atproto/jwk'
 export * from '@atproto/jwk-jose'
 export * from '@atproto/oauth-types'
-export * from '@atproto/oauth-provider-api/runtime'
 
 export * from './client/client.js'
 export * from './constants.js'

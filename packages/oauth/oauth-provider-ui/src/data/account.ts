@@ -1,6 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import { useMutation } from '@tanstack/react-query'
-import {
+import type {
   ConfirmAccountDeletionInput,
   DeactivateAccountInput,
   InitiateAccountDeletionInput,

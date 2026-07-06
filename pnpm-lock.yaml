@@ -211,9 +211,15 @@ importers:
 
   .:
     devDependencies:
+      '@atproto/bsky':
+        specifier: workspace:^
+        version: link:packages/bsky
       '@atproto/dev-env':
         specifier: workspace:^
         version: link:packages/dev-env
+      '@atproto/pds':
+        specifier: workspace:^
+        version: link:packages/pds
       '@changesets/changelog-github':
         specifier: ^0.7.0
         version: 0.7.0(encoding@0.1.13)
@@ -2047,9 +2053,6 @@ importers:
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
-      '@atproto/bsky':
-        specifier: workspace:^
-        version: link:../bsky
       '@atproto/lex-document':
         specifier: workspace:^
         version: link:../lex/lex-document

@@ -3,14 +3,14 @@ import createHttpError from 'http-errors'
 import { z } from 'zod'
 import { Did, didSchema } from '@atproto/did'
 import { signedJwtSchema } from '@atproto/jwk'
-import {
-  API_ENDPOINT_PREFIX,
+import type {
   ActiveAccountSession,
   ActiveDeviceSession,
   ActiveOAuthSession,
   ApiEndpoints,
   ISODateString,
 } from '@atproto/oauth-provider-api'
+import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
 import {
   OAuthAuthorizationRequestParameters,
   OAuthRedirectUri,

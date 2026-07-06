@@ -99,7 +99,6 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
-    "@atproto/bsky": "workspace:^",
     "@atproto/lex-document": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
     "@did-plc/server": "^0.0.1",
