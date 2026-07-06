@@ -1,4 +1,5 @@
 {
+  "name": "bsky",
   "private": true,
   "type": "module",
   "dependencies": {

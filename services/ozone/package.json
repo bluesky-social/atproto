@@ -1,4 +1,5 @@
 {
+  "name": "ozone",
   "private": true,
   "type": "module",
   "dependencies": {
