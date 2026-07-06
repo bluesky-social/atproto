@@ -1,5 +1,5 @@
 ---
-'@atproto/oauth-provider': patch
+'@atproto/oauth-provider': minor
 ---
 
-Fix internal circular dependency
+Fix internal circular dependency and remove internal utilities from the public API.
