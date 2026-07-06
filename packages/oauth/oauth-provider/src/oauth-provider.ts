@@ -96,13 +96,10 @@ import { AuthorizationResultAuthorizePage } from './result/authorization-result-
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import { ErrorHandler } from './router/error-handler.js'
 import { AccessTokenPayload } from './signer/access-token-payload.js'
+import { refreshTokenSchema } from './token/refresh-token.js'
 import { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
-import {
-  TokenStore,
-  asTokenStore,
-  refreshTokenSchema,
-} from './token/token-store.js'
+import { TokenStore, asTokenStore } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
 export { AccessTokenMode, Keyset, LexResolver }
