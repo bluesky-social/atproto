@@ -2,7 +2,7 @@ import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { CID } from 'multiformats/cid'
-import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 import { S3BlobStore } from './s3.js'
 
 const testCid = CID.parse(
@@ -15,28 +15,27 @@ type RequestHandler = (
 ) => void
 
 /**
- * A minimal fake S3 endpoint whose behavior can be swapped per test. Requests
- * are handled by the handlers queue (one handler per incoming request, last
- * handler is re-used once the queue is exhausted).
+ * A minimal fake S3 endpoint whose behavior can be swapped per test. Override
+ * {@link FakeS3Server.handler} via `vi.spyOn(server, 'handler')` to control how
+ * each incoming request is handled.
  */
 class FakeS3Server {
   server: http.Server
-  handlers: RequestHandler[] = []
-  requests: { method?: string; url?: string }[] = []
   private sockets = new Set<import('node:net').Socket>()
 
   constructor() {
     this.server = http.createServer((req, res) => {
-      this.requests.push({ method: req.method, url: req.url })
-      const handler =
-        this.handlers.length > 1 ? this.handlers.shift() : this.handlers[0]
-      assert(handler, 'no handler configured for incoming request')
-      handler(req, res)
+      this.handler(req, res)
     })
     this.server.on('connection', (socket) => {
       this.sockets.add(socket)
       socket.on('close', () => this.sockets.delete(socket))
     })
+  }
+
+  /** Default handler; override per-test via `vi.spyOn(server, 'handler')`. */
+  handler(req: http.IncomingMessage, res: http.ServerResponse): void {
+    res.writeHead(501).end()
   }
 
   async listen(): Promise<string> {
@@ -101,7 +100,10 @@ describe(S3BlobStore, () => {
     // First request stalls, second succeeds. The SDK should reap the stalled
     // request after "requestTimeoutMs" and transparently retry, well within
     // the total "uploadTimeoutMs" budget.
-    server.handlers.push(stallHandler, okHandler)
+    using handlerMock = vi.spyOn(server, 'handler')
+    handlerMock
+      .mockImplementationOnce(stallHandler)
+      .mockImplementation(okHandler)
 
     const store = createBlobStore({
       uploadTimeoutMs: 30_000,
@@ -114,16 +116,19 @@ describe(S3BlobStore, () => {
     )
 
     expect(Date.now() - start).toBeLessThan(10_000)
-    expect(
-      server.requests.filter((r) => r.method === 'PUT').length,
-    ).toBeGreaterThanOrEqual(2)
+    const putCalls = handlerMock.mock.calls.filter(
+      ([req]) => req.method === 'PUT',
+    )
+    expect(putCalls.length).toBeGreaterThanOrEqual(2)
   })
 
   it('translates stalled connection errors into "Blob upload timed out"', async () => {
     // All requests stall. With retries disabled, the socket idle timeout
     // ("requestTimeoutMs") should reject the upload long before the total
     // upload budget ("uploadTimeoutMs") is exhausted.
-    server.handlers.push(stallHandler)
+    using _handlerMock = vi
+      .spyOn(server, 'handler')
+      .mockImplementation(stallHandler)
 
     const store = createBlobStore({
       uploadTimeoutMs: 60_000,
@@ -148,7 +153,9 @@ describe(S3BlobStore, () => {
     // All requests stall, and the socket idle timeout is larger than the
     // total upload budget: the AbortSignal based upload timeout should kick
     // in.
-    server.handlers.push(stallHandler)
+    using _handlerMock = vi
+      .spyOn(server, 'handler')
+      .mockImplementation(stallHandler)
 
     const store = createBlobStore({
       uploadTimeoutMs: 1_000,
@@ -181,12 +188,14 @@ describe(S3BlobStore, () => {
 
     it('does not reap slow downloads mid-stream (requestTimeoutMs >= 6s)', async () => {
       const idleMs = 7_000
-      server.handlers.push((req, res) => {
-        req.resume()
-        res.writeHead(200, { 'content-length': '6' })
-        res.write('foo') // Headers + first bytes sent immediately
-        sleep(idleMs).then(() => res.end('bar')) // Idle > requestTimeoutMs
-      })
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          req.resume()
+          res.writeHead(200, { 'content-length': '6' })
+          res.write('foo') // Headers + first bytes sent immediately
+          sleep(idleMs).then(() => res.end('bar')) // Idle > requestTimeoutMs
+        })
 
       const store = createBlobStore({ requestTimeoutMs: 6_000 })
 
@@ -198,7 +207,9 @@ describe(S3BlobStore, () => {
     }, 15_000)
 
     it('reaps stalled downloads that never receive response headers', async () => {
-      server.handlers.push(stallHandler)
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation(stallHandler)
 
       const store = createBlobStore({
         requestTimeoutMs: 500,
@@ -219,12 +230,14 @@ describe(S3BlobStore, () => {
       // 6s: below that threshold, @smithy/node-http-handler arms the socket
       // idle timeout immediately and keeps it armed while the response body
       // is being streamed, causing slow (but legitimate) downloads to fail.
-      server.handlers.push((req, res) => {
-        req.resume()
-        res.writeHead(200, { 'content-length': '6' })
-        res.write('foo')
-        sleep(2_000).then(() => res.end('bar')) // Idle > requestTimeoutMs
-      })
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          req.resume()
+          res.writeHead(200, { 'content-length': '6' })
+          res.write('foo')
+          sleep(2_000).then(() => res.end('bar')) // Idle > requestTimeoutMs
+        })
 
       const store = createBlobStore({
         requestTimeoutMs: 500,
