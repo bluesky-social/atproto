@@ -3,9 +3,7 @@ import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
 import { ClientId } from './client-id.js'
 
 // Export all types needed to implement the ClientStore interface
-export * from './client-data.js'
-export * from './client-id.js'
-export type { Awaitable, OAuthClientMetadata }
+export type { Awaitable, ClientId, OAuthClientMetadata }
 
 export interface ClientStore {
   findClient(clientId: ClientId): Awaitable<OAuthClientMetadata>

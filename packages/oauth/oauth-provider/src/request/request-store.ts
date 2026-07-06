@@ -5,10 +5,7 @@ import { RequestData } from './request-data.js'
 import { RequestId } from './request-id.js'
 
 // Export all types needed to implement the RequestStore interface
-export * from './code.js'
-export * from './request-data.js'
-export * from './request-id.js'
-export type { Awaitable }
+export type { Awaitable, Code, RequestData, RequestId }
 
 export type UpdateRequestData = Pick<
   Partial<RequestData>,

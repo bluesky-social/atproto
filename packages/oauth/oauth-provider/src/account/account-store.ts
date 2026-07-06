@@ -30,14 +30,11 @@ import type { InviteCode } from '../types/invite-code.js'
 import type { SignUpInput } from './sign-up-input.js'
 
 // Export all types needed to implement the AccountStore interface
-
-export * from '../client/client-id.js'
-export * from '../device/device-data.js'
-export * from '../device/device-id.js'
-export * from '../request/request-id.js'
-
 export type {
   Account,
+  ClientId,
+  DeviceData,
+  DeviceId,
   Did,
   HandleString,
   HcaptchaVerifyResult,
@@ -195,7 +192,7 @@ export interface AccountStore {
   removeDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
-   * @returns **all** the device accounts that match the {@link requestId}
+   * @returns **all** the device accounts that match the {@link RequestId}
    * criteria and given {@link filter}.
    */
   listDeviceAccounts(

@@ -7,10 +7,7 @@ import { TokenData } from './token-data.js'
 import { TokenId } from './token-id.js'
 
 // Export all types needed to implement the TokenStore interface
-export * from './refresh-token.js'
-export * from './token-data.js'
-export * from './token-id.js'
-export type { Account, Awaitable, Did }
+export type { Account, Awaitable, Did, RefreshToken, TokenData, TokenId }
 
 export type TokenInfo = {
   id: TokenId
