@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "license": "MIT",
   "description": "Simple store interfaces & utilities",
   "keywords": [

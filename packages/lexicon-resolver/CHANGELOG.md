@@ -1,5 +1,19 @@
 # @atproto/lexicon-resolver
 
+## 0.4.7
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/lex-document@0.1.5
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/syntax@0.7.1
+  - @atproto/repo@0.10.5
+
 ## 0.4.6
 
 ### Patch Changes

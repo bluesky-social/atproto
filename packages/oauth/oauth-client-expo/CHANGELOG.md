@@ -1,5 +1,16 @@
 # @atproto/oauth-client-expo
 
+## 0.1.6
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/oauth-client-browser@0.4.7
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto/oauth-client@0.7.9
+
 ## 0.1.5
 
 ### Patch Changes

@@ -1,5 +1,37 @@
 # @atproto/pds
 
+## 0.5.16
+
+### Patch Changes
+
+- [#5181](https://github.com/bluesky-social/atproto/pull/5181) [`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112) Thanks [@blackmichael](https://github.com/blackmichael)! - Add `PDS_BLOBSTORE_S3_REQUEST_TIMEOUT_MS` environment variable to configure the S3 blobstore's per-request (stall detection) timeout independently from the total upload timeout. Blob upload timeouts (including stalled S3 connections) are now correctly surfaced as HTTP 504 `UpstreamTimeout` errors instead of 500s on `com.atproto.repo.uploadBlob`.
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Adapt to latest oauth-provider changes
+
+- Updated dependencies [[`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549), [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549)]:
+  - @atproto/aws@0.3.5
+  - @atproto/oauth-provider@0.20.0
+  - @atproto-labs/simple-store-memory@0.2.4
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/oauth-scopes@0.5.5
+  - @atproto/lex-cbor@0.1.4
+  - @atproto/lex-data@0.1.5
+  - @atproto/lex-json@0.1.4
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/syntax@0.7.1
+  - @atproto/repo@0.10.5
+  - @atproto/xrpc@0.8.5
+  - @atproto/did@0.5.4
+  - @atproto-labs/simple-store-redis@0.1.4
+  - @atproto-labs/xrpc-utils@0.1.7
+
 ## 0.5.15
 
 ### Patch Changes

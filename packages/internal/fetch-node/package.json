@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch-node",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "license": "MIT",
   "description": "SSRF protection for fetch() in Node.js",
   "keywords": [
