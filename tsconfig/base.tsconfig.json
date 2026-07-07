@@ -42,6 +42,11 @@
     // @TODO Change this to true and enforce the use of actual file extensions
     // in imports (through eslint)
     "rewriteRelativeImportExtensions": false,
+    // The use of "verbatimModuleSyntax" allows typescript files to be executed
+    // in NodeJS without compilation (also requires "erasableSyntaxOnly": true).
+    // This also is also useful to make bundling, tree-shaking & executing the
+    // code faster (through the elision of "import type" statements from the
+    // runtime code tree).
     "verbatimModuleSyntax": true,
     "types": [],
 
