@@ -24,6 +24,7 @@ export class UserAlreadyExistsError extends Error {
 export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
+  emailAuthFactorAt: string | null
   invitesDisabled: 0 | 1 | null
 }
 
@@ -61,6 +62,7 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'actor.deleteAfter',
       'account.email',
       'account.emailConfirmedAt',
+      'account.emailAuthFactorAt',
       'account.invitesDisabled',
     ])
 }
@@ -257,6 +259,34 @@ export const setEmailConfirmedAt = async (
       .set({ emailConfirmedAt })
       .where('did', '=', did),
   )
+}
+
+export const updateEmailAuthFactor = async (
+  db: AccountDb,
+  did: string,
+  email: string,
+  emailAuthFactorAt: DatetimeString | null,
+) => {
+  // when modifying auth factor, ensure it's for the expected email address.
+  // when enabling auth factor, also ensure that the email has been confirmed.
+  if (emailAuthFactorAt === null) {
+    await db.executeWithRetry(
+      db.db
+        .updateTable('account')
+        .set({ emailAuthFactorAt })
+        .where('did', '=', did)
+        .where('email', '=', email.toLowerCase()),
+    )
+  } else {
+    await db.executeWithRetry(
+      db.db
+        .updateTable('account')
+        .set({ emailAuthFactorAt })
+        .where('did', '=', did)
+        .where('email', '=', email.toLowerCase())
+        .where('emailConfirmedAt', 'is not', null),
+    )
+  }
 }
 
 export const getAccountAdminStatus = async (

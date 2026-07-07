@@ -350,6 +350,61 @@ export function createApiMiddleware<
   router.use(
     apiRoute({
       method: 'POST',
+      endpoint: '/enable-email-otp',
+      schema: z
+        .object({
+          did: didSchema,
+          email: emailSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        let { account } = await authenticate.call(this, req, res)
+
+        account = await server.accountManager.enableEmailAuthFactor(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { account } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/disable-email-otp',
+      schema: z
+        .object({
+          did: didSchema,
+          email: emailSchema,
+          token: emailOtpSchema.optional(),
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        let { account } = await authenticate.call(this, req, res)
+
+        // Two-phase: the first call (no token) dispatches an OTP and returns
+        // the account unchanged; the second (with token) disables the factor.
+        account = await server.accountManager.disableEmailAuthFactor(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { account } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
       endpoint: '/update-handle',
       schema: z
         .object({

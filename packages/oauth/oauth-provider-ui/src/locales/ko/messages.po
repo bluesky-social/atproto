@@ -74,7 +74,7 @@ msgstr "2단계 인증"
 msgid "A local app"
 msgstr "로컬 앱"
 
-#: src/lib/api.ts:467
+#: src/lib/api.ts:502
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
@@ -147,6 +147,7 @@ msgstr ""
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
+#: src/components/disable-email-auth-factor-dialog.tsx:83
 msgid "Already have a code?"
 msgstr "이미 코드가 있나요?"
 
@@ -159,7 +160,7 @@ msgstr "기기에 설치된 애플리케이션"
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"
 
-#: src/lib/api.ts:355
+#: src/lib/api.ts:390
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
@@ -289,7 +290,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr ""
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:258
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "{0} 이메일에서 로그인 코드를 확인한 후 여기에 입력하세요."
 
@@ -301,12 +302,12 @@ msgstr ""
 msgid "Check your inbox for the confirmation code."
 msgstr ""
 
-#: src/data/email.ts:69
+#: src/data/email.ts:71
 msgid "Check your inbox for the verification code."
 msgstr ""
 
 #: src/data/password.ts:22
-#: src/data/email.ts:23
+#: src/data/email.ts:25
 msgid "Check your inbox."
 msgstr "받은 편지함을 확인하세요."
 
@@ -391,7 +392,7 @@ msgstr "새 계정 만들기"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "계정에 연결된 공개 데이터를 생성, 갱신, 삭제할 수 있습니다"
 
-#: src/lib/api.ts:436
+#: src/lib/api.ts:471
 msgid "Custom domains are not supported"
 msgstr ""
 
@@ -399,7 +400,7 @@ msgstr ""
 msgid "Data"
 msgstr "데이터"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/pages/account/(authenticated)/manage/page.tsx:251
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr ""
@@ -412,7 +413,7 @@ msgstr ""
 msgid "Delete"
 msgstr "삭제"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/pages/account/(authenticated)/manage/page.tsx:278
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr ""
@@ -442,6 +443,18 @@ msgstr "기기"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx:90
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:43
+msgid "Disable email 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:64
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
 msgstr ""
@@ -460,7 +473,7 @@ msgstr ""
 msgid "Email"
 msgstr "이메일"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:141
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -471,20 +484,36 @@ msgstr "이메일 주소"
 msgid "Email address successfully updated"
 msgstr ""
 
-#: src/data/email.ts:22
+#: src/data/email.ts:24
 msgid "Email change request sent"
 msgstr ""
 
-#: src/data/email.ts:45
+#: src/data/email.ts:47
 msgid "Email change successful"
+msgstr ""
+
+#: src/data/email.ts:142
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts:116
+msgid "Email login verification enabled"
 msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
 msgstr ""
 
-#: src/data/email.ts:91
+#: src/data/email.ts:93
 msgid "Email verified"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx:34
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx:22
+msgid "Enable email 2FA"
 msgstr ""
 
 #: src/components/forms/input-new-password.tsx:39
@@ -502,6 +531,10 @@ msgstr ""
 #: src/components/reset-password-view.tsx:42
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
+
+#: src/components/disable-email-auth-factor-dialog.tsx:51
+msgid "Enter the security code we sent to <0>{email}</0> to disable two-factor authentication."
+msgstr ""
 
 #: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
@@ -536,7 +569,7 @@ msgstr "세부 정보 펼치기"
 msgid "Extra"
 msgstr "매우 강력"
 
-#: src/data/email.ts:51
+#: src/data/email.ts:53
 msgid "Failed to change email"
 msgstr ""
 
@@ -546,6 +579,14 @@ msgstr ""
 
 #: src/data/account.ts:98
 msgid "Failed to delete account"
+msgstr ""
+
+#: src/data/email.ts:150
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts:122
+msgid "Failed to enable email login verification"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
@@ -561,7 +602,7 @@ msgstr ""
 msgid "Failed to remove device"
 msgstr "기기를 제거하지 못했습니다"
 
-#: src/data/email.ts:28
+#: src/data/email.ts:30
 msgid "Failed to request email change"
 msgstr ""
 
@@ -581,7 +622,11 @@ msgstr "접근 권한을 취소하지 못했습니다"
 msgid "Failed to send confirmation email"
 msgstr ""
 
-#: src/data/email.ts:74
+#: src/data/email.ts:151
+msgid "Failed to send security code"
+msgstr ""
+
+#: src/data/email.ts:76
 msgid "Failed to send verification email"
 msgstr ""
 
@@ -589,7 +634,7 @@ msgstr ""
 msgid "Failed to update username"
 msgstr ""
 
-#: src/data/email.ts:97
+#: src/data/email.ts:99
 msgid "Failed to verify email"
 msgstr ""
 
@@ -677,7 +722,7 @@ msgstr ""
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:126
+#: src/pages/account/(authenticated)/manage/page.tsx:132
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr ""
 
@@ -835,7 +880,7 @@ msgstr "확인"
 msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:167
+#: src/pages/account/(authenticated)/manage/page.tsx:173
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -889,7 +934,7 @@ msgid "Please authenticate to continue"
 msgstr "계속하려면 인증하세요"
 
 #: src/data/password.ts:28
-#: src/data/email.ts:29
+#: src/data/email.ts:31
 msgid "Please check the email address and try again."
 msgstr "이메일 주소를 확인하고 다시 시도해 주세요."
 
@@ -902,11 +947,11 @@ msgid "Please check your code and password, then try again."
 msgstr ""
 
 #: src/data/password.ts:51
-#: src/data/email.ts:52
+#: src/data/email.ts:54
 msgid "Please check your reset code and try again."
 msgstr "재설정 코드를 확인하고 다시 시도해 주세요."
 
-#: src/data/email.ts:98
+#: src/data/email.ts:100
 msgid "Please check your verification code and try again."
 msgstr ""
 
@@ -914,7 +959,9 @@ msgstr ""
 msgid "Please enter the security code that was sent to your email address."
 msgstr ""
 
-#: src/data/email.ts:75
+#: src/data/email.ts:77
+#: src/data/email.ts:123
+#: src/data/email.ts:152
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -939,7 +986,7 @@ msgstr "변경 사항 게시"
 msgid "Reactivate"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/pages/account/(authenticated)/manage/page.tsx:238
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr ""
@@ -969,6 +1016,10 @@ msgstr "이 기기에서 이 계정 기억하기"
 #: src/components/utils/scope-description.tsx:643
 msgid "Repository"
 msgstr "저장소"
+
+#: src/components/enable-email-auth-factor-dialog.tsx:24
+msgid "Require an email code to sign in to your account."
+msgstr ""
 
 #: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
@@ -1019,6 +1070,10 @@ msgstr "기존 계정에서 선택하기"
 
 #: src/components/delete-account-dialog.tsx:195
 msgid "Send email"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:79
+msgid "Send email to verify"
 msgstr ""
 
 #: src/components/forms/button-request-code.tsx:11
@@ -1119,35 +1174,35 @@ msgstr ""
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "AT 프로토콜 네트워크는 외부 서비스와 통신할 때 사용자를 고유하게 식별할 수 있는 인증 메커니즘을 사용합니다. 이는 일반적으로 대화 메시지, 피드 또는 관리자 콘텐츠와 같이 계정과 연결된 데이터를 검색하거나 변경하는 데 사용됩니다. 애플리케이션은 사용자를 대신하여 다음과 같은 인증된 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
-#: src/lib/api.ts:394
+#: src/lib/api.ts:429
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "제출한 정보가 올바르지 않습니다. 입력 내용을 확인하고 다시 시도해 주세요."
 
-#: src/lib/api.ts:424
+#: src/lib/api.ts:459
 msgid "The domain name is not allowed"
 msgstr "허용되지 않는 도메인 이름입니다"
 
-#: src/lib/api.ts:494
+#: src/lib/api.ts:529
 msgid "The invite code is not valid"
 msgstr "잘못된 초대 코드입니다"
 
-#: src/lib/api.ts:353
+#: src/lib/api.ts:388
 msgid "The server encountered an unexpected error. Please try again."
 msgstr ""
 
-#: src/lib/api.ts:426
+#: src/lib/api.ts:461
 msgid "The username contains inappropriate language"
 msgstr ""
 
-#: src/lib/api.ts:432
+#: src/lib/api.ts:467
 msgid "The username could not be resolved"
 msgstr ""
 
-#: src/lib/api.ts:430
+#: src/lib/api.ts:465
 msgid "The username is already in use"
 msgstr ""
 
-#: src/lib/api.ts:422
+#: src/lib/api.ts:457
 msgid "The username is invalid"
 msgstr ""
 
@@ -1163,21 +1218,21 @@ msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다.
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음과 같은 권한(범위)을 요청합니다:"
 
-#: src/lib/api.ts:379
+#: src/lib/api.ts:414
 msgid "This authorization request has been denied. Please try again."
 msgstr "승인 요청이 거부되었습니다. 다시 시도해 주세요."
 
-#: src/lib/api.ts:558
+#: src/lib/api.ts:593
 msgid "This email is already used"
 msgstr "이미 사용 중인 이메일입니다"
 
-#: src/lib/api.ts:364
-#: src/lib/api.ts:515
-#: src/lib/api.ts:546
+#: src/lib/api.ts:399
+#: src/lib/api.ts:550
+#: src/lib/api.ts:581
 msgid "This sign-in session has expired"
 msgstr "로그인 세션이 만료되었습니다"
 
-#: src/lib/api.ts:428
+#: src/lib/api.ts:463
 msgid "This username is reserved"
 msgstr ""
 
@@ -1193,6 +1248,10 @@ msgstr ""
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx:46
+msgid "To disable your email 2FA method, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx:48
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr ""
@@ -1204,6 +1263,11 @@ msgstr "대상"
 
 #: src/components/forms/input-handle-custom-instructions.tsx:150
 msgid "Troubleshoot"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Two-factor authentication (2FA)"
 msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:57
@@ -1266,7 +1330,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:249
+#: src/pages/account/(authenticated)/manage/page.tsx:301
 msgid "Username"
 msgstr ""
 
@@ -1288,10 +1352,11 @@ msgstr ""
 
 #: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
+#: src/components/disable-email-auth-factor-confirm-form.tsx:27
 msgid "Verification code"
 msgstr ""
 
-#: src/data/email.ts:68
+#: src/data/email.ts:70
 msgid "Verification email sent"
 msgstr ""
 
@@ -1307,7 +1372,7 @@ msgstr ""
 msgid "Verify and Save"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/pages/account/(authenticated)/manage/page.tsx:92
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1361,7 +1426,7 @@ msgstr "이게 무슨 뜻인가요?"
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphere 계정이란?"
 
-#: src/lib/api.ts:530
+#: src/lib/api.ts:565
 msgid "Wrong identifier or password"
 msgstr "잘못된 아이디 또는 비밀번호입니다"
 
@@ -1397,7 +1462,7 @@ msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 
 msgid "You can deactivate your account again at any time from this page."
 msgstr ""
 
-#: src/data/email.ts:46
+#: src/data/email.ts:48
 msgid "You can now sign in with your new email."
 msgstr ""
 
@@ -1408,6 +1473,10 @@ msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
 #: src/components/reactivate-account-view.tsx:29
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
+msgstr ""
+
+#: src/data/email.ts:143
+msgid "You will no longer be prompted for a code to sign in."
 msgstr ""
 
 #: src/components/reset-password-view.tsx:77
@@ -1454,11 +1523,11 @@ msgstr ""
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr ""
 
-#: src/data/email.ts:92
+#: src/data/email.ts:94
 msgid "Your email address has been verified."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:91
+#: src/pages/account/(authenticated)/manage/page.tsx:97
 msgid "Your email address needs to be verified."
 msgstr ""
 
@@ -1466,6 +1535,10 @@ msgstr ""
 #: src/components/forms/input-handle-default.tsx:184
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
+
+#: src/data/email.ts:117
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"

@@ -74,7 +74,7 @@ msgstr "Confirmation 2FA"
 msgid "A local app"
 msgstr "Une application locale"
 
-#: src/lib/api.ts:467
+#: src/lib/api.ts:502
 msgid "A second authentication factor is required ({hint})"
 msgstr "Un second facteur d'authentification est requis ({hint})"
 
@@ -147,6 +147,7 @@ msgstr "alice.com"
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
+#: src/components/disable-email-auth-factor-dialog.tsx:83
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
@@ -159,7 +160,7 @@ msgstr "Une application sur votre appareil"
 msgid "An error occurred"
 msgstr "Une erreur s'est produite"
 
-#: src/lib/api.ts:355
+#: src/lib/api.ts:390
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
 
@@ -289,7 +290,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Vérifiez votre boîte mail <0>{email}</0> pour un email contenant le code de confirmation à saisir ci-dessous :"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:258
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Consultez la boîte de réception de {0} pour y trouver un code de connexion, et saisissez-le ici."
 
@@ -301,12 +302,12 @@ msgstr "Vérifiez votre boîte mail pour le code de confirmation à saisir ci-de
 msgid "Check your inbox for the confirmation code."
 msgstr "Vérifiez votre boîte mail pour le code de confirmation."
 
-#: src/data/email.ts:69
+#: src/data/email.ts:71
 msgid "Check your inbox for the verification code."
 msgstr "Consultez votre boîte de réception pour obtenir le code de vérification."
 
 #: src/data/password.ts:22
-#: src/data/email.ts:23
+#: src/data/email.ts:25
 msgid "Check your inbox."
 msgstr "Vérifiez votre boîte de réception."
 
@@ -391,7 +392,7 @@ msgstr "Créer un nouveau compte"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Créer, mettre à jour et supprimer toutes les données publiques de votre compte"
 
-#: src/lib/api.ts:436
+#: src/lib/api.ts:471
 msgid "Custom domains are not supported"
 msgstr "Les domaines personnalisés ne sont pas pris en charge"
 
@@ -399,7 +400,7 @@ msgstr "Les domaines personnalisés ne sont pas pris en charge"
 msgid "Data"
 msgstr "Données"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/pages/account/(authenticated)/manage/page.tsx:251
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Désactiver le compte"
@@ -412,7 +413,7 @@ msgstr "Compte désactivé"
 msgid "Delete"
 msgstr "Supprimer"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/pages/account/(authenticated)/manage/page.tsx:278
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Supprimer le compte"
@@ -442,6 +443,18 @@ msgstr "Appareils"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Vous n'avez pas reçu de code ? <0>Renvoyer un code</0>"
 
+#: src/components/disable-email-auth-factor-dialog.tsx:90
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:43
+msgid "Disable email 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:64
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
 msgstr "DNS"
@@ -460,7 +473,7 @@ msgstr "ex. <0>alice{0}</0>"
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:141
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -471,21 +484,37 @@ msgstr "Adresse email"
 msgid "Email address successfully updated"
 msgstr "Adresse email mise à jour avec succès"
 
-#: src/data/email.ts:22
+#: src/data/email.ts:24
 msgid "Email change request sent"
 msgstr "Demande de modification d'adresse email envoyée"
 
-#: src/data/email.ts:45
+#: src/data/email.ts:47
 msgid "Email change successful"
 msgstr "Modification de l'adresse email réussie"
+
+#: src/data/email.ts:142
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts:116
+msgid "Email login verification enabled"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
 msgstr "Envoyer ces instructions par email"
 
-#: src/data/email.ts:91
+#: src/data/email.ts:93
 msgid "Email verified"
 msgstr "Adresse email vérifiée"
+
+#: src/components/enable-email-auth-factor-dialog.tsx:34
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx:22
+msgid "Enable email 2FA"
+msgstr ""
 
 #: src/components/forms/input-new-password.tsx:39
 msgid "Enter a password"
@@ -502,6 +531,10 @@ msgstr "Saisissez le domaine que vous souhaitez utiliser"
 #: src/components/reset-password-view.tsx:42
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
+
+#: src/components/disable-email-auth-factor-dialog.tsx:51
+msgid "Enter the security code we sent to <0>{email}</0> to disable two-factor authentication."
+msgstr ""
 
 #: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
@@ -536,7 +569,7 @@ msgstr "Développer les détails"
 msgid "Extra"
 msgstr "Extra"
 
-#: src/data/email.ts:51
+#: src/data/email.ts:53
 msgid "Failed to change email"
 msgstr "Échec de la modification de l'adresse email"
 
@@ -547,6 +580,14 @@ msgstr "Échec de la désactivation du compte"
 #: src/data/account.ts:98
 msgid "Failed to delete account"
 msgstr "Échec de la suppression du compte"
+
+#: src/data/email.ts:150
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts:122
+msgid "Failed to enable email login verification"
+msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
 #: src/pages/account/(authenticated)/apps/page.tsx:34
@@ -561,7 +602,7 @@ msgstr "Échec de la réactivation du compte"
 msgid "Failed to remove device"
 msgstr "Échec de la suppression de l'appareil"
 
-#: src/data/email.ts:28
+#: src/data/email.ts:30
 msgid "Failed to request email change"
 msgstr "Échec de la demande de modification d'adresse email"
 
@@ -581,7 +622,11 @@ msgstr "Échec de la révocation de l'accès"
 msgid "Failed to send confirmation email"
 msgstr "Échec de l'envoi de l'email de confirmation"
 
-#: src/data/email.ts:74
+#: src/data/email.ts:151
+msgid "Failed to send security code"
+msgstr ""
+
+#: src/data/email.ts:76
 msgid "Failed to send verification email"
 msgstr "Échec de l'envoi de l'email de vérification"
 
@@ -589,7 +634,7 @@ msgstr "Échec de l'envoi de l'email de vérification"
 msgid "Failed to update username"
 msgstr "Échec de la modification du nom d'utilisateur"
 
-#: src/data/email.ts:97
+#: src/data/email.ts:99
 msgid "Failed to verify email"
 msgstr "Échec de la vérification de l'adresse email"
 
@@ -687,7 +732,7 @@ msgstr "Si vous avez accès à la configuration de l'hébergement web de votre d
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Si vous avez votre propre domaine, vous pouvez l'utiliser comme pseudo. Cela vous permet de vérifier vous-même votre identité. <0>En savoir plus ici</0>."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:126
+#: src/pages/account/(authenticated)/manage/page.tsx:132
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Si vous mettez à jour votre adresse email, la 2FA par email (si activée) sera désactivée."
 
@@ -845,7 +890,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:167
+#: src/pages/account/(authenticated)/manage/page.tsx:173
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -899,7 +944,7 @@ msgid "Please authenticate to continue"
 msgstr "Veuillez vous connecter pour continuer"
 
 #: src/data/password.ts:28
-#: src/data/email.ts:29
+#: src/data/email.ts:31
 msgid "Please check the email address and try again."
 msgstr "Veuillez vérifier l'adresse email et réessayer."
 
@@ -912,11 +957,11 @@ msgid "Please check your code and password, then try again."
 msgstr "Veuillez vérifier votre code et votre mot de passe, puis réessayer."
 
 #: src/data/password.ts:51
-#: src/data/email.ts:52
+#: src/data/email.ts:54
 msgid "Please check your reset code and try again."
 msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
 
-#: src/data/email.ts:98
+#: src/data/email.ts:100
 msgid "Please check your verification code and try again."
 msgstr "Veuillez vérifier votre code de vérification et réessayer."
 
@@ -924,7 +969,9 @@ msgstr "Veuillez vérifier votre code de vérification et réessayer."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adresse email."
 
-#: src/data/email.ts:75
+#: src/data/email.ts:77
+#: src/data/email.ts:123
+#: src/data/email.ts:152
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -949,7 +996,7 @@ msgstr "Publier des modifications"
 msgid "Reactivate"
 msgstr "Réactiver"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/pages/account/(authenticated)/manage/page.tsx:238
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Réactiver le compte"
@@ -979,6 +1026,10 @@ msgstr "Se souvenir de ce compte sur cet appareil"
 #: src/components/utils/scope-description.tsx:643
 msgid "Repository"
 msgstr "Données publiques"
+
+#: src/components/enable-email-auth-factor-dialog.tsx:24
+msgid "Require an email code to sign in to your account."
+msgstr ""
 
 #: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
@@ -1030,6 +1081,10 @@ msgstr "Sélectionner un compte"
 #: src/components/delete-account-dialog.tsx:195
 msgid "Send email"
 msgstr "Envoyer l'email"
+
+#: src/components/disable-email-auth-factor-dialog.tsx:79
+msgid "Send email to verify"
+msgstr ""
 
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
@@ -1129,35 +1184,35 @@ msgstr "L'application demande les autorisations nécessaires pour effectuer les 
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "Le réseau AT Protocol utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que les messages privés, les feeds ou le contenu de modération. L'application demande les autorisations nécessaires pour effectuer les actions authentifiées suivantes en votre nom :"
 
-#: src/lib/api.ts:394
+#: src/lib/api.ts:429
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer."
 
-#: src/lib/api.ts:424
+#: src/lib/api.ts:459
 msgid "The domain name is not allowed"
 msgstr "Le nom de domaine n'est pas autorisé"
 
-#: src/lib/api.ts:494
+#: src/lib/api.ts:529
 msgid "The invite code is not valid"
 msgstr "Le code d'invitation n'est pas valide"
 
-#: src/lib/api.ts:353
+#: src/lib/api.ts:388
 msgid "The server encountered an unexpected error. Please try again."
 msgstr "Le serveur a rencontré une erreur inattendue. Veuillez réessayer."
 
-#: src/lib/api.ts:426
+#: src/lib/api.ts:461
 msgid "The username contains inappropriate language"
 msgstr "Le nom d'utilisateur contient un langage inapproprié"
 
-#: src/lib/api.ts:432
+#: src/lib/api.ts:467
 msgid "The username could not be resolved"
 msgstr "Le nom d'utilisateur n'a pas pu être résolu"
 
-#: src/lib/api.ts:430
+#: src/lib/api.ts:465
 msgid "The username is already in use"
 msgstr "Le nom d'utilisateur est déjà utilisé"
 
-#: src/lib/api.ts:422
+#: src/lib/api.ts:457
 msgid "The username is invalid"
 msgstr "Le nom d'utilisateur est invalide"
 
@@ -1173,21 +1228,21 @@ msgstr "Ces applications ont accès à votre compte. Une application peut appara
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
-#: src/lib/api.ts:379
+#: src/lib/api.ts:414
 msgid "This authorization request has been denied. Please try again."
 msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
 
-#: src/lib/api.ts:558
+#: src/lib/api.ts:593
 msgid "This email is already used"
 msgstr "Cette adresse email est déjà utilisée"
 
-#: src/lib/api.ts:364
-#: src/lib/api.ts:515
-#: src/lib/api.ts:546
+#: src/lib/api.ts:399
+#: src/lib/api.ts:550
+#: src/lib/api.ts:581
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/lib/api.ts:428
+#: src/lib/api.ts:463
 msgid "This username is reserved"
 msgstr "Ce nom d'utilisateur est réservé"
 
@@ -1203,6 +1258,10 @@ msgstr ""
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr "Pour changer votre mot de passe, vous devrez entrer un code de sécurité envoyé à votre adresse email."
 
+#: src/components/disable-email-auth-factor-dialog.tsx:46
+msgid "To disable your email 2FA method, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx:48
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "Pour vérifier votre adresse email, vous devrez entrer un code de sécurité envoyé à <0>{email}</0>."
@@ -1215,6 +1274,11 @@ msgstr "Auprès de"
 #: src/components/forms/input-handle-custom-instructions.tsx:150
 msgid "Troubleshoot"
 msgstr "Dépannage"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Two-factor authentication (2FA)"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Type"
@@ -1276,7 +1340,7 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:249
+#: src/pages/account/(authenticated)/manage/page.tsx:301
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
@@ -1298,10 +1362,11 @@ msgstr "Valeur"
 
 #: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
+#: src/components/disable-email-auth-factor-confirm-form.tsx:27
 msgid "Verification code"
 msgstr "Code de vérification"
 
-#: src/data/email.ts:68
+#: src/data/email.ts:70
 msgid "Verification email sent"
 msgstr "Email de vérification envoyé"
 
@@ -1317,7 +1382,7 @@ msgstr "Vérification réussie !"
 msgid "Verify and Save"
 msgstr "Vérifier et enregistrer"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/pages/account/(authenticated)/manage/page.tsx:92
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1371,7 +1436,7 @@ msgstr "Qu'est-ce que ça signifie ?"
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
-#: src/lib/api.ts:530
+#: src/lib/api.ts:565
 msgid "Wrong identifier or password"
 msgstr "Identifiant ou mot de passe incorrect"
 
@@ -1407,7 +1472,7 @@ msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de dom
 msgid "You can deactivate your account again at any time from this page."
 msgstr "Vous pouvez désactiver votre compte à nouveau à tout moment depuis cette page."
 
-#: src/data/email.ts:46
+#: src/data/email.ts:48
 msgid "You can now sign in with your new email."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email."
 
@@ -1419,6 +1484,10 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 #: src/components/reactivate-account-view.tsx:29
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre compte pour continuer à vous connecter. Votre contenu (profil, publications, feeds, listes, etc.) redeviendra visible pour les autres utilisateurs."
+
+#: src/data/email.ts:143
+msgid "You will no longer be prompted for a code to sign in."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
@@ -1464,11 +1533,11 @@ msgstr "Vos contenus (profil, posts, flux, listes, etc.) seront cachés de l'app
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Votre adresse email a été mise à jour avec succès et doit être vérifiée. Veuillez saisir le code de vérification qui a été envoyé à <0>{email}</0>."
 
-#: src/data/email.ts:92
+#: src/data/email.ts:94
 msgid "Your email address has been verified."
 msgstr "Votre adresse email a été vérifiée."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:91
+#: src/pages/account/(authenticated)/manage/page.tsx:97
 msgid "Your email address needs to be verified."
 msgstr "Votre adresse email doit être vérifiée."
 
@@ -1476,6 +1545,10 @@ msgstr "Votre adresse email doit être vérifiée."
 #: src/components/forms/input-handle-default.tsx:184
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
+
+#: src/data/email.ts:117
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"

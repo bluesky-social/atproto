@@ -28,6 +28,8 @@ import type {
   DeviceId,
   DeviceStore,
   Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   FoundRequestResult,
   HandleUnavailableReason,
   LexiconData,
@@ -246,18 +248,16 @@ export class OAuthStore
     locale: _locale,
     username: identifier,
     password,
-    // Not supported by the PDS (yet?)
-    emailOtp = undefined,
+    emailOtp,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
-      // Should never happen
-      if (emailOtp != null) {
-        throw new Error('Email OTP is not supported')
-      }
-
       const { user, appPassword, isSoftDeleted } =
-        await this.accountManager.login({ identifier, password })
+        await this.accountManager.login({
+          identifier,
+          password,
+          authFactorToken: emailOtp,
+        })
 
       if (isSoftDeleted) {
         throw new InvalidRequestError('Account was taken down')
@@ -688,6 +688,36 @@ export class OAuthStore
     }
   }
 
+  async enableEmailAuthFactor({
+    did,
+    email,
+  }: EnableEmailAuthFactorInput): Promise<Account | null> {
+    const account = await this.accountManager.enableEmailAuthFactor({
+      did,
+      email,
+    })
+
+    return this.buildAccount(account)
+  }
+
+  async disableEmailAuthFactor({
+    did,
+    email,
+    token,
+    locale,
+  }: DisableEmailAuthFactorInput): Promise<Account | null> {
+    // A `null` account signals the OTP was dispatched and the change is
+    // pending confirmation (no token was supplied yet).
+    const account = await this.accountManager.disableEmailAuthFactor({
+      did,
+      email,
+      token,
+      locale,
+    })
+
+    return account ? this.buildAccount(account) : null
+  }
+
   async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {
     try {
       const account = await this.accountManager.updateHandle(did, handle)
@@ -811,6 +841,7 @@ export class OAuthStore
       pds: this.serviceDid,
       email: row.email || undefined,
       emailVerified: row.email ? row.emailConfirmedAt != null : undefined,
+      emailAuthFactor: row.email ? row.emailAuthFactorAt != null : undefined,
       handle: row.handle || undefined,
       deactivated: row.deactivatedAt != null,
     }

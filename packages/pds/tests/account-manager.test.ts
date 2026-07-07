@@ -183,6 +183,61 @@ describe('account manager', () => {
     await page.ensureNotification('Adresse email vérifiée')
   })
 
+  it('allows enabling and disabling email based 2FA', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+    await page.goto(new URL('/account', network.pds.url))
+
+    using sendSignInAuthFactorMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendSignInAuthFactor')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.ensureTextVisibility('Two-factor authentication (2FA)', 'span')
+
+    await page.clickOnText('Two-factor authentication (2FA)')
+
+    await page.ensureTextVisibility('Enable email 2FA', 'h2')
+
+    // We need to explicitly click on the enable button in the dialog,
+    // otherwise we end up clicking on the "enable" behind the dialog.
+    await page.clickOnText('Enable', 'div[role=dialog] button')
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('Disable', 'span')
+
+    expect(sendSignInAuthFactorMock).toHaveBeenCalledTimes(0)
+
+    // Disabling 2FA:
+    await page.clickOnText('Two-factor authentication (2FA)')
+    await page.ensureTextVisibility('Disable email 2FA', 'h2')
+
+    await page.clickOnText('Send email to verify', 'button')
+    await page.waitForNetworkIdle()
+
+    expect(sendSignInAuthFactorMock).toHaveBeenCalledTimes(1)
+    const [params] = sendSignInAuthFactorMock.mock.lastCall!
+    expect(params).toEqual({
+      locale: 'fr',
+      handle: expect.any(String),
+      token: expect.any(String),
+    })
+
+    await page.ensureTextVisibility('Code de vérification', 'legend')
+    await page.typeInInput('code', params.token)
+
+    // We need to explicitly click on the disable button in the dialog,
+    // otherwise we end up clicking on the "disable" behind the dialog.
+    await page.clickOnText('Disable', 'div[role=dialog] button')
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('Enable', 'span')
+  })
+
   it('allows changing the username', async () => {
     await using page = await PageHelper.from(browser, { languages })
 

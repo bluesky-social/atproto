@@ -473,6 +473,52 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         }
         return Response.json({ success: true })
       }
+      case `POST ${API_ENDPOINT_PREFIX}/enable-email-otp`: {
+        const { did } = await request.json()
+        const account = accounts.get(did)
+        if (!account) {
+          return Response.json(
+            {
+              error: 'invalid_request',
+              error_description: 'Unknown account',
+            },
+            { status: 400 },
+          )
+        }
+
+        account.emailAuthFactor = true
+        return Response.json({ account })
+      }
+      case `POST ${API_ENDPOINT_PREFIX}/disable-email-otp`: {
+        const { did, token } = await request.json()
+        const account = accounts.get(did)
+        if (!account) {
+          return Response.json(
+            {
+              error: 'invalid_request',
+              error_description: 'Unknown account',
+            },
+            { status: 400 },
+          )
+        }
+
+        if (!token) {
+          return Response.json({ account })
+        }
+
+        if (token !== 'AAAAA-AAAAA') {
+          return Response.json(
+            {
+              error: 'invalid_request',
+              error_description: 'Invalid token',
+            },
+            { status: 400 },
+          )
+        }
+
+        account.emailAuthFactor = false
+        return Response.json({ account })
+      }
       case `POST ${API_ENDPOINT_PREFIX}/update-handle`: {
         const { did, handle } = await request.json()
         const account = accounts.get(did)

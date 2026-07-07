@@ -62,6 +62,7 @@ describe('auth', () => {
       handle: account.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -92,6 +93,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -225,6 +227,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token

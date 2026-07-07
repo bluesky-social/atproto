@@ -159,6 +159,8 @@ export function SessionProvider({
         '/delete-account-confirm': ({ input }) => removeSession(input.did),
 
         // Account updates
+        '/enable-email-otp': ({ output }) => upsertAccount(output.account),
+        '/disable-email-otp': ({ output }) => upsertAccount(output.account),
         '/update-handle': ({ output }) => upsertAccount(output.account),
         '/update-email-confirm': ({ output }) => upsertAccount(output.account),
         '/verify-email-confirm': ({ output }) => upsertAccount(output.account),

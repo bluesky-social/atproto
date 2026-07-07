@@ -74,7 +74,7 @@ msgstr "2要素認証の確認"
 msgid "A local app"
 msgstr "ローカルアプリ"
 
-#: src/lib/api.ts:467
+#: src/lib/api.ts:502
 msgid "A second authentication factor is required ({hint})"
 msgstr "2番目の認証要素が必要です ({hint})"
 
@@ -147,6 +147,7 @@ msgstr "alice.com"
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
+#: src/components/disable-email-auth-factor-dialog.tsx:83
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
@@ -159,7 +160,7 @@ msgstr "デバイス上のアプリ"
 msgid "An error occurred"
 msgstr "エラーが発生しました"
 
-#: src/lib/api.ts:355
+#: src/lib/api.ts:390
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期しないエラーが発生しました。もう一度お試しください。"
 
@@ -289,7 +290,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "確認コードが記載されたメール <0>{email}</0> を確認し、ここに入力してください。"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:258
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
@@ -301,12 +302,12 @@ msgstr "確認コードが記載されたメールを確認し、ここに入力
 msgid "Check your inbox for the confirmation code."
 msgstr "確認コードが記載されたメールを確認してください。"
 
-#: src/data/email.ts:69
+#: src/data/email.ts:71
 msgid "Check your inbox for the verification code."
 msgstr "確認コードが記載されたメールを確認してください。"
 
 #: src/data/password.ts:22
-#: src/data/email.ts:23
+#: src/data/email.ts:25
 msgid "Check your inbox."
 msgstr "受信トレイを確認してください。"
 
@@ -391,7 +392,7 @@ msgstr "新規アカウントの作成"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "あなたのアカウントにリンクされたすべての公開データを作成、更新、および削除"
 
-#: src/lib/api.ts:436
+#: src/lib/api.ts:471
 msgid "Custom domains are not supported"
 msgstr "カスタムドメインはサポートされていません"
 
@@ -399,7 +400,7 @@ msgstr "カスタムドメインはサポートされていません"
 msgid "Data"
 msgstr "データ"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/pages/account/(authenticated)/manage/page.tsx:251
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "アカウントを無効化"
@@ -412,7 +413,7 @@ msgstr "無効化されたアカウント"
 msgid "Delete"
 msgstr "削除"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/pages/account/(authenticated)/manage/page.tsx:278
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "アカウントを削除"
@@ -442,6 +443,18 @@ msgstr "デバイス"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "コードが届いていませんか？<0>ここをクリックすれば再送信します。</0>"
 
+#: src/components/disable-email-auth-factor-dialog.tsx:90
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:43
+msgid "Disable email 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:64
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
 msgstr "DNS"
@@ -460,7 +473,7 @@ msgstr "例: <0>alice{0}</0>"
 msgid "Email"
 msgstr "メールアドレス"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:141
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -471,21 +484,37 @@ msgstr "メールアドレス"
 msgid "Email address successfully updated"
 msgstr "メールアドレスが正常に更新されました"
 
-#: src/data/email.ts:22
+#: src/data/email.ts:24
 msgid "Email change request sent"
 msgstr "メールアドレス変更リクエストが送信されました"
 
-#: src/data/email.ts:45
+#: src/data/email.ts:47
 msgid "Email change successful"
 msgstr "メールアドレスの変更に成功しました"
+
+#: src/data/email.ts:142
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts:116
+msgid "Email login verification enabled"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
 msgstr "これらの手順をメールで送信"
 
-#: src/data/email.ts:91
+#: src/data/email.ts:93
 msgid "Email verified"
 msgstr "メールアドレスが確認されました"
+
+#: src/components/enable-email-auth-factor-dialog.tsx:34
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx:22
+msgid "Enable email 2FA"
+msgstr ""
 
 #: src/components/forms/input-new-password.tsx:39
 msgid "Enter a password"
@@ -502,6 +531,10 @@ msgstr "使用したいドメインを入力してください"
 #: src/components/reset-password-view.tsx:42
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "アカウントの作成に使用したメールアドレスを入力します。新しいパスワードを設定できるように、「リセットコード」をお送りします。"
+
+#: src/components/disable-email-auth-factor-dialog.tsx:51
+msgid "Enter the security code we sent to <0>{email}</0> to disable two-factor authentication."
+msgstr ""
 
 #: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
@@ -536,7 +569,7 @@ msgstr "詳細を開く"
 msgid "Extra"
 msgstr "最強"
 
-#: src/data/email.ts:51
+#: src/data/email.ts:53
 msgid "Failed to change email"
 msgstr "メールアドレスの変更に失敗しました"
 
@@ -547,6 +580,14 @@ msgstr "アカウントの無効化に失敗しました"
 #: src/data/account.ts:98
 msgid "Failed to delete account"
 msgstr "アカウントの削除に失敗しました"
+
+#: src/data/email.ts:150
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts:122
+msgid "Failed to enable email login verification"
+msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
 #: src/pages/account/(authenticated)/apps/page.tsx:34
@@ -561,7 +602,7 @@ msgstr "アカウントの再有効化に失敗しました"
 msgid "Failed to remove device"
 msgstr "デバイスの削除に失敗しました"
 
-#: src/data/email.ts:28
+#: src/data/email.ts:30
 msgid "Failed to request email change"
 msgstr "メールアドレス変更リクエストの送信に失敗しました"
 
@@ -581,7 +622,11 @@ msgstr "アクセスの取消に失敗しました"
 msgid "Failed to send confirmation email"
 msgstr "確認メールの送信に失敗しました"
 
-#: src/data/email.ts:74
+#: src/data/email.ts:151
+msgid "Failed to send security code"
+msgstr ""
+
+#: src/data/email.ts:76
 msgid "Failed to send verification email"
 msgstr "確認メールの送信に失敗しました"
 
@@ -589,7 +634,7 @@ msgstr "確認メールの送信に失敗しました"
 msgid "Failed to update username"
 msgstr "ユーザー名の更新に失敗しました"
 
-#: src/data/email.ts:97
+#: src/data/email.ts:99
 msgid "Failed to verify email"
 msgstr "メールアドレスの確認に失敗しました"
 
@@ -687,7 +732,7 @@ msgstr "あなたのドメインのウェブホスティング設定にアクセ
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "自分のドメインを持っていれば、ハンドルとして利用できます。これによりあなたのアイデンティティを自己証明できます。<0>詳しくはこちら</0>。"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:126
+#: src/pages/account/(authenticated)/manage/page.tsx:132
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "メールアドレスを更新すると、メールでの2要素認証(有効にしていた場合)は無効になります。"
 
@@ -845,7 +890,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:167
+#: src/pages/account/(authenticated)/manage/page.tsx:173
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -899,7 +944,7 @@ msgid "Please authenticate to continue"
 msgstr "続けるには認証してください"
 
 #: src/data/password.ts:28
-#: src/data/email.ts:29
+#: src/data/email.ts:31
 msgid "Please check the email address and try again."
 msgstr "メールアドレスを確認して、もう一度お試しください。"
 
@@ -912,11 +957,11 @@ msgid "Please check your code and password, then try again."
 msgstr "コードとパスワードを確認して、もう一度お試しください。"
 
 #: src/data/password.ts:51
-#: src/data/email.ts:52
+#: src/data/email.ts:54
 msgid "Please check your reset code and try again."
 msgstr "リセットコードを確認して、もう一度お試しください。"
 
-#: src/data/email.ts:98
+#: src/data/email.ts:100
 msgid "Please check your verification code and try again."
 msgstr "確認コードを確認して、もう一度お試しください。"
 
@@ -924,7 +969,9 @@ msgstr "確認コードを確認して、もう一度お試しください。"
 msgid "Please enter the security code that was sent to your email address."
 msgstr "メールアドレスに送信されたセキュリティコードを入力してください。"
 
-#: src/data/email.ts:75
+#: src/data/email.ts:77
+#: src/data/email.ts:123
+#: src/data/email.ts:152
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -949,7 +996,7 @@ msgstr "公開された変更"
 msgid "Reactivate"
 msgstr "再有効化"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/pages/account/(authenticated)/manage/page.tsx:238
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "アカウントを再有効化"
@@ -979,6 +1026,10 @@ msgstr "このアカウントをこのデバイスに記憶する"
 #: src/components/utils/scope-description.tsx:643
 msgid "Repository"
 msgstr "リポジトリ"
+
+#: src/components/enable-email-auth-factor-dialog.tsx:24
+msgid "Require an email code to sign in to your account."
+msgstr ""
 
 #: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
@@ -1030,6 +1081,10 @@ msgstr "既存のアカウントから選択"
 #: src/components/delete-account-dialog.tsx:195
 msgid "Send email"
 msgstr "メールを送信"
+
+#: src/components/disable-email-auth-factor-dialog.tsx:79
+msgid "Send email to verify"
+msgstr ""
 
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
@@ -1129,35 +1184,35 @@ msgstr "アプリは、あなたのBlueskyアカウントに対して次のア�
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "ATプロトコルネットワークは、外部サービスと通信する際にユーザーを一意に識別できる認証メカニズムを使用しています。これは通常、チャットメッセージ、フィード、モデレーションコンテンツなどのアカウントにリンクされたデータを取得または更新するために使用されます。アプリは、あなたに代わって次の認証されたアクションを実行するために必要な権限を要求しています："
 
-#: src/lib/api.ts:394
+#: src/lib/api.ts:429
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "送信されたデータが無効です。フォームを確認して、もう一度お試しください。"
 
-#: src/lib/api.ts:424
+#: src/lib/api.ts:459
 msgid "The domain name is not allowed"
 msgstr "そのドメイン名は許可されていません"
 
-#: src/lib/api.ts:494
+#: src/lib/api.ts:529
 msgid "The invite code is not valid"
 msgstr "招待コードが有効ではありません"
 
-#: src/lib/api.ts:353
+#: src/lib/api.ts:388
 msgid "The server encountered an unexpected error. Please try again."
 msgstr "サーバーで予期しないエラーが発生しました。もう一度お試しください。"
 
-#: src/lib/api.ts:426
+#: src/lib/api.ts:461
 msgid "The username contains inappropriate language"
 msgstr "ユーザー名に不適切な言葉が含まれています"
 
-#: src/lib/api.ts:432
+#: src/lib/api.ts:467
 msgid "The username could not be resolved"
 msgstr "ユーザー名が見つかりません"
 
-#: src/lib/api.ts:430
+#: src/lib/api.ts:465
 msgid "The username is already in use"
 msgstr "そのユーザー名は既に使用されています"
 
-#: src/lib/api.ts:422
+#: src/lib/api.ts:457
 msgid "The username is invalid"
 msgstr "ユーザー名が無効です"
 
@@ -1173,21 +1228,21 @@ msgstr "これらのアプリはあなたのアカウントにアクセスでき
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "このアプリケーションは、あなたのアカウントにアクセスするために次の権限（スコープ）を要求しています："
 
-#: src/lib/api.ts:379
+#: src/lib/api.ts:414
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/lib/api.ts:558
+#: src/lib/api.ts:593
 msgid "This email is already used"
 msgstr "このメールアドレスはすでに使用されています"
 
-#: src/lib/api.ts:364
-#: src/lib/api.ts:515
-#: src/lib/api.ts:546
+#: src/lib/api.ts:399
+#: src/lib/api.ts:550
+#: src/lib/api.ts:581
 msgid "This sign-in session has expired"
 msgstr "このサインインセッションの有効期限が切れました"
 
-#: src/lib/api.ts:428
+#: src/lib/api.ts:463
 msgid "This username is reserved"
 msgstr "このユーザー名は予約されています"
 
@@ -1203,6 +1258,10 @@ msgstr "あなたのBlueskyアカウントと関連するすべてのデータ�
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr "パスワードを変更するには、メールに送信されたセキュリティコードを入力する必要があります。"
 
+#: src/components/disable-email-auth-factor-dialog.tsx:46
+msgid "To disable your email 2FA method, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx:48
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "メールアドレスを確認するには、<0>{email}</0> に送信されたセキュリティコードを入力する必要があります。"
@@ -1215,6 +1274,11 @@ msgstr "対象"
 #: src/components/forms/input-handle-custom-instructions.tsx:150
 msgid "Troubleshoot"
 msgstr "トラブルシュート"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Two-factor authentication (2FA)"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Type"
@@ -1276,7 +1340,7 @@ msgstr "デフォルトのユーザー名を使用"
 msgid "Use a domain name I own"
 msgstr "自分が所有するドメイン名を使用"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:249
+#: src/pages/account/(authenticated)/manage/page.tsx:301
 msgid "Username"
 msgstr "ユーザー名"
 
@@ -1298,10 +1362,11 @@ msgstr "値"
 
 #: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
+#: src/components/disable-email-auth-factor-confirm-form.tsx:27
 msgid "Verification code"
 msgstr "確認コード"
 
-#: src/data/email.ts:68
+#: src/data/email.ts:70
 msgid "Verification email sent"
 msgstr "確認メールが送信されました"
 
@@ -1317,7 +1382,7 @@ msgstr "確認成功！"
 msgid "Verify and Save"
 msgstr "確認して保存"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/pages/account/(authenticated)/manage/page.tsx:92
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1371,7 +1436,7 @@ msgstr "どういう意味ですか？"
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
 
-#: src/lib/api.ts:530
+#: src/lib/api.ts:565
 msgid "Wrong identifier or password"
 msgstr "識別子またはパスワードが間違っています"
 
@@ -1407,7 +1472,7 @@ msgstr "アカウントのセットアップ後にユーザー名をあなたが
 msgid "You can deactivate your account again at any time from this page."
 msgstr "このページからいつでもアカウントを再度無効化できます。"
 
-#: src/data/email.ts:46
+#: src/data/email.ts:48
 msgid "You can now sign in with your new email."
 msgstr "新しいメールアドレスでサインインできるようになりました。"
 
@@ -1419,6 +1484,10 @@ msgstr "新しいパスワードでサインインできるようになりまし
 #: src/components/reactivate-account-view.tsx:29
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "以前に <0/> を無効化しました。アカウントを再有効化してログインを続行できます。あなたのコンテンツ（プロフィール、投稿、フィード、リストなど）は、他のユーザーに再び表示されるようになります。"
+
+#: src/data/email.ts:143
+msgid "You will no longer be prompted for a code to sign in."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
@@ -1464,11 +1533,11 @@ msgstr "あなたのコンテンツ（プロフィール、投稿、フィード
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "メールアドレスは正常に更新され、確認が必要です。<0>{email}</0> に送信された確認コードを入力してください。"
 
-#: src/data/email.ts:92
+#: src/data/email.ts:94
 msgid "Your email address has been verified."
 msgstr "メールアドレスが確認されました。"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:91
+#: src/pages/account/(authenticated)/manage/page.tsx:97
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
@@ -1476,6 +1545,10 @@ msgstr "メールアドレスを確認する必要があります。"
 #: src/components/forms/input-handle-default.tsx:184
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
+
+#: src/data/email.ts:117
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"
