@@ -47,7 +47,10 @@ import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
 // startNodeSDK, which will load the configuration from a YAML file.
 // Otherwise, we use new NodeSDK, which will load the configuration from
 // environment variables (and supports creating an HTTP prometheus exporter).
-const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() !== 'true'
+// @NOTE Inverted from the OTEL_SDK_DISABLED spec semantics (matching the pds
+// telemetry script): the SDK stays off unless explicitly opted in with
+// OTEL_SDK_DISABLED=false.
+const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'false'
 if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
