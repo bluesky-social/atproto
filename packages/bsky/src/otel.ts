@@ -14,14 +14,13 @@ import {
 // cheap no-op when no SDK is registered). Definitions:
 // https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/rpc/rpc-spans.md
 // https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md
-const ATTR_RPC_SYSTEM = 'rpc.system'
-const ATTR_RPC_SERVICE = 'rpc.service'
+const ATTR_RPC_SYSTEM_NAME = 'rpc.system.name'
 const ATTR_RPC_METHOD = 'rpc.method'
 const ATTR_SERVER_ADDRESS = 'server.address'
 const ATTR_SERVER_PORT = 'server.port'
 const ATTR_PEER_SERVICE = 'peer.service'
-const ATTR_RPC_GRPC_STATUS_CODE = 'rpc.grpc.status_code'
-const ATTR_RPC_CONNECT_RPC_ERROR_CODE = 'rpc.connect_rpc.error_code'
+const ATTR_RPC_RESPONSE_STATUS_CODE = 'rpc.response.status_code'
+const ATTR_ERROR_TYPE = 'error.type'
 // Not a semantic convention: bsky-specific, see TracingInterceptorOptions.
 const ATTR_PEER_INTERFACE = 'peer.interface'
 
@@ -32,12 +31,12 @@ const headersSetter: TextMapSetter<Headers> = {
 export type TracingInterceptorOptions = {
   /**
    * The wire protocol of the transport this interceptor is attached to:
-   * 'grpc' for createGrpcTransport, 'connect_rpc' for createConnectTransport.
-   * Determines how errors are recorded (numeric "rpc.grpc.status_code" vs
-   * string "rpc.connect_rpc.error_code") and lets tracing backends group and
-   * render calls by protocol.
+   * 'grpc' for createGrpcTransport, 'connectrpc' for createConnectTransport.
+   * Determines the casing of "rpc.response.status_code" values (gRPC status
+   * names are UPPER_SNAKE, connect error codes are lower_snake) and lets
+   * tracing backends group and render calls by protocol.
    */
-  rpcSystem?: 'grpc' | 'connect_rpc'
+  rpcSystem?: 'grpc' | 'connectrpc'
   /**
    * Logical name of the remote service (the "peer"), e.g. 'atlantis'. Used by
    * tracing backends to label the callee in service maps when the remote's
@@ -63,13 +62,14 @@ export type TracingInterceptorOptions = {
 export const tracingInterceptor = (
   opts: TracingInterceptorOptions = {},
 ): Interceptor => {
-  const { rpcSystem = 'connect_rpc', peerService, peerInterface } = opts
+  const { rpcSystem = 'connectrpc', peerService, peerInterface } = opts
   const tracer = trace.getTracer('@atproto/bsky')
   return (next) => async (req) => {
+    // Fully-qualified, e.g. "bsky.Service/GetPostThread". Also the span name.
+    const method = `${req.service.typeName}/${req.method.name}`
     const attributes: Attributes = {
-      [ATTR_RPC_SYSTEM]: rpcSystem,
-      [ATTR_RPC_SERVICE]: req.service.typeName,
-      [ATTR_RPC_METHOD]: req.method.name,
+      [ATTR_RPC_SYSTEM_NAME]: rpcSystem,
+      [ATTR_RPC_METHOD]: method,
     }
     if (peerService) attributes[ATTR_PEER_SERVICE] = peerService
     if (peerInterface) attributes[ATTR_PEER_INTERFACE] = peerInterface
@@ -80,10 +80,10 @@ export const tracingInterceptor = (
     } catch {
       // ignore malformed URL
     }
-    const span = tracer.startSpan(
-      `${req.service.typeName}/${req.method.name}`,
-      { kind: SpanKind.CLIENT, attributes },
-    )
+    const span = tracer.startSpan(method, {
+      kind: SpanKind.CLIENT,
+      attributes,
+    })
     const ctx = trace.setSpan(context.active(), span)
     // Propagate the trace context to the server (harmless if unconsumed).
     propagation.inject(ctx, req.header, headersSetter)
@@ -94,17 +94,18 @@ export const tracingInterceptor = (
       return await context.with(ctx, () => next(req))
     } catch (err) {
       if (err instanceof ConnectError) {
-        // e.g. NotFound -> not_found (connect protocol error code string)
-        const codeName = Code[err.code]
-          ?.replace(/([a-z])([A-Z])/g, '$1_$2')
-          .toLowerCase()
-        if (rpcSystem === 'grpc') {
-          span.setAttribute(ATTR_RPC_GRPC_STATUS_CODE, err.code)
-        } else if (codeName) {
-          span.setAttribute(ATTR_RPC_CONNECT_RPC_ERROR_CODE, codeName)
+        // e.g. NotFound -> NOT_FOUND (grpc) or not_found (connectrpc)
+        const snake = Code[err.code]?.replace(/([a-z])([A-Z])/g, '$1_$2')
+        const statusCode =
+          rpcSystem === 'grpc' ? snake?.toUpperCase() : snake?.toLowerCase()
+        if (statusCode) {
+          span.setAttribute(ATTR_RPC_RESPONSE_STATUS_CODE, statusCode)
+          span.setAttribute(ATTR_ERROR_TYPE, statusCode)
         }
-        span.setStatus({ code: SpanStatusCode.ERROR, message: codeName })
+        span.setStatus({ code: SpanStatusCode.ERROR, message: statusCode })
       } else {
+        // Failed before a status code was returned (e.g. network error).
+        if (err instanceof Error) span.setAttribute(ATTR_ERROR_TYPE, err.name)
         span.setStatus({
           code: SpanStatusCode.ERROR,
           message: err instanceof Error ? err.message : undefined,
