@@ -1,5 +1,5 @@
 import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type { AddressInfo, Socket } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { CID } from 'multiformats/cid'
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -21,7 +21,7 @@ type RequestHandler = (
  */
 class FakeS3Server {
   server: http.Server
-  private sockets = new Set<import('node:net').Socket>()
+  private sockets = new Set<Socket>()
 
   constructor() {
     this.server = http.createServer((req, res) => {
