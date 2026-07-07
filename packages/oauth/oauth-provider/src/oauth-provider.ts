@@ -45,7 +45,7 @@ import type { Client } from './client/client.js'
 import type { Branding, BrandingConfig } from './customization/branding.js'
 import {
   type Customization,
-  type CustomizationInput,
+  type CustomizationConfig,
   customizationSchema,
 } from './customization/customization.js'
 import type { DeviceId } from './device/device-id.js'
@@ -105,7 +105,7 @@ import { TokenManager } from './token/token-manager.js'
 import { type TokenStore, asTokenStore } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
-// Re-exports dependencies that are part of the public API of this package, so
+// Re-export dependencies that are part of the public API of this package, so
 // that consumers don't have to install them separately.
 export { safeFetchWrap } from '@atproto-labs/fetch-node'
 export type * from '@atproto/jwk'
@@ -125,9 +125,10 @@ export type {
   BrandingConfig,
   CustomMetadata,
   Customization,
-  CustomizationInput,
+  CustomizationConfig,
   ErrorHandler,
   HcaptchaConfig,
+  LoopbackMetadataGetter,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
   VerifyTokenPayloadOptions,
@@ -244,7 +245,7 @@ export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
   DeviceManagerOptions &
-  CustomizationInput
+  CustomizationConfig
 
 export class OAuthProvider extends OAuthVerifier {
   protected readonly accessTokenMode: AccessTokenMode

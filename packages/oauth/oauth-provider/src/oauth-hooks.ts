@@ -28,10 +28,7 @@ import type { ClientInfo } from './client/client-info.js'
 import type { Client } from './client/client.js'
 import type { DeviceId } from './device/device-id.js'
 import type { DpopProof } from './dpop/dpop-proof.js'
-import { AccessDeniedError } from './errors/access-denied-error.js'
-import { AuthorizationError } from './errors/authorization-error.js'
-import { InvalidCredentialsError } from './errors/invalid-credentials-error.js'
-import { InvalidRequestError } from './errors/invalid-request-error.js'
+import type { InvalidRequestError } from './errors/invalid-request-error.js'
 import type {
   HcaptchaClientTokens,
   HcaptchaConfig,
@@ -73,14 +70,6 @@ export type {
   SignUpInput,
   TokenClaims,
   UpdateHandleData,
-}
-
-// Allows implementation to instantiate these errors
-export {
-  AccessDeniedError,
-  AuthorizationError,
-  InvalidCredentialsError,
-  InvalidRequestError,
 }
 
 export type OAuthHooks = {

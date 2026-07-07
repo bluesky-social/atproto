@@ -66,6 +66,8 @@ export function fromBase64Ponyfill(
         ? base64pad
         : base64
 
+  // @NOTE multiformats requires the prefix to be present, which is definitely
+  // not optimal. It might be worth considering a different library here.
   const bytes = base.decoder.decode(
     `${base.prefix}${b64}`,
   ) as Uint8Array<ArrayBuffer>

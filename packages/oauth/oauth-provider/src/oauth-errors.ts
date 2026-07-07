@@ -1,5 +1,3 @@
-// @NOTE For some obscure reason, the order here matters.
-
 export * from './errors/oauth-error.js'
 
 // API error

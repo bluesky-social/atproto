@@ -24,10 +24,6 @@
   ],
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
     "./errors": {
       "types": "./dist/oauth-errors.d.ts",
       "default": "./dist/oauth-errors.js"

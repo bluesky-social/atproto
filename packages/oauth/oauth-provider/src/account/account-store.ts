@@ -20,13 +20,7 @@ import type { ClientId } from '../client/client-id.js'
 import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
 import type { SessionId } from '../device/session-id.js'
-import {
-  HandleUnavailableError,
-  type HandleUnavailableReason,
-} from '../errors/handle-unavailable-error.js'
-import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
-import { InvalidRequestError } from '../errors/invalid-request-error.js'
-import { SecondAuthenticationFactorRequiredError } from '../errors/second-authentication-factor-required-error.js'
+import type { HandleUnavailableReason } from '../errors/handle-unavailable-error.js'
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
@@ -47,13 +41,6 @@ export type {
   OAuthScope,
   SessionId,
   SignUpInput,
-}
-
-export {
-  HandleUnavailableError,
-  InvalidCredentialsError,
-  InvalidRequestError,
-  SecondAuthenticationFactorRequiredError,
 }
 
 export type ResetPasswordRequestInput = InitiatePasswordResetInput
@@ -198,8 +185,7 @@ export interface AccountStore {
   removeDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
-   * @returns **all** the device accounts that match the {@link RequestId}
-   * criteria and given {@link filter}.
+   * @returns **all** the device accounts matching the given `filter`.
    */
   listDeviceAccounts(
     filter: { did: Did } | { deviceId: DeviceId },

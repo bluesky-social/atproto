@@ -52,5 +52,8 @@ export function toBase64Ponyfill(
   alphabet: Base64Alphabet = 'base64',
 ): string {
   const codec = alphabet === 'base64url' ? base64url : base64
+
+  // @NOTE multiformats requires to strip the prefix, which is definitely not
+  // optimal. It might be worth considering a different library here.
   return codec.encoder.encode(bytes).slice(codec.prefix.length)
 }

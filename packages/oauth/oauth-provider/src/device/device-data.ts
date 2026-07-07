@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { sessionIdSchema } from './session-id.js'
+import { type SessionId, sessionIdSchema } from './session-id.js'
 
 export const deviceDataSchema = z.object({
   sessionId: sessionIdSchema,
@@ -8,4 +8,5 @@ export const deviceDataSchema = z.object({
   ipAddress: z.string(),
 })
 
+export type { SessionId }
 export type DeviceData = z.infer<typeof deviceDataSchema>

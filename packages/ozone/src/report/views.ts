@@ -4,10 +4,10 @@ import type { ReportStat } from '../db/schema/report_stat.js'
 import type * as AppBskyActorDefs from '../lexicon/types/app/bsky/actor/defs.js'
 import type { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
 import type {
+  ModEventView,
   RecordViewDetail,
   RepoView,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
-import type * as ToolsOzoneModerationDefs from '../lexicon/types/tools/ozone/moderation/defs.js'
 import type * as ToolsOzoneQueueDefs from '../lexicon/types/tools/ozone/queue/defs.js'
 import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
@@ -91,7 +91,7 @@ export function buildReportView(
   report: ReportWithEvent,
   hydrated: HydratedReport,
   isModerator: boolean,
-  actions?: ToolsOzoneModerationDefs.ModEventView[],
+  actions?: ModEventView[],
 ) {
   const {
     partialRepos,
