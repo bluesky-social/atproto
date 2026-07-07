@@ -37,9 +37,11 @@ export type TracingInterceptorOptions = {
    */
   rpcSystem?: 'grpc' | 'connect_rpc'
   /**
-   * Logical name of the remote service (the "peer"), e.g. 'dataplane-bsky'.
-   * Used by tracing backends to label the callee in service maps when the
-   * remote service does not report its own telemetry.
+   * Logical name of the remote service (the "peer"), e.g. 'atlantis'. Used by
+   * tracing backends to label the callee in service maps when the remote's
+   * own spans are missing (not instrumented, disabled, or sampled out). If
+   * the remote reports its own telemetry, this must match its self-reported
+   * service.name, or service maps will show two nodes for one service.
    */
   peerService?: string
 }

@@ -109,7 +109,9 @@ const createBaseClient = (
     nodeOptions: { rejectUnauthorized },
     interceptors: [
       callerInterceptor('appview'),
-      tracingInterceptor({ rpcSystem: 'grpc', peerService: 'dataplane-bsky' }),
+      // 'atlantis' matches the dataplane's self-reported service.name, so the
+      // client-asserted peer stays consistent with the server's own spans.
+      tracingInterceptor({ rpcSystem: 'grpc', peerService: 'atlantis' }),
     ],
   })
   return createPromiseClient(Service, transport)
