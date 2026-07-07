@@ -1,4 +1,9 @@
-import { fromString } from 'uint8arrays/from-string'
+import {
+  base64,
+  base64pad,
+  base64url,
+  base64urlpad,
+} from 'multiformats/bases/base64'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 import type { Base64Alphabet } from './uint8array-base64.js'
 
@@ -16,7 +21,7 @@ declare global {
         alphabet?: 'base64' | 'base64url'
         lastChunkHandling?: 'loose' | 'strict' | 'stop-before-partial'
       },
-    ) => Uint8Array
+    ) => Uint8Array<ArrayBuffer>
   }
 }
 
@@ -25,7 +30,7 @@ export const fromBase64Native =
     ? function fromBase64Native(
         b64: string,
         alphabet: Base64Alphabet = 'base64',
-      ): Uint8Array {
+      ): Uint8Array<ArrayBuffer> {
         return Uint8Array.fromBase64!(b64, {
           alphabet,
           lastChunkHandling: 'loose',
@@ -37,7 +42,7 @@ export const fromBase64Node = Buffer
   ? function fromBase64Node(
       b64: string,
       alphabet: Base64Alphabet = 'base64',
-    ): Uint8Array {
+    ): Uint8Array<ArrayBuffer> {
       const bytes = Buffer.from(b64, alphabet)
       verifyBase64ForBytes(b64, bytes)
       // Convert to Uint8Array because even though Buffer is a sub class of
@@ -50,17 +55,32 @@ export const fromBase64Node = Buffer
 export function fromBase64Ponyfill(
   b64: string,
   alphabet: Base64Alphabet = 'base64',
-): Uint8Array {
-  const bytes = fromString(b64, b64.endsWith('=') ? `${alphabet}pad` : alphabet)
+): Uint8Array<ArrayBuffer> {
+  const isPadded = b64.endsWith('=')
+  const base =
+    alphabet === 'base64url'
+      ? isPadded
+        ? base64urlpad
+        : base64url
+      : isPadded
+        ? base64pad
+        : base64
+
+  // @NOTE multiformats requires the prefix to be present, which is definitely
+  // not optimal. It might be worth considering a different library here.
+  const bytes = base.decoder.decode(
+    `${base.prefix}${b64}`,
+  ) as Uint8Array<ArrayBuffer>
+
   verifyBase64ForBytes(b64, bytes)
   return bytes
 }
 
 // @NOTE NodeJS will silently stop decoding at the first invalid character,
-// while "uint8arrays/from-string" will not validate that the padding is
-// correct. The following function performs basic validation to ensure that the
-// input was a valid base64 string. The availability of the "bytes" allows
-// to perform checks with O[1] complexity.
+// while "multiformats" will not validate that the padding is correct. The
+// following function performs basic validation to ensure that the input was a
+// valid base64 string. The availability of the "bytes" allows to perform checks
+// with O[1] complexity.
 function verifyBase64ForBytes(b64: string, bytes: Uint8Array): void {
   const paddingCount = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0
   const trimmedLength = b64.length - paddingCount

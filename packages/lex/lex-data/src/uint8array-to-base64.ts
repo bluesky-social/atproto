@@ -1,4 +1,4 @@
-import { toString } from 'uint8arrays/to-string'
+import { base64, base64url } from 'multiformats/bases/base64'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 import type { Base64Alphabet } from './uint8array-base64.js'
 
@@ -35,10 +35,10 @@ export const toBase64Node = Buffer
       const buffer = bytes instanceof Buffer ? bytes : Buffer.from(bytes)
       const b64 = buffer.toString(alphabet)
 
-      // @NOTE We strip padding for strict compatibility with
-      // uint8arrays.toString behavior. Tests failing because of the presence of
-      // padding are not really synonymous with an actual error and we might
-      // (should?) actually want to keep the padding at some point.
+      // @NOTE We strip padding for strict compatibility with multiformats
+      // behavior. Tests failing because of the presence of padding are not
+      // really synonymous with an actual error and we might (should?) actually
+      // want to keep the padding at some point.
       return b64.charCodeAt(b64.length - 1) === /* '=' */ 0x3d
         ? b64.charCodeAt(b64.length - 2) === /* '=' */ 0x3d
           ? b64.slice(0, -2) // '=='
@@ -51,5 +51,9 @@ export function toBase64Ponyfill(
   bytes: Uint8Array,
   alphabet: Base64Alphabet = 'base64',
 ): string {
-  return toString(bytes, alphabet)
+  const codec = alphabet === 'base64url' ? base64url : base64
+
+  // @NOTE multiformats requires to strip the prefix, which is definitely not
+  // optimal. It might be worth considering a different library here.
+  return codec.encoder.encode(bytes).slice(codec.prefix.length)
 }

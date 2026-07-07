@@ -1053,9 +1053,6 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-      uint8arrays:
-        specifier: ^5.0.0
-        version: 5.1.1
       unicode-segmenter:
         specifier: ^0.14.0
         version: 0.14.0

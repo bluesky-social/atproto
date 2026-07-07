@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import { utf8LenCompute, utf8LenNode } from './utf8-len.js'
 
-describe.each([utf8LenNode!, utf8LenCompute!] as const)('%o', (utf8Len) => {
+describe.each([utf8LenNode, utf8LenCompute])('%o', (utf8Len) => {
+  assert(utf8Len, 'utf8Len implementation should not be null')
   it('computes utf8 string length', () => {
     expect(utf8Len('a')).toBe(1)
     expect(utf8Len('~')).toBe(1)
