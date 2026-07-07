@@ -46,7 +46,19 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // startNodeSDK, which will load the configuration from a YAML file.
 // Otherwise, we use new NodeSDK, which will load the configuration from
 // environment variables (and supports creating an HTTP prometheus exporter).
-const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'false'
+// @NOTE The SDK is only enabled when telemetry is explicitly configured
+// (through OTEL_CONFIG_FILE or an OTLP exporter endpoint). This makes
+// telemetry opt-in without inventing a non-standard flag: setting an exporter
+// endpoint is what opts you in. OTEL_SDK_DISABLED=true still acts as a kill
+// switch, per the OpenTelemetry spec.
+const disabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'true'
+const configured =
+  !!process.env.OTEL_CONFIG_FILE ||
+  isSignalConfigured('TRACES') ||
+  isSignalConfigured('METRICS') ||
+  isSignalConfigured('LOGS')
+
+const enabled = !disabled && configured
 if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
@@ -105,6 +117,33 @@ if (enabled) {
   process.addListener('SIGTERM', onExit)
   process.addListener('SIGINT', onExit)
   process.addListener('beforeExit', onExit)
+}
+
+/**
+ * Determines whether a telemetry signal (traces, metrics or logs) is
+ * explicitly configured for export, based on the conventional OpenTelemetry
+ * environment variables. A signal is considered configured when an OTLP
+ * endpoint applies to it (signal-specific or generic), unless its exporter
+ * was explicitly set to "none" (e.g. OTEL_TRACES_EXPORTER=none).
+ *
+ * @NOTE The OTEL_{SIGNAL}_EXPORTER variables are comma-separated lists. The
+ * SDK's per-signal handling of "none" combined with other exporters varies
+ * (metrics & logs disable the signal, traces falls back to "otlp" with a
+ * warning), but since such a combination is a misconfiguration anyway, we
+ * simply treat any list containing "none" as disabling the signal.
+ */
+function isSignalConfigured(signal: 'TRACES' | 'METRICS' | 'LOGS'): boolean {
+  // Matches "none" as an item of the comma-separated list (mimicking
+  // @opentelemetry/core's getStringListFromEnv parsing)
+  const exporters = process.env[`OTEL_${signal}_EXPORTER`]
+  if (exporters != null && /(^|,)\s*none\s*(,|$)/i.test(exporters)) {
+    return false
+  }
+
+  return (
+    !!process.env[`OTEL_EXPORTER_OTLP_${signal}_ENDPOINT`] ||
+    !!process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+  )
 }
 
 /**
