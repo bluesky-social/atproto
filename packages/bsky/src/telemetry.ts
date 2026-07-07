@@ -49,10 +49,19 @@ import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
 // startNodeSDK, which will load the configuration from a YAML file.
 // Otherwise, we use new NodeSDK, which will load the configuration from
 // environment variables (and supports creating an HTTP prometheus exporter).
-// @NOTE Inverted from the OTEL_SDK_DISABLED spec semantics (matching the pds
-// telemetry script): the SDK stays off unless explicitly opted in with
-// OTEL_SDK_DISABLED=false.
-const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'false'
+// @NOTE The SDK is only enabled when telemetry is explicitly configured
+// (through OTEL_CONFIG_FILE or an OTLP exporter endpoint). This makes
+// telemetry opt-in without inventing a non-standard flag: setting an exporter
+// endpoint is what opts you in. OTEL_SDK_DISABLED=true still acts as a kill
+// switch, per the OpenTelemetry spec.
+const disabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'true'
+const configured =
+  !!process.env.OTEL_CONFIG_FILE ||
+  isSignalConfigured('TRACES') ||
+  isSignalConfigured('METRICS') ||
+  isSignalConfigured('LOGS')
+
+const enabled = !disabled && configured
 if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
@@ -108,6 +117,20 @@ if (enabled) {
   process.addListener('SIGTERM', onExit)
   process.addListener('SIGINT', onExit)
   process.addListener('beforeExit', onExit)
+}
+
+function isSignalConfigured(signal: 'TRACES' | 'METRICS' | 'LOGS'): boolean {
+  // Matches "none" as an item of the comma-separated list (mimicking
+  // @opentelemetry/core's getStringListFromEnv parsing)
+  const exporters = process.env[`OTEL_${signal}_EXPORTER`]
+  if (exporters != null && /(^|,)\s*none\s*(,|$)/i.test(exporters)) {
+    return false
+  }
+
+  return (
+    !!process.env[`OTEL_EXPORTER_OTLP_${signal}_ENDPOINT`] ||
+    !!process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+  )
 }
 
 /**
