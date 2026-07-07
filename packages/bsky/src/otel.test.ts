@@ -49,7 +49,8 @@ describe('tracingInterceptor', () => {
     const next: AnyFn = async () => okResponse
     const res = await tracingInterceptor({
       rpcSystem: 'grpc',
-      peerService: 'dataplane-bsky',
+      peerService: 'atlantis',
+      peerInterface: 'dataplane',
     })(next)(req)
     expect(res).toBe(okResponse)
 
@@ -64,7 +65,8 @@ describe('tracingInterceptor', () => {
       'rpc.method': 'GetPostThread',
       'server.address': 'dataplane.example',
       'server.port': 2543,
-      'peer.service': 'dataplane-bsky',
+      'peer.service': 'atlantis',
+      'peer.interface': 'dataplane',
     })
     expect(req.header.get('traceparent')).toContain(span.spanContext().traceId)
   })

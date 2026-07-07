@@ -111,7 +111,11 @@ const createBaseClient = (
       callerInterceptor('appview'),
       // 'atlantis' matches the dataplane's self-reported service.name, so the
       // client-asserted peer stays consistent with the server's own spans.
-      tracingInterceptor({ rpcSystem: 'grpc', peerService: 'atlantis' }),
+      tracingInterceptor({
+        rpcSystem: 'grpc',
+        peerService: 'atlantis',
+        peerInterface: 'dataplane',
+      }),
     ],
   })
   return createPromiseClient(Service, transport)

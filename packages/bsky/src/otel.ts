@@ -22,6 +22,8 @@ const ATTR_SERVER_PORT = 'server.port'
 const ATTR_PEER_SERVICE = 'peer.service'
 const ATTR_RPC_GRPC_STATUS_CODE = 'rpc.grpc.status_code'
 const ATTR_RPC_CONNECT_RPC_ERROR_CODE = 'rpc.connect_rpc.error_code'
+// Not a semantic convention: bsky-specific, see TracingInterceptorOptions.
+const ATTR_PEER_INTERFACE = 'peer.interface'
 
 const headersSetter: TextMapSetter<Headers> = {
   set: (headers, key, value) => headers.set(key, value),
@@ -44,6 +46,12 @@ export type TracingInterceptorOptions = {
    * service.name, or service maps will show two nodes for one service.
    */
   peerService?: string
+  /**
+   * Name we know the remote interface by, when it differs from the service
+   * that hosts it (e.g. 'bsync' is an interface handled by vortex). Recorded
+   * as a "peer.interface" attribute (not a semantic convention).
+   */
+  peerInterface?: string
 }
 
 /**
@@ -55,7 +63,7 @@ export type TracingInterceptorOptions = {
 export const tracingInterceptor = (
   opts: TracingInterceptorOptions = {},
 ): Interceptor => {
-  const { rpcSystem = 'connect_rpc', peerService } = opts
+  const { rpcSystem = 'connect_rpc', peerService, peerInterface } = opts
   const tracer = trace.getTracer('@atproto/bsky')
   return (next) => async (req) => {
     const attributes: Attributes = {
@@ -64,6 +72,7 @@ export const tracingInterceptor = (
       [ATTR_RPC_METHOD]: req.method.name,
     }
     if (peerService) attributes[ATTR_PEER_SERVICE] = peerService
+    if (peerInterface) attributes[ATTR_PEER_INTERFACE] = peerInterface
     try {
       const url = new URL(req.url)
       attributes[ATTR_SERVER_ADDRESS] = url.hostname

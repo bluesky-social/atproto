@@ -21,7 +21,9 @@ export const createBsyncClient = (
     ...opts,
     interceptors: [
       ...(opts.interceptors ?? []),
-      tracingInterceptor({ peerService: 'bsync' }),
+      // 'vortex' matches the remote's self-reported service.name; bsync is
+      // the interface it handles.
+      tracingInterceptor({ peerService: 'vortex', peerInterface: 'bsync' }),
     ],
   })
   return createPromiseClient(Service, transport)
