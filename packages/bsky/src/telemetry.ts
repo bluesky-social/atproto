@@ -1,5 +1,10 @@
 /* eslint-env node */
 
+// Side-effect entrypoint that starts the OpenTelemetry NodeSDK, configured
+// via conventional OTEL_* environment variables (or OTEL_CONFIG_FILE). Not
+// part of the library API: load it before any other module via
+// `node --import @atproto/bsky/telemetry`.
+
 import { register } from 'node:module'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
