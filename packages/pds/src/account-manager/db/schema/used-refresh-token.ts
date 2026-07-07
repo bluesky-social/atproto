@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { RefreshToken } from '@atproto/oauth-provider'
+import { RefreshToken } from '@atproto/oauth-provider/store'
 
 export interface UsedRefreshToken {
   tokenId: number

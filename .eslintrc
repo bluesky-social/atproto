@@ -97,6 +97,16 @@
           }
         ]
       }
+    },
+    {
+      "files": ["packages/oauth/oauth-provider/src/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          { "prefer": "type-imports", "fixStyle": "inline-type-imports" }
+        ],
+        "@typescript-eslint/no-import-type-side-effects": "error"
+      }
     }
   ],
   "settings": {

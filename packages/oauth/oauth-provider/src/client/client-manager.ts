@@ -1,17 +1,17 @@
-import { Jwks, Keyset, jwksPubSchema } from '@atproto/jwk'
+import { type Jwks, type Keyset, jwksPubSchema } from '@atproto/jwk'
 import {
-  OAuthAuthorizationServerMetadata,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthClientIdDiscoverable,
+  type OAuthClientIdLoopback,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
   isLocalHostname,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 import {
-  Fetch,
+  type Fetch,
   bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
@@ -20,16 +20,16 @@ import {
 import { pipe } from '@atproto-labs/pipe'
 import {
   CachedGetter,
-  GetCachedOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type SimpleStore,
 } from '@atproto-labs/simple-store'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { callAsync } from '../lib/util/function.js'
-import { Awaitable } from '../lib/util/type.js'
-import { OAuthHooks } from '../oauth-hooks.js'
-import { ClientId } from './client-id.js'
-import { ClientStore } from './client-store.js'
+import type { Awaitable } from '../lib/util/type.js'
+import type { OAuthHooks } from '../oauth-hooks.js'
+import type { ClientId } from './client-id.js'
+import type { ClientStore } from './client-store.js'
 import { parseDiscoverableClientId, parseRedirectUri } from './client-utils.js'
 import { Client } from './client.js'
 

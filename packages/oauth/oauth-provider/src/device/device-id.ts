@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { DEVICE_ID_BYTES_LENGTH, DEVICE_ID_PREFIX } from '../constants.js'
 import { randomHexId } from '../lib/util/crypto.js'
+import { DEVICE_ID_BYTES_LENGTH, DEVICE_ID_PREFIX } from '../oauth-constants.js'
 
 export const DEVICE_ID_LENGTH =
   DEVICE_ID_PREFIX.length + DEVICE_ID_BYTES_LENGTH * 2 // hex encoding

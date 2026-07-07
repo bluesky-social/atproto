@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
 import { HOUR } from '@atproto/common'
-import { ClientId, DeviceId } from '@atproto/oauth-provider'
+import { ClientId, DeviceId } from '@atproto/oauth-provider/store'
 import { DateISO, JsonEncoded, toDateISO } from '../../../db/index.js'
 
 // @NOTE this migration has been updated to be idempotent through

@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { DeviceData, DeviceId } from '@atproto/oauth-provider'
+import { DeviceData, DeviceId } from '@atproto/oauth-provider/store'
 import { fromDateISO, toDateISO } from '../../db/index.js'
 import { AccountDb, Device } from '../db/index.js'
 

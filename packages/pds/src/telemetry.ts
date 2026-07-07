@@ -46,7 +46,7 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // startNodeSDK, which will load the configuration from a YAML file.
 // Otherwise, we use new NodeSDK, which will load the configuration from
 // environment variables (and supports creating an HTTP prometheus exporter).
-const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() !== 'true'
+const enabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'false'
 if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 

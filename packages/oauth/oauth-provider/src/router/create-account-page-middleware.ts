@@ -1,14 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ActiveDeviceSession } from '@atproto/oauth-provider-api'
 import {
-  Middleware,
+  type Middleware,
   Router,
   validateFetchDest,
   validateFetchMode,
   validateOrigin,
   writeRedirect,
 } from '../lib/http/index.js'
-import { SecurityHeadersOptions } from '../lib/http/security-headers.js'
+import type { SecurityHeadersOptions } from '../lib/http/security-headers.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { sendAccountPageFactory } from './assets/send-account-page.js'
 import { sendErrorPageFactory } from './assets/send-error-page.js'

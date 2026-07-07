@@ -23,7 +23,6 @@ import {
   HandleUnavailableError,
   HandleUnavailableReason,
   InvalidCredentialsError,
-  InvalidInviteCodeError,
   InvalidRequestError,
   LexiconData,
   LexiconStore,
@@ -47,7 +46,7 @@ import {
   UpdateRequestData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
@@ -122,7 +121,10 @@ export class OAuthStore
     } catch (err) {
       const message =
         err instanceof XrpcInvalidRequestError ? err.message : undefined
-      throw new InvalidInviteCodeError(message, err)
+      throw new InvalidRequestError(
+        'This invite code is invalid.' + (message ? ` ${message}` : ''),
+        err,
+      )
     }
   }
 

@@ -7,10 +7,12 @@ import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import { AtIdentifierString, DidString, isDidString } from '@atproto/lex'
 import {
   OAuthError,
+  WWWAuthenticateError,
+} from '@atproto/oauth-provider/errors'
+import {
   OAuthVerifier,
   VerifyTokenPayloadOptions,
-  WWWAuthenticateError,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/verifier'
 import {
   ScopePermissions,
   ScopePermissionsTransition,

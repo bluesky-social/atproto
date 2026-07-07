@@ -1,11 +1,11 @@
 import type { IncomingMessage } from 'node:http'
-import { Readable } from 'node:stream'
+import type { Readable } from 'node:stream'
 import createHttpError from 'http-errors'
 import { decodeStream, streamToNodeBuffer } from '@atproto/common'
 import {
-  KnownNames,
-  KnownParser,
-  ParserResult,
+  type KnownNames,
+  type KnownParser,
+  type ParserResult,
   parseContentType,
   parsers,
 } from './parser.js'

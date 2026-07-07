@@ -1,4 +1,4 @@
-import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
+import type { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
 
 export type ClientAuth =
   | { method: 'none' }

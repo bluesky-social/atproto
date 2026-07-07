@@ -1,10 +1,11 @@
 import type { Did } from '@atproto/did'
 import type { Account } from '@atproto/oauth-provider-api'
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
-import { Code } from '../request/code.js'
-import { RefreshToken } from './refresh-token.js'
-import { TokenData } from './token-data.js'
-import { TokenId } from './token-id.js'
+import type { Awaitable } from '../lib/util/type.js'
+import { buildInterfaceChecker } from '../lib/util/type.js'
+import type { Code } from '../request/code.js'
+import type { RefreshToken } from './refresh-token.js'
+import type { TokenData } from './token-data.js'
+import type { TokenId } from './token-id.js'
 
 // Export all types needed to implement the TokenStore interface
 export type * from './token-data.js'

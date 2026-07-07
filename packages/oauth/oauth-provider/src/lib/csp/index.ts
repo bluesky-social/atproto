@@ -1,4 +1,4 @@
-import { CombinedTuple, Simplify } from '../util/type.js'
+import type { CombinedTuple, Simplify } from '../util/type.js'
 
 export type CspValue =
   | `data:`

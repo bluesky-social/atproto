@@ -1,4 +1,5 @@
-import { LEXICON_REFRESH_FREQUENCY, LexiconData } from '@atproto/oauth-provider'
+import { LEXICON_REFRESH_FREQUENCY } from '@atproto/oauth-provider/constants'
+import { LexiconData } from '@atproto/oauth-provider/store'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
 import { AccountDb } from '../db/index.js'
 

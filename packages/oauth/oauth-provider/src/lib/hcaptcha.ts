@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import {
-  Fetch,
-  FetchBound,
+  type Fetch,
+  type FetchBound,
   bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,

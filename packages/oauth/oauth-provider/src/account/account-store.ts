@@ -20,7 +20,10 @@ import type { ClientId } from '../client/client-id.js'
 import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
 import type { SessionId } from '../device/session-id.js'
-import { HandleUnavailableError } from '../errors/handle-unavailable-error.js'
+import {
+  HandleUnavailableError,
+  type HandleUnavailableReason,
+} from '../errors/handle-unavailable-error.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { SecondAuthenticationFactorRequiredError } from '../errors/second-authentication-factor-required-error.js'
@@ -38,6 +41,7 @@ export type {
   DeviceId,
   Did,
   HandleString,
+  HandleUnavailableReason,
   HcaptchaVerifyResult,
   InviteCode,
   OAuthScope,
