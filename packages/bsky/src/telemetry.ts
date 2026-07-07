@@ -4,6 +4,9 @@
 // via conventional OTEL_* environment variables (or OTEL_CONFIG_FILE). Not
 // part of the library API: load it before any other module via
 // `node --import @atproto/bsky/telemetry`.
+//
+// Documented in docs/bsky/o11y.md — keep that file in sync when changing
+// the instrumentation set or the enablement gate.
 
 import { register } from 'node:module'
 import { diag } from '@opentelemetry/api'

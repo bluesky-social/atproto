@@ -58,6 +58,9 @@ export type TracingInterceptorOptions = {
  * OpenTelemetry RPC semantic conventions. Needed because
  * "@opentelemetry/instrumentation-http" does not cover node:http2, which
  * connect's transports use.
+ *
+ * Documented in docs/bsky/o11y.md — keep that file in sync when changing
+ * the emitted attributes or the wired-up peer names.
  */
 export const tracingInterceptor = (
   opts: TracingInterceptorOptions = {},
