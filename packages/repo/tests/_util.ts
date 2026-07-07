@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import { TID } from '@atproto/common-web'
-import type * as crypto from '@atproto/crypto'
 import { type Keypair, randomBytes } from '@atproto/crypto'
 import * as cbor from '@atproto/lex-cbor'
 import { type Cid, cidForCbor, parseCid } from '@atproto/lex-data'
@@ -88,7 +87,7 @@ export const testCollections: NsidString[] = [
 
 export const fillRepo = async (
   repo: Repo,
-  keypair: crypto.Keypair,
+  keypair: Keypair,
   itemsPerCollection: number,
 ): Promise<{ repo: Repo; data: RepoContents }> => {
   const repoData: RepoContents = {}
@@ -118,7 +117,7 @@ export const fillRepo = async (
 export const formatEdit = async (
   repo: Repo,
   prevData: RepoContents,
-  keypair: crypto.Keypair,
+  keypair: Keypair,
   params: {
     adds?: number
     updates?: number
