@@ -196,11 +196,18 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    // Roll the post's own tags together with moderation tags on its author,
+    // so author-level tags are filtered the same way as post-level tags.
+    const author = hydration.actors?.get(creator)
+    const tags = new Set([
+      ...post.tags,
+      ...(author?.accountModerationTags ?? []),
+      ...(author?.profileModerationTags ?? []),
+    ])
+
     // Tags that are hidden from all search surfaces (Top and Latest),
     // regardless of curation or author filtering.
-    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) =>
-      post.tags.has(t),
-    )
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) => tags.has(t))
     if (alwaysHidden) return false
 
     let tagged = false
@@ -209,9 +216,9 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
         params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
     ) {
-      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
+      tagged = tags.has(ctx.cfg.visibilityTagHide)
     } else {
-      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+      tagged = [...ctx.cfg.searchTagsHide].some((t) => tags.has(t))
     }
 
     // Cases to conditionally show based on tagging.

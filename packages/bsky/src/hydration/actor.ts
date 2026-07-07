@@ -57,6 +57,8 @@ export type Actor = {
   status?: RecordInfo<StatusRecord>
   germ?: RecordInfo<GermDeclarationRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
+  accountModerationTags: Set<string>
+  profileModerationTags: Set<string>
   /**
    * Debug information for internal development
    */
@@ -313,6 +315,8 @@ export class ActorHydrator {
         allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
           actor.allowActivitySubscriptionsFrom,
         ),
+        accountModerationTags: new Set(actor.tags),
+        profileModerationTags: new Set(actor.profileTags),
         debug,
       })
     }
