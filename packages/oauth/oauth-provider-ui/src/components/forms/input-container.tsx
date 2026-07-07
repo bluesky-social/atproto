@@ -1,6 +1,12 @@
 import { clsx } from 'clsx'
-import { JSX, KeyboardEvent, MouseEvent, ReactNode, useState } from 'react'
-import { Override } from '#/lib/util.ts'
+import {
+  type JSX,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  useState,
+} from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type InputContainerProps = Override<
   JSX.IntrinsicElements['div'],

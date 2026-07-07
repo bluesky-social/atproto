@@ -1,17 +1,17 @@
 import AwaitLock from 'await-lock'
 import { TID, retry } from '@atproto/common-web'
-import { AtUri, DidString, ensureValidDidRegex } from '@atproto/syntax'
+import { AtUri, type DidString, ensureValidDidRegex } from '@atproto/syntax'
 import {
-  FetchHandler,
-  FetchHandlerOptions,
+  type FetchHandler,
+  type FetchHandlerOptions,
   XrpcClient,
   buildFetchHandler,
 } from '@atproto/xrpc'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
-  AppBskyFeedPost,
-  AppBskyLabelerDefs,
+  type AppBskyFeedPost,
+  type AppBskyLabelerDefs,
   AppNS,
   ChatNS,
   ComAtprotoRepoPutRecord,
@@ -19,26 +19,26 @@ import {
   ToolsNS,
 } from './client/index.js'
 import { schemas } from './client/lexicons.js'
-import { MutedWord, Nux } from './client/types/app/bsky/actor/defs.js'
-import { $Typed, Un$Typed } from './client/util.js'
+import type { MutedWord, Nux } from './client/types/app/bsky/actor/defs.js'
+import type { $Typed, Un$Typed } from './client/util.js'
 import { BSKY_LABELER_DID } from './const.js'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels.js'
 import { interpretLabelValueDefinitions } from './moderation/index.js'
-import {
+import type {
   InterpretedLabelValueDefinition,
   LabelPreference,
   ModerationPrefs,
 } from './moderation/types.js'
 import * as predicate from './predicate.js'
-import { SessionManager } from './session-manager.js'
+import type { SessionManager } from './session-manager.js'
 import {
-  AtpAgentGlobalOpts,
-  AtprotoProxy,
-  AtprotoServiceType,
-  BskyFeedViewPreference,
-  BskyInterestsPreference,
-  BskyPreferences,
-  BskyThreadViewPreference,
+  type AtpAgentGlobalOpts,
+  type AtprotoProxy,
+  type AtprotoServiceType,
+  type BskyFeedViewPreference,
+  type BskyInterestsPreference,
+  type BskyPreferences,
+  type BskyThreadViewPreference,
   asAtprotoProxy,
   asDid,
   isDid,

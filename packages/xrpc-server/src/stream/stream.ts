@@ -1,7 +1,7 @@
-import { DuplexOptions } from 'node:stream'
-import { WebSocket, createWebSocketStream } from 'ws'
+import type { DuplexOptions } from 'node:stream'
+import { type WebSocket, createWebSocketStream } from 'ws'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { Frame, MessageFrame } from './frames.js'
+import { Frame, type MessageFrame } from './frames.js'
 
 export function streamByteChunks(ws: WebSocket, options?: DuplexOptions) {
   return createWebSocketStream(ws, {

@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
-import { JSX, useMemo } from 'react'
-import { Override } from '#/lib/util.ts'
+import { type JSX, useMemo } from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type LinkExternalProps = Override<
   JSX.IntrinsicElements['a'],

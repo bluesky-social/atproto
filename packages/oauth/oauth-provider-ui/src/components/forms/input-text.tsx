@@ -1,8 +1,8 @@
 import { composeEventHandlers } from '@radix-ui/primitive'
 import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useRef } from 'react'
-import { Override } from '#/lib/util.ts'
+import { type JSX, type ReactNode, useRef } from 'react'
+import type { Override } from '#/lib/util.ts'
 import { useFieldsetContext } from './fieldset-context.tsx'
 import { InputContainer } from './input-container.tsx'
 

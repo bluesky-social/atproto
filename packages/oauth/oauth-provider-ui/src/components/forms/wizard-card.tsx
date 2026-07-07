@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useCallback, useState } from 'react'
-import { DisabledStep, useStepper } from '#/hooks/use-stepper.ts'
-import { Override } from '#/lib/util.ts'
+import { type JSX, type ReactNode, useCallback, useState } from 'react'
+import { type DisabledStep, useStepper } from '#/hooks/use-stepper.ts'
+import type { Override } from '#/lib/util.ts'
 
 export type WizardRenderProps<TStepData> = {
   /**

@@ -1,5 +1,5 @@
-import { DeviceId } from '@atproto/oauth-provider'
-import { DateISO } from '../../../db/index.js'
+import type { DeviceId } from '@atproto/oauth-provider'
+import type { DateISO } from '../../../db/index.js'
 
 export interface AccountDevice {
   did: string

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { LexValue, lexEquals, parseCid } from '@atproto/lex-data'
-import { JsonValue } from './json.js'
+import { type LexValue, lexEquals, parseCid } from '@atproto/lex-data'
+import type { JsonValue } from './json.js'
 import {
   jsonToLex,
   lexParse,

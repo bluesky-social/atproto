@@ -22,7 +22,7 @@ import type { DeviceData } from '../device/device-store.js'
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
-import type {
+import {
   HandleUnavailableError,
   InvalidCredentialsError,
   InvalidRequestError,

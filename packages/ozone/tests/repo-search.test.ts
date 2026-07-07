@@ -1,12 +1,12 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   usersBulkSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
-import { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos.js'
+import type { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos.js'
 import { paginateAll } from './_util.js'
 
 describe('admin repo search view', () => {

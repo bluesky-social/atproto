@@ -1,11 +1,11 @@
-import {
+import type {
   AuthorizedClientData,
   AuthorizedClients,
   ClientId,
   Did,
 } from '@atproto/oauth-provider'
 import { fromJson, toDateISO, toJson } from '../../db/index.js'
-import { AccountDb } from '../db/index.js'
+import type { AccountDb } from '../db/index.js'
 
 export async function upsert(
   db: AccountDb,

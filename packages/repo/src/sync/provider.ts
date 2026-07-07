@@ -1,10 +1,10 @@
-import { Cid } from '@atproto/lex-data'
+import type { Cid } from '@atproto/lex-data'
 import { writeCarStream } from '../car.js'
 import { CidSet } from '../cid-set.js'
 import { MissingBlocksError } from '../error.js'
 import { MST } from '../mst/index.js'
-import { ReadableBlockstore, RepoStorage } from '../storage/index.js'
-import { CarBlock, RecordPath, def } from '../types.js'
+import type { ReadableBlockstore, RepoStorage } from '../storage/index.js'
+import { type CarBlock, type RecordPath, def } from '../types.js'
 import * as util from '../util.js'
 
 // Full Repo

@@ -3,13 +3,13 @@ import { z } from 'zod'
 import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
 import { parseHttpCookies } from '../lib/http/index.js'
 import {
-  RequestMetadata,
+  type RequestMetadata,
   extractRequestMetadata,
   setCookie,
 } from '../lib/http/request.js'
-import { DeviceData } from './device-data.js'
-import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
-import { DeviceStore } from './device-store.js'
+import type { DeviceData } from './device-data.js'
+import { type DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
+import type { DeviceStore } from './device-store.js'
 import { generateSessionId, sessionIdSchema } from './session-id.js'
 
 /**

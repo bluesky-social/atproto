@@ -1,42 +1,42 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
 import { z } from 'zod'
-import { Did, didSchema } from '@atproto/did'
+import { type Did, didSchema } from '@atproto/did'
 import { signedJwtSchema } from '@atproto/jwk'
 import {
   API_ENDPOINT_PREFIX,
-  ActiveAccountSession,
-  ActiveDeviceSession,
-  ActiveOAuthSession,
-  ApiEndpoints,
-  ISODateString,
+  type ActiveAccountSession,
+  type ActiveDeviceSession,
+  type ActiveOAuthSession,
+  type ApiEndpoints,
+  type ISODateString,
 } from '@atproto/oauth-provider-api'
 import {
-  OAuthAuthorizationRequestParameters,
-  OAuthRedirectUri,
-  OAuthResponseMode,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthRedirectUri,
+  type OAuthResponseMode,
   oauthRedirectUriSchema,
   oauthResponseModeSchema,
   oauthScopeSchema,
 } from '@atproto/oauth-types'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
-import { DeviceId, deviceIdSchema } from '../device/device-id.js'
+import { type DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import {
-  ErrorPayload,
+  type ErrorPayload,
   buildErrorPayload,
   buildErrorStatus,
 } from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
-  JsonResponse,
-  Middleware,
-  RequestMetadata,
+  type JsonResponse,
+  type Middleware,
+  type RequestMetadata,
   Router,
-  RouterCtx,
-  SubCtx,
+  type RouterCtx,
+  type SubCtx,
   flushStream,
   jsonHandler,
   parseHttpRequest,
@@ -46,13 +46,13 @@ import {
   validateOrigin,
   validateReferrer,
 } from '../lib/http/index.js'
-import { RouteCtx, createRoute } from '../lib/http/route.js'
+import { type RouteCtx, createRoute } from '../lib/http/route.js'
 import { asArray } from '../lib/util/cast.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
-import { RequestUri, requestUriSchema } from '../request/request-uri.js'
-import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
+import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
+import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
 import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
@@ -61,8 +61,8 @@ import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
 import {
   ERROR_REDIRECT_KEYS,
-  OAuthRedirectOptions,
-  OAuthRedirectQueryParameter,
+  type OAuthRedirectOptions,
+  type OAuthRedirectQueryParameter,
   SUCCESS_REDIRECT_KEYS,
   buildRedirectMode,
   buildRedirectParams,

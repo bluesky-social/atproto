@@ -1,5 +1,5 @@
-import { Selectable } from 'kysely'
-import {
+import type { Selectable } from 'kysely'
+import type {
   Code,
   Did,
   NewTokenData,
@@ -8,7 +8,7 @@ import {
   TokenId,
 } from '@atproto/oauth-provider'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
-import { AccountDb, Token } from '../db/index.js'
+import type { AccountDb, Token } from '../db/index.js'
 import { selectAccountQB } from './account.js'
 
 export function toTokenData(row: Selectable<Token>): TokenData {

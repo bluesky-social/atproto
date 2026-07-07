@@ -1,8 +1,8 @@
 import type { Did } from '@atproto/did'
-import { SignedJwt, isSignedJwt } from '@atproto/jwk'
+import { type SignedJwt, isSignedJwt } from '@atproto/jwk'
 import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
-import {
+import type {
   OAuthAccessToken,
   OAuthAuthorizationRequestParameters,
   OAuthScope,
@@ -10,28 +10,28 @@ import {
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { AccessTokenMode } from '../access-token/access-token-mode.js'
-import { ClientAuth } from '../client/client-auth.js'
-import { Client } from '../client/client.js'
+import type { ClientAuth } from '../client/client-auth.js'
+import type { Client } from '../client/client.js'
 import { TOKEN_MAX_AGE } from '../constants.js'
-import { DeviceId } from '../device/device-id.js'
+import type { DeviceId } from '../device/device-id.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
-import { LexiconManager } from '../lexicon/lexicon-manager.js'
-import { RequestMetadata } from '../lib/http/request.js'
+import type { LexiconManager } from '../lexicon/lexicon-manager.js'
+import type { RequestMetadata } from '../lib/http/request.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
-import { OAuthHooks } from '../oauth-hooks.js'
-import { Code, isCode } from '../request/code.js'
-import { AccessTokenPayload } from '../signer/access-token-payload.js'
+import type { OAuthHooks } from '../oauth-hooks.js'
+import { type Code, isCode } from '../request/code.js'
+import type { AccessTokenPayload } from '../signer/access-token-payload.js'
 import { Signer } from '../signer/signer.js'
 import {
-  RefreshToken,
+  type RefreshToken,
   generateRefreshToken,
   isRefreshToken,
 } from './refresh-token.js'
-import { TokenClaims } from './token-claims.js'
-import { TokenId, generateTokenId, isTokenId } from './token-id.js'
-import { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
+import type { TokenClaims } from './token-claims.js'
+import { type TokenId, generateTokenId, isTokenId } from './token-id.js'
+import type { CreateTokenData, TokenInfo, TokenStore } from './token-store.js'
 
 export { AccessTokenMode, Signer }
 export type { OAuthHooks, TokenStore }

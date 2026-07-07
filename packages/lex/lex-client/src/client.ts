@@ -31,10 +31,10 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import {
+import type {
   XrpcResponse,
-  type XrpcResponseBody,
-  type XrpcResponseOptions,
+  XrpcResponseBody,
+  XrpcResponseOptions,
 } from './response.js'
 import type { BinaryBodyInit, Service } from './types.js'
 import {

@@ -1,10 +1,10 @@
 import {
-  Duplex,
+  type Duplex,
   PassThrough,
   Readable,
-  Stream,
+  type Stream,
   Transform,
-  TransformCallback,
+  type TransformCallback,
   pipeline,
 } from 'node:stream'
 import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'

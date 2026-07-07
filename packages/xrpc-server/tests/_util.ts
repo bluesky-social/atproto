@@ -1,18 +1,18 @@
 import { once } from 'node:events'
-import * as http from 'node:http'
+import type * as http from 'node:http'
 import express from 'express'
 import {
-  LexiconDocument,
+  type LexiconDocument,
   LexiconIterableIndexer,
   LexiconSchemaBuilder,
 } from '@atproto/lex-document'
-import { LexiconDoc } from '@atproto/lexicon'
+import type { LexiconDoc } from '@atproto/lexicon'
 import {
   AuthRequiredError,
-  MethodConfigOrHandler,
-  Options,
+  type MethodConfigOrHandler,
+  type Options,
   Server,
-  StreamConfigOrHandler,
+  type StreamConfigOrHandler,
 } from '../src/index.js'
 
 // @ts-expect-error

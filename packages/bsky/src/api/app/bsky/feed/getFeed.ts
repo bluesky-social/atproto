@@ -5,32 +5,32 @@ import {
   xrpcSafe,
 } from '@atproto/lex'
 import {
-  Headers as HeadersMap,
+  type Headers as HeadersMap,
   InvalidRequestError,
-  Server,
+  type Server,
   ServerTimer,
   UpstreamFailureError,
   XRPCError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane/index.js'
-import { FeedItem } from '../../../../hydration/feed.js'
-import { HydrateCtx } from '../../../../hydration/hydrator.js'
+import type { FeedItem } from '../../../../hydration/feed.js'
+import type { HydrateCtx } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {

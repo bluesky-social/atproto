@@ -3,18 +3,18 @@ import { createRequire } from 'node:module'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
-import { Customization } from '../../customization/customization.js'
-import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
+import type { Customization } from '../../customization/customization.js'
+import { type CspConfig, mergeCsp } from '../../lib/csp/index.js'
 import { declareHydrationData } from '../../lib/html/hydration-data.js'
 import { cssCode, html } from '../../lib/html/index.js'
-import { WriteResponseOptions } from '../../lib/http/response.js'
+import type { WriteResponseOptions } from '../../lib/http/response.js'
 import {
   CrossOriginEmbedderPolicy,
-  SecurityHeadersOptions,
+  type SecurityHeadersOptions,
 } from '../../lib/http/security-headers.js'
 import { mergeDefaults } from '../../lib/util/object.js'
-import { Simplify } from '../../lib/util/type.js'
-import { WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
+import type { Simplify } from '../../lib/util/type.js'
+import { type WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 import { setupCsrfToken } from './csrf.js'
 

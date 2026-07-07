@@ -1,6 +1,6 @@
-import { OAuthClientMetadata } from '@atproto/oauth-types'
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
-import { ClientId } from './client-id.js'
+import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import { type Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import type { ClientId } from './client-id.js'
 
 // Export all types needed to implement the ClientStore interface
 export * from './client-data.js'

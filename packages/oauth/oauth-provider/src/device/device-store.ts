@@ -1,6 +1,6 @@
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
-import { DeviceData } from './device-data.js'
-import { DeviceId } from './device-id.js'
+import { type Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import type { DeviceData } from './device-data.js'
+import type { DeviceId } from './device-id.js'
 
 // Export all types needed to implement the DeviceStore interface
 export * from './device-data.js'

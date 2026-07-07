@@ -1,19 +1,23 @@
 import assert from 'node:assert'
 import { lexParse } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { BsyncClient, authWithApiKey, createBsyncClient } from '../../bsync.js'
-import { ServerConfig } from '../../config.js'
+import {
+  type BsyncClient,
+  authWithApiKey,
+  createBsyncClient,
+} from '../../bsync.js'
+import type { ServerConfig } from '../../config.js'
 import { app } from '../../lexicons/index.js'
 import { subLogger as log } from '../../logger.js'
 import {
   Method,
-  MuteOperation,
+  type MuteOperation,
   MuteOperation_Type,
-  NotifOperation,
-  Operation,
+  type NotifOperation,
+  type Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
-import { Database } from './db/index.js'
+import type { Database } from './db/index.js'
 import { countAll, excluded } from './db/util.js'
 
 export type BsyncCursors = {

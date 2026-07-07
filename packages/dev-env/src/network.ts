@@ -13,7 +13,7 @@ import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 import { LexiconAuthorityProfile } from './service-profile-lexicon.js'
 import { OzoneServiceProfile } from './service-profile-ozone.js'
-import { TestServerParams } from './types.js'
+import type { TestServerParams } from './types.js'
 import { mockNetworkUtilities } from './util.js'
 
 const ADMIN_USERNAME = 'admin'

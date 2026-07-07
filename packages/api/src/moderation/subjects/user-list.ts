@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/syntax'
-import { AppBskyActorDefs } from '../../client/index.js'
+import type { AppBskyActorDefs } from '../../client/index.js'
 import { ModerationDecision } from '../decision.js'
-import { ModerationOpts, ModerationSubjectUserList } from '../types.js'
+import type { ModerationOpts, ModerationSubjectUserList } from '../types.js'
 import { decideAccount } from './account.js'
 import { decideProfile } from './profile.js'
 

@@ -1,8 +1,8 @@
-import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { Nsid } from '@atproto/oauth-scopes'
+import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
+import type { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
-import { LexiconData, LexiconStore } from './lexicon-store.js'
+import type { LexiconData, LexiconStore } from './lexicon-store.js'
 
 /**
  * This utility class handles the retrieval and caching of lexicon

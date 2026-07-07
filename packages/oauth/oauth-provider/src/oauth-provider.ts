@@ -1,47 +1,47 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { Jwks, Keyset } from '@atproto/jwk'
+import { type Jwks, Keyset } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAccessToken,
-  OAuthAuthorizationCodeGrantTokenRequest,
-  OAuthAuthorizationRequestJar,
-  OAuthAuthorizationRequestPar,
-  OAuthAuthorizationRequestParameters,
-  OAuthAuthorizationRequestQuery,
-  OAuthAuthorizationServerMetadata,
-  OAuthClientCredentials,
-  OAuthClientMetadata,
-  OAuthParResponse,
-  OAuthRefreshTokenGrantTokenRequest,
-  OAuthTokenIdentification,
-  OAuthTokenRequest,
-  OAuthTokenResponse,
-  OAuthTokenType,
+  type OAuthAccessToken,
+  type OAuthAuthorizationCodeGrantTokenRequest,
+  type OAuthAuthorizationRequestJar,
+  type OAuthAuthorizationRequestPar,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthAuthorizationRequestQuery,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthClientCredentials,
+  type OAuthClientMetadata,
+  type OAuthParResponse,
+  type OAuthRefreshTokenGrantTokenRequest,
+  type OAuthTokenIdentification,
+  type OAuthTokenRequest,
+  type OAuthTokenResponse,
+  type OAuthTokenType,
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
-import { SimpleStore } from '@atproto-labs/simple-store'
+import type { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
-  AccountStore,
-  AuthorizedClientData,
-  DeviceAccount,
+  type AccountStore,
+  type AuthorizedClientData,
+  type DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
-import { ClientAuth, ClientAuthLegacy } from './client/client-auth.js'
-import { ClientId } from './client/client-id.js'
+import type { ClientAuth, ClientAuthLegacy } from './client/client-auth.js'
+import type { ClientId } from './client/client-id.js'
 import {
   ClientManager,
-  LoopbackMetadataGetter,
+  type LoopbackMetadataGetter,
 } from './client/client-manager.js'
-import { ClientStore, ifClientStore } from './client/client-store.js'
-import { Client } from './client/client.js'
+import { type ClientStore, ifClientStore } from './client/client-store.js'
+import type { Client } from './client/client.js'
 import {
   AUTHENTICATION_MAX_AGE,
   CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
@@ -50,19 +50,19 @@ import {
   PUBLIC_CLIENT_SESSION_LIFETIME,
   TOKEN_MAX_AGE,
 } from './constants.js'
-import { Branding, BrandingInput } from './customization/branding.js'
+import type { Branding, BrandingInput } from './customization/branding.js'
 import {
-  Customization,
-  CustomizationInput,
+  type Customization,
+  type CustomizationInput,
   customizationSchema,
 } from './customization/customization.js'
-import { DeviceId } from './device/device-id.js'
+import type { DeviceId } from './device/device-id.js'
 import {
-  DeviceInfo,
+  type DeviceInfo,
   DeviceManager,
-  DeviceManagerOptions,
+  type DeviceManagerOptions,
 } from './device/device-manager.js'
-import { DeviceStore, asDeviceStore } from './device/device-store.js'
+import { type DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
@@ -72,34 +72,37 @@ import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
-import { LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
-import { HcaptchaConfig } from './lib/hcaptcha.js'
-import { RequestMetadata } from './lib/http/request.js'
+import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
+import type { HcaptchaConfig } from './lib/hcaptcha.js'
+import type { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
-import { MultiLangString } from './lib/util/locale.js'
-import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
-import { OAuthHooks } from './oauth-hooks.js'
+import type { MultiLangString } from './lib/util/locale.js'
 import {
-  DpopProof,
+  type CustomMetadata,
+  buildMetadata,
+} from './metadata/build-metadata.js'
+import type { OAuthHooks } from './oauth-hooks.js'
+import {
+  type DpopProof,
   OAuthVerifier,
-  OAuthVerifierOptions,
-  VerifyTokenPayloadOptions,
+  type OAuthVerifierOptions,
+  type VerifyTokenPayloadOptions,
 } from './oauth-verifier.js'
-import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
+import { type ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
-import { RequestStore, asRequestStore } from './request/request-store.js'
+import { type RequestStore, asRequestStore } from './request/request-store.js'
 import { parseRequestUri } from './request/request-uri.js'
-import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
-import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
-import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
-import { ErrorHandler } from './router/error-handler.js'
-import { AccessTokenPayload } from './signer/access-token-payload.js'
-import { TokenData } from './token/token-data.js'
+import type { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
+import type { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
+import type { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
+import type { ErrorHandler } from './router/error-handler.js'
+import type { AccessTokenPayload } from './signer/access-token-payload.js'
+import type { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
 import {
-  TokenStore,
+  type TokenStore,
   asTokenStore,
   refreshTokenSchema,
 } from './token/token-store.js'

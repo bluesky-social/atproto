@@ -1,9 +1,13 @@
 import { chunkArray } from '@atproto/common'
-import { DatetimeString, DidString, currentDatetimeString } from '@atproto/lex'
+import {
+  type DatetimeString,
+  type DidString,
+  currentDatetimeString,
+} from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll } from '../../db/index.js'
-import { com } from '../../lexicons/index.js'
-import { AccountDb, InviteCode } from '../db/index.js'
+import type { com } from '../../lexicons/index.js'
+import type { AccountDb, InviteCode } from '../db/index.js'
 
 export type CodeDetail = com.atproto.server.defs.InviteCode
 export type CodeUse = com.atproto.server.defs.InviteCodeUse

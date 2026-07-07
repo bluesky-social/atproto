@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/default
-import pg from 'pg'
+import type pg from 'pg'
 type PgPool = pg.Pool
 
 export type PgOptions = {

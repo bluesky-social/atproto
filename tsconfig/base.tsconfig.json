@@ -42,10 +42,7 @@
     // @TODO Change this to true and enforce the use of actual file extensions
     // in imports (through eslint)
     "rewriteRelativeImportExtensions": false,
-    // @TODO Change this to true to better control the emitted JS imports (in
-    // particular, to avoid runtime dependencies by promoting the use of "import
-    // type" for *ALL* types)
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "types": [],
 
     "noErrorTruncation": true,

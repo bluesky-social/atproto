@@ -1,4 +1,4 @@
-import { Ref, useMemo } from 'react'
+import { type Ref, useMemo } from 'react'
 
 function mergeRefs<T>(...refs: Array<Ref<T> | undefined>): Ref<T> {
   return (value) => {

@@ -1,14 +1,12 @@
 import { once } from 'node:events'
 import {
-  IncomingMessage,
-  Server as HttpServer,
-  ServerResponse,
+  type IncomingHttpHeaders,
+  type IncomingMessage,
+  type RequestListener,
+  type Server as HttpServer,
+  type ServerOptions,
+  type ServerResponse,
   createServer as createHttpServer,
-} from 'node:http'
-import type {
-  IncomingHttpHeaders,
-  RequestListener,
-  ServerOptions,
 } from 'node:http'
 import type { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'

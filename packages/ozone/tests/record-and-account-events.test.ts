@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -10,11 +10,11 @@ import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/de
 import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
 import {
   REVIEWOPEN,
-  SubjectStatusView,
+  type SubjectStatusView,
   isAccountHosting,
   isRecordHosting,
 } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
-import { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent.js'
+import type { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent.js'
 
 describe('record and account events on moderation subjects', () => {
   let network: TestNetwork

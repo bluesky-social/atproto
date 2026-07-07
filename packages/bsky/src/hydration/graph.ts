@@ -1,8 +1,8 @@
-import { AtUriString, DidString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app } from '../lexicons/index.js'
-import { FollowInfo } from '../proto/bsky_pb.js'
-import {
+import type { FollowInfo } from '../proto/bsky_pb.js'
+import type {
   BlockRecord,
   FollowRecord,
   ListItemRecord,
@@ -10,7 +10,12 @@ import {
   StarterPackRecord,
   VerificationRecord,
 } from '../views/types.js'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util.js'
+import {
+  HydrationMap,
+  type ItemRef,
+  type RecordInfo,
+  parseRecord,
+} from './util.js'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<AtUriString, List>

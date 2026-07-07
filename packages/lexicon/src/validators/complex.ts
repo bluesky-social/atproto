@@ -1,4 +1,4 @@
-import { Lexicons } from '../lexicons.js'
+import type { Lexicons } from '../lexicons.js'
 import { ValidationError, isDiscriminatedObject, isObj } from '../types.js'
 import type {
   LexArray,

@@ -1,5 +1,5 @@
-import { Generated } from 'kysely'
-import {
+import type { Generated } from 'kysely'
+import type {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,

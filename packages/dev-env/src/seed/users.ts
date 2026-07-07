@@ -1,4 +1,4 @@
-import { SeedClient } from './client.js'
+import type { SeedClient } from './client.js'
 
 export default async function usersSeed(sc: SeedClient) {
   await sc.createAccount('alice', users.alice)

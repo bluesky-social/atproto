@@ -1,11 +1,11 @@
-import { Nsid, isNsid } from '../lib/nsid.js'
+import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
-import { ResourcePermission } from '../lib/resource-permission.js'
+import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
-  NeArray,
-  NeRoArray,
-  ScopeSyntax,
+  type NeArray,
+  type NeRoArray,
+  type ScopeSyntax,
   isScopeStringFor,
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'

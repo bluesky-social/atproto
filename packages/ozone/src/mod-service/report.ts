@@ -1,8 +1,8 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../db/index.js'
-import { Report } from '../db/schema/report.js'
-import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
+import type { Database } from '../db/index.js'
+import type { Report } from '../db/schema/report.js'
+import type { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,

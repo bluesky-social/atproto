@@ -1,6 +1,9 @@
-import { LEXICON_REFRESH_FREQUENCY, LexiconData } from '@atproto/oauth-provider'
+import {
+  LEXICON_REFRESH_FREQUENCY,
+  type LexiconData,
+} from '@atproto/oauth-provider'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
-import { AccountDb } from '../db/index.js'
+import type { AccountDb } from '../db/index.js'
 
 export async function upsert(db: AccountDb, nsid: string, data: LexiconData) {
   // @TODO not annotated as `Omit<Insertable<Lexicon>, 'nsid'>`. Insertable's

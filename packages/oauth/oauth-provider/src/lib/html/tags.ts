@@ -1,5 +1,5 @@
 import {
-  HtmlValue,
+  type HtmlValue,
   cssEscaper,
   htmlEscaper,
   javascriptEscaper,

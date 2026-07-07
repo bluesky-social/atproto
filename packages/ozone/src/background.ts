@@ -1,5 +1,5 @@
 import PQueue from 'p-queue'
-import { Database } from './db/index.js'
+import type { Database } from './db/index.js'
 import { dbLogger } from './logger.js'
 import {
   boundAbortController,

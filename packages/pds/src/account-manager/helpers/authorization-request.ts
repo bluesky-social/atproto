@@ -1,6 +1,6 @@
 import assert from 'node:assert'
-import { Insertable, Selectable } from 'kysely'
-import {
+import type { Insertable, Selectable } from 'kysely'
+import type {
   Code,
   FoundRequestResult,
   RequestData,
@@ -8,7 +8,7 @@ import {
   UpdateRequestData,
 } from '@atproto/oauth-provider'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
-import { AccountDb, AuthorizationRequest } from '../db/index.js'
+import type { AccountDb, AuthorizationRequest } from '../db/index.js'
 
 export const rowToRequestData = (
   row: Selectable<AuthorizationRequest>,

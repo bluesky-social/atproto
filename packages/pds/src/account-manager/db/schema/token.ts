@@ -1,5 +1,5 @@
-import { Generated, Selectable } from 'kysely'
-import {
+import type { Generated, Selectable } from 'kysely'
+import type {
   ClientAuth,
   ClientAuthLegacy,
   Code,
@@ -11,7 +11,7 @@ import {
   RefreshToken,
   TokenId,
 } from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded } from '../../../db/cast.js'
+import type { DateISO, JsonEncoded } from '../../../db/cast.js'
 
 export interface Token {
   id: Generated<number>

@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import { cidForLex, encode } from '@atproto/lex-cbor'
-import { Cid, cidForCbor } from '@atproto/lex-data'
+import { type Cid, cidForCbor } from '@atproto/lex-data'
 import { BlockMap } from '../block-map.js'
 import { CidSet } from '../cid-set.js'
 import { MissingBlockError, MissingBlocksError } from '../error.js'
 import * as parse from '../parse.js'
-import { ReadableBlockstore } from '../storage/index.js'
-import { CarBlock, schema } from '../types.js'
+import type { ReadableBlockstore } from '../storage/index.js'
+import { type CarBlock, schema } from '../types.js'
 import * as util from './util.js'
 
 /**

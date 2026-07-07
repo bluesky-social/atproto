@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import type { z } from 'zod'
 import { didSchema } from '@atproto/did'
 import { jwtPayloadSchema } from '@atproto/jwk'
 import { deviceIdSchema } from '../oauth-store.js'

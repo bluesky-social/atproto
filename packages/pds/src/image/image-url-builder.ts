@@ -1,4 +1,4 @@
-import { BskyAppView } from '../bsky-app-view.js'
+import type { BskyAppView } from '../bsky-app-view.js'
 import { com } from '../lexicons/index.js'
 
 export class ImageUrlBuilder {

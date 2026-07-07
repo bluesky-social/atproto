@@ -11,7 +11,7 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
-  Middleware,
+  type Middleware,
   Router,
   cacheControlMiddleware,
   combineMiddlewares,

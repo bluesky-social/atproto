@@ -1,15 +1,15 @@
 import { mapDefined } from '@atproto/common'
-import { DidString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
-import {
+import type { DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator.js'
 import { internal } from '../../../../lexicons/index.js'
 import { createPipeline, noRules } from '../../../../pipeline.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfiles = createPipeline(skeleton, hydration, noRules, presentation)

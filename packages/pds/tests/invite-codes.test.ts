@@ -1,10 +1,10 @@
-import { AtpAgent, ComAtprotoServerCreateAccount } from '@atproto/api'
+import { type AtpAgent, ComAtprotoServerCreateAccount } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { toDatetimeString } from '@atproto/lex'
 import { genInvCodes } from '../src/api/com/atproto/server/util.js'
-import { AppContext } from '../src/index.js'
+import type { AppContext } from '../src/index.js'
 
 describe('account', () => {
   let network: TestNetworkNoAppView

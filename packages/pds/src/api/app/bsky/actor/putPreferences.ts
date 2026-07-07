@@ -1,7 +1,7 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AccountPreference } from '../../../../actor-store/preference/reader.js'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AccountPreference } from '../../../../actor-store/preference/reader.js'
 import { isAccessFull } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   bareDidFromProxyTo,

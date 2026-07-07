@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
-  BlobRef,
-  LegacyBlobRef,
+  type BlobRef,
+  type LegacyBlobRef,
   enumBlobRefs,
   isLegacyBlobRef,
   isTypedBlobRef,
 } from './blob.js'
-import { RawCid, parseCid } from './cid.js'
-import { LexArray, LexMap, LexValue } from './lex.js'
+import { type RawCid, parseCid } from './cid.js'
+import type { LexArray, LexMap, LexValue } from './lex.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
 const validBlobCid = parseCid(

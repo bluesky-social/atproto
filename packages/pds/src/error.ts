@@ -1,4 +1,4 @@
-import { ErrorRequestHandler } from 'express'
+import type { ErrorRequestHandler } from 'express'
 import { OAuthError } from '@atproto/oauth-provider'
 import { XRPCError } from '@atproto/xrpc-server'
 import { httpLogger as log } from './logger.js'

@@ -1,5 +1,5 @@
-import { LexiconPermission } from './lexicon.js'
-import { ScopeSyntax } from './syntax.js'
+import type { LexiconPermission } from './lexicon.js'
+import type { ScopeSyntax } from './syntax.js'
 
 const isArray: (value: unknown) => value is readonly unknown[] = Array.isArray
 

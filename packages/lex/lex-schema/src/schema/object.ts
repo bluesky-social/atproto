@@ -1,10 +1,11 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
-import type {
-  InferInput,
-  InferOutput,
-  Validator,
-  WithOptionalProperties,
+import {
+  type InferInput,
+  type InferOutput,
+  Schema,
+  type ValidationContext,
+  type Validator,
+  type WithOptionalProperties,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 

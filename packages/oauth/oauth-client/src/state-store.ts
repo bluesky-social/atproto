@@ -1,6 +1,6 @@
-import { Key } from '@atproto/jwk'
-import { SimpleStore } from '@atproto-labs/simple-store'
-import { ClientAuthMethod } from './oauth-client-auth.js'
+import type { Key } from '@atproto/jwk'
+import type { SimpleStore } from '@atproto-labs/simple-store'
+import type { ClientAuthMethod } from './oauth-client-auth.js'
 
 export type InternalStateData = {
   iss: string

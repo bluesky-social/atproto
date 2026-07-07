@@ -7,7 +7,7 @@ import {
   oauthMiddleware,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-provider'
-import { AppContext } from './context.js'
+import type { AppContext } from './context.js'
 import { oauthLogger, reqSerializer } from './logger.js'
 
 export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {

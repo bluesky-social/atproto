@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode, useEffect } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import { Home } from './Home.tsx'
 import * as lexicons from './lexicons.ts'
 import { AuthenticationProvider } from './providers/AuthenticationProvider.tsx'

@@ -1,12 +1,15 @@
 import * as dns from 'node:dns/promises'
-import { Cid, l } from '@atproto/lex'
-import { LexiconDocument, lexiconDocumentSchema } from '@atproto/lex-document'
-import { Commit } from '@atproto/repo'
-import { AtUri, DidString, NSID, NsidString } from '@atproto/syntax'
+import { type Cid, l } from '@atproto/lex'
+import {
+  type LexiconDocument,
+  lexiconDocumentSchema,
+} from '@atproto/lex-document'
+import type { Commit } from '@atproto/repo'
+import { AtUri, type DidString, NSID, type NsidString } from '@atproto/syntax'
 import * as lexiconsSchema from './lexicons/com/atproto/lexicon/schema.js'
 import {
-  BuildRecordResolverOptions,
-  ResolveRecordOptions,
+  type BuildRecordResolverOptions,
+  type ResolveRecordOptions,
   buildRecordResolver,
 } from './record.js'
 

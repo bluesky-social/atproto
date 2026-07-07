@@ -1,21 +1,21 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { Client, DidString } from '@atproto/lex'
-import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Client, DidString } from '@atproto/lex'
+import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  Hydrator,
+  type HydrateCtx,
+  type Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedOnboardingUsers = createPipeline(

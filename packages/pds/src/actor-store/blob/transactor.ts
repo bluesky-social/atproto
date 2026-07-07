@@ -1,26 +1,26 @@
 import crypto from 'node:crypto'
-import stream from 'node:stream'
+import type stream from 'node:stream'
 // eslint-disable-next-line import/default, import/no-named-as-default-member
 import fileType from 'file-type'
 const { fromStream: fileTypeFromStream } = fileType
 import PQueue from 'p-queue'
 import { SECOND, cloneStream, streamSize } from '@atproto/common'
 import {
-  BlobRef,
-  Cid,
-  TypedBlobRef,
+  type BlobRef,
+  type Cid,
+  type TypedBlobRef,
   cidForRawHash,
   getBlobCidString,
   parseCid,
 } from '@atproto/lex-data'
-import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri, currentDatetimeString } from '@atproto/syntax'
+import { BlobNotFoundError, type BlobStore, WriteOpAction } from '@atproto/repo'
+import { type AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../../background.js'
-import { com } from '../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type { com } from '../../lexicons/index.js'
 import { blobStoreLogger as log } from '../../logger.js'
-import { PreparedWrite } from '../../repo/types.js'
-import { ActorDb, Blob as BlobTable } from '../db/index.js'
+import type { PreparedWrite } from '../../repo/types.js'
+import type { ActorDb, Blob as BlobTable } from '../db/index.js'
 import { BlobReader } from './reader.js'
 
 export type BlobMetadata = {

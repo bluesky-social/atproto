@@ -1,8 +1,8 @@
-import { PlainMessage, Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect.js'
-import { DraftInfo } from '../../../proto/bsky_pb.js'
-import { Database } from '../db/index.js'
+import { type PlainMessage, Timestamp } from '@bufbuild/protobuf'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { DraftInfo } from '../../../proto/bsky_pb.js'
+import type { Database } from '../db/index.js'
 import { IsoUpdatedAtKey } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

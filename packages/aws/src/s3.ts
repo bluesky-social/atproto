@@ -1,10 +1,10 @@
-import stream from 'node:stream'
-import { NoSuchKey, S3, S3ClientConfig } from '@aws-sdk/client-s3'
+import type stream from 'node:stream'
+import { NoSuchKey, S3, type S3ClientConfig } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
 
 export type S3Config = {
   bucket: string

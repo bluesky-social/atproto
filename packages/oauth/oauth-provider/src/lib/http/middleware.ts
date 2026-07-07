@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { invokeOnce } from '../util/function.js'
 import { writeJson } from './response.js'
-import { Handler, Middleware, NextFunction } from './types.js'
+import type { Handler, Middleware, NextFunction } from './types.js'
 
 const isNonNullable = <X>(x: X): x is NonNullable<X> => x != null
 

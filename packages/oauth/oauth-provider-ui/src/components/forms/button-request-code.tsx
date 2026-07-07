@@ -2,7 +2,7 @@ import { Trans } from '@lingui/react/macro'
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react'
 import {
   ButtonCooldown,
-  ButtonCooldownProps,
+  type ButtonCooldownProps,
 } from '#/components/forms/button-cooldown.tsx'
 
 export type ButtonRequestCodeProps = ButtonCooldownProps

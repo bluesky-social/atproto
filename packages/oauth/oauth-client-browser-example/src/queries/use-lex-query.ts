@@ -1,16 +1,16 @@
 import {
-  UseQueryOptions,
-  UseQueryResult,
+  type UseQueryOptions,
+  type UseQueryResult,
   useQuery,
 } from '@tanstack/react-query'
 import {
-  Client,
-  Main,
-  Query,
-  Restricted,
-  XrpcFailure,
-  XrpcRequestParams,
-  XrpcResponse,
+  type Client,
+  type Main,
+  type Query,
+  type Restricted,
+  type XrpcFailure,
+  type XrpcRequestParams,
+  type XrpcResponse,
   getMain,
 } from '@atproto/lex'
 

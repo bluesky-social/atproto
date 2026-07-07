@@ -5,7 +5,7 @@ import {
   Schema,
   type StringFormat,
   type UnknownString,
-  ValidationContext,
+  type ValidationContext,
   isStringFormat,
 } from '../core.js'
 import type { IfAny } from '../util/if-any.js'

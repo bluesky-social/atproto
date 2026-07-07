@@ -1,18 +1,18 @@
-import express from 'express'
-import { LexValue, l } from '@atproto/lex'
+import type express from 'express'
+import { type LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
-import {
+import type {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../context.js'
+import type { AppContext } from '../context.js'
 import { readStickyLogger as log } from '../logger.js'
 import {
   asPipeThroughBuffer,
   isJsonContentType,
   pipethrough,
 } from '../pipethrough.js'
-import { HandlerResponse, LocalRecords, MungeFn } from './types.js'
+import type { HandlerResponse, LocalRecords, MungeFn } from './types.js'
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
   let oldest: string | undefined = local.profile?.indexedAt

@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/oauth-provider'
 import { AtUri } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { app, com } from '../../../../lexicons/index.js'
 import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
 

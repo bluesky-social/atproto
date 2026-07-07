@@ -1,12 +1,12 @@
-import { Key, Keyset } from '@atproto/jwk'
-import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
-import { Fetch } from '@atproto-labs/fetch'
-import { GetCachedOptions } from './oauth-authorization-server-metadata-resolver.js'
-import { ClientAuthMethod } from './oauth-client-auth.js'
-import { OAuthResolver } from './oauth-resolver.js'
-import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
-import { Runtime } from './runtime.js'
-import { ClientMetadata } from './types.js'
+import type { Key, Keyset } from '@atproto/jwk'
+import type { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
+import type { Fetch } from '@atproto-labs/fetch'
+import type { GetCachedOptions } from './oauth-authorization-server-metadata-resolver.js'
+import type { ClientAuthMethod } from './oauth-client-auth.js'
+import type { OAuthResolver } from './oauth-resolver.js'
+import { type DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
+import type { Runtime } from './runtime.js'
+import type { ClientMetadata } from './types.js'
 
 export class OAuthServerFactory {
   constructor(

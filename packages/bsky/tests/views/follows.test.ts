@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyGraphGetFollowers,
-  AppBskyGraphGetFollows,
-  AtpAgent,
+  type AppBskyGraphGetFollowers,
+  type AppBskyGraphGetFollows,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, followsSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, followsSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 describe('pds follow views', () => {

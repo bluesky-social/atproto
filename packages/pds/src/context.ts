@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import express from 'express'
-import { Redis } from 'ioredis'
+import type express from 'express'
+import type { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
-import * as undici from 'undici'
+import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -16,12 +16,12 @@ import {
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
-import { BlobStore } from '@atproto/repo'
+import type { BlobStore } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import { Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
+import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager.js'
 import { OAuthStore } from './account-manager/oauth-store.js'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
@@ -34,7 +34,7 @@ import {
 } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import { BskyAppView } from './bsky-app-view.js'
-import { ServerConfig, ServerSecrets } from './config/index.js'
+import type { ServerConfig, ServerSecrets } from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
@@ -43,7 +43,10 @@ import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import { buildProxyAgent } from './pipethrough.js'
-import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer.js'
+import {
+  LocalViewer,
+  type LocalViewerCreator,
+} from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
 

@@ -1,11 +1,15 @@
-import { DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
+import {
+  type DidString,
+  type HandleString,
+  INVALID_HANDLE,
+} from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { softDeleted } from '../../../../db/util.js'
 import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util.js'

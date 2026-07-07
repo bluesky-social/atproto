@@ -1,11 +1,11 @@
-import { ClientId } from '../client/client-id.js'
+import type { ClientId } from '../client/client-id.js'
 import {
   CLIENT_ASSERTION_MAX_AGE,
   CODE_CHALLENGE_REPLAY_TIMEFRAME,
   DPOP_NONCE_MAX_AGE,
   JAR_MAX_AGE,
 } from '../constants.js'
-import { ReplayStore } from './replay-store.js'
+import type { ReplayStore } from './replay-store.js'
 
 const SECURITY_RATIO = 1.1 // 10% extra time for security
 const asTimeFrame = (timeFrame: number) => Math.ceil(timeFrame * SECURITY_RATIO)

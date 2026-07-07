@@ -82,7 +82,7 @@ msgstr ""
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0>(이)가 관리하는 서비스"
 
-#: src/pages/account/(authenticated)/route.tsx:77
+#: src/pages/account/(authenticated)/route.tsx:83
 msgid "About"
 msgstr "정보"
 
@@ -94,7 +94,7 @@ msgstr ""
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:56
+#: src/pages/account/(authenticated)/route.tsx:62
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "계정"
@@ -163,7 +163,7 @@ msgstr "오류가 발생했습니다"
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
-#: src/components/utils/error-card.tsx:82
+#: src/components/utils/error-card.tsx:90
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
 
@@ -183,7 +183,7 @@ msgstr "모든 메서드"
 msgid "Any service"
 msgstr "모든 서비스"
 
-#: src/pages/account/(authenticated)/route.tsx:70
+#: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr "앱"
 
@@ -220,7 +220,7 @@ msgstr "{0}에 승인됨"
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
-#: src/components/forms/form-card.tsx:57
+#: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "뒤로"
 
@@ -264,7 +264,7 @@ msgstr "호출"
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card.tsx:54
+#: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "취소"
 
@@ -319,7 +319,7 @@ msgstr ""
 msgid "Choose a new email address to associate with your account."
 msgstr ""
 
-#: src/components/sign-up-view.tsx:74
+#: src/components/sign-up-view.tsx:77
 msgid "Choose a username"
 msgstr "사용자 이름 선택"
 
@@ -434,7 +434,7 @@ msgstr "접근 거부"
 msgid "Details"
 msgstr "세부 정보"
 
-#: src/pages/account/(authenticated)/route.tsx:63
+#: src/pages/account/(authenticated)/route.tsx:69
 msgid "Devices"
 msgstr "기기"
 
@@ -455,14 +455,14 @@ msgstr ""
 msgid "e.g. <0>alice{0}</0>"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:56
+#: src/components/sign-up-credentials-form.tsx:59
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "이메일"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:28
-#: src/components/reset-password-request-form.tsx:32
+#: src/components/reset-password-request-form.tsx:31
+#: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "이메일 주소"
@@ -503,7 +503,7 @@ msgstr ""
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
 
-#: src/components/reset-password-request-form.tsx:31
+#: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
 msgstr "이메일 주소 입력"
 
@@ -524,7 +524,7 @@ msgstr "사용자 이름 및 비밀번호 입력"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:47
+#: src/components/sign-up-credentials-form.tsx:50
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
@@ -644,7 +644,7 @@ msgstr ""
 msgid "Hide"
 msgstr "숨기기"
 
-#: src/pages/account/(authenticated)/route.tsx:50
+#: src/pages/account/(authenticated)/route.tsx:56
 #: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "홈"
@@ -697,8 +697,8 @@ msgstr "사용 불가"
 msgid "Invalid Handle"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:41
-#: src/components/sign-up-credentials-form.tsx:46
+#: src/components/sign-up-credentials-form.tsx:44
+#: src/components/sign-up-credentials-form.tsx:49
 msgid "Invite code"
 msgstr "초대 코드"
 
@@ -766,7 +766,7 @@ msgstr ""
 msgid "Make visible"
 msgstr "표시"
 
-#: src/pages/account/(authenticated)/route.tsx:71
+#: src/pages/account/(authenticated)/route.tsx:77
 msgid "Manage applications that have access to your account"
 msgstr "내 계정에 접근 권한이 있는 애플리케이션을 관리합니다"
 
@@ -774,11 +774,11 @@ msgstr "내 계정에 접근 권한이 있는 애플리케이션을 관리합니
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "<1>@핸들</1>을 포함한 내 <0>전체 신원</0> 관리"
 
-#: src/pages/account/(authenticated)/route.tsx:57
+#: src/pages/account/(authenticated)/route.tsx:63
 msgid "Manage your account"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx:64
+#: src/pages/account/(authenticated)/route.tsx:70
 msgid "Manage your active sessions"
 msgstr "내 활성 세션을 관리합니다"
 
@@ -803,7 +803,7 @@ msgstr "미입력"
 msgid "Moderate"
 msgstr "보통"
 
-#: src/pages/account/(authenticated)/route.tsx:141
+#: src/pages/account/(authenticated)/route.tsx:147
 msgid "My Atmosphere Account"
 msgstr ""
 
@@ -817,7 +817,7 @@ msgstr ""
 msgid "New email address"
 msgstr ""
 
-#: src/components/reset-password-confirm-form.tsx:64
+#: src/components/reset-password-confirm-form.tsx:67
 msgid "New password"
 msgstr "새 비밀번호"
 
@@ -836,7 +836,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:68
+#: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -970,7 +970,7 @@ msgstr "이 기기에서 이 계정 기억하기"
 msgid "Repository"
 msgstr "저장소"
 
-#: src/components/reset-password-confirm-form.tsx:48
+#: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
 msgstr "재설정 코드"
 
@@ -984,7 +984,7 @@ msgstr "비밀번호 재설정"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:30
-#: src/components/utils/error-card.tsx:77
+#: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "다시 시도"
 
@@ -1054,8 +1054,8 @@ msgstr "로그아웃"
 msgid "Sign out"
 msgstr "로그아웃"
 
-#: src/components/sign-up-view.tsx:51
-#: src/components/sign-up-view.tsx:56
+#: src/components/sign-up-view.tsx:54
+#: src/components/sign-up-view.tsx:59
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "가입"
@@ -1073,7 +1073,7 @@ msgstr "{count}단계 중 {currentPosition}단계"
 msgid "Strong"
 msgstr "강력"
 
-#: src/components/forms/form-card.tsx:49
+#: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "제출"
 
@@ -1286,7 +1286,7 @@ msgstr "사용 가능"
 msgid "Value"
 msgstr ""
 
-#: src/components/verify-email-confirm-form.tsx:24
+#: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr ""
@@ -1299,7 +1299,7 @@ msgstr ""
 msgid "Verification method"
 msgstr ""
 
-#: src/components/sign-up-hcaptcha-form.tsx:43
+#: src/components/sign-up-hcaptcha-form.tsx:46
 msgid "Verification successful!"
 msgstr ""
 
@@ -1317,7 +1317,7 @@ msgstr ""
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
 
-#: src/components/sign-up-view.tsx:111
+#: src/components/sign-up-view.tsx:114
 msgid "Verify you are human"
 msgstr "사람이 맞는지 확인"
 
@@ -1337,7 +1337,7 @@ msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
 msgid "Warning"
 msgstr "경고"
 
-#: src/components/sign-up-view.tsx:52
+#: src/components/sign-up-view.tsx:55
 msgid "We're so excited to have you join us!"
 msgstr "함께하게 되어 정말 기뻐요!"
 
@@ -1357,7 +1357,7 @@ msgstr ""
 msgid "What does this mean?"
 msgstr "이게 무슨 뜻인가요?"
 
-#: src/pages/account/(authenticated)/route.tsx:79
+#: src/pages/account/(authenticated)/route.tsx:85
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphere 계정이란?"
 
@@ -1389,7 +1389,7 @@ msgstr "페이지 이동 중…"
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr ""
 
-#: src/components/sign-up-handle-form.tsx:41
+#: src/components/sign-up-handle-form.tsx:44
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 도메인 이름으로 변경할 수 있습니다."
 
@@ -1414,7 +1414,7 @@ msgstr ""
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "‘재설정 코드’가 포함된 이메일을 받게 되면 여기에 해당 코드를 입력한 다음 새 비밀번호를 입력하세요."
 
-#: src/components/sign-up-view.tsx:94
+#: src/components/sign-up-view.tsx:97
 msgid "Your account"
 msgstr "내 계정"
 

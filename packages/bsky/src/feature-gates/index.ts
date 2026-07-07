@@ -3,7 +3,7 @@ import type express from 'express'
 import { featureGatesLogger } from '../logger.js'
 import { Gate, IGNORE_METRICS_FOR_GATES } from './gates.js'
 import { MetricsClient } from './metrics.js'
-import {
+import type {
   CheckedFeatureGatesMap,
   ScopedFeatureGatesClient,
   UserContext,

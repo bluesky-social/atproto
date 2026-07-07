@@ -1,16 +1,16 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { WebSocket, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import {
   ErrorFrame,
-  Frame,
+  type Frame,
   MessageFrame,
   Subscription,
   byFrame,
 } from '../src/index.js'
-import * as xrpcServer from '../src/index.js'
+import type * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   buildAddLexicons,

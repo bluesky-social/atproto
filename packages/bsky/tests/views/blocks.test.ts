@@ -4,10 +4,15 @@ import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
   AtUri,
-  AtpAgent,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { assertIsThreadViewPost, forSnapshot } from '../_util.js'
 

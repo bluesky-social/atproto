@@ -7,13 +7,13 @@ import {
   AppBskyEmbedRecordWithMedia,
   AppBskyEmbedVideo,
   AppBskyFeedDefs,
-  AppBskyFeedGetAuthorFeed,
+  type AppBskyFeedGetAuthorFeed,
   AppBskyFeedPost,
-  AtpAgent,
+  type AtpAgent,
   asPredicate,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { uriToDid } from '../../src/util/uris.js'
 import {

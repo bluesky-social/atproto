@@ -1,8 +1,8 @@
 import { readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
-import { Label } from '../src/lexicon/types/com/atproto/label/defs.js'
-import { LabelsEvt, Sequencer } from '../src/sequencer/index.js'
+import type { Label } from '../src/lexicon/types/com/atproto/label/defs.js'
+import type { LabelsEvt, Sequencer } from '../src/sequencer/index.js'
 import { Outbox } from '../src/sequencer/outbox.js'
 
 describe('sequencer', () => {

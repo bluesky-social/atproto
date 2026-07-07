@@ -1,6 +1,6 @@
 import { chunkArray } from '@atproto/common-web'
 import type { HandleString } from '@atproto/syntax'
-import { SeedClient } from './client.js'
+import type { SeedClient } from './client.js'
 
 export default async function usersBulkSeed(sc: SeedClient, max = Infinity) {
   // @TODO when these are run in parallel, seem to get an intermittent

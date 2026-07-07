@@ -2,7 +2,7 @@ import {
   PoorlyFormattedDidError,
   UnsupportedDidMethodError,
 } from '../errors.js'
-import { DidResolverOpts } from '../types.js'
+import type { DidResolverOpts } from '../types.js'
 import { BaseResolver } from './base-resolver.js'
 import { DidPlcResolver } from './plc-resolver.js'
 import { DidWebResolver } from './web-resolver.js'

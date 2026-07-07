@@ -2,10 +2,10 @@ import { check } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors.js'
 import {
-  AtprotoData,
-  CacheResult,
-  DidCache,
-  DidDocument,
+  type AtprotoData,
+  type CacheResult,
+  type DidCache,
+  type DidDocument,
   didDocument,
 } from '../types.js'
 import * as atprotoData from './atproto-data.js'

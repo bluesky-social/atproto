@@ -1,6 +1,6 @@
 import {
   BrowserOAuthClient,
-  OAuthSession,
+  type OAuthSession,
   buildAtprotoLoopbackClientMetadata,
 } from '@atproto/oauth-client-browser'
 import {

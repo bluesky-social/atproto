@@ -1,35 +1,39 @@
-import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
-import { IncomingMessage, ServerResponse } from 'node:http'
+import { type KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import * as jose from 'jose'
 import KeyEncoderModule from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
-import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
-import { AtIdentifierString, DidString, isDidString } from '@atproto/lex'
+import { type IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import {
+  type AtIdentifierString,
+  type DidString,
+  isDidString,
+} from '@atproto/lex'
 import {
   OAuthError,
-  OAuthVerifier,
-  VerifyTokenPayloadOptions,
+  type OAuthVerifier,
+  type VerifyTokenPayloadOptions,
   WWWAuthenticateError,
 } from '@atproto/oauth-provider'
 import {
-  ScopePermissions,
+  type ScopePermissions,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import {
   AuthRequiredError,
-  Awaitable,
+  type Awaitable,
   ForbiddenError,
   InvalidRequestError,
-  MethodAuthContext,
-  MethodAuthVerifier,
-  Params,
+  type MethodAuthContext,
+  type MethodAuthVerifier,
+  type Params,
   XRPCError,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { AccountManager } from './account-manager/account-manager.js'
-import { ActorAccount } from './account-manager/helpers/account.js'
-import {
+import type { AccountManager } from './account-manager/account-manager.js'
+import type { ActorAccount } from './account-manager/helpers/account.js'
+import type {
   AccessOutput,
   AdminTokenOutput,
   ModServiceOutput,
@@ -41,7 +45,7 @@ import {
 import { ACCESS_STANDARD, AuthScope, isAuthScope } from './auth-scope.js'
 import { softDeleted } from './db/index.js'
 import { appendVary } from './util/http.js'
-import { WithRequired } from './util/types.js'
+import type { WithRequired } from './util/types.js'
 
 // key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
 const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)

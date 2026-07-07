@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 
 describe('get config', () => {

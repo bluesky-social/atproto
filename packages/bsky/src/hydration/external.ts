@@ -1,8 +1,8 @@
-import { AtUriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { AtUriString } from '@atproto/syntax'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
-import {
+import type {
   GetSiteStandardRecordsByRefResponse,
   GetSiteStandardRecordsByURIResponse,
 } from '../proto/bsky_pb.js'
@@ -10,11 +10,16 @@ import {
   parseSiteStandardRecordKey,
   siteStandardRecordKey,
 } from '../util/standard-site.js'
-import {
+import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
 } from '../views/types.js'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util.js'
+import {
+  HydrationMap,
+  type ItemRef,
+  type RecordInfo,
+  parseRecord,
+} from './util.js'
 
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>

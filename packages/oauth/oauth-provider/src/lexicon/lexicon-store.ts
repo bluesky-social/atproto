@@ -1,5 +1,5 @@
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
-import { LexiconData, LexiconDocument } from './lexicon-data.js'
+import { type Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import type { LexiconData, LexiconDocument } from './lexicon-data.js'
 
 export type { Awaitable, LexiconData, LexiconDocument }
 

@@ -1,6 +1,6 @@
 import events from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
@@ -8,7 +8,7 @@ import express from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
+import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { createServer } from '@atproto/xrpc-server'
@@ -22,7 +22,7 @@ import API, {
 } from './api/index.js'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier.js'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
-import { ServerConfig } from './config.js'
+import type { ServerConfig } from './config.js'
 import { AppContext } from './context.js'
 import {
   authWithApiKey as courierAuth,

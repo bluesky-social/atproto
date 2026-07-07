@@ -1,20 +1,20 @@
 import { mapDefined } from '@atproto/common'
-import { AtUriString, DidString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
-import { DataPlaneClient } from '../../../../data-plane/index.js'
-import { FeedItem } from '../../../../hydration/feed.js'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import type { FeedItem } from '../../../../hydration/feed.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
+  type HydrateCtx,
+  type HydrationState,
+  type Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import { createPipeline } from '../../../../pipeline.js'
 import { uriToDid } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {

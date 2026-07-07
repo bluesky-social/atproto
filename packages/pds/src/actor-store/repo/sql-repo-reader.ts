@@ -1,15 +1,15 @@
 import { sql } from 'kysely'
 import { chunkArray } from '@atproto/common'
-import { Cid, parseCid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 import {
   BlockMap,
-  CarBlock,
+  type CarBlock,
   CidSet,
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
 import { countAll } from '../../db/index.js'
-import { ActorDb } from '../db/index.js'
+import type { ActorDb } from '../db/index.js'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()

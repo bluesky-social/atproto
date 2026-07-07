@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../context.js'
 import getProfile from './app/bsky/actor/getProfile.js'
 import getProfiles from './app/bsky/actor/getProfiles.js'
 import getSuggestions from './app/bsky/actor/getSuggestions.js'

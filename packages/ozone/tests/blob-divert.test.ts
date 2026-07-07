@@ -1,9 +1,9 @@
 import assert from 'node:assert'
 import { jest } from '@jest/globals'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
+import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'

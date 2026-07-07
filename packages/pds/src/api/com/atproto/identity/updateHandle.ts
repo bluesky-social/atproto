@@ -1,7 +1,7 @@
 import { DAY, MINUTE } from '@atproto/common'
-import { MethodRateLimit, Server } from '@atproto/xrpc-server'
-import { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
-import { AppContext } from '../../../../context.js'
+import type { MethodRateLimit, Server } from '@atproto/xrpc-server'
+import type { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

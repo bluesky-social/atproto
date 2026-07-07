@@ -1,22 +1,25 @@
 import {
-  JwtHeader,
-  JwtPayload,
-  JwtPayloadGetter,
-  JwtSignHeader,
-  Key,
+  type JwtHeader,
+  type JwtPayload,
+  type JwtPayloadGetter,
+  type JwtSignHeader,
+  type Key,
   Keyset,
-  SignedJwt,
-  VerifyOptions,
-  VerifyResult,
+  type SignedJwt,
+  type VerifyOptions,
+  type VerifyResult,
 } from '@atproto/jwk'
 import { EPHEMERAL_SESSION_MAX_AGE } from '../constants.js'
 import { dateToEpoch } from '../lib/util/date.js'
-import { OmitKey, RequiredKey } from '../lib/util/type.js'
+import type { OmitKey, RequiredKey } from '../lib/util/type.js'
 import {
-  AccessTokenPayload,
+  type AccessTokenPayload,
   accessTokenPayloadSchema,
 } from './access-token-payload.js'
-import { ApiTokenPayload, apiTokenPayloadSchema } from './api-token-payload.js'
+import {
+  type ApiTokenPayload,
+  apiTokenPayloadSchema,
+} from './api-token-payload.js'
 
 export type SignPayload = JwtPayload & { iss?: never }
 

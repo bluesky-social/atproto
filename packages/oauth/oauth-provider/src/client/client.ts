@@ -1,5 +1,5 @@
 import {
-  JWTClaimVerificationOptions,
+  type JWTClaimVerificationOptions,
   type JWTHeaderParameters,
   type JWTPayload,
   type JWTVerifyOptions,
@@ -15,13 +15,13 @@ import {
   exportJWK,
   jwtVerify,
 } from 'jose'
-import { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
+import type { Jwks, SignedJwt, UnsignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthorizationRequestParameters,
-  OAuthClientCredentials,
-  OAuthClientMetadata,
-  OAuthRedirectUri,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthClientCredentials,
+  type OAuthClientMetadata,
+  type OAuthRedirectUri,
 } from '@atproto/oauth-types'
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
@@ -32,10 +32,10 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
-import { Awaitable } from '../lib/util/type.js'
-import { ClientAuth } from './client-auth.js'
-import { ClientId } from './client-id.js'
-import { ClientInfo } from './client-info.js'
+import type { Awaitable } from '../lib/util/type.js'
+import type { ClientAuth } from './client-auth.js'
+import type { ClientId } from './client-id.js'
+import type { ClientInfo } from './client-info.js'
 
 const { JOSEError } = errors
 

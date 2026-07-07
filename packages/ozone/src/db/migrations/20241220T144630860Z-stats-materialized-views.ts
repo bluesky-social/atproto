@@ -1,12 +1,12 @@
-import { Kysely, sql } from 'kysely'
+import { type Kysely, sql } from 'kysely'
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs.js'
 import {
   REVIEWESCALATED,
   REVIEWOPEN,
 } from '../../lexicon/types/tools/ozone/moderation/defs.js'
-import * as modEvent from '../schema/moderation_event.js'
-import * as modStatus from '../schema/moderation_subject_status.js'
-import * as recordEventsStats from '../schema/record_events_stats.js'
+import type * as modEvent from '../schema/moderation_event.js'
+import type * as modStatus from '../schema/moderation_subject_status.js'
+import type * as recordEventsStats from '../schema/record_events_stats.js'
 
 export async function up(db: Kysely<any>): Promise<void> {
   // Used by "tools.ozone.moderation.queryStatuses". Reduces query cost by two

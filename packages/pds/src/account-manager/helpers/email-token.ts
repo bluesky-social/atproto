@@ -1,8 +1,8 @@
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
-import { DidString, currentDatetimeString } from '@atproto/lex'
+import { type DidString, currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getRandomToken } from '../../api/com/atproto/server/util.js'
-import { AccountDb, EmailTokenPurpose } from '../db/index.js'
+import type { AccountDb, EmailTokenPurpose } from '../db/index.js'
 
 export const createEmailToken = async (
   db: AccountDb,

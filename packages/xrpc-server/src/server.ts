@@ -1,21 +1,21 @@
 import assert from 'node:assert'
-import { IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import express, {
-  Application,
-  ErrorRequestHandler,
-  Express,
-  RequestHandler,
+  type Application,
+  type ErrorRequestHandler,
+  type Express,
+  type RequestHandler,
   Router,
 } from 'express'
-import { LexValue } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import {
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexXrpcSubscription,
-  LexiconDoc,
+  type LexXrpcProcedure,
+  type LexXrpcQuery,
+  type LexXrpcSubscription,
+  type LexiconDoc,
   Lexicons,
   lexToJson,
 } from '@atproto/lexicon'
@@ -29,11 +29,11 @@ import {
 import log, { LOGGER_NAME } from './logger.js'
 import { HttpRateLimiter } from './rate-limiter-http.js'
 import {
-  CalcKeyFn,
-  CalcPointsFn,
-  RateLimiterErrorHandlerDetails,
-  RateLimiterI,
-  RateLimiterOptions,
+  type CalcKeyFn,
+  type CalcPointsFn,
+  type RateLimiterErrorHandlerDetails,
+  type RateLimiterI,
+  type RateLimiterOptions,
   WrappedRateLimiter,
 } from './rate-limiter.js'
 import {
@@ -43,42 +43,42 @@ import {
   XrpcStreamServer,
 } from './stream/index.js'
 import {
-  Auth,
-  AuthResult,
-  AuthVerifier,
-  CatchallHandler,
-  HandlerContext,
-  Input,
-  LexMethodConfig,
-  LexMethodHandler,
-  LexMethodInput,
-  LexMethodOutput,
-  LexMethodParams,
-  LexSubscriptionConfig,
-  LexSubscriptionHandler,
-  MethodAuthContext,
-  MethodConfig,
-  MethodConfigOrHandler,
-  MethodHandler,
-  Options,
-  Output,
-  Params,
-  RouteOptions,
-  ServerRateLimitDescription,
-  StreamAuthContext,
-  StreamConfig,
-  StreamConfigOrHandler,
-  StreamContext,
+  type Auth,
+  type AuthResult,
+  type AuthVerifier,
+  type CatchallHandler,
+  type HandlerContext,
+  type Input,
+  type LexMethodConfig,
+  type LexMethodHandler,
+  type LexMethodInput,
+  type LexMethodOutput,
+  type LexMethodParams,
+  type LexSubscriptionConfig,
+  type LexSubscriptionHandler,
+  type MethodAuthContext,
+  type MethodConfig,
+  type MethodConfigOrHandler,
+  type MethodHandler,
+  type Options,
+  type Output,
+  type Params,
+  type RouteOptions,
+  type ServerRateLimitDescription,
+  type StreamAuthContext,
+  type StreamConfig,
+  type StreamConfigOrHandler,
+  type StreamContext,
   isHandlerPipeThroughBuffer,
   isHandlerPipeThroughStream,
   isHandlerSuccess,
   isSharedRateLimitOpts,
 } from './types.js'
 import {
-  AuthVerifierInternal,
-  InputVerifierInternal,
-  OutputVerifierInternal,
-  ParamsVerifierInternal,
+  type AuthVerifierInternal,
+  type InputVerifierInternal,
+  type OutputVerifierInternal,
+  type ParamsVerifierInternal,
   asArray,
   createLexiconInputVerifier,
   createLexiconOutputVerifier,

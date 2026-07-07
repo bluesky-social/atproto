@@ -1,5 +1,5 @@
-import { JSX } from 'react'
-import { DidString } from '@atproto/lex'
+import type { JSX } from 'react'
+import type { DidString } from '@atproto/lex'
 import { app } from '../lexicons.ts'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 import { useLexQuery } from '../queries/use-lex-query.ts'

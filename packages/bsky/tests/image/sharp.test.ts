@@ -2,7 +2,7 @@ import { createReadStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import { describe, expect, it } from 'vitest'
 import {
-  Options,
+  type Options,
   createImageProcessor,
   createImageUpscaler,
   getInfo,

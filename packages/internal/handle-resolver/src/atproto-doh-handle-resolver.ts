@@ -1,10 +1,10 @@
 import {
   AtprotoHandleResolver,
-  AtprotoHandleResolverOptions,
+  type AtprotoHandleResolverOptions,
 } from './atproto-handle-resolver.js'
 import { HandleResolverError } from './handle-resolver-error.js'
-import { ResolveTxt } from './internal-resolvers/dns-handle-resolver.js'
-import { HandleResolver } from './types.js'
+import type { ResolveTxt } from './internal-resolvers/dns-handle-resolver.js'
+import type { HandleResolver } from './types.js'
 
 export type AtprotoDohHandleResolverOptions = Omit<
   AtprotoHandleResolverOptions,

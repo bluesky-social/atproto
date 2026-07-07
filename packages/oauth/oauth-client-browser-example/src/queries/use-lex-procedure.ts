@@ -1,15 +1,15 @@
 import {
-  UseMutationOptions,
-  UseMutationResult,
+  type UseMutationOptions,
+  type UseMutationResult,
   useMutation,
 } from '@tanstack/react-query'
 import {
-  Client,
-  InferMethodInputBody,
-  InferMethodOutputBody,
-  Main,
-  Procedure,
-  XrpcFailure,
+  type Client,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type Main,
+  type Procedure,
+  type XrpcFailure,
   getMain,
 } from '@atproto/lex'
 

@@ -1,8 +1,10 @@
 import { Readable } from 'node:stream'
 import { Timestamp } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
-import express, { RequestHandler, Router } from 'express'
-import { AppContext } from '../context.js'
+import type express from 'express'
+import type { RequestHandler } from 'express'
+import { Router } from 'express'
+import type { AppContext } from '../context.js'
 import { httpLogger as log } from '../logger.js'
 import { SitemapPageType } from '../proto/bsky_pb.js'
 

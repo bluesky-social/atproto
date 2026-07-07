@@ -1,4 +1,4 @@
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, type ValidationContext } from '../core.js'
 
 /**
  * Schema that accepts one of several specific literal values.

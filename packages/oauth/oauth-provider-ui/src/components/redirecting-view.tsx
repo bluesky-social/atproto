@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
 import {
-  MouseEventHandler,
+  type MouseEventHandler,
   useCallback,
   useEffect,
   useRef,
@@ -8,10 +8,10 @@ import {
 } from 'react'
 import {
   LayoutTitle,
-  LayoutTitleProps,
+  type LayoutTitleProps,
 } from '#/components/layouts/layout-title.tsx'
 import { useCountdown } from '#/hooks/use-countdown.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { buttonClassName } from './forms/button.tsx'
 
 export type RedirectingViewProps = Override<

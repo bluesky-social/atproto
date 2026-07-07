@@ -1,9 +1,16 @@
-import { AtprotoDidRefAbsolute, isAtprotoDidRefAbsolute } from '@atproto/did'
-import { Nsid, isNsid } from '../lib/nsid.js'
+import {
+  type AtprotoDidRefAbsolute,
+  isAtprotoDidRefAbsolute,
+} from '@atproto/did'
+import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
-import { ResourcePermission } from '../lib/resource-permission.js'
+import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
-import { NeRoArray, ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
+import {
+  type NeRoArray,
+  type ScopeSyntax,
+  isScopeStringFor,
+} from '../lib/syntax.js'
 
 export {
   type AtprotoDidRefAbsolute,

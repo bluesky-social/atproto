@@ -1,12 +1,13 @@
-import { Schema, ValidationContext } from '../core.js'
-import type {
-  InferInput,
-  InferOutput,
-  UnwrapValidator,
-  Validator,
+import {
+  type InferInput,
+  type InferOutput,
+  Schema,
+  type UnwrapValidator,
+  type ValidationContext,
+  type Validator,
 } from '../core.js'
 import { memoizedTransformer } from '../util/memoize.js'
-import { WithDefaultSchema } from './with-default.js'
+import type { WithDefaultSchema } from './with-default.js'
 
 /**
  * Schema wrapper that makes a value optional (allows undefined).

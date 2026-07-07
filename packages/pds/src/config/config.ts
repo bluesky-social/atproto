@@ -1,12 +1,12 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import {
+import type {
   BrandingInput as BrandingConfig,
   HcaptchaConfig,
 } from '@atproto/oauth-provider'
-import { DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
-import { ServerEnvironment } from './env.js'
+import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
+import type { ServerEnvironment } from './env.js'
 
 export type { BrandingConfig }
 

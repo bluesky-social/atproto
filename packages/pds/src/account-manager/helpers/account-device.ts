@@ -1,7 +1,7 @@
 import assert from 'node:assert'
-import { DeviceId, Did } from '@atproto/oauth-provider'
+import type { DeviceId, Did } from '@atproto/oauth-provider'
 import { toDateISO } from '../../db/index.js'
-import { AccountDb } from '../db/index.js'
+import type { AccountDb } from '../db/index.js'
 import { selectAccountQB } from './account.js'
 
 export function upsertQB(db: AccountDb, deviceId: DeviceId, did: string) {

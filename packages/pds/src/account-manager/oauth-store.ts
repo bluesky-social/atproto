@@ -1,68 +1,72 @@
 import assert from 'node:assert'
-import { Client, createOp as createPlcOp } from '@did-plc/lib'
-import { Selectable } from 'kysely'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { DidString, HandleString, getBlobCidString } from '@atproto/lex'
+import { type Client, createOp as createPlcOp } from '@did-plc/lib'
+import type { Selectable } from 'kysely'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
-  Account,
-  AccountStore,
-  AuthenticateAccountData,
-  AuthorizedClientData,
-  AuthorizedClients,
-  ClientId,
-  Code,
-  DeactivateAccountData,
-  DeleteAccountConfirmInput,
-  DeleteAccountRequestInput,
-  DeviceAccount,
-  DeviceData,
-  DeviceId,
-  DeviceStore,
-  Did,
-  FoundRequestResult,
+  type DidString,
+  type HandleString,
+  getBlobCidString,
+} from '@atproto/lex'
+import {
+  type Account,
+  type AccountStore,
+  type AuthenticateAccountData,
+  type AuthorizedClientData,
+  type AuthorizedClients,
+  type ClientId,
+  type Code,
+  type DeactivateAccountData,
+  type DeleteAccountConfirmInput,
+  type DeleteAccountRequestInput,
+  type DeviceAccount,
+  type DeviceData,
+  type DeviceId,
+  type DeviceStore,
+  type Did,
+  type FoundRequestResult,
   HandleUnavailableError,
-  HandleUnavailableReason,
+  type HandleUnavailableReason,
   InvalidCredentialsError,
   InvalidInviteCodeError,
   InvalidRequestError,
-  LexiconData,
-  LexiconStore,
-  NewTokenData,
-  ReactivateAccountData,
-  RefreshToken,
-  RequestData,
-  RequestId,
-  RequestStore,
-  ResetPasswordConfirmInput,
-  ResetPasswordRequestInput,
-  SignUpData,
-  TokenData,
-  TokenId,
-  TokenInfo,
-  TokenStore,
-  UpdateEmailConfirmInput,
-  UpdateEmailRequestInput,
-  UpdateEmailRequestOutput,
-  UpdateHandleData,
-  UpdateRequestData,
-  VerifyEmailConfirmInput,
-  VerifyEmailRequestInput,
+  type LexiconData,
+  type LexiconStore,
+  type NewTokenData,
+  type ReactivateAccountData,
+  type RefreshToken,
+  type RequestData,
+  type RequestId,
+  type RequestStore,
+  type ResetPasswordConfirmInput,
+  type ResetPasswordRequestInput,
+  type SignUpData,
+  type TokenData,
+  type TokenId,
+  type TokenInfo,
+  type TokenStore,
+  type UpdateEmailConfirmInput,
+  type UpdateEmailRequestInput,
+  type UpdateEmailRequestOutput,
+  type UpdateHandleData,
+  type UpdateRequestData,
+  type VerifyEmailConfirmInput,
+  type VerifyEmailRequestInput,
 } from '@atproto/oauth-provider'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
 } from '@atproto/xrpc-server'
-import { ActorStore } from '../actor-store/actor-store.js'
-import { BackgroundQueue } from '../background.js'
+import type { ActorStore } from '../actor-store/actor-store.js'
+import type { BackgroundQueue } from '../background.js'
 import { fromDateISO } from '../db/index.js'
-import { ImageUrlBuilder } from '../image/image-url-builder.js'
+import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
-import { ServerMailer } from '../mailer/index.js'
-import { Sequencer } from '../sequencer/index.js'
-import { AccountManager, InvalidPasswordError } from './account-manager.js'
-import * as schemas from './db/schema/index.js'
+import type { ServerMailer } from '../mailer/index.js'
+import type { Sequencer } from '../sequencer/index.js'
+import { type AccountManager, InvalidPasswordError } from './account-manager.js'
+import type * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import { ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
+import { type ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'

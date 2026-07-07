@@ -1,5 +1,5 @@
-import { Cid, currentDatetimeString } from '@atproto/lex'
-import { AccountDb } from '../db/index.js'
+import { type Cid, currentDatetimeString } from '@atproto/lex'
+import type { AccountDb } from '../db/index.js'
 
 export const updateRoot = async (
   db: AccountDb,

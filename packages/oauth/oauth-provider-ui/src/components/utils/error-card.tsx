@@ -2,10 +2,18 @@ import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { composeEventHandlers } from '@radix-ui/primitive'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
-import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
-import { Override } from '#/lib/util.ts'
-import { Admonition, AdmonitionAction, AdmonitionProps } from './admonition.tsx'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import {
+  type ErrorParser,
+  type ParsedError,
+  parseError,
+} from '#/lib/error-parser.ts'
+import type { Override } from '#/lib/util.ts'
+import {
+  Admonition,
+  AdmonitionAction,
+  type AdmonitionProps,
+} from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
 
 export type { ErrorParser, ParsedError }

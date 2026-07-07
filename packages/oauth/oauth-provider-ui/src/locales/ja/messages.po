@@ -82,7 +82,7 @@ msgstr "2番目の認証要素が必要です ({hint})"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0> によって管理されているサービス"
 
-#: src/pages/account/(authenticated)/route.tsx:77
+#: src/pages/account/(authenticated)/route.tsx:83
 msgid "About"
 msgstr "アカウントについて"
 
@@ -94,7 +94,7 @@ msgstr "Blueskyアカウントの特定の部分にアクセス"
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr "Blueskyアカウントの特定の部分にアクセスし、プライベート設定を読み取ります"
 
-#: src/pages/account/(authenticated)/route.tsx:56
+#: src/pages/account/(authenticated)/route.tsx:62
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "アカウント"
@@ -163,7 +163,7 @@ msgstr "エラーが発生しました"
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期しないエラーが発生しました。もう一度お試しください。"
 
-#: src/components/utils/error-card.tsx:82
+#: src/components/utils/error-card.tsx:90
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
@@ -183,7 +183,7 @@ msgstr "すべてのメソッド"
 msgid "Any service"
 msgstr "すべてのサービス"
 
-#: src/pages/account/(authenticated)/route.tsx:70
+#: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr "アプリ"
 
@@ -220,7 +220,7 @@ msgstr "{0} に承認されました"
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
-#: src/components/forms/form-card.tsx:57
+#: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "戻る"
 
@@ -264,7 +264,7 @@ msgstr "呼び出し"
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card.tsx:54
+#: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -319,7 +319,7 @@ msgstr "新しいデフォルトのユーザー名を選択してください。
 msgid "Choose a new email address to associate with your account."
 msgstr "アカウントに関連付ける新しいメールアドレスを選択してください。"
 
-#: src/components/sign-up-view.tsx:74
+#: src/components/sign-up-view.tsx:77
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
@@ -434,7 +434,7 @@ msgstr "アクセスを拒否"
 msgid "Details"
 msgstr "詳細"
 
-#: src/pages/account/(authenticated)/route.tsx:63
+#: src/pages/account/(authenticated)/route.tsx:69
 msgid "Devices"
 msgstr "デバイス"
 
@@ -455,14 +455,14 @@ msgstr "例: <0>alice.com</0>"
 msgid "e.g. <0>alice{0}</0>"
 msgstr "例: <0>alice{0}</0>"
 
-#: src/components/sign-up-credentials-form.tsx:56
+#: src/components/sign-up-credentials-form.tsx:59
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "メールアドレス"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:28
-#: src/components/reset-password-request-form.tsx:32
+#: src/components/reset-password-request-form.tsx:31
+#: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "メールアドレス"
@@ -503,7 +503,7 @@ msgstr "使用したいドメインを入力してください"
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "アカウントの作成に使用したメールアドレスを入力します。新しいパスワードを設定できるように、「リセットコード」をお送りします。"
 
-#: src/components/reset-password-request-form.tsx:31
+#: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
 msgstr "メールアドレスを入力してください"
 
@@ -524,7 +524,7 @@ msgstr "ユーザー名とパスワードを入力してください"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "アカウントに接続しているすべてのアプリと、作成したすべての「アプリパスワード」が取り消されます。再有効化する際には、再度サインインする必要があります。"
 
-#: src/components/sign-up-credentials-form.tsx:47
+#: src/components/sign-up-credentials-form.tsx:50
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
@@ -654,7 +654,7 @@ msgstr "ヘルプ"
 msgid "Hide"
 msgstr "隠す"
 
-#: src/pages/account/(authenticated)/route.tsx:50
+#: src/pages/account/(authenticated)/route.tsx:56
 #: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "ホーム"
@@ -707,8 +707,8 @@ msgstr "無効"
 msgid "Invalid Handle"
 msgstr "無効なハンドル"
 
-#: src/components/sign-up-credentials-form.tsx:41
-#: src/components/sign-up-credentials-form.tsx:46
+#: src/components/sign-up-credentials-form.tsx:44
+#: src/components/sign-up-credentials-form.tsx:49
 msgid "Invite code"
 msgstr "招待コード"
 
@@ -776,7 +776,7 @@ msgstr "次のURLで以下の内容のテキストファイルを利用できる
 msgid "Make visible"
 msgstr "表示する"
 
-#: src/pages/account/(authenticated)/route.tsx:71
+#: src/pages/account/(authenticated)/route.tsx:77
 msgid "Manage applications that have access to your account"
 msgstr "あなたのアカウントにアクセスできるアプリケーションを管理する"
 
@@ -784,11 +784,11 @@ msgstr "あなたのアカウントにアクセスできるアプリケーショ
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "あなたの <1>@handle</1> を含む <0>すべての識別情報</0> を管理する"
 
-#: src/pages/account/(authenticated)/route.tsx:57
+#: src/pages/account/(authenticated)/route.tsx:63
 msgid "Manage your account"
 msgstr "アカウントを管理"
 
-#: src/pages/account/(authenticated)/route.tsx:64
+#: src/pages/account/(authenticated)/route.tsx:70
 msgid "Manage your active sessions"
 msgstr "アクティブなセッションを管理"
 
@@ -813,7 +813,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/pages/account/(authenticated)/route.tsx:141
+#: src/pages/account/(authenticated)/route.tsx:147
 msgid "My Atmosphere Account"
 msgstr "私のAtmosphereアカウント"
 
@@ -827,7 +827,7 @@ msgstr "名前"
 msgid "New email address"
 msgstr "新しいメールアドレス"
 
-#: src/components/reset-password-confirm-form.tsx:64
+#: src/components/reset-password-confirm-form.tsx:67
 msgid "New password"
 msgstr "新しいパスワード"
 
@@ -846,7 +846,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:68
+#: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -980,7 +980,7 @@ msgstr "このアカウントをこのデバイスに記憶する"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/reset-password-confirm-form.tsx:48
+#: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
 msgstr "リセットコード"
 
@@ -994,7 +994,7 @@ msgstr "パスワードをリセット"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:30
-#: src/components/utils/error-card.tsx:77
+#: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "再試行"
 
@@ -1064,8 +1064,8 @@ msgstr "サインアウト"
 msgid "Sign out"
 msgstr "サインアウト"
 
-#: src/components/sign-up-view.tsx:51
-#: src/components/sign-up-view.tsx:56
+#: src/components/sign-up-view.tsx:54
+#: src/components/sign-up-view.tsx:59
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "サインアップ"
@@ -1083,7 +1083,7 @@ msgstr "ステップ {currentPosition} / {count}"
 msgid "Strong"
 msgstr "強い"
 
-#: src/components/forms/form-card.tsx:49
+#: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "送信"
 
@@ -1296,7 +1296,7 @@ msgstr "有効"
 msgid "Value"
 msgstr "値"
 
-#: src/components/verify-email-confirm-form.tsx:24
+#: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr "確認コード"
@@ -1309,7 +1309,7 @@ msgstr "確認メールが送信されました"
 msgid "Verification method"
 msgstr "確認方法"
 
-#: src/components/sign-up-hcaptcha-form.tsx:43
+#: src/components/sign-up-hcaptcha-form.tsx:46
 msgid "Verification successful!"
 msgstr "確認成功！"
 
@@ -1327,7 +1327,7 @@ msgstr "確認する"
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "パスワードを入力する前に、ウェブサイトのアドレスを確認してください。信頼できるサイトでのみサインインしてください。"
 
-#: src/components/sign-up-view.tsx:111
+#: src/components/sign-up-view.tsx:114
 msgid "Verify you are human"
 msgstr "あなたが人間であることを確認"
 
@@ -1347,7 +1347,7 @@ msgstr "あなたの <0/> アカウントを通じてあなたを識別しよう
 msgid "Warning"
 msgstr "警告"
 
-#: src/components/sign-up-view.tsx:52
+#: src/components/sign-up-view.tsx:55
 msgid "We're so excited to have you join us!"
 msgstr "私たちはあなたが参加してくれることをとても楽しみにしています！"
 
@@ -1367,7 +1367,7 @@ msgstr "おかえりなさい！"
 msgid "What does this mean?"
 msgstr "どういう意味ですか？"
 
-#: src/pages/account/(authenticated)/route.tsx:79
+#: src/pages/account/(authenticated)/route.tsx:85
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
 
@@ -1399,7 +1399,7 @@ msgstr "リダイレクトしています…"
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "代わりに、一時的にアカウントを無効にすることもできます。 プロフィール、投稿、フィード、リストは他のBlueskyユーザーには表示されなくなります。 ログインするといつでもアカウントを再開できます。"
 
-#: src/components/sign-up-handle-form.tsx:41
+#: src/components/sign-up-handle-form.tsx:44
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "アカウントのセットアップ後にユーザー名をあなたが管理しているドメイン名に変更することができます。"
 
@@ -1424,7 +1424,7 @@ msgstr "以前に <0/> を無効化しました。アカウントを再有効化
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
 
-#: src/components/sign-up-view.tsx:94
+#: src/components/sign-up-view.tsx:97
 msgid "Your account"
 msgstr "あなたのアカウント"
 

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { Infer, UnknownString } from '../core.js'
-import { StringSchemaOptions, string } from './string.js'
+import type { Infer, UnknownString } from '../core.js'
+import { type StringSchemaOptions, string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
 

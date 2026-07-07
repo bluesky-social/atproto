@@ -1,9 +1,9 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
 import { LinkAnchor } from '#/components/utils/link-anchor.tsx'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 
 export type SignUpDisclaimerProps = Override<
   Omit<JSX.IntrinsicElements['p'], 'children'>,

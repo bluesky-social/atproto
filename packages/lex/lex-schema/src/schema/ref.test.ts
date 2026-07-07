@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Schema, Validator } from '../core.js'
+import type { Schema, Validator } from '../core.js'
 import { integer } from './integer.js'
 import { object } from './object.js'
 import { optional } from './optional.js'

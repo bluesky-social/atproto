@@ -5,13 +5,13 @@ import {
   wait,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot } from '@atproto/repo'
 import type { DidString } from '@atproto/syntax'
 import {
-  SeqEvt,
-  Sequencer,
-  SyncEvt,
+  type SeqEvt,
+  type Sequencer,
+  type SyncEvt,
   formatSeqSyncEvt,
 } from '../src/sequencer/index.js'
 import { Outbox } from '../src/sequencer/outbox.js'

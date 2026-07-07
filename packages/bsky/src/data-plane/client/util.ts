@@ -1,4 +1,4 @@
-import { Code, ConnectError, Interceptor } from '@connectrpc/connect'
+import { type Code, ConnectError, type Interceptor } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { getDidKeyFromMultibase } from '@atproto/identity'
 
