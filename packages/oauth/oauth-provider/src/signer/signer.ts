@@ -9,9 +9,9 @@ import {
   type VerifyOptions,
   type VerifyResult,
 } from '@atproto/jwk'
-import { EPHEMERAL_SESSION_MAX_AGE } from '../constants.js'
 import { dateToEpoch } from '../lib/util/date.js'
 import type { OmitKey, RequiredKey } from '../lib/util/type.js'
+import { EPHEMERAL_SESSION_MAX_AGE } from '../oauth-constants.js'
 import {
   type AccessTokenPayload,
   accessTokenPayloadSchema,

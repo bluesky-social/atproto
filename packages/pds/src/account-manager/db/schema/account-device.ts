@@ -1,4 +1,4 @@
-import type { DeviceId } from '@atproto/oauth-provider'
+import type { DeviceId } from '@atproto/oauth-provider/store'
 import type { DateISO } from '../../../db/index.js'
 
 export interface AccountDevice {

@@ -3,7 +3,7 @@ import type {
   AuthorizedClients,
   ClientId,
   Did,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import { fromJson, toDateISO, toJson } from '../../db/index.js'
 import type { AccountDb } from '../db/index.js'
 

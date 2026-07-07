@@ -11,10 +11,12 @@ import {
 } from '@atproto/lex'
 import {
   OAuthError,
-  type OAuthVerifier,
-  type VerifyTokenPayloadOptions,
   WWWAuthenticateError,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/errors'
+import type {
+  OAuthVerifier,
+  VerifyTokenPayloadOptions,
+} from '@atproto/oauth-provider/verifier'
 import {
   type ScopePermissions,
   ScopePermissionsTransition,

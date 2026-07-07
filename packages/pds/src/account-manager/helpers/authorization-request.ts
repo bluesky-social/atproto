@@ -6,7 +6,7 @@ import type {
   RequestData,
   RequestId,
   UpdateRequestData,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
 import type { AccountDb, AuthorizationRequest } from '../db/index.js'
 

@@ -2,13 +2,13 @@ import type { Selectable } from 'kysely'
 import type {
   ClientAuth,
   ClientAuthLegacy,
+  ClientId,
   Code,
   DeviceId,
   Did,
   OAuthAuthorizationRequestParameters,
-  OAuthClientId,
   RequestId,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import type { DateISO, JsonEncoded } from '../../../db/index.js'
 
 export interface AuthorizationRequest {
@@ -16,7 +16,7 @@ export interface AuthorizationRequest {
   did: Did | null
   deviceId: DeviceId | null
 
-  clientId: OAuthClientId
+  clientId: ClientId
   clientAuth: JsonEncoded<null | ClientAuth | ClientAuthLegacy>
   parameters: JsonEncoded<OAuthAuthorizationRequestParameters>
   expiresAt: DateISO

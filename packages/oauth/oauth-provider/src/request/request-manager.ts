@@ -10,12 +10,6 @@ import { isValidHandle } from '@atproto/syntax'
 import type { ClientAuth } from '../client/client-auth.js'
 import type { ClientId } from '../client/client-id.js'
 import type { Client } from '../client/client.js'
-import {
-  AUTHORIZATION_INACTIVITY_TIMEOUT,
-  NODE_ENV,
-  PAR_EXPIRES_IN,
-  TOKEN_MAX_AGE,
-} from '../constants.js'
 import type { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
@@ -26,6 +20,12 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import type { LexiconManager } from '../lexicon/lexicon-manager.js'
 import type { RequestMetadata } from '../lib/http/request.js'
+import {
+  AUTHORIZATION_INACTIVITY_TIMEOUT,
+  NODE_ENV,
+  PAR_EXPIRES_IN,
+  TOKEN_MAX_AGE,
+} from '../oauth-constants.js'
 import type { OAuthHooks } from '../oauth-hooks.js'
 import type { Signer } from '../signer/signer.js'
 import { type Code, generateCode } from './code.js'

@@ -25,5 +25,5 @@ export const customizationSchema = z.object({
    */
   hcaptcha: hcaptchaConfigSchema.optional(),
 })
-export type CustomizationInput = z.input<typeof customizationSchema>
+export type CustomizationConfig = z.input<typeof customizationSchema>
 export type Customization = z.infer<typeof customizationSchema>

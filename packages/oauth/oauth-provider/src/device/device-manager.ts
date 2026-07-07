@@ -1,12 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { z } from 'zod'
-import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
 import { parseHttpCookies } from '../lib/http/index.js'
 import {
   type RequestMetadata,
   extractRequestMetadata,
   setCookie,
 } from '../lib/http/request.js'
+import { SESSION_FIXATION_MAX_AGE } from '../oauth-constants.js'
 import type { DeviceData } from './device-data.js'
 import { type DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
 import type { DeviceStore } from './device-store.js'

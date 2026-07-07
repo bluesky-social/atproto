@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { type Jwks, Keyset } from '@atproto/jwk'
+import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -42,18 +42,10 @@ import {
 } from './client/client-manager.js'
 import { type ClientStore, ifClientStore } from './client/client-store.js'
 import type { Client } from './client/client.js'
-import {
-  AUTHENTICATION_MAX_AGE,
-  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  PUBLIC_CLIENT_REFRESH_LIFETIME,
-  PUBLIC_CLIENT_SESSION_LIFETIME,
-  TOKEN_MAX_AGE,
-} from './constants.js'
-import type { Branding, BrandingInput } from './customization/branding.js'
+import type { Branding, BrandingConfig } from './customization/branding.js'
 import {
   type Customization,
-  type CustomizationInput,
+  type CustomizationConfig,
   customizationSchema,
 } from './customization/customization.js'
 import type { DeviceId } from './device/device-id.js'
@@ -82,6 +74,14 @@ import {
   type CustomMetadata,
   buildMetadata,
 } from './metadata/build-metadata.js'
+import {
+  AUTHENTICATION_MAX_AGE,
+  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
+  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
+  PUBLIC_CLIENT_REFRESH_LIFETIME,
+  PUBLIC_CLIENT_SESSION_LIFETIME,
+  TOKEN_MAX_AGE,
+} from './oauth-constants.js'
 import type { OAuthHooks } from './oauth-hooks.js'
 import {
   type DpopProof,
@@ -99,32 +99,50 @@ import type { AuthorizationResultAuthorizePage } from './result/authorization-re
 import type { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
 import type { ErrorHandler } from './router/error-handler.js'
 import type { AccessTokenPayload } from './signer/access-token-payload.js'
+import { refreshTokenSchema } from './token/refresh-token.js'
 import type { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
-import {
-  type TokenStore,
-  asTokenStore,
-  refreshTokenSchema,
-} from './token/token-store.js'
+import { type TokenStore, asTokenStore } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
-export { AccessTokenMode, Keyset, LexResolver }
+// Re-export dependencies that are part of the public API of this package, so
+// that consumers don't have to install them separately.
+export { safeFetchWrap } from '@atproto-labs/fetch-node'
+export type * from '@atproto/jwk'
+export { Keyset } from '@atproto/jwk'
+export type * from '@atproto/jwk-jose'
+export { JoseKey } from '@atproto/jwk-jose'
+export type * from '@atproto/lex-resolver'
+export { LexResolver } from '@atproto/lex-resolver'
+
+export { AccessTokenMode }
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
   AuthorizationResultAuthorizePage as AuthorizationResultAuthorize,
   AuthorizationResultRedirect,
   Branding,
-  BrandingInput,
+  BrandingConfig,
   CustomMetadata,
   Customization,
-  CustomizationInput,
+  CustomizationConfig,
   ErrorHandler,
   HcaptchaConfig,
+  LoopbackMetadataGetter,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
   VerifyTokenPayloadOptions,
 }
+
+export type ClientJwksCache = SimpleStore<string, Jwks>
+export type ClientMetadataCache = SimpleStore<string, OAuthClientMetadata>
+export type OAuthStore = AccountStore &
+  ClientStore &
+  DeviceStore &
+  LexiconStore &
+  ReplayStore &
+  RequestStore &
+  TokenStore
 
 type OAuthProviderConfig = {
   /**
@@ -186,15 +204,7 @@ type OAuthProviderConfig = {
    * this store implements all the interfaces not provided in the other
    * `<name>Store` options.
    */
-  store?: Partial<
-    AccountStore &
-      ClientStore &
-      DeviceStore &
-      LexiconStore &
-      ReplayStore &
-      RequestStore &
-      TokenStore
-  >
+  store?: Partial<OAuthStore>
 
   accountStore?: AccountStore
   clientStore?: ClientStore
@@ -210,7 +220,7 @@ type OAuthProviderConfig = {
    *
    * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
    */
-  clientJwksCache?: SimpleStore<string, Jwks>
+  clientJwksCache?: ClientJwksCache
 
   /**
    * In order to speed up the client fetching process, you can provide a cache
@@ -218,7 +228,7 @@ type OAuthProviderConfig = {
    *
    * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
    */
-  clientMetadataCache?: SimpleStore<string, OAuthClientMetadata>
+  clientMetadataCache?: ClientMetadataCache
 
   /**
    * In order to enable loopback clients, you can provide a function that
@@ -235,7 +245,7 @@ export type OAuthProviderOptions = OAuthProviderConfig &
   OAuthVerifierOptions &
   OAuthHooks &
   DeviceManagerOptions &
-  CustomizationInput
+  CustomizationConfig
 
 export class OAuthProvider extends OAuthVerifier {
   protected readonly accessTokenMode: AccessTokenMode
@@ -260,10 +270,14 @@ export class OAuthProvider extends OAuthVerifier {
     accessTokenMode = AccessTokenMode.stateless,
 
     metadata,
+    loopbackMetadata = atprotoLoopbackClientMetadata,
 
+    // Services
     safeFetch = safeFetchWrap(),
-    store, // compound store implementation
     lexResolver = new LexResolver({ fetch: safeFetch }),
+
+    // compound store implementation
+    store,
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -284,8 +298,6 @@ export class OAuthProvider extends OAuthVerifier {
       maxSize: 50_000_000,
       ttl: 600e3,
     }),
-
-    loopbackMetadata = atprotoLoopbackClientMetadata,
 
     // OAuthHooks &
     // OAuthVerifierOptions &

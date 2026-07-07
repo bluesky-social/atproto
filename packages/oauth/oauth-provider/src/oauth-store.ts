@@ -1,8 +1,3 @@
-/**
- * Every store file exports all the types needed to implement that store. This
- * files re-exports all the types from the x-store files.
- */
-
 export * from './account/account-store.js'
 export * from './client/client-store.js'
 export * from './device/device-store.js'

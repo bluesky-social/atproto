@@ -1,4 +1,4 @@
-import type { LexiconDocument } from '@atproto/oauth-provider'
+import type { LexiconDocument } from '@atproto/oauth-provider/store'
 import type { DateISO, JsonEncoded } from '../../../db/cast.js'
 
 export interface Lexicon {

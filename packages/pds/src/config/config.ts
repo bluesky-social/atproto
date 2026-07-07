@@ -2,9 +2,9 @@ import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import type {
-  BrandingInput as BrandingConfig,
+  BrandingConfig,
   HcaptchaConfig,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/provider'
 import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
 import type { ServerEnvironment } from './env.js'
 

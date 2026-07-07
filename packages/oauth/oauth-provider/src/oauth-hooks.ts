@@ -25,14 +25,10 @@ import type { SignUpInput } from './account/sign-up-input.js'
 import type { ClientAuth } from './client/client-auth.js'
 import type { ClientId } from './client/client-id.js'
 import type { ClientInfo } from './client/client-info.js'
-import { Client } from './client/client.js'
+import type { Client } from './client/client.js'
 import type { DeviceId } from './device/device-id.js'
 import type { DpopProof } from './dpop/dpop-proof.js'
-import { AccessDeniedError } from './errors/access-denied-error.js'
-import { AuthorizationError } from './errors/authorization-error.js'
-import { InvalidCredentialsError } from './errors/invalid-credentials-error.js'
-import { InvalidRequestError } from './errors/invalid-request-error.js'
-import { OAuthError } from './errors/oauth-error.js'
+import type { InvalidRequestError } from './errors/invalid-request-error.js'
 import type {
   HcaptchaClientTokens,
   HcaptchaConfig,
@@ -45,40 +41,35 @@ import type { AccessTokenPayload } from './signer/access-token-payload.js'
 import type { TokenClaims } from './token/token-claims.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
-export {
-  AccessDeniedError,
-  type AccessTokenPayload,
-  type Account,
-  AuthorizationError,
-  type Awaitable,
+export type {
+  AccessTokenPayload,
+  Account,
+  Awaitable,
   Client,
-  type ClientAuth,
-  type ClientId,
-  type ClientInfo,
-  type DeviceId,
-  type Did,
-  type DpopProof,
-  type HcaptchaClientTokens,
-  type HcaptchaConfig,
-  type HcaptchaVerifyResult,
-  InvalidCredentialsError,
-  InvalidRequestError,
-  type Jwks,
-  type OAuthAccessToken,
-  type OAuthAuthorizationDetails,
-  type OAuthAuthorizationRequestParameters,
-  type OAuthClientMetadata,
-  OAuthError,
-  type OAuthTokenResponse,
-  type OAuthTokenType,
-  type RequestMetadata,
-  type ResetPasswordConfirmInput,
-  type ResetPasswordRequestInput,
-  type SignInData,
-  type SignUpData,
-  type SignUpInput,
-  type TokenClaims,
-  type UpdateHandleData,
+  ClientAuth,
+  ClientId,
+  ClientInfo,
+  DeviceId,
+  Did,
+  DpopProof,
+  HcaptchaClientTokens,
+  HcaptchaConfig,
+  HcaptchaVerifyResult,
+  Jwks,
+  OAuthAccessToken,
+  OAuthAuthorizationDetails,
+  OAuthAuthorizationRequestParameters,
+  OAuthClientMetadata,
+  OAuthTokenResponse,
+  OAuthTokenType,
+  RequestMetadata,
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
+  SignInData,
+  SignUpData,
+  SignUpInput,
+  TokenClaims,
+  UpdateHandleData,
 }
 
 export type OAuthHooks = {

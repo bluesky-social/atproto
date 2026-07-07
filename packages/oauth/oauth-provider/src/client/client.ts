@@ -23,7 +23,6 @@ import {
   type OAuthClientMetadata,
   type OAuthRedirectUri,
 } from '@atproto/oauth-types'
-import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
@@ -33,6 +32,7 @@ import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import type { Awaitable } from '../lib/util/type.js'
+import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../oauth-constants.js'
 import type { ClientAuth } from './client-auth.js'
 import type { ClientId } from './client-id.js'
 import type { ClientInfo } from './client-info.js'

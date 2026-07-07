@@ -6,7 +6,7 @@ import type {
   RefreshToken,
   TokenData,
   TokenId,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
 import type { AccountDb, Token } from '../db/index.js'
 import { selectAccountQB } from './account.js'

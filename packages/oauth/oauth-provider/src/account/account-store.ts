@@ -17,42 +17,30 @@ import type {
 import type { OAuthScope } from '@atproto/oauth-types'
 import type { HandleString } from '@atproto/syntax'
 import type { ClientId } from '../client/client-id.js'
+import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
-import type { DeviceData } from '../device/device-store.js'
+import type { SessionId } from '../device/session-id.js'
+import type { HandleUnavailableReason } from '../errors/handle-unavailable-error.js'
 import type { HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { buildInterfaceChecker } from '../lib/util/type.js'
-import {
-  HandleUnavailableError,
-  InvalidCredentialsError,
-  InvalidRequestError,
-  SecondAuthenticationFactorRequiredError,
-} from '../oauth-errors.js'
 import type { InviteCode } from '../types/invite-code.js'
 import type { SignUpInput } from './sign-up-input.js'
 
 // Export all types needed to implement the AccountStore interface
-
-export * from '../client/client-id.js'
-export * from '../device/device-data.js'
-export * from '../device/device-id.js'
-export * from '../request/request-id.js'
-
 export type {
   Account,
+  ClientId,
+  DeviceData,
+  DeviceId,
   Did,
   HandleString,
+  HandleUnavailableReason,
   HcaptchaVerifyResult,
   InviteCode,
   OAuthScope,
+  SessionId,
   SignUpInput,
-}
-
-export {
-  HandleUnavailableError,
-  InvalidCredentialsError,
-  InvalidRequestError,
-  SecondAuthenticationFactorRequiredError,
 }
 
 export type ResetPasswordRequestInput = InitiatePasswordResetInput
@@ -197,8 +185,7 @@ export interface AccountStore {
   removeDeviceAccount(deviceId: DeviceId, did: Did): Awaitable<void>
 
   /**
-   * @returns **all** the device accounts that match the {@link requestId}
-   * criteria and given {@link filter}.
+   * @returns **all** the device accounts matching the given `filter`.
    */
   listDeviceAccounts(
     filter: { did: Did } | { deviceId: DeviceId },

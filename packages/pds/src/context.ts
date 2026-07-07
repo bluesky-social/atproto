@@ -14,8 +14,8 @@ import {
   JoseKey,
   LexResolver,
   OAuthProvider,
-  OAuthVerifier,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/provider'
+import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
 import type { BlobStore } from '@atproto/repo'
 import {
   createServiceAuthHeaders,

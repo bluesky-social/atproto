@@ -1,4 +1,4 @@
-import { InvalidRequestError } from '@atproto/oauth-provider'
+import { InvalidRequestError } from '@atproto/oauth-provider/errors'
 import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'

@@ -1,14 +1,13 @@
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
-import { type Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
+import type { Awaitable } from '../lib/util/type.js'
+import { buildInterfaceChecker } from '../lib/util/type.js'
 import type { Code } from './code.js'
 import type { RequestData } from './request-data.js'
 import type { RequestId } from './request-id.js'
 
 // Export all types needed to implement the RequestStore interface
-export * from './code.js'
-export * from './request-data.js'
-export * from './request-id.js'
-export type { Awaitable }
+export type * from './request-data.js'
+export type { Awaitable, RequestId }
 
 export type UpdateRequestData = Pick<
   Partial<RequestData>,

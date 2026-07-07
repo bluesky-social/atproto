@@ -1,4 +1,4 @@
-import type { RefreshToken } from '@atproto/oauth-provider'
+import type { RefreshToken } from '@atproto/oauth-provider/store'
 import type { AccountDb } from '../db/index.js'
 
 /**

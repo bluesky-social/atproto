@@ -10,6 +10,7 @@ import type { Code } from '../request/code.js'
 
 export type {
   ClientAuth,
+  ClientAuthLegacy,
   ClientId,
   Code,
   DeviceId,

@@ -4,7 +4,7 @@ import {
   CODE_CHALLENGE_REPLAY_TIMEFRAME,
   DPOP_NONCE_MAX_AGE,
   JAR_MAX_AGE,
-} from '../constants.js'
+} from '../oauth-constants.js'
 import type { ReplayStore } from './replay-store.js'
 
 const SECURITY_RATIO = 1.1 // 10% extra time for security

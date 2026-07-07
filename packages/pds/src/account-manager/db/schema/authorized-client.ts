@@ -1,14 +1,14 @@
 import type { Selectable } from 'kysely'
 import type {
   AuthorizedClientData,
+  ClientId,
   Did,
-  OAuthClientId,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import type { DateISO, JsonEncoded } from '../../../db/index.js'
 
 export interface AuthorizedClient {
   did: Did
-  clientId: OAuthClientId
+  clientId: ClientId
 
   createdAt: DateISO
   updatedAt: DateISO

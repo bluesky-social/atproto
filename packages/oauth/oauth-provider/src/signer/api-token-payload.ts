@@ -1,7 +1,7 @@
 import type { z } from 'zod'
 import { didSchema } from '@atproto/did'
 import { jwtPayloadSchema } from '@atproto/jwk'
-import { deviceIdSchema } from '../oauth-store.js'
+import { deviceIdSchema } from '../device/device-id.js'
 import { requestUriSchema } from '../request/request-uri.js'
 
 export const apiTokenPayloadSchema = jwtPayloadSchema

@@ -1,7 +1,7 @@
 import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
 import type { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
-import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
+import { LEXICON_REFRESH_FREQUENCY } from '../oauth-constants.js'
 import type { LexiconData, LexiconStore } from './lexicon-store.js'
 
 /**
