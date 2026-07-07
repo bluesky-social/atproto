@@ -73,7 +73,6 @@ export function fromBase64Ponyfill(
   ) as Uint8Array<ArrayBuffer>
 
   verifyBase64ForBytes(b64, bytes)
-
   return bytes
 }
 

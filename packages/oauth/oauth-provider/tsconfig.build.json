@@ -24,7 +24,6 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "verbatimModuleSyntax": true,
     // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
   },
