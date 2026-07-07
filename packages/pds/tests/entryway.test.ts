@@ -5,7 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import { isDidString } from '@atproto/lex'
-import { DidString } from '@atproto/syntax'
+import type { DidString } from '@atproto/syntax'
 import { MockEntryway } from './entryway-mock.js'
 
 describe('entryway', () => {

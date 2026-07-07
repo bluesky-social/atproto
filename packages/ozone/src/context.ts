@@ -1,62 +1,68 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import express from 'express'
+import type express from 'express'
 import { AtpAgent } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { AssignmentService } from './assignment/index.js'
 import { AuthVerifier } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import {
   CommunicationTemplateService,
-  CommunicationTemplateServiceCreator,
+  type CommunicationTemplateServiceCreator,
 } from './communication-service/template.js'
-import { OzoneConfig, OzoneSecrets } from './config/index.js'
+import type { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { BlobDiverter } from './daemon/blob-diverter.js'
 import { EventPusher } from './daemon/index.js'
 import { Database } from './db/index.js'
-import { ImageInvalidator } from './image-invalidator.js'
+import type { ImageInvalidator } from './image-invalidator.js'
 import {
   ModerationService,
-  ModerationServiceCreator,
+  type ModerationServiceCreator,
 } from './mod-service/index.js'
 import {
   ModerationServiceProfile,
-  ModerationServiceProfileCreator,
+  type ModerationServiceProfileCreator,
 } from './mod-service/profile.js'
-import { StrikeService, StrikeServiceCreator } from './mod-service/strike.js'
-import { QueueService, QueueServiceCreator } from './queue/service.js'
+import {
+  StrikeService,
+  type StrikeServiceCreator,
+} from './mod-service/strike.js'
+import { QueueService, type QueueServiceCreator } from './queue/service.js'
 import {
   ReportStatsService,
-  ReportStatsServiceCreator,
+  type ReportStatsServiceCreator,
 } from './report/stats.js'
 import {
   SafelinkRuleService,
-  SafelinkRuleServiceCreator,
+  type SafelinkRuleServiceCreator,
 } from './safelink/service.js'
 import {
   ScheduledActionService,
-  ScheduledActionServiceCreator,
+  type ScheduledActionServiceCreator,
 } from './scheduled-action/service.js'
 import { Sequencer } from './sequencer/sequencer.js'
-import { SetService, SetServiceCreator } from './set/service.js'
-import { SettingService, SettingServiceCreator } from './setting/service.js'
-import { TeamService, TeamServiceCreator } from './team/index.js'
+import { SetService, type SetServiceCreator } from './set/service.js'
+import {
+  SettingService,
+  type SettingServiceCreator,
+} from './setting/service.js'
+import { TeamService, type TeamServiceCreator } from './team/index.js'
 import {
   LABELER_HEADER_NAME,
-  ParsedLabelers,
+  type ParsedLabelers,
   defaultLabelerHeader,
   getSigningKeyId,
   parseLabelerHeader,
 } from './util.js'
 import {
   VerificationIssuer,
-  VerificationIssuerCreator,
+  type VerificationIssuerCreator,
 } from './verification/issuer.js'
 import {
   VerificationService,
-  VerificationServiceCreator,
+  type VerificationServiceCreator,
 } from './verification/service.js'
 
 export type AppContextOptions = {

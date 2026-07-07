@@ -1,18 +1,21 @@
 import { mapDefined } from '@atproto/common'
 import {
-  AtIdentifierString,
-  AtUriString,
-  DatetimeString,
-  DidString,
-  HandleString,
+  type AtIdentifierString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
   isDidIdentifier,
   isHandleIdentifier,
   normalizeHandle,
 } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb.js'
-import {
+import type {
+  ActivitySubscription,
+  VerificationMeta,
+} from '../proto/bsky_pb.js'
+import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
   NotificationDeclarationRecord,
@@ -21,7 +24,7 @@ import {
 } from '../views/types.js'
 import {
   HydrationMap,
-  RecordInfo,
+  type RecordInfo,
   isActivitySubscriptionEnabled,
   parseDate,
   parseRecord,

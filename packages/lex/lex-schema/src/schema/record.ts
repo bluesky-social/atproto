@@ -9,7 +9,7 @@ import {
   type RecordKeyValue,
   Schema,
   type Unknown$TypedObject,
-  ValidationContext,
+  type ValidationContext,
   type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react'
-import { Agent, Client } from '@atproto/lex'
+import { type Agent, Client } from '@atproto/lex'
 import { asDid } from '@atproto/oauth-client-browser'
 import { Layout } from '../components/Layout.tsx'
 import { Spinner } from '../components/Spinner.tsx'

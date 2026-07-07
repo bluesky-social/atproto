@@ -1,7 +1,6 @@
 import type { LexValue } from '@atproto/lex-data'
-import type { Infer, NsidString } from '../core.js'
-import { Schema } from '../core.js'
-import { ParamsSchema } from './params.js'
+import type { Infer, NsidString, Schema } from '../core.js'
+import type { ParamsSchema } from './params.js'
 
 /**
  * Infers the parameters type from a Subscription definition.

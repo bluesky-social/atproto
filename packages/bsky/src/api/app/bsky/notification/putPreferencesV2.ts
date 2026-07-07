@@ -1,9 +1,9 @@
 import assert from 'node:assert'
-import { Un$Typed } from '@atproto/lex'
-import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Un$Typed } from '@atproto/lex'
+import { type Server, UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb.js'
+import type { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../../stash.js'
 import { DEFAULT_CHAT_PREFERENCE, protobufToLex } from './util.js'
 

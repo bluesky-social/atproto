@@ -1,19 +1,19 @@
 import {
-  $Typed,
-  AtpAgent,
-  ChatBskyConvoDefs,
-  ComAtprotoAdminDefs,
-  ComAtprotoRepoStrongRef,
-  ToolsOzoneModerationDefs,
-  ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  type $Typed,
+  type AtpAgent,
+  type ChatBskyConvoDefs,
+  type ComAtprotoAdminDefs,
+  type ComAtprotoRepoStrongRef,
+  type ToolsOzoneModerationDefs,
+  type ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
-  ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
-  ToolsOzoneReportQueryReports as QueryModerationReports,
-  ToolsOzoneSettingRemoveOptions,
-  ToolsOzoneSettingUpsertOption,
+  type ToolsOzoneModerationQueryEvents as QueryModerationEvents,
+  type ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  type ToolsOzoneReportQueryReports as QueryModerationReports,
+  type ToolsOzoneSettingRemoveOptions,
+  type ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { TestOzone } from './ozone.js'
+import type { TestOzone } from './ozone.js'
 
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams

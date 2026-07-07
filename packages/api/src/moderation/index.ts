@@ -6,7 +6,7 @@ import { decidePost } from './subjects/post.js'
 import { decideProfile } from './subjects/profile.js'
 import { decideStatus } from './subjects/status.js'
 import { decideUserList } from './subjects/user-list.js'
-import {
+import type {
   ModerationOpts,
   ModerationSubjectFeedGenerator,
   ModerationSubjectNotification,

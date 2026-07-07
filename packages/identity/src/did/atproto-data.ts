@@ -7,7 +7,7 @@ import {
   getSigningKey,
 } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
-import { AtprotoData, DidDocument } from '../types.js'
+import type { AtprotoData, DidDocument } from '../types.js'
 
 export {
   getDid,

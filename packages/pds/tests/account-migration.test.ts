@@ -1,13 +1,13 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
+import { AtUri, type AtpAgent } from '@atproto/api'
 import {
-  SeedClient,
+  type SeedClient,
   TestNetworkNoAppView,
   TestPds,
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
-import { DidString } from '@atproto/syntax'
+import type { DidString } from '@atproto/syntax'
 
 describe('account migration', () => {
   let network: TestNetworkNoAppView

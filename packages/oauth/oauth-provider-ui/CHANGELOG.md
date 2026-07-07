@@ -1,5 +1,14 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.5
+
+### Patch Changes
+
+- [#5177](https://github.com/bluesky-social/atproto/pull/5177) [`54a8364`](https://github.com/bluesky-social/atproto/commit/54a836416064e9394d58d156a0618a5afc73934c) Thanks [@dolciss](https://github.com/dolciss)! - fix: add missing links
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.7.4
+
 ## 0.8.4
 
 ### Patch Changes

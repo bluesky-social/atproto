@@ -1,7 +1,7 @@
-import { check } from '@atproto/common-web'
+import type { check } from '@atproto/common-web'
 import { decode } from '@atproto/lex-cbor'
-import { Cid, LexMap } from '@atproto/lex-data'
-import { BlockMap } from './block-map.js'
+import type { Cid, LexMap } from '@atproto/lex-data'
+import type { BlockMap } from './block-map.js'
 import { MissingBlockError, UnexpectedObjectError } from './error.js'
 import { cborToLexRecord } from './util.js'
 

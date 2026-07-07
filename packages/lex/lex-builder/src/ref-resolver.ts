@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { join } from 'node:path'
-import { SourceFile } from 'ts-morph'
+import type { SourceFile } from 'ts-morph'
 import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import {
   isGlobalIdentifier,

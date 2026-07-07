@@ -1,5 +1,16 @@
 # @atproto/common
 
+## 0.7.0
+
+### Minor Changes
+
+- [#5162](https://github.com/bluesky-social/atproto/pull/5162) [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Language-tag string-format validation now has strict and lenient variants, matching the pattern already used for `at-uri` and `datetime`. `isLanguageString` (and the default `language` string-format verifier) is now strict and rejects BCP 47 tags that violate RFC 5646 §4.1 (e.g. duplicate variant subtags or duplicate extension singletons). Pass `{ strict: false }` to fall back to the lenient (syntax-only) verifier, `isLanguageStringLenient`.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.4
+
 ## 0.6.5
 
 ### Patch Changes

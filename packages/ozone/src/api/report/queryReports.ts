@@ -1,5 +1,5 @@
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 import { queryReports } from '../../mod-service/report.js'
 import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getPdsAccountInfos } from '../util.js'

@@ -1,8 +1,8 @@
 import getPort from 'get-port'
 import {
-  BsyncClient,
+  type BsyncClient,
   BsyncService,
-  Database,
+  type Database,
   authWithApiKey,
   createClient,
   envToCfg,

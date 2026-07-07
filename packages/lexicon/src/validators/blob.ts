@@ -1,5 +1,5 @@
 import { BlobRef } from '../blob-refs.js'
-import { Lexicons } from '../lexicons.js'
+import type { Lexicons } from '../lexicons.js'
 import type { LexUserType, ValidationResult } from '../types.js'
 import { ValidationError } from '../types.js'
 

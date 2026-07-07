@@ -1,15 +1,15 @@
-import { DidDocument } from '@atproto/did'
-import { Key } from '@atproto/jwk'
+import type { DidDocument } from '@atproto/did'
+import type { Key } from '@atproto/jwk'
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'
-import { InternalStateData, Session } from '@atproto/oauth-client'
-import {
+import type { InternalStateData, Session } from '@atproto/oauth-client'
+import type {
   OAuthAuthorizationServerMetadata,
   OAuthProtectedResourceMetadata,
 } from '@atproto/oauth-types'
-import { ResolvedHandle } from '@atproto-labs/handle-resolver'
-import { SimpleStore, Value } from '@atproto-labs/simple-store'
-import { DB, DBObjectStore } from './indexed-db/index.js'
-import { TupleUnion } from './util.js'
+import type { ResolvedHandle } from '@atproto-labs/handle-resolver'
+import type { SimpleStore, Value } from '@atproto-labs/simple-store'
+import { DB, type DBObjectStore } from './indexed-db/index.js'
+import type { TupleUnion } from './util.js'
 
 type Item<V> = {
   value: V

@@ -1,5 +1,12 @@
 # @atproto/ws-client
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112)]:
+  - @atproto/common@0.7.0
+
 ## 0.1.4
 
 ### Patch Changes

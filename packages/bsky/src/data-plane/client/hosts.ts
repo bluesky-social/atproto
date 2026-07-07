@@ -1,4 +1,4 @@
-import { Etcd3 } from 'etcd3'
+import type { Etcd3 } from 'etcd3'
 import { EtcdMap } from '../../etcd.js'
 import { dataplaneLogger as logger } from '../../logger.js'
 

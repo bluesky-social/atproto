@@ -3,10 +3,10 @@ import {
   type InferOutput,
   Schema,
   type Simplify,
-  ValidationContext,
+  type ValidationContext,
 } from '../core.js'
-import { DictSchema } from './dict.js'
-import { ObjectSchema } from './object.js'
+import type { DictSchema } from './dict.js'
+import type { ObjectSchema } from './object.js'
 
 /**
  * Type utility for computing the intersection of two object types.

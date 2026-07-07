@@ -2,7 +2,7 @@ import {
   type InferInput,
   type InferOutput,
   Schema,
-  ValidationContext,
+  type ValidationContext,
   type Validator,
   type WrappedValidator,
 } from '../core.js'

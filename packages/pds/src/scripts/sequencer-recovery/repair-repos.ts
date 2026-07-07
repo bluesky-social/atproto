@@ -1,9 +1,9 @@
-import { DidString } from '@atproto/syntax'
+import type { DidString } from '@atproto/syntax'
 import { parseRepoSeqRows } from '../../sequencer/index.js'
 import { rebuildRepo } from '../rebuild-repo.js'
 import {
-  RecovererContext,
-  RecovererContextNoDb,
+  type RecovererContext,
+  type RecovererContextNoDb,
   processSeqEvt,
 } from './recoverer.js'
 import { getRecoveryDbFromSequencerLoc } from './recovery-db.js'

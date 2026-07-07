@@ -1,7 +1,7 @@
 import './style.css'
 
 import { msg } from '@lingui/core/macro'
-import { ReactNode, StrictMode, useCallback, useState } from 'react'
+import { type ReactNode, StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'

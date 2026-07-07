@@ -1,7 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { FormField } from '#/components/forms/form-field'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type ResetPasswordRequestData = { email: string }
 

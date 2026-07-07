@@ -1,5 +1,5 @@
-import { Generated } from 'kysely'
-import { com } from '../../lexicons/index.js'
+import type { Generated } from 'kysely'
+import type { com } from '../../lexicons/index.js'
 
 export const actionTableName = 'moderation_action'
 export const actionSubjectBlobTableName = 'moderation_action_subject_blob'

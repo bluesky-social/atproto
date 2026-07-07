@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
 import { Button } from '#/components/forms/button.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'

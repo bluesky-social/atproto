@@ -3,12 +3,12 @@ import {
   ForbiddenError,
   InvalidRequestError,
 } from '@atproto/xrpc-server'
-import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 import { ids } from '../../lexicon/lexicons.js'
 import {
-  ModEventTag,
+  type ModEventTag,
   isAgeAssuranceEvent,
   isAgeAssuranceOverrideEvent,
   isAgeAssurancePurgeEvent,
@@ -24,11 +24,11 @@ import {
   isModEventUnmuteReporter,
   isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs.js'
-import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import type { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
-import { SettingService } from '../../setting/service.js'
+import type { SettingService } from '../../setting/service.js'
 import { TagService } from '../../tag-service/index.js'
 import { getTagForReport } from '../../tag-service/util.js'
 import { retryHttp } from '../../util.js'

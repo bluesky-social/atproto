@@ -1,13 +1,13 @@
 import events from 'node:events'
-import http from 'node:http'
+import type http from 'node:http'
 import express from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { TestBsky } from './bsky.js'
-import { TestBsync } from './bsync.js'
-import { TestOzone } from './ozone.js'
-import { TestPds } from './pds.js'
-import { TestPlc } from './plc.js'
+import type { TestBsky } from './bsky.js'
+import type { TestBsync } from './bsync.js'
+import type { TestOzone } from './ozone.js'
+import type { TestPds } from './pds.js'
+import type { TestPlc } from './plc.js'
 
 export class IntrospectServer {
   private terminator: httpTerminator.HttpTerminator

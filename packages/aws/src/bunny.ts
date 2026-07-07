@@ -1,5 +1,5 @@
 import { allFulfilled } from '@atproto/common'
-import { ImageInvalidator } from './types.js'
+import type { ImageInvalidator } from './types.js'
 
 export type BunnyConfig = {
   accessKey: string

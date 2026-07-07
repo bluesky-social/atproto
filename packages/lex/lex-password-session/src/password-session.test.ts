@@ -4,14 +4,14 @@ import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
 import { Client, XrpcAuthenticationError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
-import { Server, serve } from '@atproto/lex-server/nodejs'
+import { type Server, serve } from '@atproto/lex-server/nodejs'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { AuthVerifier } from './password-session-utils.test.js'
 import {
   PasswordSession,
-  PasswordSessionOptions,
-  SessionData,
+  type PasswordSessionOptions,
+  type SessionData,
 } from './password-session.js'
 
 const defaultOptions: Partial<PasswordSessionOptions> = {

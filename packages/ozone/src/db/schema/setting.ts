@@ -1,5 +1,5 @@
-import { Generated, GeneratedAlways } from 'kysely'
-import { Member } from './member.js'
+import type { Generated, GeneratedAlways } from 'kysely'
+import type { Member } from './member.js'
 
 export const settingTableName = 'setting'
 

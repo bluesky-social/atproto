@@ -6,7 +6,7 @@ import type {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
-import { WithOptionalLocale } from '#/lib/api.ts'
+import type { WithOptionalLocale } from '#/lib/api.ts'
 
 export function useResetPasswordRequest() {
   const api = useApi()

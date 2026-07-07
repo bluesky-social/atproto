@@ -1,6 +1,6 @@
 import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
-import { JSX, useRef } from 'react'
+import { type JSX, useRef } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Checkbox } from './checkbox.tsx'
 import { useFieldsetContext } from './fieldset-context.tsx'

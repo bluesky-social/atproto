@@ -1,5 +1,5 @@
 import type { NsidString } from '../core.js'
-import { Permission } from './permission.js'
+import type { Permission } from './permission.js'
 
 /**
  * Configuration options for a permission set.

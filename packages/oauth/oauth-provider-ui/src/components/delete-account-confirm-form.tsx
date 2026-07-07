@@ -5,7 +5,7 @@ import { InputPassword } from '#/components/forms/input-password.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import {
   SmartForm,
-  WrappedSmartFormProps,
+  type WrappedSmartFormProps,
 } from '#/components/forms/smart-form.tsx'
 
 export type DeleteAccountConfirmData = {

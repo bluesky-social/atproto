@@ -1,7 +1,7 @@
 import {
   IndentationText,
   Project,
-  SourceFile,
+  type SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { BlobRef, Client, getBlobCidString } from '@atproto/lex'
+import { type BlobRef, type Client, getBlobCidString } from '@atproto/lex'
 
 export function useGetBlob(
   client: Client,

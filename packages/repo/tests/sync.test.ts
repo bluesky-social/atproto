@@ -2,7 +2,7 @@ import * as crypto from '@atproto/crypto'
 import {
   CidSet,
   Repo,
-  RepoContents,
+  type RepoContents,
   RepoVerificationError,
   getAndParseRecord,
   readCar,

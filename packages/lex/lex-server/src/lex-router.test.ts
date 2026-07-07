@@ -1,4 +1,4 @@
-import { AddressInfo } from 'node:net'
+import type { AddressInfo } from 'node:net'
 import { scheduler } from 'node:timers/promises'
 import { describe, expect, it, vi } from 'vitest'
 import { WebSocket } from 'ws'
@@ -8,13 +8,13 @@ import { parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import { LexError, LexServerAuthError, LexServerError } from './errors.js'
 import {
-  ConnectionInfo,
-  HandlerErrorHook,
-  HealthCheckHandler,
+  type ConnectionInfo,
+  type HandlerErrorHook,
+  type HealthCheckHandler,
   LexRouter,
-  LexRouterAuth,
-  LexRouterMethodHandler,
-  SocketErrorHook,
+  type LexRouterAuth,
+  type LexRouterMethodHandler,
+  type SocketErrorHook,
 } from './lex-router.js'
 import { serve, upgradeWebSocket } from './nodejs.js'
 

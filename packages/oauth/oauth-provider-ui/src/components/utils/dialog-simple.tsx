@@ -1,8 +1,8 @@
 import { useLingui } from '@lingui/react/macro'
 import { XIcon } from '@phosphor-icons/react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { ReactNode } from 'react'
-import { Override } from '#/lib/util.ts'
+import type { ReactNode } from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type DialogSimpleProps = Override<
   Dialog.DialogProps,

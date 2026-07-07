@@ -1,19 +1,17 @@
 import type { LexValue } from '@atproto/lex-data'
 import { isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
-import type {
-  InferInput,
-  InferPayload,
-  Main,
-  NsidString,
-  Params,
-  Restricted,
-} from '@atproto/lex-schema'
 import {
-  Payload,
-  Procedure,
-  Query,
-  Subscription,
+  type InferInput,
+  type InferPayload,
+  type Main,
+  type NsidString,
+  type Params,
+  type Payload,
+  type Procedure,
+  type Query,
+  type Restricted,
+  type Subscription,
   getMain,
 } from '@atproto/lex-schema'
 import type { Agent, AgentOptions } from './agent.js'

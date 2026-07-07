@@ -1,9 +1,9 @@
-import { app } from '../../../../lexicons/index.js'
+import type { app } from '../../../../lexicons/index.js'
 import {
-  FilterableNotificationPreference,
+  type FilterableNotificationPreference,
   NotificationInclude,
-  NotificationPreference,
-  NotificationPreferences,
+  type NotificationPreference,
+  type NotificationPreferences,
 } from '../../../../proto/bsky_pb.js'
 import { AppPlatform } from '../../../../proto/courier_pb.js'
 

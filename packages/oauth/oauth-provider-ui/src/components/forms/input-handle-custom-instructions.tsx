@@ -1,6 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { JSX, useMemo, useState } from 'react'
-import { Override } from '#/lib/util.ts'
+import { type JSX, useMemo, useState } from 'react'
+import type { Override } from '#/lib/util.ts'
 import { CodeSnippet } from '../utils/code-snippet.tsx'
 import { LinkExternal } from '../utils/link-external.tsx'
 import { FormField } from './form-field.tsx'

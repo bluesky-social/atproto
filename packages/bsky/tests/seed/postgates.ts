@@ -1,4 +1,8 @@
-import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
+import type {
+  SeedClient,
+  TestNetwork,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
 import type { DidString, HandleString } from '@atproto/syntax'
 
 export type User = {

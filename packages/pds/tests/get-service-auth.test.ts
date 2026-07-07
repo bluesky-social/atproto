@@ -1,5 +1,5 @@
 import * as jose from 'jose'
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('com.atproto.server.getServiceAuth', () => {

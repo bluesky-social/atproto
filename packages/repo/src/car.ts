@@ -2,9 +2,9 @@ import { setImmediate } from 'node:timers/promises'
 // eslint-disable-next-line import/default, import/no-named-as-default-member
 import varint from 'varint'
 import * as cbor from '@atproto/lex-cbor'
-import { Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
+import { type Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
 import { BlockMap } from './block-map.js'
-import { CarBlock, schema } from './types.js'
+import { type CarBlock, schema } from './types.js'
 import { concatBytesAsync } from './util.js'
 
 export async function* writeCarStream(

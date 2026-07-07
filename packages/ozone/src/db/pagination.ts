@@ -1,6 +1,6 @@
-import { DynamicModule, SqlBool, sql } from 'kysely'
+import { type DynamicModule, type SqlBool, sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AnyQb, DbRef } from './types.js'
+import type { AnyQb, DbRef } from './types.js'
 
 export type Cursor = { primary: string; secondary: string }
 export type LabeledResult = {

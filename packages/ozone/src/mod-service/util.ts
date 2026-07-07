@@ -2,11 +2,11 @@ import net from 'node:net'
 import { sql } from 'kysely'
 import AtpAgent from '@atproto/api'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
-import { LabelRow } from '../db/schema/label.js'
-import { DbRef } from '../db/types.js'
-import { Label } from '../lexicon/types/com/atproto/label/defs.js'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
+import type { LabelRow } from '../db/schema/label.js'
+import type { DbRef } from '../db/types.js'
+import type { Label } from '../lexicon/types/com/atproto/label/defs.js'
 
 export type SignedLabel = Label & { sig: Uint8Array }
 

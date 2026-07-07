@@ -1,4 +1,4 @@
-import { Json } from '@atproto-labs/fetch'
+import type { Json } from '@atproto-labs/fetch'
 import { ifString } from './util.js'
 
 export class OAuthResponseError extends Error {

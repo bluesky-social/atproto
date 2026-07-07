@@ -1,6 +1,6 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetwork } from '@atproto/dev-env'

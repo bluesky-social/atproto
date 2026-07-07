@@ -1,14 +1,14 @@
-import { RequestListener, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
+import { type RequestListener, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { expect } from 'vitest'
 import {
-  $Typed,
+  type $Typed,
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedDefs,
-  AppBskyFeedGetPostThread,
+  type AppBskyFeedGetPostThread,
   AppBskyLabelerDefs,
   lexToJson,
 } from '@atproto/api'

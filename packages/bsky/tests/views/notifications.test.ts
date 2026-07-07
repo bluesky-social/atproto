@@ -8,17 +8,17 @@ import {
   vi,
 } from 'vitest'
 import {
-  AppBskyActorDefs,
-  AppBskyNotificationDeclaration,
-  AppBskyNotificationDefs,
-  AppBskyNotificationListActivitySubscriptions,
-  AppBskyNotificationListNotifications,
-  AppBskyNotificationPutPreferencesV2,
-  AtpAgent,
+  type AppBskyActorDefs,
+  type AppBskyNotificationDeclaration,
+  type AppBskyNotificationDefs,
+  type AppBskyNotificationListActivitySubscriptions,
+  type AppBskyNotificationListNotifications,
+  type AppBskyNotificationPutPreferencesV2,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
 import {
-  SeedClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
   seedThreadV2,

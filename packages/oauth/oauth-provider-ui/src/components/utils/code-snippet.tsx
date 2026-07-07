@@ -1,7 +1,7 @@
 import { clsx } from 'clsx'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import { ButtonCopy } from '#/components/forms/button-copy.tsx'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 
 export type CodeSnippetProps = Override<
   JSX.IntrinsicElements['div'],

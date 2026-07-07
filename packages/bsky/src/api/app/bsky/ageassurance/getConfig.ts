@@ -1,6 +1,6 @@
-import { Server } from '@atproto/xrpc-server'
+import type { Server } from '@atproto/xrpc-server'
 import { AGE_ASSURANCE_CONFIG } from '../../../../api/age-assurance/const.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

@@ -1,38 +1,38 @@
 import { TID } from '@atproto/common'
-import { RecordSchema } from '@atproto/lex'
+import type { RecordSchema } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
-  Cid,
-  LexMap,
-  TypedBlobRef,
-  TypedLexMap,
+  type Cid,
+  type LexMap,
+  type TypedBlobRef,
+  type TypedLexMap,
   cidForCbor,
   enumBlobRefs,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
 import {
-  RecordCreateOp,
-  RecordDeleteOp,
-  RecordUpdateOp,
-  RecordWriteOp,
+  type RecordCreateOp,
+  type RecordDeleteOp,
+  type RecordUpdateOp,
+  type RecordWriteOp,
   WriteOpAction,
 } from '@atproto/repo'
 import {
   AtUri,
-  DidString,
-  NsidString,
-  RecordKeyString,
+  type DidString,
+  type NsidString,
+  type RecordKeyString,
   isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import { app, chat, com } from '../lexicons/index.js'
 import {
   InvalidRecordError,
-  PreparedCreate,
-  PreparedDelete,
-  PreparedUpdate,
-  PreparedWrite,
-  ValidationStatus,
+  type PreparedCreate,
+  type PreparedDelete,
+  type PreparedUpdate,
+  type PreparedWrite,
+  type ValidationStatus,
 } from './types.js'
 
 // @TODO replace this with automatically fetched (& built) schemas

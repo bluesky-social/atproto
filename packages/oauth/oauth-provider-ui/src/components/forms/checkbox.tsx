@@ -1,6 +1,10 @@
 import { clsx } from 'clsx'
-import { ClassAttributes, InputHTMLAttributes, forwardRef } from 'react'
-import { Override } from '#/lib/util.ts'
+import {
+  type ClassAttributes,
+  type InputHTMLAttributes,
+  forwardRef,
+} from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type CheckboxProps = Override<
   InputHTMLAttributes<HTMLInputElement> & ClassAttributes<HTMLInputElement>,

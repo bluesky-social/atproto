@@ -1,8 +1,8 @@
 import { langLogger as log } from '../logger.js'
-import { ModerationService } from '../mod-service/index.js'
-import { ModSubject } from '../mod-service/subject.js'
-import { ModerationSubjectStatusRow } from '../mod-service/types.js'
-import { ContentTagger } from './content-tagger.js'
+import type { ModerationService } from '../mod-service/index.js'
+import type { ModSubject } from '../mod-service/subject.js'
+import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
+import type { ContentTagger } from './content-tagger.js'
 import { EmbedTagger } from './embed-tagger.js'
 import { LanguageTagger } from './language-tagger.js'
 

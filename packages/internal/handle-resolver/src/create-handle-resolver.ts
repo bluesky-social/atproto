@@ -1,8 +1,11 @@
-import { CachedHandleResolver, HandleCache } from './cached-handle-resolver.js'
-import { HandleResolver } from './types.js'
+import {
+  CachedHandleResolver,
+  type HandleCache,
+} from './cached-handle-resolver.js'
+import type { HandleResolver } from './types.js'
 import {
   XrpcHandleResolver,
-  XrpcHandleResolverOptions,
+  type XrpcHandleResolverOptions,
 } from './xrpc-handle-resolver.js'
 
 export type CreateHandleResolverOptions = {

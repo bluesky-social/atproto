@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AppBskyFeedSearchPosts, AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type AppBskyFeedSearchPosts, type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
-import { DatabaseSchema } from '../../src/index.js'
+import type { DatabaseSchema } from '../../src/index.js'
 
 const TAG_HIDE = 'hide'
 const TAG_ALWAYS_HIDE = 'always-hide'

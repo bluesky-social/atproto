@@ -82,7 +82,7 @@ msgstr "Un second facteur d'authentification est requis ({hint})"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "Un service contrôlé par <0>{domain}</0>"
 
-#: src/pages/account/(authenticated)/route.tsx:77
+#: src/pages/account/(authenticated)/route.tsx:83
 msgid "About"
 msgstr "À propos"
 
@@ -94,7 +94,7 @@ msgstr "Accéder à certaines parties de votre compte Bluesky"
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr "Accéder à certaines parties de votre compte Bluesky et lire vos préférences privées"
 
-#: src/pages/account/(authenticated)/route.tsx:56
+#: src/pages/account/(authenticated)/route.tsx:62
 #: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Compte utilisateur"
@@ -163,7 +163,7 @@ msgstr "Une erreur s'est produite"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
 
-#: src/components/utils/error-card.tsx:82
+#: src/components/utils/error-card.tsx:90
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
@@ -183,7 +183,7 @@ msgstr "N'importe quelle action"
 msgid "Any service"
 msgstr "N'importe quel service"
 
-#: src/pages/account/(authenticated)/route.tsx:70
+#: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr "Applications"
 
@@ -220,7 +220,7 @@ msgstr "Autorisé le {0}"
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
-#: src/components/forms/form-card.tsx:57
+#: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "Retour"
 
@@ -264,7 +264,7 @@ msgstr "Appeler"
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card.tsx:54
+#: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -319,7 +319,7 @@ msgstr "Choisissez un nouveau nom d'utilisateur par défaut."
 msgid "Choose a new email address to associate with your account."
 msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 
-#: src/components/sign-up-view.tsx:74
+#: src/components/sign-up-view.tsx:77
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
@@ -434,7 +434,7 @@ msgstr "Refuser l'accès"
 msgid "Details"
 msgstr "Détails"
 
-#: src/pages/account/(authenticated)/route.tsx:63
+#: src/pages/account/(authenticated)/route.tsx:69
 msgid "Devices"
 msgstr "Appareils"
 
@@ -455,14 +455,14 @@ msgstr "ex. <0>alice.com</0>"
 msgid "e.g. <0>alice{0}</0>"
 msgstr "ex. <0>alice{0}</0>"
 
-#: src/components/sign-up-credentials-form.tsx:56
+#: src/components/sign-up-credentials-form.tsx:59
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "Email"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:28
-#: src/components/reset-password-request-form.tsx:32
+#: src/components/reset-password-request-form.tsx:31
+#: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
 msgid "Email address"
 msgstr "Adresse email"
@@ -503,7 +503,7 @@ msgstr "Saisissez le domaine que vous souhaitez utiliser"
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
 
-#: src/components/reset-password-request-form.tsx:31
+#: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
@@ -524,7 +524,7 @@ msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "Toutes les applications actuellement connectées à votre compte, ainsi que les « mots de passe d'application » que vous avez créés, seront révoqués. Vous devrez vous reconnecter lors de la réactivation."
 
-#: src/components/sign-up-credentials-form.tsx:47
+#: src/components/sign-up-credentials-form.tsx:50
 msgid "example-com-xxxxx-xxxxx"
 msgstr "exemple-com-xxxxx-xxxxx"
 
@@ -654,7 +654,7 @@ msgstr "Aide"
 msgid "Hide"
 msgstr "Masquer"
 
-#: src/pages/account/(authenticated)/route.tsx:50
+#: src/pages/account/(authenticated)/route.tsx:56
 #: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "Accueil"
@@ -707,8 +707,8 @@ msgstr "Invalide"
 msgid "Invalid Handle"
 msgstr "Pseudo invalide"
 
-#: src/components/sign-up-credentials-form.tsx:41
-#: src/components/sign-up-credentials-form.tsx:46
+#: src/components/sign-up-credentials-form.tsx:44
+#: src/components/sign-up-credentials-form.tsx:49
 msgid "Invite code"
 msgstr "Code d'invitation"
 
@@ -776,7 +776,7 @@ msgstr "Rendez un fichier texte avec le contenu ci-dessous disponible à l'URL s
 msgid "Make visible"
 msgstr "Rendre visible"
 
-#: src/pages/account/(authenticated)/route.tsx:71
+#: src/pages/account/(authenticated)/route.tsx:77
 msgid "Manage applications that have access to your account"
 msgstr "Gérer les applications qui ont accès à votre compte"
 
@@ -784,11 +784,11 @@ msgstr "Gérer les applications qui ont accès à votre compte"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
 
-#: src/pages/account/(authenticated)/route.tsx:57
+#: src/pages/account/(authenticated)/route.tsx:63
 msgid "Manage your account"
 msgstr "Gérer votre compte"
 
-#: src/pages/account/(authenticated)/route.tsx:64
+#: src/pages/account/(authenticated)/route.tsx:70
 msgid "Manage your active sessions"
 msgstr "Gérer vos sessions actives"
 
@@ -813,7 +813,7 @@ msgstr "Manquant"
 msgid "Moderate"
 msgstr "Modéré"
 
-#: src/pages/account/(authenticated)/route.tsx:141
+#: src/pages/account/(authenticated)/route.tsx:147
 msgid "My Atmosphere Account"
 msgstr "Mon compte Atmosphère"
 
@@ -827,7 +827,7 @@ msgstr "Nom"
 msgid "New email address"
 msgstr "Nouvelle adresse email"
 
-#: src/components/reset-password-confirm-form.tsx:64
+#: src/components/reset-password-confirm-form.tsx:67
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
@@ -846,7 +846,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:68
+#: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -980,7 +980,7 @@ msgstr "Se souvenir de ce compte sur cet appareil"
 msgid "Repository"
 msgstr "Données publiques"
 
-#: src/components/reset-password-confirm-form.tsx:48
+#: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
 msgstr "Code de réinitialisation"
 
@@ -994,7 +994,7 @@ msgstr "Réinitialisez votre mot de passe"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:30
-#: src/components/utils/error-card.tsx:77
+#: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -1064,8 +1064,8 @@ msgstr "Déconnecter"
 msgid "Sign out"
 msgstr "Se déconnecter"
 
-#: src/components/sign-up-view.tsx:51
-#: src/components/sign-up-view.tsx:56
+#: src/components/sign-up-view.tsx:54
+#: src/components/sign-up-view.tsx:59
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Inscription"
@@ -1083,7 +1083,7 @@ msgstr "Étape {currentPosition} sur {count}"
 msgid "Strong"
 msgstr "Fort"
 
-#: src/components/forms/form-card.tsx:49
+#: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "Valider"
 
@@ -1296,7 +1296,7 @@ msgstr "Valide"
 msgid "Value"
 msgstr "Valeur"
 
-#: src/components/verify-email-confirm-form.tsx:24
+#: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr "Code de vérification"
@@ -1309,7 +1309,7 @@ msgstr "Email de vérification envoyé"
 msgid "Verification method"
 msgstr "Méthode de vérification"
 
-#: src/components/sign-up-hcaptcha-form.tsx:43
+#: src/components/sign-up-hcaptcha-form.tsx:46
 msgid "Verification successful!"
 msgstr "Vérification réussie !"
 
@@ -1327,7 +1327,7 @@ msgstr "Vérifier"
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
 
-#: src/components/sign-up-view.tsx:111
+#: src/components/sign-up-view.tsx:114
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
@@ -1347,7 +1347,7 @@ msgstr "veut vous identifier de manière unique via votre compte <0/>"
 msgid "Warning"
 msgstr "Avertissement"
 
-#: src/components/sign-up-view.tsx:52
+#: src/components/sign-up-view.tsx:55
 msgid "We're so excited to have you join us!"
 msgstr "Nous sommes ravis de vous accueillir parmi nous !"
 
@@ -1367,7 +1367,7 @@ msgstr "Heureux de vous revoir!"
 msgid "What does this mean?"
 msgstr "Qu'est-ce que ça signifie ?"
 
-#: src/pages/account/(authenticated)/route.tsx:79
+#: src/pages/account/(authenticated)/route.tsx:85
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
@@ -1399,7 +1399,7 @@ msgstr "Redirection en cours..."
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Vous pouvez également désactiver temporairement votre compte. Votre profil, vos publications, vos feeds et vos listes ne seront plus visibles par les autres utilisateurs de Bluesky. Vous pouvez réactiver votre compte à tout moment en vous reconnectant."
 
-#: src/components/sign-up-handle-form.tsx:41
+#: src/components/sign-up-handle-form.tsx:44
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 
@@ -1424,7 +1424,7 @@ msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre 
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
-#: src/components/sign-up-view.tsx:94
+#: src/components/sign-up-view.tsx:97
 msgid "Your account"
 msgstr "Votre compte"
 

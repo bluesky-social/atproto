@@ -2,14 +2,17 @@ import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
 import {
-  BsyncClient,
+  type BsyncClient,
   BsyncService,
-  Database,
+  type Database,
   authWithApiKey,
   createClient,
   envToCfg,
 } from '../src/index.js'
-import { MuteOperation, MuteOperation_Type } from '../src/proto/bsync_pb.js'
+import {
+  type MuteOperation,
+  MuteOperation_Type,
+} from '../src/proto/bsync_pb.js'
 
 describe('mutes', () => {
   let bsync: BsyncService

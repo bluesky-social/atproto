@@ -1,4 +1,4 @@
-import { Lexicons } from '../lexicons.js'
+import type { Lexicons } from '../lexicons.js'
 import { ValidationError, isObj } from '../types.js'
 import type { LexXrpcParameters, ValidationResult } from '../types.js'
 import { array } from './complex.js'

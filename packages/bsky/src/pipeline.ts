@@ -1,4 +1,4 @@
-import { HydrationState } from './hydration/hydrator.js'
+import type { HydrationState } from './hydration/hydrator.js'
 
 export function createPipeline<Params, Skeleton, View, Context>(
   skeletonFn: SkeletonFn<Context, Params, Skeleton>,

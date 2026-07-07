@@ -1,6 +1,6 @@
 import * as jose from 'jose'
 import { request as undiciRequest } from 'undici'
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
 

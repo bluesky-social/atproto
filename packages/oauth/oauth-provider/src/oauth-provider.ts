@@ -107,11 +107,11 @@ import { isPARResponseError } from './types/par-response-error.js'
 
 // Re-exports dependencies that are part of the public API of this package, so
 // that consumers don't have to install them separately.
+export { safeFetchWrap } from '@atproto-labs/fetch-node'
 export type * from '@atproto/jwk'
 export { Keyset } from '@atproto/jwk'
 export type * from '@atproto/jwk-jose'
 export { JoseKey } from '@atproto/jwk-jose'
-export { safeFetchWrap } from '@atproto-labs/fetch-node'
 export type * from '@atproto/lex-resolver'
 export { LexResolver } from '@atproto/lex-resolver'
 

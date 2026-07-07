@@ -1,5 +1,5 @@
 import { DBIndex } from './db-index.js'
-import { ObjectStoreSchema } from './schema.js'
+import type { ObjectStoreSchema } from './schema.js'
 import { promisify } from './util.js'
 
 export class DBObjectStore<Schema extends ObjectStoreSchema> {

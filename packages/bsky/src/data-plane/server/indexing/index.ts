@@ -1,21 +1,21 @@
-import { Selectable, sql } from 'kysely'
+import { type Selectable, sql } from 'kysely'
 import { DAY, HOUR } from '@atproto/common'
-import { IdResolver, getPds } from '@atproto/identity'
-import { Cid, l, parseCid, xrpc, xrpcSafe } from '@atproto/lex'
+import { type IdResolver, getPds } from '@atproto/identity'
+import { type Cid, l, parseCid, xrpc, xrpcSafe } from '@atproto/lex'
 import {
-  VerifiedRepo,
+  type VerifiedRepo,
   WriteOpAction,
   getAndParseRecord,
   readCarWithRoot,
   verifyRepo,
 } from '@atproto/repo'
-import { AtUri, DidString } from '@atproto/syntax'
+import { AtUri, type DidString } from '@atproto/syntax'
 import { com } from '../../../lexicons/index.js'
 import { subLogger } from '../../../logger.js'
 import { retryXrpc } from '../../../util/retry.js'
-import { BackgroundQueue } from '../background.js'
-import { Database } from '../db/index.js'
-import { Actor } from '../db/tables/actor.js'
+import type { BackgroundQueue } from '../background.js'
+import type { Database } from '../db/index.js'
+import type { Actor } from '../db/tables/actor.js'
 import * as Block from './plugins/block.js'
 import * as ChatDeclaration from './plugins/chat-declaration.js'
 import * as FeedGenerator from './plugins/feed-generator.js'

@@ -1,11 +1,11 @@
 import { jwkAlgorithms } from './alg.js'
 import {
-  Jwk,
-  KeyUsage,
+  type Jwk,
+  type KeyUsage,
   PUBLIC_KEY_USAGE,
-  PrivateJwk,
-  PublicJwk,
-  PublicKeyUsage,
+  type PrivateJwk,
+  type PublicJwk,
+  type PublicKeyUsage,
   hasSharedSecretJwk,
   isEncKeyUsage,
   isPrivateJwk,
@@ -14,8 +14,8 @@ import {
   jwkPubSchema,
   jwkSchema,
 } from './jwk.js'
-import { VerifyOptions, VerifyResult } from './jwt-verify.js'
-import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
+import type { VerifyOptions, VerifyResult } from './jwt-verify.js'
+import type { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
 export type KeyMatchOptions = {

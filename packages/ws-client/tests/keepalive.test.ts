@@ -1,6 +1,6 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
+import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { WebSocketServer } from 'ws'

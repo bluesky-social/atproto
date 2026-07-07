@@ -1,4 +1,4 @@
-import { SeedClient } from '@atproto/dev-env'
+import type { SeedClient } from '@atproto/dev-env'
 
 export default async function usersSeed(
   sc: SeedClient,

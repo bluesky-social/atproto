@@ -1,10 +1,10 @@
-import { Selectable } from 'kysely'
-import {
+import type { Selectable } from 'kysely'
+import type {
   AuthorizedClientData,
   ClientId,
   Did,
 } from '@atproto/oauth-provider/store'
-import { DateISO, JsonEncoded } from '../../../db/index.js'
+import type { DateISO, JsonEncoded } from '../../../db/index.js'
 
 export interface AuthorizedClient {
   did: Did

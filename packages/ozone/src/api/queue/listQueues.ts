@@ -1,5 +1,5 @@
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.queue.listQueues({

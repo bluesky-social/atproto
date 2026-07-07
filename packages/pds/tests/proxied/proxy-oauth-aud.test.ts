@@ -1,15 +1,19 @@
 import { once } from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
+import type { Keypair } from '@atproto/crypto'
+import {
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
 import { ScopePermissions } from '@atproto/oauth-scopes'
-import { DidString } from '@atproto/syntax'
-import { AppContext } from '../../src/context.js'
+import type { DidString } from '@atproto/syntax'
+import type { AppContext } from '../../src/context.js'
 import { proxyHandler } from '../../src/pipethrough.js'
 
 // Regression test for the OAuth service-proxying audience fix.

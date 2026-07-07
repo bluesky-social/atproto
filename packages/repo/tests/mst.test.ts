@@ -1,6 +1,11 @@
 import assert from 'node:assert'
-import { Cid, parseCid } from '@atproto/lex-data'
-import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff.js'
+import { type Cid, parseCid } from '@atproto/lex-data'
+import {
+  type DataAdd,
+  type DataDelete,
+  DataDiff,
+  type DataUpdate,
+} from '../src/data-diff.js'
 import { MST } from '../src/mst/index.js'
 import { InvalidMstKeyError, countPrefixLen } from '../src/mst/util.js'
 import { MemoryBlockstore } from '../src/storage/index.js'

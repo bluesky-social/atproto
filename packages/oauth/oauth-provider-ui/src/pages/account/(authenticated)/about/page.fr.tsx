@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { CustomizationName } from '#/components/customization-name.tsx'
 import { AccountIdentifier } from '#/components/utils/account-identifier'
 import { LinkExternal } from '#/components/utils/link-external'

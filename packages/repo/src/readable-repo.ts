@@ -1,10 +1,10 @@
-import { Cid, LexMap } from '@atproto/lex-data'
+import type { Cid, LexMap } from '@atproto/lex-data'
 import { MissingBlocksError } from './error.js'
 import log from './logger.js'
 import { MST } from './mst/index.js'
 import * as parse from './parse.js'
-import { ReadableBlockstore } from './storage/index.js'
-import { Commit, RepoContents, def } from './types.js'
+import type { ReadableBlockstore } from './storage/index.js'
+import { type Commit, type RepoContents, def } from './types.js'
 import * as util from './util.js'
 
 type Params = {

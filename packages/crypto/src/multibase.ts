@@ -1,5 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
-import { SupportedEncodings } from 'uint8arrays/to-string'
+import type { SupportedEncodings } from 'uint8arrays/to-string'
 
 export const multibaseToBytes = (mb: string): Uint8Array => {
   const base = mb[0]

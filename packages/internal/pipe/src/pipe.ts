@@ -1,4 +1,4 @@
-import { Fn, Transformer } from './type.js'
+import type { Fn, Transformer } from './type.js'
 
 type PipelineArgs<T> = T extends [
   Fn<infer A extends readonly unknown[], any>,

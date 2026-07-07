@@ -1,19 +1,19 @@
 import { TID } from '@atproto/common-web'
-import * as crypto from '@atproto/crypto'
+import type * as crypto from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
-import { Cid, cidForCbor } from '@atproto/lex-data'
+import { type Cid, cidForCbor } from '@atproto/lex-data'
 import { BlockMap } from './block-map.js'
 import { CidSet } from './cid-set.js'
 import { DataDiff } from './data-diff.js'
 import log from './logger.js'
 import { MST } from './mst/index.js'
 import { ReadableRepo } from './readable-repo.js'
-import { RepoStorage } from './storage/index.js'
+import type { RepoStorage } from './storage/index.js'
 import {
-  Commit,
-  CommitData,
-  RecordCreateOp,
-  RecordWriteOp,
+  type Commit,
+  type CommitData,
+  type RecordCreateOp,
+  type RecordWriteOp,
   WriteOpAction,
   def,
 } from './types.js'

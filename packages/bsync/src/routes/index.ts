@@ -1,6 +1,6 @@
-import { ConnectRouter } from '@connectrpc/connect'
+import type { ConnectRouter } from '@connectrpc/connect'
 import { sql } from 'kysely'
-import { AppContext } from '../context.js'
+import type { AppContext } from '../context.js'
 import { Service } from '../proto/bsync_connect.js'
 import addMuteOperation from './add-mute-operation.js'
 import addNotifOperation from './add-notif-operation.js'

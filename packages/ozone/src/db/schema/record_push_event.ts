@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import type { Generated } from 'kysely'
 
 export const eventTableName = 'record_push_event'
 

@@ -1,7 +1,7 @@
 import type * as Result from './result.js'
 import { LexValidationError } from './validation-error.js'
 import {
-  Issue,
+  type Issue,
   IssueInvalidFormat,
   IssueInvalidType,
   IssueInvalidValue,

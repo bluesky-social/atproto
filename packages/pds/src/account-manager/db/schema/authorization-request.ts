@@ -1,5 +1,5 @@
-import { Selectable } from 'kysely'
-import {
+import type { Selectable } from 'kysely'
+import type {
   ClientAuth,
   ClientAuthLegacy,
   ClientId,
@@ -9,7 +9,7 @@ import {
   OAuthAuthorizationRequestParameters,
   RequestId,
 } from '@atproto/oauth-provider/store'
-import { DateISO, JsonEncoded } from '../../../db/index.js'
+import type { DateISO, JsonEncoded } from '../../../db/index.js'
 
 export interface AuthorizationRequest {
   id: RequestId

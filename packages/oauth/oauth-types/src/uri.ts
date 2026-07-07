@@ -1,4 +1,4 @@
-import { TypeOf, ZodIssueCode, z } from 'zod'
+import { type TypeOf, ZodIssueCode, z } from 'zod'
 import {
   canParseUrl,
   isHostnameIP,

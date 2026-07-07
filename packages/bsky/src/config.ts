@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
-import { DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger.js'
 
 type LiveNowConfig = {

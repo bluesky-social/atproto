@@ -3,10 +3,10 @@ import { TicketIcon } from '@phosphor-icons/react'
 import { composeEventHandlers } from '@radix-ui/primitive'
 import { useRef } from 'react'
 import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { ButtonRequestCode } from './button-request-code.tsx'
 import { useFieldsetContext } from './fieldset-context.tsx'
-import { InputText, InputTextProps } from './input-text.tsx'
+import { InputText, type InputTextProps } from './input-text.tsx'
 
 export type InputTokenProps = Override<
   Omit<

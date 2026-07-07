@@ -5,7 +5,7 @@ import type {
   DidString,
 } from '@atproto/oauth-provider-api'
 import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
-import { OAuthClientId, OAuthClientMetadata } from '@atproto/oauth-types'
+import type { OAuthClientId, OAuthClientMetadata } from '@atproto/oauth-types'
 
 export const currentDeviceId = 'device1' // Simulate that this device is "device1"
 

@@ -6,11 +6,11 @@ import {
   AppBskyEmbedImages,
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
-  AtpAgent,
+  type AtpAgent,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
+import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
-import { app } from '../../src/lexicons/index.js'
+import type { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic.js'
 
 describe('proxy read after write', () => {

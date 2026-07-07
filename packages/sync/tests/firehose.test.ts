@@ -1,16 +1,16 @@
 import { createDeferrable, wait } from '@atproto/common'
 import {
-  SeedClient,
+  type SeedClient,
   TestNetworkNoAppView,
   mockResolvers,
 } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
-import { DidString } from '@atproto/syntax'
+import type { DidString } from '@atproto/syntax'
 import {
-  Create,
-  Event,
+  type Create,
+  type Event,
   Firehose,
-  FirehoseOptions,
+  type FirehoseOptions,
   MemoryRunner,
 } from '../src/index.js'
 

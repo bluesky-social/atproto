@@ -1,4 +1,4 @@
-import { GeneratedAlways, Selectable } from 'kysely'
+import type { GeneratedAlways, Selectable } from 'kysely'
 
 export const tableName = 'record_events_stats'
 

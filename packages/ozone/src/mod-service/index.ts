@@ -1,30 +1,30 @@
-import { Expression, Insertable, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
-import { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
+import { type Expression, type Insertable, sql } from 'kysely'
+import type { CID } from 'multiformats/cid'
+import type { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getReviewState } from '../api/util.js'
-import { BackgroundQueue } from '../background.js'
-import { OzoneConfig } from '../config/index.js'
-import { EventPusher } from '../daemon/index.js'
-import { Database } from '../db/index.js'
+import type { BackgroundQueue } from '../background.js'
+import type { OzoneConfig } from '../config/index.js'
+import type { EventPusher } from '../daemon/index.js'
+import type { Database } from '../db/index.js'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination.js'
-import { BlobPushEvent } from '../db/schema/blob_push_event.js'
+import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import { LabelChannel } from '../db/schema/label.js'
-import { ModerationEvent } from '../db/schema/moderation_event.js'
+import type { ModerationEvent } from '../db/schema/moderation_event.js'
 import { jsonb } from '../db/types.js'
-import { ImageInvalidator } from '../image-invalidator.js'
+import type { ImageInvalidator } from '../image-invalidator.js'
 import { ids } from '../lexicon/lexicons.js'
-import {
+import type {
   RepoBlobRef,
   RepoRef,
 } from '../lexicon/types/com/atproto/admin/defs.js'
-import { Label } from '../lexicon/types/com/atproto/label/defs.js'
-import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
-import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef.js'
+import type { Label } from '../lexicon/types/com/atproto/label/defs.js'
+import type { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
+import type { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef.js'
 import {
   REVIEWESCALATED,
   REVIEWOPEN,
@@ -46,23 +46,23 @@ import {
   isRecordEvent,
   isScheduleTakedownEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
-import { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses.js'
+import type { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses.js'
 import { httpLogger as log } from '../logger.js'
-import { LABELER_HEADER_NAME, ParsedLabelers } from '../util.js'
+import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
 import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
   moderationSubjectStatusQueryBuilder,
 } from './status.js'
-import { StrikeService, StrikeServiceCreator } from './strike.js'
+import type { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
-  ModSubject,
-  RecordSubject,
-  RepoSubject,
+  type ModSubject,
+  type RecordSubject,
+  type RepoSubject,
   subjectFromStatusRow,
 } from './subject.js'
-import {
+import type {
   ModEventType,
   ModerationEventRow,
   ModerationEventRowWithHandle,
@@ -79,7 +79,7 @@ import {
   getPdsAgentForRepo,
   signLabel,
 } from './util.js'
-import { AuthHeaders, ModerationViews } from './views.js'
+import { type AuthHeaders, ModerationViews } from './views.js'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 

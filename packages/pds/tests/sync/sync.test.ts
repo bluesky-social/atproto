@@ -1,13 +1,13 @@
 import assert from 'node:assert'
 import { TID } from '@atproto/common'
-import { Keypair, randomStr } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { Client, isNsidString, isRecordKeyString } from '@atproto/lex'
+import { type Keypair, randomStr } from '@atproto/crypto'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type Client, isNsidString, isRecordKeyString } from '@atproto/lex'
 import { cidForLex } from '@atproto/lex-cbor'
-import { Cid } from '@atproto/lex-data'
+import type { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
-import { AtUri, DidString, NsidString } from '@atproto/syntax'
+import type { AtUri, DidString, NsidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons.js'
 
 describe('repo sync', () => {

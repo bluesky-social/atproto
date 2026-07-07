@@ -1,9 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
-import { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
-import { Member } from '../lexicon/types/tools/ozone/team/defs.js'
+import type { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
+import type { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
+import type { Member } from '../lexicon/types/tools/ozone/team/defs.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,

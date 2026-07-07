@@ -1,5 +1,5 @@
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
-import { CallOptions, QueryParams } from './types.js'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
+import type { CallOptions, QueryParams } from './types.js'
 import { combineHeaders } from './util.js'
 import { XrpcClient } from './xrpc-client.js'
 
