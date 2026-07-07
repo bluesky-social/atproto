@@ -80,8 +80,11 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=./tracer.ts", "api.ts"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=@atproto/bsky/telemetry", "api.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"
 LABEL org.opencontainers.image.licenses=MIT
+
+# Allows consumer to distinguish pre-otel builds
+LABEL social.bsky.appview.telemetry="otel"

@@ -9,6 +9,7 @@ import {
   type ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
+import { tracingInterceptor } from './otel.js'
 import { Service } from './proto/bsync_connect.js'
 
 export type BsyncClient = PromiseClient<typeof Service>
@@ -16,7 +17,13 @@ export type BsyncClient = PromiseClient<typeof Service>
 export const createBsyncClient = (
   opts: ConnectTransportOptions,
 ): BsyncClient => {
-  const transport = createConnectTransport(opts)
+  const transport = createConnectTransport({
+    ...opts,
+    interceptors: [
+      ...(opts.interceptors ?? []),
+      tracingInterceptor({ peerService: 'bsync' }),
+    ],
+  })
   return createPromiseClient(Service, transport)
 }
 

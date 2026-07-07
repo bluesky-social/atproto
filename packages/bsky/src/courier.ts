@@ -9,6 +9,7 @@ import {
   type ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
+import { tracingInterceptor } from './otel.js'
 import { Service } from './proto/courier_connect.js'
 
 export type CourierClient = PromiseClient<typeof Service>
@@ -16,7 +17,13 @@ export type CourierClient = PromiseClient<typeof Service>
 export const createCourierClient = (
   opts: ConnectTransportOptions,
 ): CourierClient => {
-  const transport = createConnectTransport(opts)
+  const transport = createConnectTransport({
+    ...opts,
+    interceptors: [
+      ...(opts.interceptors ?? []),
+      tracingInterceptor({ peerService: 'courier' }),
+    ],
+  })
   return createPromiseClient(Service, transport)
 }
 

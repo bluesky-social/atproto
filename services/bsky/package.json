@@ -6,6 +6,6 @@
   "dependencies": {
     "@atproto/bsky": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "dd-trace": "^5.103.0"
+    "@opentelemetry/instrumentation": "^0.219.0"
   }
 }
