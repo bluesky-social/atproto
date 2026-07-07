@@ -453,9 +453,6 @@ importers:
       '@opentelemetry/instrumentation-http':
         specifier: ^0.219.0
         version: 0.219.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-ioredis':
-        specifier: ^0.67.0
-        version: 0.67.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/instrumentation-pino':
         specifier: ^0.65.0
         version: 0.65.0(@opentelemetry/api@1.9.1)

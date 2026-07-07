@@ -10,7 +10,6 @@ import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express'
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
-import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runtime-node'
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
@@ -90,7 +89,6 @@ if (enabled) {
           if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
         },
       }),
-      new IORedisInstrumentation(),
       new PinoInstrumentation(),
     ],
   })
