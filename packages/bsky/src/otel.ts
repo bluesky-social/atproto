@@ -1,9 +1,9 @@
-import { Code, ConnectError, Interceptor } from '@connectrpc/connect'
+import { Code, ConnectError, type Interceptor } from '@connectrpc/connect'
 import {
-  Attributes,
+  type Attributes,
   SpanKind,
   SpanStatusCode,
-  TextMapSetter,
+  type TextMapSetter,
   context,
   propagation,
   trace,
@@ -11,7 +11,9 @@ import {
 
 // OpenTelemetry RPC semantic convention attribute names, inlined to keep this
 // module's runtime dependencies limited to @opentelemetry/api (so it stays a
-// cheap no-op when no SDK is registered).
+// cheap no-op when no SDK is registered). Definitions:
+// https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/rpc/rpc-spans.md
+// https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/registry/attributes/rpc.md
 const ATTR_RPC_SYSTEM = 'rpc.system'
 const ATTR_RPC_SERVICE = 'rpc.service'
 const ATTR_RPC_METHOD = 'rpc.method'
@@ -26,9 +28,19 @@ const headersSetter: TextMapSetter<Headers> = {
 }
 
 export type TracingInterceptorOptions = {
-  /** 'grpc' for createGrpcTransport, 'connect_rpc' for createConnectTransport */
+  /**
+   * The wire protocol of the transport this interceptor is attached to:
+   * 'grpc' for createGrpcTransport, 'connect_rpc' for createConnectTransport.
+   * Determines how errors are recorded (numeric "rpc.grpc.status_code" vs
+   * string "rpc.connect_rpc.error_code") and lets tracing backends group and
+   * render calls by protocol.
+   */
   rpcSystem?: 'grpc' | 'connect_rpc'
-  /** Logical name of the remote service, e.g. 'dataplane-bsky' */
+  /**
+   * Logical name of the remote service (the "peer"), e.g. 'dataplane-bsky'.
+   * Used by tracing backends to label the callee in service maps when the
+   * remote service does not report its own telemetry.
+   */
   peerService?: string
 }
 
