@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -5,6 +6,7 @@ import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetwork } from '@atproto/dev-env'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
+import { MailCatcher } from './_mailcatcher.js'
 import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {
@@ -388,5 +390,144 @@ describe('oauth', () => {
     await page.clickOnText('Sign out')
 
     await page.waitForNetworkIdle()
+  })
+
+  describe('with 2FA', () => {
+    let mailCatcher: MailCatcher
+    let jane
+
+    beforeAll(async () => {
+      mailCatcher = new MailCatcher(network.pds.ctx.mailer)
+
+      const sc = network.getSeedClient()
+
+      jane = await sc.createAccount('jane', {
+        email: 'jane@test.com',
+        handle: 'jane.test',
+        password: 'jane-pass',
+      })
+
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
+
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
+      )
+
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+        email: jane.email,
+      })
+    })
+
+    afterAll(async () => {
+      await mailCatcher.restore()
+    })
+
+    it('Allows to sign-in through OAuth', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'jane.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'jane-pass')
+
+      const submit = async () => {
+        await page.clickOnText('Se connecter')
+        await page.waitForNetworkIdle()
+      }
+
+      const { mail } = await mailCatcher.getMailFrom(submit())
+      const token = mailCatcher.getTokenFromMail(mail)
+
+      // Make sure the 2FA field appears:
+      await page.ensureTextVisibility('Confirmation 2FA', 'label')
+      await page.ensureTextVisibility(
+        'Consultez la boîte de réception de j***e@t***m pour y trouver un code de connexion, et saisissez-le ici.',
+        'p',
+      )
+
+      assert(token, "Expected email confirmation token for Jane's login")
+      await page.typeInInput('otp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
+
+      await page.navigationClick('Autoriser')
+
+      await page.assertTitle('OAuth Client Example')
+
+      await page.ensureTextVisibility('Token info', 'h2')
+
+      await page.clickOnAriaLabel('User menu')
+
+      await page.clickOnText('Sign out')
+
+      await page.waitForNetworkIdle()
+    })
+
+    it('Prevents to sign-in through OAuth with invalid OTP', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'jane.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'jane-pass')
+
+      const submit = async () => {
+        await page.clickOnText('Se connecter')
+        await page.waitForNetworkIdle()
+      }
+
+      const { mail } = await mailCatcher.getMailFrom(submit())
+      const token = mailCatcher.getTokenFromMail(mail)
+
+      // Make sure the 2FA field appears:
+      await page.ensureTextVisibility('Confirmation 2FA', 'label')
+      await page.ensureTextVisibility(
+        'Consultez la boîte de réception de j***e@t***m pour y trouver un code de connexion, et saisissez-le ici.',
+        'p',
+      )
+
+      assert(token, 'Ensure we generated a token')
+      assert(
+        token !== 'AAAAA-AAAAA',
+        "Ensure generated token isn't our test token",
+      )
+      await page.typeInInput('otp', 'AAAAA-AAAAA')
+
+      await page.clickOnText('Confirmer')
+
+      await page.ensureTextVisibility(
+        'Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer.',
+        'p',
+      )
+
+      await page.typeInInput('otp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
+    })
   })
 })

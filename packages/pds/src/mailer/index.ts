@@ -1,5 +1,6 @@
 import type { SendMailOptions, Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
+import type { HandleString } from '@atproto/syntax'
 import type { BrandingConfig, EmailConfig } from '../config/index.js'
 import { mailerLogger } from '../logger.js'
 import * as templates from './templates.js'
@@ -20,11 +21,13 @@ export class ServerMailer {
     public readonly transporter: Transporter,
     private readonly email: EmailConfig | null,
     branding: BrandingConfig,
+    oauthIssuer: string,
   ) {
     transporter.use('compile', htmlToText())
 
     this.config = {
       serviceName: branding.name ?? 'Bluesky',
+      oauthIssuer: oauthIssuer,
       homeUrl:
         branding.links?.find((link) => link.rel === 'canonical')?.href ??
         DEFAULT_HOME_URL,
@@ -77,6 +80,27 @@ export class ServerMailer {
       subject: 'Email Update Requested',
       ...mailOpts,
     })
+  }
+
+  async sendSignInAuthFactor(
+    params: { token: string; handle: HandleString | null; locale?: string },
+    mailOpts: SendMailOptions,
+  ) {
+    // @TODO (later) handle locale in the template
+    await this.sendTemplate(
+      'signInAuthFactor',
+      {
+        ...params,
+        changePasswordUrl: new URL(
+          '/.well-known/change-password',
+          this.config.oauthIssuer,
+        ).toString(),
+      },
+      {
+        subject: 'Sign-in Confirmation',
+        ...mailOpts,
+      },
+    )
   }
 
   async sendPlcOperation(params: { token: string }, mailOpts: SendMailOptions) {

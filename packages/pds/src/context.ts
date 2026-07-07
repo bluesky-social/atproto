@@ -174,7 +174,12 @@ export class AppContext implements AsyncDisposable {
         ? nodemailer.createTransport(cfg.email.smtpUrl)
         : nodemailer.createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, cfg.email, cfg.branding)
+    const mailer = new ServerMailer(
+      mailTransport,
+      cfg.email,
+      cfg.branding,
+      cfg.oauth.issuer,
+    )
 
     const modMailTransport =
       cfg.moderationEmail !== null

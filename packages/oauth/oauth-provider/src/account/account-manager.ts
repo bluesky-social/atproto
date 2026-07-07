@@ -8,6 +8,7 @@ import type { Client } from '../client/client.js'
 import type { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { SecondAuthenticationFactorRequiredError } from '../errors/second-authentication-factor-required-error.js'
 import { HCaptchaClient, type HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
@@ -20,6 +21,8 @@ import type {
   DeleteAccountConfirmInput,
   DeleteAccountRequestInput,
   DeviceAccount,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleString,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
@@ -185,6 +188,10 @@ export class AccountManager {
       const account = await callAsync(() =>
         this.store.authenticateAccount(data),
       ).catch(async (err) => {
+        if (err instanceof SecondAuthenticationFactorRequiredError) {
+          throw err
+        }
+
         // Only notify for credential failures (e.g. unknown identifier, wrong
         // password). Server errors and flows that require an additional factor
         // (e.g. SecondAuthenticationFactorRequiredError) are not "failed
@@ -460,6 +467,68 @@ export class AccountManager {
     })
 
     return updatedAccount
+  }
+
+  public async enableEmailAuthFactor(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: EnableEmailAuthFactorInput,
+    account: Account,
+  ): Promise<Account> {
+    await this.hooks.onUpdateEmailAuthFactor?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.enableEmailAuthFactor(input)
+
+    // Bypass the analytics if no update actually occurred:
+    if (!updatedAccount) {
+      return account
+    }
+
+    await this.hooks.onUpdateEmailAuthFactorConfirmed?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account: updatedAccount,
+    })
+
+    return updatedAccount
+  }
+
+  public async disableEmailAuthFactor(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: DisableEmailAuthFactorInput,
+    account: Account,
+  ): Promise<{ account: Account; tokenRequired: boolean }> {
+    await this.hooks.onUpdateEmailAuthFactor?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const { updatedAccount, tokenRequired } =
+      await this.store.disableEmailAuthFactor(input)
+
+    // Once email auth factor is actually disabled, fire the "confirmed" hook.
+    // If there is a token required or no modification, don't fire the confirmed hook:
+    if (tokenRequired || !updatedAccount) {
+      return { account: account, tokenRequired }
+    }
+
+    await this.hooks.onUpdateEmailAuthFactorConfirmed?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account: updatedAccount,
+    })
+
+    return { account: updatedAccount, tokenRequired }
   }
 
   public async updateHandle(

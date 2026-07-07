@@ -6,6 +6,7 @@ export interface Account {
   email: string
   passwordScrypt: string
   emailConfirmedAt: DatetimeString | null
+  emailAuthFactorAt: DatetimeString | null
   invitesDisabled: Generated<0 | 1>
 }
 

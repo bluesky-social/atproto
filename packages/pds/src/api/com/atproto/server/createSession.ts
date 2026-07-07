@@ -1,4 +1,5 @@
 import { DAY, MINUTE } from '@atproto/common'
+import { SecondAuthenticationFactorRequiredError } from '@atproto/oauth-provider/errors'
 import {
   type DidString,
   type HandleString,
@@ -59,8 +60,17 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const { user, isSoftDeleted, appPassword } =
-          await ctx.accountManager.login(body)
+        const { user, isSoftDeleted, appPassword } = await ctx.accountManager
+          .login(body)
+          .catch((err) => {
+            if (err instanceof SecondAuthenticationFactorRequiredError) {
+              throw new AuthRequiredError(
+                'A sign in code has been sent to your email address',
+                'AuthFactorTokenRequired',
+              )
+            }
+            throw err
+          })
 
         if (!body.allowTakendown && isSoftDeleted) {
           throw new AuthRequiredError(
@@ -97,6 +107,7 @@ export default function (server: Server, ctx: AppContext) {
             handle: (user.handle ?? INVALID_HANDLE) as HandleString,
             email: user.email ?? undefined,
             emailConfirmed: !!user.emailConfirmedAt,
+            emailAuthFactor: !!user.emailAuthFactorAt,
             active,
             status,
           },
