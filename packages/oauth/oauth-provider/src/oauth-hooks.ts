@@ -11,6 +11,8 @@ import type {
 } from '@atproto/oauth-types'
 import type {
   DeleteAccountConfirmInput,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
@@ -176,6 +178,31 @@ export type OAuthHooks = {
    */
   onVerifyEmailConfirmed?: (data: {
     input: VerifyEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user request to modify their email auth factor
+   * (OTP) settings, before the change is actually saved.
+   */
+  onUpdateEmailAuthFactor?: (data: {
+    input: EnableEmailAuthFactorInput | DisableEmailAuthFactorInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user has confirmed a change to their email auth
+   * factor setting. For enabling, this happens automatically, for disabling,
+   * you will see two `onUpdateEmailAuthFactor` events, followed by one
+   * `onUpdateEmailAuthFactorConfirmed`. For enabling you will see one of each
+   * of `onUpdateEmailAuthFactor` and `onUpdateEmailAuthFactorConfirmed`
+   */
+  onUpdateEmailAuthFactorConfirmed?: (data: {
+    input: EnableEmailAuthFactorInput | DisableEmailAuthFactorInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account

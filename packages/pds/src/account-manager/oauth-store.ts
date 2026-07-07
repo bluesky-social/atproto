@@ -28,6 +28,8 @@ import type {
   DeviceId,
   DeviceStore,
   Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   FoundRequestResult,
   HandleUnavailableReason,
   LexiconData,
@@ -246,18 +248,16 @@ export class OAuthStore
     locale: _locale,
     username: identifier,
     password,
-    // Not supported by the PDS (yet?)
-    emailOtp = undefined,
+    emailOtp,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
-      // Should never happen
-      if (emailOtp != null) {
-        throw new Error('Email OTP is not supported')
-      }
-
       const { user, appPassword, isSoftDeleted } =
-        await this.accountManager.login({ identifier, password })
+        await this.accountManager.login({
+          identifier,
+          password,
+          authFactorToken: emailOtp,
+        })
 
       if (isSoftDeleted) {
         throw new InvalidRequestError('Account was taken down')
@@ -273,6 +273,7 @@ export class OAuthStore
       // so it must be checked first. Surfacing the matched `did` as the
       // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
       // "identifier known, credentials wrong" from "identifier unknown".
+      // TODO: Add SecondFactor here
       if (err instanceof InvalidPasswordError) {
         throw new InvalidCredentialsError(err.message, err.did, err)
       }
@@ -688,6 +689,48 @@ export class OAuthStore
     }
   }
 
+  async enableEmailAuthFactor({
+    did,
+    email,
+  }: EnableEmailAuthFactorInput): Promise<Account> {
+    const account = await this.accountManager.enableEmailAuthFactor({
+      did,
+      email,
+    })
+
+    return await this.buildAccount(account)
+  }
+
+  async disableEmailAuthFactor({
+    did,
+    email,
+    token,
+    locale,
+  }: DisableEmailAuthFactorInput): Promise<{
+    updatedAccount: Account | null
+    tokenRequired: boolean
+  }> {
+    // `tokenRequired: true` signals the OTP was dispatched and the change is
+    // pending confirmation (no token was supplied yet); `false` means the
+    // factor is now disabled (or was already disabled).
+    const { account, tokenRequired } =
+      await this.accountManager.disableEmailAuthFactor({
+        did,
+        email,
+        token,
+        locale,
+      })
+
+    if (!account) {
+      return { updatedAccount: null, tokenRequired }
+    }
+
+    return {
+      updatedAccount: await this.buildAccount(account),
+      tokenRequired,
+    }
+  }
+
   async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {
     try {
       const account = await this.accountManager.updateHandle(did, handle)
@@ -811,6 +854,7 @@ export class OAuthStore
       pds: this.serviceDid,
       email: row.email || undefined,
       emailVerified: row.email ? row.emailConfirmedAt != null : undefined,
+      emailAuthFactor: row.email ? row.emailAuthFactorAt != null : undefined,
       handle: row.handle || undefined,
       deactivated: row.deactivatedAt != null,
     }

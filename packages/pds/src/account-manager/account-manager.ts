@@ -3,7 +3,7 @@ import type { KeyObject } from 'node:crypto'
 import type { Client as PlcClient } from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-import { HOUR, wait } from '@atproto/common'
+import { HOUR, obfuscateEmail, wait } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
 import {
@@ -13,8 +13,10 @@ import {
   isAtIdentifierString,
 } from '@atproto/lex'
 import type { Cid } from '@atproto/lex-data'
+import { SecondAuthenticationFactorRequiredError } from '@atproto/oauth-provider/errors'
 import {
   INVALID_HANDLE,
+  asDatetimeString,
   currentDatetimeString,
   isValidTld,
 } from '@atproto/syntax'
@@ -587,9 +589,11 @@ export class AccountManager {
   async login({
     identifier,
     password,
+    authFactorToken,
   }: {
     identifier: string
     password: string
+    authFactorToken?: string | undefined
   }): Promise<{
     // @TODO we should rename this "account" for consistency
     user: ActorAccount
@@ -631,6 +635,30 @@ export class AccountManager {
         if (appPassword === null) {
           throw new InvalidPasswordError(user.did)
         }
+      }
+
+      if (authFactorToken) {
+        await this.assertValidEmailTokenAndCleanup(
+          user.did,
+          'auth_factor',
+          authFactorToken,
+        )
+        // require email factor when not using an app password
+      } else if (
+        user.email !== null &&
+        user.emailAuthFactorAt !== null &&
+        appPassword === null
+      ) {
+        const token = await this.createEmailToken(user.did, 'auth_factor')
+
+        await this.mailer.sendSignInAuthFactor(
+          { token, handle: user.handle },
+          { to: user.email },
+        )
+
+        // FIXME:
+        const hint = obfuscateEmail(user.email)
+        throw new SecondAuthenticationFactorRequiredError('emailOtp', hint)
       }
 
       return { user, appPassword, isSoftDeleted }
@@ -895,6 +923,138 @@ export class AccountManager {
       await accountHelpers.updateEmail(dbTxn, did, email)
       await emailToken.deleteAllEmailTokens(dbTxn, did)
     })
+  }
+
+  async updateAccountEmailAuthFactor(opts: {
+    did: DidString
+    email: string
+    emailAuthFactor: boolean
+  }) {
+    const { did, email, emailAuthFactor } = opts
+    const now = new Date()
+
+    await accountHelpers.updateEmailAuthFactor(
+      this.db,
+      did,
+      email,
+      emailAuthFactor ? asDatetimeString(now.toISOString()) : null,
+    )
+  }
+
+  /**
+   * Enable email-based two-factor authentication. Enabling is immediate: the
+   * account must already have a confirmed email matching `email`, since the
+   * factor delivers one-time codes to that address. Returns
+   * `{ account, tokenRequired }` for symmetry with future factors that require
+   * a confirmation step; email-based 2FA never does, so `tokenRequired` is
+   * always `false`.
+   *
+   * @throws InvalidRequestError if the account has no confirmed, matching email
+   */
+  async enableEmailAuthFactor(opts: {
+    did: DidString
+    email: string
+  }): Promise<ActorAccount> {
+    const { did, email } = opts
+
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    if (
+      !account.email ||
+      account.email !== email ||
+      !account.emailConfirmedAt
+    ) {
+      throw new InvalidRequestError(
+        'A confirmed email address is required to enable email-based two-factor authentication',
+      )
+    }
+
+    // Already enabled → nothing to change (idempotent).
+    if (account.emailAuthFactorAt) {
+      return account
+    }
+
+    await this.updateAccountEmailAuthFactor({
+      did,
+      email: account.email,
+      emailAuthFactor: true,
+    })
+
+    account.emailAuthFactorAt = asDatetimeString(new Date().toISOString())
+
+    return account
+  }
+
+  /**
+   * Disable email-based two-factor authentication. This supports a two-phase
+   * flow, if a token isn't initially supplied for proving control of the inbox
+   * which prevents a hijacked session from silently turning off the factor. The
+   * second call (with a valid `token`) actually disables it. Disabling an
+   * already-disabled factor is an idempotent no-op.
+   *
+   * @returns the (possibly updated) account together with `tokenRequired`:
+   * `true` while an OTP is pending confirmation, `false` once the factor is
+   * disabled or was already disabled
+   * @throws InvalidRequestError if the account has no matching email, or the
+   * token is invalid
+   */
+  async disableEmailAuthFactor(opts: {
+    did: DidString
+    email: string
+    token?: string
+    locale?: string
+  }): Promise<{ account: ActorAccount | null; tokenRequired: boolean }> {
+    const { did, email, token, locale } = opts
+
+    const account = await this.getAccount(did, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+
+    if (!account) {
+      throw new InvalidRequestError('account not found')
+    }
+
+    if (!account.email || account.email !== email) {
+      throw new InvalidRequestError('Email address does not match the account')
+    }
+
+    // Already disabled → idempotent no-op; nothing to confirm, no OTP sent.
+    if (!account.emailAuthFactorAt) {
+      return { account: null, tokenRequired: false }
+    }
+
+    // Phase one: no token yet, send a one-time code and signal "pending". MUST
+    // use `update_email` due to social-app using requestEmailUpdate, not
+    // two-step updateEmail:
+    if (!token) {
+      const otp = await this.createEmailToken(did, 'update_email')
+      await this.mailer.sendUpdateEmail(
+        { token: otp, locale: locale },
+        { to: account.email },
+      )
+      return { account: account, tokenRequired: true }
+    }
+
+    // Phase two: verify the one-time code, then disable the factor.
+    await this.assertValidEmailTokenAndCleanup(did, 'update_email', token)
+
+    await this.updateAccountEmailAuthFactor({
+      did,
+      email: account.email,
+      emailAuthFactor: false,
+    })
+
+    account.emailAuthFactorAt = null
+
+    return { account, tokenRequired: false }
   }
 
   async resetPassword(opts: { password: string; token: string }) {

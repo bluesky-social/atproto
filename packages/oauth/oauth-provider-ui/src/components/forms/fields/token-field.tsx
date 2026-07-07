@@ -38,6 +38,7 @@ export function TokenField({
       autoCapitalize="characters"
       autoCorrect="off"
       autoComplete="one-time-code"
+      data-1p-ignore
       spellCheck="false"
       minLength={11}
       maxLength={11}
