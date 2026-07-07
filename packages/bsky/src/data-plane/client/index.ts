@@ -8,8 +8,8 @@ import {
   makeAnyClient,
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
-import { tracingInterceptor } from '../../otel.js'
 import { Service } from '../../proto/bsky_connect.js'
+import { tracingInterceptor } from '../../rpc-tracing.js'
 import type { HostList } from './hosts.js'
 import { callerInterceptor } from './util.js'
 

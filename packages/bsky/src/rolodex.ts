@@ -9,8 +9,8 @@ import {
   type ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-import { tracingInterceptor } from './otel.js'
 import { RolodexService } from './proto/rolodex_connect.js'
+import { tracingInterceptor } from './rpc-tracing.js'
 
 // Rolodex is the service that does contact imports following https://docs.bsky.app/blog/contact-import-rfc.
 export type RolodexClient = PromiseClient<typeof RolodexService>

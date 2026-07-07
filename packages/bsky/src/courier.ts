@@ -9,8 +9,8 @@ import {
   type ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-import { tracingInterceptor } from './otel.js'
 import { Service } from './proto/courier_connect.js'
+import { tracingInterceptor } from './rpc-tracing.js'
 
 export type CourierClient = PromiseClient<typeof Service>
 

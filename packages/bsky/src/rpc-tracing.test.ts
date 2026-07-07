@@ -7,7 +7,7 @@ import {
 } from '@opentelemetry/api'
 import { core, tracing } from '@opentelemetry/sdk-node'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { tracingInterceptor } from './otel.js'
+import { tracingInterceptor } from './rpc-tracing.js'
 
 type AnyFn = Parameters<ReturnType<typeof tracingInterceptor>>[0]
 type AnyReq = Parameters<AnyFn>[0]
