@@ -61,11 +61,14 @@ describe('tracingInterceptor', () => {
     expect(span.kind).toBe(SpanKind.CLIENT)
     expect(span.attributes).toMatchObject({
       'rpc.system.name': 'grpc',
-      'rpc.method': 'bsky.Service/GetPostThread',
+      'rpc.method': 'GetPostThread',
       'server.address': 'dataplane.example',
       'server.port': 2543,
       'peer.service': 'atlantis',
       'peer.interface': 'dataplane',
+      // Deprecated semconv, dual-emitted for ecosystem compatibility
+      'rpc.system': 'grpc',
+      'rpc.service': 'bsky.Service',
     })
     expect(req.header.get('traceparent')).toContain(span.spanContext().traceId)
   })
@@ -83,6 +86,7 @@ describe('tracingInterceptor', () => {
     expect(span.status.code).toBe(SpanStatusCode.ERROR)
     expect(span.attributes['rpc.response.status_code']).toBe('UNAVAILABLE')
     expect(span.attributes['error.type']).toBe('UNAVAILABLE')
+    expect(span.attributes['rpc.grpc.status_code']).toBe(Code.Unavailable)
   })
 
   it('records connect error code on ConnectError', async () => {
@@ -96,6 +100,7 @@ describe('tracingInterceptor', () => {
     expect(span.status.code).toBe(SpanStatusCode.ERROR)
     expect(span.attributes['rpc.response.status_code']).toBe('not_found')
     expect(span.attributes['error.type']).toBe('not_found')
+    expect(span.attributes['rpc.connect_rpc.error_code']).toBe('not_found')
     expect(span.status.message).toBe('not_found')
   })
 

@@ -21,6 +21,18 @@ const ATTR_SERVER_PORT = 'server.port'
 const ATTR_PEER_SERVICE = 'peer.service'
 const ATTR_RPC_RESPONSE_STATUS_CODE = 'rpc.response.status_code'
 const ATTR_ERROR_TYPE = 'error.type'
+// Deprecated in v1.41.1 but still what the ecosystem emits (notably
+// connectrpc.com/otelconnect, used by atlantis/vortex/courier). Dual-emitted
+// alongside the current attributes so queries can join client and server
+// spans; drop once the ecosystem catches up.
+// @NOTE The old rpc.method is the *bare* method name; the current semconv
+// redefines the same key as the fully-qualified name. They collide, so we
+// emit the old form (matching otelconnect) — the fully-qualified name is
+// available as the span name.
+const DEPRECATED_ATTR_RPC_SYSTEM = 'rpc.system'
+const DEPRECATED_ATTR_RPC_SERVICE = 'rpc.service'
+const DEPRECATED_ATTR_RPC_GRPC_STATUS_CODE = 'rpc.grpc.status_code'
+const DEPRECATED_ATTR_RPC_CONNECT_RPC_ERROR_CODE = 'rpc.connect_rpc.error_code'
 // Not a semantic convention: bsky-specific, see TracingInterceptorOptions.
 const ATTR_PEER_INTERFACE = 'peer.interface'
 
@@ -72,7 +84,10 @@ export const tracingInterceptor = (
     const method = `${req.service.typeName}/${req.method.name}`
     const attributes: Attributes = {
       [ATTR_RPC_SYSTEM_NAME]: rpcSystem,
-      [ATTR_RPC_METHOD]: method,
+      [ATTR_RPC_METHOD]: req.method.name,
+      [DEPRECATED_ATTR_RPC_SYSTEM]:
+        rpcSystem === 'connectrpc' ? 'connect_rpc' : rpcSystem,
+      [DEPRECATED_ATTR_RPC_SERVICE]: req.service.typeName,
     }
     if (peerService) attributes[ATTR_PEER_SERVICE] = peerService
     if (peerInterface) attributes[ATTR_PEER_INTERFACE] = peerInterface
@@ -104,6 +119,14 @@ export const tracingInterceptor = (
         if (statusCode) {
           span.setAttribute(ATTR_RPC_RESPONSE_STATUS_CODE, statusCode)
           span.setAttribute(ATTR_ERROR_TYPE, statusCode)
+        }
+        if (rpcSystem === 'grpc') {
+          span.setAttribute(DEPRECATED_ATTR_RPC_GRPC_STATUS_CODE, err.code)
+        } else if (snake) {
+          span.setAttribute(
+            DEPRECATED_ATTR_RPC_CONNECT_RPC_ERROR_CODE,
+            snake.toLowerCase(),
+          )
         }
         span.setStatus({ code: SpanStatusCode.ERROR, message: statusCode })
       } else {
