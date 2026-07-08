@@ -1,7 +1,7 @@
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { dbLogger } from '../logger.js'
-import { QueueServiceCreator } from '../queue/service.js'
+import type { QueueServiceCreator } from '../queue/service.js'
 import { initJobCursor } from './job-cursor.js'
 
 const JOB_NAME = 'queue_router'

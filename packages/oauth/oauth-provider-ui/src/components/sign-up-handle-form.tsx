@@ -1,7 +1,10 @@
 import { Trans } from '@lingui/react/macro'
-import { HandleString } from '@atproto/syntax'
+import type { HandleString } from '@atproto/syntax'
 import { InputHandleDefault } from '#/components/forms/input-handle-default'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 import { Admonition } from '#/components/utils/admonition.tsx'
 
 export type SignUpHandleData = {

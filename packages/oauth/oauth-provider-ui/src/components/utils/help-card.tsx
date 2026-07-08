@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { LinkAnchor } from './link-anchor.js'
 
 export type HelpCardProps = Override<

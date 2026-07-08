@@ -1,9 +1,9 @@
 import { AtpAgent } from '@atproto/api'
 import {
-  RecordRef,
-  SeedClient,
+  type RecordRef,
+  type SeedClient,
   TestNetwork,
-  TestOzone,
+  type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'

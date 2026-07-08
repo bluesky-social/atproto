@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CID } from '@atproto/lex-data'
-import { Def } from './check.js'
+import type { Def } from './check.js'
 
 const cidSchema = z.unknown().transform((obj, ctx): CID => {
   const cid = CID.asCID(obj)

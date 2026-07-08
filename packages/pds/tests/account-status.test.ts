@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { Client } from '@atproto/lex'
+import type { Client } from '@atproto/lex'
 import { com } from '../src/lexicons/index.js'
 
 describe('account-status', () => {

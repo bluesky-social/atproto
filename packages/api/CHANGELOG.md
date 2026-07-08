@@ -1,5 +1,33 @@
 # @atproto/api
 
+## 0.20.27
+
+### Patch Changes
+
+- [#5195](https://github.com/bluesky-social/atproto/pull/5195) [`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Update description
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/common-web@0.5.5
+  - @atproto/lexicon@0.7.6
+  - @atproto/syntax@0.7.1
+  - @atproto/xrpc@0.8.5
+
+## 0.20.26
+
+### Patch Changes
+
+- [#2657](https://github.com/bluesky-social/atproto/pull/2657) [`6b493b7`](https://github.com/bluesky-social/atproto/commit/6b493b77f56b7de47f5eb91d29f726cdc7794e46) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Fix hashtag length check in `detectFacets` to count grapheme clusters instead of UTF-16 code units, skipping the grapheme count when the UTF-16 length already fits within the limit.
+
+- [#5178](https://github.com/bluesky-social/atproto/pull/5178) [`1497fea`](https://github.com/bluesky-social/atproto/commit/1497fea9c975e46e56fd99914fba2ad96affa934) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add method for setting bskyAppState.isBetaUser flag
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/common-web@0.5.4
+  - @atproto/lexicon@0.7.5
+  - @atproto/xrpc@0.8.4
+
 ## 0.20.25
 
 ### Patch Changes

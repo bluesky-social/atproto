@@ -1,15 +1,15 @@
-import { Selectable } from 'kysely'
-import { ToolsOzoneQueueDefs } from '@atproto/api'
+import type { Selectable } from 'kysely'
+import type { ToolsOzoneQueueDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { EndAtIdKeyset, paginate } from '../db/pagination.js'
-import { ModeratorAssignment } from '../db/schema/moderator_assignment.js'
-import { ReportQueue } from '../db/schema/report_queue.js'
+import type { ModeratorAssignment } from '../db/schema/moderator_assignment.js'
+import type { ReportQueue } from '../db/schema/report_queue.js'
 import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
-import { QueueService, QueueServiceCreator } from '../queue/service.js'
+import type { QueueService, QueueServiceCreator } from '../queue/service.js'
 import { createReportActivity } from '../report/activity.js'
-import { TeamService, TeamServiceCreator } from '../team/index.js'
+import type { TeamService, TeamServiceCreator } from '../team/index.js'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number

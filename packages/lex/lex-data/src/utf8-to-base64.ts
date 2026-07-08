@@ -1,4 +1,4 @@
-import { toString } from 'uint8arrays/to-string'
+import { base64, base64url } from 'multiformats/bases/base64'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 import type { Base64Alphabet } from './uint8array-base64.js'
 import { toBase64Node } from './uint8array-to-base64.js'
@@ -18,5 +18,6 @@ export function utf8ToBase64Ponyfill(
   alphabet?: Base64Alphabet,
 ): string {
   const bytes = textEncoder.encode(text)
-  return toString(bytes, alphabet)
+  const codec = alphabet === 'base64url' ? base64url : base64
+  return codec.encoder.encode(bytes).slice(codec.prefix.length)
 }

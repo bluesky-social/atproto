@@ -1,5 +1,5 @@
 import { InvalidDidError } from '../../src/did-error.js'
-import { Did } from '../../src/did.js'
+import type { Did } from '../../src/did.js'
 import { asDidPlc, assertDidPlc, isDidPlc } from '../../src/methods/plc.js'
 
 const VALID: Did<'plc'>[] = [

@@ -1,9 +1,18 @@
 import assert from 'node:assert'
-import { Client, createOp as createPlcOp } from '@did-plc/lib'
-import { Selectable } from 'kysely'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { DidString, HandleString, getBlobCidString } from '@atproto/lex'
+import { type Client, createOp as createPlcOp } from '@did-plc/lib'
+import type { Selectable } from 'kysely'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
+  type DidString,
+  type HandleString,
+  getBlobCidString,
+} from '@atproto/lex'
+import {
+  HandleUnavailableError,
+  InvalidCredentialsError,
+  InvalidRequestError,
+} from '@atproto/oauth-provider/errors'
+import type {
   Account,
   AccountStore,
   AuthenticateAccountData,
@@ -20,11 +29,7 @@ import {
   DeviceStore,
   Did,
   FoundRequestResult,
-  HandleUnavailableError,
   HandleUnavailableReason,
-  InvalidCredentialsError,
-  InvalidInviteCodeError,
-  InvalidRequestError,
   LexiconData,
   LexiconStore,
   NewTokenData,
@@ -47,22 +52,22 @@ import {
   UpdateRequestData,
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import {
   AuthRequiredError as XrpcAuthRequiredError,
   InvalidRequestError as XrpcInvalidRequestError,
 } from '@atproto/xrpc-server'
-import { ActorStore } from '../actor-store/actor-store.js'
-import { BackgroundQueue } from '../background.js'
+import type { ActorStore } from '../actor-store/actor-store.js'
+import type { BackgroundQueue } from '../background.js'
 import { fromDateISO } from '../db/index.js'
-import { ImageUrlBuilder } from '../image/image-url-builder.js'
+import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
-import { ServerMailer } from '../mailer/index.js'
-import { Sequencer } from '../sequencer/index.js'
-import { AccountManager, InvalidPasswordError } from './account-manager.js'
-import * as schemas from './db/schema/index.js'
+import type { ServerMailer } from '../mailer/index.js'
+import type { Sequencer } from '../sequencer/index.js'
+import { type AccountManager, InvalidPasswordError } from './account-manager.js'
+import type * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
-import { ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
+import { type ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
 import * as authRequestHelper from './helpers/authorization-request.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as deviceHelper from './helpers/device.js'
@@ -121,7 +126,10 @@ export class OAuthStore
     } catch (err) {
       const message =
         err instanceof XrpcInvalidRequestError ? err.message : undefined
-      throw new InvalidInviteCodeError(message, err)
+      throw new InvalidRequestError(
+        'This invite code is invalid.' + (message ? ` ${message}` : ''),
+        err,
+      )
     }
   }
 

@@ -1,4 +1,4 @@
-import { Did } from '@atproto/did'
+import type { Did } from '@atproto/did'
 import { InvalidRequestError } from './invalid-request-error.js'
 
 /**

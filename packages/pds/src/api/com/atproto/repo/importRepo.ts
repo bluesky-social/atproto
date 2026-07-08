@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { LexMap, enumBlobRefs } from '@atproto/lex-data'
+import { type LexMap, enumBlobRefs } from '@atproto/lex-data'
 import {
   BlockMap,
   WriteOpAction,
@@ -8,9 +8,9 @@ import {
   verifyDiff,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

@@ -1,5 +1,5 @@
-import { ReactNode, createContext, useContext, useMemo } from 'react'
-import { Client, DidString } from '@atproto/lex'
+import { type ReactNode, createContext, useContext, useMemo } from 'react'
+import { Client, type DidString } from '@atproto/lex'
 import { useOAuthSession } from './OAuthProvider.tsx'
 
 export type AuthenticatedClient = Client & { did: DidString }

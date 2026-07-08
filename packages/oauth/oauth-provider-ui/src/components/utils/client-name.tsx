@@ -1,10 +1,10 @@
 import { Trans } from '@lingui/react/macro'
-import { JSX, useMemo } from 'react'
+import { type JSX, useMemo } from 'react'
 import {
-  OAuthClientMetadata,
+  type OAuthClientMetadata,
   isConventionalOAuthClientId,
 } from '#/lib/oauth-client.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { UrlViewer } from './url-viewer.tsx'
 
 export type ClientNameProps = Override<

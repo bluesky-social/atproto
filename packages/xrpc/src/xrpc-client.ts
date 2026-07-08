@@ -1,14 +1,14 @@
-import { LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
 import {
-  FetchHandler,
-  FetchHandlerObject,
-  FetchHandlerOptions,
+  type FetchHandler,
+  type FetchHandlerObject,
+  type FetchHandlerOptions,
   buildFetchHandler,
 } from './fetch-handler.js'
 import {
-  CallOptions,
-  Gettable,
-  QueryParams,
+  type CallOptions,
+  type Gettable,
+  type QueryParams,
   ResponseType,
   XRPCError,
   XRPCInvalidResponseError,

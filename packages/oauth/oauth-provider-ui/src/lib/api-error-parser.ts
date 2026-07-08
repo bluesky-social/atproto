@@ -1,5 +1,5 @@
-import { MessageDescriptor } from '@lingui/core'
-import { ParsedError } from '#/components/utils/error-card.tsx'
+import type { MessageDescriptor } from '@lingui/core'
+import type { ParsedError } from '#/components/utils/error-card.tsx'
 import { OAuthErrorResponse } from '#/lib/api.ts'
 import { JsonErrorResponse } from './json-client.ts'
 import { toJsonSafe } from './util.ts'

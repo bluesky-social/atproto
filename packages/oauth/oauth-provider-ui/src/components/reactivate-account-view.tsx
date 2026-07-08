@@ -1,6 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
-import { Account } from '@atproto/oauth-provider-api'
+import type { Account } from '@atproto/oauth-provider-api'
 import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
 import { AccountOverview } from '#/components/utils/account-overview.tsx'
 import { ButtonAsync } from './forms/button-async.tsx'

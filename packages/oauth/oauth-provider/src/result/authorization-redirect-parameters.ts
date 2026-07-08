@@ -1,5 +1,5 @@
-import { OAuthTokenType } from '@atproto/oauth-types'
-import { Code } from '../request/code.js'
+import type { OAuthTokenType } from '@atproto/oauth-types'
+import type { Code } from '../request/code.js'
 
 /**
  * @note `iss` and `state` will be added from the

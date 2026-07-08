@@ -1,10 +1,10 @@
-import * as accountPref from './account-pref.js'
-import * as backlink from './backlink.js'
-import * as blob from './blob.js'
-import * as recordBlob from './record-blob.js'
-import * as record from './record.js'
-import * as repoBlock from './repo-block.js'
-import * as repoRoot from './repo-root.js'
+import type * as accountPref from './account-pref.js'
+import type * as backlink from './backlink.js'
+import type * as blob from './blob.js'
+import type * as recordBlob from './record-blob.js'
+import type * as record from './record.js'
+import type * as repoBlock from './repo-block.js'
+import type * as repoRoot from './repo-root.js'
 
 export type DatabaseSchema = accountPref.PartialDB &
   repoRoot.PartialDB &

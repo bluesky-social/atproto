@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from '@phosphor-icons/react'
-import { ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { FormField } from '#/components/forms/form-field.tsx'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'

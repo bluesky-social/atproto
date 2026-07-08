@@ -1,5 +1,11 @@
-import type { $Typed, InferInput, Main, Restricted } from '@atproto/lex-schema'
-import { RecordSchema, getMain } from '@atproto/lex-schema'
+import {
+  type $Typed,
+  type InferInput,
+  type Main,
+  type RecordSchema,
+  type Restricted,
+  getMain,
+} from '@atproto/lex-schema'
 import { com } from './lexicons/index.js'
 import type { RecordKeyOptions } from './util.js'
 import { getDefaultRecordKey, getLiteralRecordKey } from './util.js'

@@ -1,17 +1,17 @@
-import { Cid, LexMap, parseCid } from '@atproto/lex-data'
+import { type Cid, type LexMap, parseCid } from '@atproto/lex-data'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
 import {
   AtUri,
-  AtUriString,
-  DatetimeString,
-  NsidString,
+  type AtUriString,
+  type DatetimeString,
+  type NsidString,
   ensureValidAtUri,
   ensureValidDid,
 } from '@atproto/syntax'
 import { countAll, notSoftDeletedClause } from '../../db/util.js'
-import { app, com } from '../../lexicons/index.js'
-import { LocalRecords } from '../../read-after-write/types.js'
-import { ActorDb, Backlink } from '../db/index.js'
+import { app, type com } from '../../lexicons/index.js'
+import type { LocalRecords } from '../../read-after-write/types.js'
+import type { ActorDb, Backlink } from '../db/index.js'
 
 export type RecordDescript = {
   uri: string

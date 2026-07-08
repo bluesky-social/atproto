@@ -1,8 +1,13 @@
 import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { cidForLex } from '@atproto/lex-cbor'
-import { NsidString } from '@atproto/syntax'
-import { RecordCidClaim, RecordPath, Repo, RepoContents } from '../src/index.js'
+import type { NsidString } from '@atproto/syntax'
+import {
+  type RecordCidClaim,
+  type RecordPath,
+  Repo,
+  type RepoContents,
+} from '../src/index.js'
 import { MemoryBlockstore } from '../src/storage/index.js'
 import * as sync from '../src/sync/index.js'
 import * as util from './_util.js'

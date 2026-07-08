@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
-import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
-import {
+import type { UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
+import type {
   NormalizedUserContext,
   TrackingMetadata,
   UserContext,

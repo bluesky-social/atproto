@@ -1,21 +1,21 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import { AtUriString } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
-import { DataPlaneClient } from '../../../../data-plane/index.js'
+import type { AtUriString } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { DataPlaneClient } from '../../../../data-plane/index.js'
 import {
-  PostSearchQuery,
+  type PostSearchQuery,
   parsePostSearchQuery,
 } from '../../../../data-plane/server/util.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
 import {
@@ -23,7 +23,7 @@ import {
   SearchSortOrder,
 } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -164,14 +164,21 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    // Roll the post's own tags together with moderation tags on its author,
+    // so author-level tags are filtered the same way as post-level tags.
+    const author = hydration.actors?.get(creator)
+    const tags = new Set([
+      ...post.tags,
+      ...(author?.accountModerationTags ?? []),
+      ...(author?.profileModerationTags ?? []),
+    ])
+
     // Tags that are hidden from all search surfaces (Top and Latest),
     // regardless of curation or author filtering.
-    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) =>
-      post.tags.has(t),
-    )
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) => tags.has(t))
     if (alwaysHidden) return false
 
-    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    const tagged = [...ctx.cfg.searchTagsHide].some((t) => tags.has(t))
 
     if (isCuratedSearch && tagged) return false
     if (!(parsedQuery.author || params.authors?.length) && tagged) return false

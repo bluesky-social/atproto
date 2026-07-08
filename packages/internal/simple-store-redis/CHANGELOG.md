@@ -1,5 +1,12 @@
 # @atproto-labs/simple-store-redis
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto-labs/simple-store@0.4.4
+
 ## 0.1.3
 
 ### Patch Changes

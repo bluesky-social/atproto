@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../context.js'
 import actor from './actor/index.js'
 import feed from './feed/index.js'
 import notification from './notification/index.js'

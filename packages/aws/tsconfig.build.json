@@ -1,6 +1,7 @@
 {
   "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
   "references": [
     { "path": "../common-web/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },

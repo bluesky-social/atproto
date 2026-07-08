@@ -1,4 +1,4 @@
-import { AtUriString } from '@atproto/syntax'
+import type { AtUriString } from '@atproto/syntax'
 
 export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 

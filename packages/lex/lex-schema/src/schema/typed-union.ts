@@ -4,11 +4,11 @@ import {
   type InferOutput,
   Schema,
   type Unknown$TypedObject,
-  ValidationContext,
+  type ValidationContext,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import { TypedObjectSchema } from './typed-object.js'
-import { TypedRefSchema } from './typed-ref.js'
+import type { TypedObjectSchema } from './typed-object.js'
+import type { TypedRefSchema } from './typed-ref.js'
 
 /**
  * Schema for Lexicon typed unions (unions discriminated by $type).

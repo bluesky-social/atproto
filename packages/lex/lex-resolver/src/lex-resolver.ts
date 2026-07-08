@@ -57,7 +57,7 @@ export type LexResolverFetchResult = {
   lexicon: LexiconDocument
 }
 
-export type Awaitable<T> = T | Promise<T>
+type Awaitable<T> = T | PromiseLike<T>
 
 /**
  * Callback hooks for customizing the lexicon resolution process.
@@ -174,8 +174,8 @@ export type LexResolverOptions = CreateDidResolverOptions & {
   hooks?: LexResolverHooks
 }
 
-export { AtUri, type Cid, NSID }
-export type { LexiconDocument, ResolveDidOptions }
+export { AtUri, NSID }
+export type { Cid, LexiconDocument, ResolveDidOptions }
 
 /**
  * Resolves Lexicon documents from the AT Protocol network.

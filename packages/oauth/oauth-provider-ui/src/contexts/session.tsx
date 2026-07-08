@@ -1,6 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useCallback,
   useContext,

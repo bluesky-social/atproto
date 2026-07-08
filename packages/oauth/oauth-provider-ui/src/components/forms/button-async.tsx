@@ -1,7 +1,10 @@
 import { composeEventHandlers } from '@radix-ui/primitive'
-import { AsyncActionHandler, useAsyncAction } from '#/hooks/use-async-action.ts'
-import { Override } from '#/lib/util.ts'
-import { Button, ButtonProps } from './button.tsx'
+import {
+  type AsyncActionHandler,
+  useAsyncAction,
+} from '#/hooks/use-async-action.ts'
+import type { Override } from '#/lib/util.ts'
+import { Button, type ButtonProps } from './button.tsx'
 
 export type ButtonAsyncHandler = AsyncActionHandler
 

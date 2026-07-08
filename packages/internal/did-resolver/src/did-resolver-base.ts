@@ -1,5 +1,5 @@
 import { ZodError } from 'zod'
-import { Did, DidError, extractDidMethod } from '@atproto/did'
+import { type Did, DidError, extractDidMethod } from '@atproto/did'
 import { FetchError, FetchResponseError } from '@atproto-labs/fetch'
 import type { DidMethod, DidMethods, ResolveDidOptions } from './did-method.js'
 import type { DidResolver, ResolvedDocument } from './did-resolver.js'

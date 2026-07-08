@@ -1,7 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { AccountIdentifier } from './account-identifier.js'
 
 export type AccountNameProps = Override<

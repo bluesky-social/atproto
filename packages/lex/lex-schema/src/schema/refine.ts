@@ -1,7 +1,7 @@
 import {
   type InferInput,
   IssueCustom,
-  ValidationContext,
+  type ValidationContext,
   type ValidationResult,
   type Validator,
 } from '../core.js'

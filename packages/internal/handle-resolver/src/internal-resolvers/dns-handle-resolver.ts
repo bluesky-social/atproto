@@ -1,4 +1,8 @@
-import { HandleResolver, ResolvedHandle, isResolvedHandle } from '../types.js'
+import {
+  type HandleResolver,
+  type ResolvedHandle,
+  isResolvedHandle,
+} from '../types.js'
 
 const SUBDOMAIN = '_atproto'
 const PREFIX = 'did='

@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "../../tsconfig/isomorphic.tsconfig.json",
-    "../../tsconfig/verbatim.tsconfig.json",
-  ],
+  "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./src"],
   "references": [
     { "path": "../common-web/tsconfig.build.json" },

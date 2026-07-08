@@ -1,14 +1,14 @@
 import assert from 'node:assert'
-import { Insertable, Selectable } from 'kysely'
-import {
+import type { Insertable, Selectable } from 'kysely'
+import type {
   Code,
   FoundRequestResult,
   RequestData,
   RequestId,
   UpdateRequestData,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-provider/store'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
-import { AccountDb, AuthorizationRequest } from '../db/index.js'
+import type { AccountDb, AuthorizationRequest } from '../db/index.js'
 
 export const rowToRequestData = (
   row: Selectable<AuthorizationRequest>,

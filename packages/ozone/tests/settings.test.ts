@@ -1,9 +1,10 @@
-import AtpAgent, {
+import type {
   ToolsOzoneSettingListOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { SettingScope } from '../dist/db/schema/setting.js'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { SettingScope } from '../dist/db/schema/setting.js'
 import { ids } from '../src/lexicon/lexicons.js'
 import { forSnapshot } from './_util.js'
 

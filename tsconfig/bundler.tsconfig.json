@@ -8,14 +8,6 @@
     // will, by nature, completely rewrite the imports to the final bundle
     // output anyways.
     "rewriteRelativeImportExtensions": false,
-    // The use of "verbatimModuleSyntax" allows typescript files to be executed
-    // in NodeJS without compilation (also requires "erasableSyntaxOnly": true).
-    // This also is also useful to make bundling, tree-shaking & executing the
-    // code faster (through the elision of "import type" statements from the
-    // runtime code tree).
-    //
-    // @TODO change this to true globally (and remove verbatim.tsconfig.json)
-    "verbatimModuleSyntax": false,
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,

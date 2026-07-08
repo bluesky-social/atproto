@@ -1,5 +1,5 @@
-import { HandlerOpts, TapHandler } from './channel.js'
-import { IdentityEvent, RecordEvent, TapEvent } from './types.js'
+import type { HandlerOpts, TapHandler } from './channel.js'
+import type { IdentityEvent, RecordEvent, TapEvent } from './types.js'
 
 type IdentityEventHandler = (
   evt: IdentityEvent,

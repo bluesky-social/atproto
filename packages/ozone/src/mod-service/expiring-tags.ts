@@ -1,6 +1,6 @@
-import { Selectable } from 'kysely'
-import { Database } from '../db/index.js'
-import { ExpiringTag } from '../db/schema/expiring_tag.js'
+import type { Selectable } from 'kysely'
+import type { Database } from '../db/index.js'
+import type { ExpiringTag } from '../db/schema/expiring_tag.js'
 
 export type ExpiringTagRow = Selectable<ExpiringTag>
 

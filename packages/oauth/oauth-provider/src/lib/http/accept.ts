@@ -3,8 +3,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import accept from '@hapi/accept'
 // eslint-disable-next-line import/no-named-as-default-member
 const { mediaType } = accept
-import { SubCtx, subCtx } from './context.js'
-import { Middleware, NextFunction } from './types.js'
+import { type SubCtx, subCtx } from './context.js'
+import type { Middleware, NextFunction } from './types.js'
 
 type View<
   T extends object | void,

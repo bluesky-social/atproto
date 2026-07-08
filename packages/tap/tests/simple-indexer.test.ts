@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { HandlerOpts } from '../src/channel.js'
+import type { HandlerOpts } from '../src/channel.js'
 import { SimpleIndexer } from '../src/simple-indexer.js'
-import { IdentityEvent, RecordEvent } from '../src/types.js'
+import type { IdentityEvent, RecordEvent } from '../src/types.js'
 import {
   createIdentityEvent,
   createMockOpts,

@@ -1,8 +1,8 @@
-import { Transformer, pipe } from '@atproto-labs/pipe'
+import { type Transformer, pipe } from '@atproto-labs/pipe'
 import { FetchError } from './fetch-error.js'
 import { TransformedResponse } from './transformed-response.js'
 import {
-  Json,
+  type Json,
   MaxBytesTransformStream,
   cancelBody,
   ifString,

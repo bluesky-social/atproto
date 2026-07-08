@@ -1,16 +1,16 @@
-import { $Typed } from '../src/client/util.js'
+import type { $Typed } from '../src/client/util.js'
 import {
-  AppBskyEmbedGallery,
-  AppBskyEmbedRecord,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyFeedPost,
+  type AppBskyEmbedGallery,
+  type AppBskyEmbedRecord,
+  type AppBskyEmbedRecordWithMedia,
+  type AppBskyFeedPost,
   BlobRef,
   RichText,
   mock,
   moderatePost,
 } from '../src/index.js'
 import { matchMuteWords } from '../src/moderation/mutewords.js'
-import { ModerationOpts } from '../src/moderation/types.js'
+import type { ModerationOpts } from '../src/moderation/types.js'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 

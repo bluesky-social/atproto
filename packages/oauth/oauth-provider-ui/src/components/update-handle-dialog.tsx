@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useEffect, useState } from 'react'
-import { HandleString } from '@atproto/syntax'
+import { type ReactNode, useEffect, useState } from 'react'
+import type { HandleString } from '@atproto/syntax'
 import { Button } from '#/components/forms/button.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 import { LinkExternal } from '#/components/utils/link-external.tsx'

@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { type Readable, pipeline } from 'node:stream'
 import createHttpError from 'http-errors'
-import { Awaitable } from '../util/type.js'
+import type { Awaitable } from '../util/type.js'
 import { negotiateResponseContent } from './request.js'
 import type { Handler, Middleware } from './types.js'
 

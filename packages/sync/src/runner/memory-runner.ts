@@ -1,6 +1,6 @@
 import PQueue from 'p-queue'
 import { ConsecutiveList } from './consecutive-list.js'
-import { EventRunner } from './types.js'
+import type { EventRunner } from './types.js'
 
 export type MemoryRunnerOptions = {
   setCursor?: (cursor: number) => Promise<void>

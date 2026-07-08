@@ -1,5 +1,5 @@
-import { ReactNode, createContext, useContext } from 'react'
-import { OAuthSession } from '@atproto/oauth-client-browser'
+import { type ReactNode, createContext, useContext } from 'react'
+import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
 import { Layout } from '../components/Layout.tsx'
 import { Spinner } from '../components/Spinner.tsx'

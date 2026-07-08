@@ -6,14 +6,14 @@ import {
   JwtCreateError,
   JwtVerifyError,
 } from './errors.js'
-import { PrivateKeyUsage } from './jwk.js'
-import { JwksPub } from './jwks.js'
+import type { PrivateKeyUsage } from './jwk.js'
+import type { JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
-import { VerifyOptions, VerifyResult } from './jwt-verify.js'
-import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
-import { ActivityCheckOptions, Key, KeyMatchOptions } from './key.js'
+import type { VerifyOptions, VerifyResult } from './jwt-verify.js'
+import type { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
+import type { ActivityCheckOptions, Key, KeyMatchOptions } from './key.js'
 import {
-  Override,
+  type Override,
   cachedGetter,
   isDefined,
   matchesAny,

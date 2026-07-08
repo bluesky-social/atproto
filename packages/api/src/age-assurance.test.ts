@@ -4,7 +4,7 @@ import {
   computeAgeAssuranceRegionAccess,
   getAgeAssuranceRegionConfig,
 } from './age-assurance.js'
-import { AppBskyAgeassuranceDefs } from './client/index.js'
+import type { AppBskyAgeassuranceDefs } from './client/index.js'
 
 describe('age-assurance', () => {
   describe('getAgeAssuranceRegionConfig', () => {

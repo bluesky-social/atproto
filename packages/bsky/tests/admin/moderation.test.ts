@@ -1,12 +1,17 @@
 import assert from 'node:assert'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
-  $Typed,
-  AtpAgent,
+  type $Typed,
+  type AtpAgent,
   ComAtprotoAdminDefs,
   ComAtprotoRepoStrongRef,
 } from '@atproto/api'
-import { ImageRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type ImageRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 
 describe('moderation', () => {
   let network: TestNetwork

@@ -3,8 +3,8 @@
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
-import { Database } from '../db/index.js'
-import { DatabaseSchema } from '../db/schema/index.js'
+import type { Database } from '../db/index.js'
+import type { DatabaseSchema } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
 import {
   REVIEWCLOSED,
@@ -12,7 +12,7 @@ import {
   REVIEWNONE,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
+import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,

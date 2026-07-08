@@ -1,5 +1,5 @@
 import { FetchRequestError } from './fetch-request.js'
-import { Fetch, FetchContext, toRequestTransformer } from './fetch.js'
+import { type Fetch, type FetchContext, toRequestTransformer } from './fetch.js'
 import { TransformedResponse } from './transformed-response.js'
 import { padLines, stringifyMessage } from './util.js'
 

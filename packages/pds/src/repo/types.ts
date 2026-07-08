@@ -1,6 +1,6 @@
-import { Cid, LexMap, TypedBlobRef } from '@atproto/lex-data'
-import { BlockMap, CommitData, WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import type { Cid, LexMap, TypedBlobRef } from '@atproto/lex-data'
+import type { BlockMap, CommitData, WriteOpAction } from '@atproto/repo'
+import type { AtUri } from '@atproto/syntax'
 
 export type ValidationStatus = 'valid' | 'unknown'
 

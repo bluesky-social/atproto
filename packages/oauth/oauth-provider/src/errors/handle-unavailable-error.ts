@@ -1,4 +1,4 @@
-import { HandleUnavailableReason } from '@atproto/oauth-provider-api'
+import type { HandleUnavailableReason } from '@atproto/oauth-provider-api'
 import { OAuthError } from './oauth-error.js'
 
 // @TODO this is *not* and "OAuthError" error but rather an ApiError.

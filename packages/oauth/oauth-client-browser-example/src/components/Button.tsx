@@ -1,4 +1,4 @@
-import { JSX, useState } from 'react'
+import { type JSX, useState } from 'react'
 import { Spinner } from './Spinner.tsx'
 
 export type ButtonProps = {

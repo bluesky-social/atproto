@@ -1,11 +1,11 @@
 import type { ClientOptions } from 'ws'
-import { Deferrable, createDeferrable, wait } from '@atproto/common'
+import { type Deferrable, createDeferrable, wait } from '@atproto/common'
 import {
-  DidDocument,
-  IdResolver,
+  type DidDocument,
+  type IdResolver,
   parseToAtprotoDocument,
 } from '@atproto/identity'
-import { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex'
 import {
   RepoVerificationError,
   cborToLexRecord,
@@ -17,7 +17,7 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
-import {
+import type {
   AccountEvt,
   AccountStatus,
   CommitEvt,
@@ -27,7 +27,7 @@ import {
   SyncEvt,
 } from '../events.js'
 import { com } from '../lexicons/index.js'
-import { EventRunner } from '../runner/index.js'
+import type { EventRunner } from '../runner/index.js'
 import { didAndSeqForEvt } from '../util.js'
 
 export type FirehoseOptions = ClientOptions & {

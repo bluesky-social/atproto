@@ -1,5 +1,44 @@
 # @atproto/dev-env
 
+## 0.5.27
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112), [`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2), [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`dc9525a`](https://github.com/bluesky-social/atproto/commit/dc9525a844c336597fa5d2ccb958606c7a1df83e), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549)]:
+  - @atproto/pds@0.5.16
+  - @atproto/api@0.20.27
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/common-web@0.5.5
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/lexicon@0.7.6
+  - @atproto/crypto@0.5.4
+  - @atproto/syntax@0.7.1
+  - @atproto/bsync@0.0.35
+  - @atproto/ozone@0.2.13
+  - @atproto/bsky@0.0.255
+  - @atproto/sync@0.3.9
+
+## 0.5.26
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`6b493b7`](https://github.com/bluesky-social/atproto/commit/6b493b77f56b7de47f5eb91d29f726cdc7794e46), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed), [`1497fea`](https://github.com/bluesky-social/atproto/commit/1497fea9c975e46e56fd99914fba2ad96affa934)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/lex@0.2.0
+  - @atproto/api@0.20.26
+  - @atproto/xrpc-server@0.11.7
+  - @atproto/bsky@0.0.254
+  - @atproto/bsync@0.0.34
+  - @atproto/common-web@0.5.4
+  - @atproto/lexicon@0.7.5
+  - @atproto/ozone@0.2.12
+  - @atproto/pds@0.5.15
+  - @atproto/sync@0.3.8
+  - @atproto/identity@0.5.4
+
 ## 0.5.25
 
 ### Patch Changes

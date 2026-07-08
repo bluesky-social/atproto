@@ -1,4 +1,5 @@
-import express, { RequestHandler } from 'express'
+import type { RequestHandler } from 'express'
+import type express from 'express'
 import { httpLogger as log } from '../../logger.js'
 import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const.js'
 import {
@@ -7,7 +8,7 @@ import {
 } from '../age-assurance/kws/external-payload.js'
 import { createEvent } from '../age-assurance/stash.js'
 import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util.js'
-import { AppContextWithKwsClient } from './types.js'
+import type { AppContextWithKwsClient } from './types.js'
 import {
   createStashEvent,
   getClientUa,

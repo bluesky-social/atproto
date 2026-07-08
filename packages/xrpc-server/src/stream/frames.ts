@@ -1,12 +1,12 @@
 import { decodeAll, encode } from '@atproto/lex-cbor'
-import { LexValue, isPlainObject } from '@atproto/lex-data'
+import { type LexValue, isPlainObject } from '@atproto/lex-data'
 import { XRPCError } from '../errors.js'
 import {
-  ErrorFrameBody,
-  ErrorFrameHeader,
-  FrameHeader,
+  type ErrorFrameBody,
+  type ErrorFrameHeader,
+  type FrameHeader,
   FrameType,
-  MessageFrameHeader,
+  type MessageFrameHeader,
   errorFrameBody,
   frameHeader,
 } from './types.js'

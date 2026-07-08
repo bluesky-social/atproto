@@ -1,8 +1,8 @@
 import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { dbLogger } from '../logger.js'
-import { ReportStatsServiceCreator } from '../report/stats.js'
+import type { ReportStatsServiceCreator } from '../report/stats.js'
 
 // Stable lock ID for pg_try_advisory_lock across all instances
 const ADVISORY_LOCK_ID = 7_239_401

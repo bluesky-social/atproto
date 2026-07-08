@@ -2,13 +2,13 @@ import assert from 'node:assert'
 import SqliteDB from 'better-sqlite3'
 import {
   Kysely,
-  KyselyPlugin,
-  PluginTransformQueryArgs,
-  PluginTransformResultArgs,
-  QueryResult,
-  RootOperationNode,
+  type KyselyPlugin,
+  type PluginTransformQueryArgs,
+  type PluginTransformResultArgs,
+  type QueryResult,
+  type RootOperationNode,
   SqliteDialect,
-  UnknownRow,
+  type UnknownRow,
   sql,
 } from 'kysely'
 import { dbLogger } from '../logger.js'

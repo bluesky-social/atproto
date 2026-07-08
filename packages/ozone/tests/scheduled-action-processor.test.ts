@@ -1,10 +1,10 @@
-import {
+import type {
   AtpAgent,
   ToolsOzoneModerationListScheduledActions,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs.js'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs.js'
 import { ids } from '../src/lexicon/lexicons.js'
 import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 

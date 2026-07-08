@@ -1,5 +1,5 @@
-import { LexiconDoc } from '@atproto/lexicon'
-import { TestPds } from './pds.js'
+import type { LexiconDoc } from '@atproto/lexicon'
+import type { TestPds } from './pds.js'
 import { ServiceProfile } from './service-profile.js'
 
 const LEXICONS: readonly LexiconDoc[] = [

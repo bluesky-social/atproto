@@ -2,7 +2,7 @@ import { Readable } from 'node:stream'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { cidForCbor } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
-import { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex'
 import { getInfo } from '../../src/image/sharp.js'
 import { ImageUriBuilder } from '../../src/image/uri.js'
 

@@ -1,7 +1,7 @@
 import 'core-js/es/symbol/dispose.js'
 
 import { DBTransaction } from './db-transaction.js'
-import { DatabaseSchema } from './schema.js'
+import type { DatabaseSchema } from './schema.js'
 
 export class DB<Schema extends DatabaseSchema> implements AsyncDisposable {
   static async open<Schema extends DatabaseSchema = DatabaseSchema>(

@@ -1,7 +1,7 @@
-import { BlobStore } from '@atproto/repo'
-import { SyncEvtData } from '../../repo/index.js'
+import type { BlobStore } from '@atproto/repo'
+import type { SyncEvtData } from '../../repo/index.js'
 import { BlobReader } from '../blob/reader.js'
-import { ActorDb } from '../db/index.js'
+import type { ActorDb } from '../db/index.js'
 import { RecordReader } from '../record/reader.js'
 import { SqlRepoReader } from './sql-repo-reader.js'
 

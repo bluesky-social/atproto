@@ -3,7 +3,7 @@ import {
   type InferInput,
   type InferOutput,
   Schema,
-  ValidationContext,
+  type ValidationContext,
   type Validator,
 } from '../core.js'
 

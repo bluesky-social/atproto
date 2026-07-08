@@ -1,4 +1,4 @@
-import { DidString } from '@atproto/syntax'
+import type { DidString } from '@atproto/syntax'
 
 export type EmailTokenPurpose =
   | 'confirm_email'
