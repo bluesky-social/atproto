@@ -1,7 +1,7 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import type { AtUriString, Client } from '@atproto/lex'
-import type { Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
 import type { DataPlaneClient } from '../../../../data-plane/index.js'
@@ -127,7 +127,7 @@ const skeletonV2 = async (
       query: params.q,
       viewer: params.hydrateCtx.viewer ?? undefined,
       limit: params.limit,
-      cursor: params.cursor,
+      cursor: sanitizeCursor(params.cursor),
     },
     sort: postSortToV2(params.sort),
     filters: {
@@ -279,4 +279,18 @@ const parseTimestamp = (value: string | undefined): Timestamp | undefined => {
   const date = new Date(value)
   if (isNaN(date.getTime())) return undefined
   return Timestamp.fromDate(date)
+}
+
+const sanitizeCursor = (cursor: string | undefined): string | undefined => {
+  if (!cursor) return undefined
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8')
+    const parsed = JSON.parse(decoded)
+    if (typeof parsed === 'object' && parsed !== null) {
+      return cursor
+    }
+  } catch {
+    // fall through to throw below
+  }
+  throw new InvalidRequestError('Invalid cursor format')
 }
