@@ -1,5 +1,6 @@
 import {
   AbnormalCloseError,
+  BufferOverflowError,
   SocketError,
   WebSocketCoreError,
 } from './errors.js'
@@ -69,6 +70,10 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   private terminal: Terminal | null = null
   private iterated = false
 
+  private readonly highWaterMark: number
+  private readonly maxBufferedBytes: number
+  private paused = false
+
   private resolveOpened!: () => void
   private rejectOpened!: (err: unknown) => void
   private resolveClosed!: (info: CloseInfo) => void
@@ -83,6 +88,8 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   ) {
     this.dataMode = options.dataMode ?? 'auto'
     this.signal = options.signal
+    this.highWaterMark = options.highWaterMark ?? 1_048_576
+    this.maxBufferedBytes = options.maxBufferedBytes ?? Infinity
 
     this.opened = new Promise<void>((resolve, reject) => {
       this.resolveOpened = resolve
@@ -113,8 +120,8 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
 
     // Retained for later tasks and referenced here to satisfy noUnusedLocals
     // until then: `dataMode` is enforced in Task 6; `options` carries the
-    // highWaterMark/maxBufferedBytes (Task 5) and heartbeat/idleTimeoutMs
-    // (Tasks 7–8) settings consumed by the hooks above.
+    // heartbeat/idleTimeoutMs (Tasks 7–8) settings consumed by the hooks
+    // above.
     void this.dataMode
     void this.options
   }
@@ -190,6 +197,16 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     }
     this.buffer.push({ value, bytes })
     this.bufferedBytes += bytes
+    // Hard ceiling first: crash over silent unbounded growth.
+    if (this.bufferedBytes > this.maxBufferedBytes) {
+      this.fail(new BufferOverflowError(this.bufferedBytes), true)
+      return
+    }
+    // High-water mark: request the transport pause the socket.
+    if (!this.paused && this.bufferedBytes > this.highWaterMark) {
+      this.paused = true
+      this.transport.pause()
+    }
   }
 
   // ---- terminal transitions ----
@@ -297,7 +314,11 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   }
 
   private afterDrain(): void {
-    // Task 5: transport.resume() when buffer drains below highWaterMark / 2.
+    // Hysteresis: only resume once well below the high-water mark.
+    if (this.paused && this.bufferedBytes < this.highWaterMark / 2) {
+      this.paused = false
+      this.transport.resume()
+    }
   }
 }
 
