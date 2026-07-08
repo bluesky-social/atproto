@@ -400,7 +400,7 @@ msgstr ""
 msgid "Data"
 msgstr "데이터"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:251
+#: src/pages/account/(authenticated)/manage/page.tsx:252
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr ""
@@ -413,7 +413,7 @@ msgstr ""
 msgid "Delete"
 msgstr "삭제"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:278
+#: src/pages/account/(authenticated)/manage/page.tsx:279
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr ""
@@ -441,6 +441,10 @@ msgstr "기기"
 
 #: src/components/forms/input-token.tsx:88
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Disable"
 msgstr ""
 
 #: src/components/disable-email-auth-factor-dialog.tsx:90
@@ -508,6 +512,7 @@ msgstr ""
 msgid "Email verified"
 msgstr ""
 
+#: src/pages/account/(authenticated)/manage/page.tsx:200
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
 msgstr ""
@@ -986,7 +991,7 @@ msgstr "변경 사항 게시"
 msgid "Reactivate"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:238
+#: src/pages/account/(authenticated)/manage/page.tsx:239
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr ""
@@ -1265,8 +1270,8 @@ msgstr "대상"
 msgid "Troubleshoot"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:201
+#: src/pages/account/(authenticated)/manage/page.tsx:220
 msgid "Two-factor authentication (2FA)"
 msgstr ""
 
@@ -1330,7 +1335,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:301
+#: src/pages/account/(authenticated)/manage/page.tsx:302
 msgid "Username"
 msgstr ""
 

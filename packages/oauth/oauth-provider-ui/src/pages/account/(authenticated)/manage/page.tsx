@@ -1,4 +1,4 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   AtIcon,
   CaretRightIcon,
@@ -177,6 +177,7 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 }
 
 function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { t } = useLingui()
   const { account } = useAuthenticatedSession()
   const { did, email, emailVerified, emailAuthFactor } = account
 
@@ -196,7 +197,7 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
           await enableEmailAuthFactor.mutateAsync({ email, did })
         }}
       >
-        <Row {...props} icon={ShieldWarningIcon} value="Enable">
+        <Row {...props} icon={ShieldWarningIcon} value={t`Enable`}>
           <Trans>Two-factor authentication (2FA)</Trans>
         </Row>
       </EnableEmailAuthFactorDialog>
@@ -215,7 +216,7 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await disableEmailAuthFactor.mutateAsync({ email, did, token })
       }}
     >
-      <Row {...props} icon={ShieldWarningIcon} value="Disable">
+      <Row {...props} icon={ShieldWarningIcon} value={t`Disable`}>
         <Trans>Two-factor authentication (2FA)</Trans>
       </Row>
     </DisableEmailAuthFactorDialog>

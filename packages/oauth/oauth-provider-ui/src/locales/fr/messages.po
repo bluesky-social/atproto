@@ -400,7 +400,7 @@ msgstr "Les domaines personnalisés ne sont pas pris en charge"
 msgid "Data"
 msgstr "Données"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:251
+#: src/pages/account/(authenticated)/manage/page.tsx:252
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Désactiver le compte"
@@ -413,7 +413,7 @@ msgstr "Compte désactivé"
 msgid "Delete"
 msgstr "Supprimer"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:278
+#: src/pages/account/(authenticated)/manage/page.tsx:279
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Supprimer le compte"
@@ -443,17 +443,21 @@ msgstr "Appareils"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Vous n'avez pas reçu de code ? <0>Renvoyer un code</0>"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Disable"
+msgstr "Désactiver"
+
 #: src/components/disable-email-auth-factor-dialog.tsx:90
 msgid "Disable 2FA"
-msgstr ""
+msgstr "Désactiver la 2FA"
 
 #: src/components/disable-email-auth-factor-dialog.tsx:43
 msgid "Disable email 2FA"
-msgstr ""
+msgstr "Désactiver la 2FA par email"
 
 #: src/components/disable-email-auth-factor-dialog.tsx:64
 msgid "Disabling two-factor authentication makes your account less secure."
-msgstr ""
+msgstr "Désactiver l'authentification à deux facteurs rend votre compte moins sécurisé."
 
 #: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
@@ -494,11 +498,11 @@ msgstr "Modification de l'adresse email réussie"
 
 #: src/data/email.ts:142
 msgid "Email login verification disabled"
-msgstr ""
+msgstr "Vérification de connexion par email désactivée"
 
 #: src/data/email.ts:116
 msgid "Email login verification enabled"
-msgstr ""
+msgstr "Vérification de connexion par email activée"
 
 #: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
@@ -508,13 +512,14 @@ msgstr "Envoyer ces instructions par email"
 msgid "Email verified"
 msgstr "Adresse email vérifiée"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:200
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
-msgstr ""
+msgstr "Activer"
 
 #: src/components/enable-email-auth-factor-dialog.tsx:22
 msgid "Enable email 2FA"
-msgstr ""
+msgstr "Activer la 2FA par email"
 
 #: src/components/forms/input-new-password.tsx:39
 msgid "Enter a password"
@@ -534,7 +539,7 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 
 #: src/components/disable-email-auth-factor-dialog.tsx:51
 msgid "Enter the security code we sent to <0>{email}</0> to disable two-factor authentication."
-msgstr ""
+msgstr "Saisissez le code de sécurité que nous avons envoyé à <0>{email}</0> pour désactiver l'authentification à deux facteurs."
 
 #: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
@@ -583,11 +588,11 @@ msgstr "Échec de la suppression du compte"
 
 #: src/data/email.ts:150
 msgid "Failed to disable email login verification"
-msgstr ""
+msgstr "Échec de la désactivation de la vérification de connexion par email"
 
 #: src/data/email.ts:122
 msgid "Failed to enable email login verification"
-msgstr ""
+msgstr "Échec de l'activation de la vérification de connexion par email"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
 #: src/pages/account/(authenticated)/apps/page.tsx:34
@@ -624,7 +629,7 @@ msgstr "Échec de l'envoi de l'email de confirmation"
 
 #: src/data/email.ts:151
 msgid "Failed to send security code"
-msgstr ""
+msgstr "Échec de l'envoi du code de sécurité"
 
 #: src/data/email.ts:76
 msgid "Failed to send verification email"
@@ -996,7 +1001,7 @@ msgstr "Publier des modifications"
 msgid "Reactivate"
 msgstr "Réactiver"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:238
+#: src/pages/account/(authenticated)/manage/page.tsx:239
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Réactiver le compte"
@@ -1029,7 +1034,7 @@ msgstr "Données publiques"
 
 #: src/components/enable-email-auth-factor-dialog.tsx:24
 msgid "Require an email code to sign in to your account."
-msgstr ""
+msgstr "Exiger un code envoyé par email pour vous connecter à votre compte."
 
 #: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
@@ -1084,7 +1089,7 @@ msgstr "Envoyer l'email"
 
 #: src/components/disable-email-auth-factor-dialog.tsx:79
 msgid "Send email to verify"
-msgstr ""
+msgstr "Envoyer un email de vérification"
 
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
@@ -1260,7 +1265,7 @@ msgstr "Pour changer votre mot de passe, vous devrez entrer un code de sécurit�
 
 #: src/components/disable-email-auth-factor-dialog.tsx:46
 msgid "To disable your email 2FA method, please verify your access to <0>{email}</0>"
-msgstr ""
+msgstr "Pour désactiver votre méthode 2FA par email, veuillez vérifier votre accès à <0>{email}</0>"
 
 #: src/components/verify-email-dialog.tsx:48
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
@@ -1275,10 +1280,10 @@ msgstr "Auprès de"
 msgid "Troubleshoot"
 msgstr "Dépannage"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:201
+#: src/pages/account/(authenticated)/manage/page.tsx:220
 msgid "Two-factor authentication (2FA)"
-msgstr ""
+msgstr "Authentification à deux facteurs (2FA)"
 
 #: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Type"
@@ -1340,7 +1345,7 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:301
+#: src/pages/account/(authenticated)/manage/page.tsx:302
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
@@ -1487,7 +1492,7 @@ msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre 
 
 #: src/data/email.ts:143
 msgid "You will no longer be prompted for a code to sign in."
-msgstr ""
+msgstr "Un code ne vous sera plus demandé pour vous connecter."
 
 #: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
@@ -1548,7 +1553,7 @@ msgstr "Votre nom d'utilisateur complet sera : {0}"
 
 #: src/data/email.ts:117
 msgid "Your next login will require a code that is sent to your email address."
-msgstr ""
+msgstr "Votre prochaine connexion nécessitera un code envoyé à votre adresse email."
 
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"

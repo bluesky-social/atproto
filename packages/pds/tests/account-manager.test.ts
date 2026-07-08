@@ -195,27 +195,30 @@ describe('account manager', () => {
 
     await page.clickOnText('Compte utilisateur', 'a')
 
-    await page.ensureTextVisibility('Two-factor authentication (2FA)', 'span')
+    await page.ensureTextVisibility(
+      'Authentification à deux facteurs (2FA)',
+      'span',
+    )
 
-    await page.clickOnText('Two-factor authentication (2FA)')
+    await page.clickOnText('Authentification à deux facteurs (2FA)')
 
-    await page.ensureTextVisibility('Enable email 2FA', 'h2')
+    await page.ensureTextVisibility('Activer la 2FA par email', 'h2')
 
     // We need to explicitly click on the enable button in the dialog,
     // otherwise we end up clicking on the "enable" behind the dialog.
-    await page.clickOnText('Enable', 'div[role=dialog] button')
+    await page.clickOnText('Activer', 'div[role=dialog] button')
 
     await page.waitForNetworkIdle()
 
-    await page.ensureTextVisibility('Disable', 'span')
+    await page.ensureTextVisibility('Désactiver', 'span')
 
     expect(sendUpdateEmailMock).toHaveBeenCalledTimes(0)
 
     // Disabling 2FA:
-    await page.clickOnText('Two-factor authentication (2FA)')
-    await page.ensureTextVisibility('Disable email 2FA', 'h2')
+    await page.clickOnText('Authentification à deux facteurs (2FA)')
+    await page.ensureTextVisibility('Désactiver la 2FA par email', 'h2')
 
-    await page.clickOnText('Send email to verify', 'button')
+    await page.clickOnText('Envoyer un email de vérification', 'button')
     await page.waitForNetworkIdle()
 
     expect(sendUpdateEmailMock).toHaveBeenCalledTimes(1)
@@ -230,11 +233,11 @@ describe('account manager', () => {
 
     // We need to explicitly click on the disable button in the dialog,
     // otherwise we end up clicking on the "disable" behind the dialog.
-    await page.clickOnText('Disable', 'div[role=dialog] button')
+    await page.clickOnText('Désactiver', 'div[role=dialog] button')
 
     await page.waitForNetworkIdle()
 
-    await page.ensureTextVisibility('Enable', 'span')
+    await page.ensureTextVisibility('Activer', 'span')
   })
 
   it('allows changing the username', async () => {

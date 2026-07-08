@@ -400,7 +400,7 @@ msgstr "Anpassade domäner stöds inte"
 msgid "Data"
 msgstr "Data"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:251
+#: src/pages/account/(authenticated)/manage/page.tsx:252
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Inaktivera konto"
@@ -413,7 +413,7 @@ msgstr "Inaktiverat konto"
 msgid "Delete"
 msgstr "Radera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:278
+#: src/pages/account/(authenticated)/manage/page.tsx:279
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Radera konto"
@@ -442,6 +442,10 @@ msgstr "Enheter"
 #: src/components/forms/input-token.tsx:88
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Har du inte fått någon kod? <0>Klicka här för att skicka en ny.</0>"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Disable"
+msgstr ""
 
 #: src/components/disable-email-auth-factor-dialog.tsx:90
 msgid "Disable 2FA"
@@ -508,6 +512,7 @@ msgstr "Skicka dessa instruktioner via e-post"
 msgid "Email verified"
 msgstr "E-postadressen har verifierats"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:200
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
 msgstr ""
@@ -996,7 +1001,7 @@ msgstr "Publicera ändringar"
 msgid "Reactivate"
 msgstr "Återaktivera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:238
+#: src/pages/account/(authenticated)/manage/page.tsx:239
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Återaktivera konto"
@@ -1275,8 +1280,8 @@ msgstr "Gentemot"
 msgid "Troubleshoot"
 msgstr "Felsök"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:201
+#: src/pages/account/(authenticated)/manage/page.tsx:220
 msgid "Two-factor authentication (2FA)"
 msgstr ""
 
@@ -1340,7 +1345,7 @@ msgstr "Använd ett användarnamn med standarddomän"
 msgid "Use a domain name I own"
 msgstr "Använd ett domännamn jag äger"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:301
+#: src/pages/account/(authenticated)/manage/page.tsx:302
 msgid "Username"
 msgstr "Användarnamn"
 

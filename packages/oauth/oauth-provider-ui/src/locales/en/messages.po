@@ -400,7 +400,7 @@ msgstr "Custom domains are not supported"
 msgid "Data"
 msgstr "Data"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:251
+#: src/pages/account/(authenticated)/manage/page.tsx:252
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Deactivate account"
@@ -413,7 +413,7 @@ msgstr "Deactivated account"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:278
+#: src/pages/account/(authenticated)/manage/page.tsx:279
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Delete account"
@@ -442,6 +442,10 @@ msgstr "Devices"
 #: src/components/forms/input-token.tsx:88
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Didn't receive a code? <0>Click here to resend.</0>"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:219
+msgid "Disable"
+msgstr "Disable"
 
 #: src/components/disable-email-auth-factor-dialog.tsx:90
 msgid "Disable 2FA"
@@ -508,6 +512,7 @@ msgstr "Email these instructions"
 msgid "Email verified"
 msgstr "Email verified"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:200
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
 msgstr "Enable"
@@ -996,7 +1001,7 @@ msgstr "Publish changes"
 msgid "Reactivate"
 msgstr "Reactivate"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:238
+#: src/pages/account/(authenticated)/manage/page.tsx:239
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Reactivate account"
@@ -1275,8 +1280,8 @@ msgstr "Towards"
 msgid "Troubleshoot"
 msgstr "Troubleshoot"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:201
+#: src/pages/account/(authenticated)/manage/page.tsx:220
 msgid "Two-factor authentication (2FA)"
 msgstr "Two-factor authentication (2FA)"
 
@@ -1340,7 +1345,7 @@ msgstr "Use a default username"
 msgid "Use a domain name I own"
 msgstr "Use a domain name I own"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:301
+#: src/pages/account/(authenticated)/manage/page.tsx:302
 msgid "Username"
 msgstr "Username"
 
