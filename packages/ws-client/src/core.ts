@@ -268,7 +268,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
       return: async () => {
         // Consumer abandoned iteration: polite close.
         if (this.state === 'open' || this.state === 'connecting') {
-          this.close(1000)
+          void this.close(1000).catch(() => {})
         }
         return { value: undefined as never, done: true }
       },

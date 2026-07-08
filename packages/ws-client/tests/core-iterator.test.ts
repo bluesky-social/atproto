@@ -174,4 +174,28 @@ describe('WebSocketCoreEngine iterator', () => {
     await expect(pending).rejects.toThrow('user aborted')
     expect(mock.terminated).toBe(true)
   })
+
+  it('does not leak an unhandled rejection when consumer breaks then connection fails', async () => {
+    const { engine, mock } = makeEngine()
+    mock.emitOpen()
+
+    const unhandled: unknown[] = []
+    const onUnhandled = (reason: unknown) => unhandled.push(reason)
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      // Consumer receives one message then abandons iteration -> return() -> close(1000).
+      mock.emitMessage('one', false)
+      for await (const _msg of engine) {
+        break
+      }
+      // The graceful close never completes cleanly; the connection fails.
+      mock.emitError(new Error('dropped during close'))
+      // Let any microtasks/rejections settle.
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    } finally {
+      process.removeListener('unhandledRejection', onUnhandled)
+    }
+
+    expect(unhandled).toEqual([])
+  })
 })
