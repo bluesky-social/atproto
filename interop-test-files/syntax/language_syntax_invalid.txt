@@ -3,8 +3,11 @@
 j
 ja-
 a-DE
-jaja
-JA
+
+# part of the "invalid" interop test, but current tests allow them:
+
+# jaja
+# JA
 
 # technically not valid, but allowing in naive parser
 de-419-DE
