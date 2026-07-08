@@ -400,7 +400,7 @@ msgstr "カスタムドメインはサポートされていません"
 msgid "Data"
 msgstr "データ"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:252
+#: src/pages/account/(authenticated)/manage/page.tsx:266
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "アカウントを無効化"
@@ -413,7 +413,7 @@ msgstr "無効化されたアカウント"
 msgid "Delete"
 msgstr "削除"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:279
+#: src/pages/account/(authenticated)/manage/page.tsx:293
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "アカウントを削除"
@@ -443,7 +443,7 @@ msgstr "デバイス"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "コードが届いていませんか？<0>ここをクリックすれば再送信します。</0>"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:233
 msgid "Disable"
 msgstr ""
 
@@ -477,7 +477,7 @@ msgstr "例: <0>alice{0}</0>"
 msgid "Email"
 msgstr "メールアドレス"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:141
+#: src/pages/account/(authenticated)/manage/page.tsx:142
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -512,7 +512,7 @@ msgstr "これらの手順をメールで送信"
 msgid "Email verified"
 msgstr "メールアドレスが確認されました"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
+#: src/pages/account/(authenticated)/manage/page.tsx:214
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
 msgstr ""
@@ -737,7 +737,7 @@ msgstr "あなたのドメインのウェブホスティング設定にアクセ
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "自分のドメインを持っていれば、ハンドルとして利用できます。これによりあなたのアイデンティティを自己証明できます。<0>詳しくはこちら</0>。"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:132
+#: src/pages/account/(authenticated)/manage/page.tsx:133
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "メールアドレスを更新すると、メールでの2要素認証(有効にしていた場合)は無効になります。"
 
@@ -895,7 +895,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:173
+#: src/pages/account/(authenticated)/manage/page.tsx:174
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -1001,7 +1001,7 @@ msgstr "公開された変更"
 msgid "Reactivate"
 msgstr "再有効化"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:239
+#: src/pages/account/(authenticated)/manage/page.tsx:253
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "アカウントを再有効化"
@@ -1280,8 +1280,9 @@ msgstr "対象"
 msgid "Troubleshoot"
 msgstr "トラブルシュート"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:201
-#: src/pages/account/(authenticated)/manage/page.tsx:220
+#: src/pages/account/(authenticated)/manage/page.tsx:202
+#: src/pages/account/(authenticated)/manage/page.tsx:215
+#: src/pages/account/(authenticated)/manage/page.tsx:234
 msgid "Two-factor authentication (2FA)"
 msgstr ""
 
@@ -1345,7 +1346,7 @@ msgstr "デフォルトのユーザー名を使用"
 msgid "Use a domain name I own"
 msgstr "自分が所有するドメイン名を使用"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:302
+#: src/pages/account/(authenticated)/manage/page.tsx:316
 msgid "Username"
 msgstr "ユーザー名"
 
@@ -1387,7 +1388,11 @@ msgstr "確認成功！"
 msgid "Verify and Save"
 msgstr "確認して保存"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:92
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+msgid "Verify email to enable"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:93
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1542,7 +1547,7 @@ msgstr "メールアドレスは正常に更新され、確認が必要です。
 msgid "Your email address has been verified."
 msgstr "メールアドレスが確認されました。"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:97
+#: src/pages/account/(authenticated)/manage/page.tsx:98
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 

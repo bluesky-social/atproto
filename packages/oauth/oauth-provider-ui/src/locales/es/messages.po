@@ -400,7 +400,7 @@ msgstr ""
 msgid "Data"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:252
+#: src/pages/account/(authenticated)/manage/page.tsx:266
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr ""
@@ -413,7 +413,7 @@ msgstr ""
 msgid "Delete"
 msgstr "Eliminar"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:279
+#: src/pages/account/(authenticated)/manage/page.tsx:293
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr ""
@@ -443,7 +443,7 @@ msgstr ""
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:233
 msgid "Disable"
 msgstr ""
 
@@ -477,7 +477,7 @@ msgstr ""
 msgid "Email"
 msgstr "Correo electrónico"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:141
+#: src/pages/account/(authenticated)/manage/page.tsx:142
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -512,7 +512,7 @@ msgstr ""
 msgid "Email verified"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
+#: src/pages/account/(authenticated)/manage/page.tsx:214
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
 msgstr ""
@@ -727,7 +727,7 @@ msgstr ""
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:132
+#: src/pages/account/(authenticated)/manage/page.tsx:133
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr ""
 
@@ -885,7 +885,7 @@ msgstr "Aceptar"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Solo letras, números y guiones"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:173
+#: src/pages/account/(authenticated)/manage/page.tsx:174
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -991,7 +991,7 @@ msgstr "Publicar cambios"
 msgid "Reactivate"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:239
+#: src/pages/account/(authenticated)/manage/page.tsx:253
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr ""
@@ -1270,8 +1270,9 @@ msgstr "Hacia"
 msgid "Troubleshoot"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:201
-#: src/pages/account/(authenticated)/manage/page.tsx:220
+#: src/pages/account/(authenticated)/manage/page.tsx:202
+#: src/pages/account/(authenticated)/manage/page.tsx:215
+#: src/pages/account/(authenticated)/manage/page.tsx:234
 msgid "Two-factor authentication (2FA)"
 msgstr ""
 
@@ -1335,7 +1336,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:302
+#: src/pages/account/(authenticated)/manage/page.tsx:316
 msgid "Username"
 msgstr ""
 
@@ -1377,7 +1378,11 @@ msgstr ""
 msgid "Verify and Save"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:92
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+msgid "Verify email to enable"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:93
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1532,7 +1537,7 @@ msgstr ""
 msgid "Your email address has been verified."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx:97
+#: src/pages/account/(authenticated)/manage/page.tsx:98
 msgid "Your email address needs to be verified."
 msgstr ""
 

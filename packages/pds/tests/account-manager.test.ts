@@ -146,6 +146,24 @@ describe('account manager', () => {
     await page.ensureNotification('Réinitialisation du mot de passe réussie')
   })
 
+  it('shows email 2FA as disabled until the email is verified', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    // The 2FA row's label lives inside a disabled <button> until the email is
+    // verified. Matching the label span and constraining its ancestor proves
+    // the row is present *and* disabled.
+    await page.ensureTextVisibility(
+      'Authentification à deux facteurs (2FA)',
+      'button[disabled] span',
+    )
+  })
+
   it('allows verifying the email address', async () => {
     await using page = await PageHelper.from(browser, { languages })
 

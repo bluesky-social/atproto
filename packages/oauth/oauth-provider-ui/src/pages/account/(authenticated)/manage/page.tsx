@@ -188,8 +188,21 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   // These endpoints requires an email, so if the user doesn't have one, we can't
   // let them update their email auth factor. These users should not exist in
   // normal conditions (may have been created manually by an admin), and are
-  // expected to contact support to update their password.
-  if (!email || !emailVerified) return null
+  // expected to contact support.
+  if (!email) return null
+
+  if (!emailVerified) {
+    return (
+      <Row
+        {...props}
+        disabled
+        icon={ShieldWarningIcon}
+        value={t`Verify email to enable`}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    )
+  }
 
   if (!emailAuthFactor) {
     return (

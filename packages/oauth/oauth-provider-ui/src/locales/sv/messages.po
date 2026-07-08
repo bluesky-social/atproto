@@ -400,7 +400,7 @@ msgstr "Anpassade domäner stöds inte"
 msgid "Data"
 msgstr "Data"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:252
+#: src/pages/account/(authenticated)/manage/page.tsx:266
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Inaktivera konto"
@@ -413,7 +413,7 @@ msgstr "Inaktiverat konto"
 msgid "Delete"
 msgstr "Radera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:279
+#: src/pages/account/(authenticated)/manage/page.tsx:293
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Radera konto"
@@ -443,7 +443,7 @@ msgstr "Enheter"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Har du inte fått någon kod? <0>Klicka här för att skicka en ny.</0>"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:219
+#: src/pages/account/(authenticated)/manage/page.tsx:233
 msgid "Disable"
 msgstr ""
 
@@ -477,7 +477,7 @@ msgstr "t.ex <0>alice{0}</0>"
 msgid "Email"
 msgstr "E-post"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:141
+#: src/pages/account/(authenticated)/manage/page.tsx:142
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -512,7 +512,7 @@ msgstr "Skicka dessa instruktioner via e-post"
 msgid "Email verified"
 msgstr "E-postadressen har verifierats"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:200
+#: src/pages/account/(authenticated)/manage/page.tsx:214
 #: src/components/enable-email-auth-factor-dialog.tsx:34
 msgid "Enable"
 msgstr ""
@@ -737,7 +737,7 @@ msgstr "Om du har åtkomst till din domäns webbutrymme (t.ex. via FTP)"
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Om du har en egen domän kan du använda den som användarnamn. På så sätt kan du själv verifiera din identitet. <0>Läs mer här.</0>"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:132
+#: src/pages/account/(authenticated)/manage/page.tsx:133
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Om du uppdaterar din e-postadress kommer tvåfaktorsautentisering via e-post att inaktiveras (om det är aktiverat)."
 
@@ -895,7 +895,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Endast bokstäver, siffror och bindestreck"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:173
+#: src/pages/account/(authenticated)/manage/page.tsx:174
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -1001,7 +1001,7 @@ msgstr "Publicera ändringar"
 msgid "Reactivate"
 msgstr "Återaktivera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:239
+#: src/pages/account/(authenticated)/manage/page.tsx:253
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Återaktivera konto"
@@ -1280,8 +1280,9 @@ msgstr "Gentemot"
 msgid "Troubleshoot"
 msgstr "Felsök"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:201
-#: src/pages/account/(authenticated)/manage/page.tsx:220
+#: src/pages/account/(authenticated)/manage/page.tsx:202
+#: src/pages/account/(authenticated)/manage/page.tsx:215
+#: src/pages/account/(authenticated)/manage/page.tsx:234
 msgid "Two-factor authentication (2FA)"
 msgstr ""
 
@@ -1345,7 +1346,7 @@ msgstr "Använd ett användarnamn med standarddomän"
 msgid "Use a domain name I own"
 msgstr "Använd ett domännamn jag äger"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:302
+#: src/pages/account/(authenticated)/manage/page.tsx:316
 msgid "Username"
 msgstr "Användarnamn"
 
@@ -1387,7 +1388,11 @@ msgstr "Verifieringen lyckades!"
 msgid "Verify and Save"
 msgstr "Verifiera och spara"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:92
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+msgid "Verify email to enable"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:93
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1542,7 +1547,7 @@ msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifier
 msgid "Your email address has been verified."
 msgstr "Din e-postadress har verifierats."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:97
+#: src/pages/account/(authenticated)/manage/page.tsx:98
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 
