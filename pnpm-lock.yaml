@@ -2195,9 +2195,12 @@ importers:
       http-terminator:
         specifier: ^3.2.0
         version: 3.2.0
-      jest:
-        specifier: ^30.0.0
-        version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.13.3)(@types/node@22.19.17)(typescript@6.0.3))
+      undici:
+        specifier: ^6.0.0
+        version: 6.19.8
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
 
   packages/xrpc:
     dependencies:
@@ -11760,7 +11763,7 @@ snapshots:
   '@babel/helper-module-imports@7.25.9':
     dependencies:
       '@babel/traverse': 7.28.4
-      '@babel/types': 7.28.4
+      '@babel/types': 7.29.0
     transitivePeerDependencies:
       - supports-color
 
@@ -14504,7 +14507,7 @@ snapshots:
       '@babel/plugin-transform-sticky-regex': 7.27.1(@babel/core@7.29.0)
       '@babel/plugin-transform-typescript': 7.28.0(@babel/core@7.29.0)
       '@babel/plugin-transform-unicode-regex': 7.27.1(@babel/core@7.29.0)
-      '@babel/template': 7.27.2
+      '@babel/template': 7.28.6
       '@react-native/babel-plugin-codegen': 0.81.4(@babel/core@7.29.0)
       babel-plugin-syntax-hermes-parser: 0.29.1
       babel-plugin-transform-flow-enums: 0.0.2(@babel/core@7.29.0)
@@ -15756,7 +15759,7 @@ snapshots:
 
   babel-plugin-react-compiler@19.1.0-rc.3:
     dependencies:
-      '@babel/types': 7.28.4
+      '@babel/types': 7.29.0
 
   babel-plugin-react-native-web@0.21.1: {}
 

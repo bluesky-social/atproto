@@ -1,6 +1,9 @@
 import type { ClientOptions } from 'ws'
 import { WebSocket, createWebSocketStream } from 'ws'
 import { SECOND, isErrnoException, wait } from '@atproto/common'
+import { CloseCode, DisconnectError } from './keepalive-shared.js'
+
+export { CloseCode, DisconnectError } from './keepalive-shared.js'
 
 export class WebSocketKeepAlive {
   public ws: WebSocket | null = null
@@ -141,22 +144,6 @@ export default WebSocketKeepAlive
 
 class AbnormalCloseError extends Error {
   code = 'EWSABNORMALCLOSE'
-}
-
-export class DisconnectError extends Error {
-  constructor(
-    public wsCode: CloseCode = CloseCode.Policy,
-    public xrpcCode?: string,
-  ) {
-    super()
-  }
-}
-
-// https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-export enum CloseCode {
-  Normal = 1000,
-  Abnormal = 1006,
-  Policy = 1008,
 }
 
 function isReconnectable(err: unknown): boolean {
