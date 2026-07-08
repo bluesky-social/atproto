@@ -5,6 +5,7 @@ import {
   EnvelopeIcon,
   type Icon,
   LockIcon,
+  ShieldCheckIcon,
   ShieldWarningIcon,
   SnowflakeIcon,
   TrashIcon,
@@ -216,7 +217,7 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await disableEmailAuthFactor.mutateAsync({ email, did, token })
       }}
     >
-      <Row {...props} icon={ShieldWarningIcon} value={t`Disable`}>
+      <Row {...props} icon={ShieldCheckIcon} value={t`Disable`}>
         <Trans>Two-factor authentication (2FA)</Trans>
       </Row>
     </DisableEmailAuthFactorDialog>
