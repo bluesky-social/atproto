@@ -317,11 +317,7 @@ export type LexRecord = z.infer<typeof lexRecord>
 // core
 // =
 
-// We need to use `z.custom` here because
-// lexXrpcProperty and lexObject are refined
-// `z.union` would work, but it's too slow
-// see #915 for details
-export const lexUserType = z.custom<
+export type LexUserType =
   | LexRecord
   | LexPermissionSet
   | LexXrpcQuery
@@ -337,83 +333,93 @@ export const lexUserType = z.custom<
   | LexBytes
   | LexCidLink
   | LexUnknown
->(
-  (val) => {
-    if (!val || typeof val !== 'object') {
-      return
-    }
 
-    if (val['type'] === undefined) {
-      return
-    }
-
-    switch (val['type']) {
-      case 'record':
-        return lexRecord.parse(val)
-
-      case 'permission-set':
-        return lexPermissionSet.parse(val)
-
-      case 'query':
-        return lexXrpcQuery.parse(val)
-      case 'procedure':
-        return lexXrpcProcedure.parse(val)
-      case 'subscription':
-        return lexXrpcSubscription.parse(val)
-
-      case 'blob':
-        return lexBlob.parse(val)
-
-      case 'array':
-        return lexArray.parse(val)
-      case 'token':
-        return lexToken.parse(val)
-      case 'object':
-        return lexObject.parse(val)
-
-      case 'boolean':
-        return lexBoolean.parse(val)
-      case 'integer':
-        return lexInteger.parse(val)
-      case 'string':
-        return lexString.parse(val)
-      case 'bytes':
-        return lexBytes.parse(val)
-      case 'cid-link':
-        return lexCidLink.parse(val)
-      case 'unknown':
-        return lexUnknown.parse(val)
-    }
-  },
-  (val) => {
-    if (!val || typeof val !== 'object') {
-      return {
-        message: 'Must be an object',
-        fatal: true,
-      }
-    }
-
-    if (val['type'] === undefined) {
-      return {
-        message: 'Must have a type',
-        fatal: true,
-      }
-    }
-
-    if (typeof val['type'] !== 'string') {
-      return {
-        message: 'Type property must be a string',
-        fatal: true,
-      }
-    }
-
-    return {
-      message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
+// We need to use custom dispatch here because
+// lexXrpcProperty and lexObject are refined.
+// `z.union` would work, but it's too slow
+// see #915 for details
+export const lexUserType = z.unknown().superRefine((val, ctx) => {
+  if (!val || typeof val !== 'object') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Must be an object',
       fatal: true,
+    })
+    return z.NEVER
+  }
+
+  const obj = val as Record<string, unknown>
+  const type = obj['type']
+
+  if (type === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Must have a type',
+      fatal: true,
+    })
+    return z.NEVER
+  }
+
+  if (typeof type !== 'string') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Type property must be a string',
+      fatal: true,
+    })
+    return z.NEVER
+  }
+
+  const typeSchema = (() => {
+    switch (type) {
+      case 'record':
+        return lexRecord
+      case 'permission-set':
+        return lexPermissionSet
+      case 'query':
+        return lexXrpcQuery
+      case 'procedure':
+        return lexXrpcProcedure
+      case 'subscription':
+        return lexXrpcSubscription
+      case 'blob':
+        return lexBlob
+      case 'array':
+        return lexArray
+      case 'token':
+        return lexToken
+      case 'object':
+        return lexObject
+      case 'boolean':
+        return lexBoolean
+      case 'integer':
+        return lexInteger
+      case 'string':
+        return lexString
+      case 'bytes':
+        return lexBytes
+      case 'cid-link':
+        return lexCidLink
+      case 'unknown':
+        return lexUnknown
     }
-  },
-)
-export type LexUserType = z.infer<typeof lexUserType>
+  })()
+
+  if (!typeSchema) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Invalid type: ${type} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
+      fatal: true,
+    })
+    return z.NEVER
+  }
+
+  const result = typeSchema.safeParse(val)
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      ctx.addIssue(issue)
+    }
+  }
+}) as z.ZodType<LexUserType>
 
 export const lexiconDoc = z
   .object({
