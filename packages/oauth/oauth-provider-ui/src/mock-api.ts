@@ -57,6 +57,7 @@ export const accounts = new Map<DidString, Account>(
         deactivated: true,
         email: 'alice@test.com',
         emailVerified: true,
+        emailAuthFactor: true,
         name: 'Alice',
         handle: 'alice.test',
         picture: /** @type {sting|undefined} */ undefined,
@@ -177,6 +178,11 @@ export const accountDeviceSessions = new Map<
       },
       {
         did: 'did:plc:dpajgwmnecpdyjyqzjzm6bnb',
+        remember: false,
+        loginRequired: false,
+      },
+      {
+        did: 'did:plc:alice',
         remember: false,
         loginRequired: false,
       },
