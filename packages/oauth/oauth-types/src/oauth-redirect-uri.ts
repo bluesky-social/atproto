@@ -1,7 +1,6 @@
 import { type TypeOf, ZodIssueCode, z } from 'zod'
 import {
   type HttpsUri,
-  type LoopbackUri,
   type PrivateUseUri,
   httpsUriSchema,
   loopbackUriSchema,
@@ -9,33 +8,20 @@ import {
 } from './uri.js'
 
 /**
- * This is a {@link loopbackUriSchema} with the additional restriction that
- * the hostname `localhost` is not allowed.
+ * Any loopback URI ("localhost", "127.0.0.1" or "[::1]" hostname) is allowed
+ * as a redirect URI.
  *
- * @see {@link https://datatracker.ietf.org/doc/html/rfc8252#section-8.3 Loopback Redirect Considerations} RFC8252
+ * @NOTE {@link https://datatracker.ietf.org/doc/html/rfc8252#section-8.3 RFC8252}
+ * recommends loopback IP literals over "localhost" for native apps binding a
+ * local port listener, out of concern that "localhost" could resolve to a
+ * non-loopback address. The atproto OAuth profile allows "localhost" redirect
+ * URIs for loopback (development) clients: browser-mediated flows resolve
+ * "localhost" to the loopback interface, and the mandatory PKCE and DPoP
+ * requirements prevent use of an intercepted authorization code.
  *
- * > While redirect URIs using localhost (i.e.,
- * > "http://localhost:{port}/{path}") function similarly to loopback IP
- * > redirects described in Section 7.3, the use of localhost is NOT
- * > RECOMMENDED. Specifying a redirect URI with the loopback IP literal rather
- * > than localhost avoids inadvertently listening on network interfaces other
- * > than the loopback interface.  It is also less susceptible to client-side
- * > firewalls and misconfigured host name resolution on the user's device.
+ * @see {@link https://atproto.com/specs/oauth#localhost-client-development}
  */
-export const loopbackRedirectURISchema = loopbackUriSchema.superRefine(
-  (value, ctx): value is Exclude<LoopbackUri, `http://localhost${string}`> => {
-    if (value.startsWith('http://localhost')) {
-      ctx.addIssue({
-        code: ZodIssueCode.custom,
-        message:
-          'Use of "localhost" hostname is not allowed (RFC 8252), use a loopback IP such as "127.0.0.1" instead',
-      })
-      return false
-    }
-
-    return true
-  },
-)
+export const loopbackRedirectURISchema = loopbackUriSchema
 export type LoopbackRedirectURI = TypeOf<typeof loopbackRedirectURISchema>
 
 export const oauthLoopbackClientRedirectUriSchema = loopbackRedirectURISchema

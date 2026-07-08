@@ -18,6 +18,10 @@ export class PageHelper implements AsyncDisposable {
     return this.page.isClosed()
   }
 
+  url() {
+    return this.page.url()
+  }
+
   async title() {
     await this.waitForNetworkIdle()
     return this.page.title()

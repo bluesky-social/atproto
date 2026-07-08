@@ -487,22 +487,13 @@ export class ClientManager {
       switch (true) {
         // FIRST: Loopback redirect URI exception (only for native apps)
 
-        case url.hostname === 'localhost': {
-          // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
-          //
-          // > While redirect URIs using localhost (i.e.,
-          // > "http://localhost:{port}/{path}") function similarly to loopback IP
-          // > redirects described in Section 7.3, the use of localhost is NOT
-          // > RECOMMENDED. Specifying a redirect URI with the loopback IP literal
-          // > rather than localhost avoids inadvertently listening on network
-          // > interfaces other than the loopback interface. It is also less
-          // > susceptible to client-side firewalls and misconfigured host name
-          // > resolution on the user's device.
-          throw new InvalidRedirectUriError(
-            `Loopback redirect URI ${url} is not allowed (use explicit IPs instead)`,
-          )
-        }
-
+        // @NOTE Although RFC 8252 (section 8.3) recommends loopback IP
+        // literals over "localhost" for native apps binding a local port
+        // listener, the atproto OAuth profile allows "localhost" redirect
+        // URIs for loopback (development) clients.
+        //
+        // https://atproto.com/specs/oauth#localhost-client-development
+        case url.hostname === 'localhost':
         case url.hostname === '127.0.0.1':
         case url.hostname === '[::1]': {
           // Only allowed for native apps

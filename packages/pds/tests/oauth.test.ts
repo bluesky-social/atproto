@@ -13,6 +13,7 @@ describe('oauth', () => {
   let server: Server
 
   let appUrl: string
+  let localhostAppUrl: string
 
   // @NOTE We are using another language than "en" as default language to
   // test the language negotiation.
@@ -55,11 +56,14 @@ describe('oauth', () => {
       scope: `account:email identity:* repo:*`,
     }
 
-    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams(
+    const appQueryString = new URLSearchParams(
       Object.entries(appConfig).filter(
         (e): e is [string, string] => e[1] != null,
       ),
-    )}`
+    ).toString()
+
+    appUrl = `http://127.0.0.1:${port}?${appQueryString}`
+    localhostAppUrl = `http://localhost:${port}?${appQueryString}`
   })
 
   afterAll(async () => {
@@ -241,6 +245,40 @@ describe('oauth', () => {
     await page.navigationClick('Autoriser')
 
     await page.assertTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Token info', 'h2')
+
+    await page.clickOnAriaLabel('User menu')
+
+    await page.clickOnText('Sign out')
+
+    await page.waitForNetworkIdle()
+  })
+
+  it('Allows to sign-in through OAuth from a "localhost" origin', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(localhostAppUrl)
+
+    await page.assertTitle('OAuth Client Example')
+
+    // The app must not have redirected away from the "localhost" origin
+    expect(new URL(page.url()).hostname).toBe('localhost')
+
+    const input = await page.typeInInput('identifier', 'alice.test')
+
+    await page.navigationAction(async () => input.press('Enter'))
+
+    // The device session on the Authorization Server is remembered from the
+    // previous sign-in, so the flow jumps straight to the consent screen.
+    await page.assertTitle('Autoriser')
+
+    await page.navigationClick('Autoriser')
+
+    await page.assertTitle('OAuth Client Example')
+
+    // The OAuth flow must have returned to the "localhost" origin
+    expect(new URL(page.url()).hostname).toBe('localhost')
 
     await page.ensureTextVisibility('Token info', 'h2')
 

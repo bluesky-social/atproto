@@ -8,6 +8,11 @@ export type TupleUnion<U extends string, R extends any[] = []> = {
 }[U]
 
 /**
+ * @param localhost - Hostname to use in the redirect URI when the location's
+ * hostname is "localhost". Defaults to "127.0.0.1" for compatibility with
+ * Authorization Servers that do not (yet) accept "localhost" redirect URIs.
+ * Pass "localhost" to preserve the hostname as-is.
+ *
  * @example
  * ```ts
  * const clientId = buildLoopbackClientId(window.location)

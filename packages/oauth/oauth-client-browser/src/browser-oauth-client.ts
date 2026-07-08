@@ -224,7 +224,7 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
 
   async initRestore(refresh?: boolean) {
     // @NOTE Fixing the location should not be needed from callback endpoints
-    // since callback endpoint are required to use IP based URLs (for localhost)
+    // since callback endpoints necessarily match one of the redirect URIs
     await fixLocation(this.clientMetadata)
 
     const sub = localStorage.getItem(`${NAMESPACE}(sub)`)
@@ -511,19 +511,32 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
 }
 
 /**
- * Since "localhost" is often used either in IP mode or in hostname mode,
- * and because the redirect uris must use the IP mode, we need to make sure
- * that the current location url is not using "localhost".
- *
- * This is required for the IndexedDB to work properly. Indeed, the IndexedDB
- * is shared by origin, so we must ensure to be on the same origin as the
- * redirect uris.
+ * The session state of loopback clients is stored in origin-scoped browser
+ * storage (IndexedDB), so the app must be running on the same origin as the
+ * redirect URI that will be used. If the current location is "localhost" but
+ * none of the client's redirect URIs use the "localhost" hostname, redirect
+ * to a matching loopback IP based redirect URI instead.
  */
 function fixLocation(clientMetadata: ClientMetadata) {
   if (!isOAuthClientIdLoopback(clientMetadata.client_id)) return
   if (window.location.hostname !== 'localhost') return
 
   const locationUrl = new URL(window.location.href)
+
+  // If the current "localhost" location matches one of the client's redirect
+  // URIs, the OAuth flow will be able to return to this origin; nothing to
+  // fix.
+  for (const uri of clientMetadata.redirect_uris) {
+    const url = new URL(uri)
+    if (
+      url.hostname === 'localhost' &&
+      (!url.port || url.port === locationUrl.port) &&
+      url.protocol === locationUrl.protocol &&
+      url.pathname === locationUrl.pathname
+    ) {
+      return
+    }
+  }
 
   for (const uri of clientMetadata.redirect_uris) {
     const url = new URL(uri)

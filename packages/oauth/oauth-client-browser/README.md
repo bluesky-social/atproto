@@ -303,9 +303,10 @@ This has several restrictions:
 2. The validity of the refresh tokens (if any) will be very limited (typically 1
    day)
 3. Silent-sign-in will not be allowed
-4. Only `http://127.0.0.1:<any_port>` and `http://[::1]:<any_port>` can be used
-   as origin for your app, and **not** `http://localhost:<any_port>`. This
-   library will automatically redirect the user to an IP based origin
+4. Only `http://localhost:<any_port>`, `http://127.0.0.1:<any_port>` and
+   `http://[::1]:<any_port>` can be used as origin for your app. If the
+   client's `redirect_uris` are restricted to IP based origins, this library
+   will automatically redirect the user to an IP based origin
    (`http://127.0.0.1:<port>`) when visiting an origin with `localhost`.
 
 Using a loopback client is only recommended for development purposes. A loopback
@@ -328,10 +329,11 @@ import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 
 const client = new BrowserOAuthClient({
   handleResolver: 'https://bsky.social',
-  // Note that the origin of the "client_id" URL must be "http://localhost" when
-  // using this configuration, regardless of the actual hostname ("127.0.0.1" or
-  // "[::1]"), port or pathname. Only the `redirect_uris` must contain the
-  // actual url that will be used to redirect the user back to the application.
+  // Note that the origin of the "client_id" URL must be "http://localhost"
+  // (with no port) when using this configuration, regardless of the actual
+  // hostname ("localhost", "127.0.0.1" or "[::1]"), port or pathname. Only the
+  // `redirect_uris` must contain the actual url that will be used to redirect
+  // the user back to the application.
   clientMetadata: `http://localhost?redirect_uri=${encodeURIComponent('http://127.0.0.1:8080/callback')}`,
 })
 ```

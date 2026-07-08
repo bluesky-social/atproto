@@ -1,3 +1,5 @@
+import { isLoopbackHost } from '@atproto/oauth-client-browser'
+
 const { searchParams } = new URL(window.location.href)
 const getParam = <T extends string | undefined>(
   name: string,
@@ -67,13 +69,17 @@ export const OAUTH_SCOPE_DEFAULT: string =
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ?? OAUTH_SCOPE_DEFAULT
 
-// This app is dynamically configured via query parameters. The canonical URL is
-// always 127.0.0.1 with the relevant params set.
+// This app is dynamically configured via query parameters. The canonical URL
+// preserves the current loopback hostname ("localhost", "127.0.0.1" or
+// "[::1]") with the relevant params set, falling back to 127.0.0.1 for
+// non-loopback hostnames.
 export const LOOPBACK_CANONICAL_LOCATION = Object.assign(
   new URL(window.location.origin),
   {
     protocol: 'http:',
-    hostname: '127.0.0.1',
+    hostname: isLoopbackHost(window.location.hostname)
+      ? window.location.hostname
+      : '127.0.0.1',
     search: new URLSearchParams({
       ...(ENV !== ENV_DEFAULT && { env: ENV }),
       ...(PLC_DIRECTORY_URL !== PLC_DIRECTORY_URL_DEFAULT && {
@@ -94,4 +100,4 @@ export const LOOPBACK_CANONICAL_LOCATION = Object.assign(
       ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
     }).toString(),
   },
-).href as `http://127.0.0.1/${string}`
+).href as `http://${string}`
