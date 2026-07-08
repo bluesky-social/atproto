@@ -5,11 +5,13 @@ import type {
 } from '@atproto/lex-schema'
 import type { Labeler, Service } from './types.ts'
 
+type NonReadonly<T> = { -readonly [K in keyof T]: T[K] }
+
 export type WithDefaults<
   TOptions extends Record<string, unknown>,
   TDefaults extends Record<string, unknown>[],
 > = TDefaults extends [infer First, ...infer Rest extends any[]]
-  ? WithDefaults<TOptions & { -readonly [K in keyof First]: First[K] }, Rest>
+  ? TOptions & WithDefaults<NonReadonly<First>, Rest>
   : TOptions
 
 export function applyDefaults<
@@ -86,24 +88,40 @@ export function asUint8ArrayArrayBuffer(
 
 export type XrpcRequestHeadersOptions = {
   /**
-   * Additional custom HTTP headers to include in the request. `atproto-*`
-   * headers are reserved and should be set through the appropriate options.
+   * Additional custom HTTP headers to include in the request.
+   *
+   * @note "atproto-proxy" and "atproto-accept-labelers" headers will be
+   * overridden by the `service` and `labelers` options, respectively, if they
+   * are provided (which is always the case when using the {@link Client}
+   * class).
    */
   headers?: HeadersInit
 
   /**
    * Labeler DIDs to request labels from for content moderation.
    *
-   * @default null, unless the client instance has default labelers set, in
-   * which case those defaults are used.
+   * When `undefined`, will default to the client instance's default. When not
+   * used against a client instance (e.g., when using the {@link xrpc} helper
+   * function), the default is to not alter the `atproto-accept-labelers` header
+   * (e.g. if one is provided in the {@link XrpcRequestHeadersOptions.headers}).
+   *
+   * When defined (as either `null` or a string), it will override any
+   * `atproto-proxy` header provided in the
+   * {@link XrpcRequestHeadersOptions.headers} option.
    */
   labelers?: null | Iterable<Labeler>
 
   /**
    * Service proxy identifier for routing requests through a specific service.
    *
-   * @default null, unless the client instance has a default service set, in
-   * which case that default is used.
+   * When `undefined`, will default to the client instance's default. When not
+   * used against a client instance (e.g., when using the {@link xrpc} helper
+   * function), the default is to not alter the `atproto-proxy` header (e.g. if
+   * one is provided in the {@link XrpcRequestHeadersOptions.headers}).
+   *
+   * When defined (as either `null` or a string), it will override any
+   * `atproto-proxy` header provided in the
+   * {@link XrpcRequestHeadersOptions.headers} option.
    */
   service?: null | Service
 }
@@ -123,23 +141,21 @@ export function buildXrpcRequestHeaders(
 ): Headers {
   const headers = new Headers(options.headers)
 
-  // Custom headers starting with "atproto-" are reserved and cannot be set
-  // directly.
-  // @NOTE Copying the keys before deleting, as deleting entries while
-  // iterating causes entries to be skipped.
-  for (const key of Array.from(headers.keys())) {
-    if (key.startsWith('atproto-')) {
-      headers.delete(key)
+  if (options.service !== undefined) {
+    if (options.service === null) {
+      headers.delete('atproto-proxy')
+    } else {
+      headers.set('atproto-proxy', options.service)
     }
   }
 
-  if (options.service) {
-    headers.set('atproto-proxy', options.service)
-  }
-
-  const labelers = new Set(options.labelers)
-  if (labelers.size > 0) {
-    headers.set('atproto-accept-labelers', Array.from(labelers).join(', '))
+  if (options.labelers !== undefined) {
+    const labelers = new Set(options.labelers)
+    if (labelers.size > 0) {
+      headers.set('atproto-accept-labelers', Array.from(labelers).join(', '))
+    } else {
+      headers.delete('atproto-accept-labelers')
+    }
   }
 
   return headers
