@@ -61,7 +61,7 @@ describe('utils', () => {
 
 describe('Client', () => {
   describe('atproto-* headers', () => {
-    it('ignores atproto-proxy headers set through the per-request headers option', async () => {
+    it('defaults "service" to atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
         return Response.json({ preferences: [] })
       })
@@ -79,7 +79,7 @@ describe('Client', () => {
       const [_url, init] = fetchHandler.mock.calls[0]
       const headers = new Headers(init?.headers)
 
-      expect(headers.get('atproto-proxy')).toBeNull()
+      expect(headers.get('atproto-proxy')).toBe('did:plc:existing#service')
     })
 
     it('uses the "atproto-proxy" header as fallback for the "service" option', async () => {
