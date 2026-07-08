@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.257
+
+### Patch Changes
+
+- [#5211](https://github.com/bluesky-social/atproto/pull/5211) [`68ed54d`](https://github.com/bluesky-social/atproto/commit/68ed54d875e10d0f1db52b8a4e5b191a5650d25b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sanitize cursors in v1 searchPosts, throwing more specific error for downstream consumers
+
 ## 0.0.256
 
 ### Patch Changes
