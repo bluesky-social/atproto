@@ -1,5 +1,19 @@
 # @atproto/aws
 
+## 0.3.5
+
+### Patch Changes
+
+- [#5181](https://github.com/bluesky-social/atproto/pull/5181) [`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112) Thanks [@blackmichael](https://github.com/blackmichael)! - `S3BlobStore`: decouple the per-request stall detection timeout (`requestTimeoutMs`, a socket idle timeout) from the total upload budget (`uploadTimeoutMs`). `requestTimeoutMs` now defaults to `min(uploadTimeoutMs, 15s)` (clamped to a minimum of 6s) instead of `uploadTimeoutMs`, so that stalled S3 connections are reaped and retried quickly even when a large upload timeout is configured. The 6s floor keeps the socket idle timeout from applying to blob downloads streamed to slow (client-paced) consumers. Also adds a `connectionTimeoutMs` option (default 5s), and translates stalled-connection `TimeoutError`s into the same "Blob upload timed out" error as upload timeouts.
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/common-web@0.5.5
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/repo@0.10.5
+
 ## 0.3.4
 
 ### Patch Changes

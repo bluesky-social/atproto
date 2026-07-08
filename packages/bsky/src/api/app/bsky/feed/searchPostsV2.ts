@@ -164,14 +164,21 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    // Roll the post's own tags together with moderation tags on its author,
+    // so author-level tags are filtered the same way as post-level tags.
+    const author = hydration.actors?.get(creator)
+    const tags = new Set([
+      ...post.tags,
+      ...(author?.accountModerationTags ?? []),
+      ...(author?.profileModerationTags ?? []),
+    ])
+
     // Tags that are hidden from all search surfaces (Top and Latest),
     // regardless of curation or author filtering.
-    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) =>
-      post.tags.has(t),
-    )
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) => tags.has(t))
     if (alwaysHidden) return false
 
-    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    const tagged = [...ctx.cfg.searchTagsHide].some((t) => tags.has(t))
 
     if (isCuratedSearch && tagged) return false
     if (!(parsedQuery.author || params.authors?.length) && tagged) return false

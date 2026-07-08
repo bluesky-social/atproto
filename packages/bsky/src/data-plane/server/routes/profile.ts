@@ -185,7 +185,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         statusRecord: status,
         germRecord: germDeclaration,
         tags: [],
-        profileTags: [],
+        profileTags: profiles.records[i].tags,
         allowActivitySubscriptionsFrom: activitySubscription(),
         ageAssuranceStatus: ageAssuranceStatus(),
       }

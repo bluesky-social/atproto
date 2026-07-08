@@ -1,5 +1,19 @@
 # @atproto/api
 
+## 0.20.27
+
+### Patch Changes
+
+- [#5195](https://github.com/bluesky-social/atproto/pull/5195) [`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Update description
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/common-web@0.5.5
+  - @atproto/lexicon@0.7.6
+  - @atproto/syntax@0.7.1
+  - @atproto/xrpc@0.8.5
+
 ## 0.20.26
 
 ### Patch Changes

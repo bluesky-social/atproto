@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-document",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "description": "Lexicon document validation tools for AT",
   "keywords": [

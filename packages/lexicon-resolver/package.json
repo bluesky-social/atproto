@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [

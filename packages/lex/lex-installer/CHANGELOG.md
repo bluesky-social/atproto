@@ -1,5 +1,20 @@
 # @atproto/lex-installer
 
+## 0.1.6
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto/lex-document@0.1.5
+  - @atproto/lex-resolver@0.2.0
+  - @atproto/lex-builder@0.1.7
+  - @atproto/lex-schema@0.2.1
+  - @atproto/lex-cbor@0.1.4
+  - @atproto/lex-data@0.1.5
+  - @atproto/syntax@0.7.1
+
 ## 0.1.5
 
 ### Patch Changes

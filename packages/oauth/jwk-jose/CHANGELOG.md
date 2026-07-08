@@ -1,5 +1,14 @@
 # @atproto/jwk-jose
 
+## 0.2.4
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/jwk@0.7.4
+
 ## 0.2.3
 
 ### Patch Changes

@@ -1,5 +1,27 @@
 # @atproto/bsky
 
+## 0.0.255
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- [#5201](https://github.com/bluesky-social/atproto/pull/5201) [`dc9525a`](https://github.com/bluesky-social/atproto/commit/dc9525a844c336597fa5d2ccb958606c7a1df83e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hide posts in search based on moderation tags on their author, in addition to tags on the post itself
+
+- Updated dependencies [[`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2), [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/api@0.20.27
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/syntax@0.7.1
+  - @atproto/repo@0.10.5
+  - @atproto/sync@0.3.9
+  - @atproto/did@0.5.4
+  - @atproto-labs/xrpc-utils@0.1.7
+
 ## 0.0.254
 
 ### Patch Changes

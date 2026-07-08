@@ -1,5 +1,47 @@
 # @atproto/oauth-provider
 
+## 0.20.0
+
+### Minor Changes
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** Replace the single barrel entrypoint with smaller, more focused export paths. The package no longer exposes a root (`.`) export; consumers must now import from one of the following entrypoints:
+
+  - `@atproto/oauth-provider/provider` — `OAuthProvider` and its configuration types (also re-exports the public API of `@atproto/jwk`, `@atproto/jwk-jose` and `@atproto/lex-resolver`, as well as `safeFetchWrap` from `@atproto-labs/fetch-node`)
+  - `@atproto/oauth-provider/verifier` — `OAuthVerifier` and token verification types
+  - `@atproto/oauth-provider/errors` — all error classes (`OAuthError` and its subclasses)
+  - `@atproto/oauth-provider/store` — all the types needed to implement the various stores (`AccountStore`, `ClientStore`, `DeviceStore`, `LexiconStore`, `ReplayStore`, `RequestStore`, `TokenStore`)
+  - `@atproto/oauth-provider/hooks` — `OAuthHooks` and related types
+  - `@atproto/oauth-provider/middleware` — `oauthMiddleware`
+  - `@atproto/oauth-provider/constants` — public constants
+  - `@atproto/oauth-provider/utils` — miscellaneous utilities (e.g. `buildProtectedResourceMetadata`)
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove internal utilities and error classes from the public API. Most notably, the package no longer re-exports the full public API of `@atproto-labs/fetch`, `@atproto-labs/fetch-node` or `@atproto/oauth-types`, and `InvalidInviteCodeError` was removed (use `InvalidRequestError` instead). This change also fixes an internal circular dependency.
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename the `BrandingInput` and `CustomizationInput` exported types to `BrandingConfig` and `CustomizationConfig`, to better reflect their purpose and actual use.
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove extraneous `@atproto-labs/fetch` dependency
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto-labs/simple-store-memory@0.2.4
+  - @atproto/oauth-provider-ui@0.8.6
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/oauth-scopes@0.5.5
+  - @atproto/oauth-types@0.7.5
+  - @atproto/lex-document@0.1.5
+  - @atproto/lex-resolver@0.2.0
+  - @atproto/jwk-jose@0.2.4
+  - @atproto-labs/pipe@0.2.4
+  - @atproto/jwk@0.7.4
+  - @atproto/common@0.7.1
+  - @atproto/syntax@0.7.1
+  - @atproto/did@0.5.4
+  - @atproto/oauth-provider-api@0.7.5
+
 ## 0.19.9
 
 ### Patch Changes
