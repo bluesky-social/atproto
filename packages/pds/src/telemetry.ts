@@ -27,10 +27,7 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 //    and attributes for XRPC requests.
 // 3) auto-instrumentations-node does not support configuring instrumentations
 //    via a configuration file (OTEL_CONFIG_FILE).
-//
-// Replacing this script with auto-instrumentations-node would also require to
-// explicitly set the OTEL_NODE_ENABLED_INSTRUMENTATIONS environment variable to
-// avoid loading unnecessary instrumentations.
+// 4) this approach also registers the instrumentation hook
 //
 // We also use `startNodeSDK` instead of `registerInstrumentations` because it
 // will setup metric and traces exporters automatically based on conventional
@@ -40,17 +37,11 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // configuration from that file. Otherwise, the SDK will load the configuration
 // from environment variables.
 
-// @NOTE @opentelemetry/sdk-node provides two ways to start the SDK:
-// startNodeSDK and new NodeSDK. We determine which one to use based on the
-// presence of the OTEL_CONFIG_FILE environment variable. If it is set, we use
-// startNodeSDK, which will load the configuration from a YAML file.
-// Otherwise, we use new NodeSDK, which will load the configuration from
-// environment variables (and supports creating an HTTP prometheus exporter).
 // @NOTE The SDK is only enabled when telemetry is explicitly configured
-// (through OTEL_CONFIG_FILE or an OTLP exporter endpoint). This makes
-// telemetry opt-in without inventing a non-standard flag: setting an exporter
-// endpoint is what opts you in. OTEL_SDK_DISABLED=true still acts as a kill
-// switch, per the OpenTelemetry spec.
+// (through OTEL_CONFIG_FILE or an OTLP exporter endpoint). This makes telemetry
+// opt-in without inventing a non-standard flag: setting an exporter endpoint is
+// what opts you in. OTEL_SDK_DISABLED=true still acts as a kill switch, per the
+// OpenTelemetry spec.
 const disabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'true'
 const configured =
   !!process.env.OTEL_CONFIG_FILE ||
@@ -62,6 +53,12 @@ const enabled = !disabled && configured
 if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
+  // @NOTE @opentelemetry/sdk-node provides two ways to start the SDK:
+  // `startNodeSDK` and `new NodeSDK`. We determine which one to use based on
+  // the presence of the OTEL_CONFIG_FILE environment variable. If it is set, we
+  // use `startNodeSDK`, which will load the configuration from a YAML file.
+  // Otherwise, we use `new NodeSDK`, which will load the configuration from
+  // environment variables (and supports creating an HTTP prometheus exporter).
   const start = process.env.OTEL_CONFIG_FILE ? startNodeSDK : startNodeSDKClass
   const { shutdown } = start({
     // @NOTE We use getResourceDetectors from
@@ -78,8 +75,6 @@ if (enabled) {
       new HttpInstrumentation({
         // Sets the "http.route" attribute for XRPC requests (both incoming and
         // outgoing) based on the normalized XRPC path.
-        //
-        // @TODO replace with dedicated XrpcClient/XrpcServer instrumentations
         requestHook: (span, request) => {
           const url = 'path' in request ? request.path : request.url
           if (url != null) {
