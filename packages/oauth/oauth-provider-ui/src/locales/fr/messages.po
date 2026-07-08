@@ -1284,7 +1284,7 @@ msgstr "Dépannage"
 #: src/pages/account/(authenticated)/manage/page.tsx:215
 #: src/pages/account/(authenticated)/manage/page.tsx:234
 msgid "Two-factor authentication (2FA)"
-msgstr "Authentification à deux facteurs (2FA)"
+msgstr "Auth. à deux facteurs (2FA)"
 
 #: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Type"

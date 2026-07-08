@@ -159,7 +159,7 @@ describe('account manager', () => {
     // verified. Matching the label span and constraining its ancestor proves
     // the row is present *and* disabled.
     await page.ensureTextVisibility(
-      'Authentification à deux facteurs (2FA)',
+      'Auth. à deux facteurs (2FA)',
       'button[disabled] span',
     )
   })
@@ -214,11 +214,11 @@ describe('account manager', () => {
     await page.clickOnText('Compte utilisateur', 'a')
 
     await page.ensureTextVisibility(
-      'Authentification à deux facteurs (2FA)',
+      'Auth. à deux facteurs (2FA)',
       'span',
     )
 
-    await page.clickOnText('Authentification à deux facteurs (2FA)')
+    await page.clickOnText('Auth. à deux facteurs (2FA)')
 
     await page.ensureTextVisibility('Activer la 2FA par email', 'h2')
 
@@ -233,7 +233,7 @@ describe('account manager', () => {
     expect(sendUpdateEmailMock).toHaveBeenCalledTimes(0)
 
     // Disabling 2FA:
-    await page.clickOnText('Authentification à deux facteurs (2FA)')
+    await page.clickOnText('Auth. à deux facteurs (2FA)')
     await page.ensureTextVisibility('Désactiver la 2FA par email', 'h2')
 
     await page.clickOnText('Envoyer un email de vérification', 'button')
