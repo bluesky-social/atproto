@@ -14,6 +14,7 @@ import {
   XrpcAuthenticationError,
   XrpcInvalidResponseError,
   XrpcResponseError,
+  buildAgent,
 } from '../src/index.js'
 import { app, com } from './lexicons/index.js'
 
@@ -60,30 +61,7 @@ describe('utils', () => {
 
 describe('Client', () => {
   describe('atproto-* headers', () => {
-    it('ignores atproto-* headers set through the headers option', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
-        return Response.json({ preferences: [] })
-      })
-
-      const client = new Client(fetchHandler, {
-        headers: {
-          'atproto-proxy': 'did:plc:existing#service',
-          'atproto-accept-labelers': 'did:plc:existing',
-        },
-      })
-
-      await client.xrpc(app.bsky.actor.getPreferences)
-
-      expect(fetchHandler).toHaveBeenCalledOnce()
-
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      expect(headers.get('atproto-proxy')).toBeNull()
-      expect(headers.get('atproto-accept-labelers')).toBeNull()
-    })
-
-    it('ignores atproto-* headers set through the per-request headers option', async () => {
+    it('ignores atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
         return Response.json({ preferences: [] })
       })
@@ -93,7 +71,6 @@ describe('Client', () => {
       await client.xrpc(app.bsky.actor.getPreferences, {
         headers: {
           'atproto-proxy': 'did:plc:existing#service',
-          'atproto-accept-labelers': 'did:plc:existing',
         },
       })
 
@@ -103,7 +80,41 @@ describe('Client', () => {
       const headers = new Headers(init?.headers)
 
       expect(headers.get('atproto-proxy')).toBeNull()
-      expect(headers.get('atproto-accept-labelers')).toBeNull()
+    })
+
+    it('uses the "atproto-proxy" header as fallback for the "service" option', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+        return Response.json({ preferences: [] })
+      })
+
+      const client = new Client(fetchHandler, {
+        headers: { 'atproto-proxy': 'did:plc:existing#service' },
+      })
+
+      expect(client.service).toBe('did:plc:existing#service')
+
+      await client.xrpc(app.bsky.actor.getPreferences)
+
+      // A per-request "service" still overrides the header-provided default
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        service: 'did:plc:new#service',
+      })
+
+      // And "service: null" disables it
+      await client.xrpc(app.bsky.actor.getPreferences, {
+        service: null,
+      })
+
+      expect(fetchHandler).toHaveBeenCalledTimes(3)
+
+      const proxies = fetchHandler.mock.calls.map(([, init]) =>
+        new Headers(init?.headers).get('atproto-proxy'),
+      )
+      expect(proxies).toEqual([
+        'did:plc:existing#service',
+        'did:plc:new#service',
+        null,
+      ])
     })
 
     it('uses global "service" and "labelers" options for requests', async () => {
@@ -195,59 +206,33 @@ describe('Client', () => {
       expect(headers.get('atproto-accept-labelers')).toBe(labeler)
     })
 
-    it('does not mix "service" and "labelers" defaults when composing clients', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
-        return Response.json({ preferences: [] })
-      })
-
-      const baseClient = new Client(fetchHandler, {
-        service: 'did:plc:base#base_service',
-        labelers: ['did:plc:baselabeler'],
-      })
-
-      const childClient = new Client(baseClient, {
-        labelers: ['did:plc:childlabeler'],
-      })
-
-      await childClient.xrpc(app.bsky.actor.getPreferences)
-
-      expect(fetchHandler).toHaveBeenCalledOnce()
-
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      // The base client's defaults only apply to requests initiated through
-      // the base client, not to requests initiated through child clients.
-      expect(headers.has('atproto-proxy')).toBe(false)
-      expect(headers.get('atproto-accept-labelers')).toBe(
-        'did:plc:childlabeler',
-      )
-    })
-
     it('propagates custom (non atproto-*) headers when composing clients', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async (_url, _init) => {
         return Response.json({ preferences: [] })
       })
 
-      const baseClient = new Client(fetchHandler, {
+      const agent = buildAgent({
+        fetch,
+        service: 'https://base.example.com',
         headers: { 'x-base': 'base', 'x-shared': 'base' },
       })
 
-      const childClient = new Client(baseClient, {
+      const client = new Client(agent)
+
+      await client.xrpc(app.bsky.actor.getPreferences, {
         headers: { 'x-child': 'child', 'x-shared': 'child' },
       })
 
-      await childClient.xrpc(app.bsky.actor.getPreferences)
+      expect(fetch).toHaveBeenCalledOnce()
 
-      expect(fetchHandler).toHaveBeenCalledOnce()
+      const [_url, init] = fetch.mock.calls[0]
+      const headers = Object.fromEntries(new Headers(init?.headers))
 
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      expect(headers.get('x-base')).toBe('base')
-      expect(headers.get('x-child')).toBe('child')
-      // The child client's headers take precedence over the base client's
-      expect(headers.get('x-shared')).toBe('child')
+      expect(headers).toMatchObject({
+        'x-base': 'base',
+        'x-child': 'child',
+        'x-shared': 'child',
+      })
     })
 
     it('always adds the static labelers as "redact" labelers', async () => {
@@ -272,53 +257,6 @@ describe('Client', () => {
 
       expect(headers.get('atproto-accept-labelers')).toBe(
         'did:plc:staticlabeler;redact, did:plc:dynamiclabeler',
-      )
-    })
-
-    it('inherits parents appLabelers', async () => {
-      Client.configure({
-        appLabelers: ['did:plc:staticlabeler1', 'did:plc:staticlabeler2'],
-      })
-      // Reset at end of test
-      using _ = { [Symbol.dispose]: () => void (Client.appLabelers = []) }
-
-      const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {
-        return Response.json({ preferences: [] })
-      })
-
-      const client = new Client(fetchHandler, {
-        labelers: ['did:plc:dynamiclabeler1', 'did:plc:dynamiclabeler2'],
-      })
-
-      class SubClient extends Client {
-        static {
-          this.configure({
-            appLabelers: ['did:plc:staticlabeler2', 'did:plc:staticlabeler3'],
-          })
-        }
-      }
-
-      const subClient = new SubClient(client, {
-        labelers: ['did:plc:dynamiclabeler2', 'did:plc:dynamiclabeler3'],
-      })
-
-      await subClient.xrpc(app.bsky.actor.getPreferences, {
-        labelers: ['did:plc:dynamiclabeler3', 'did:plc:dynamiclabeler4'],
-      })
-
-      expect(fetchHandler).toHaveBeenCalledOnce()
-
-      const [_url, init] = fetchHandler.mock.calls[0]
-      const headers = new Headers(init?.headers)
-
-      expect(headers.get('atproto-accept-labelers')).toBe(
-        [
-          'did:plc:staticlabeler1;redact',
-          'did:plc:staticlabeler2;redact',
-          'did:plc:staticlabeler3;redact',
-          'did:plc:dynamiclabeler3',
-          'did:plc:dynamiclabeler4',
-        ].join(', '),
       )
     })
   })

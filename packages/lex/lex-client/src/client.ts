@@ -36,14 +36,14 @@ import type {
   XrpcResponseBody,
   XrpcResponseOptions,
 } from './response.js'
-import type { BinaryBodyInit, Labeler, Service } from './types.js'
+import { type BinaryBodyInit, type Service, isService } from './types.js'
 import {
   type RecordKeyOptions,
   type XrpcRequestHeadersOptions,
   applyDefaults,
   getDefaultRecordKey,
   getLiteralRecordKey,
-  trim,
+  mergeHeaders,
 } from './util.js'
 import {
   type WriteOperation,
@@ -385,7 +385,7 @@ export type ListRecordItem<Value extends LexMap> =
  * })
  * ```
  */
-export class Client implements Agent {
+export class Client {
   static appLabelers: readonly DidString[] = []
 
   /**
@@ -404,7 +404,8 @@ export class Client implements Agent {
   /** Default {@link XrpcOptions} for this client instance. */
   public readonly xrpcDefaults: Readonly<{
     service: Service | null
-    labelers: Set<Labeler>
+    labelers: Set<DidString>
+    appLabelers?: null | Iterable<DidString>
     validateRequest: boolean
     validateResponse: boolean
     strictResponseProcessing: boolean
@@ -413,9 +414,23 @@ export class Client implements Agent {
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent = buildAgent(agent)
     this.headers = new Headers(options.headers)
+
+    // @NOTE An "atproto-proxy" header provided through the `headers` option
+    // acts as fallback for the `service` option.
+    const service = this.headers.get('atproto-proxy')?.trim()
+
     this.xrpcDefaults = Object.freeze({
-      service: options.service ?? null,
+      service:
+        options.service === undefined && service != null && isService(service)
+          ? service
+          : options.service ?? null,
       labelers: new Set(options.labelers),
+      // @NOTE when provided (including `null`), will override the class wide
+      // Client.appLabelers
+      appLabelers:
+        options.appLabelers != null
+          ? new Set(options.appLabelers)
+          : options.appLabelers,
       validateRequest: options.validateRequest ?? false,
       validateResponse: options.validateResponse ?? true,
       strictResponseProcessing: options.strictResponseProcessing ?? true,
@@ -442,7 +457,7 @@ export class Client implements Agent {
     return this.xrpcDefaults.service
   }
 
-  get labelers(): Set<Labeler> {
+  get labelers(): Set<DidString> {
     return this.xrpcDefaults.labelers
   }
 
@@ -467,7 +482,7 @@ export class Client implements Agent {
    * Replaces all labelers with the given set.
    * @param labelers - Iterable of labeler DIDs
    */
-  public setLabelers(labelers: Iterable<Labeler> = []) {
+  public setLabelers(labelers: Iterable<DidString> = []) {
     this.clearLabelers()
     this.addLabelers(labelers)
   }
@@ -476,7 +491,7 @@ export class Client implements Agent {
    * Adds labelers to the current set.
    * @param labelers - Iterable of labeler DIDs to add
    */
-  public addLabelers(labelers: Iterable<Labeler>) {
+  public addLabelers(labelers: Iterable<DidString>) {
     for (const labeler of labelers) this.xrpcDefaults.labelers.add(labeler)
   }
 
@@ -485,58 +500,6 @@ export class Client implements Agent {
    */
   public clearLabelers() {
     this.xrpcDefaults.labelers.clear()
-  }
-
-  /**
-   * {@link Agent}'s {@link Agent.fetchHandler} implementation, which adds
-   * labelers and service proxying headers. This method allow a {@link Client}
-   * instance to be used directly as an {@link Agent} for another
-   * {@link Client}, enabling composition of headers (labelers, proxying, etc.).
-   *
-   * @param path - The request path
-   * @param init - Request initialization options
-   */
-  public fetchHandler(
-    path: `/${string}`,
-    init: RequestInit,
-  ): Promise<Response> {
-    const headers = new Headers(init.headers)
-
-    // Add non "atproto-*" headers from the client instance if they are not
-    // already set on the request.
-    for (const [key, value] of this.headers) {
-      // "atproto-*" are configured via options
-      if (key.startsWith('atproto-')) continue
-
-      if (!headers.has(key)) {
-        headers.set(key, value)
-      }
-    }
-
-    // If "appLabelers" are configured, they are always added to the request
-    // (with the ";redact" param).
-    const { appLabelers } = this.constructor as typeof Client
-    if (appLabelers.length > 0) {
-      headers.set(
-        'atproto-accept-labelers',
-        Array.from(
-          new Set<Labeler>([
-            // Prepend appLabelers with ";redact" param
-            ...appLabelers.map(appendRedactParam),
-            // And keep any labelers that was set on the request (likely through
-            // the "labelers" option)
-            ...((headers
-              .get('atproto-accept-labelers')
-              ?.split(',')
-              .map(trim)
-              .filter(Boolean) ?? []) as Labeler[]),
-          ]),
-        ).join(', '),
-      )
-    }
-
-    // @NOTE The agent here could be another Client instance.
-    return this.agent.fetchHandler(path, { ...init, headers })
   }
 
   /**
@@ -581,7 +544,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M>> {
-    return xrpc(this, ns, applyDefaults(options, this.xrpcDefaults))
+    return xrpc(this.agent, ns, this.buildXrpcOptions(options))
   }
 
   /**
@@ -620,7 +583,49 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
-    return xrpcSafe(this, ns, applyDefaults(options, this.xrpcDefaults))
+    return xrpcSafe(this.agent, ns, this.buildXrpcOptions(options))
+  }
+
+  protected buildXrpcOptions<M extends Query | Procedure>(
+    options: XrpcOptions<M>,
+  ): XrpcOptions<M> {
+    // Apply the instance-wide defaults for service, labelers, and validation
+    // options.
+    const combined = applyDefaults(options, this.xrpcDefaults)
+
+    // Dynamically apply the class-wide appLabelers if they are not already set
+    // in the combined options.
+    if (combined.appLabelers === undefined) {
+      combined.appLabelers = (this.constructor as typeof Client).appLabelers
+    }
+
+    const optionsHeaders =
+      options.headers != null ? new Headers(options.headers) : null
+
+    // @NOTE we allow the "service" options to fallback to the "atproto-proxy"
+    // header if it is present in the request-specific headers.
+    if (options.service === undefined && optionsHeaders?.has('atproto-proxy')) {
+      const serviceHeader = optionsHeaders.get('atproto-proxy')?.trim()
+      if (serviceHeader != null && isService(serviceHeader)) {
+        combined.service = serviceHeader
+      }
+    }
+
+    // Merge the instance-wide headers with the request-specific headers.
+    // Request-specific headers take precedence. This cannot be done in the
+    // applyDefaults step above because headers require special merging logic.
+    combined.headers = optionsHeaders
+      ? mergeHeaders(this.headers, optionsHeaders)
+      : new Headers(this.headers)
+
+    // @NOTE Since the combined options here always contain a defined
+    // "service" (even if null), any "atproto-proxy" header in either the
+    // instance-wide or request-specific headers will be overridden by the
+    // "service" value. Note that an "atproto-proxy" header provided through
+    // the constructor's `headers` option is used as fallback for the
+    // constructor's `service` option (see constructor), making the two
+    // equivalent.
+    return combined
   }
 
   /**
@@ -1235,8 +1240,4 @@ function processListRecord<T extends RecordSchema>(
   } else {
     return { ...record, valid: false }
   }
-}
-
-function appendRedactParam(labeler: DidString): Labeler {
-  return `${labeler};redact`
 }

@@ -170,9 +170,17 @@ describe(buildXrpcRequestHeaders, () => {
     expect(headers.get('atproto-proxy')).toBe('did:plc:new#service')
   })
 
-  it('ignores atproto-proxy header if service option is not set', () => {
+  it('leaves atproto-proxy header if service option is not set', () => {
     const headers = buildXrpcRequestHeaders({
       headers: { 'atproto-proxy': 'did:plc:existing#service' },
+    })
+    expect(headers.has('atproto-proxy')).toBe(true)
+  })
+
+  it('strips atproto-proxy header if service option is null', () => {
+    const headers = buildXrpcRequestHeaders({
+      headers: { 'atproto-proxy': 'did:plc:existing#service' },
+      service: null,
     })
     expect(headers.has('atproto-proxy')).toBe(false)
   })
@@ -186,19 +194,29 @@ describe(buildXrpcRequestHeaders, () => {
     )
   })
 
-  it('overrides atproto-accept-labelers header if labelers option is set', () => {
+  it('strips atproto-accept-labelers header if labelers option is null', () => {
     const headers = buildXrpcRequestHeaders({
       headers: { 'atproto-accept-labelers': 'did:plc:existing' },
-      labelers: ['did:plc:new'] as const,
+      labelers: null,
     })
-    expect(headers.get('atproto-accept-labelers')).toBe('did:plc:new')
+    expect(headers.get('atproto-accept-labelers')).toBe(null)
   })
 
-  it('ignores atproto-accept-labelers header if labelers option is not set', () => {
+  it('leaves atproto-accept-labelers header if labelers option is not set', () => {
     const headers = buildXrpcRequestHeaders({
       headers: { 'atproto-accept-labelers': 'did:plc:existing' },
     })
-    expect(headers.has('atproto-accept-labelers')).toBe(false)
+    expect(headers.get('atproto-accept-labelers')).toBe('did:plc:existing')
+  })
+
+  it('merges atproto-accept-labelers header if labelers option is an empty array', () => {
+    const headers = buildXrpcRequestHeaders({
+      headers: { 'atproto-accept-labelers': 'did:plc:foo' },
+      labelers: ['did:plc:bar'] as const,
+    })
+    expect(headers.get('atproto-accept-labelers')).toBe(
+      'did:plc:bar, did:plc:foo',
+    )
   })
 
   it('passes through base headers', () => {
@@ -217,17 +235,6 @@ describe(buildXrpcRequestHeaders, () => {
   it('does not set the atproto-accept-labelers header if labelers option is an empty array', () => {
     const headers = buildXrpcRequestHeaders({ labelers: [] })
     expect(headers.has('atproto-accept-labelers')).toBe(false)
-  })
-
-  it('strips all reserved atproto-* headers from the headers option', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: {
-        'atproto-accept-labelers': 'did:plc:existing',
-        'atproto-proxy': 'did:plc:existing#service',
-        'x-custom': 'value',
-      },
-    })
-    expect([...headers.keys()]).toEqual(['x-custom'])
   })
 })
 
