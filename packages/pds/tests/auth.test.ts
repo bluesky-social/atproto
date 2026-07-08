@@ -3,6 +3,7 @@ import { request as undiciRequest } from 'undici'
 import type { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
+import { MailCatcher } from './_mailcatcher.js'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView
@@ -403,6 +404,133 @@ describe('auth', () => {
     )
     await expect(refreshSession(account.refreshJwt)).rejects.toMatchObject({
       error: 'AccountTakedown',
+    })
+  })
+
+  describe('when 2FA is enabled', () => {
+    let jane
+    let mailCatcher: MailCatcher
+    beforeAll(async () => {
+      mailCatcher = new MailCatcher(network.pds.ctx.mailer)
+
+      const sc = network.getSeedClient()
+
+      jane = await sc.createAccount('jane', {
+        email: 'jane@test.com',
+        handle: 'jane.test',
+        password: 'jane-pass',
+      })
+
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
+
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
+      )
+
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+        email: jane.email,
+      })
+    })
+
+    afterAll(async () => {
+      await mailCatcher.restore()
+    })
+
+    it('challenges for a 2FA token on session creation', async () => {
+      const sessionPromise = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+      })
+      await expect(sessionPromise).rejects.toThrow(
+        'A sign in code has been sent to your email address',
+      )
+      await expect(sessionPromise).rejects.toMatchObject({
+        error: 'AuthFactorTokenRequired',
+      })
+    })
+
+    it('accepts a 2FA token after challenging on session creation', async () => {
+      const { mail } = await mailCatcher.getMailFrom(
+        createSession({
+          identifier: 'jane.test',
+          password: 'jane-pass',
+        }).catch((err) => {
+          // swallow the auth factor required error, as we are capturing the
+          // token from that error:
+          if (err.error === 'AuthFactorTokenRequired') {
+            return null
+          }
+          throw err
+        }),
+      )
+
+      const token = mailCatcher.getTokenFromMail(mail)
+      const session = await createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: token,
+      })
+
+      expect(session).toEqual(
+        expect.objectContaining({
+          did: jane.did,
+          handle: jane.handle,
+          email: jane.email,
+          emailConfirmed: true,
+          emailAuthFactor: true,
+          active: true,
+        }),
+      )
+    })
+    it('rejects an invalid 2FA token after challenging on session creation', async () => {
+      const { mail } = await mailCatcher.getMailFrom(
+        createSession({
+          identifier: 'jane.test',
+          password: 'jane-pass',
+        }).catch((err) => {
+          // swallow the auth factor required error, as we are capturing the
+          // token from that error:
+          if (err.error === 'AuthFactorTokenRequired') {
+            return null
+          }
+          throw err
+        }),
+      )
+
+      const token = mailCatcher.getTokenFromMail(mail)
+      expect(token).not.toBe('AAAAA-AAAAA')
+
+      // Attempt 1: deliberately invalid authFactorToken
+      const sessionPromise = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: 'AAAAA-AAAAA',
+      })
+      await expect(sessionPromise).rejects.toThrow('Token is invalid')
+
+      // Attempt 2: with correct authFactorToken
+      const sessionPromiseWithValidToken = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: token,
+      })
+      await expect(sessionPromiseWithValidToken).resolves.toEqual(
+        expect.objectContaining({
+          did: jane.did,
+          handle: jane.handle,
+          email: jane.email,
+          emailConfirmed: true,
+          emailAuthFactor: true,
+          active: true,
+        }),
+      )
     })
   })
 })

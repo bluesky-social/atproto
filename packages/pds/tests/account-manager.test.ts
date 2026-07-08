@@ -187,8 +187,8 @@ describe('account manager', () => {
     await using page = await PageHelper.from(browser, { languages })
     await page.goto(new URL('/account', network.pds.url))
 
-    using sendSignInAuthFactorMock = jest
-      .spyOn(network.pds.ctx.mailer, 'sendSignInAuthFactor')
+    using sendUpdateEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
       .mockImplementation(async () => {
         // noop
       })
@@ -209,7 +209,7 @@ describe('account manager', () => {
 
     await page.ensureTextVisibility('Disable', 'span')
 
-    expect(sendSignInAuthFactorMock).toHaveBeenCalledTimes(0)
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(0)
 
     // Disabling 2FA:
     await page.clickOnText('Two-factor authentication (2FA)')
@@ -218,11 +218,10 @@ describe('account manager', () => {
     await page.clickOnText('Send email to verify', 'button')
     await page.waitForNetworkIdle()
 
-    expect(sendSignInAuthFactorMock).toHaveBeenCalledTimes(1)
-    const [params] = sendSignInAuthFactorMock.mock.lastCall!
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendUpdateEmailMock.mock.lastCall!
     expect(params).toEqual({
       locale: 'fr',
-      handle: expect.any(String),
       token: expect.any(String),
     })
 

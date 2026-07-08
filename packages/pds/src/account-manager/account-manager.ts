@@ -1015,18 +1015,20 @@ export class AccountManager {
       throw new InvalidRequestError('Email address does not match the account')
     }
 
-    // Phase one: no token yet, send a one-time code and signal "pending".
+    // Phase one: no token yet, send a one-time code and signal "pending". MUST
+    // use `update_email` due to social-app using requestEmailUpdate, not
+    // two-step updateEmail:
     if (!token) {
-      const otp = await this.createEmailToken(did, 'auth_factor')
-      await this.mailer.sendSignInAuthFactor(
-        { token: otp, handle: account.handle, locale: locale },
+      const otp = await this.createEmailToken(did, 'update_email')
+      await this.mailer.sendUpdateEmail(
+        { token: otp, locale: locale },
         { to: account.email },
       )
       return null
     }
 
     // Phase two: verify the one-time code, then disable the factor.
-    await this.assertValidEmailTokenAndCleanup(did, 'auth_factor', token)
+    await this.assertValidEmailTokenAndCleanup(did, 'update_email', token)
 
     await this.updateAccountEmailAuthFactor({
       did,

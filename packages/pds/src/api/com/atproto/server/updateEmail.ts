@@ -46,7 +46,6 @@ export default function (server: Server, ctx: AppContext) {
         // body, or by using the `Accept-Language` header).
         const locale = undefined
 
-        // TODO: Double check social-apps usage of email auth factor
         // Pure auth-factor toggle: the email isn't changing, the caller is only
         // flipping the OTP factor on/off. Handle it and return; falling
         // through to updateEmail() would re-set the (unchanged) email and null
@@ -64,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
             })
           } else {
             // Disabling removes a second factor, so it's gated by an
-            // `auth_factor` OTP: the first call (no token) emails a code and
+            // `update_email` OTP: the first call (no token) emails a code and
             // makes no change; the second (with token) verifies and disables.
             const account = await ctx.accountManager.disableEmailAuthFactor({
               did,

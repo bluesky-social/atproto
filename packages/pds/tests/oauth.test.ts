@@ -4,7 +4,6 @@ import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
-import type { AtpAgent } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
 import { MailCatcher } from './_mailcatcher.js'
@@ -346,7 +345,6 @@ describe('oauth', () => {
 
   describe('with 2FA', () => {
     let mailCatcher: MailCatcher
-    let agent: AtpAgent
     let jane
 
     beforeAll(async () => {
@@ -360,36 +358,22 @@ describe('oauth', () => {
         password: 'jane-pass',
       })
 
-      agent = network.pds.getAgent()
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
 
-      const { mail } = await mailCatcher.getMailFrom(
-        agent.api.com.atproto.server.requestEmailConfirmation(undefined, {
-          headers: sc.getHeaders(jane.did),
-        }),
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
       )
 
-      const token = mailCatcher.getTokenFromMail(mail)
-
-      assert(token, 'Expected email confirmation token for Jane')
-      await agent.api.com.atproto.server.confirmEmail(
-        {
-          email: jane.email,
-          token,
-        },
-        {
-          headers: sc.getHeaders(jane.did),
-        },
-      )
-
-      await agent.api.com.atproto.server.updateEmail(
-        {
-          email: jane.email,
-          emailAuthFactor: true,
-        },
-        {
-          headers: sc.getHeaders(jane.did),
-        },
-      )
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+        email: jane.email,
+      })
     })
 
     afterAll(async () => {
@@ -476,6 +460,7 @@ describe('oauth', () => {
         'p',
       )
 
+      assert(token, 'Ensure we generated a token')
       assert(
         token !== 'AAAAA-AAAAA',
         "Ensure generated token isn't our test token",
@@ -484,12 +469,16 @@ describe('oauth', () => {
 
       await page.clickOnText('Confirmer')
 
-      await page.assertTitle('Connexion')
-
       await page.ensureTextVisibility(
         'Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer.',
         'p',
       )
+
+      await page.typeInInput('otp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
     })
   })
 })
