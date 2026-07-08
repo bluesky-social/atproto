@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.256
+
+### Patch Changes
+
+- [#5208](https://github.com/bluesky-social/atproto/pull/5208) [`af43bdb`](https://github.com/bluesky-social/atproto/commit/af43bdb6f13e8191bd1f4b47957c023851aa2415) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Lift auth requirement for searchPostsV2, maintain v1-v2 parity for results and auth handling.
+
 ## 0.0.255
 
 ### Patch Changes
