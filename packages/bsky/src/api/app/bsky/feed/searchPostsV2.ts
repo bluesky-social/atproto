@@ -2,9 +2,9 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import type { AtUriString } from '@atproto/lex'
 import {
+  ForbiddenError,
   InvalidRequestError,
   type Server,
-  ForbiddenError,
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { DataPlaneClient } from '../../../../data-plane/index.js'
