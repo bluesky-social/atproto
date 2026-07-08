@@ -122,6 +122,7 @@ const skeletonV2 = async (
     author: params.author,
   })
   const res = await ctx.dataplane.searchPostsV2({
+    allTime: true, // match v1 behavior, v2 defaults to false
     params: {
       query: params.q,
       viewer: params.hydrateCtx.viewer ?? undefined,
