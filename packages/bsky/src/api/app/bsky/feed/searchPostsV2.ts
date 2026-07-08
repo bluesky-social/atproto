@@ -1,7 +1,11 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import type { AtUriString } from '@atproto/lex'
-import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import {
+  InvalidRequestError,
+  type Server,
+  ForbiddenError,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { DataPlaneClient } from '../../../../data-plane/index.js'
 import {
@@ -34,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.searchPostsV2, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
@@ -57,6 +61,15 @@ export default function (server: Server, ctx: AppContext) {
         ) || resolveSearchV2Override(req, ctx.cfg)
       if (!isV2Enabled) {
         throw new InvalidRequestError('Search v2 is not enabled')
+      }
+
+      /*
+       * Matches v1 handling: allow one page of results for unauthenticated
+       * users, but block further pages. This is a temporary measure until
+       * we finalize moderation rules for search v2.
+       */
+      if (!viewer && params.cursor) {
+        throw new ForbiddenError('Request forbidden by administrative rules.')
       }
 
       const results = await searchPostsV2(
