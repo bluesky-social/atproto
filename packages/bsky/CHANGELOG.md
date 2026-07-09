@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.258
+
+### Patch Changes
+
+- [#5213](https://github.com/bluesky-social/atproto/pull/5213) [`bd2b7b6`](https://github.com/bluesky-social/atproto/commit/bd2b7b6b5b56585b763a8dc505ba6d27369454c3) Thanks [@treethought](https://github.com/treethought)! - return 400 for dataplane InvalidArgument in search
+
 ## 0.0.257
 
 ### Patch Changes
