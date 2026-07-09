@@ -1,5 +1,23 @@
 # @atproto/bsky
 
+## 0.0.258
+
+### Patch Changes
+
+- [#5213](https://github.com/bluesky-social/atproto/pull/5213) [`bd2b7b6`](https://github.com/bluesky-social/atproto/commit/bd2b7b6b5b56585b763a8dc505ba6d27369454c3) Thanks [@treethought](https://github.com/treethought)! - return 400 for dataplane InvalidArgument in search
+
+## 0.0.257
+
+### Patch Changes
+
+- [#5211](https://github.com/bluesky-social/atproto/pull/5211) [`68ed54d`](https://github.com/bluesky-social/atproto/commit/68ed54d875e10d0f1db52b8a4e5b191a5650d25b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sanitize cursors in v1 searchPosts, throwing more specific error for downstream consumers
+
+## 0.0.256
+
+### Patch Changes
+
+- [#5208](https://github.com/bluesky-social/atproto/pull/5208) [`af43bdb`](https://github.com/bluesky-social/atproto/commit/af43bdb6f13e8191bd1f4b47957c023851aa2415) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Lift auth requirement for searchPostsV2, maintain v1-v2 parity for results and auth handling.
+
 ## 0.0.255
 
 ### Patch Changes
