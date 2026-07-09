@@ -4,6 +4,14 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: >-
+          Optional GHCR tag suffix (after ':'), e.g. pds-plc-dev-pr25-cdn.
+          Use when building from a branch so Railway can pin an exact image
+          instead of pds-plc-dev-latest.
+        required: false
+        type: string
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
@@ -24,6 +32,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Validate custom image tag
+        if: github.event_name == 'workflow_dispatch' && inputs.image_tag != ''
+        run: |
+          tag='${{ inputs.image_tag }}'
+          if ! printf '%s' "$tag" | grep -Eq '^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$'; then
+            echo "Invalid image_tag: use 1-128 chars [a-zA-Z0-9_.-], starting with alphanumeric or _"
+            exit 1
+          fi
+
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v2
 
@@ -42,6 +59,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=pds-plc-dev-latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=${{ inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' }}
             type=sha,enable=true,priority=100,prefix=pds-plc-dev:,suffix=,format=long
 
       - name: Build and push Docker image
@@ -56,7 +74,17 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Log pushed image tags
+        run: |
+          echo "Pushed tags:"
+          echo "${{ steps.meta.outputs.tags }}" | tr ' ' '\n'
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            echo ""
+            echo "Pin Railway to: ghcr.io/${{ github.repository }}:${{ inputs.image_tag }}"
+          fi
+
       - name: Redeploy on Railway
+        if: github.event_name != 'workflow_dispatch' || inputs.image_tag == ''
         run: |
           npm install -g @railway/cli
           railway redeploy --service "${{ secrets.RAILWAY_ATPROTO_ID }}" --yes

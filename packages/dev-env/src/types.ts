@@ -53,6 +53,10 @@ export type SokaaAppViewConfig = {
   dbPostgresSchema: string
   migration?: string
   privateKey?: string
+  /** Client-facing base URL for embed/CDN links (defaults to internal listen URL). */
+  publicUrl?: string
+  /** Override CDN base for image/video view URLs returned in timeline responses. */
+  cdnUrl?: string
   /** When false, caller must invoke sub.start() after PDS is listening. */
   startSubscription?: boolean
 }

@@ -59,14 +59,16 @@ export class TestSokaaAppView {
     const dataplanePort = await getPort()
     const dataplane = await sokaa.DataPlaneServer.create(db, dataplanePort)
 
+    const publicUrl = cfg.publicUrl ?? url
     const config = new sokaa.ServerConfig({
       port,
-      publicUrl: url,
+      publicUrl,
       serverDid,
       alternateAudienceDids: [],
       dataplaneUrl: dataplane.url,
       didPlcUrl: cfg.plcUrl,
       adminPasswords: [ADMIN_PASSWORD],
+      ...(cfg.cdnUrl ? { cdnUrl: cfg.cdnUrl } : {}),
     })
 
     const server = sokaa.SokaaAppView.create({ config, db })

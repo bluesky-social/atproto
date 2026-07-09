@@ -95,6 +95,9 @@ async function main() {
         : {}),
   }
 
+  const sokaaAppViewPublicUrl = nonEmptyEnv('SOKAA_APPVIEW_PUBLIC_URL')
+  const sokaaAppViewCdnUrl = nonEmptyEnv('SOKAA_APPVIEW_CDN_URL')
+
   const network = appviewEnabled
     ? await TestNetworkSokaa.create({
         plc: {
@@ -104,6 +107,12 @@ async function main() {
         pds: pdsConfig,
         dbPostgresUrl,
         dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA ?? 'pds_plc',
+        sokaa: {
+          ...(sokaaAppViewPublicUrl
+            ? { publicUrl: sokaaAppViewPublicUrl }
+            : {}),
+          ...(sokaaAppViewCdnUrl ? { cdnUrl: sokaaAppViewCdnUrl } : {}),
+        },
       })
     : await TestNetworkNoAppView.create({
         plc: {
@@ -130,7 +139,11 @@ async function main() {
   console.log(`📡 PDS DID: ${network.pds.ctx.cfg.service.did}\n`)
   if ('sokaa' in network) {
     console.log(`📡 Sokaa AppView: ${network.sokaa.url}`)
-    console.log(`📡 Sokaa AppView DID: ${network.sokaa.serverDid}\n`)
+    console.log(`📡 Sokaa AppView DID: ${network.sokaa.serverDid}`)
+    if (sokaaAppViewCdnUrl) {
+      console.log(`📡 Sokaa AppView CDN: ${sokaaAppViewCdnUrl}`)
+    }
+    console.log('')
   }
   console.log(
     `🔧 PDS devMode=${network.pds.ctx.cfg.service.devMode} invites.required=${network.pds.ctx.cfg.invites.required}`,
