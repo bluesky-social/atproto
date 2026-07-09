@@ -4,7 +4,10 @@ import type { AtUriString, Client } from '@atproto/lex'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
-import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
 import {
   type PostSearchQuery,
   parsePostSearchQuery,
@@ -121,26 +124,29 @@ const skeletonV2 = async (
   const parsedQuery = parsePostSearchQuery(params.q, {
     author: params.author,
   })
-  const res = await ctx.dataplane.searchPostsV2({
-    allTime: true, // match v1 behavior, v2 defaults to false
-    params: {
-      query: params.q,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      limit: params.limit,
-      cursor: sanitizeCursor(params.cursor),
-    },
-    sort: postSortToV2(params.sort),
-    filters: {
-      authors: params.author ? [params.author] : [],
-      mentions: params.mentions ? [params.mentions] : [],
-      domains: params.domain ? [params.domain] : [],
-      urls: params.url ? [params.url] : [],
-      hashtags: params.tag ?? [],
-      languages: params.lang ? [params.lang] : [],
-    },
-    since: parseTimestamp(params.since),
-    until: parseTimestamp(params.until),
-  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchPostsV2({
+      allTime: true, // match v1 behavior, v2 defaults to false
+      params: {
+        query: params.q,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: sanitizeCursor(params.cursor),
+      },
+      sort: postSortToV2(params.sort),
+      filters: {
+        authors: params.author ? [params.author] : [],
+        mentions: params.mentions ? [params.mentions] : [],
+        domains: params.domain ? [params.domain] : [],
+        urls: params.url ? [params.url] : [],
+        hashtags: params.tag ?? [],
+        languages: params.lang ? [params.lang] : [],
+      },
+      since: parseTimestamp(params.since),
+      until: parseTimestamp(params.until),
+    })
+    .catch(asInvalidRequest)
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),

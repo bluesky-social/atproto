@@ -1,6 +1,7 @@
-import { type Code, ConnectError, type Interceptor } from '@connectrpc/connect'
+import { Code, ConnectError, type Interceptor } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { getDidKeyFromMultibase } from '@atproto/identity'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export const callerInterceptor =
   (caller: string): Interceptor =>
@@ -18,6 +19,17 @@ export const isDataplaneError = (
     return !code || err.code === code
   }
   return false
+}
+
+// Rethrows a dataplane InvalidArgument error as a client-facing 400. Use as a
+// `.catch()` handler on a dataplane call whose args come from user input.
+// Returns `never`, so the awaited result keeps its type. Any other error passes
+// through unchanged.
+export const asInvalidRequest = (err: unknown): never => {
+  if (isDataplaneError(err, Code.InvalidArgument)) {
+    throw new InvalidRequestError(err.rawMessage)
+  }
+  throw err
 }
 
 export const unpackIdentityServices = (servicesBytes: Uint8Array) => {
