@@ -1,5 +1,16 @@
 # @atproto/lex-resolver
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55), [`1570e44`](https://github.com/bluesky-social/atproto/commit/1570e4471bffb1f3e5e6907f031d025db9ef3198)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/lex-schema@0.2.2
+  - @atproto/repo@0.10.6
+  - @atproto/lex-client@0.2.4
+  - @atproto/lex-document@0.1.6
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @atproto/oauth-client
 
+## 0.7.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.6
+
 ## 0.7.9
 
 ### Patch Changes

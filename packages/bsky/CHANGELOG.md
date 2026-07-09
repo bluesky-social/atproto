@@ -1,5 +1,22 @@
 # @atproto/bsky
 
+## 0.0.259
+
+### Patch Changes
+
+- [#5218](https://github.com/bluesky-social/atproto/pull/5218) [`7505dd4`](https://github.com/bluesky-social/atproto/commit/7505dd4acb0d3940620025a0b75a69221e62e6fe) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable age assurance in Texas
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/api@0.20.28
+  - @atproto/repo@0.10.6
+  - @atproto/sync@0.3.10
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto-labs/xrpc-utils@0.1.8
+
 ## 0.0.258
 
 ### Patch Changes
