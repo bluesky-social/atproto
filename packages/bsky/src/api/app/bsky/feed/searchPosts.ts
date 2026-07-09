@@ -146,7 +146,7 @@ const skeletonV2 = async (
       since: parseTimestamp(params.since),
       until: parseTimestamp(params.until),
     })
-    .catch(asInvalidRequest)
+    .catch(asInvalidRequest())
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),

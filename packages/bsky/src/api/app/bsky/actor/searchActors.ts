@@ -114,7 +114,7 @@ const skeletonV2 = async (
         cursor: params.cursor,
       },
     })
-    .catch(asInvalidRequest)
+    .catch(asInvalidRequest())
   return {
     dids: res.actors.map(({ did }) => did as DidString),
     cursor: parseString(res.pageInfo?.cursor),

@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
                 limit: params.limit,
               },
             })
-            .catch(asInvalidRequest)
+            .catch(asInvalidRequest())
           uris = res.feedGenerators.map(({ uri }) => uri) as AtUriString[]
         } else {
           const res = await ctx.dataplane
@@ -66,7 +66,7 @@ export default function (server: Server, ctx: AppContext) {
               query,
               limit: params.limit,
             })
-            .catch(asInvalidRequest)
+            .catch(asInvalidRequest())
           uris = res.uris as AtUriString[]
         }
       } else {

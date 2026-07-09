@@ -106,7 +106,7 @@ const skeletonV2 = async (
         limit: params.limit,
       },
     })
-    .catch(asInvalidRequest)
+    .catch(asInvalidRequest())
   return {
     dids: res.actors.map(({ did }) => did as DidString),
   }

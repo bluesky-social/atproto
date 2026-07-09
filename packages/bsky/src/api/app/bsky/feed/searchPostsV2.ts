@@ -144,7 +144,7 @@ const skeleton = async (
       following: params.following,
       queryLanguage: queryLanguageToV2(params.queryLanguage),
     })
-    .catch(asInvalidRequest)
+    .catch(asInvalidRequest())
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),
