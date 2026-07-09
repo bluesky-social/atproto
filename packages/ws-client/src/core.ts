@@ -1,6 +1,7 @@
 import {
   AbnormalCloseError,
   BufferOverflowError,
+  DataModeError,
   SocketError,
   WebSocketCoreError,
 } from './errors.js'
@@ -119,10 +120,8 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     }
 
     // Retained for later tasks and referenced here to satisfy noUnusedLocals
-    // until then: `dataMode` is enforced in Task 6; `options` carries the
-    // heartbeat/idleTimeoutMs (Tasks 7–8) settings consumed by the hooks
-    // above.
-    void this.dataMode
+    // until then: `options` carries the heartbeat/idleTimeoutMs (Tasks 7–8)
+    // settings consumed by the hooks above.
     void this.options
   }
 
@@ -188,6 +187,15 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   // ---- message intake (Task 5 adds watermarks, Task 6 adds dataMode) ----
 
   private onMessage(data: string | Uint8Array, isBinary: boolean): void {
+    const received = isBinary ? 'binary' : 'text'
+    if (this.dataMode === 'text' && isBinary) {
+      this.rejectDataMode('text', received)
+      return
+    }
+    if (this.dataMode === 'binary' && !isBinary) {
+      this.rejectDataMode('binary', received)
+      return
+    }
     const value = data as MessageOf<M>
     const bytes = messageBytes(data, isBinary)
     const waiter = this.waiters.shift()
@@ -207,6 +215,15 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
       this.paused = true
       this.transport.pause()
     }
+  }
+
+  private rejectDataMode(
+    expected: 'text' | 'binary',
+    received: 'text' | 'binary',
+  ): void {
+    // Attempt a protocol-level close (1003 = unsupported data), then hard kill.
+    this.transport.close(1003)
+    this.fail(new DataModeError(expected, received), true)
   }
 
   // ---- terminal transitions ----
