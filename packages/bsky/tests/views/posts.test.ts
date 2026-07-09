@@ -1,15 +1,15 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedGallery,
-  AppBskyEmbedRecord,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyEmbedVideo,
-  AppBskyFeedPost,
-  AtpAgent,
-  Un$Typed,
+  type AppBskyEmbedRecord,
+  type AppBskyEmbedRecordWithMedia,
+  type AppBskyEmbedVideo,
+  type AppBskyFeedPost,
+  type AtpAgent,
+  type Un$Typed,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util.js'
 
 describe('pds posts views', () => {

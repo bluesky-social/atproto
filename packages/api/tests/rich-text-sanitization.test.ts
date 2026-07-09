@@ -1,5 +1,5 @@
 import {
-  Facet,
+  type Facet,
   RichText,
   UnicodeString,
   sanitizeRichText,

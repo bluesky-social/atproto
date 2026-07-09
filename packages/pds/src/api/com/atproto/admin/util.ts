@@ -1,9 +1,9 @@
-import express from 'express'
-import { l } from '@atproto/lex'
+import type express from 'express'
+import type { l } from '@atproto/lex'
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { ActorAccount } from '../../../../account-manager/helpers/account.js'
-import { CodeDetail } from '../../../../account-manager/helpers/invite.js'
-import { com } from '../../../../lexicons/index.js'
+import type { ActorAccount } from '../../../../account-manager/helpers/account.js'
+import type { CodeDetail } from '../../../../account-manager/helpers/invite.js'
+import type { com } from '../../../../lexicons/index.js'
 
 // Output designed to passed as second arg to AtpAgent methods.
 // The encoding field here is a quirk of the AtpAgent.

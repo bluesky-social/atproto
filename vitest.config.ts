@@ -12,6 +12,7 @@ export default defineConfig({
       ],
     },
     projects: [
+      'packages/aws',
       'packages/lex/*',
       'packages/oauth/oauth-client',
       'packages/syntax',

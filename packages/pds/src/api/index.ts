@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../context.js'
 import appBsky from './app/bsky/index.js'
 import comAtproto from './com/atproto/index.js'
 

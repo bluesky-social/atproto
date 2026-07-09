@@ -1,7 +1,7 @@
 import * as common from '@atproto/common'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { DidString, isDidString } from '@atproto/lex-schema'
+import { type DidString, isDidString } from '@atproto/lex-schema'
 import { AuthRequiredError } from './errors.js'
 
 type ServiceJwtParams = {

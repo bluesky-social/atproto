@@ -1,4 +1,4 @@
-import { UseQueryResult } from '@tanstack/react-query'
+import type { UseQueryResult } from '@tanstack/react-query'
 import ReactJson from 'react-json-view'
 import { useIsDarkMode } from '../lib/use-is-dark-mode.ts'
 

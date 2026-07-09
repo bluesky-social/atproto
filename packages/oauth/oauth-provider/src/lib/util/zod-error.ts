@@ -1,4 +1,4 @@
-import { ZodError, ZodIssue, ZodIssueCode } from 'zod'
+import { type ZodError, type ZodIssue, ZodIssueCode } from 'zod'
 
 export function formatZodError(err: ZodError, prefix?: string): string {
   const message = err.issues.length

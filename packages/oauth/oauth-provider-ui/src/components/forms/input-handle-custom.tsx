@@ -2,13 +2,13 @@ import { useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
 import { composeEventHandlers } from '@radix-ui/primitive'
 import {
-  HandleString,
+  type HandleString,
   isValidHandle,
   isValidTld,
   normalizeHandle,
 } from '@atproto/syntax'
-import { Override } from '#/lib/util.ts'
-import { InputText, InputTextProps } from './input-text.tsx'
+import type { Override } from '#/lib/util.ts'
+import { InputText, type InputTextProps } from './input-text.tsx'
 
 export type InputHandleCustomProps = Override<
   Omit<InputTextProps, 'type' | 'append' | 'bellow'>,

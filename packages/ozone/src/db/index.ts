@@ -2,13 +2,13 @@ import assert from 'node:assert'
 import { EventEmitter } from 'node:events'
 import {
   Kysely,
-  KyselyPlugin,
-  PluginTransformQueryArgs,
-  PluginTransformResultArgs,
+  type KyselyPlugin,
+  type PluginTransformQueryArgs,
+  type PluginTransformResultArgs,
   PostgresDialect,
-  QueryResult,
-  RootOperationNode,
-  UnknownRow,
+  type QueryResult,
+  type RootOperationNode,
+  type UnknownRow,
 } from 'kysely'
 import { Migrator } from 'kysely/migration'
 // eslint-disable-next-line import/default
@@ -20,8 +20,8 @@ import type TypedEmitter from 'typed-emitter'
 import { dbLogger } from '../logger.js'
 import * as migrations from './migrations/index.js'
 import { CtxMigrationProvider } from './migrations/provider.js'
-import { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
-import { PgOptions } from './types.js'
+import type { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
+import type { PgOptions } from './types.js'
 
 export class Database {
   pool: PgPool

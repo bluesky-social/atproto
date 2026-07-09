@@ -1,27 +1,27 @@
 import * as plc from '@did-plc/lib'
-import { Etcd3 } from 'etcd3'
-import express from 'express'
-import { Dispatcher } from 'undici'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
-import { Client } from '@atproto/lex'
-import { AuthVerifier } from './auth-verifier.js'
-import { BsyncClient } from './bsync.js'
-import { ServerConfig } from './config.js'
-import { CourierClient } from './courier.js'
-import { DataPlaneClient, HostList } from './data-plane/client/index.js'
-import { FeatureGatesClient } from './feature-gates/index.js'
-import { Hydrator } from './hydration/hydrator.js'
-import { KwsClient } from './kws.js'
+import type { Etcd3 } from 'etcd3'
+import type express from 'express'
+import type { Dispatcher } from 'undici'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
+import type { Client } from '@atproto/lex'
+import type { AuthVerifier } from './auth-verifier.js'
+import type { BsyncClient } from './bsync.js'
+import type { ServerConfig } from './config.js'
+import type { CourierClient } from './courier.js'
+import type { DataPlaneClient, HostList } from './data-plane/client/index.js'
+import type { FeatureGatesClient } from './feature-gates/index.js'
+import type { Hydrator } from './hydration/hydrator.js'
+import type { KwsClient } from './kws.js'
 import { httpLogger as log } from './logger.js'
-import { RolodexClient } from './rolodex.js'
-import { StashClient } from './stash.js'
+import type { RolodexClient } from './rolodex.js'
+import type { StashClient } from './stash.js'
 import {
-  ParsedLabelers,
+  type ParsedLabelers,
   defaultLabelerHeader,
   parseLabelerHeader,
 } from './util.js'
-import { Views } from './views/index.js'
+import type { Views } from './views/index.js'
 
 export class AppContext {
   constructor(

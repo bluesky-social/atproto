@@ -1,10 +1,10 @@
 import {
   type InferInput,
   type InferOutput,
-  Issue,
+  type Issue,
   LexValidationError,
   Schema,
-  ValidationContext,
+  type ValidationContext,
   type Validator,
 } from '../core.js'
 

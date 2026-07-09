@@ -1,4 +1,4 @@
-import { ScopeStringFor, ScopeSyntax } from './syntax.js'
+import type { ScopeStringFor, ScopeSyntax } from './syntax.js'
 import { minIdx } from './util.js'
 
 /**

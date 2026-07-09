@@ -1,5 +1,5 @@
-import { AtUri, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { AtUri, type AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { forSnapshot } from '../_util.js'
 import basicSeed from '../seeds/basic.js'

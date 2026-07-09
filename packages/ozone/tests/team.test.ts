@@ -1,5 +1,5 @@
-import { AtpAgent, ToolsOzoneTeamDefs } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type AtpAgent, ToolsOzoneTeamDefs } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util.js'
 
 describe('team management', () => {

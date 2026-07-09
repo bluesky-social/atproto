@@ -1,9 +1,9 @@
 import { msg } from '@lingui/core/macro'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
-import { Override } from '#/lib/util.ts'
-import { LayoutApp, LayoutAppProps } from './layouts/layout-app.tsx'
-import { ErrorCard, ErrorParser } from './utils/error-card.tsx'
+import type { Override } from '#/lib/util.ts'
+import { LayoutApp, type LayoutAppProps } from './layouts/layout-app.tsx'
+import { ErrorCard, type ErrorParser } from './utils/error-card.tsx'
 
 export type ErrorViewProps = Override<
   LayoutAppProps,

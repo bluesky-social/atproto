@@ -1,8 +1,8 @@
 import { getNotif } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import { getDidDoc } from '../util/resolver.js'
 

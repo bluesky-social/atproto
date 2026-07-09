@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, quotesSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { forSnapshot } from '../_util.js'
 

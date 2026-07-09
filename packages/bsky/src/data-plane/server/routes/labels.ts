@@ -1,10 +1,10 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Selectable, sql } from 'kysely'
+import type { ServiceImpl } from '@connectrpc/connect'
+import { type Selectable, sql } from 'kysely'
 import * as ui8 from 'uint8arrays'
 import { noUndefinedVals } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
-import { Database } from '../db/index.js'
-import { Label } from '../db/tables/label.js'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
+import type { Label } from '../db/tables/label.js'
 
 type LabelRow = Selectable<Label>
 

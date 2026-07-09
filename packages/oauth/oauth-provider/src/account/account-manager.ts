@@ -1,19 +1,19 @@
-import { Did } from '@atproto/did'
+import type { Did } from '@atproto/did'
 import {
-  OAuthIssuerIdentifier,
+  type OAuthIssuerIdentifier,
   isOAuthClientIdLoopback,
 } from '@atproto/oauth-types'
-import { ClientId } from '../client/client-id.js'
-import { Client } from '../client/client.js'
-import { DeviceId } from '../device/device-id.js'
+import type { ClientId } from '../client/client-id.js'
+import type { Client } from '../client/client.js'
+import type { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
-import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
+import { HCaptchaClient, type HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
-import { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
-import { Customization } from '../oauth-provider.js'
-import {
+import type { OAuthHooks, RequestMetadata } from '../oauth-hooks.js'
+import type { Customization } from '../oauth-provider.js'
+import type {
   Account,
   AccountStore,
   AuthorizedClientData,
@@ -30,8 +30,8 @@ import {
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account-store.js'
-import { SignInData } from './sign-in-data.js'
-import { SignUpInput } from './sign-up-input.js'
+import type { SignInData } from './sign-in-data.js'
+import type { SignUpInput } from './sign-up-input.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 const BRUTE_FORCE_MITIGATION_DELAY = 300

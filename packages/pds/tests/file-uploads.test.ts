@@ -3,16 +3,16 @@ import fs from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { Client, DidString } from '@atproto/lex'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { Client, DidString } from '@atproto/lex'
 import {
-  TypedBlobRef,
+  type TypedBlobRef,
   getBlobCidString,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { ActorDb } from '../src/actor-store/db/index.js'
-import { DiskBlobStore } from '../src/disk-blobstore.js'
-import { AppContext } from '../src/index.js'
+import type { ActorDb } from '../src/actor-store/db/index.js'
+import type { DiskBlobStore } from '../src/disk-blobstore.js'
+import type { AppContext } from '../src/index.js'
 import { app } from '../src/lexicons/index.js'
 import { users } from './seeds/users.js'
 

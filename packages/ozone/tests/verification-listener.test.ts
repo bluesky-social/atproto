@@ -1,11 +1,11 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
+import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { WebSocket, WebSocketServer } from 'ws'
-import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type WebSocket, WebSocketServer } from 'ws'
+import type { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util.js'
 
 describe('verification-listener', () => {

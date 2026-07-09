@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { OzoneEnvironment } from './env.js'
+import type { OzoneEnvironment } from './env.js'
 
 export const envToSecrets = (env: OzoneEnvironment): OzoneSecrets => {
   assert(env.adminPassword)

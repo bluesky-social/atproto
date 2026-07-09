@@ -1,7 +1,7 @@
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
 import { Agent, AtUri, CredentialSession } from '@atproto/api'
-import { VerifierConfig } from '../config/index.js'
-import { Verification } from '../db/schema/verification.js'
+import type { VerifierConfig } from '../config/index.js'
+import type { Verification } from '../db/schema/verification.js'
 
 export type VerificationInput = {
   displayName: string

@@ -1,25 +1,25 @@
-import { Duplex, Transform, Writable } from 'node:stream'
+import { type Duplex, Transform, type Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
-import { Dispatcher } from 'undici'
+import type { Dispatcher } from 'undici'
 import {
   VerifyCidError,
   VerifyCidTransform,
   createDecoders,
 } from '@atproto/common'
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import { Cid } from '@atproto/lex'
+import { type AtprotoDid, isAtprotoDid } from '@atproto/did'
+import type { Cid } from '@atproto/lex'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import { ServerConfig } from '../config.js'
-import { AppContext } from '../context.js'
+import type { ServerConfig } from '../config.js'
+import type { AppContext } from '../context.js'
 import {
   Code,
-  DataPlaneClient,
+  type DataPlaneClient,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
@@ -27,7 +27,7 @@ import {
 import { parseCid } from '../hydration/util.js'
 import { httpLogger as log } from '../logger.js'
 import {
-  Middleware,
+  type Middleware,
   proxyResponseHeaders,
   responseSignal,
 } from '../util/http.js'

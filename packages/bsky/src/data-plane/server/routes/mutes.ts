@@ -1,10 +1,10 @@
 import assert from 'node:assert'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
-import { Database } from '../db/index.js'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
 import {
   CreatedAtDidKeyset,
   TimeCidKeyset,

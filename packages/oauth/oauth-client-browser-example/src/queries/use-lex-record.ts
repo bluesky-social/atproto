@@ -1,11 +1,11 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query'
+import { type UseQueryResult, useQuery } from '@tanstack/react-query'
 import {
-  Client,
-  GetOptions,
-  GetOutput,
-  Main,
-  RecordSchema,
-  Restricted,
+  type Client,
+  type GetOptions,
+  type GetOutput,
+  type Main,
+  type RecordSchema,
+  type Restricted,
   XrpcError,
   getMain,
 } from '@atproto/lex'

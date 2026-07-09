@@ -1,6 +1,6 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { LinkExternal } from './link-external.tsx'
 import { LinkTitle } from './link-title.tsx'
 

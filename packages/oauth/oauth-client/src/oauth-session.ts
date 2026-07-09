@@ -1,14 +1,14 @@
-import { AtprotoDid } from '@atproto/did'
-import {
+import type { AtprotoDid } from '@atproto/did'
+import type {
   AtprotoOAuthScope,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
-import { Fetch, bindFetch } from '@atproto-labs/fetch'
+import { type Fetch, bindFetch } from '@atproto-labs/fetch'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
-import { OAuthServerAgent, TokenSet } from './oauth-server-agent.js'
-import { SessionGetter } from './session-getter.js'
+import type { OAuthServerAgent, TokenSet } from './oauth-server-agent.js'
+import type { SessionGetter } from './session-getter.js'
 
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream

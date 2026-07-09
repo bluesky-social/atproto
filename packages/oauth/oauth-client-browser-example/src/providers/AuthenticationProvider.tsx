@@ -1,5 +1,5 @@
-import { ReactNode, createContext, useContext, useMemo } from 'react'
-import { OAuthSession } from '@atproto/oauth-client-browser'
+import { type ReactNode, createContext, useContext, useMemo } from 'react'
+import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
 import { Layout } from '../components/Layout.tsx'
 import { PDS_OPERATOR_URL } from '../constants.ts'

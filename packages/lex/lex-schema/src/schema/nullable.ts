@@ -2,7 +2,7 @@ import {
   type InferInput,
   type InferOutput,
   Schema,
-  ValidationContext,
+  type ValidationContext,
   type Validator,
 } from '../core.js'
 import { memoizedTransformer } from '../util/memoize.js'

@@ -1,5 +1,5 @@
 import { chunkArray } from '@atproto/common'
-import { SeedClient } from '@atproto/dev-env'
+import type { SeedClient } from '@atproto/dev-env'
 import type { HandleString } from '@atproto/syntax'
 
 export default async (sc: SeedClient, max = Infinity) => {

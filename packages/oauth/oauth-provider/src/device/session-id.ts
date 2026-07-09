@@ -1,6 +1,9 @@
 import { z } from 'zod'
-import { SESSION_ID_BYTES_LENGTH, SESSION_ID_PREFIX } from '../constants.js'
 import { randomHexId } from '../lib/util/crypto.js'
+import {
+  SESSION_ID_BYTES_LENGTH,
+  SESSION_ID_PREFIX,
+} from '../oauth-constants.js'
 
 export const SESSION_ID_LENGTH =
   SESSION_ID_PREFIX.length + SESSION_ID_BYTES_LENGTH * 2 // hex encoding

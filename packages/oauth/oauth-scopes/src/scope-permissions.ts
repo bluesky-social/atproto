@@ -1,21 +1,24 @@
 import { ScopeMissingError } from './scope-missing-error.js'
 import {
   AccountPermission,
-  AccountPermissionMatch,
+  type AccountPermissionMatch,
 } from './scopes/account-permission.js'
 import {
   BlobPermission,
-  BlobPermissionMatch,
+  type BlobPermissionMatch,
 } from './scopes/blob-permission.js'
 import {
   IdentityPermission,
-  IdentityPermissionMatch,
+  type IdentityPermissionMatch,
 } from './scopes/identity-permission.js'
 import {
   RepoPermission,
-  RepoPermissionMatch,
+  type RepoPermissionMatch,
 } from './scopes/repo-permission.js'
-import { RpcPermission, RpcPermissionMatch } from './scopes/rpc-permission.js'
+import {
+  RpcPermission,
+  type RpcPermissionMatch,
+} from './scopes/rpc-permission.js'
 import { ScopesSet } from './scopes-set.js'
 
 export type {

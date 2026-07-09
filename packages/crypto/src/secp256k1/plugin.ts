@@ -1,5 +1,5 @@
 import { SECP256K1_DID_PREFIX, SECP256K1_JWT_ALG } from '../const.js'
-import { DidKeyPlugin } from '../types.js'
+import type { DidKeyPlugin } from '../types.js'
 import { compressPubkey, decompressPubkey } from './encoding.js'
 import { verifyDidSig } from './operations.js'
 

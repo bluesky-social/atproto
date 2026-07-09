@@ -1,7 +1,11 @@
 import { bench, describe } from 'vitest'
 import { utf8FromBytes } from '@atproto/lex-data'
 import { JsonBytesDecoder } from './json-bytes-decoder.js'
-import { LexParseOptions, lexParse, lexParseJsonBytes } from './lex-json.js'
+import {
+  type LexParseOptions,
+  lexParse,
+  lexParseJsonBytes,
+} from './lex-json.js'
 
 // This benchmark compares the performance of two implementations of
 // lexParseJsonBytes:

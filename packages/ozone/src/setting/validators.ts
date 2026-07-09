@@ -1,6 +1,6 @@
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Setting } from '../db/schema/setting.js'
+import type { Setting } from '../db/schema/setting.js'
 import {
   PolicyListSettingKey,
   ProtectedTagSettingKey,

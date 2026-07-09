@@ -1,7 +1,10 @@
 import { Trans } from '@lingui/react/macro'
 import { FormField } from '#/components/forms/form-field'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type VerifyEmailConfirmData = { token: string }
 

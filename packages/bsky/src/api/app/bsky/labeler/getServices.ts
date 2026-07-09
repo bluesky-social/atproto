@@ -1,6 +1,6 @@
 import { mapDefined } from '@atproto/common'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import { resHeaders } from '../../../util.js'
 

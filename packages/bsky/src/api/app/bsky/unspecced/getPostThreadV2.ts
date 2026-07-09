@@ -1,23 +1,23 @@
-import { AtUriString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config.js'
-import { AppContext } from '../../../../context.js'
+import type { AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
 import {
   Code,
-  DataPlaneClient,
+  type DataPlaneClient,
   isDataplaneError,
 } from '../../../../data-plane/index.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
 } from '../../../../pipeline.js'
 import { postUriToThreadgateUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {

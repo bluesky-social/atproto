@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { graphemeLen, utf8Len } from '@atproto/common-web'
-import { Lexicons } from '../lexicons.js'
+import type { Lexicons } from '../lexicons.js'
 import { ValidationError } from '../types.js'
 import type {
   LexBoolean,

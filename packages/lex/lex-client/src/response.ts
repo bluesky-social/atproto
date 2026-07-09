@@ -4,10 +4,12 @@ import type {
   InferMethodOutputEncoding,
   InferOutput,
   LexValue,
+  Payload,
+  Procedure,
+  Query,
   ResultSuccess,
   Validator,
 } from '@atproto/lex-schema'
-import { Payload, Procedure, Query } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
   XrpcInvalidResponseError,

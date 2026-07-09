@@ -1,5 +1,5 @@
-import { Key } from '@atproto/jwk'
-import { Awaitable } from './util.js'
+import type { Key } from '@atproto/jwk'
+import type { Awaitable } from './util.js'
 
 export type { Key }
 export type RuntimeKeyFactory = (algs: string[]) => Key | PromiseLike<Key>

@@ -5,7 +5,7 @@
 import 'express-async-errors'
 
 import events from 'node:events'
-import http from 'node:http'
+import type http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
@@ -13,7 +13,7 @@ import express from 'express'
 import httpTerminator from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import {
-  MethodHandler,
+  type MethodHandler,
   ResponseType,
   XRPCError,
   createServer,
@@ -21,10 +21,10 @@ import {
 import apiRoutes from './api/index.js'
 import * as authRoutes from './auth-routes.js'
 import * as basicRoutes from './basic-routes.js'
-import { ServerConfig, ServerSecrets } from './config/index.js'
-import { AppContext, AppContextOptions } from './context.js'
+import type { ServerConfig, ServerSecrets } from './config/index.js'
+import { AppContext, type AppContextOptions } from './context.js'
 import * as error from './error.js'
-import { app } from './lexicons.js'
+import type { app } from './lexicons.js'
 import { loggerMiddleware } from './logger.js'
 import { proxyHandler } from './pipethrough.js'
 import { buildRateLimitsConfig } from './rate-limits.js'

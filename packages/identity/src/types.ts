@@ -1,4 +1,4 @@
-import { DidDocument } from '@atproto/common-web'
+import type { DidDocument } from '@atproto/common-web'
 
 export { didDocument } from '@atproto/common-web'
 export type { DidDocument } from '@atproto/common-web'

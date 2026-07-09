@@ -1,6 +1,6 @@
-import { Server } from '@atproto/xrpc-server'
+import type { Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   bareDidFromProxyTo,

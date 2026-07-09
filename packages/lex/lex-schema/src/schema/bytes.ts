@@ -1,5 +1,5 @@
 import { asUint8Array, ifUint8Array } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, type ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**

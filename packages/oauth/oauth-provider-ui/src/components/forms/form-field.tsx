@@ -1,7 +1,10 @@
-import { JSX, ReactNode, useMemo } from 'react'
+import { type JSX, type ReactNode, useMemo } from 'react'
 import { useRandomString } from '#/hooks/use-random-string.ts'
-import { Override } from '#/lib/util.ts'
-import { FieldsetContext, FieldsetContextValue } from './fieldset-context.js'
+import type { Override } from '#/lib/util.ts'
+import {
+  FieldsetContext,
+  type FieldsetContextValue,
+} from './fieldset-context.js'
 import { useFormContext } from './form-context.js'
 
 export type FormFieldProps = Override<

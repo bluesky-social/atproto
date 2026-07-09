@@ -1,7 +1,6 @@
 import type { LexValue } from '@atproto/lex-data'
-import type { InferInput, Validator } from '../core.js'
-import { Schema } from '../core.js'
-import { ObjectSchema, object } from './object.js'
+import type { InferInput, Schema, Validator } from '../core.js'
+import { type ObjectSchema, object } from './object.js'
 
 export type { LexValue }
 

@@ -1,16 +1,16 @@
 import {
-  AuthorizeOptions,
-  ClientMetadata,
-  Fetch,
+  type AuthorizeOptions,
+  type ClientMetadata,
+  type Fetch,
   OAuthCallbackError,
   OAuthClient,
-  OAuthClientOptions,
-  OAuthSession,
-  SessionHooks,
+  type OAuthClientOptions,
+  type OAuthSession,
+  type SessionHooks,
 } from '@atproto/oauth-client'
 import {
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
   assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
@@ -18,7 +18,7 @@ import {
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
-import { Simplify, buildLoopbackClientId } from './util.js'
+import { type Simplify, buildLoopbackClientId } from './util.js'
 
 export type BrowserOAuthClientOptions = Simplify<
   {

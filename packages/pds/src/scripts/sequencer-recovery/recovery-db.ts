@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { Kysely } from 'kysely'
-import { DidString } from '@atproto/syntax'
+import type { Kysely } from 'kysely'
+import type { DidString } from '@atproto/syntax'
 import { Database, Migrator } from '../../db/index.js'
 
 export interface NewAccount {

@@ -1,14 +1,14 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { useLingui } from '@lingui/react'
-import { ArrowLeftIcon, IconProps } from '@phosphor-icons/react'
+import { ArrowLeftIcon, type IconProps } from '@phosphor-icons/react'
 import {
   Link,
-  RegisteredRouter,
-  ToPathOption,
+  type RegisteredRouter,
+  type ToPathOption,
   useRouterState,
 } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { FunctionComponent, ReactNode } from 'react'
+import type { FunctionComponent, ReactNode } from 'react'
 import { LayoutApp } from '#/components/layouts/layout-app.tsx'
 import { AccountSelector } from '#/components/utils/account-selector.tsx'
 

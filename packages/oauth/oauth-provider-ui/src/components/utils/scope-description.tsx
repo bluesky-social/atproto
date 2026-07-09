@@ -10,19 +10,19 @@ import {
   IdentificationBadgeIcon,
   UserIcon,
 } from '@phosphor-icons/react'
-import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
+import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
 import {
-  AudParam,
+  type AudParam,
   BlobPermission,
-  CollectionParam,
+  type CollectionParam,
   IncludeScope,
-  LxmParam,
+  type LxmParam,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
-import { Override } from '#/lib/util'
+import type { Override } from '#/lib/util'
 import { Checkbox } from '../forms/checkbox.tsx'
 import { Admonition } from './admonition.tsx'
 import { DescriptionCard } from './description-card.tsx'

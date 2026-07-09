@@ -7,8 +7,8 @@ import { cidForLex, decode, encode } from '@atproto/lex-cbor'
 import {
   CBOR_DATA_CODEC,
   type CID,
-  Cid,
-  LexValue,
+  type Cid,
+  type LexValue,
   asMultiformatsCID,
   // eslint-disable-next-line
   cidForCbor,

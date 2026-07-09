@@ -7,8 +7,8 @@ import {
   expect,
   it,
 } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('post views w/ debug field', () => {
   let network: TestNetwork

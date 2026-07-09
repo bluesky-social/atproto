@@ -1,11 +1,11 @@
 import {
   ForbiddenError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { CodeDetail } from '../../../../account-manager/helpers/invite.js'
+import type { CodeDetail } from '../../../../account-manager/helpers/invite.js'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { genInvCodes } from './util.js'
 

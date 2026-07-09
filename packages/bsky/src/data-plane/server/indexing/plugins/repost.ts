@@ -1,11 +1,14 @@
-import { Insertable, Selectable } from 'kysely'
-import { Cid } from '@atproto/lex'
+import type { Insertable, Selectable } from 'kysely'
+import type { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { app } from '../../../../lexicons/index.js'
-import { BackgroundQueue } from '../../background.js'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
-import { Database } from '../../db/index.js'
-import { Notification } from '../../db/tables/notification.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import type { Notification } from '../../db/tables/notification.js'
 import { countAll, excluded } from '../../db/util.js'
 import { RecordProcessor } from '../processor.js'
 

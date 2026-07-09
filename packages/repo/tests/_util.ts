@@ -1,24 +1,23 @@
 import fs from 'node:fs'
 import { TID } from '@atproto/common-web'
-import * as crypto from '@atproto/crypto'
-import { Keypair, randomBytes } from '@atproto/crypto'
+import { type Keypair, randomBytes } from '@atproto/crypto'
 import * as cbor from '@atproto/lex-cbor'
-import { Cid, cidForCbor, parseCid } from '@atproto/lex-data'
-import { NsidString } from '@atproto/syntax'
+import { type Cid, cidForCbor, parseCid } from '@atproto/lex-data'
+import type { NsidString } from '@atproto/syntax'
 import {
   BlockMap,
-  CollectionContents,
-  Commit,
-  CommitData,
+  type CollectionContents,
+  type Commit,
+  type CommitData,
   DataDiff,
-  RecordPath,
-  RecordWriteOp,
-  RepoContents,
+  type RecordPath,
+  type RecordWriteOp,
+  type RepoContents,
   WriteOpAction,
 } from '../src/index.js'
-import { MST } from '../src/mst/index.js'
+import type { MST } from '../src/mst/index.js'
 import { Repo } from '../src/repo.js'
-import { RepoStorage } from '../src/storage/index.js'
+import type { RepoStorage } from '../src/storage/index.js'
 
 type IdMapping = Record<string, Cid>
 
@@ -88,7 +87,7 @@ export const testCollections: NsidString[] = [
 
 export const fillRepo = async (
   repo: Repo,
-  keypair: crypto.Keypair,
+  keypair: Keypair,
   itemsPerCollection: number,
 ): Promise<{ repo: Repo; data: RepoContents }> => {
   const repoData: RepoContents = {}
@@ -118,7 +117,7 @@ export const fillRepo = async (
 export const formatEdit = async (
   repo: Repo,
   prevData: RepoContents,
-  keypair: crypto.Keypair,
+  keypair: Keypair,
   params: {
     adds?: number
     updates?: number

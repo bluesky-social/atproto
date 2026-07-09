@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import getRecommendedDidCredentials from './getRecommendedDidCredentials.js'
 import requestPlcOperationSignature from './requestPlcOperationSignature.js'
 import resolveHandle from './resolveHandle.js'

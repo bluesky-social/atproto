@@ -3,9 +3,9 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import type { Manifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
-import { AssetRef } from '../../lib/html/build-document.js'
+import type { AssetRef } from '../../lib/html/build-document.js'
 import {
-  Middleware,
+  type Middleware,
   validateFetchDest,
   validateFetchSite,
   writeStream,

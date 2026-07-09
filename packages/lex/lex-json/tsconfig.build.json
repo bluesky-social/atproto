@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "../../../tsconfig/isomorphic.tsconfig.json",
-    "../../../tsconfig/verbatim.tsconfig.json",
-  ],
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.bench.ts", "**/*.test.ts"],
   "references": [{ "path": "../lex-data/tsconfig.build.json" }],

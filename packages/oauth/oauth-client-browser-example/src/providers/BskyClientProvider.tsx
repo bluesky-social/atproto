@@ -1,12 +1,12 @@
 import {
-  PropsWithChildren,
-  ReactNode,
+  type PropsWithChildren,
+  type ReactNode,
   createContext,
   use,
   useContext,
 } from 'react'
-import { Agent, Client } from '@atproto/lex'
-import { OAuthSession, asDid } from '@atproto/oauth-client-browser'
+import { type Agent, Client } from '@atproto/lex'
+import { type OAuthSession, asDid } from '@atproto/oauth-client-browser'
 import { BSKY_API_DID, BSKY_API_URL } from '../constants.ts'
 import * as app from '../lexicons/app.ts'
 import { useOAuthContext } from './OAuthProvider.tsx'

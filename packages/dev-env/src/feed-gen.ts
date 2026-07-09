@@ -1,12 +1,12 @@
 import events from 'node:events'
-import http from 'node:http'
+import type http from 'node:http'
 import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
 // eslint-disable-next-line import/default, import/no-named-as-default-member
 import httpTerminator from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { SkeletonHandler, app } from '@atproto/pds'
-import { AtUriString, DidString } from '@atproto/syntax'
+import { type SkeletonHandler, app } from '@atproto/pds'
+import type { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
 
 export class TestFeedGen {

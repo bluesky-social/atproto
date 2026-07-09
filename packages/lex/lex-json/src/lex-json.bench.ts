@@ -1,7 +1,7 @@
 import { bench, describe } from 'vitest'
-import { JsonValue } from './json.js'
+import type { JsonValue } from './json.js'
 import {
-  LexParseOptions,
+  type LexParseOptions,
   jsonToLex,
   lexParse,
   parseSpecialJsonObject,

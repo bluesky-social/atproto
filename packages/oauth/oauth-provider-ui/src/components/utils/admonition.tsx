@@ -7,15 +7,15 @@ import {
 } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
 import {
-  AriaRole,
-  JSX,
-  ReactNode,
+  type AriaRole,
+  type JSX,
+  type ReactNode,
   createContext,
   useContext,
   useMemo,
 } from 'react'
-import { Button, ButtonProps } from '#/components/forms/button.tsx'
-import { Override } from '#/lib/util.ts'
+import { Button, type ButtonProps } from '#/components/forms/button.tsx'
+import type { Override } from '#/lib/util.ts'
 
 type Variant = 'info' | 'warning' | 'error' | 'success'
 

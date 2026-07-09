@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { JSX, useDeferredValue, useEffect, useState } from 'react'
-import { HandleString, isHandleString } from '@atproto/lex'
+import { type JSX, useDeferredValue, useEffect, useState } from 'react'
+import { type HandleString, isHandleString } from '@atproto/lex'
 import { com } from '../lexicons.ts'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 import { useLexQuery } from '../queries/use-lex-query.ts'

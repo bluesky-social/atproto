@@ -1,7 +1,7 @@
 import { I18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useContext,
   useEffect,
@@ -11,7 +11,7 @@ import {
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
-import { Locale, detectLocale, isLocale, locales } from './locales.ts'
+import { type Locale, detectLocale, isLocale, locales } from './locales.ts'
 
 export type LocaleContextValue = {
   locale: string

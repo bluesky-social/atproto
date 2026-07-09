@@ -1,6 +1,6 @@
 import { Database, Migrator } from '../../db/index.js'
 import migrations from './migrations/index.js'
-import { SequencerDbSchema } from './schema.js'
+import type { SequencerDbSchema } from './schema.js'
 
 export * from './schema.js'
 

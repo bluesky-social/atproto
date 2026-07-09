@@ -1,4 +1,4 @@
-import { Generated, GeneratedAlways } from 'kysely'
+import type { Generated, GeneratedAlways } from 'kysely'
 
 export const ozoneSetTableName = 'set_detail'
 export const ozoneSetValueTableName = 'set_value'

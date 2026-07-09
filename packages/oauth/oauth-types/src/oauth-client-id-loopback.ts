@@ -1,9 +1,9 @@
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import {
-  OAuthLoopbackRedirectURI,
+  type OAuthLoopbackRedirectURI,
   oauthLoopbackClientRedirectUriSchema,
 } from './oauth-redirect-uri.js'
-import { OAuthScope, oauthScopeSchema } from './oauth-scope.js'
+import { type OAuthScope, oauthScopeSchema } from './oauth-scope.js'
 
 export const LOOPBACK_CLIENT_ID_ORIGIN = 'http://localhost'
 

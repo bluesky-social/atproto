@@ -3,9 +3,9 @@ import { KeyIcon } from '@phosphor-icons/react'
 import { composeEventHandlers } from '@radix-ui/primitive'
 import { composeRefs } from '@radix-ui/react-compose-refs'
 import { useRef, useState } from 'react'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
-import { InputText, InputTextProps } from './input-text.tsx'
+import { InputText, type InputTextProps } from './input-text.tsx'
 
 export type InputPasswordProps = Override<
   Omit<InputTextProps, 'type'> & {

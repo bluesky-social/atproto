@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "../../../tsconfig/node.tsconfig.json",
-    "../../../tsconfig/verbatim.tsconfig.json",
-  ],
+  "extends": ["../../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [

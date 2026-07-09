@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AppBskyGraphGetMutes, AtpAgent, ids } from '@atproto/api'
+import { type AppBskyGraphGetMutes, type AtpAgent, ids } from '@atproto/api'
 import {
-  SeedClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
   usersBulkSeed,

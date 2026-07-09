@@ -4,7 +4,7 @@ import {
   type InferCheckedCid,
   isCid,
 } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, type ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 export type { Cid }

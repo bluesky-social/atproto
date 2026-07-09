@@ -1,16 +1,16 @@
 import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { LexValue, cidForLex } from '@atproto/lex-cbor'
+import { type LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
-  $Typed,
+  type $Typed,
   LexValidationError,
   currentDatetimeString,
 } from '@atproto/lex-schema'
 import {
-  Action,
+  type Action,
   Client,
-  FetchHandler,
+  type FetchHandler,
   XrpcAuthenticationError,
   XrpcInvalidResponseError,
   XrpcResponseError,

@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import { LexMap } from '@atproto/lex-data'
-import { Unknown$Type, Unknown$TypedObject } from './$type.js'
+import type { LexMap } from '@atproto/lex-data'
+import type { Unknown$Type, Unknown$TypedObject } from './$type.js'
 
 describe('Unknown$TypedObject', () => {
   it('allows assigning Unknown$TypedObject to LexMap', () => {

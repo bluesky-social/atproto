@@ -1,4 +1,4 @@
-FROM node:24.15-alpine3.23 AS build
+FROM node:24.18-alpine3.23 AS build
 
 RUN npm install -g pnpm@11.5.2
 
@@ -62,7 +62,7 @@ RUN pnpm run --recursive --stream --filter '@atproto/aws...' --filter '@atproto/
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 # Uses assets from build stage to reduce build size
-FROM node:24.15-alpine3.23
+FROM node:24.18-alpine3.23
 
 RUN apk add --update dumb-init
 

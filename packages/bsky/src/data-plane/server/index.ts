@@ -1,11 +1,11 @@
 import events from 'node:events'
-import http from 'node:http'
+import type http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { IdResolver, MemoryCache } from '@atproto/identity'
-import { Database, DatabaseSchema } from './db/index.js'
+import type { Database, DatabaseSchema } from './db/index.js'
 import createRoutes from './routes/index.js'
 
 export type { DatabaseSchema }

@@ -1,18 +1,18 @@
 import {
-  OAuthAuthorizationServerMetadata,
+  type OAuthAuthorizationServerMetadata,
   oauthAuthorizationServerMetadataValidator,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
 import {
-  Fetch,
+  type Fetch,
   FetchResponseError,
   bindFetch,
   cancelBody,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
-  GetCachedOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type SimpleStore,
 } from '@atproto-labs/simple-store'
 import { contentMime } from './util.js'
 

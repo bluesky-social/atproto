@@ -1,5 +1,5 @@
 import {
-  PropsWithChildren,
+  type PropsWithChildren,
   createContext,
   use,
   useCallback,
@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { type OAuthSession } from '@atproto/oauth-client-browser'
+import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { useAbortableEffect } from '../lib/use-abortable-effect.js'
 import { initPromise, oauthClient, oauthEvents } from '../oauthClient.js'
 

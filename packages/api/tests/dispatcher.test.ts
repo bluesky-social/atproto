@@ -1,11 +1,11 @@
 import assert from 'node:assert'
-import { AddressInfo } from 'node:net'
+import type { AddressInfo } from 'node:net'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   AtpAgent,
-  AtpSessionData,
-  AtpSessionEvent,
+  type AtpSessionData,
+  type AtpSessionEvent,
   BSKY_LABELER_DID,
 } from '../src/index.js'
 import { createHeaderEchoServer } from './util/echo-server.js'

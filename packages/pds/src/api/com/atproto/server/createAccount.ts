@@ -2,16 +2,20 @@ import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { MINUTE, check } from '@atproto/common'
-import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
-import { DidString } from '@atproto/syntax'
+import {
+  type ExportableKeypair,
+  type Keypair,
+  Secp256k1Keypair,
+} from '@atproto/crypto'
+import { type AtprotoData, ensureAtpDocument } from '@atproto/identity'
+import type { DidString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
 import { safeResolveDidDoc } from './util.js'

@@ -1,6 +1,6 @@
-import { SendMailOptions, Transporter } from 'nodemailer'
+import type { SendMailOptions, Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
-import { BrandingConfig, EmailConfig } from '../config/index.js'
+import type { BrandingConfig, EmailConfig } from '../config/index.js'
 import { mailerLogger } from '../logger.js'
 import * as templates from './templates.js'
 

@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises'
-import { Awaitable } from './type.js'
+import type { Awaitable } from './type.js'
 
 export function onOvertimeDefault(options: {
   start: number

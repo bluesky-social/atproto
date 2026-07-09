@@ -1,5 +1,8 @@
 import { ModerationDecision } from '../decision.js'
-import { ModerationOpts, ModerationSubjectFeedGenerator } from '../types.js'
+import type {
+  ModerationOpts,
+  ModerationSubjectFeedGenerator,
+} from '../types.js'
 import { decideAccount } from './account.js'
 import { decideProfile } from './profile.js'
 

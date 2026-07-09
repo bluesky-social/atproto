@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { type Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   // Only small percentage of moderation events have a batchId in modTool meta property so we're creating a partial index

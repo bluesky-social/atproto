@@ -1,5 +1,5 @@
-import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { AuthorizationRedirectParameters } from './authorization-redirect-parameters.js'
+import type { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
+import type { AuthorizationRedirectParameters } from './authorization-redirect-parameters.js'
 
 export type AuthorizationResultRedirect = {
   issuer: string

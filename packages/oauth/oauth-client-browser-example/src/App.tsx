@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode, Suspense, useEffect } from 'react'
+import { type ReactNode, Suspense, useEffect } from 'react'
 import { Home } from './Home.tsx'
 import { Spinner } from './components/Spinner.js'
 import * as lexicons from './lexicons.ts'

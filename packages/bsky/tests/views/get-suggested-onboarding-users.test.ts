@@ -1,16 +1,16 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
-  AtpAgent,
+  type AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString, HandleString } from '@atproto/syntax'
 
 type User = {

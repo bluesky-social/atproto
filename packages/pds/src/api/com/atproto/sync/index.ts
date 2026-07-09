@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import getCheckout from './deprecated/getCheckout.js'
 import getHead from './deprecated/getHead.js'
 import getBlob from './getBlob.js'

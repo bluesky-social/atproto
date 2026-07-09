@@ -1,9 +1,9 @@
 import { z } from 'zod'
+import { randomHexId } from '../lib/util/crypto.js'
 import {
   REFRESH_TOKEN_BYTES_LENGTH,
   REFRESH_TOKEN_PREFIX,
-} from '../constants.js'
-import { randomHexId } from '../lib/util/crypto.js'
+} from '../oauth-constants.js'
 
 export const REFRESH_TOKEN_LENGTH =
   REFRESH_TOKEN_PREFIX.length + REFRESH_TOKEN_BYTES_LENGTH * 2 // hex encoding

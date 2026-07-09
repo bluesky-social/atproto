@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from 'node:crypto'
 import { z } from 'zod'
-import { DPOP_NONCE_MAX_AGE } from '../constants.js'
+import { DPOP_NONCE_MAX_AGE } from '../oauth-constants.js'
 
 const MAX_ROTATION_INTERVAL = DPOP_NONCE_MAX_AGE / 3
 const MIN_ROTATION_INTERVAL = Math.min(1000, MAX_ROTATION_INTERVAL)

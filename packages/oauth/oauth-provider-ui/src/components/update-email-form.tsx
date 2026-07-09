@@ -4,7 +4,7 @@ import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import {
   SmartForm,
-  WrappedSmartFormProps,
+  type WrappedSmartFormProps,
 } from '#/components/forms/smart-form.tsx'
 
 export type UpdateEmailFormData = {
