@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 
 export type PlaceholderProps = JSX.IntrinsicElements['div']
 export function Placeholder({ className = '', ...props }: PlaceholderProps) {

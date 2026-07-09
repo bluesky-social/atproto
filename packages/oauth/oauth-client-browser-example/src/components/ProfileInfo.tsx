@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import { app } from '../lexicons.ts'
 import { usePdsClient } from '../providers/PdsClientProvider.tsx'
 import { useLexRecord } from '../queries/use-lex-record.ts'

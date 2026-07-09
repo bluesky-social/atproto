@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import { useGetTokenInfoQuery } from '../queries/use-get-token-info-query.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
