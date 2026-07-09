@@ -43,6 +43,21 @@ await agent.post({ text: rt.text, facets: rt.facets, createdAt: new Date().toISO
 //                                   ^^^^^^^^^^^^^^^ omit this and tags/links go plain
 ```
 
+## Alternative: opt-in server-side detection (PDS change)
+
+This fork also adds an **opt-in** PDS flag, `PDS_ENRICH_POST_FACETS`, that makes
+the server auto-populate facets when an `app.bsky.feed.post` is created via
+`com.atproto.repo.createRecord` **without** a `facets` field. This lets a client
+that only sends `{ text, createdAt }` still get clickable tags/links/mentions.
+
+- Implementation: [`packages/pds/src/api/com/atproto/repo/detect-facets.ts`](../../packages/pds/src/api/com/atproto/repo/detect-facets.ts),
+  wired into [`createRecord.ts`](../../packages/pds/src/api/com/atproto/repo/createRecord.ts).
+- Off by default. It **mutates user records on write** and diverges from
+  atproto's design (facets are normally a client responsibility), so client-side
+  detection remains the recommended approach.
+- Scope: `createRecord` only (not `applyWrites` / `putRecord`). Mentions that
+  don't resolve to a DID are dropped rather than written invalid.
+
 ### Notes
 
 - Facet indices are **UTF-8 byte offsets**, not character offsets — non-ASCII text

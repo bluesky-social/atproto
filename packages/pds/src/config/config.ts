@@ -39,6 +39,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
+    enrichPostFacets: env.enrichPostFacets ?? false,
   }
 
   const dbLoc = (name: string) => {
@@ -415,6 +416,7 @@ export type ServiceConfig = {
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
+  enrichPostFacets: boolean
 }
 
 export type DatabaseConfig = {

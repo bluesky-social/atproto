@@ -15,6 +15,7 @@ import {
   prepareCreate,
   prepareDelete,
 } from '../../../../repo/index.js'
+import { maybeEnrichPostFacets } from './detect-facets.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.repo.createRecord, {
@@ -69,6 +70,18 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
+
+      // Opt-in (PDS_ENRICH_POST_FACETS): auto-populate facets for posts that
+      // arrive without them, so bare { text, createdAt } writes still render
+      // clickable #tags / links / @mentions. Off by default; facet detection is
+      // normally a client responsibility (see @atproto/api RichText).
+      if (ctx.cfg.service.enrichPostFacets) {
+        await maybeEnrichPostFacets(
+          collection,
+          record as Record<string, unknown>,
+          ctx.idResolver,
+        )
+      }
 
       let write: PreparedCreate
       try {

@@ -18,6 +18,8 @@ export function readEnv() {
     maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+    // Opt-in: server-side facet detection for posts written without facets.
+    enrichPostFacets: envBool('PDS_ENRICH_POST_FACETS'),
 
     // hCaptcha
     hcaptchaSiteKey: envStr('PDS_HCAPTCHA_SITE_KEY'),

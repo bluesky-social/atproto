@@ -20,7 +20,8 @@
  *   BSKY_TEXT="Your custom post with #tags, https://example.com and @someone.bsky.social"
  */
 
-import { AtpAgent, RichText } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
+import { buildPostRecord } from './facets.mjs'
 
 const {
   BSKY_SERVICE = 'https://bsky.social',
@@ -46,27 +47,21 @@ async function main() {
   await agent.login({ identifier: BSKY_HANDLE, password: BSKY_APP_PASSWORD })
   console.log(`Logged in as ${agent.session?.handle} (${agent.session?.did})`)
 
-  // 2. Build rich text and detect facets.
-  //    - detectFacets scans the text for tags / links / mentions
-  //    - passing `agent` lets it resolve @handles into DIDs (required for mentions)
-  const rt = new RichText({ text })
-  await rt.detectFacets(agent)
+  // 2. Build the post record with facets, using the reusable helper in ./facets.mjs
+  //    (which wraps RichText.detectFacets + mention resolution).
+  const record = await buildPostRecord(agent, text)
 
   // 3. Show what the CLIENT computed — this is the piece a raw createRecord call omits.
-  console.log('\nText:', rt.text)
-  console.log('Detected facets:', JSON.stringify(rt.facets ?? [], null, 2))
-  if (!rt.facets?.length) {
+  console.log('\nText:', record.text)
+  console.log('Detected facets:', JSON.stringify(record.facets ?? [], null, 2))
+  if (!record.facets?.length) {
     console.log(
       '(No facets detected — the post would render as plain, unclickable text.)',
     )
   }
 
   // 4. Create the post WITH facets. Without `facets`, tags/links/mentions are plain text.
-  const res = await agent.post({
-    text: rt.text,
-    facets: rt.facets, // <-- the missing ingredient
-    createdAt: new Date().toISOString(),
-  })
+  const res = await agent.post(record)
 
   // 5. Print a link to the created post.
   const rkey = res.uri.split('/').pop()
