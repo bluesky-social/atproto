@@ -26,11 +26,13 @@ const MENTION_REGEX = /(^|\s|\()(@)([a-zA-Z0-9.-]+)(\b)/g
 const URL_REGEX =
   /(^|\s|\()((https?:\/\/[\S]+)|((?<domain>[a-z][a-z0-9]*(\.[a-z0-9]+)+)[\S]*))/gim
 const TRAILING_PUNCTUATION_REGEX = /\p{P}+$/gu
-// The `[#＃]` sigil is NON-capturing, so match[2] is the tag text.
-// `️` emoji modifier; `­⁠ ​‌‍⃢` zero-widths.
-// eslint-disable-next-line no-misleading-character-class
+// The sigil (ascii `#` + fullwidth U+FF03) is NON-capturing, so match[2] is the
+// tag text. \ufe0f = emoji modifier; the rest are zero-width codepoints.
+// Zero-width/joiner codepoints in the class trip no-misleading-character-class;
+// they are intentional (matching the client), hence the disable below.
 const TAG_REGEX =
-  /(^|\s)[#＃]((?!️)[^\s­⁠ ​‌‍⃢]*[^\d\s\p{P}­⁠ ​‌‍⃢]+[^\s­⁠ ​‌‍⃢]*)?/gu
+  // eslint-disable-next-line no-misleading-character-class
+  /(^|\s)[#\uff03]((?!\ufe0f)[^\s\u00ad\u2060\u200a\u200b\u200c\u200d\u20e2]*[^\d\s\p{P}\u00ad\u2060\u200a\u200b\u200c\u200d\u20e2]+[^\s\u00ad\u2060\u200a\u200b\u200c\u200d\u20e2]*)?/gu
 
 type Facet = {
   $type?: string
@@ -48,14 +50,17 @@ const isValidTld = (str: string): boolean => {
 /**
  * Detect link and hashtag facets from post text. Mentions are detected and
  * returned with the *handle* in `did`; the caller must resolve them to DIDs.
+ *
+ * @NOTE synchronous by design: the module-level `g`-flag regexes have their
+ * `lastIndex` reset here, which is only safe with no interleaving await.
  */
 export function detectFacetsFromText(text: string): Facet[] {
   const facets: Facet[] = []
   let match: RegExpExecArray | null
 
   // mentions (unresolved: `did` holds the handle for the caller to resolve)
-  const mentionRe = new RegExp(MENTION_REGEX)
-  while ((match = mentionRe.exec(text))) {
+  MENTION_REGEX.lastIndex = 0
+  while ((match = MENTION_REGEX.exec(text))) {
     const handle = match[3]
     if (!isValidTld(handle) && !handle.endsWith('.test')) continue
     const start = text.indexOf(handle, match.index) - 1 // include the '@'
@@ -70,8 +75,8 @@ export function detectFacetsFromText(text: string): Facet[] {
   }
 
   // links
-  const urlRe = new RegExp(URL_REGEX)
-  while ((match = urlRe.exec(text))) {
+  URL_REGEX.lastIndex = 0
+  while ((match = URL_REGEX.exec(text))) {
     let uri = match[2]
     if (!uri.startsWith('http')) {
       const domain = match.groups?.domain
@@ -99,8 +104,8 @@ export function detectFacetsFromText(text: string): Facet[] {
   }
 
   // hashtags (match[2] is the tag text; sigil is non-capturing)
-  const tagRe = new RegExp(TAG_REGEX)
-  while ((match = tagRe.exec(text))) {
+  TAG_REGEX.lastIndex = 0
+  while ((match = TAG_REGEX.exec(text))) {
     const leading = match[1]
     let tag = match[2]
     if (!tag) continue
