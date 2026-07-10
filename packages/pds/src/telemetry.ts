@@ -83,6 +83,13 @@ function getInstrumentations(): Instrumentation[] {
     // un-necessary instrumentations with no easy way to filter them out.
     new RuntimeNodeInstrumentation(),
     new HttpInstrumentation({
+      // Mirrors dd-trace's "operation_name:express.request" on incoming
+      // server spans, easing the transition from Datadog: dashboards can
+      // filter on span.operation.name, and Datadog's OTLP ingest uses this
+      // attribute as the operation name.
+      startIncomingSpanHook: () => ({
+        ['operation_name']: 'express.request',
+      }),
       // Sets the "http.route" attribute for XRPC requests (both incoming and
       // outgoing) based on the normalized XRPC path.
       requestHook: (span, request) => {
