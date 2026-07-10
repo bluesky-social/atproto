@@ -87,13 +87,16 @@ function getInstrumentations(): Instrumentation[] {
       // outgoing) based on the normalized XRPC path.
       requestHook: (span, request) => {
         const url = 'path' in request ? request.path : request.url
+        const method = request.method ?? 'GET'
         const nsid = extractNormalizedXrpcNsid(url)
         // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
         // HttpInstrumentation to update the incoming server request span
         // name to: "${method ?? 'GET'} ${route}".
-        if (nsid) {
-          span.setAttribute(ATTR_HTTP_ROUTE, `/xrpc/${nsid}`)
+        if (nsid && (method === 'GET' || method === 'POST')) {
+          span.setAttribute(ATTR_HTTP_ROUTE, `${method} /xrpc/${nsid}`)
           span.setAttribute(ATTR_XRPC_METHOD, nsid)
+        } else {
+          span.setAttribute(ATTR_HTTP_ROUTE, `${method} ${url}`)
         }
       },
     }),
