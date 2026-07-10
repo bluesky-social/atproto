@@ -8,10 +8,7 @@ import {
   getStringFromEnv,
   getStringListFromEnv,
 } from '@opentelemetry/core'
-import {
-  type Instrumentation,
-  registerInstrumentations,
-} from '@opentelemetry/instrumentation'
+import type { Instrumentation } from '@opentelemetry/instrumentation'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
 import {
   ExpressInstrumentation,
@@ -24,7 +21,6 @@ import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runti
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
 import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node'
 import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
-import ddTrace from 'dd-trace'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 
 // @NOTE This is similar to "@opentelemetry/auto-instrumentations-node"'s
@@ -51,11 +47,6 @@ const otelConfigured =
   isSignalConfigured('METRICS') ||
   isSignalConfigured('LOGS')
 const otelEnabled = !otelDisabled && otelConfigured
-
-// Legacy behavior: enabled Datadog tracing by default. OTEL does take
-// precedence.
-const ddEnabled =
-  !otelEnabled && process.env.DD_TRACING_ENABLED?.toLowerCase() !== 'false'
 
 if (otelEnabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
@@ -84,17 +75,6 @@ if (otelEnabled) {
   process.addListener('SIGTERM', onExit)
   process.addListener('SIGINT', onExit)
   process.addListener('beforeExit', onExit)
-} else if (ddEnabled) {
-  register('dd-trace/loader-hook.mjs', import.meta.url)
-
-  const { TracerProvider } = ddTrace.init({ logInjection: true })
-  const tracer = new TracerProvider()
-  tracer.register()
-
-  registerInstrumentations({
-    tracerProvider: tracer,
-    instrumentations: getInstrumentations(),
-  })
 }
 
 function getInstrumentations(): Instrumentation[] {
