@@ -1,43 +1,39 @@
-import * as util from 'node:util'
-
 export class CdnUriBuilder {
   constructor(
     private opts: {
       cdnUrl: string
+      /** @deprecated Raw video is served by the media gateway. */
       videoPlaylistUrlPattern: string
+      /** @deprecated Thumbnails are served by the media gateway. */
       videoThumbnailUrlPattern: string
     },
   ) {}
 
   avatar(did: string, cid: string) {
-    return `${this.opts.cdnUrl}/avatar/plain/${did}/${cid}@jpeg`
+    return this.media(did, cid)
   }
 
   banner(did: string, cid: string) {
-    return `${this.opts.cdnUrl}/banner/plain/${did}/${cid}@jpeg`
+    return this.media(did, cid)
   }
 
   feedThumbnail(did: string, cid: string) {
-    return `${this.opts.cdnUrl}/img/feed_thumbnail/plain/${did}/${cid}@jpeg`
+    return this.media(did, cid)
   }
 
   feedFullsize(did: string, cid: string) {
-    return `${this.opts.cdnUrl}/img/feed_fullsize/plain/${did}/${cid}@jpeg`
+    return this.media(did, cid)
   }
 
   videoPlaylist(did: string, videoCid: string) {
-    return util.format(
-      this.opts.videoPlaylistUrlPattern,
-      encodeURIComponent(did),
-      encodeURIComponent(videoCid),
-    )
+    return this.media(did, videoCid)
   }
 
   videoThumbnail(did: string, videoCid: string) {
-    return util.format(
-      this.opts.videoThumbnailUrlPattern,
-      encodeURIComponent(did),
-      encodeURIComponent(videoCid),
-    )
+    return this.media(did, videoCid)
+  }
+
+  private media(did: string, cid: string) {
+    return `${this.opts.cdnUrl}/v1/media/${encodeURIComponent(did)}/${encodeURIComponent(cid)}`
   }
 }
