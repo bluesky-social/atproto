@@ -3,6 +3,7 @@ import {
   BufferOverflowError,
   DataModeError,
   HeartbeatTimeoutError,
+  IdleTimeoutError,
   SocketError,
   WebSocketCoreError,
 } from './errors.js'
@@ -80,6 +81,10 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   private heartbeatIntervalMs: number | null = null
   private heartbeatAlive = true
 
+  private idleInterval: ReturnType<typeof setInterval> | null = null
+  private idleTimeoutMs: number | null = null
+  private idleActive = true
+
   private resolveOpened!: () => void
   private rejectOpened!: (err: unknown) => void
   private resolveClosed!: (info: CloseInfo) => void
@@ -118,6 +123,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     if (hb !== false && this.transport.capabilities.heartbeat) {
       this.heartbeatIntervalMs = hb?.intervalMs ?? 10_000
     }
+    this.idleTimeoutMs = this.options.idleTimeoutMs ?? null
 
     if (this.signal) {
       if (this.signal.aborted) {
@@ -128,11 +134,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         this.signal.addEventListener('abort', this.onAbort, { once: true })
       }
     }
-
-    // Retained for a later task and referenced here to satisfy noUnusedLocals
-    // until then: `options` carries the idleTimeoutMs (Task 8) setting
-    // consumed by the idle-timeout hooks.
-    void this.options
   }
 
   get readyState(): ReadyState {
@@ -182,7 +183,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
 
   // Hooks overridden/extended by later tasks. Base implementations here.
   private onOpen(): void {
-    // Task 8: also start the idle timer here.
     if (this.heartbeatIntervalMs != null) {
       this.heartbeatAlive = true
       this.heartbeatInterval = setInterval(
@@ -191,19 +191,30 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
       )
       this.heartbeatInterval.unref?.()
     }
+    if (this.idleTimeoutMs != null) {
+      this.idleActive = true
+      this.idleInterval = setInterval(
+        () => this.idleTick(),
+        this.idleTimeoutMs,
+      )
+      this.idleInterval.unref?.()
+    }
   }
   private recordLiveness(): void {
-    // Task 8: also reset the idle-timeout flag here.
     this.heartbeatAlive = true
+    this.idleActive = true
   }
   private recordPong(): void {
     this.heartbeatAlive = true
   }
   private clearTimers(): void {
-    // Task 8: also clear the idle-timeout interval here.
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval)
       this.heartbeatInterval = null
+    }
+    if (this.idleInterval) {
+      clearInterval(this.idleInterval)
+      this.idleInterval = null
     }
   }
 
@@ -217,6 +228,18 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     }
     this.heartbeatAlive = false
     this.transport.ping()
+  }
+
+  // Flag-based idle check, independent of the heartbeat timer: each tick
+  // either finds evidence (an incoming message, not a pong) since the
+  // previous tick and clears the flag, or finds none and terminates.
+  // Detection latency is therefore 1x-2x idleTimeoutMs.
+  private idleTick(): void {
+    if (!this.idleActive) {
+      this.fail(new IdleTimeoutError(), true)
+      return
+    }
+    this.idleActive = false
   }
 
   // ---- message intake (Task 5 adds watermarks, Task 6 adds dataMode) ----
