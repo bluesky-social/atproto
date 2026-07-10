@@ -32,6 +32,7 @@
       "types": "./dist/telemetry.d.ts",
       "default": "./dist/telemetry.js"
     },
+    "./bin": "./bin/pds.mjs",
     "./package.json": "./package.json"
   },
   "engines": {

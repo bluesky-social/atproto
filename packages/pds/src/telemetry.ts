@@ -51,10 +51,6 @@ const otelEnabled = !otelDisabled && otelConfigured
 if (otelEnabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
-  // @NOTE @opentelemetry/sdk-node provides two ways to start the SDK:
-  // `startNodeSDK` and `new NodeSDK`. `startNodeSDK` loads configuration from a
-  // file (OTEL_CONFIG_FILE), but does not support creating an HTTP prometheus
-  // exporter, or defining custom propagators.
   const { shutdown } = startNodeSDKClass({
     // @NOTE We use getResourceDetectors from
     // @opentelemetry/auto-instrumentations-node (instead of the default from

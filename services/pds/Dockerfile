@@ -71,8 +71,8 @@ COPY ./services/pds ./services/pds
 
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
-# build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build -- --force
+RUN pnpm run codegen --filter '!@atproto/api' --filter '!@atproto/ozone'
+RUN cd ./packages/pds && pnpm run build --force
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
@@ -98,7 +98,7 @@ ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=@atproto/pds/telemetry", "./node_modules/@atproto/pds/bin/pds.mjs"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--import=@atproto/pds/telemetry", "-e", "import '@atproto/pds/bin'"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"
