@@ -13,6 +13,7 @@ import { formatAccountStatus } from '../../../../account-manager/account-manager
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { sessionCreatedCounter } from '../../../../metrics.js'
 import { didDocForSession } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -78,6 +79,8 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
         const { status, active } = formatAccountStatus(user)
+
+        sessionCreatedCounter.add(1, { source: 'xrpc' })
 
         return {
           encoding: 'application/json',

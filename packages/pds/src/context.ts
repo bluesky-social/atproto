@@ -42,6 +42,11 @@ import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
+import {
+  accountCreatedCounter,
+  oauthClientAuthorizedCounter,
+  oauthTokenRefreshedCounter,
+} from './metrics.js'
 import { buildProxyAgent } from './pipethrough.js'
 import {
   LocalViewer,
@@ -398,6 +403,18 @@ export class AppContext {
             return {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
+          },
+          onSignedUp() {
+            accountCreatedCounter.add(1, {
+              source: 'oauth',
+              deactivated: false,
+            })
+          },
+          onAuthorized({ client }) {
+            oauthClientAuthorizedCounter.add(1, { clientId: client.id })
+          },
+          onTokenRefreshed({ client }) {
+            oauthTokenRefreshedCounter.add(1, { clientId: client.id })
           },
         })
       : undefined

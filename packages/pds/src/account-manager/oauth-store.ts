@@ -63,7 +63,6 @@ import { fromDateISO } from '../db/index.js'
 import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
-import { accountCreated } from '../metrics.js'
 import type { Sequencer } from '../sequencer/index.js'
 import { type AccountManager, InvalidPasswordError } from './account-manager.js'
 import type * as schemas from './db/schema/index.js'
@@ -214,8 +213,6 @@ export class OAuthStore
 
               const account = await this.accountManager.getAccount(did)
               assert(account, 'Account not found after creation')
-
-              accountCreated.add(1, { deactivated: false, source: 'oauth' })
 
               return await this.buildAccount(account)
             } catch (err) {

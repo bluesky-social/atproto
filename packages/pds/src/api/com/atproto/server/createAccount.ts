@@ -18,7 +18,10 @@ import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scr
 import type { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { accountCreated } from '../../../../metrics.js'
+import {
+  accountCreatedCounter,
+  sessionCreatedCounter,
+} from '../../../../metrics.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -100,7 +103,8 @@ export default function (server: Server, ctx: AppContext) {
                   )
                 })
 
-              accountCreated.add(1, { deactivated, source: 'xrpc' })
+              accountCreatedCounter.add(1, { source: 'xrpc', deactivated })
+              sessionCreatedCounter.add(1, { source: 'xrpc' })
 
               return {
                 encoding: 'application/json' as const,
