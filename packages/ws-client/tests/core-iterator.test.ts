@@ -121,6 +121,36 @@ describe('WebSocketCoreEngine iterator', () => {
     await expect(it.next()).rejects.toBeInstanceOf(SocketError)
   })
 
+  it('terminate() self-settles, drops buffered messages, and ignores a late transport echo', async () => {
+    const { engine, mock } = makeEngine()
+    mock.emitOpen()
+    mock.emitMessage('buffered', false) // buffered, no consumer parked
+    engine.terminate()
+    expect(mock.terminated).toBe(true)
+
+    const it = engine[Symbol.asyncIterator]()
+    await expect(it.next()).rejects.toSatisfy((err) => {
+      assert(err instanceof SocketError) // terminate() rejects, never yields the buffered value
+      return true
+    })
+    await expect(engine.closed).rejects.toBeInstanceOf(SocketError)
+
+    // Late async echo from the transport (e.g. browser ws.close() -> onClose)
+    // must be a harmless no-op: no second settlement, no unhandled rejection.
+    const unhandled: unknown[] = []
+    const onUnhandled = (reason: unknown) => unhandled.push(reason)
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      mock.emitClose(1000, '', true)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      // Still terminal from terminate(), unaffected by the late echo.
+      await expect(it.next()).rejects.toBeInstanceOf(SocketError)
+    } finally {
+      process.removeListener('unhandledRejection', onUnhandled)
+    }
+    expect(unhandled).toEqual([])
+  })
+
   it('throws if iterated twice', () => {
     const { engine, mock } = makeEngine()
     mock.emitOpen()

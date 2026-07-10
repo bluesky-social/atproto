@@ -343,9 +343,21 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   }
 
   terminate(): void {
-    this.state = 'closed'
-    this.clearTimers()
-    this.transport.terminate()
+    // Idempotent teardown: a terminal is already settled (from a prior
+    // fail()/finishDone()/terminate()), so just poke the transport again
+    // and return — never double-settle opened/closed/waiters.
+    if (this.terminal) {
+      this.transport.terminate()
+      return
+    }
+    // Self-settle synchronously (discarding the buffer) instead of waiting
+    // on the transport to asynchronously echo a close/error. This keeps
+    // "immediate teardown" honest across adapters: the browser adapter maps
+    // terminate() to ws.close(), which can echo back a clean 1000 and would
+    // otherwise route through finishDone() and deliver buffered messages —
+    // contradicting "no handshake". Once this sets a terminal, that later
+    // echo is a harmless no-op (fail()/finishDone() both guard on it).
+    this.fail(new SocketError(new Error('WebSocket terminated')), true)
   }
 
   // ---- async iteration ----
