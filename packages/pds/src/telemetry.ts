@@ -3,6 +3,15 @@
 import { register } from 'node:module'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
+import {
+  getBooleanFromEnv,
+  getStringFromEnv,
+  getStringListFromEnv,
+} from '@opentelemetry/core'
+import {
+  type Instrumentation,
+  registerInstrumentations,
+} from '@opentelemetry/instrumentation'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
 import {
   ExpressInstrumentation,
@@ -15,6 +24,7 @@ import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runti
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
 import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node'
 import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
+import ddTrace from 'dd-trace'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 
 // @NOTE This is similar to "@opentelemetry/auto-instrumentations-node"'s
@@ -35,14 +45,19 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 // inventing a non-standard flag: setting an exporter endpoint is what opts you
 // in. OTEL_SDK_DISABLED=true still acts as a kill switch, per the OpenTelemetry
 // spec.
-const disabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'true'
-const configured =
+const otelDisabled = getBooleanFromEnv('OTEL_SDK_DISABLED')
+const otelConfigured =
   isSignalConfigured('TRACES') ||
   isSignalConfigured('METRICS') ||
   isSignalConfigured('LOGS')
+const otelEnabled = !otelDisabled && otelConfigured
 
-const enabled = !disabled && configured
-if (enabled) {
+// Legacy behavior: enabled Datadog tracing by default. OTEL does take
+// precedence.
+const ddEnabled =
+  !otelEnabled && process.env.DD_TRACING_ENABLED?.toLowerCase() !== 'false'
+
+if (otelEnabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
   // @NOTE @opentelemetry/sdk-node provides two ways to start the SDK:
@@ -56,64 +71,77 @@ if (enabled) {
     // detector, which is not included in the default NodeSDK resource
     // detectors.
     resourceDetectors: getResourceDetectors(),
-    instrumentations: [
-      // @NOTE We *DON'T* use getNodeAutoInstrumentations from
-      // @opentelemetry/auto-instrumentations-node because it loads a lot of
-      // un-necessary instrumentations with no easy way to filter them out.
-      new RuntimeNodeInstrumentation(),
-      new HttpInstrumentation({
-        // Sets the "http.route" attribute for XRPC requests (both incoming and
-        // outgoing) based on the normalized XRPC path.
-        requestHook: (span, request) => {
-          const url = 'path' in request ? request.path : request.url
-          if (url != null) {
-            const endpoint = extractNormalizedXrpcEndpoint(url)
-            // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
-            // HttpInstrumentation to update the incoming server request span
-            // name to: "${method ?? 'GET'} ${route}".
-            if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
-          }
-        },
-      }),
-      new ExpressInstrumentation({
-        // We don't need the "compress", "cors", ... middleware layers to be
-        // reported.
-        ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
-        spanNameHook: (info, defaultName) => {
-          // @NOTE The default span name is "${method ?? 'GET'} ${route}".
-          // We want to use the normalized XRPC path instead of the route, if
-          // available.
-          const endpoint = extractNormalizedXrpcEndpoint(info.route)
-          return endpoint != null
-            ? `${info.request.method ?? 'GET'} ${endpoint}`
-            : defaultName
-        },
-      }),
-      new UndiciInstrumentation({
-        requestHook: (span, request) => {
-          const endpoint = extractNormalizedXrpcEndpoint(request.path)
-          if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
-        },
-      }),
-      new AwsInstrumentation(),
-      new IORedisInstrumentation(),
-      new BetterSqlite3Instrumentation(),
-      new PinoInstrumentation(),
-    ],
+    instrumentations: getInstrumentations(),
   })
 
   const onExit = () => {
     process.removeListener('SIGTERM', onExit)
     process.removeListener('SIGINT', onExit)
     process.removeListener('beforeExit', onExit)
-    void shutdown().catch((err) => {
-      diag.error('Error terminating OpenTelemetry SDK', err)
-    })
+    void shutdown()
   }
 
   process.addListener('SIGTERM', onExit)
   process.addListener('SIGINT', onExit)
   process.addListener('beforeExit', onExit)
+} else if (ddEnabled) {
+  register('dd-trace/loader-hook.mjs', import.meta.url)
+
+  const { TracerProvider } = ddTrace.init({ logInjection: true })
+  const tracer = new TracerProvider()
+  tracer.register()
+
+  registerInstrumentations({
+    tracerProvider: tracer,
+    instrumentations: getInstrumentations(),
+  })
+}
+
+function getInstrumentations(): Instrumentation[] {
+  return [
+    // @NOTE We *DON'T* use getNodeAutoInstrumentations from
+    // @opentelemetry/auto-instrumentations-node because it loads a lot of
+    // un-necessary instrumentations with no easy way to filter them out.
+    new RuntimeNodeInstrumentation(),
+    new HttpInstrumentation({
+      // Sets the "http.route" attribute for XRPC requests (both incoming and
+      // outgoing) based on the normalized XRPC path.
+      requestHook: (span, request) => {
+        const url = 'path' in request ? request.path : request.url
+        if (url != null) {
+          const endpoint = extractNormalizedXrpcEndpoint(url)
+          // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
+          // HttpInstrumentation to update the incoming server request span
+          // name to: "${method ?? 'GET'} ${route}".
+          if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
+        }
+      },
+    }),
+    new ExpressInstrumentation({
+      // We don't need the "compress", "cors", ... middleware layers to be
+      // reported.
+      ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
+      spanNameHook: (info, defaultName) => {
+        // @NOTE The default span name is "${method ?? 'GET'} ${route}".
+        // We want to use the normalized XRPC path instead of the route, if
+        // available.
+        const endpoint = extractNormalizedXrpcEndpoint(info.route)
+        return endpoint != null
+          ? `${info.request.method ?? 'GET'} ${endpoint}`
+          : defaultName
+      },
+    }),
+    new UndiciInstrumentation({
+      requestHook: (span, request) => {
+        const endpoint = extractNormalizedXrpcEndpoint(request.path)
+        if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
+      },
+    }),
+    new AwsInstrumentation(),
+    new IORedisInstrumentation(),
+    new BetterSqlite3Instrumentation(),
+    new PinoInstrumentation(),
+  ]
 }
 
 /**
@@ -130,16 +158,13 @@ if (enabled) {
  * simply treat any list containing "none" as disabling the signal.
  */
 function isSignalConfigured(signal: 'TRACES' | 'METRICS' | 'LOGS'): boolean {
-  // Matches "none" as an item of the comma-separated list (mimicking
-  // @opentelemetry/core's getStringListFromEnv parsing)
-  const exporters = process.env[`OTEL_${signal}_EXPORTER`]
-  if (exporters != null && /(^|,)\s*none\s*(,|$)/i.test(exporters)) {
+  if (getStringListFromEnv(`OTEL_${signal}_EXPORTER`)?.includes('none')) {
     return false
   }
 
   return (
-    !!process.env[`OTEL_EXPORTER_OTLP_${signal}_ENDPOINT`] ||
-    !!process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    !!getStringFromEnv(`OTEL_EXPORTER_OTLP_${signal}_ENDPOINT`) ||
+    !!getStringFromEnv('OTEL_EXPORTER_OTLP_ENDPOINT')
   )
 }
 

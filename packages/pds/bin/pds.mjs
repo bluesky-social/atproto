@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* eslint-env node */
 
 // This file is referenced by the "bin" field in package.json. Because of that,
