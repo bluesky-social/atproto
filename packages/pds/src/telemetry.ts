@@ -12,6 +12,7 @@ import type { Instrumentation } from '@opentelemetry/instrumentation'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
 import {
   ExpressInstrumentation,
+  ExpressLayerType,
   type ExpressRequestInfo,
 } from '@opentelemetry/instrumentation-express'
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
@@ -87,8 +88,9 @@ function getInstrumentations(): Instrumentation[] {
       // server spans, easing the transition from Datadog: dashboards can
       // filter on span.operation.name, and Datadog's OTLP ingest uses this
       // attribute as the operation name.
+      // https://docs.datadoghq.com/opentelemetry/mapping/semantic_mapping/?tab=datadogexporter
       startIncomingSpanHook: () => ({
-        ['operation_name']: 'express.request',
+        ['operation.name']: 'express.request',
       }),
       // Sets the "http.route" attribute for XRPC requests (both incoming and
       // outgoing) based on the normalized XRPC path.
@@ -108,7 +110,7 @@ function getInstrumentations(): Instrumentation[] {
       },
     }),
     new ExpressInstrumentation({
-      // ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
+      ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
       requestHook: (span, { request }: ExpressRequestInfo<Request>) => {
         const url = request.originalUrl ?? request.url
         const nsid = extractNormalizedXrpcNsid(url)
