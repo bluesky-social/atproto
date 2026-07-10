@@ -72,7 +72,7 @@ COPY ./services/pds ./services/pds
 # install all deps
 RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all the dependencies of ./package.json
-RUN pnpm run --recursive --stream --filter 'pds-service...' build --force
+RUN pnpm run --recursive --stream --workspace-concurrency 1 --filter 'pds-service...' build -- --force
 # install only prod deps, hoisted to root node_modules dir
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
