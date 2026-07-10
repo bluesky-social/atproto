@@ -4,17 +4,16 @@ import { register } from 'node:module'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
-import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express'
+import {
+  ExpressInstrumentation,
+  ExpressLayerType,
+} from '@opentelemetry/instrumentation-express'
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runtime-node'
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
-import {
-  NodeSDK,
-  type NodeSDKConfiguration,
-  startNodeSDK,
-} from '@opentelemetry/sdk-node'
+import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node'
 import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 
@@ -25,26 +24,19 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 //    better-sqlite3.
 // 2) we want to customize the HttpInstrumentation to provide better span name
 //    and attributes for XRPC requests.
-// 3) auto-instrumentations-node does not support configuring instrumentations
-//    via a configuration file (OTEL_CONFIG_FILE).
-// 4) this approach also registers the instrumentation hook
+// ) this approach also registers the instrumentation hook
 //
 // We also use `startNodeSDK` instead of `registerInstrumentations` because it
 // will setup metric and traces exporters automatically based on conventional
 // OpenTelemetry environment variables.
-//
-// If there is an OTEL_CONFIG_FILE environment variable, the SDK will load the
-// configuration from that file. Otherwise, the SDK will load the configuration
-// from environment variables.
 
 // @NOTE The SDK is only enabled when telemetry is explicitly configured
-// (through OTEL_CONFIG_FILE or an OTLP exporter endpoint). This makes telemetry
-// opt-in without inventing a non-standard flag: setting an exporter endpoint is
-// what opts you in. OTEL_SDK_DISABLED=true still acts as a kill switch, per the
-// OpenTelemetry spec.
+// (through an OTLP exporter endpoint). This makes telemetry opt-in without
+// inventing a non-standard flag: setting an exporter endpoint is what opts you
+// in. OTEL_SDK_DISABLED=true still acts as a kill switch, per the OpenTelemetry
+// spec.
 const disabled = process.env.OTEL_SDK_DISABLED?.toLowerCase() === 'true'
 const configured =
-  !!process.env.OTEL_CONFIG_FILE ||
   isSignalConfigured('TRACES') ||
   isSignalConfigured('METRICS') ||
   isSignalConfigured('LOGS')
@@ -54,13 +46,10 @@ if (enabled) {
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
   // @NOTE @opentelemetry/sdk-node provides two ways to start the SDK:
-  // `startNodeSDK` and `new NodeSDK`. We determine which one to use based on
-  // the presence of the OTEL_CONFIG_FILE environment variable. If it is set, we
-  // use `startNodeSDK`, which will load the configuration from a YAML file.
-  // Otherwise, we use `new NodeSDK`, which will load the configuration from
-  // environment variables (and supports creating an HTTP prometheus exporter).
-  const start = process.env.OTEL_CONFIG_FILE ? startNodeSDK : startNodeSDKClass
-  const { shutdown } = start({
+  // `startNodeSDK` and `new NodeSDK`. `startNodeSDK` loads configuration from a
+  // file (OTEL_CONFIG_FILE), but does not support creating an HTTP prometheus
+  // exporter, or defining custom propagators.
+  const { shutdown } = startNodeSDKClass({
     // @NOTE We use getResourceDetectors from
     // @opentelemetry/auto-instrumentations-node (instead of the default from
     // @opentelemetry/sdk-node) because it supports the "container" resource
@@ -86,7 +75,20 @@ if (enabled) {
           }
         },
       }),
-      new ExpressInstrumentation(),
+      new ExpressInstrumentation({
+        // We don't need the "compress", "cors", ... middleware layers to be
+        // reported.
+        ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
+        spanNameHook: (info, defaultName) => {
+          // @NOTE The default span name is "${method ?? 'GET'} ${route}".
+          // We want to use the normalized XRPC path instead of the route, if
+          // available.
+          const endpoint = extractNormalizedXrpcEndpoint(info.route)
+          return endpoint != null
+            ? `${info.request.method ?? 'GET'} ${endpoint}`
+            : defaultName
+        },
+      }),
       new UndiciInstrumentation({
         requestHook: (span, request) => {
           const endpoint = extractNormalizedXrpcEndpoint(request.path)
@@ -181,8 +183,6 @@ function startNodeSDKClass(configuration?: Partial<NodeSDKConfiguration>): {
 // @NOTE This should become obsolete once we have dedicated
 // XrpcClient/XrpcServer instrumentations.
 function extractNormalizedXrpcEndpoint(url: string): string | undefined {
-  // ⚠️ HOT PATH ⚠️
-
   if (url.length < 9 || !url.startsWith('/xrpc/')) {
     return undefined
   }
