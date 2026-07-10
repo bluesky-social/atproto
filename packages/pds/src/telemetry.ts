@@ -13,7 +13,6 @@ import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
 import {
   ExpressInstrumentation,
   ExpressLayerType,
-  type ExpressRequestInfo,
 } from '@opentelemetry/instrumentation-express'
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
@@ -22,7 +21,6 @@ import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runti
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
 import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node'
 import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
-import type { Request } from 'express'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 
 const ATTR_XRPC_METHOD = 'xrpc.method'
