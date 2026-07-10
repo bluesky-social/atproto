@@ -30,10 +30,12 @@ for await (const message of ws) {
 `WebSocketCore` implements `AsyncIterable`, so `for await` is the read
 model. There is a single consumer: iterating a second time (or iterating
 concurrently) throws. When the connection ends cleanly (close code `1000`
-or `1001`), the loop exits normally; any other close, socket error, or
-aborted `signal` rejects the iterator with an error from the taxonomy
-below. Messages received before a consumer starts iterating are buffered
-and delivered in order once iteration begins.
+or `1001`), the loop exits normally; any other close or socket error
+rejects the iterator with an error from the taxonomy below. An aborted
+`signal` rejects the iterator with the AbortSignal's own `reason` (the
+value passed to `controller.abort(reason)`, or a `DOMException` named
+`AbortError` if no reason was given). Messages received before a consumer
+starts iterating are buffered and delivered in order once iteration begins.
 
 ### `dataMode`
 
@@ -99,7 +101,7 @@ These are independent, optional liveness checks:
   `HeartbeatTimeoutError`; otherwise it sends a fresh ping. Detection
   latency is one to two intervals. Pass `heartbeat: false` to disable.
 - **Idle timeout** (`options.idleTimeoutMs`, disabled by default, works on
-  both transports): each tick, if no *message* was received since the
+  both transports): each tick, if no _message_ was received since the
   previous tick, the connection fails with `IdleTimeoutError`. A pong does
   **not** count as activity for this timer — it's tracking application
   traffic, not raw socket liveness.
@@ -110,14 +112,14 @@ Both timers are `unref()`'d on Node so they never keep the process alive.
 
 All errors extend `WebSocketCoreError`:
 
-| Error | Cause |
-| --- | --- |
-| `AbnormalCloseError` | Close with a code other than `1000`/`1001`. Carries `code`, `reason`, `wasClean`. |
-| `SocketError` | A transport-level error event. Carries the underlying `cause`. |
-| `HeartbeatTimeoutError` | No ping/pong activity within the heartbeat window (Node only). |
-| `IdleTimeoutError` | No message received within `idleTimeoutMs`. |
-| `BufferOverflowError` | Buffered, unconsumed bytes exceeded `maxBufferedBytes`. Carries `bufferedBytes`. |
-| `DataModeError` | A frame's type didn't match a strict `dataMode`. Carries `expected`/`received`. |
+| Error                   | Cause                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `AbnormalCloseError`    | Close with a code other than `1000`/`1001`. Carries `code`, `reason`, `wasClean`. |
+| `SocketError`           | A transport-level error event. Carries the underlying `cause`.                    |
+| `HeartbeatTimeoutError` | No ping/pong activity within the heartbeat window (Node only).                    |
+| `IdleTimeoutError`      | No message received within `idleTimeoutMs`.                                       |
+| `BufferOverflowError`   | Buffered, unconsumed bytes exceeded `maxBufferedBytes`. Carries `bufferedBytes`.  |
+| `DataModeError`         | A frame's type didn't match a strict `dataMode`. Carries `expected`/`received`.   |
 
 Backpressure options `highWaterMark` (pause the read side once buffered
 bytes exceed this) and `maxBufferedBytes` (hard cap — crash rather than
