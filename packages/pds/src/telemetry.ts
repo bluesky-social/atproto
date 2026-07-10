@@ -12,7 +12,7 @@ import type { Instrumentation } from '@opentelemetry/instrumentation'
 import { AwsInstrumentation } from '@opentelemetry/instrumentation-aws-sdk'
 import {
   ExpressInstrumentation,
-  ExpressLayerType,
+  type ExpressRequestInfo,
 } from '@opentelemetry/instrumentation-express'
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
@@ -21,7 +21,10 @@ import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runti
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
 import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node'
 import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
+import type { Request } from 'express'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
+
+const ATTR_XRPC_METHOD = 'xrpc.method'
 
 // @NOTE This is similar to "@opentelemetry/auto-instrumentations-node"'s
 // register script. We provide our own telemetry script because:
@@ -84,33 +87,32 @@ function getInstrumentations(): Instrumentation[] {
       // outgoing) based on the normalized XRPC path.
       requestHook: (span, request) => {
         const url = 'path' in request ? request.path : request.url
-        if (url != null) {
-          const endpoint = extractNormalizedXrpcEndpoint(url)
-          // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
-          // HttpInstrumentation to update the incoming server request span
-          // name to: "${method ?? 'GET'} ${route}".
-          if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
+        const nsid = extractNormalizedXrpcNsid(url)
+        // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
+        // HttpInstrumentation to update the incoming server request span
+        // name to: "${method ?? 'GET'} ${route}".
+        if (nsid) {
+          span.setAttribute(ATTR_HTTP_ROUTE, `/xrpc/${nsid}`)
+          span.setAttribute(ATTR_XRPC_METHOD, nsid)
         }
       },
     }),
     new ExpressInstrumentation({
-      // We don't need the "compress", "cors", ... middleware layers to be
-      // reported.
-      ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
-      spanNameHook: (info, defaultName) => {
-        // @NOTE The default span name is "${method ?? 'GET'} ${route}".
-        // We want to use the normalized XRPC path instead of the route, if
-        // available.
-        const endpoint = extractNormalizedXrpcEndpoint(info.route)
-        return endpoint != null
-          ? `${info.request.method ?? 'GET'} ${endpoint}`
-          : defaultName
+      // ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
+      requestHook: (span, { request }: ExpressRequestInfo<Request>) => {
+        const url = request.originalUrl ?? request.url
+        const nsid = extractNormalizedXrpcNsid(url)
+        if (nsid) {
+          span.setAttribute(ATTR_XRPC_METHOD, nsid)
+        }
       },
     }),
     new UndiciInstrumentation({
       requestHook: (span, request) => {
-        const endpoint = extractNormalizedXrpcEndpoint(request.path)
-        if (endpoint) span.setAttribute(ATTR_HTTP_ROUTE, endpoint)
+        const nsid = extractNormalizedXrpcNsid(request.path)
+        if (nsid) {
+          span.setAttribute(ATTR_XRPC_METHOD, nsid)
+        }
       },
     }),
     new AwsInstrumentation(),
@@ -183,7 +185,11 @@ function startNodeSDKClass(configuration?: Partial<NodeSDKConfiguration>): {
 
 // @NOTE This should become obsolete once we have dedicated
 // XrpcClient/XrpcServer instrumentations.
-function extractNormalizedXrpcEndpoint(url: string): string | undefined {
+function extractNormalizedXrpcNsid(url: unknown): string | undefined {
+  if (typeof url !== 'string') {
+    return undefined
+  }
+
   if (url.length < 9 || !url.startsWith('/xrpc/')) {
     return undefined
   }
