@@ -94,30 +94,47 @@ function getInstrumentations(): Instrumentation[] {
       }),
       // Sets the "http.route" attribute for XRPC requests (both incoming and
       // outgoing) based on the normalized XRPC path.
-      requestHook: (span, request) => {
+      //
+      // @NOTE We use applyCustomAttributesOnSpan (which fires when the
+      // response finishes) rather than requestHook (which fires when the
+      // request starts) because of how the express instrumentation interacts
+      // with the http instrumentation: on every express layer it enters, the
+      // express instrumentation overwrites the shared rpcMetadata.route with
+      // the route it computed from express's layer stack. Since this app
+      // composes multiple express apps and routers mounted at "/" (and some
+      // requests are handled by catchall middlewares with no route layer at
+      // all), that computed route is often just "/". When the response
+      // finishes, the http instrumentation copies rpcMetadata.route into the
+      // "http.route" attribute — clobbering anything a requestHook set — and
+      // renames the incoming span to "${method} ${route}" from it.
+      // applyCustomAttributesOnSpan runs *after* that copy-and-rename, so the
+      // attributes and span name we set here are authoritative.
+      applyCustomAttributesOnSpan: (span, request) => {
         const url = 'path' in request ? request.path : request.url ?? '/'
         const method = request.method ?? 'GET'
-        const nsid = extractNormalizedXrpcNsid(url)
-        // @NOTE The ATTR_HTTP_ROUTE attribute is used internally by
-        // HttpInstrumentation to update the incoming server request span
-        // name to: "${method ?? 'GET'} ${route}".
-        if (nsid && (method === 'GET' || method === 'POST')) {
-          span.setAttribute(ATTR_HTTP_ROUTE, `${method} /xrpc/${nsid}`)
+        const nsid =
+          method === 'GET' || method === 'POST'
+            ? extractNormalizedXrpcNsid(url)
+            : undefined
+
+        // Use a normalized route for XRPC requests, and the raw path for
+        // non-XRPC requests
+        const route = nsid ? `/xrpc/${nsid}` : url.split('?')[0]
+        span.setAttribute(ATTR_HTTP_ROUTE, route)
+
+        // set the xrpc.method attribute for both incoming and outgoing requests
+        if (nsid) {
           span.setAttribute(ATTR_XRPC_METHOD, nsid)
-        } else if (typeof url === 'string') {
-          span.setAttribute(ATTR_HTTP_ROUTE, url.split('?')[0])
+        }
+
+        // incoming requests only
+        if ('url' in request) {
+          span.updateName(`${method} ${route}`)
         }
       },
     }),
     new ExpressInstrumentation({
       ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
-      requestHook: (span, { request }: ExpressRequestInfo<Request>) => {
-        const url = request.originalUrl ?? request.url
-        const nsid = extractNormalizedXrpcNsid(url)
-        if (nsid) {
-          span.setAttribute(ATTR_XRPC_METHOD, nsid)
-        }
-      },
     }),
     new UndiciInstrumentation({
       requestHook: (span, request) => {
