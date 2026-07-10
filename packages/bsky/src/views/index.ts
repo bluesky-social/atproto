@@ -14,6 +14,7 @@ import {
   type DidString,
   INVALID_HANDLE,
   normalizeDatetimeAlways,
+  stripBidiControls,
 } from '@atproto/syntax'
 import type { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
@@ -389,7 +390,9 @@ export class Views {
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
-      displayName: actor.profile?.displayName,
+      displayName:
+        actor.profile?.displayName &&
+        stripBidiControls(actor.profile.displayName),
       pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
@@ -581,7 +584,9 @@ export class Views {
 
         return {
           issuer,
-          issuerDisplayName: issuerActor?.profile?.displayName,
+          issuerDisplayName:
+            issuerActor?.profile?.displayName &&
+            stripBidiControls(issuerActor.profile.displayName),
           issuerHandle: issuerActor?.handle,
           uri,
           isValid,
