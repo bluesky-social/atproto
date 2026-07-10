@@ -187,7 +187,7 @@ msgstr "Vilken tjänst som helst"
 msgid "Apps"
 msgstr "Appar"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:58
+#: src/pages/account/(authenticated)/apps/page.tsx:59
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för att titta efter notiser eller synkronisera data) även när du själv inte använder dem aktivt. Det är en normal företeelse som också påverkar tidsangivelserna för ”senaste aktivitet” ovan."
 
@@ -327,6 +327,7 @@ msgstr "Välj ett användarnamn"
 msgid "Click here if nothing happens"
 msgstr "Klicka här om ingenting händer"
 
+#: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/utils/dialog-simple.tsx:70
 msgid "Close"
 msgstr "Stäng"
@@ -430,6 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
+#: src/pages/account/(authenticated)/apps/page.tsx:131
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Detaljer"
@@ -549,7 +551,7 @@ msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr "Det gick inte att läsa in anslutna appar"
 
@@ -712,7 +714,7 @@ msgstr "Ogiltigt användarnamn"
 msgid "Invite code"
 msgstr "Inbjudningskod"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:68
+#: src/pages/account/(authenticated)/apps/page.tsx:69
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Det verkar som att du inte har använt det här kontot för att logga in på någon app ännu."
 
@@ -993,7 +995,7 @@ msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:31
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "Försök igen"
@@ -1002,7 +1004,7 @@ msgstr "Försök igen"
 msgid "Retry in {remainingSeconds}s"
 msgstr "Försök igen om {remainingSeconds} s"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/components/oauth-session-details-dialog.tsx:38
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Återkalla åtkomst"
@@ -1165,9 +1167,17 @@ msgstr "Användarnamnet är ogiltigt"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. Kom tillbaka när du vill."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:42
+#: src/pages/account/(authenticated)/apps/page.tsx:43
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
+
+#: src/components/oauth-session-details-dialog.tsx:57
+msgid "This app can uniquely identify you through your account."
+msgstr ""
+
+#: src/components/oauth-session-details-dialog.tsx:64
+msgid "This app has access to your account with the following permissions:"
+msgstr ""
 
 #: src/components/consent-form.tsx:142
 msgid "This application is requesting the following permissions (scopes) to access your account:"
