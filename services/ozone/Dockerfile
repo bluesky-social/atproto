@@ -1,6 +1,6 @@
 FROM node:24.18-alpine3.23 AS build
 
-RUN npm install -g pnpm@11.5.2
+RUN npm install -g pnpm@11.11.0
 
 WORKDIR /app
 
