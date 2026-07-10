@@ -144,6 +144,32 @@ describe('pds profile views', () => {
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
+  it('strips bidi control characters from displayName (#1480)', async () => {
+    const rlo = String.fromCodePoint(0x202e)
+    const maliciousDisplayName = `Carol${rlo}redaeR ykseulB`
+
+    await sc.createAccount('carol-bidi', {
+      handle: 'carol-bidi.test',
+      email: 'carol-bidi@test.com',
+      password: 'carol-bidi-pass',
+    })
+    await sc.createProfile(sc.dids['carol-bidi'], maliciousDisplayName)
+    await network.processAll()
+
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids['carol-bidi'] },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
+    )
+
+    expect(res.data.displayName).toBe('CarolredaeR ykseulB')
+    expect(res.data.displayName).not.toContain(rlo)
+  })
+
   it('reflects self-labels', async () => {
     const aliceForBob = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },

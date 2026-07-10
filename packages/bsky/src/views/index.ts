@@ -387,12 +387,11 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const rawDisplayName = actor.profile?.displayName
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
-      displayName:
-        actor.profile?.displayName &&
-        stripBidiControls(actor.profile.displayName),
+      displayName: rawDisplayName && stripBidiControls(rawDisplayName),
       pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
@@ -581,12 +580,12 @@ export class Views {
         // Expose the *issuer's* current handle/displayName, sourced from the
         // issuer's hydrated actor record (see `Hydrator.hydrateProfiles`).
         const issuerActor = state.actors?.get(issuer)
+        const rawIssuerDisplayName = issuerActor?.profile?.displayName
 
         return {
           issuer,
           issuerDisplayName:
-            issuerActor?.profile?.displayName &&
-            stripBidiControls(issuerActor.profile.displayName),
+            rawIssuerDisplayName && stripBidiControls(rawIssuerDisplayName),
           issuerHandle: issuerActor?.handle,
           uri,
           isValid,
