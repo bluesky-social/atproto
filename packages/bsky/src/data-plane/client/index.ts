@@ -9,6 +9,7 @@ import {
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import { Service } from '../../proto/bsky_connect.js'
+import { tracingInterceptor } from '../../rpc-tracing.js'
 import type { HostList } from './hosts.js'
 import { callerInterceptor } from './util.js'
 
@@ -106,7 +107,12 @@ const createBaseClient = (
     httpVersion,
     acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
-    interceptors: [callerInterceptor('appview')],
+    interceptors: [
+      callerInterceptor('appview'),
+      // 'atlantis' matches the dataplane's self-reported service.name, so the
+      // client-asserted peer stays consistent with the server's own spans.
+      tracingInterceptor({ rpcSystem: 'grpc', peerService: 'atlantis' }),
+    ],
   })
   return createPromiseClient(Service, transport)
 }

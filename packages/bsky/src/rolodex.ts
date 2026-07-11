@@ -10,6 +10,7 @@ import {
   createConnectTransport,
 } from '@connectrpc/connect-node'
 import { RolodexService } from './proto/rolodex_connect.js'
+import { tracingInterceptor } from './rpc-tracing.js'
 
 // Rolodex is the service that does contact imports following https://docs.bsky.app/blog/contact-import-rfc.
 export type RolodexClient = PromiseClient<typeof RolodexService>
@@ -17,7 +18,13 @@ export type RolodexClient = PromiseClient<typeof RolodexService>
 export const createRolodexClient = (
   opts: ConnectTransportOptions,
 ): RolodexClient => {
-  const transport = createConnectTransport(opts)
+  const transport = createConnectTransport({
+    ...opts,
+    interceptors: [
+      ...(opts.interceptors ?? []),
+      tracingInterceptor({ peerService: 'rolodex' }),
+    ],
+  })
   return createPromiseClient(RolodexService, transport)
 }
 

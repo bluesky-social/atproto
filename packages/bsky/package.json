@@ -23,7 +23,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry.d.ts",
+      "default": "./dist/telemetry.js"
+    },
+    "./package.json": "./package.json"
   },
   "engines": {
     "node": ">=22"
@@ -48,6 +53,17 @@
     "@did-plc/lib": "^0.0.1",
     "@growthbook/growthbook": "^1.6.2",
     "@hapi/address": "^5.1.1",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.77.0",
+    "@opentelemetry/instrumentation": "^0.219.0",
+    "@opentelemetry/instrumentation-express": "^0.67.0",
+    "@opentelemetry/instrumentation-http": "^0.219.0",
+    "@opentelemetry/instrumentation-pino": "^0.65.0",
+    "@opentelemetry/instrumentation-runtime-node": "^0.32.0",
+    "@opentelemetry/instrumentation-undici": "^0.29.0",
+    "@opentelemetry/resource-detector-container": "^0.8.10",
+    "@opentelemetry/sdk-node": "^0.219.0",
+    "@opentelemetry/semantic-conventions": "^1.41.1",
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

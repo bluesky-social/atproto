@@ -10,13 +10,22 @@ import {
   createConnectTransport,
 } from '@connectrpc/connect-node'
 import { Service } from './proto/bsync_connect.js'
+import { tracingInterceptor } from './rpc-tracing.js'
 
 export type BsyncClient = PromiseClient<typeof Service>
 
 export const createBsyncClient = (
   opts: ConnectTransportOptions,
 ): BsyncClient => {
-  const transport = createConnectTransport(opts)
+  const transport = createConnectTransport({
+    ...opts,
+    interceptors: [
+      ...(opts.interceptors ?? []),
+      // 'vortex' matches the remote's self-reported service.name; bsync is
+      // the interface it handles.
+      tracingInterceptor({ peerService: 'vortex', peerInterface: 'bsync' }),
+    ],
+  })
   return createPromiseClient(Service, transport)
 }
 

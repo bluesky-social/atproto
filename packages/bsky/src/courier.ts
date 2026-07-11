@@ -10,13 +10,20 @@ import {
   createConnectTransport,
 } from '@connectrpc/connect-node'
 import { Service } from './proto/courier_connect.js'
+import { tracingInterceptor } from './rpc-tracing.js'
 
 export type CourierClient = PromiseClient<typeof Service>
 
 export const createCourierClient = (
   opts: ConnectTransportOptions,
 ): CourierClient => {
-  const transport = createConnectTransport(opts)
+  const transport = createConnectTransport({
+    ...opts,
+    interceptors: [
+      ...(opts.interceptors ?? []),
+      tracingInterceptor({ peerService: 'courier' }),
+    ],
+  })
   return createPromiseClient(Service, transport)
 }
 
