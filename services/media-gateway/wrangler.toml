@@ -2,6 +2,9 @@ name = "sokaa-media-gateway"
 main = "src/index.ts"
 compatibility_date = "2026-07-09"
 
+[observability]
+enabled = true
+
 [[r2_buckets]]
 binding = "MEDIA"
 bucket_name = "sokaa-media"
