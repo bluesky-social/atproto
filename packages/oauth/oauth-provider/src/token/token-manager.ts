@@ -388,7 +388,7 @@ export class TokenManager {
       throw new InvalidTokenError(tokenType, `Invalid token`)
     }
 
-    if (isCurrentTokenExpired(tokenInfo)) {
+    if (isCurrentAccessTokenExpired(tokenInfo)) {
       await this.deleteToken(tokenId)
       throw new InvalidTokenError(tokenType, `Token expired`)
     }
@@ -405,16 +405,18 @@ export class TokenManager {
     }
   }
 
+  /**
+   * Lists stored tokens for an account. Callers must apply access, refresh,
+   * and session lifetime rules before presenting them as active sessions.
+   */
   async listAccountTokens(did: Did): Promise<TokenInfo[]> {
     const results = await this.store.listAccountTokens(did)
-    return results
-      .filter((tokenInfo) => tokenInfo.account.did === did) // Fool proof
-      .filter((tokenInfo) => !isCurrentTokenExpired(tokenInfo))
+    return results.filter((tokenInfo) => tokenInfo.account.did === did) // Fool proof
   }
 }
 
-function isCurrentTokenExpired(tokenInfo: TokenInfo): boolean {
-  return tokenInfo.data.expiresAt.getTime() < Date.now()
+function isCurrentAccessTokenExpired(tokenInfo: TokenInfo): boolean {
+  return tokenInfo.data.expiresAt.getTime() <= Date.now()
 }
 
 function inferTokenType(

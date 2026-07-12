@@ -74,14 +74,7 @@ import {
   type CustomMetadata,
   buildMetadata,
 } from './metadata/build-metadata.js'
-import {
-  AUTHENTICATION_MAX_AGE,
-  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  PUBLIC_CLIENT_REFRESH_LIFETIME,
-  PUBLIC_CLIENT_SESSION_LIFETIME,
-  TOKEN_MAX_AGE,
-} from './oauth-constants.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './oauth-constants.js'
 import type { OAuthHooks } from './oauth-hooks.js'
 import {
   type DpopProof,
@@ -102,6 +95,7 @@ import type { AccessTokenPayload } from './signer/access-token-payload.js'
 import { refreshTokenSchema } from './token/refresh-token.js'
 import type { TokenData } from './token/token-data.js'
 import { TokenManager } from './token/token-manager.js'
+import { getOAuthSessionLifetimes } from './token/token-session.js'
 import { type TokenStore, asTokenStore } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
@@ -1037,13 +1031,9 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     data: TokenData,
   ): Promise<void> {
-    const [sessionLifetime, refreshLifetime] =
-      clientAuth.method !== 'none' || client.info.isFirstParty
-        ? [
-            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-          ]
-        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
+    const [sessionLifetime, refreshLifetime] = getOAuthSessionLifetimes(
+      clientAuth.method !== 'none' || client.info.isFirstParty,
+    )
 
     const sessionAge = Date.now() - data.createdAt.getTime()
     if (sessionAge > sessionLifetime) {

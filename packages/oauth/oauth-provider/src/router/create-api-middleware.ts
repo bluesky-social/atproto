@@ -54,6 +54,10 @@ import type { OAuthProvider } from '../oauth-provider.js'
 import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
 import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
+import {
+  isOAuthSessionActive,
+  usesExtendedOAuthSessionLifetime,
+} from '../token/token-session.js'
 import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
@@ -495,8 +499,16 @@ export function createApiMiddleware<
         const tokenInfos = await server.tokenManager.listAccountTokens(
           account.did,
         )
+        const now = Date.now()
+        const tokenCandidates = tokenInfos.filter(
+          (tokenInfo) =>
+            tokenInfo.currentRefreshToken !== null ||
+            tokenInfo.data.expiresAt.getTime() > now,
+        )
 
-        const clientIds = tokenInfos.map((tokenInfo) => tokenInfo.data.clientId)
+        const clientIds = tokenCandidates.map(
+          (tokenInfo) => tokenInfo.data.clientId,
+        )
 
         const clients = await server.clientManager.loadClients(clientIds, {
           onError: (err, clientId) => {
@@ -505,23 +517,39 @@ export function createApiMiddleware<
           },
         })
 
-        // @TODO: We should ideally filter sessions that are expired (or even
-        // expose the expiration date). This requires a change to the way
-        // TokenInfo are stored (see TokenManager#isTokenExpired and
-        // TokenManager#isTokenInactive).
-        const json = tokenInfos.map(({ id, data }): ActiveOAuthSession => {
-          return {
-            tokenId: id,
+        const activeTokenInfos = tokenCandidates.filter((tokenInfo) => {
+          const client = clients.get(tokenInfo.data.clientId)
+          const usesExtendedSessionLifetime = usesExtendedOAuthSessionLifetime(
+            tokenInfo,
+            client && {
+              isConfidential:
+                client.metadata.token_endpoint_auth_method !== 'none',
+              isFirstParty: client.info.isFirstParty,
+            },
+          )
 
-            createdAt: data.createdAt.toISOString() as ISODateString,
-            updatedAt: data.updatedAt.toISOString() as ISODateString,
-
-            clientId: data.clientId,
-            clientMetadata: clients.get(data.clientId)?.metadata,
-
-            scope: data.parameters.scope,
-          }
+          return isOAuthSessionActive(
+            tokenInfo,
+            usesExtendedSessionLifetime,
+            now,
+          )
         })
+
+        const json = activeTokenInfos.map(
+          ({ id, data }): ActiveOAuthSession => {
+            return {
+              tokenId: id,
+
+              createdAt: data.createdAt.toISOString() as ISODateString,
+              updatedAt: data.updatedAt.toISOString() as ISODateString,
+
+              clientId: data.clientId,
+              clientMetadata: clients.get(data.clientId)?.metadata,
+
+              scope: data.parameters.scope,
+            }
+          },
+        )
 
         return { json }
       },
