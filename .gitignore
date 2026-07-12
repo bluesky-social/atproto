@@ -12,6 +12,7 @@ test.sqlite
 .*.env
 .env.*
 .env
+!**/.env.example
 \#*\#
 *~
 *.swp

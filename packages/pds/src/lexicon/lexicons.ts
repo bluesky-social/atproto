@@ -9538,7 +9538,8 @@ export const schemaDict = {
           playlist: {
             type: 'string',
             format: 'uri',
-            description: 'HLS/DASH playlist URL served by the media CDN.',
+            description:
+              'Raw video URL served by the media gateway. The legacy field name is retained for compatibility.',
           },
           thumbnail: {
             type: 'string',

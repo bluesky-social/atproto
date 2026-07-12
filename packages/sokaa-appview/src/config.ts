@@ -10,6 +10,7 @@ export interface ServerConfigValues {
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
   debugMode?: boolean
+  environment?: string
 }
 
 export class ServerConfig {
@@ -50,7 +51,29 @@ export class ServerConfig {
   }
 
   get cdnUrl() {
-    return this.cfg.cdnUrl ?? `${this.publicUrl}/cdn`
+    const configuredCdnUrl = this.cfg.cdnUrl?.trim()
+    if (this.environment === 'production' && !configuredCdnUrl) {
+      throw new Error('cdnUrl is required in production')
+    }
+
+    const cdnUrl = stripTrailingSlashes(
+      configuredCdnUrl ?? `${stripTrailingSlashes(this.publicUrl)}/cdn`,
+    )
+    if (this.environment === 'production') {
+      let parsed: URL
+      try {
+        parsed = new URL(cdnUrl)
+      } catch {
+        throw new Error('cdnUrl must be a valid HTTPS URL in production')
+      }
+      if (parsed.protocol !== 'https:') {
+        throw new Error('cdnUrl must use HTTPS in production')
+      }
+      if (isLocalHost(parsed.hostname)) {
+        throw new Error('cdnUrl must use a public host in production')
+      }
+    }
+    return cdnUrl
   }
 
   get videoPlaylistUrlPattern() {
@@ -70,4 +93,16 @@ export class ServerConfig {
   get debugMode() {
     return this.cfg.debugMode ?? false
   }
+
+  private get environment() {
+    return this.cfg.environment ?? process.env.NODE_ENV
+  }
 }
+
+const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '')
+
+const isLocalHost = (hostname: string) =>
+  hostname === 'localhost' ||
+  hostname === '::1' ||
+  hostname === '[::1]' ||
+  /^127(?:\.\d{1,3}){3}$/.test(hostname)

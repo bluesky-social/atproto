@@ -58,7 +58,7 @@ export function validateAspectRatio<V>(v: V) {
 export interface View {
   $type?: 'app.sokaa.embed.video#view'
   cid: string
-  /** HLS/DASH playlist URL served by the media CDN. */
+  /** Raw video URL served by the media gateway. The legacy field name is retained for compatibility. */
   playlist: string
   thumbnail?: string
   alt?: string
