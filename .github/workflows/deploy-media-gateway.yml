@@ -1,0 +1,51 @@
+name: deploy-media-gateway
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/media-gateway/**'
+      - '.github/workflows/deploy-media-gateway.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-media-gateway
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Cloudflare Worker
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+
+      # Filtered install: media-gateway + workspace deps only (not PDS/ozone/sqlite).
+      - name: Install media-gateway dependencies
+        run: pnpm install --frozen-lockfile --filter @atproto/media-gateway...
+
+      - name: Build workspace dependency (@atproto/syntax)
+        run: pnpm --filter @atproto/syntax build
+
+      - name: Test
+        run: pnpm --filter @atproto/media-gateway test
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: services/media-gateway
+          command: deploy
