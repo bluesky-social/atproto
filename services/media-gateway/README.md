@@ -39,5 +39,7 @@ Set the AppView environment variable to the Worker's HTTPS origin without a
 route suffix:
 
 ```text
-SOKAA_APPVIEW_CDN_URL=https://media.example.com
+SOKAA_APPVIEW_CDN_URL=https://sokaa-media-gateway.sokaa-media.workers.dev
 ```
+
+AppView appends `/v1/media/:did/:cid` itself — do not include that path in the env var.
