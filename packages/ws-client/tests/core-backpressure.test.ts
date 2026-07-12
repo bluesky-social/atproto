@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BufferOverflowError } from '../src/errors.js'
 import { WebSocketCoreEngine } from '../src/core.js'
+import { BufferOverflowError } from '../src/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 // 10-byte binary frame (byteLength = 10).
@@ -9,7 +9,7 @@ const frame = () => new Uint8Array(10)
 describe('WebSocketCoreEngine backpressure', () => {
   it('pauses when buffered bytes exceed highWaterMark', () => {
     const mock = new MockTransport()
-    const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
+    new WebSocketCoreEngine(() => mock, 'ws://x', {
       highWaterMark: 25, // 3 frames (30 bytes) crosses it
     })
     mock.emitOpen()
@@ -60,7 +60,7 @@ describe('WebSocketCoreEngine backpressure', () => {
     const mock = new MockTransport({
       capabilities: { heartbeat: false, pauseResume: false },
     })
-    const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
+    new WebSocketCoreEngine(() => mock, 'ws://x', {
       highWaterMark: 5,
     })
     mock.emitOpen()

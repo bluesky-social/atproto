@@ -1,9 +1,10 @@
-// Temporary browser stub. WebSocketKeepAlive will be reimplemented on top of
-// WebSocketCore in a follow-up; until then it is unavailable in the browser.
+// WebSocketKeepAlive is Node-only: its reconnect loop depends on the `ws`
+// package, which never enters the browser bundle. This stub keeps the browser
+// entrypoint's export surface identical to Node's while failing loudly if used.
 export class WebSocketKeepAlive {
   constructor() {
     throw new Error(
-      'WebSocketKeepAlive is not yet available in the browser build; use WebSocketCore directly',
+      'WebSocketKeepAlive is not available in the browser build; use WebSocketCore directly',
     )
   }
 }

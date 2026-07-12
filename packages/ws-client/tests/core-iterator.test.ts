@@ -1,6 +1,6 @@
 import { assert, describe, expect, it } from 'vitest'
-import { AbnormalCloseError, SocketError } from '../src/errors.js'
 import { WebSocketCoreEngine } from '../src/core.js'
+import { AbnormalCloseError, SocketError } from '../src/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(

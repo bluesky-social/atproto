@@ -153,16 +153,16 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         this.state = 'open'
         this.negotiatedProtocol = this.transport.protocol
         this.resolveOpened()
-        this.onOpen() // Tasks 7–8 start timers here
+        this.onOpen()
       },
       onMessage: (data, isBinary) => {
         if (this.terminal) return // post-failure discard
-        this.recordLiveness() // Tasks 7–8
+        this.recordLiveness()
         this.onMessage(data, isBinary)
       },
       onPong: () => {
         if (this.terminal) return
-        this.recordPong() // Task 7
+        this.recordPong()
       },
       onClose: (code, reason, wasClean) => {
         if (this.terminal) return
@@ -181,7 +181,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     }
   }
 
-  // Hooks overridden/extended by later tasks. Base implementations here.
+  // Start the liveness timers once the socket is open.
   private onOpen(): void {
     if (this.heartbeatIntervalMs != null) {
       this.heartbeatAlive = true
@@ -193,10 +193,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     }
     if (this.idleTimeoutMs != null) {
       this.idleActive = true
-      this.idleInterval = setInterval(
-        () => this.idleTick(),
-        this.idleTimeoutMs,
-      )
+      this.idleInterval = setInterval(() => this.idleTick(), this.idleTimeoutMs)
       this.idleInterval.unref?.()
     }
   }
@@ -242,7 +239,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     this.idleActive = false
   }
 
-  // ---- message intake (Task 5 adds watermarks, Task 6 adds dataMode) ----
+  // ---- message intake: dataMode enforcement, then buffering/watermarks ----
 
   private onMessage(data: string | Uint8Array, isBinary: boolean): void {
     const received = isBinary ? 'binary' : 'text'
@@ -384,7 +381,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     const item = this.buffer.shift()
     if (item) {
       this.bufferedBytes -= item.bytes
-      this.afterDrain() // Task 5: resume below low-water mark
+      this.afterDrain() // resume the transport once below the low-water mark
       return Promise.resolve({ value: item.value, done: false })
     }
     // 2. Buffer empty: honor a stored terminal.
@@ -412,5 +409,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
 // Byte accounting: binary counts byteLength; strings approximate via UTF-16
 // code units (length * 2) — cheap, deterministic, good enough for watermarks.
 function messageBytes(data: string | Uint8Array, isBinary: boolean): number {
-  return isBinary ? (data as Uint8Array).byteLength : (data as string).length * 2
+  return isBinary
+    ? (data as Uint8Array).byteLength
+    : (data as string).length * 2
 }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { IdleTimeoutError } from '../src/errors.js'
 import { WebSocketCoreEngine } from '../src/core.js'
+import { IdleTimeoutError } from '../src/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 describe('WebSocketCoreEngine idle timeout', () => {

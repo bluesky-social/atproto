@@ -29,6 +29,6 @@ export {
   WebSocketCoreError,
 } from './errors.js'
 
-// Legacy reconnect client (Node only until reimplemented on WebSocketCore).
+// Legacy reconnect client (Node only; depends on the `ws` package).
 export { WebSocketKeepAlive } from './keepalive.js'
 export { CloseCode, DisconnectError } from './keepalive-shared.js'

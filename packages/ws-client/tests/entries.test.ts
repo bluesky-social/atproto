@@ -17,8 +17,10 @@ describe('entrypoint parity', () => {
   it('WebSocketCore constructors are type-compatible', () => {
     // Pure type-level assertion: constructing a real WebSocketCore here
     // would open a socket to an unreachable URL, which is unnecessary risk
-    // for what is otherwise a type-only check. See Task 11 brief.
-    expectTypeOf(node.WebSocketCore).toEqualTypeOf<typeof browser.WebSocketCore>()
+    // for what is otherwise a type-only check.
+    expectTypeOf(node.WebSocketCore).toEqualTypeOf<
+      typeof browser.WebSocketCore
+    >()
   })
 
   it('binary dataMode binds Uint8Array on both entries', () => {
@@ -27,8 +29,8 @@ describe('entrypoint parity', () => {
     // and the two WebSocketCore<'binary'> instance types are identical.
     expectTypeOf<node.MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
     expectTypeOf<browser.MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
-    expectTypeOf<InstanceType<typeof node.WebSocketCore<'binary'>>>().toEqualTypeOf<
-      InstanceType<typeof browser.WebSocketCore<'binary'>>
-    >()
+    expectTypeOf<
+      InstanceType<typeof node.WebSocketCore<'binary'>>
+    >().toEqualTypeOf<InstanceType<typeof browser.WebSocketCore<'binary'>>>()
   })
 })

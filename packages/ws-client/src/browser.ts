@@ -29,6 +29,6 @@ export {
   WebSocketCoreError,
 } from './errors.js'
 
-// Temporary stub: reimplemented on WebSocketCore in a follow-up round.
+// Node-only; the browser build exposes a throwing stub (see keepalive-stub).
 export { WebSocketKeepAlive } from './keepalive-stub.js'
 export { CloseCode, DisconnectError } from './keepalive-shared.js'
