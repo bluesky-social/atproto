@@ -9,12 +9,14 @@ import {
   bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
+  fetchNoRedirectProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 import type { DidMethod, ResolveDidOptions } from '../did-method.js'
 
 const fetchSuccessHandler = pipe(
+  fetchNoRedirectProcessor(),
   fetchOkProcessor(),
   fetchJsonProcessor(/^application\/(did\+ld\+)?json$/),
   fetchJsonZodProcessor(didDocumentValidator),
@@ -55,7 +57,7 @@ export class DidWebMethod implements DidMethod<'web'> {
     // responsible for handling it.
 
     return this.fetch(didDocumentUrl, {
-      redirect: 'error',
+      redirect: 'manual',
       headers: { accept: 'application/did+ld+json,application/json' },
       signal: options?.signal,
     }).then(fetchSuccessHandler)
