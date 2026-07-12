@@ -1,0 +1,20 @@
+{
+  "name": "@atproto/media-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atproto/syntax": "workspace:^",
+    "multiformats": "^9.9.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260710.1",
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.16",
+    "wrangler": "4.86.0"
+  }
+}
