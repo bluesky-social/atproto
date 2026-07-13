@@ -50,6 +50,9 @@ export class BrowserTransport implements Transport {
       } else if (data instanceof ArrayBuffer) {
         this.handlers.onMessage(new Uint8Array(data), true)
       } else if (ArrayBuffer.isView(data)) {
+        // Unreachable for a spec-compliant WebSocket: with binaryType set to
+        // 'arraybuffer', received binary data is an ArrayBuffer, never a view.
+        // Kept as a defensive fallback for non-conforming implementations.
         const view = data as ArrayBufferView
         this.handlers.onMessage(
           new Uint8Array(view.buffer, view.byteOffset, view.byteLength),

@@ -13,6 +13,10 @@ export class NodeTransport implements Transport {
 
   constructor(url: string | URL, protocols?: string | string[]) {
     this.ws = new WebSocket(url, protocols)
+    // Pin the default so every frame arrives as a single Buffer. ws's RawData
+    // is `Buffer | ArrayBuffer | Buffer[]`; only 'nodebuffer' guarantees Buffer
+    // for both text and binary frames, which is what the listener below assumes.
+    this.ws.binaryType = 'nodebuffer'
     this.ws.on('open', () => this.handlers.onOpen())
     this.ws.on('message', (data: Buffer, isBinary: boolean) => {
       if (isBinary) {
