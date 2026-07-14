@@ -50,7 +50,10 @@ import {
 import { type Un$Typed, asPredicate } from '../lexicon/util.js'
 import { dbLogger, httpLogger } from '../logger.js'
 import type { ParsedLabelers } from '../util.js'
-import { getStatusIdentifierFromSubject, moderationSubjectStatusQueryBuilder } from './status.js'
+import {
+  getStatusIdentifierFromSubject,
+  moderationSubjectStatusQueryBuilder,
+} from './status.js'
 import {
   CHAT_CONVO_COLLECTION,
   type ModSubject,

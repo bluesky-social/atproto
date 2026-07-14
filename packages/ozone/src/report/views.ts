@@ -1,10 +1,10 @@
 import type { Selectable } from 'kysely'
+import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import { addAccountInfoToRepoViewDetail } from '../api/util.js'
 import type { ReportStat } from '../db/schema/report_stat.js'
 import type * as AppBskyActorDefs from '../lexicon/types/app/bsky/actor/defs.js'
 import type { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
 import type {
-  ModEventView,
   RecordViewDetail,
   RepoView,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
@@ -12,10 +12,12 @@ import type * as ToolsOzoneQueueDefs from '../lexicon/types/tools/ozone/queue/de
 import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
 import type { ReportWithEvent } from '../mod-service/report.js'
-import type { ParsedLabelers } from '../util.js'
-import type { ToolsOzoneModerationDefs } from '@atproto/api'
-import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from '../mod-service/subject.js'
+import {
+  CHAT_CONVO_COLLECTION,
+  CHAT_MESSAGE_COLLECTION,
+} from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRowWithHandle } from '../mod-service/types.js'
+import type { ParsedLabelers } from '../util.js'
 
 type ReportViews = {
   repoDetails(

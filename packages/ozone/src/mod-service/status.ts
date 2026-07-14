@@ -12,8 +12,8 @@ import {
   REVIEWNONE,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
-import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 import { CHAT_CONVO_COLLECTION } from './subject.js'
+import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
