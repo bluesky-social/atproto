@@ -1,4 +1,4 @@
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import { ReconnectingWebSocket } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>
 type OnCreateCallback<T extends JetstreamRecord> = (
@@ -51,7 +51,7 @@ export interface CommitDeleteEvent extends EventBase {
 }
 
 export class Jetstream {
-  public ws?: WebSocketKeepAlive
+  public ws?: ReconnectingWebSocket<'binary'>
   public url: URL
   /** The current cursor. */
   public cursor?: number
@@ -71,16 +71,17 @@ export class Jetstream {
     onCreate?: Record<string, OnCreateCallback<any>>
     onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
   }) {
-    this.ws = new WebSocketKeepAlive({
-      getUrl: async () => {
+    this.ws = new ReconnectingWebSocket(
+      () => {
         if (this.cursor)
           this.url.searchParams.set('cursor', this.cursor.toString())
         return this.url.toString()
       },
-    })
+      { dataMode: 'binary' },
+    )
 
     for await (const message of this.ws) {
-      const parsedMessage = JSON.parse(message.toString())
+      const parsedMessage = JSON.parse(Buffer.from(message).toString())
       if (parsedMessage.kind === 'commit') {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
         const { collection, operation, record } = parsedMessage.commit || {}
@@ -100,8 +101,6 @@ export class Jetstream {
    * Closes the WebSocket connection.
    */
   async close() {
-    // @TODO This should return a promise that fulfills when the connection is
-    // fully closed.
-    this.ws?.ws?.close()
+    await this.ws?.close()
   }
 }
