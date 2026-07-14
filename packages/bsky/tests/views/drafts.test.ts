@@ -9,11 +9,11 @@ import {
   vi,
 } from 'vitest'
 import {
-  $Typed,
+  type $Typed,
   AppBskyDraftCreateDraft,
   AppBskyDraftDefs,
-  AppBskyDraftGetDrafts,
-  AtpAgent,
+  type AppBskyDraftGetDrafts,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
 import { TID } from '@atproto/common'

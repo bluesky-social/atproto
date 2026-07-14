@@ -3,15 +3,15 @@ import fs from 'node:fs/promises'
 import {
   AppBskyEmbedImages,
   AppBskyFeedPost,
-  AppBskyFeedPostRecord,
-  AtpAgent,
+  type AppBskyFeedPostRecord,
+  type AtpAgent,
   BlobRef,
 } from '@atproto/api'
 import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { AppContext } from '../src/context.js'
+import type { AppContext } from '../src/context.js'
 import { forSnapshot, paginateAll } from './_util.js'
 
 describe('crud operations', () => {
@@ -25,7 +25,6 @@ describe('crud operations', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'crud',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getAgent()
     aliceAgent = network.pds.getAgent()

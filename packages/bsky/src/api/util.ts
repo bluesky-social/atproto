@@ -1,6 +1,6 @@
-import { IncomingHttpHeaders } from 'node:http'
-import { ServerConfig } from '../config.js'
-import { ParsedLabelers, formatLabelerHeader } from '../util.js'
+import type { IncomingHttpHeaders } from 'node:http'
+import type { ServerConfig } from '../config.js'
+import { type ParsedLabelers, formatLabelerHeader } from '../util.js'
 
 export const BSKY_USER_AGENT = 'BskyAppView'
 export const ATPROTO_CONTENT_LABELERS = 'Atproto-Content-Labelers'

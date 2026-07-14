@@ -1,4 +1,3 @@
-import * as fs from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import {
   InvalidDatetimeError,
@@ -8,16 +7,11 @@ import {
   normalizeDatetime,
   normalizeDatetimeAlways,
 } from '../src/index.js'
+import { readInteropFile } from './_utils.ts'
 
-const interopValid = readLines(
-  `${__dirname}/interop-files/datetime_syntax_valid.txt`,
-)
-const interopInvalidSyntax = readLines(
-  `${__dirname}/interop-files/datetime_syntax_invalid.txt`,
-)
-const interopInvalidParse = readLines(
-  `${__dirname}/interop-files/datetime_parse_invalid.txt`,
-)
+const interopValid = readInteropFile(`datetime_syntax_valid.txt`)
+const interopInvalidSyntax = readInteropFile(`datetime_syntax_invalid.txt`)
+const interopInvalidParse = readInteropFile(`datetime_parse_invalid.txt`)
 
 // These strings come from the test suite in "@atproto/lexicon", kept around
 // to ensure compatibility with legacy implementation.
@@ -271,10 +265,3 @@ describe(normalizeDatetimeAlways, () => {
     })
   })
 })
-
-function readLines(filePath: string): string[] {
-  return fs
-    .readFileSync(filePath, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.startsWith('#') && line.length > 0)
-}

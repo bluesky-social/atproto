@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
+import { type AppBskyFeedGetLikes, type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import {
   constantDate,

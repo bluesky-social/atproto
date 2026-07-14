@@ -28,7 +28,7 @@ describe('ipld decode multi', () => {
       test: Number.MAX_SAFE_INTEGER,
     }
     const encoded = cborEncode(one)
-    const decoded = cborDecodeMulti(encoded)
-    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
+    const decoded = cborDecodeMulti(encoded) as [{ test: number }]
+    expect(Number.isInteger(decoded[0]['test'])).toBe(true)
   })
 })

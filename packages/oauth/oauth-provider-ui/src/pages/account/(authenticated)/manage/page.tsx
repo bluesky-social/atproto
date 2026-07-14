@@ -3,17 +3,17 @@ import {
   AtIcon,
   CaretRightIcon,
   EnvelopeIcon,
-  Icon,
+  type Icon,
   LockIcon,
   ShieldWarningIcon,
   SnowflakeIcon,
   TrashIcon,
 } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
-import { Button, ButtonProps } from '#/components/forms/button.tsx'
+import { Button, type ButtonProps } from '#/components/forms/button.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
@@ -40,7 +40,7 @@ import {
   useResetPasswordConfirm,
   useResetPasswordRequest,
 } from '#/data/password.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 
 export function Page() {
   return (

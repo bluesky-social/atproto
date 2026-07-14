@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
 
 type IncomingHttpHeaders = Record<string, string | string[] | undefined>

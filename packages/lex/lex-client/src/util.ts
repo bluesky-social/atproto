@@ -1,9 +1,9 @@
-import {
+import type {
   InferRecordKey,
   LexiconRecordKey,
   RecordSchema,
 } from '@atproto/lex-schema'
-import type { DidString, Service } from './types.js'
+import type { DidString, Service } from './types.ts'
 
 export function applyDefaults<
   TDefaults extends Record<string, unknown>,

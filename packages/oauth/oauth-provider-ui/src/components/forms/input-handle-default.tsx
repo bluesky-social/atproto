@@ -2,19 +2,19 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon, CheckIcon, XIcon } from '@phosphor-icons/react'
 import { composeRefs } from '@radix-ui/react-compose-refs'
 import { clsx } from 'clsx'
-import { JSX, useCallback, useEffect, useRef, useState } from 'react'
-import { HandleString, isValidHandle } from '@atproto/syntax'
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react'
+import { type HandleString, isValidHandle } from '@atproto/syntax'
 import { useStableCallback } from '#/hooks/use-stable-callback.ts'
 import {
   MAX_FULL_LENGTH,
   MAX_LENGTH,
   MIN_LENGTH,
-  ValidDomain,
+  type ValidDomain,
   isValidDomain,
 } from '#/lib/handle.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { Handle } from '../utils/handle.tsx'
-import { InputText, InputTextProps } from './input-text.tsx'
+import { InputText, type InputTextProps } from './input-text.tsx'
 
 export type InputHandleProvidedProps = Override<
   Omit<

@@ -1,12 +1,12 @@
 import { EventEmitter, once } from 'node:events'
-import { SendMailOptions } from 'nodemailer'
+import type { SendMailOptions } from 'nodemailer'
 import {
-  AtpAgent,
+  type AtpAgent,
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { ServerMailer } from '../src/mailer/index.js'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { ServerMailer } from '../src/mailer/index.js'
 import userSeed from './seeds/users.js'
 
 describe('email confirmation', () => {
@@ -24,7 +24,6 @@ describe('email confirmation', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'email_confirmation',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     mailer = network.pds.ctx.mailer
     agent = network.pds.getAgent()
     sc = network.getSeedClient()

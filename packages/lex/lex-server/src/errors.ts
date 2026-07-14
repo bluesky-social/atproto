@@ -1,10 +1,9 @@
 import { XrpcError } from '@atproto/lex-client'
-import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
+import type { LexErrorCode, LexErrorData } from '@atproto/lex-data'
+import { LexError } from '@atproto/lex-data'
 import { LexValidationError } from '@atproto/lex-schema'
-import {
-  WWWAuthenticate,
-  formatWWWAuthenticateHeader,
-} from './lib/www-authenticate.js'
+import type { WWWAuthenticate } from './lib/www-authenticate.js'
+import { formatWWWAuthenticateHeader } from './lib/www-authenticate.js'
 
 export { LexError }
 export type { LexErrorCode, LexErrorData, WWWAuthenticate }

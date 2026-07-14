@@ -1,4 +1,9 @@
-import { Issue, IssueCustom, Schema, ValidationContext } from '../core.js'
+import {
+  type Issue,
+  IssueCustom,
+  Schema,
+  type ValidationContext,
+} from '../core.js'
 
 /**
  * Context object provided to custom assertion functions.

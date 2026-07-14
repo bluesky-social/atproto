@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    // "rewriteRelativeImportExtensions" conflict with "paths" aliases; bundlers
+    // will, by nature, completely rewrite the imports to the final bundle
+    // output anyways.
+    "rewriteRelativeImportExtensions": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "composite": false,
+  },
+}

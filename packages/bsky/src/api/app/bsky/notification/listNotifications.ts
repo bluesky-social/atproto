@@ -1,23 +1,23 @@
 import { mapDefined } from '@atproto/common'
-import { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config.js'
-import { AppContext } from '../../../../context.js'
-import {
+import type { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtxWithViewer,
   Hydrator,
 } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
-import { Notification } from '../../../../proto/bsky_pb.js'
+import type { Notification } from '../../../../proto/bsky_pb.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { isPostRecordType } from '../../../../views/types.js'
 import { resHeaders } from '../../../util.js'
 

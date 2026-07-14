@@ -1,10 +1,10 @@
 import {
-  AgeAssuranceRuleID,
-  AppBskyAgeassuranceDefs,
+  type AgeAssuranceRuleID,
+  type AppBskyAgeassuranceDefs,
   computeAgeAssuranceRegionAccess,
   getAgeAssuranceRegionConfig,
 } from '@atproto/api'
-import { app } from '../../lexicons/index.js'
+import type { app } from '../../lexicons/index.js'
 
 /**
  * Compute age assurance access based on verified minimum age. Thrown errors

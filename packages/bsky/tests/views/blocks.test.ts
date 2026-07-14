@@ -4,10 +4,15 @@ import {
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
   AtUri,
-  AtpAgent,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { assertIsThreadViewPost, forSnapshot } from '../_util.js'
 
@@ -47,7 +52,7 @@ describe('pds views with blocking', () => {
       sc.posts[dan][0].ref,
       'alice replies to dan',
     )
-    const _carolReplyToAliceReplyToDan = await sc.reply(
+    await sc.reply(
       carol,
       sc.posts[dan][0].ref,
       aliceReplyToDan.ref,

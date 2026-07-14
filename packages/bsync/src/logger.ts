@@ -1,4 +1,4 @@
-import { type IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { pinoHttp, stdSerializers } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
 
@@ -13,9 +13,9 @@ export const loggerMiddleware = pinoHttp({
     paths: ['req.headers.authorization'],
   },
   serializers: {
-    err: (err: unknown) => ({
-      code: err?.['code'],
-      message: err?.['message'],
+    err: (err: any) => ({
+      code: err?.code,
+      message: err?.message,
     }),
     req: (req: IncomingMessage) => {
       const serialized = stdSerializers.req(req)

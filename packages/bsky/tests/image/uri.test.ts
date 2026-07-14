@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { cidForCbor } from '@atproto/common'
-import { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri.js'
 
 describe('image uri builder', () => {

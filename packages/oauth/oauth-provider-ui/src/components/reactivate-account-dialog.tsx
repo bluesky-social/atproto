@@ -1,5 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { SmartForm } from '#/components/forms/smart-form.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'

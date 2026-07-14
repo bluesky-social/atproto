@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import readline from 'node:readline/promises'
 import { TID } from '@atproto/common'
-import { DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex'
 import {
   BlockMap,
   CidSet,
@@ -9,9 +9,9 @@ import {
   MemoryBlockstore,
   signCommit,
 } from '@atproto/repo'
-import { AccountManager } from '../account-manager/account-manager.js'
-import { ActorStore } from '../actor-store/actor-store.js'
-import { Sequencer } from '../sequencer/index.js'
+import type { AccountManager } from '../account-manager/account-manager.js'
+import type { ActorStore } from '../actor-store/actor-store.js'
+import type { Sequencer } from '../sequencer/index.js'
 
 export interface RebuildContext {
   sequencer: Sequencer

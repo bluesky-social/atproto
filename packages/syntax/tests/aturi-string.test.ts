@@ -1,17 +1,13 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
 import {
   InvalidAtUriError,
   assertAtUriString,
   isAtUriString,
 } from '../src/index.js'
+import { readInteropFile } from './_utils.js'
 
 describe('valid interop', () => {
-  test.each(
-    readLines(
-      `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_valid.txt`,
-    ),
-  )('%s', (value) => {
+  test.each(readInteropFile(`aturi_syntax_valid.txt`))('%s', (value) => {
     expect(isAtUriString(value)).toBe(true)
     expect(isAtUriString(value, { strict: false })).toBe(true)
     expect(() => assertAtUriString(value)).not.toThrow()
@@ -20,11 +16,7 @@ describe('valid interop', () => {
 })
 
 describe('invalid interop', () => {
-  test.each(
-    readLines(
-      `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_invalid.txt`,
-    ),
-  )('%s', (value) => {
+  test.each(readInteropFile(`aturi_syntax_invalid.txt`))('%s', (value) => {
     expect(isAtUriString(value)).toBe(false)
     expect(() => assertAtUriString(value)).toThrow(InvalidAtUriError)
   })
@@ -214,10 +206,4 @@ function testLoose(value: string) {
     expect(() => assertAtUriString(value)).toThrow()
     expect(() => assertAtUriString(value, { strict: false })).not.toThrow()
   })
-}
-
-function readLines(filePath: string): string[] {
-  return readFileSync(filePath, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.startsWith('#') && line.length > 0)
 }

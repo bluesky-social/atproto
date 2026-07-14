@@ -1,28 +1,34 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import {
   DevicesIcon,
   GlobeIcon,
   HouseSimpleIcon,
-  IconProps,
+  type IconProps,
   QuestionIcon,
   UserIcon,
 } from '@phosphor-icons/react'
 import {
   Outlet,
-  RegisteredRouter,
-  ToPathOption,
+  type RegisteredRouter,
+  type ToPathOption,
   createRoute,
   useRouter,
 } from '@tanstack/react-router'
-import { FunctionComponent, ReactNode, useEffect, useMemo, useRef } from 'react'
+import {
+  type FunctionComponent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react'
 import {
   LayoutPage,
-  LayoutPageLink,
+  type LayoutPageLink,
 } from '#/components/layouts/layout-page.tsx'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
-import { Explicit } from '#/lib/util.ts'
+import type { Explicit } from '#/lib/util.ts'
 import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
 import { Page as AccountOAuthPage } from './apps/page.tsx'

@@ -1,5 +1,5 @@
-import { BlobStore } from '@atproto/repo'
-import { BackgroundQueue } from '../background.js'
+import type { BlobStore } from '@atproto/repo'
+import type { BackgroundQueue } from '../background.js'
 
 export type ActorStoreResources = {
   blobstore: (did: string) => BlobStore

@@ -1,8 +1,8 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { useLingui } from '@lingui/react'
 import { clsx } from 'clsx'
-import { JSX, ReactNode } from 'react'
-import { Override } from '#/lib/util.ts'
+import type { JSX, ReactNode } from 'react'
+import type { Override } from '#/lib/util.ts'
 import { LocaleSelector } from '#/locales/locale-selector.tsx'
 
 export type LayoutTitleProps = Override<

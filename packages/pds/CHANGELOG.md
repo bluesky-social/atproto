@@ -1,5 +1,117 @@
 # @atproto/pds
 
+## 0.5.17
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/oauth-provider@0.20.1
+  - @atproto/oauth-scopes@0.5.6
+  - @atproto/repo@0.10.6
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/aws@0.3.6
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto/xrpc@0.8.6
+  - @atproto-labs/xrpc-utils@0.1.8
+
+## 0.5.16
+
+### Patch Changes
+
+- [#5181](https://github.com/bluesky-social/atproto/pull/5181) [`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112) Thanks [@blackmichael](https://github.com/blackmichael)! - Add `PDS_BLOBSTORE_S3_REQUEST_TIMEOUT_MS` environment variable to configure the S3 blobstore's per-request (stall detection) timeout independently from the total upload timeout. Blob upload timeouts (including stalled S3 connections) are now correctly surfaced as HTTP 504 `UpstreamTimeout` errors instead of 500s on `com.atproto.repo.uploadBlob`.
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Adapt to latest oauth-provider changes
+
+- Updated dependencies [[`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549), [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549)]:
+  - @atproto/aws@0.3.5
+  - @atproto/oauth-provider@0.20.0
+  - @atproto-labs/simple-store-memory@0.2.4
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/oauth-scopes@0.5.5
+  - @atproto/lex-cbor@0.1.4
+  - @atproto/lex-data@0.1.5
+  - @atproto/lex-json@0.1.4
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/syntax@0.7.1
+  - @atproto/repo@0.10.5
+  - @atproto/xrpc@0.8.5
+  - @atproto/did@0.5.4
+  - @atproto-labs/simple-store-redis@0.1.4
+  - @atproto-labs/xrpc-utils@0.1.7
+
+## 0.5.15
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/lex@0.2.0
+  - @atproto/common@0.7.0
+  - @atproto/xrpc-server@0.11.7
+  - @atproto/oauth-provider@0.19.9
+  - @atproto/oauth-scopes@0.5.4
+  - @atproto/repo@0.10.4
+  - @atproto/aws@0.3.4
+  - @atproto-labs/xrpc-utils@0.1.6
+  - @atproto/identity@0.5.4
+  - @atproto/xrpc@0.8.4
+
+## 0.5.14
+
+### Patch Changes
+
+- [#5044](https://github.com/bluesky-social/atproto/pull/5044) [`4f1e203`](https://github.com/bluesky-social/atproto/commit/4f1e20387bb2a212e263590ac7a3458e8f939091) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Proxy `app.bsky.notification.unregisterPush` to the notification service identified by `serviceDid`, matching the behavior of `registerPush`.
+
+## 0.5.13
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto/identity@0.5.3
+  - @atproto-labs/simple-store-memory@0.2.3
+  - @atproto-labs/simple-store-redis@0.1.3
+  - @atproto-labs/simple-store@0.4.3
+  - @atproto/oauth-provider@0.19.8
+  - @atproto-labs/fetch-node@0.3.4
+  - @atproto-labs/xrpc-utils@0.1.5
+  - @atproto/oauth-scopes@0.5.3
+  - @atproto/lex-cbor@0.1.3
+  - @atproto/lex-data@0.1.4
+  - @atproto/lex-json@0.1.3
+  - @atproto/xrpc-server@0.11.6
+  - @atproto/lex@0.1.7
+  - @atproto/common@0.6.5
+  - @atproto/crypto@0.5.3
+  - @atproto/repo@0.10.3
+  - @atproto/xrpc@0.8.3
+  - @atproto/aws@0.3.3
+  - @atproto/did@0.5.3
+
+## 0.5.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.1.6
+  - @atproto/xrpc-server@0.11.5
+  - @atproto/oauth-provider@0.19.7
+  - @atproto-labs/xrpc-utils@0.1.4
+
 ## 0.5.11
 
 ### Patch Changes

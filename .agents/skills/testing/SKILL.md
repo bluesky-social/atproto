@@ -25,7 +25,7 @@ Decide which runner to use by following these steps in order:
 
 1. Does the package directory contain `vitest.config.ts`? → use Vitest, follow [references/vitest.md](references/vitest.md).
 2. Does the package directory contain `jest.config.cjs`? → use Jest, follow [references/jest.md](references/jest.md).
-3. Neither exists? → the package has no tests yet. Adopt Vitest: before writing any test code, create `vitest.config.ts` and `tsconfig.tests.json` by following the setup section of [references/vitest.md](references/vitest.md), then write the test.
+3. Neither exists? → the package has no tests yet. Adopt Vitest: before writing any test code, create `vitest.config.ts` and `tsconfig.test.json` by following the setup section of [references/vitest.md](references/vitest.md), then write the test.
 4. Does the test code import `@atproto/lex` (or any `@atproto/lex-*` sub-packages)? → also consult the [lex-sdk skill](../lex-sdk/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
 
 Runner-reference summary:
@@ -48,15 +48,15 @@ Each package splits its TS config into three files referenced from the root `tsc
   "include": [],
   "references": [
     { "path": "./tsconfig.build.json" },
-    { "path": "./tsconfig.tests.json" }
+    { "path": "./tsconfig.test.json" }
   ]
 }
 ```
 
 - `tsconfig.build.json` — production code in `./src`, excludes `**/*.test.ts`, emits to `./dist`.
-- `tsconfig.tests.json` — test code. For vitest packages it extends `../../tsconfig/vitest.json`; for jest packages it extends `../../tsconfig/tests.json` (which adds `"types": ["node", "jest"]`). The `include` list typically covers both `./tests` and `./src/**/*.test.ts`.
+- `tsconfig.test.json` — test code. For vitest packages it extends `../../tsconfig/vitest.tsconfig.json`; for jest packages it extends `../../tsconfig/jest.tsconfig.json` (which adds `"types": ["node", "jest"]`). The `include` list typically covers both `./tests` and `./src/**/*.test.ts`.
 
-When adding tests to a package that doesn't already have a `tsconfig.tests.json`, create one before writing tests. See the runner-specific reference for the exact contents.
+When adding tests to a package that doesn't already have a `tsconfig.test.json`, create one before writing tests. See the runner-specific reference for the exact contents.
 
 ## Running tests
 

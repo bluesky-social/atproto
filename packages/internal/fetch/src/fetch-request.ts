@@ -69,7 +69,7 @@ function extractInfo(err: unknown): [statusCode: number, message: string] {
   }
 
   // NodeJS errors
-  const code = err['code']
+  const code = 'code' in err ? err.code : undefined
   if (typeof code === 'string') {
     switch (true) {
       case code === 'ENOTFOUND':
@@ -104,7 +104,9 @@ export function protocolCheckRequestTransform(protocols: {
     const { protocol, port } = new URL(request.url)
 
     const config: undefined | boolean | { allowCustomPort?: boolean } =
-      Object.hasOwn(protocols, protocol) ? protocols[protocol] : undefined
+      Object.hasOwn(protocols, protocol)
+        ? protocols[protocol as keyof typeof protocols]
+        : undefined
 
     if (!config) {
       throw new FetchRequestError(

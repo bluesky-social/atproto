@@ -1,11 +1,11 @@
 import assert from 'node:assert'
-import { KeyObject } from 'node:crypto'
+import type { KeyObject } from 'node:crypto'
 import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
 import { AuthScope } from '../../auth-scope.js'
-import { AccountDb } from '../db/index.js'
-import { AppPassDescript } from './password.js'
+import type { AccountDb } from '../db/index.js'
+import type { AppPassDescript } from './password.js'
 
 export type AuthToken = {
   scope: AuthScope

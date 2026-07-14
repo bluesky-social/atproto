@@ -1,35 +1,35 @@
 import { rmIfExists } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { DidString, isNsidString, isRecordKeyString } from '@atproto/lex'
+import { type DidString, isNsidString, isRecordKeyString } from '@atproto/lex'
 import {
   BlockMap,
   CidSet,
-  CommitData,
+  type CommitData,
   WriteOpAction,
   cborToLexRecord,
   parseDataKey,
   readCar,
 } from '@atproto/repo'
 import {
-  AccountManager,
+  type AccountManager,
   AccountStatus,
 } from '../../account-manager/account-manager.js'
-import { ActorStoreTransactor } from '../../actor-store/actor-store-transactor.js'
-import { ActorStore } from '../../actor-store/actor-store.js'
+import type { ActorStoreTransactor } from '../../actor-store/actor-store-transactor.js'
+import type { ActorStore } from '../../actor-store/actor-store.js'
 import { countAll } from '../../db/index.js'
 import {
-  PreparedWrite,
+  type PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
 } from '../../repo/index.js'
-import {
+import type {
   AccountEvt,
   CommitEvt,
   SeqEvt,
   Sequencer,
 } from '../../sequencer/index.js'
-import { RecoveryDb } from './recovery-db.js'
+import type { RecoveryDb } from './recovery-db.js'
 import { UserQueues } from './user-queues.js'
 
 export type RecovererContextNoDb = {

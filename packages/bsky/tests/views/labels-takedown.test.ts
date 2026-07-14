@@ -1,7 +1,12 @@
 import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyLabelerDefs, AtpAgent, ids } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 
 describe('bsky takedown labels', () => {
   let network: TestNetwork

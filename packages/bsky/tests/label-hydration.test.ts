@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 
 describe('label hydration', () => {

@@ -1,8 +1,8 @@
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
-import { ScopeStringFor } from '../lib/syntax.js'
+import type { ScopeStringFor } from '../lib/syntax.js'
 import { AccountPermission } from './account-permission.js'
 import { IdentityPermission } from './identity-permission.js'
-import { IncludeScope, LexiconPermissionSet } from './include-scope.js'
+import { IncludeScope, type LexiconPermissionSet } from './include-scope.js'
 
 describe('IncludeScope', () => {
   describe('static', () => {

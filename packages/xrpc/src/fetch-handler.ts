@@ -1,4 +1,4 @@
-import { Gettable } from './types.js'
+import type { Gettable } from './types.js'
 import { combineHeaders } from './util.js'
 
 export type FetchHandler = (

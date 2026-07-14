@@ -1,4 +1,4 @@
-import { DatetimeString } from '@atproto/lex'
+import type { DatetimeString } from '@atproto/lex'
 
 export interface AppPassword {
   did: string

@@ -1,12 +1,12 @@
 // Must be first
 import './polyfill.js'
 
-import {
-  LexBuilder,
+import type {
   LexBuilderLoadOptions,
   LexBuilderOptions,
   LexBuilderSaveOptions,
 } from './lex-builder.js'
+import { LexBuilder } from './lex-builder.js'
 
 export * from './lex-builder.js'
 export * from './lex-def-builder.js'

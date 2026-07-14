@@ -6,8 +6,8 @@ import { Agent as Undici6Agent } from 'undici_v6' // NodeJS 22
 import { Agent as Undici7Agent } from 'undici_v7' // NodeJS 24
 import { Agent as Undici8Agent } from 'undici_v8' // NodeJS 26
 import {
-  Fetch,
-  FetchContext,
+  type Fetch,
+  type FetchContext,
   FetchRequestError,
   asRequest,
   extractUrl,

@@ -1,9 +1,9 @@
-import { SkeletonHandler } from '@atproto/pds'
+import type { SkeletonHandler } from '@atproto/pds'
 import { TestFeedGen } from './feed-gen.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 import { SeedClient } from './seed/client.js'
-import { TestServerParams } from './types.js'
+import type { TestServerParams } from './types.js'
 import { mockNetworkUtilities } from './util.js'
 
 export class TestNetworkNoAppView {

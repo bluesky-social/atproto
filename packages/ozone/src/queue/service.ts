@@ -1,10 +1,10 @@
-import { Selectable, sql } from 'kysely'
-import { ToolsOzoneQueueDefs } from '@atproto/api'
+import { type Selectable, sql } from 'kysely'
+import type { ToolsOzoneQueueDefs } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import { ReportQueue } from '../db/schema/report_queue.js'
+import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
@@ -21,16 +21,41 @@ type ResolvedAssignment = {
   status: 'queued' | 'open'
 }
 
+/**
+ * Find queue to route a report to.
+ */
 function resolveAssignment(
   subjectType: SubjectType,
   collection: string | null,
   reportType: string,
   queues: Selectable<ReportQueue>[],
   now: string,
+  explicitQueueId?: number,
 ): ResolvedAssignment {
+  if (explicitQueueId !== undefined) {
+    const target = queues.find((q) => q.id === explicitQueueId)
+    if (target) return { queueId: target.id, queuedAt: now, status: 'queued' }
+    return { queueId: -1, queuedAt: null, status: 'open' }
+  }
   const matched = findMatchingQueue(queues, subjectType, collection, reportType)
   if (matched) return { queueId: matched.id, queuedAt: now, status: 'queued' }
   return { queueId: -1, queuedAt: null, status: 'open' }
+}
+
+/**
+ * Parse routing info from modTool
+ */
+export function parseModTool(
+  modTool: { name: string; meta?: { [_ in string]: unknown } } | null,
+): { queueId?: number; isAutomated: boolean } {
+  // modTool.meta is untrusted input.
+  const queueId =
+    typeof modTool?.meta?.queueId === 'number'
+      ? modTool.meta.queueId
+      : undefined
+  const isAutomated = modTool?.meta?.isAutomated === true
+
+  return { queueId, isAutomated }
 }
 
 export type QueueServiceCreator = (db: Database) => QueueService
@@ -43,11 +68,13 @@ export class QueueService {
   }
 
   async checkConflict({
+    name,
     subjectTypes,
     collection,
     reportTypes,
     excludeId,
   }: {
+    name: string
     subjectTypes: string[]
     collection?: string | null
     reportTypes: string[]
@@ -67,6 +94,13 @@ export class QueueService {
     const existingQueues = await qb.execute()
 
     for (const existing of existingQueues) {
+      if (existing.name === name) {
+        throw new InvalidRequestError(
+          'A queue with that name already exists',
+          'ConflictingQueue',
+        )
+      }
+
       const subjectTypesOverlap = subjectTypes.some((st) =>
         existing.subjectTypes.includes(st),
       )
@@ -295,6 +329,7 @@ export class QueueService {
 
     let query = this.db.db
       .selectFrom('report as r')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
       .select([
         'r.id',
         'r.status',
@@ -302,6 +337,7 @@ export class QueueService {
         'r.recordPath',
         'r.subjectMessageId',
         'r.subjectConvoId',
+        'me.modTool',
       ])
       .where('r.status', '!=', 'closed')
       .where('r.id', '>=', params.start)
@@ -351,12 +387,15 @@ export class QueueService {
       const collection =
         slashIdx > 0 ? report.recordPath.slice(0, slashIdx) : null
 
+      const tool = parseModTool(report.modTool)
+
       const assignment = resolveAssignment(
         subjectType,
         collection,
         report.reportType,
         queues,
         now,
+        tool.queueId,
       )
 
       if (assignment.queueId !== -1) {
@@ -483,6 +522,7 @@ export class QueueService {
         'subjectMessageId',
         'subjectConvoId',
         'meta',
+        'modTool',
         'createdAt',
       ])
       .where('action', '=', MOD_EVENT_REPORT_ACTION)
@@ -524,12 +564,15 @@ export class QueueService {
       const reportType =
         (event.meta?.reportType as string | undefined) ?? REASON_OTHER
 
+      const tool = parseModTool(event.modTool)
+
       const assignment = resolveAssignment(
         subjectType,
         collection,
         reportType,
         queues,
         now,
+        tool.queueId,
       )
 
       if (assignment.queueId === -1) unmatched++
@@ -546,6 +589,7 @@ export class QueueService {
         actionEventIds: null,
         actionNote: null,
         isMuted,
+        isAutomated: tool.isAutomated,
         status: assignment.status,
         reportType,
         did: event.subjectDid,

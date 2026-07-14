@@ -1,10 +1,10 @@
-import { Did } from '@atproto/did'
-import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
-import { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
-import { ClientId } from '../client/client-id.js'
-import { DeviceId } from '../device/device-id.js'
-import { NonNullableKeys } from '../lib/util/type.js'
-import { Code } from './code.js'
+import type { Did } from '@atproto/did'
+import type { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
+import type { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
+import type { ClientId } from '../client/client-id.js'
+import type { DeviceId } from '../device/device-id.js'
+import type { NonNullableKeys } from '../lib/util/type.js'
+import type { Code } from './code.js'
 
 export type {
   ClientAuth,

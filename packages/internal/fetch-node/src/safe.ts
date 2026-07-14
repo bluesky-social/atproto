@@ -1,6 +1,6 @@
 import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
-  Fetch,
+  type Fetch,
   asRequest,
   explicitRedirectCheckRequestTransform,
   fetchMaxSizeProcessor,
@@ -10,7 +10,7 @@ import {
   timedFetch,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { UnicastFetchWrapOptions, unicastFetchWrap } from './unicast.js'
+import { type UnicastFetchWrapOptions, unicastFetchWrap } from './unicast.js'
 
 export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
   responseMaxSize?: number

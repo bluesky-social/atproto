@@ -1,5 +1,6 @@
-import { StandardSchemaV1 } from '@standard-schema/spec'
-import { ValidationContext, Validator } from './validator.js'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { Validator } from './validator.js'
+import { ValidationContext } from './validator.js'
 
 /**
  * The Standard Schema adapter for {@link Validator} instances.

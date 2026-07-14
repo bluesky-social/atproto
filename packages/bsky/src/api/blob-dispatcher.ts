@@ -1,6 +1,6 @@
-import { Agent, Dispatcher, Pool, interceptors } from 'undici'
+import { Agent, type Dispatcher, Pool, interceptors } from 'undici'
 import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
-import { ServerConfig } from '../config.js'
+import type { ServerConfig } from '../config.js'
 import { RETRYABLE_HTTP_STATUS_CODES } from '../util/retry.js'
 
 export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {

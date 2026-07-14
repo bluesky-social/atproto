@@ -1,6 +1,6 @@
 import { bench, describe } from 'vitest'
 import {
-  LexParseOptions,
+  type LexParseOptions,
   jsonToLex,
   lexParse,
   lexParseJsonBytes,

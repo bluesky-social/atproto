@@ -1,13 +1,13 @@
-import { PlainMessage } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { PlainMessage } from '@bufbuild/protobuf'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
-import { Service } from '../../../proto/bsky_connect.js'
+import type { Service } from '../../../proto/bsky_connect.js'
 import {
-  ActivitySubscription,
+  type ActivitySubscription,
   GetActivitySubscriptionsByActorAndSubjectsResponse,
 } from '../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../stash.js'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { StashKeyKey } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

@@ -2,7 +2,7 @@ import {
   PoorlyFormattedDidError,
   UnsupportedDidWebPathError,
 } from '../errors.js'
-import { DidCache } from '../types.js'
+import type { DidCache } from '../types.js'
 import { BaseResolver } from './base-resolver.js'
 import { timed } from './util.js'
 

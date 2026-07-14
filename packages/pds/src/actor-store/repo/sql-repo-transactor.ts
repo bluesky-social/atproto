@@ -1,7 +1,7 @@
 import { chunkArray } from '@atproto/common'
-import { Cid, parseCid } from '@atproto/lex-data'
-import { BlockMap, CommitData, RepoStorage } from '@atproto/repo'
-import { ActorDb, RepoBlock } from '../db/index.js'
+import { type Cid, parseCid } from '@atproto/lex-data'
+import { BlockMap, type CommitData, type RepoStorage } from '@atproto/repo'
+import type { ActorDb, RepoBlock } from '../db/index.js'
 import { SqlRepoReader } from './sql-repo-reader.js'
 
 export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {

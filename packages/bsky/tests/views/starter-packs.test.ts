@@ -2,12 +2,17 @@ import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
-  AppBskyGraphGetStarterPacksWithMembership,
-  AtpAgent,
+  type AppBskyGraphGetStarterPacksWithMembership,
+  type AtpAgent,
   asPredicate,
   ids,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util.js'
 
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)

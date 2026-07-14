@@ -1,5 +1,126 @@
 # @atproto/bsky
 
+## 0.0.259
+
+### Patch Changes
+
+- [#5218](https://github.com/bluesky-social/atproto/pull/5218) [`7505dd4`](https://github.com/bluesky-social/atproto/commit/7505dd4acb0d3940620025a0b75a69221e62e6fe) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable age assurance in Texas
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/api@0.20.28
+  - @atproto/repo@0.10.6
+  - @atproto/sync@0.3.10
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto-labs/xrpc-utils@0.1.8
+
+## 0.0.258
+
+### Patch Changes
+
+- [#5213](https://github.com/bluesky-social/atproto/pull/5213) [`bd2b7b6`](https://github.com/bluesky-social/atproto/commit/bd2b7b6b5b56585b763a8dc505ba6d27369454c3) Thanks [@treethought](https://github.com/treethought)! - return 400 for dataplane InvalidArgument in search
+
+## 0.0.257
+
+### Patch Changes
+
+- [#5211](https://github.com/bluesky-social/atproto/pull/5211) [`68ed54d`](https://github.com/bluesky-social/atproto/commit/68ed54d875e10d0f1db52b8a4e5b191a5650d25b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sanitize cursors in v1 searchPosts, throwing more specific error for downstream consumers
+
+## 0.0.256
+
+### Patch Changes
+
+- [#5208](https://github.com/bluesky-social/atproto/pull/5208) [`af43bdb`](https://github.com/bluesky-social/atproto/commit/af43bdb6f13e8191bd1f4b47957c023851aa2415) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Lift auth requirement for searchPostsV2, maintain v1-v2 parity for results and auth handling.
+
+## 0.0.255
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- [#5201](https://github.com/bluesky-social/atproto/pull/5201) [`dc9525a`](https://github.com/bluesky-social/atproto/commit/dc9525a844c336597fa5d2ccb958606c7a1df83e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hide posts in search based on moderation tags on their author, in addition to tags on the post itself
+
+- Updated dependencies [[`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2), [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/api@0.20.27
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/syntax@0.7.1
+  - @atproto/repo@0.10.5
+  - @atproto/sync@0.3.9
+  - @atproto/did@0.5.4
+  - @atproto-labs/xrpc-utils@0.1.7
+
+## 0.0.254
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`6b493b7`](https://github.com/bluesky-social/atproto/commit/6b493b77f56b7de47f5eb91d29f726cdc7794e46), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed), [`1497fea`](https://github.com/bluesky-social/atproto/commit/1497fea9c975e46e56fd99914fba2ad96affa934)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/lex@0.2.0
+  - @atproto/api@0.20.26
+  - @atproto/common@0.7.0
+  - @atproto/xrpc-server@0.11.7
+  - @atproto/repo@0.10.4
+  - @atproto/sync@0.3.8
+  - @atproto-labs/xrpc-utils@0.1.6
+  - @atproto/identity@0.5.4
+
+## 0.0.253
+
+### Patch Changes
+
+- [#5179](https://github.com/bluesky-social/atproto/pull/5179) [`f6409db`](https://github.com/bluesky-social/atproto/commit/f6409dbcefdd5565b1ba23c52dc71ec7e791e2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support the new timestamp field, along with transactionId and errorCode, on KWS age verification status payloads. Add additionalVerificationMethods to Age Assurance config.
+
+- Updated dependencies [[`f6409db`](https://github.com/bluesky-social/atproto/commit/f6409dbcefdd5565b1ba23c52dc71ec7e791e2e9)]:
+  - @atproto/api@0.20.25
+
+## 0.0.252
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing `@types` dependencies
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5173](https://github.com/bluesky-social/atproto/pull/5173) [`85baa2d`](https://github.com/bluesky-social/atproto/commit/85baa2dac9819288f8a4af12c8831a24c80669d5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Revert [#5166](https://github.com/bluesky-social/atproto/issues/5166) and [#5164](https://github.com/bluesky-social/atproto/issues/5164)
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto/identity@0.5.3
+  - @atproto-labs/fetch-node@0.3.4
+  - @atproto-labs/xrpc-utils@0.1.5
+  - @atproto/xrpc-server@0.11.6
+  - @atproto/lex@0.1.7
+  - @atproto/common@0.6.5
+  - @atproto/crypto@0.5.3
+  - @atproto/repo@0.10.3
+  - @atproto/sync@0.3.7
+  - @atproto/api@0.20.24
+  - @atproto/did@0.5.3
+
+## 0.0.251
+
+### Patch Changes
+
+- [#5163](https://github.com/bluesky-social/atproto/pull/5163) [`8ffe18b`](https://github.com/bluesky-social/atproto/commit/8ffe18ba1ed6923651d68c91b86823881c04e21b) Thanks [@spacecowboy37](https://github.com/spacecowboy37)! - Pass through `#reasonPin` in feed hydration to allow feedgens to pin post
+
+- [#5172](https://github.com/bluesky-social/atproto/pull/5172) [`6125ccb`](https://github.com/bluesky-social/atproto/commit/6125ccb6f7704717ebec95e0ae078694567e021b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `searchTagsHideAll` config to filter tagged posts from all search surfaces
+
+- Updated dependencies []:
+  - @atproto/lex@0.1.6
+  - @atproto/xrpc-server@0.11.5
+  - @atproto/sync@0.3.6
+  - @atproto-labs/xrpc-utils@0.1.4
+
 ## 0.0.250
 
 ### Patch Changes

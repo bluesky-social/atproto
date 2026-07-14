@@ -1,6 +1,6 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -48,11 +48,7 @@ describe('expiring tags', () => {
   }
 
   const createReverser = () =>
-    new EventReverser(
-      network.ozone.ctx.db,
-      // @ts-expect-error Error due to circular dependency with the dev-env package
-      network.ozone.ctx.modService,
-    )
+    new EventReverser(network.ozone.ctx.db, network.ozone.ctx.modService)
 
   it('creates expiring_tag rows when durationInHours is set', async () => {
     // Create a report so the subject exists in moderation_subject_status

@@ -1,5 +1,5 @@
-import { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
-import {
+import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import type {
   AtIdentifierString,
   AtUriString,
   CidString,
@@ -12,14 +12,12 @@ import {
   Main,
   NsidString,
   Params,
-  Procedure,
-  Query,
-  RecordSchema,
   Restricted,
-  getMain,
 } from '@atproto/lex-schema'
-import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcError, XrpcFailure, XrpcResponseError } from './errors.js'
+import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -33,33 +31,32 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import {
+import type {
   XrpcResponse,
   XrpcResponseBody,
   XrpcResponseOptions,
 } from './response.js'
-import { BinaryBodyInit, Service } from './types.js'
+import type { BinaryBodyInit, Service } from './types.js'
 import {
-  RecordKeyOptions,
-  XrpcRequestHeadersOptions,
+  type RecordKeyOptions,
+  type XrpcRequestHeadersOptions,
   applyDefaults,
   buildXrpcRequestHeaders,
   getDefaultRecordKey,
   getLiteralRecordKey,
-  wait,
 } from './util.js'
 import {
-  WriteOperation,
-  WriteOperationCreateOptions,
-  WriteOperationDeleteOptions,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
   WriteOperationHelper,
-  WriteOperationUpdateOptions,
-  WriteOperationsFactory,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
 } from './write-operation-builder.js'
 import {
-  XrpcOptions,
-  XrpcRequestParams,
-  XrpcRequestProcessingOptions,
+  type XrpcOptions,
+  type XrpcRequestParams,
+  type XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
 } from './xrpc.js'
@@ -1083,85 +1080,31 @@ export class Client implements Agent {
    */
   async *listAll<const T extends RecordSchema>(
     ns: Main<T>,
-    { maxRetries = 3, ...options }: ListOptions & { maxRetries?: number } = {},
+    { maxRetries = 3, ...options }: ListOptions = {},
   ): AsyncGenerator<ListRecordItem<Infer<T>>, void, unknown> {
     const schema = getMain(ns)
-    let currentErrorCount = 0
 
     do {
       options.signal?.throwIfAborted()
 
-      try {
-        const { body } = await this.listRecords(schema.$type, options)
+      const { body } = await this.listRecords(schema.$type, {
+        ...options,
+        maxRetries,
+      })
 
-        // We got a successful response, reset error count
-        currentErrorCount = 0
-
-        // We don't use this.list() here so that we can lazily process records as
-        // they come in, rather than mapping and yielding the entire page at once.
-        for (const record of body.records) {
-          yield processListRecord.call(schema, record)
-        }
-
-        // If the server returns the same cursor, we may be in a loop. Stop
-        // iteration.
-        if (body.cursor && body.cursor === options.cursor) {
-          return
-        }
-
-        options.cursor = body.cursor
-      } catch (err) {
-        currentErrorCount++
-        if (currentErrorCount > maxRetries) {
-          throw err
-        }
-
-        if (err instanceof XrpcResponseError) {
-          // Page not found, return empty iterator
-          if (err.status === 404 || err.error === 'NotFound') {
-            return
-          }
-
-          // Rate limit error
-          if (err.status === 429 || err.error === 'RateLimitExceeded') {
-            const resetsAt = err.headers.get('RateLimit-Reset') // epoch
-            if (resetsAt != null && /^\s*\d+\s*$/.test(resetsAt)) {
-              const resetsIn = Number(resetsAt) * 1000 - Date.now()
-              await wait(Math.max(resetsIn, 1e3), options)
-              continue
-            }
-
-            // Unable to determine when to retry; fall through
-          }
-
-          // Server asks to retry after a certain time
-          const retryAfter = err.headers.get('Retry-After')
-          if (retryAfter != null) {
-            const waitTime = /^\s*\d+\s*$/.test(retryAfter)
-              ? // Retry-After is in seconds
-                Number(retryAfter) * 1000
-              : // Retry-After is an http-date
-                new Date(retryAfter).getTime() - Date.now()
-
-            if (!Number.isNaN(waitTime)) {
-              await wait(Math.max(waitTime, 1e3), options)
-              continue
-            }
-
-            // Invalid date; fall through
-          }
-        }
-
-        // Exponential backoff for transient errors
-        if (err instanceof XrpcError && err.shouldRetry()) {
-          const waitTime = Math.min(2 ** currentErrorCount * 1000, 30_000)
-          await wait(waitTime, options)
-          continue
-        }
-
-        // Propagate unexpected and non-retryable errors
-        throw err
+      // We don't use this.list() here so that we can lazily process records as
+      // they come in, rather than mapping and yielding the entire page at once.
+      for (const record of body.records) {
+        yield processListRecord.call(schema, record)
       }
+
+      // If the server returns the same cursor, we may be in a loop. Stop
+      // iteration.
+      if (body.cursor && body.cursor === options.cursor) {
+        return
+      }
+
+      options.cursor = body.cursor
     } while (options.cursor)
   }
 }

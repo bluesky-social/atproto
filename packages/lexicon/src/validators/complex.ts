@@ -1,12 +1,10 @@
-import { Lexicons } from '../lexicons.js'
-import {
+import type { Lexicons } from '../lexicons.js'
+import { ValidationError, isDiscriminatedObject, isObj } from '../types.js'
+import type {
   LexArray,
   LexRefVariant,
   LexUserType,
-  ValidationError,
   ValidationResult,
-  isDiscriminatedObject,
-  isObj,
 } from '../types.js'
 import { toLexUri } from '../util.js'
 import { blob } from './blob.js'

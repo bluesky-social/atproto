@@ -1,5 +1,106 @@
 # @atproto/oauth-provider
 
+## 0.20.1
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/lex-resolver@0.2.1
+  - @atproto/oauth-provider-api@0.7.6
+  - @atproto/oauth-provider-ui@0.8.7
+  - @atproto/oauth-scopes@0.5.6
+  - @atproto/lex-document@0.1.6
+  - @atproto/common@0.7.2
+
+## 0.20.0
+
+### Minor Changes
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** Replace the single barrel entrypoint with smaller, more focused export paths. The package no longer exposes a root (`.`) export; consumers must now import from one of the following entrypoints:
+
+  - `@atproto/oauth-provider/provider` — `OAuthProvider` and its configuration types (also re-exports the public API of `@atproto/jwk`, `@atproto/jwk-jose` and `@atproto/lex-resolver`, as well as `safeFetchWrap` from `@atproto-labs/fetch-node`)
+  - `@atproto/oauth-provider/verifier` — `OAuthVerifier` and token verification types
+  - `@atproto/oauth-provider/errors` — all error classes (`OAuthError` and its subclasses)
+  - `@atproto/oauth-provider/store` — all the types needed to implement the various stores (`AccountStore`, `ClientStore`, `DeviceStore`, `LexiconStore`, `ReplayStore`, `RequestStore`, `TokenStore`)
+  - `@atproto/oauth-provider/hooks` — `OAuthHooks` and related types
+  - `@atproto/oauth-provider/middleware` — `oauthMiddleware`
+  - `@atproto/oauth-provider/constants` — public constants
+  - `@atproto/oauth-provider/utils` — miscellaneous utilities (e.g. `buildProtectedResourceMetadata`)
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove internal utilities and error classes from the public API. Most notably, the package no longer re-exports the full public API of `@atproto-labs/fetch`, `@atproto-labs/fetch-node` or `@atproto/oauth-types`, and `InvalidInviteCodeError` was removed (use `InvalidRequestError` instead). This change also fixes an internal circular dependency.
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename the `BrandingInput` and `CustomizationInput` exported types to `BrandingConfig` and `CustomizationConfig`, to better reflect their purpose and actual use.
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- [#5199](https://github.com/bluesky-social/atproto/pull/5199) [`9b05af9`](https://github.com/bluesky-social/atproto/commit/9b05af9168fb11131160980a373415262aadf549) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove extraneous `@atproto-labs/fetch` dependency
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto-labs/simple-store-memory@0.2.4
+  - @atproto/oauth-provider-ui@0.8.6
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto-labs/fetch-node@0.3.5
+  - @atproto/oauth-scopes@0.5.5
+  - @atproto/oauth-types@0.7.5
+  - @atproto/lex-document@0.1.5
+  - @atproto/lex-resolver@0.2.0
+  - @atproto/jwk-jose@0.2.4
+  - @atproto-labs/pipe@0.2.4
+  - @atproto/jwk@0.7.4
+  - @atproto/common@0.7.1
+  - @atproto/syntax@0.7.1
+  - @atproto/did@0.5.4
+  - @atproto/oauth-provider-api@0.7.5
+
+## 0.19.9
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`54a8364`](https://github.com/bluesky-social/atproto/commit/54a836416064e9394d58d156a0618a5afc73934c), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/oauth-provider-ui@0.8.5
+  - @atproto/common@0.7.0
+  - @atproto/lex-resolver@0.1.5
+  - @atproto/oauth-provider-api@0.7.4
+  - @atproto/oauth-scopes@0.5.4
+  - @atproto/lex-document@0.1.4
+
+## 0.19.8
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto-labs/simple-store-memory@0.2.3
+  - @atproto/oauth-provider-api@0.7.3
+  - @atproto/oauth-provider-ui@0.8.4
+  - @atproto-labs/simple-store@0.4.3
+  - @atproto-labs/fetch-node@0.3.4
+  - @atproto/oauth-scopes@0.5.3
+  - @atproto/oauth-types@0.7.4
+  - @atproto/lex-document@0.1.3
+  - @atproto/lex-resolver@0.1.4
+  - @atproto-labs/fetch@0.3.3
+  - @atproto/jwk-jose@0.2.3
+  - @atproto-labs/pipe@0.2.3
+  - @atproto/jwk@0.7.3
+  - @atproto/common@0.6.5
+  - @atproto/did@0.5.3
+
+## 0.19.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.1.3
+
 ## 0.19.6
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { Infer, UnknownString } from '../core.js'
-import { StringSchemaOptions, string } from './string.js'
+import type { Infer, UnknownString } from '../core.js'
+import { type StringSchemaOptions, string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
 
@@ -513,6 +513,34 @@ describe('StringSchema', () => {
     it('rejects invalid language code', () => {
       const result = schema.safeParse('not valid')
       expect(result.success).toBe(false)
+    })
+
+    it('rejects tags with duplicate variant subtags (RFC 5646 §4.1)', () => {
+      const result = schema.safeParse('de-DE-1901-1901')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects tags with duplicate extension singletons (RFC 5646 §4.1)', () => {
+      const result = schema.safeParse('en-a-foo-a-bar')
+      expect(result.success).toBe(false)
+    })
+
+    describe('loose validation', () => {
+      it('accepts tags with duplicate variant subtags', () => {
+        const result = schema.safeParse('de-DE-1901-1901', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts tags with duplicate extension singletons', () => {
+        const result = schema.safeParse('en-a-foo-a-bar', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('still rejects syntactically invalid strings', () => {
+        expect(schema.safeParse('not valid', { strict: false }).success).toBe(
+          false,
+        )
+      })
     })
   })
 

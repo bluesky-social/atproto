@@ -1,8 +1,8 @@
-import http from 'node:http'
+import type http from 'node:http'
 import cors from 'cors'
 import express, { Router, json } from 'express'
-import { DidDocument } from '../../src/index.js'
-import { DidWebDb } from './db.js'
+import type { DidDocument } from '../../src/index.js'
+import type { DidWebDb } from './db.js'
 
 const DOC_PATH = '/.well-known/did.json'
 

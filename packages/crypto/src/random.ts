@@ -1,6 +1,6 @@
 import * as noble from '@noble/hashes/utils'
 import * as uint8arrays from 'uint8arrays'
-import { SupportedEncodings } from 'uint8arrays/to-string'
+import type { SupportedEncodings } from 'uint8arrays/to-string'
 import { sha256 } from './sha.js'
 
 export const randomBytes = noble.randomBytes as (

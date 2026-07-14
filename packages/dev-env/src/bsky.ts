@@ -7,7 +7,7 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
-import { BskyConfig } from './types.js'
+import type { BskyConfig } from './types.js'
 export * from '@atproto/bsky'
 
 export class TestBsky {
@@ -83,6 +83,7 @@ export class TestBsky {
       maxThreadParents: cfg.maxThreadParents ?? 50,
       disableSsrfProtection: true,
       searchTagsHide: new Set(),
+      searchTagsHideAll: new Set(),
       threadTagsBumpDown: new Set(),
       threadTagsHide: new Set(),
       visibilityTagHide: '',

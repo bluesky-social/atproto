@@ -1,9 +1,13 @@
-import { IdResolver } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { WriteOpAction } from '@atproto/repo'
-import { Event as FirehoseEvent, Firehose, MemoryRunner } from '@atproto/sync'
+import {
+  type Event as FirehoseEvent,
+  Firehose,
+  MemoryRunner,
+} from '@atproto/sync'
 import { subLogger as log } from '../../logger.js'
 import { BackgroundQueue } from './background.js'
-import { Database } from './db/index.js'
+import type { Database } from './db/index.js'
 import { IndexingService } from './indexing/index.js'
 
 export class RepoSubscription {

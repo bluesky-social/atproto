@@ -1,13 +1,13 @@
-import { Selectable } from 'kysely'
-import { ToolsOzoneSafelinkDefs } from '@atproto/api'
+import type { Selectable } from 'kysely'
+import type { ToolsOzoneSafelinkDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import {
+import type {
   SafelinkActionType,
   SafelinkPatternType,
   SafelinkReasonType,
 } from '../api/util.js'
-import { Database } from '../db/index.js'
-import { SafelinkEvent, SafelinkRule } from '../db/schema/safelink.js'
+import type { Database } from '../db/index.js'
+import type { SafelinkEvent, SafelinkRule } from '../db/schema/safelink.js'
 
 export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
 

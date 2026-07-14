@@ -1,7 +1,10 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export async function main() {
   const now = new Date()

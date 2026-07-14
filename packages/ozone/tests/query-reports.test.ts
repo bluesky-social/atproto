@@ -1,11 +1,11 @@
 import {
   ComAtprotoModerationDefs,
-  ToolsOzoneReportAssignModerator,
-  ToolsOzoneReportUnassignModerator,
+  type ToolsOzoneReportAssignModerator,
+  type ToolsOzoneReportUnassignModerator,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'

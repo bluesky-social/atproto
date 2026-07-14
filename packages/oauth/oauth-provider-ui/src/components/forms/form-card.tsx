@@ -1,12 +1,18 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { FormEvent, JSX, MouseEventHandler, ReactNode, useMemo } from 'react'
+import {
+  type FormEvent,
+  type JSX,
+  type MouseEventHandler,
+  type ReactNode,
+  useMemo,
+} from 'react'
 import { errorCardRender } from '#/components/utils/error-card.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
-import { ErrorParser } from '#/lib/error-parser.ts'
-import { Override } from '#/lib/util.ts'
-import { Button, ButtonColor } from './button.tsx'
-import { FormContext, FormContextValue } from './form-context.tsx'
+import type { ErrorParser } from '#/lib/error-parser.ts'
+import type { Override } from '#/lib/util.ts'
+import { Button, type ButtonColor } from './button.tsx'
+import { FormContext, type FormContextValue } from './form-context.tsx'
 
 export type ErrorRenderer = (props: {
   error: unknown

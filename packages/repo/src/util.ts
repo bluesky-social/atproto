@@ -1,18 +1,23 @@
 import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
-import { Keypair } from '@atproto/crypto'
+import type { Keypair } from '@atproto/crypto'
 import * as cbor from '@atproto/lex-cbor'
-import { Cid, LexMap, LexValue, isPlainObject } from '@atproto/lex-data'
-import { DataDiff } from './data-diff.js'
 import {
-  Commit,
-  LegacyV2Commit,
-  RecordCreateDescript,
-  RecordDeleteDescript,
-  RecordPath,
-  RecordUpdateDescript,
-  RecordWriteDescript,
-  UnsignedCommit,
+  type Cid,
+  type LexMap,
+  type LexValue,
+  isPlainObject,
+} from '@atproto/lex-data'
+import type { DataDiff } from './data-diff.js'
+import {
+  type Commit,
+  type LegacyV2Commit,
+  type RecordCreateDescript,
+  type RecordDeleteDescript,
+  type RecordPath,
+  type RecordUpdateDescript,
+  type RecordWriteDescript,
+  type UnsignedCommit,
   WriteOpAction,
 } from './types.js'
 

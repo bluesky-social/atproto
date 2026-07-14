@@ -1,13 +1,13 @@
 import {
-  BlobRef,
-  LegacyBlobRef,
-  TypedBlobRef,
+  type BlobRef,
+  type LegacyBlobRef,
+  type TypedBlobRef,
   getBlobSize,
   isBlobRef,
   isLegacyBlobRef,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, type ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -145,6 +145,6 @@ function matchesMime(mime: string, accepted: string[]): boolean {
  */
 export const blob = /*#__PURE__*/ memoizedOptions(function <
   O extends BlobSchemaOptions = NonNullable<unknown>,
->(options?: O) {
+>(options: O = {} as O): BlobSchema<O> {
   return new BlobSchema(options)
 })

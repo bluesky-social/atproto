@@ -1,7 +1,7 @@
 import { xrpc } from '@atproto/lex'
-import { Server } from '@atproto/xrpc-server'
+import type { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough.js'
 

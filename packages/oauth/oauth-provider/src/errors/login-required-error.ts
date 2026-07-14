@@ -1,4 +1,4 @@
-import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
+import type { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import { AuthorizationError } from './authorization-error.js'
 
 export class LoginRequiredError extends AuthorizationError {

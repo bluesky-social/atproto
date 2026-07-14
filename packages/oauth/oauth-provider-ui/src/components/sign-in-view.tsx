@@ -1,10 +1,10 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useCallback, useEffect, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
-import { SignInData, SignInForm } from './sign-in-form.tsx'
+import { type SignInData, SignInForm } from './sign-in-form.tsx'
 import { SignInPicker } from './sign-in-picker.tsx'
 
 export type SignInViewProps = {

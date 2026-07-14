@@ -1,10 +1,10 @@
-import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
+import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { AppContext } from '../context.js'
-import { Database } from '../db/index.js'
+import type { AppContext } from '../context.js'
+import type { Database } from '../db/index.js'
 import { createMuteOpChannel } from '../db/schema/mute_op.js'
-import { Service } from '../proto/bsync_connect.js'
+import type { Service } from '../proto/bsync_connect.js'
 import {
   AddMuteOperationResponse,
   MuteOperation_Type,

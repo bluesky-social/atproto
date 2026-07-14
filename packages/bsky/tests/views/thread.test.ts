@@ -7,7 +7,7 @@ import {
   AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import {
   assertIsThreadViewPost,

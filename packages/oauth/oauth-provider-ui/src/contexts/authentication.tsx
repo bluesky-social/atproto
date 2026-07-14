@@ -1,20 +1,20 @@
 import { Trans } from '@lingui/react/macro'
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
-import { OAuthPromptMode } from '@atproto/oauth-types'
+import type { OAuthPromptMode } from '@atproto/oauth-types'
 import { AuthenticateWelcomeView } from '#/components/authenticate-welcome-view.tsx'
 import { ResetPasswordView } from '#/components/reset-password-view.tsx'
 import { SignInView } from '#/components/sign-in-view.tsx'
 import { SignUpView } from '#/components/sign-up-view.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
-import { Session, useSessionContext } from '#/contexts/session.tsx'
-import { Api } from '#/lib/api'
+import { type Session, useSessionContext } from '#/contexts/session.tsx'
+import type { Api } from '#/lib/api'
 
 enum View {
   Welcome,

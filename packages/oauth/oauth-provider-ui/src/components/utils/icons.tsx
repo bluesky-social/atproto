@@ -1,5 +1,5 @@
 import { type FunctionComponent, type JSX, forwardRef } from 'react'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 
 export type IconProps = Override<
   Omit<JSX.IntrinsicElements['svg'], 'viewBox' | 'children' | 'xmlns'>,

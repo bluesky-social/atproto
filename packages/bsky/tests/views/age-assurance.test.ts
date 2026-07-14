@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application, RequestHandler } from 'express'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application, type RequestHandler } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import {
@@ -15,9 +15,9 @@ import {
   it,
   vi,
 } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import {
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type {
   KwsExternalPayload,
   KwsVerificationQuery,
   KwsWebhookBody,

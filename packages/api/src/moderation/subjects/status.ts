@@ -1,5 +1,5 @@
 import { ModerationDecision } from '../decision.js'
-import { ModerationOpts, ModerationSubjectProfile } from '../types.js'
+import type { ModerationOpts, ModerationSubjectProfile } from '../types.js'
 import { decideAccount } from './account.js'
 import { decideProfile } from './profile.js'
 

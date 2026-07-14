@@ -1,14 +1,14 @@
 import assert from 'node:assert'
 import { EventEmitter, once } from 'node:events'
-import Mail from 'nodemailer/lib/mailer'
-import { AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
+import type Mail from 'nodemailer/lib/mailer'
+import { type AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { IdResolver } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { isDidString } from '@atproto/lex'
-import { DidString } from '@atproto/syntax'
-import { AppContext } from '../src/index.js'
-import { ServerMailer } from '../src/mailer/index.js'
+import type { DidString } from '@atproto/syntax'
+import type { AppContext } from '../src/index.js'
+import type { ServerMailer } from '../src/mailer/index.js'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -42,9 +42,7 @@ describe('account', () => {
         privacyPolicyUrl: 'https://example.com/privacy-policy',
       },
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     mailer = network.pds.ctx.mailer
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getAgent()

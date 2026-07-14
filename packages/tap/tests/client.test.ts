@@ -1,6 +1,6 @@
 import { once } from 'node:events'
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { default as express } from 'express'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'

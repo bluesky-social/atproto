@@ -4,10 +4,10 @@ import * as jose from 'jose'
 import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AtUri, AtpAgent } from '@atproto/api'
+import { AtUri, type AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 // key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
 const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)

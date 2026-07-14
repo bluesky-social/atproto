@@ -4,10 +4,10 @@ import {
   fromString as ui8FromString,
   toString as ui8ToString,
 } from 'uint8arrays'
-import { SupportedEncodings } from 'uint8arrays/to-string'
+import type { SupportedEncodings } from 'uint8arrays/to-string'
 import { P256_JWT_ALG } from '../const.js'
 import * as did from '../did.js'
-import { Keypair } from '../types.js'
+import type { Keypair } from '../types.js'
 
 export type P256KeypairOptions = {
   exportable: boolean

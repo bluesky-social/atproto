@@ -1,6 +1,6 @@
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
-import { ReportView } from '../../lexicon/types/tools/ozone/report/defs.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
+import type { ReportView } from '../../lexicon/types/tools/ozone/report/defs.js'
 import { getReportsByIds } from '../../mod-service/report.js'
 import {
   formatActivityView,

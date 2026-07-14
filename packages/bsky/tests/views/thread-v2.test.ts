@@ -2,13 +2,13 @@ import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedDefs,
-  AppBskyUnspeccedGetPostThreadOtherV2,
-  AppBskyUnspeccedGetPostThreadV2,
-  AtpAgent,
+  type AppBskyUnspeccedGetPostThreadOtherV2,
+  type AppBskyUnspeccedGetPostThreadV2,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
-import {
+import { type SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
+import type {
   ThreadItemValuePost,
   ThreadOtherItemValuePost,
 } from '../../src/views/threads-v2.js'

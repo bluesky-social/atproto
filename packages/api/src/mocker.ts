@@ -1,4 +1,4 @@
-import {
+import type {
   AppBskyActorDefs,
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
@@ -7,7 +7,7 @@ import {
   AppBskyNotificationListNotifications,
   ComAtprotoLabelDefs,
 } from './client/index.js'
-import { $Typed, Un$Typed } from './client/util.js'
+import type { $Typed, Un$Typed } from './client/util.js'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 

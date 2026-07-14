@@ -1,17 +1,14 @@
 import {
-  $Typed,
-  InferInput,
-  Main,
-  RecordSchema,
-  Restricted,
+  type $Typed,
+  type InferInput,
+  type Main,
+  type RecordSchema,
+  type Restricted,
   getMain,
 } from '@atproto/lex-schema'
 import { com } from './lexicons/index.js'
-import {
-  RecordKeyOptions,
-  getDefaultRecordKey,
-  getLiteralRecordKey,
-} from './util.js'
+import type { RecordKeyOptions } from './util.js'
+import { getDefaultRecordKey, getLiteralRecordKey } from './util.js'
 
 export type WriteOperation =
   | $Typed<com.atproto.repo.applyWrites.Create>

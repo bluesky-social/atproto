@@ -1,4 +1,4 @@
-import { HtmlValue } from './escapers.js'
+import type { HtmlValue } from './escapers.js'
 import { Html } from './html.js'
 import { html } from './tags.js'
 

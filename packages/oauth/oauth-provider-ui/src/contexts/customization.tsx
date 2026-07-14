@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext } from 'react'
+import { type ReactNode, createContext, useContext } from 'react'
 import type { CustomizationData } from '@atproto/oauth-provider-api'
 
 const CustomizationContext = createContext<CustomizationData>({})

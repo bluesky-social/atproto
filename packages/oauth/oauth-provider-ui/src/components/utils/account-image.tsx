@@ -1,9 +1,9 @@
 import { useLingui } from '@lingui/react/macro'
 import { SnowflakeIcon, UserIcon } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
-import { JSX, useEffect, useState } from 'react'
+import { type JSX, useEffect, useState } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
-import { Override } from '#/lib/util'
+import type { Override } from '#/lib/util'
 
 const sizeMap = {
   xs: 'size-3',

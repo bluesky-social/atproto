@@ -1,5 +1,5 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
@@ -7,7 +7,7 @@ import {
   unpackIdentityServices,
 } from '../../../../data-plane/index.js'
 import { app } from '../../../../lexicons/index.js'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
 import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {

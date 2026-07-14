@@ -1,4 +1,4 @@
-import {
+import type {
   StreamRequest,
   StreamResponse,
   UnaryRequest,
