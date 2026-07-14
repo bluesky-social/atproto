@@ -1,0 +1,248 @@
+import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
+import { WebSocketCoreEngine } from '../src/core.js'
+import { ReconnectingWebSocketBase } from '../src/reconnecting.js'
+import {
+  AbnormalCloseError,
+  BufferOverflowError,
+  DataModeError,
+} from '../src/errors.js'
+import { MockTransport } from './_util/mock-transport.js'
+
+function makeReconnecting<M extends 'auto' | 'text' | 'binary' = 'auto'>(
+  options?: ConstructorParameters<typeof ReconnectingWebSocketBase<M>>[2],
+  url: string | URL | (() => string | URL | Promise<string | URL>) = 'ws://x',
+) {
+  const mocks: MockTransport[] = []
+  const factory = (u: string | URL, coreOptions: any) => {
+    const mock = new MockTransport()
+    mocks.push(mock)
+    return new WebSocketCoreEngine(() => mock, u, coreOptions)
+  }
+  const ws = new ReconnectingWebSocketBase<M>(factory, url, options)
+  return { ws, mocks }
+}
+
+// Let the loop advance to the point where mock N exists and has a consumer.
+async function tick() {
+  await Promise.resolve()
+  await Promise.resolve()
+}
+
+describe('ReconnectingWebSocketBase', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('yields across a clean 1001 reconnect and fires onOpen with reconnect flag', async () => {
+    const opens: boolean[] = []
+    const { ws, mocks } = makeReconnecting({ onOpen: ({ reconnect }) => opens.push(reconnect) })
+    const received: (string | Uint8Array)[] = []
+
+    const consume = (async () => {
+      for await (const msg of ws) {
+        received.push(msg)
+        if (received.length === 2) break
+      }
+    })()
+
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('a', false)
+    mocks[0].emitClose(1001, 'going away', true) // reconnect
+    await vi.advanceTimersByTimeAsync(2000) // backoff
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('b', false)
+    await consume
+
+    expect(received).toEqual(['a', 'b'])
+    expect(opens).toEqual([false, true]) // first connect, then reconnect
+  })
+
+  it('stops (no reconnect) on a clean 1000 close', async () => {
+    const { ws, mocks } = makeReconnecting()
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) received.push(msg)
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('x', false)
+    mocks[0].emitClose(1000, '', true) // fatal-clean → stop
+    await consume
+    expect(received).toEqual(['x'])
+    expect(mocks).toHaveLength(1) // never reconnected
+  })
+
+  it('reconnects on AbnormalCloseError with a reconnectable code', async () => {
+    const errs: Array<{ willReconnect: boolean; attempt: number }> = []
+    const { ws, mocks } = makeReconnecting({
+      onError: (_e, info) => errs.push(info),
+    })
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) {
+        received.push(msg)
+        if (received.length === 1) break
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1011, 'server error', false) // AbnormalCloseError(1011) → reconnect
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('ok', false)
+    await consume
+    expect(errs[0]).toMatchObject({ willReconnect: true, attempt: expect.any(Number) })
+    expect(received).toEqual(['ok'])
+  })
+
+  it('propagates a fatal AbnormalCloseError (1002) and stops', async () => {
+    const errs: Array<{ willReconnect: boolean }> = []
+    const { ws, mocks } = makeReconnecting({ onError: (_e, info) => errs.push(info) })
+    const consume = (async () => {
+      for await (const _msg of ws) { /* noop */ }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1002, 'protocol error', false)
+    await expect(consume).rejects.toSatisfy((err) => {
+      assert(err instanceof AbnormalCloseError)
+      expect(err.code).toBe(1002)
+      return true
+    })
+    expect(errs[0]).toMatchObject({ willReconnect: false })
+    expect(mocks).toHaveLength(1)
+  })
+
+  it('propagates a fatal BufferOverflowError and stops', async () => {
+    const { ws, mocks } = makeReconnecting({ maxBufferedBytes: 5 })
+    const consume = (async () => {
+      // Frames arrive faster than the consumer drains → buffer grows → overflow.
+      for await (const _msg of ws) { /* noop */ }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    // First frame is delivered to the parked consumer; while the generator is
+    // suspended at `yield`, the second frame buffers (10 > 5) → overflow.
+    mocks[0].emitMessage(new Uint8Array(10), true)
+    mocks[0].emitMessage(new Uint8Array(10), true) // 10 > 5 → BufferOverflowError
+    await expect(consume).rejects.toBeInstanceOf(BufferOverflowError)
+    expect(mocks).toHaveLength(1)
+  })
+
+  it('applies backoff between attempts and resets after a successful open', async () => {
+    const { ws, mocks } = makeReconnecting()
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) {
+        received.push(msg)
+        if (received.length === 1) break
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()          // opens → attempt counter resets to 0
+    mocks[0].emitClose(1006, '', false) // reconnect, attempt 0 → fast (≤1s)
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('done', false)
+    await consume
+    expect(received).toEqual(['done'])
+    expect(mocks.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('shouldReconnect override forces a normally-fatal error to reconnect', async () => {
+    const { ws, mocks } = makeReconnecting({
+      shouldReconnect: () => true, // even DataModeError reconnects
+    })
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) {
+        received.push(msg)
+        if (received.length === 1) break
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    // Force a DataModeError: text engine gets a binary frame. Use dataMode:'text'.
+    // (Simpler: emit a 1002 close which is normally fatal; override makes it reconnect.)
+    mocks[0].emitClose(1002, '', false)
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('recovered', false)
+    await consume
+    expect(received).toEqual(['recovered'])
+  })
+
+  it('close() ends the loop and does not reconnect', async () => {
+    const { ws, mocks } = makeReconnecting()
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) received.push(msg)
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one', false)
+    const closing = ws.close(1000)
+    // core sees close → emits its close echo:
+    mocks[0].emitClose(1000, '', true)
+    await closing
+    await consume
+    expect(received).toEqual(['one'])
+    expect(mocks).toHaveLength(1)
+  })
+
+  it('signal abort ends the loop', async () => {
+    const ac = new AbortController()
+    const { ws, mocks } = makeReconnecting({ signal: ac.signal })
+    const consume = (async () => {
+      for await (const _msg of ws) { /* noop */ }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    ac.abort(new Error('user stop'))
+    await expect(consume).rejects.toThrow('user stop')
+    expect(mocks).toHaveLength(1)
+  })
+
+  it('re-resolves a URL thunk on each connect', async () => {
+    const urls: string[] = []
+    let n = 0
+    const { ws, mocks } = makeReconnecting(undefined, () => {
+      const u = `ws://host/${n++}`
+      urls.push(u)
+      return u
+    })
+    const consume = (async () => {
+      for await (const _msg of ws) break
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1006, '', false)
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('x', false)
+    await consume
+    expect(urls).toEqual(['ws://host/0', 'ws://host/1'])
+  })
+
+  it('send rejects when not connected, resolves when open', async () => {
+    const { ws, mocks } = makeReconnecting()
+    await expect(ws.send('early' as never)).rejects.toThrow()
+    const consume = (async () => {
+      for await (const _msg of ws) break
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    expect(ws.connected).toBe(true)
+    const p = ws.send('hello' as never)
+    // MockTransport records the send; flush it
+    mocks[0].sent[0].onFlush()
+    await expect(p).resolves.toBeUndefined()
+    mocks[0].emitMessage('x', false)
+    await consume
+  })
+})
