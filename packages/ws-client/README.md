@@ -144,6 +144,151 @@ try {
 }
 ```
 
+## `ReconnectingWebSocket`
+
+`ReconnectingWebSocket` wraps `WebSocketCore` with an automatic reconnect
+loop, while presenting the same `AsyncIterable` read model — `for await`
+transparently spans reconnects, so a consumer never has to notice that the
+underlying connection was torn down and re-established.
+
+```ts
+import { ReconnectingWebSocket } from '@atproto/ws-client'
+
+const ws = new ReconnectingWebSocket(
+  'wss://jetstream.example.com/subscribe',
+  { dataMode: 'text' },
+)
+
+for await (const message of ws) {
+  const event = JSON.parse(message)
+  // ... handle event, spanning any number of reconnects
+}
+```
+
+### Constructing
+
+`new ReconnectingWebSocket(url, options)` — `url` is a `string | URL`, or a
+thunk `() => string | URL | Promise<string | URL>` that's re-invoked on
+every (re)connect attempt. Use the thunk form to refresh a cursor, token, or
+other query param each time — e.g. resuming a firehose from the last-seen
+event after a drop. `options.dataMode` (`'auto' | 'text' | 'binary'`,
+default `'auto'`) is forwarded to the underlying core and, as with
+`WebSocketCore`, types what the iterator yields via `MessageOf<M>`.
+
+### Node-only `headers`
+
+`options.headers` (`Record<string, string> | Headers`) is applied to the
+underlying `ws` connection on Node. It's ignored in the browser build — the
+native `WebSocket` API has no request-header mechanism — so browser
+consumers authenticate via the URL (query param, cookie) or a subprotocol
+instead. `BrowserReconnectingOptions` omits `headers` entirely for
+`satisfies`-style option objects that must work on both entries.
+
+### Browser backstops: `maxBufferedBytes` and `idleTimeoutMs`
+
+Both options are forwarded to the core on every (re)connect, and both exist
+because the browser transport lacks capabilities the Node transport has:
+
+- `maxBufferedBytes` is the hard cap on unconsumed buffered bytes. On Node,
+  exceeding `highWaterMark` first pauses the socket for real backpressure;
+  the browser has no such pause/resume, so `maxBufferedBytes` is its only
+  backstop — crossing it fails the connection with `BufferOverflowError`,
+  which the default policy reconnects from.
+- `idleTimeoutMs` fails the connection with `IdleTimeoutError` if no message
+  arrives within the window. The browser has no ping/pong heartbeat API, so
+  for chatty protocols (e.g. a firehose) this is how a browser client
+  detects a silently-dead connection and reconnects.
+
+### Lifecycle callbacks
+
+- `onOpen({ reconnect })` — fires after each successful (re)open;
+  `reconnect` is `false` for the first connection and `true` thereafter.
+- `onError(error, { willReconnect, attempt })` — fires when a connection
+  ends with an error, before the loop decides whether to sleep-and-retry or
+  give up; `attempt` is the consecutive-failure count since the last
+  successful open.
+
+### Reconnect policy
+
+By default, a connection failure or close reconnects unless the close code
+is genuinely fatal. `FATAL_CLOSE_CODES` (`1000, 1002, 1003, 1007, 1009`) and
+`isReconnectableClose(code)` are exported so callers can inspect or reuse
+the same classification. Only close codes a peer can deliberately put on
+the wire to mean normal shutdown (`1000`) or a malformed-protocol condition
+(`1002`/`1003`/`1007`/`1009`) are fatal; the synthetic codes a runtime
+generates locally to describe transient trouble (`1005` no-status, `1006`
+abnormal, `1015` TLS) are reconnectable, matching how the same failures
+surface as `SocketError` on the other transport. Pass
+`shouldReconnect(error, attempt)` to override the classification for any
+error, including a synthetic `AbnormalCloseError` used internally to
+reclassify clean close codes.
+
+### `send` / `connected` / `close` / `signal`
+
+- `send(data)` rejects immediately if not currently connected (no
+  queueing across a reconnect) — check `connected` first, or catch and
+  retry once the next `onOpen` fires.
+- `connected` is `true` only while the current underlying core reports
+  `readyState === 'open'`.
+- `close(code?, reason?)` stops the reconnect loop for good and closes the
+  current connection cleanly; the async iterator then completes normally.
+- `options.signal` (`AbortSignal`) ends the reconnect loop permanently on
+  abort, rejecting the iterator with the signal's abort reason — use this
+  for caller-driven shutdown instead of `close()` when you already have a
+  signal wired through your application.
+
+### Node example: Jetstream-style consumer with headers
+
+```ts
+import { ReconnectingWebSocket } from '@atproto/ws-client'
+
+let cursor: number | undefined
+const url = new URL('wss://jetstream.example.com/subscribe')
+
+const ws = new ReconnectingWebSocket(
+  () => {
+    if (cursor) url.searchParams.set('cursor', String(cursor))
+    return url
+  },
+  {
+    dataMode: 'text',
+    headers: { Authorization: `Bearer ${process.env.JETSTREAM_TOKEN}` },
+    onError: (error, { willReconnect, attempt }) =>
+      console.warn('jetstream error', { willReconnect, attempt }, error),
+  },
+)
+
+for await (const message of ws) {
+  const event = JSON.parse(message)
+  if (event.kind === 'commit') cursor = event.time_us
+  // ... handle event
+}
+```
+
+### Browser example: URL-based auth, no headers
+
+```ts
+import { ReconnectingWebSocket } from '@atproto/ws-client'
+
+const ws = new ReconnectingWebSocket(
+  `wss://example.com/socket?token=${encodeURIComponent(token)}`,
+  { dataMode: 'text', idleTimeoutMs: 30_000 },
+)
+
+for await (const message of ws) {
+  console.log('received', message)
+}
+```
+
+### A note for downstream library authors
+
+If your library re-exports or wraps `ReconnectingWebSocket`/`WebSocketCore`
+and you bundle your own package for distribution, keep `@atproto/ws-client`
+**external** (not pre-bundled). It resolves to different files on Node vs.
+the browser through conditional package exports; pre-bundling it into a
+single output collapses that choice to whatever the bundler picked at
+build time, breaking resolution for whichever runtime it didn't choose.
+
 ## `WebSocketKeepAlive` (Node)
 
 `WebSocketKeepAlive` is a legacy, reconnecting client and remains available
