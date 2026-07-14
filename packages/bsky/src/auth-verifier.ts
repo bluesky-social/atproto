@@ -49,6 +49,7 @@ type NullOutput = {
 type StandardOutput = {
   credentials: {
     type: 'standard'
+    /** @note we don't validate this to be a {@link DidString} (we might want to in the future) */
     aud: string
     iss: DidString | `${DidString}#${string}`
   }
@@ -64,8 +65,8 @@ type RoleOutput = {
 type ModServiceOutput = {
   credentials: {
     type: 'mod_service'
-    aud: string
-    iss: string
+    aud: DidString
+    iss: DidString | `${DidString}#${string}`
   }
 }
 
@@ -76,17 +77,17 @@ const ALLOWED_AUTH_SCOPES = new Set([
 ])
 
 export type AuthVerifierOpts = {
-  ownDid: string
-  alternateAudienceDids: string[]
-  modServiceDid: string
+  ownDid: DidString
+  alternateAudienceDids: DidString[]
+  modServiceDid: DidString
   adminPasses: string[]
   entrywayJwtPublicKey?: KeyObject
 }
 
 export class AuthVerifier {
-  public ownDid: string
-  public standardAudienceDids: Set<string>
-  public modServiceDid: string
+  public ownDid: DidString
+  public standardAudienceDids: Set<DidString>
+  public modServiceDid: DidString
   private adminPasses: Set<string>
   private entrywayJwtPublicKey?: KeyObject
 
@@ -138,7 +139,10 @@ export class AuthVerifier {
           iss: null,
           aud: null,
         })
-        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
+        if (
+          !opts.skipAudCheck &&
+          !(this.standardAudienceDids as Set<string>).has(aud)
+        ) {
           throw new AuthRequiredError(
             'jwt audience does not match service did',
             'BadJwtAudience',
@@ -299,17 +303,13 @@ export class AuthVerifier {
     return { status: Invalid, admin: false }
   }
 
-  async verifyServiceJwt(
-    reqCtx: ReqCtx,
-    opts: {
+  async verifyServiceJwt<
+    TOptions extends {
       iss: string[] | null
       aud: string | null
       lxmCheck?: (method?: string) => boolean
     },
-  ): Promise<{
-    iss: DidString | `${DidString}#${string}`
-    aud: string
-  }> {
+  >(reqCtx: ReqCtx, opts: TOptions) {
     const getSigningKey = async (
       iss: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
@@ -318,6 +318,10 @@ export class AuthVerifier {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
       const [did, serviceId] = iss.split('#')
+      if (!isDidString(did)) {
+        throw new AuthRequiredError('identity unknown')
+      }
+
       const keyId =
         serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
       let identity: GetIdentityByDidResponse
@@ -371,10 +375,16 @@ export class AuthVerifier {
       // we'll allow ozone self-hosters to upgrade before removing this condition.
       assertLxmCheck()
     }
-    return { iss: payload.iss, aud: payload.aud }
+
+    return {
+      iss: payload.iss as (DidString | `${DidString}#${string}`) &
+        (TOptions extends { iss: ReadonlyArray<infer I> } ? I : unknown),
+      aud: payload.aud as string &
+        (TOptions extends { aud: infer A extends string } ? A : unknown),
+    }
   }
 
-  isModService(iss: string): boolean {
+  isModService(iss: string): iss is DidString | `${DidString}#atproto_labeler` {
     return [
       this.modServiceDid,
       `${this.modServiceDid}#atproto_labeler`,

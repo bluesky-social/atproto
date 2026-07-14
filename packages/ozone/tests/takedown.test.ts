@@ -37,7 +37,7 @@ describe('moderation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows specifying policy for takedown actions.', async () => {

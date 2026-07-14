@@ -73,7 +73,7 @@ describe('scheduled action processor', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('findAndExecuteScheduledActions', () => {

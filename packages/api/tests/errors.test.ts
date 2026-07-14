@@ -13,7 +13,7 @@ describe('errors', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('constructs the correct error instance', async () => {

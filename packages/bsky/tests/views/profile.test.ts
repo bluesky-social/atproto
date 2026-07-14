@@ -1,7 +1,15 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyEmbedExternal,
   AtpAgent,
@@ -10,6 +18,7 @@ import {
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
@@ -17,15 +26,15 @@ describe('pds profile views', () => {
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
-  let labelerDid: string
+  let labelerDid: DidString
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let dan: string
-  let eve: string
-  let frank: string
-  let noprofile: string
+  let alice: DidString
+  let bob: DidString
+  let dan: DidString
+  let eve: DidString
+  let frank: DidString
+  let noprofile: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -77,7 +86,6 @@ describe('pds profile views', () => {
       password: 'noprofile-pass',
     })
 
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -86,9 +94,8 @@ describe('pds profile views', () => {
     noprofile = sc.dids.noprofile
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
 
@@ -750,7 +757,10 @@ describe('pds profile views', () => {
     expect(data.createdAt).toBeUndefined()
   })
 
-  async function updateProfile(did: string, record: Record<string, unknown>) {
+  async function updateProfile(
+    did: DidString,
+    record: Record<string, unknown>,
+  ) {
     return await pdsAgent.api.com.atproto.repo.putRecord(
       {
         repo: did,

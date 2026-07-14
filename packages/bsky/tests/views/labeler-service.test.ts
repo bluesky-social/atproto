@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyLabelerDefs,
@@ -8,6 +8,7 @@ import {
   ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSnapshot, stripViewerFromLabeler } from '../_util.js'
 
 describe('labeler service views', () => {
@@ -17,9 +18,9 @@ describe('labeler service views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   let aliceService: RecordRef
 
@@ -67,12 +68,10 @@ describe('labeler service views', () => {
     aliceService = new RecordRef(aliceRes.data.uri, aliceRes.data.cid)
 
     await sc.like(bob, aliceService)
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches labelers', async () => {
     const view = await agent.api.app.bsky.labeler.getServices(

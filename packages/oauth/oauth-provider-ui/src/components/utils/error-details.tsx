@@ -1,7 +1,6 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { JSX } from 'react'
+import { JSX, ReactNode } from 'react'
 import { Override } from '#/lib/util.ts'
 
 export type ErrorDetailsProps = Override<

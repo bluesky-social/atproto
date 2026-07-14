@@ -158,7 +158,10 @@ const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: app.bsky.feed.repost.main,
     insertFn,

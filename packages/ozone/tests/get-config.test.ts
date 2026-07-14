@@ -19,7 +19,7 @@ describe('get-config', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getConfig = async (role: 'moderator' | 'admin' | 'triage') => {

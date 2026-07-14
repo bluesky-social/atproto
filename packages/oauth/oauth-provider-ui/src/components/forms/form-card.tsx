@@ -5,7 +5,7 @@ import { errorCardRender } from '#/components/utils/error-card.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import { ErrorParser } from '#/lib/error-parser.ts'
 import { Override } from '#/lib/util.ts'
-import { Button } from './button.tsx'
+import { Button, ButtonColor } from './button.tsx'
 import { FormContext, FormContextValue } from './form-context.tsx'
 
 export type ErrorRenderer = (props: {
@@ -25,6 +25,7 @@ export type FormCardProps = Override<
 
     onSubmit?: (event: FormEvent<HTMLFormElement>) => void
     submitLabel?: ReactNode
+    submitColor?: ButtonColor
     submittable?: boolean
 
     onCancel?: MouseEventHandler<HTMLButtonElement>
@@ -46,6 +47,7 @@ export function FormCard({
   actions,
 
   submitLabel = <Trans>Submit</Trans>,
+  submitColor = 'primary',
   submittable = true,
 
   onCancel = undefined,
@@ -112,8 +114,8 @@ export function FormCard({
         >
           {submitLabel && (
             <Button
-              color="primary"
               type="submit"
+              color={submitColor}
               loading={loading}
               disabled={disabled || !submittable}
             >

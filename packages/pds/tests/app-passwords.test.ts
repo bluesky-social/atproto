@@ -24,7 +24,7 @@ describe('app_passwords', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   let appPass: string

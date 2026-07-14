@@ -54,4 +54,4 @@ const users = {
     handle: 'eve.test',
     password: 'eve-pass',
   },
-}
+} as const

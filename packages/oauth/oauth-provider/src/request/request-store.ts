@@ -12,7 +12,7 @@ export type { Awaitable }
 
 export type UpdateRequestData = Pick<
   Partial<RequestData>,
-  'sub' | 'code' | 'deviceId' | 'expiresAt' | 'parameters'
+  'did' | 'code' | 'deviceId' | 'expiresAt' | 'parameters'
 >
 
 export type FoundRequestResult = {
@@ -43,11 +43,11 @@ export interface RequestStore {
 }
 
 export const isRequestStore = buildInterfaceChecker<RequestStore>([
+  'consumeRequestCode',
   'createRequest',
+  'deleteRequest',
   'readRequest',
   'updateRequest',
-  'deleteRequest',
-  'consumeRequestCode',
 ])
 
 export function asRequestStore<V extends Partial<RequestStore>>(

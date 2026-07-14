@@ -815,20 +815,12 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationInclude {
-  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
-  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
-}
-
-message ChatNotificationPreference {
-  ChatNotificationInclude include = 1;
-  NotificationChannelPush push = 2;
-}
-
 message NotificationPreferences {
   bytes entry = 1;
-  ChatNotificationPreference chat = 2;
+
+  reserved 2; // formerly "chat". This is now stored on the chat service.
+  reserved "chat";
+
   FilterableNotificationPreference follow = 3;
   FilterableNotificationPreference like = 4;
   FilterableNotificationPreference like_via_repost = 5;
@@ -1144,10 +1136,10 @@ enum SearchQueryLanguage {
   SEARCH_QUERY_LANGUAGE_ZH = 2; // Chinese (smartcn)
   SEARCH_QUERY_LANGUAGE_KO = 3; // Korean (nori)
   SEARCH_QUERY_LANGUAGE_TH = 4; // Thai
+  SEARCH_QUERY_LANGUAGE_AR = 5; // Arabic
 }
 
-// Shared request params
-
+// Shared request params for paginated methods
 message SearchParams {
   string query = 1;
   string viewer = 2;
@@ -1155,6 +1147,13 @@ message SearchParams {
   // Pagination
   int32 limit = 3;
   string cursor = 4;
+}
+
+// Shared params for typeahead-style searches, which aren't paginated.
+message SearchTypeaheadParams {
+  string query = 1;
+  string viewer = 2;
+  int32 limit = 3;
 }
 
 // Shared result types
@@ -1195,8 +1194,14 @@ message PostsFilters {
   // Content filters
   repeated string domains = 3;
   repeated string urls = 4;
-  repeated string embed_uris = 5;
+  // Canonical request field for posts embedding these AT-URI records.
+  repeated string embedded_at_uris = 5;
   repeated string hashtags = 6;
+  // Filter posts in any of these languages
+  // Supports 2-char ISO prefixes ("en", "ja", "fr", etc) and compares against
+  // the 2-char prefix of any `langs` field values of the post record.
+  // e.g. a post with langs=["en-US", "fr"] matches ["en"] or ["fr", "ja"] but not ["ja"].
+  repeated string languages = 7;
 }
 
 message SearchPostsV2Request {
@@ -1219,33 +1224,32 @@ message SearchPostsV2Request {
   // so `since` and `until` will silently be capped
   optional bool all_time = 7;
 
-  // Language filter - match posts in this language
-  // Supports 2-char ISO prefixes ("en", "ja, "fr", etc")
-  // and compares against the 2-char prefix of any `langs` field values of the post record
-  // e.g. a post with langs=["en-US", "fr"] would match "en" or "fr" but not "ja"
-  optional string language = 8;
-
   // Media filters
-  optional bool has_media = 9;
-  optional bool has_video = 10;
+  optional bool has_media = 8;
+  optional bool has_video = 9;
 
   // Reply filters
-  optional string reply_parent_uri = 11;
-  optional string thread_root_uri = 12;
-  optional bool exclude_replies = 13;
-  optional bool replies_only = 14;
+  optional string reply_parent_uri = 10;
+  optional string thread_root_uri = 11;
+  optional bool exclude_replies = 12;
+  optional bool replies_only = 13;
 
   // Social filters
-  optional bool following = 15;
+  optional bool following = 14;
 
   // Query analysis hint — forces a specific language analyzer.
   // Auto-detects from query text when unset.
-  optional SearchQueryLanguage query_language = 16;
+  optional SearchQueryLanguage query_language = 15;
 }
 
 message SearchPostsV2Response {
   repeated SearchRecordResult posts = 1;
   PageInfo page_info = 2;
+  // Detected CJK/Thai/Arabic languages of the query, usually one. Han-only text
+  // returns ["zh", "ja"] since it's ambiguous between Chinese and Japanese.
+  // set query_language on the request to disambiguate.
+  // Currently left empty for other scripts (e.g. Latin-based languages like English).
+  repeated string detected_query_languages = 3;
 }
 
 message SearchActorsV2Request {
@@ -1258,9 +1262,7 @@ message SearchActorsV2Response {
 }
 
 message SearchActorsTypeaheadRequest {
-  string viewer = 1;
-  string query = 2;
-  int32 limit = 3;
+  SearchTypeaheadParams params = 1;
 }
 
 message SearchActorsTypeaheadResponse {

@@ -2,10 +2,10 @@ import { EXAMPLE_LABELER, SeedClient, TestBsky } from '@atproto/dev-env'
 import { app, com } from '../../src/lexicons/index.js'
 import usersSeed from './users.js'
 
-export default async (
+export default async function basicSeed(
   sc: SeedClient,
   opts?: { inviteCode?: string; addModLabels?: TestBsky },
-) => {
+) {
   await usersSeed(sc, opts)
 
   const alice = sc.dids.alice

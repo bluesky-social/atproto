@@ -5,6 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client } from '@atproto/lex'
+import type { DidString } from '@atproto/syntax'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import { BskyConfig } from './types.js'
 export * from '@atproto/bsky'
@@ -16,7 +17,7 @@ export class TestBsky {
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
-    public bsync: bsky.MockBsync,
+    public bsyncSub: bsky.BsyncSubscription,
     public sub: bsky.RepoSubscription,
     public serverDid: string,
   ) {}
@@ -29,13 +30,13 @@ export class TestBsky {
 
     const port = cfg.port || (await getPort())
     const url = `http://localhost:${port}`
-    const serverDid = await plcClient.createDid({
+    const serverDid = (await plcClient.createDid({
       signingKey: serviceKeypair.did(),
       rotationKeys: [serviceKeypair.did()],
       handle: 'bsky.test',
       pds: `http://localhost:${port}`,
       signer: serviceKeypair,
-    })
+    })) as DidString
 
     const endpoint = `http://localhost:${port}`
 
@@ -65,9 +66,6 @@ export class TestBsky {
       cfg.plcUrl,
     )
 
-    const bsyncPort = await getPort()
-    const bsync = await bsky.MockBsync.create(db, bsyncPort)
-
     const config = new bsky.ServerConfig({
       version: 'unknown',
       port,
@@ -77,8 +75,8 @@ export class TestBsky {
       alternateAudienceDids: [],
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
-      bsyncUrl: `http://localhost:${bsyncPort}`,
       bsyncHttpVersion: '1.1',
+      bsyncApiKey: 'bsync-api-key',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: [EXAMPLE_LABELER],
       bigThreadUris: new Set(),
@@ -114,6 +112,11 @@ export class TestBsky {
       signingKey: serviceKeypair,
     })
 
+    const bsyncSub = new bsky.BsyncSubscription({
+      config,
+      db,
+    })
+
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
       db,
@@ -122,9 +125,19 @@ export class TestBsky {
 
     await server.start()
 
-    sub.start()
+    bsyncSub.start()
+    void sub.start()
 
-    return new TestBsky(url, port, db, server, dataplane, bsync, sub, serverDid)
+    return new TestBsky(
+      url,
+      port,
+      db,
+      server,
+      dataplane,
+      bsyncSub,
+      sub,
+      serverDid,
+    )
   }
 
   get ctx(): bsky.AppContext {
@@ -158,10 +171,27 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy()
-    await this.bsync.destroy()
-    await this.dataplane.destroy()
-    await this.sub.destroy()
-    await this.db.close()
+    // @TODO Use disposable stack when it becomes available (Node24+)
+    try {
+      await this.server.destroy()
+    } finally {
+      try {
+        await this.bsyncSub.destroy()
+      } finally {
+        try {
+          await this.dataplane.destroy()
+        } finally {
+          try {
+            await this.sub.destroy()
+          } finally {
+            await this.db.close()
+          }
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

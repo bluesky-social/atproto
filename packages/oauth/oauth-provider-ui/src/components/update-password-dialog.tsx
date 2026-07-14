@@ -82,6 +82,7 @@ export function UpdatePasswordDialog({
           email={email}
           disabled={confirmPending}
           onLoadingChange={setConfirmSubmitting}
+          onResend={onRequest}
           handler={async (data) => {
             await onConfirm(data)
             setOpen(false)

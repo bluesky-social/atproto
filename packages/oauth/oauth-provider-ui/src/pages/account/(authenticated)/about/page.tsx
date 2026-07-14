@@ -100,7 +100,7 @@ export function Page() {
             Atmosphere identity, independently of any app-specific details like
             the profile you have on the{' '}
             <LinkExternal
-              href={`https://bsky.app/profile/${account.preferred_username ?? account.sub}`}
+              href={`https://bsky.app/profile/${account.handle ?? account.did}`}
             >
               Bluesky social app
             </LinkExternal>

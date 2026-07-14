@@ -1,4 +1,9 @@
-import { Sender, WebSocketServer } from 'ws'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import { AddressInfo } from 'node:net'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
+import { WebSocket, WebSocketServer } from 'ws'
 import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util.js'
@@ -8,16 +13,38 @@ describe('verification-listener', () => {
   let sc: SeedClient
   let adminAgent: AtpAgent
   let jetstream: WebSocketServer
-  let relay: Sender
+  let relay: WebSocket
+  let terminator: httpTerminator.HttpTerminator
 
   beforeAll(async () => {
-    const jetstreamPort = 2511
-    jetstream = new WebSocketServer({
-      port: jetstreamPort,
+    const server = createServer()
+    terminator = httpTerminator.createHttpTerminator({ server })
+
+    await once(server.listen(0), 'listening')
+    const jetstreamPort = (server.address() as AddressInfo).port
+
+    jetstream = new WebSocketServer({ server })
+    const relayPromise = new Promise<WebSocket>((resolve, reject) => {
+      const cleanup = () => {
+        jetstream.off('connection', onConnection)
+        jetstream.off('error', onError)
+      }
+
+      const onConnection = (ws: WebSocket) => {
+        cleanup()
+        resolve(ws)
+      }
+
+      const onError = (err: Error) => {
+        cleanup()
+        reject(err)
+      }
+
+      jetstream.on('connection', onConnection)
+      jetstream.on('error', onError)
     })
-    jetstream.on('connection', (ws) => {
-      relay = ws
-    })
+    relayPromise.catch(() => {})
+
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_verification_listener_test',
       ozone: {
@@ -37,13 +64,13 @@ describe('verification-listener', () => {
     })
     await network.ozone.addAdminDid(sc.dids.alice)
 
-    await network.processAll()
+    relay = await relayPromise
   })
 
-  afterAll(async () => {
-    await jetstream.close()
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => relay.close())
+  afterAll(async () => terminator?.terminate())
 
   it('indexes new and revoked verifications', async () => {
     const { verificationListener } = network.ozone.daemon.ctx

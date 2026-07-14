@@ -3,8 +3,11 @@
   "sourceLocale": "en",
   "locales": [
     "en",
+    "es",
     "fr",
-    "ja"
+    "ja",
+    "ko",
+    "sv"
   ],
   "fallbackLocales": {
     "default": "en"

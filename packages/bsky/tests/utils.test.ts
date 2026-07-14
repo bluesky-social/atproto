@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import {
-  PostSearchQuery,
-  parsePostSearchQuery,
-} from '../src/data-plane/server/util.js'
+import { parsePostSearchQuery } from '../src/data-plane/server/util.js'
 
 describe('parsePostSearchQuery', () => {
-  type TestCase = {
-    input: string
-    output: PostSearchQuery
-  }
-
-  const tests: TestCase[] = [
+  it.each([
     {
       input: `bluesky `,
       output: { q: `bluesky`, author: undefined },
@@ -38,9 +30,7 @@ describe('parsePostSearchQuery', () => {
         author: `did:test:123`,
       },
     },
-  ]
-
-  it.each(tests)(`'$input' -> '$output'`, ({ input, output }) => {
+  ])(`'$input' -> '$output'`, ({ input, output }) => {
     expect(parsePostSearchQuery(input)).toEqual(output)
   })
 })

@@ -5,6 +5,7 @@ import {
   TestNetworkNoAppView,
   basicSeed,
 } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('account deactivation', () => {
   let network: TestNetworkNoAppView
@@ -12,7 +13,7 @@ describe('account deactivation', () => {
   let sc: SeedClient
   let agent: AtpAgent
 
-  let alice: string
+  let alice: DidString
   let aliceAvatar: ImageRef
 
   beforeAll(async () => {
@@ -39,7 +40,7 @@ describe('account deactivation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('deactivates account', async () => {

@@ -1,5 +1,41 @@
 # @atproto-labs/fetch-node
 
+## 0.3.3
+
+### Patch Changes
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Wrap all errors thrown through `unicastFetchWrap` in Whatwg fetch like `TypeError`.
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `unicastFetchWrap` to be called without options object
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `isUnicastIp` to `isUnicastIpHostname` (`isUnicastIp` is still exported as deprecated for backwards compatibility).
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add tests for unicast ip lookup and utilities
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `unicastFetchWrap` now cancels request bodies when throwing an error (to avoid resource leak)
+
+- Updated dependencies [[`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto-labs/fetch@0.3.2
+  - @atproto-labs/pipe@0.2.2
+
+## 0.3.2
+
+### Patch Changes
+
+- [#5116](https://github.com/bluesky-social/atproto/pull/5116) [`39f5c01`](https://github.com/bluesky-social/atproto/commit/39f5c018791ae70391fc86f44be283075dfa206b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update undici dependency to v8.5.0
+
+## 0.3.1
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto-labs/fetch@0.3.1
+  - @atproto-labs/pipe@0.2.1
+
 ## 0.3.0
 
 ### Minor Changes

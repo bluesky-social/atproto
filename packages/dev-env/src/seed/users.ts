@@ -1,6 +1,6 @@
 import { SeedClient } from './client.js'
 
-export default async (sc: SeedClient) => {
+export default async function usersSeed(sc: SeedClient) {
   await sc.createAccount('alice', users.alice)
   await sc.createAccount('bob', users.bob)
   await sc.createAccount('carol', users.carol)
@@ -61,4 +61,4 @@ const users = {
     description: undefined,
     selfLabels: undefined,
   },
-}
+} as const

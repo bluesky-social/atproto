@@ -29,7 +29,7 @@ describe('firehose', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const createAndReadFirehose = async (

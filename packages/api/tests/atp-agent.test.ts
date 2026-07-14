@@ -24,7 +24,7 @@ describe('agent', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getProfileDisplayName = async (

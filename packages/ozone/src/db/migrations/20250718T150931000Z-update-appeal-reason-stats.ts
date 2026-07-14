@@ -1,7 +1,6 @@
 import { Kysely, sql } from 'kysely'
 import { OZONE_APPEAL_REASON_TYPE } from '../../api/util.js'
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs.js'
-import { DatabaseSchemaType } from '../schema/index.js'
 import * as modEvent from '../schema/moderation_event.js'
 import * as recordEventsStats from '../schema/record_events_stats.js'
 
@@ -161,7 +160,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute()
 }
 
-export async function down(db: Kysely<DatabaseSchemaType>): Promise<void> {
+export async function down(db: Kysely<any>): Promise<void> {
   // Drop the updated materialized views
   await db.schema
     .dropView('account_record_events_stats')

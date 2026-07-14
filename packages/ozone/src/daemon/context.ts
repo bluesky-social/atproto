@@ -73,7 +73,7 @@ export class DaemonContext {
       pds: cfg.pds ?? undefined,
     })
 
-    const backgroundQueue = new BackgroundQueue(db)
+    const backgroundQueue = new BackgroundQueue(db, { concurrency: 20 })
 
     const settingService = SettingService.creator()
     const strikeService = StrikeService.creator()

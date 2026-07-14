@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyEmbedGallery,
@@ -14,6 +14,7 @@ import {
   ids,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
@@ -32,11 +33,11 @@ describe('pds author feed views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
-  let eve: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
+  let eve: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -46,17 +47,15 @@ describe('pds author feed views', () => {
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await authorFeedSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
     eve = sc.dids.eve
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
   // @TODO(bsky) blocked by record takedown via labels.

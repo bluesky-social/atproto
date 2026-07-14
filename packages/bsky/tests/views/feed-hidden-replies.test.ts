@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { Users, feedHiddenRepliesSeed } from '../seed/feed-hidden-replies.js'
 
 describe('feed hidden replies', () => {
@@ -20,13 +21,10 @@ describe('feed hidden replies', () => {
 
     const result = await feedHiddenRepliesSeed(sc)
     users = result.users
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe(`notifications`, () => {
     it(`[A] -> [B] : B is hidden`, async () => {
@@ -47,7 +45,7 @@ describe('feed hidden replies', () => {
           createdAt: new Date().toISOString(),
           hiddenReplies: [B.ref.uriStr],
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
 
       await network.processAll()
@@ -90,7 +88,7 @@ describe('feed hidden replies', () => {
           createdAt: new Date().toISOString(),
           hiddenReplies: [B.ref.uriStr],
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
 
       await network.processAll()
@@ -178,7 +176,7 @@ describe('feed hidden replies', () => {
           createdAt: new Date().toISOString(),
           hiddenReplies: [C.ref.uriStr],
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
       await network.processAll()
       const D = await sc.reply(users.viewer.did, A.ref, C.ref, `D`)
@@ -237,7 +235,7 @@ describe('feed hidden replies', () => {
           repo: A.ref.uri.host,
           rkey: A.ref.uri.rkey,
         },
-        sc.getHeaders(A.ref.uri.host),
+        sc.getHeaders(A.ref.uri.host as DidString),
       )
       await network.processAll()
     })

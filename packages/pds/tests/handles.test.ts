@@ -60,7 +60,7 @@ describe('handles', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getHandleFromDb = async (

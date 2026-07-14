@@ -1,5 +1,6 @@
 import { chunkArray } from '@atproto/common'
 import { SeedClient } from '@atproto/dev-env'
+import type { HandleString } from '@atproto/syntax'
 
 export default async (sc: SeedClient, max = Infinity) => {
   // @TODO when these are run in parallel, seem to get an intermittent
@@ -41,7 +42,7 @@ export default async (sc: SeedClient, max = Infinity) => {
 //   return sc
 // }
 
-const users = [
+const users: { handle: HandleString; displayName: string | null }[] = [
   { handle: 'silas77.test', displayName: 'Tanya Denesik' },
   { handle: 'nicolas-krajcik10.test', displayName: null },
   { handle: 'lennie-strosin.test', displayName: null },

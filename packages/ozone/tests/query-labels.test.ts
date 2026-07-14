@@ -70,7 +70,7 @@ describe('ozone query labels', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('returns all labels', async () => {

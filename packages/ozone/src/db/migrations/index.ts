@@ -41,3 +41,4 @@ export * as _20260313T000000000Z from './20260313T000000000Z-add-report-activity
 export * as _20260318T152058935Z from './20260318T152058935Z-add-report-stat.js'
 export * as _20260428T000000000Z from './20260428T000000000Z-add-expiring-tag-table.js'
 export * as _20260513T202941104Z from './20260513T202941104Z-add-subject-convo-id.js'
+export * as _20260602T120000000Z from './20260602T120000000Z-add-report-activity-created-index.js'

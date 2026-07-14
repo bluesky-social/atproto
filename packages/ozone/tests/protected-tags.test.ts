@@ -30,7 +30,7 @@ describe('protected-tags', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('Settings management', () => {

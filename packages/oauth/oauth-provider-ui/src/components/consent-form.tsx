@@ -80,6 +80,7 @@ export function ConsentForm({
       ref={formRef}
       onBack={onBack}
       error={reject.error}
+      disabled={reject.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
       values={{ allowEmail: true }}
       onValues={() => reject.reset()}
@@ -90,6 +91,8 @@ export function ConsentForm({
       handler={onConsent}
       actions={
         <Button
+          disabled={form?.loading}
+          loading={reject.loading}
           onClick={(event) => {
             event.preventDefault()
             form?.reset()

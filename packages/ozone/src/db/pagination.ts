@@ -1,4 +1,4 @@
-import { DynamicModule, sql } from 'kysely'
+import { DynamicModule, SqlBool, sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AnyQb, DbRef } from './types.js'
 
@@ -66,16 +66,16 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
     if (tryIndex) {
       // The tryIndex param will likely disappear and become the default implementation: here for now for gradual rollout query-by-query.
       if (direction === 'asc') {
-        return sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
       } else {
-        return sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
       }
     } else {
       // @NOTE this implementation can struggle to use an index on (primary, secondary) for pagination due to the "or" usage.
       if (direction === 'asc') {
-        return sql`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
       } else {
-        return sql`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+        return sql<SqlBool>`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
       }
     }
   }
@@ -91,7 +91,7 @@ export class StatusKeyset extends GenericKeyset<StatusKeysetParam, Cursor> {
   labelResult(result: StatusKeysetParam): Cursor
   labelResult(result: StatusKeysetParam) {
     const primaryField = (
-      this.primary as ReturnType<DynamicModule['ref']>
+      this.primary as ReturnType<DynamicModule<unknown>['ref']>
     ).dynamicReference.includes('lastReviewedAt')
       ? 'lastReviewedAt'
       : 'lastReportedAt'
@@ -134,12 +134,12 @@ export class StatusKeyset extends GenericKeyset<StatusKeysetParam, Cursor> {
     if (labeled === undefined) return
     if (direction === 'asc') {
       return !labeled.primary
-        ? sql`(${this.primary} IS NULL AND ${this.secondary} > ${labeled.secondary})`
-        : sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
+        ? sql<SqlBool>`(${this.primary} IS NULL AND ${this.secondary} > ${labeled.secondary})`
+        : sql<SqlBool>`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
     } else {
       return !labeled.primary
-        ? sql`(${this.primary} IS NULL AND ${this.secondary} < ${labeled.secondary})`
-        : sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
+        ? sql<SqlBool>`(${this.primary} IS NULL AND ${this.secondary} < ${labeled.secondary})`
+        : sql<SqlBool>`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
     }
   }
 }
@@ -244,15 +244,15 @@ export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
     const primaryRef = sql`COALESCE(${this.primary}, ${PERMANENT_ENDSAT})`
     if (tryIndex) {
       if (direction === 'asc') {
-        return sql`((${primaryRef}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${primaryRef}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
       } else {
-        return sql`((${primaryRef}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+        return sql<SqlBool>`((${primaryRef}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
       }
     } else {
       if (direction === 'asc') {
-        return sql`((${primaryRef} > ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+        return sql<SqlBool>`((${primaryRef} > ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
       } else {
-        return sql`((${primaryRef} < ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+        return sql<SqlBool>`((${primaryRef} < ${labeled.primary}) or (${primaryRef} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
       }
     }
   }
@@ -314,11 +314,11 @@ export const paginate = <
   } = opts
   const keysetSql = keyset.getSql(keyset.unpack(cursor), direction, tryIndex)
   return qb
-    .if(!!limit, (q) => q.limit(limit as number))
-    .if(!nullsLast, (q) =>
+    .$if(!!limit, (q) => q.limit(limit as number))
+    .$if(!nullsLast, (q) =>
       q.orderBy(keyset.primary, direction).orderBy(keyset.secondary, direction),
     )
-    .if(!!nullsLast, (q) =>
+    .$if(!!nullsLast, (q) =>
       q
         .orderBy(
           direction === 'asc'
@@ -331,5 +331,5 @@ export const paginate = <
             : sql`${keyset.secondary} desc nulls last`,
         ),
     )
-    .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+    .$if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
 }

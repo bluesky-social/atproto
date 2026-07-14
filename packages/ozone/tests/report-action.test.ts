@@ -29,7 +29,7 @@ describe('report-action', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('emitEvent with reportAction', () => {

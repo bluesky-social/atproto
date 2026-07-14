@@ -21,7 +21,7 @@ describe('mod-tool tracking', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('stores and returns modTool with name and meta metadata', async () => {

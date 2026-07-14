@@ -29,7 +29,7 @@ describe('safelink management', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('addRule', () => {

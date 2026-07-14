@@ -13,10 +13,12 @@ export type ResetPasswordConfirmData = {
 export type ResetPasswordConfirmFormProps =
   WrappedSmartFormProps<ResetPasswordConfirmData> & {
     email?: string
+    onResend?: () => void | PromiseLike<void>
   }
 
 export function ResetPasswordConfirmForm({
   email,
+  onResend,
   ...props
 }: ResetPasswordConfirmFormProps) {
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -37,7 +39,7 @@ export function ResetPasswordConfirmForm({
               <input
                 type="text"
                 autoComplete="username"
-                value={email}
+                defaultValue={email}
                 readOnly
                 hidden
               />
@@ -50,6 +52,7 @@ export function ResetPasswordConfirmForm({
                 required
                 autoFocus={true}
                 defaultValue={values.token}
+                onResend={onResend}
                 onToken={(value) => {
                   set('token', value ?? undefined)
                   // Auto-focus next field when token is complete

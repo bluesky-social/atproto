@@ -117,4 +117,8 @@ export class TestPds {
   async close() {
     await this.server.destroy()
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
+  }
 }

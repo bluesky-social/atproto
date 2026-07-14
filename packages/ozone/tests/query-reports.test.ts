@@ -92,7 +92,7 @@ describe('query-reports', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('queryReports', () => {

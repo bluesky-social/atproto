@@ -23,7 +23,7 @@ describe('image processing server', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('processes image from blob resolver.', async () => {

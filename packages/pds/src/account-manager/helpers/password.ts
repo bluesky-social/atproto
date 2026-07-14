@@ -128,3 +128,9 @@ export const deleteAppPassword = async (
       .where('name', '=', name),
   )
 }
+
+export const deleteAllAppPasswords = async (db: AccountDb, did: string) => {
+  await db.executeWithRetry(
+    db.db.deleteFrom('app_password').where('did', '=', did),
+  )
+}

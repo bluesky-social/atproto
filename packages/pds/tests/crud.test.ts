@@ -47,7 +47,7 @@ describe('crud operations', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('registers users', async () => {

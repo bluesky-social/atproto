@@ -134,7 +134,7 @@ export class ActorStore {
         store.repo.blob.getBlobCids(),
       )
       await blobstore.deleteMany(cids).catch((err) => {
-        blobStoreLogger.error('Failed to delete blobs', { did, cids, err })
+        blobStoreLogger.error({ did, cids, err }, 'Failed to delete blobs')
       })
     }
 

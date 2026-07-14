@@ -30,7 +30,7 @@ describe('admin get starter pack view', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

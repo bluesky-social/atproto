@@ -18,9 +18,9 @@ export interface DeviceStore {
 
 export const isDeviceStore = buildInterfaceChecker<DeviceStore>([
   'createDevice',
+  'deleteDevice',
   'readDevice',
   'updateDevice',
-  'deleteDevice',
 ])
 
 export function asDeviceStore<V>(implementation: V): V & DeviceStore {

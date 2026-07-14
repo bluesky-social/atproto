@@ -19,6 +19,7 @@ export type PdsConfig = Partial<pds.ServerEnvironment> & {
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {
+  bsyncUrl: string
   plcUrl: string
   repoProvider: string
   dbPostgresUrl: string

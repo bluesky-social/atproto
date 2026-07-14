@@ -1,4 +1,8 @@
-import getPort from 'get-port'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import { AddressInfo } from 'node:net'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { WebSocketServer } from 'ws'
 import { wait } from '@atproto/common'
 import { CloseCode, WebSocketKeepAlive } from '../src/index.js'
@@ -7,11 +11,17 @@ describe('WebSocketKeepAlive', () => {
   it('uses a heartbeat to reconnect if a connection is dropped', async () => {
     // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
     // on second connection, it sends a message and then closes
-    const port = await getPort()
-    const server = new WebSocketServer({ port })
+
+    const server = createServer()
+
+    // make sure to always close the server (even in case of test failure)
+    const { terminate } = httpTerminator.createHttpTerminator({ server })
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    const wsServer = new WebSocketServer({ server })
     let firstConnection = true
     let firstWasClosed = false
-    server.on('connection', async (socket) => {
+    wsServer.on('connection', async (socket) => {
       if (firstConnection === true) {
         firstConnection = false
         socket.pause()
@@ -32,6 +42,9 @@ describe('WebSocketKeepAlive', () => {
       }
     })
 
+    await once(server.listen(0), 'listening')
+    const port = (server.address() as AddressInfo).port
+
     const wsKeepAlive = new WebSocketKeepAlive({
       getUrl: async () => `ws://localhost:${port}`,
       heartbeatIntervalMs: 500,
@@ -45,6 +58,5 @@ describe('WebSocketKeepAlive', () => {
     expect(messages).toHaveLength(1)
     expect(Buffer.from(messages[0]).toString()).toBe('test message')
     expect(firstWasClosed).toBe(true)
-    server.close()
   })
 })

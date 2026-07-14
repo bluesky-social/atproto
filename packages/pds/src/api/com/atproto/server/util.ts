@@ -1,9 +1,10 @@
+import * as plc from '@did-plc/lib'
 import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { DidDocument } from '@atproto/identity'
+import { DidDocument, IdResolver } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ActorStore } from '../../../../actor-store/actor-store.js'
 import { ServerConfig } from '../../../../config/index.js'
-import { AppContext } from '../../../../context.js'
 import { httpLogger } from '../../../../logger.js'
 
 // generate an invite code preceded by the hostname
@@ -29,7 +30,7 @@ export const getRandomToken = () => {
 }
 
 export const safeResolveDidDoc = async (
-  ctx: AppContext,
+  ctx: { idResolver: IdResolver },
   did: string,
   forceRefresh?: boolean,
 ): Promise<DidDocument | undefined> => {
@@ -42,7 +43,7 @@ export const safeResolveDidDoc = async (
 }
 
 export const didDocForSession = async (
-  ctx: AppContext,
+  ctx: { idResolver: IdResolver; cfg: ServerConfig },
   did: string,
   forceRefresh?: boolean,
 ): Promise<DidDocument | undefined> => {
@@ -51,7 +52,13 @@ export const didDocForSession = async (
 }
 
 export const isValidDidDocForService = async (
-  ctx: AppContext,
+  ctx: {
+    plcClient: plc.Client
+    idResolver: IdResolver
+    cfg: ServerConfig
+    plcRotationKey: crypto.Keypair
+    actorStore: ActorStore
+  },
   did: string,
 ): Promise<boolean> => {
   try {
@@ -63,7 +70,13 @@ export const isValidDidDocForService = async (
 }
 
 export const assertValidDidDocumentForService = async (
-  ctx: AppContext,
+  ctx: {
+    plcClient: plc.Client
+    idResolver: IdResolver
+    cfg: ServerConfig
+    plcRotationKey: crypto.Keypair
+    actorStore: ActorStore
+  },
   did: string,
 ) => {
   if (did.startsWith('did:plc')) {
@@ -86,7 +99,11 @@ export const assertValidDidDocumentForService = async (
 }
 
 const assertValidDocContents = async (
-  ctx: AppContext,
+  ctx: {
+    cfg: ServerConfig
+    plcRotationKey: crypto.Keypair
+    actorStore: ActorStore
+  },
   did: string,
   contents: {
     signingKey?: string

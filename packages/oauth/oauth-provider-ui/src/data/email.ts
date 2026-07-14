@@ -1,4 +1,4 @@
-import { useLingui } from '@lingui/react/macro'
+import { msg } from '@lingui/core/macro'
 import { useMutation } from '@tanstack/react-query'
 import {
   ConfirmEmailUpdateInput,
@@ -11,8 +11,7 @@ import { useApi } from '#/contexts/session.tsx'
 
 export function useUpdateEmailRequest() {
   const api = useApi()
-  const { t } = useLingui()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: InitiateEmailUpdateInput) {
@@ -20,17 +19,14 @@ export function useUpdateEmailRequest() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
-        title: t`Email change request sent`,
-        description: t`Check your inbox.`,
+        title: msg`Email change request sent`,
+        description: msg`Check your inbox.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to request email change', error)
-      notify({
-        variant: 'error',
-        title: t`Failed to request email change`,
-        description: t`Please check the email address and try again.`,
+      notifyError(error, {
+        title: msg`Failed to request email change`,
+        description: msg`Please check the email address and try again.`,
       })
     },
   })
@@ -38,8 +34,7 @@ export function useUpdateEmailRequest() {
 
 export function useUpdateEmailConfirm() {
   const api = useApi()
-  const { t } = useLingui()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: ConfirmEmailUpdateInput) {
@@ -47,17 +42,14 @@ export function useUpdateEmailConfirm() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
-        title: t`Email change successful`,
-        description: t`You can now sign in with your new email.`,
+        title: msg`Email change successful`,
+        description: msg`You can now sign in with your new email.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to change email', error)
-      notify({
-        variant: 'error',
-        title: t`Failed to change email`,
-        description: t`Please check your reset code and try again.`,
+      notifyError(error, {
+        title: msg`Failed to change email`,
+        description: msg`Please check your reset code and try again.`,
       })
     },
   })
@@ -65,8 +57,7 @@ export function useUpdateEmailConfirm() {
 
 export function useVerifyEmailRequest() {
   const api = useApi()
-  const { t } = useLingui()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: InitiateEmailVerificationInput) {
@@ -74,17 +65,14 @@ export function useVerifyEmailRequest() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
-        title: t`Verification email sent`,
-        description: t`Check your inbox for the verification code.`,
+        title: msg`Verification email sent`,
+        description: msg`Check your inbox for the verification code.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to request email verification', error)
-      notify({
-        variant: 'error',
-        title: t`Failed to send verification email`,
-        description: t`Please try again in a moment.`,
+      notifyError(error, {
+        title: msg`Failed to send verification email`,
+        description: msg`Please try again in a moment.`,
       })
     },
   })
@@ -92,8 +80,7 @@ export function useVerifyEmailRequest() {
 
 export function useVerifyEmailConfirm() {
   const api = useApi()
-  const { t } = useLingui()
-  const { notify } = useNotificationsContext()
+  const { notify, notifyError } = useNotificationsContext()
 
   return useMutation({
     async mutationFn(data: ConfirmEmailVerificationInput) {
@@ -101,17 +88,14 @@ export function useVerifyEmailConfirm() {
     },
     onSuccess(_data, _variables, _context) {
       notify({
-        variant: 'success',
-        title: t`Email verified`,
-        description: t`Your email address has been verified.`,
+        title: msg`Email verified`,
+        description: msg`Your email address has been verified.`,
       })
     },
     onError(error, _variables, _context) {
-      console.error('Failed to verify email', error)
-      notify({
-        variant: 'error',
-        title: t`Failed to verify email`,
-        description: t`Please check your verification code and try again.`,
+      notifyError(error, {
+        title: msg`Failed to verify email`,
+        description: msg`Please check your verification code and try again.`,
       })
     },
   })

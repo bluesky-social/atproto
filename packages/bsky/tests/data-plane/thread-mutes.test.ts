@@ -1,14 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('thread mutes', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   let rootPost: RecordRef
   let replyPost: RecordRef
@@ -25,10 +26,10 @@ describe('thread mutes', () => {
     rootPost = (await sc.post(alice, 'root post')).ref
     replyPost = (await sc.reply(alice, rootPost, rootPost, 'first reply')).ref
     await network.processAll()
-  }, 20_000) // @NOTE seeding can take a while
+  })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('mutes threads', async () => {
@@ -42,6 +43,7 @@ describe('thread mutes', () => {
         ),
       },
     )
+    await network.processAll()
   })
 
   it('notes that threads are muted in viewer state', async () => {
@@ -136,6 +138,7 @@ describe('thread mutes', () => {
         ),
       },
     )
+    await network.processAll()
   })
 
   it('no longer notes that threads are muted in viewer state after unmuting', async () => {

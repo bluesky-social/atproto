@@ -1,12 +1,13 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSubjectStatusSnapshot } from './_util.js'
 
 describe('appeal account takedown', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-  let moderator: string
+  let moderator: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -25,7 +26,7 @@ describe('appeal account takedown', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('actor takedown allows appeal request.', async () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyGraphGetMutes, AtpAgent, ids } from '@atproto/api'
 import {
   SeedClient,
@@ -6,18 +6,23 @@ import {
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
+import type {
+  AtIdentifierString,
+  DidString,
+  HandleString,
+} from '@atproto/syntax'
 import { forSnapshot, paginateAll } from '../_util.js'
 
 describe('mute views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
-  let mutes: string[]
+  let mutes: AtIdentifierString[]
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -54,11 +59,10 @@ describe('mute views', () => {
         },
       )
     }
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('flags mutes in threads', async () => {
     const res = await agent.api.app.bsky.feed.getPostThread(
@@ -88,7 +92,9 @@ describe('mute views', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -103,7 +109,9 @@ describe('mute views', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -122,7 +130,9 @@ describe('mute views', () => {
       },
     )
     expect(
-      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+      res.data.feed.some((post) =>
+        [bob, carol].includes(post.post.author.did as DidString),
+      ),
     ).toBe(false)
   })
 
@@ -168,7 +178,7 @@ describe('mute views', () => {
     )
     expect(
       res.data.notifications.some((notif) =>
-        [bob, carol].includes(notif.author.did),
+        [bob, carol].includes(notif.author.did as DidString),
       ),
     ).toBeFalsy()
   })
@@ -192,7 +202,10 @@ describe('mute views', () => {
       },
     )
     for (const actor of res.data.actors) {
-      if (mutes.includes(actor.did) || mutes.includes(actor.handle)) {
+      if (
+        mutes.includes(actor.did as DidString) ||
+        mutes.includes(actor.handle as HandleString)
+      ) {
         expect(actor.viewer?.muted).toBe(true)
       } else {
         expect(actor.viewer?.muted).toBe(false)
@@ -262,6 +275,7 @@ describe('mute views', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
 
     const { data: final } = await agent.api.app.bsky.graph.getMutes(
       {},

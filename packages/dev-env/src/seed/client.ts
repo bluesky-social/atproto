@@ -21,7 +21,7 @@ import {
 } from '@atproto/api'
 import { CidString, Client } from '@atproto/lex'
 import { BlobRef } from '@atproto/lexicon'
-import { AtUri, AtUriString, DidString } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString, HandleString } from '@atproto/syntax'
 import { TestNetworkNoAppView } from '../network-no-appview.js'
 
 // Makes it simple to create data via the XRPC client,
@@ -67,22 +67,21 @@ export class RecordRef {
   }
 }
 
+export type Account = {
+  did: DidString
+  accessJwt: string
+  refreshJwt: string
+  handle: HandleString
+  email: string
+  password: string
+}
+
 export class SeedClient<
   Network extends TestNetworkNoAppView = TestNetworkNoAppView,
 > {
-  accounts: Record<
-    string,
-    {
-      did: DidString
-      accessJwt: string
-      refreshJwt: string
-      handle: string
-      email: string
-      password: string
-    }
-  >
+  accounts: Record<DidString, Account>
   profiles: Record<
-    string,
+    DidString,
     {
       displayName: string
       description: string
@@ -91,41 +90,53 @@ export class SeedClient<
       ref: RecordRef
     }
   >
-  follows: Record<string, Record<string, RecordRef>>
-  blocks: Record<string, Record<string, RecordRef>>
-  mutes: Record<string, Set<string>>
+  follows: Record<DidString, Record<DidString, RecordRef>>
+  blocks: Record<DidString, Record<DidString, RecordRef>>
+  mutes: Record<DidString, Set<DidString>>
   posts: Record<
-    string,
+    DidString,
     { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
   >
-  likes: Record<string, Record<string, AtUri>>
+  likes: Record<DidString, Record<string, AtUri>>
   replies: Record<
     string,
     { text: string; ref: RecordRef; images: ImageRef[] }[]
   >
-  reposts: Record<string, RecordRef[]>
+  reposts: Record<DidString, RecordRef[]>
   lists: Record<
-    string,
-    Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
+    DidString,
+    Record<
+      AtUriString,
+      {
+        ref: RecordRef
+        items: Record<DidString, RecordRef>
+      }
+    >
   >
   feedgens: Record<
-    string,
-    Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
+    DidString,
+    Record<
+      AtUriString,
+      {
+        ref: RecordRef
+        items: Record<string, RecordRef>
+      }
+    >
   >
   starterpacks: Record<
-    string,
+    DidString,
     Record<
-      string,
+      AtUriString,
       {
         ref: RecordRef
         name: string
         list: RecordRef
-        feeds: string[]
+        feeds: readonly AtUriString[]
       }
     >
   >
 
-  verifications: Record<string, Record<string, AtUri>>
+  verifications: Record<DidString, Record<DidString, AtUri>>
 
   dids: Record<string, DidString>
 
@@ -153,18 +164,19 @@ export class SeedClient<
   async createAccount(
     shortName: string,
     params: {
-      handle: string
+      handle: HandleString
       email: string
       password: string
       inviteCode?: string
     },
-  ) {
+  ): Promise<Account> {
     const { data: account } =
       await this.agent.com.atproto.server.createAccount(params)
     const did = account.did as DidString
     this.dids[shortName] = did
     this.accounts[account.did] = {
-      ...account,
+      // @NOTE type case needed until we move test to lex-sdk
+      ...(account as typeof account & { handle: HandleString }),
       did,
       email: params.email,
       password: params.password,
@@ -172,7 +184,7 @@ export class SeedClient<
     return this.accounts[account.did]
   }
 
-  async updateHandle(by: string, handle: string) {
+  async updateHandle(by: DidString, handle: HandleString) {
     await this.agent.com.atproto.identity.updateHandle(
       { handle },
       { encoding: 'application/json', headers: this.getHeaders(by) },
@@ -180,10 +192,10 @@ export class SeedClient<
   }
 
   async createProfile(
-    by: string,
+    by: DidString,
     displayName: string,
     description: string,
-    selfLabels?: string[],
+    selfLabels?: readonly string[],
     joinedViaStarterPack?: RecordRef,
     overrides?: Partial<AppBskyActorProfile.Record>,
   ): Promise<{
@@ -234,7 +246,7 @@ export class SeedClient<
     return this.profiles[by]
   }
 
-  async updateProfile(by: string, record: Record<string, unknown>) {
+  async updateProfile(by: DidString, record: Record<string, unknown>) {
     const res = await this.agent.com.atproto.repo.putRecord(
       {
         repo: by,
@@ -253,8 +265,8 @@ export class SeedClient<
   }
 
   async follow(
-    from: string,
-    to: string,
+    from: DidString,
+    to: DidString,
     overrides?: Partial<AppBskyGraphFollow.Record>,
   ) {
     const res = await this.agent.app.bsky.graph.follow.create(
@@ -271,7 +283,7 @@ export class SeedClient<
     return this.follows[from][to]
   }
 
-  async unfollow(from: string, to: string) {
+  async unfollow(from: DidString, to: DidString) {
     const follow = this.follows[from][to]
     if (!follow) {
       throw new Error('follow does not exist')
@@ -284,8 +296,8 @@ export class SeedClient<
   }
 
   async block(
-    from: string,
-    to: string,
+    from: DidString,
+    to: DidString,
     overrides?: Partial<AppBskyGraphBlock.Record>,
   ) {
     const res = await this.agent.app.bsky.graph.block.create(
@@ -302,7 +314,7 @@ export class SeedClient<
     return this.blocks[from][to]
   }
 
-  async unblock(from: string, to: string) {
+  async unblock(from: DidString, to: DidString) {
     const block = this.blocks[from][to]
     if (!block) {
       throw new Error('block does not exist')
@@ -314,7 +326,7 @@ export class SeedClient<
     delete this.blocks[from][to]
   }
 
-  async mute(from: string, to: string) {
+  async mute(from: DidString, to: DidString) {
     await this.agent.app.bsky.graph.muteActor(
       {
         actor: to,
@@ -327,7 +339,7 @@ export class SeedClient<
   }
 
   async post(
-    by: string,
+    by: DidString,
     text: string,
     facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
@@ -373,7 +385,7 @@ export class SeedClient<
     return post
   }
 
-  async deletePost(by: string, uri: AtUri) {
+  async deletePost(by: DidString, uri: AtUri) {
     await this.agent.app.bsky.feed.post.delete(
       {
         repo: by,
@@ -384,7 +396,7 @@ export class SeedClient<
   }
 
   async uploadFile(
-    by: string,
+    by: DidString,
     filePath: string,
     encoding: string,
   ): Promise<ImageRef> {
@@ -397,7 +409,7 @@ export class SeedClient<
   }
 
   async like(
-    by: string,
+    by: DidString,
     subject: RecordRef,
     overrides?: Partial<AppBskyFeedLike.Record>,
   ) {
@@ -416,7 +428,7 @@ export class SeedClient<
   }
 
   async reply(
-    by: string,
+    by: DidString,
     root: RecordRef,
     parent: RecordRef,
     text: string,
@@ -456,7 +468,7 @@ export class SeedClient<
   }
 
   async repost(
-    by: string,
+    by: DidString,
     subject: RecordRef,
     overrides?: Partial<AppBskyFeedRepost.Record>,
   ) {
@@ -476,7 +488,7 @@ export class SeedClient<
   }
 
   async createList(
-    by: string,
+    by: DidString,
     name: string,
     purpose: 'mod' | 'curate' | 'reference',
     overrides?: Partial<AppBskyGraphList.Record>,
@@ -505,7 +517,7 @@ export class SeedClient<
     return ref
   }
 
-  async createFeedGen(by: string, feedDid: string, name: string) {
+  async createFeedGen(by: DidString, feedDid: string, name: string) {
     const res = await this.agent.app.bsky.feed.generator.create(
       { repo: by },
       {
@@ -525,10 +537,10 @@ export class SeedClient<
   }
 
   async createStarterPack(
-    by: string,
+    by: DidString,
     name: string,
-    actors: string[],
-    feeds?: string[],
+    actors: readonly DidString[],
+    feeds?: readonly AtUriString[],
   ) {
     const list = await this.createList(by, 'n/a', 'reference')
     for (const did of actors) {
@@ -555,7 +567,7 @@ export class SeedClient<
     return ref
   }
 
-  async addToList(by: string, subject: string, list: RecordRef) {
+  async addToList(by: DidString, subject: DidString, list: RecordRef) {
     const res = await this.agent.app.bsky.graph.listitem.create(
       { repo: by },
       { subject, list: list.uriStr, createdAt: new Date().toISOString() },
@@ -569,7 +581,7 @@ export class SeedClient<
     return ref
   }
 
-  async rmFromList(by: string, subject: string, list: RecordRef) {
+  async rmFromList(by: DidString, subject: DidString, list: RecordRef) {
     const foundList = (this.lists[by] ?? {})[list.uriStr] ?? {}
     if (!foundList) return
     const foundItem = foundList.items[subject]
@@ -591,7 +603,7 @@ export class SeedClient<
       | $Typed<ChatBskyConvoDefs.ConvoRef>
       | { $type: string }
     reason?: string
-    reportedBy: string
+    reportedBy: DidString
   }): Promise<
     ComAtprotoModerationCreateReport.OutputSchema & {
       subject:
@@ -614,9 +626,9 @@ export class SeedClient<
   }
 
   async verify(
-    by: string,
-    subject: string,
-    handle: string,
+    by: DidString,
+    subject: DidString,
+    handle: HandleString,
     displayName: string,
     overrides?: Partial<AppBskyGraphVerification.Record>,
   ) {
@@ -636,7 +648,7 @@ export class SeedClient<
     return this.verifications[by][subject]
   }
 
-  async unverify(by: string, subject: string) {
+  async unverify(by: DidString, subject: DidString) {
     const verification = this.verifications[by]?.[subject]
     if (!verification) {
       throw new Error('verification does not exist')
@@ -649,7 +661,7 @@ export class SeedClient<
     delete this.verifications[by][subject]
   }
 
-  getHeaders(did: string) {
+  getHeaders(did: DidString) {
     return SeedClient.getHeaders(this.accounts[did].accessJwt)
   }
 

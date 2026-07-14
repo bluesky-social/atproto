@@ -4,6 +4,7 @@ import {
   ClientAuthLegacy,
   Code,
   DeviceId,
+  Did,
   OAuthAuthorizationRequestParameters,
   OAuthClientId,
   RequestId,
@@ -12,7 +13,7 @@ import { DateISO, JsonEncoded } from '../../../db/index.js'
 
 export interface AuthorizationRequest {
   id: RequestId
-  did: string | null
+  did: Did | null
   deviceId: DeviceId | null
 
   clientId: OAuthClientId

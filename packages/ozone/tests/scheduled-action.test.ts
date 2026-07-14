@@ -57,7 +57,7 @@ describe('scheduled action management', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('scheduleAction', () => {

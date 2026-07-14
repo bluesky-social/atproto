@@ -67,10 +67,11 @@ export class TeamService {
       builder = builder.where('disabled', disabled ? 'is' : 'is not', true)
     }
     if (q) {
-      builder = builder.where((qb) =>
-        qb
-          .orWhere('handle', 'ilike', `%${q}%`)
-          .orWhere('displayName', 'ilike', `%${q}%`),
+      builder = builder.where((eb) =>
+        eb.or([
+          eb('handle', 'ilike', `%${q}%`),
+          eb('displayName', 'ilike', `%${q}%`),
+        ]),
       )
     }
 
@@ -245,7 +246,7 @@ export class TeamService {
         .selectFrom('member')
         .select(['did'])
         .limit(25)
-        .if(!!lastDid, (q) => q.where('did', '>', lastDid))
+        .$if(!!lastDid, (q) => q.where('did', '>', lastDid))
         .orderBy('did', 'asc')
         .execute()
 

@@ -95,9 +95,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const { ref } = db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
-    const values = valuesList(pairs.map((p) => sql`${p.a}, ${p.b}`))
+    const values = valuesList<{ source: string; target: string }>(
+      pairs.map((p) => sql`${p.a}, ${p.b}`),
+    )
     const res = await db.db
-      .selectFrom(values.as(sql`pair (source, target)`))
+      .selectFrom(values.as<'pair'>(sql`pair (source, target)`))
       .select([
         sql<string>`${sourceRef}`.as('source'),
         sql<string>`${targetRef}`.as('target'),

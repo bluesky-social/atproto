@@ -13,7 +13,7 @@ describe('agent', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('migrates legacy content-label prefs (no mutations)', async () => {

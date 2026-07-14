@@ -6,11 +6,15 @@ import {
   Icon,
   LockIcon,
   ShieldWarningIcon,
+  SnowflakeIcon,
+  TrashIcon,
 } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
 import { ReactNode } from 'react'
-import { isValidHandle } from '@atproto/syntax'
-import { Button, ButtonProps } from '#/components/forms/button'
+import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
+import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
+import { Button, ButtonProps } from '#/components/forms/button.tsx'
+import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
@@ -19,6 +23,12 @@ import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
+import {
+  useDeactivateAccount,
+  useDeleteAccountConfirm,
+  useDeleteAccountRequest,
+  useReactivateAccount,
+} from '#/data/account.ts'
 import {
   useUpdateEmailConfirm,
   useUpdateEmailRequest,
@@ -35,23 +45,26 @@ import { Override } from '#/lib/util.ts'
 export function Page() {
   return (
     <div className="flex flex-col gap-2">
-      <VerifyEmailRow />
-      <UpdateEmailRow />
-      <UpdatePasswordRow />
+      <EmailVerificationRow />
+      <EmailUpdateRow />
       <hr className="border-none" aria-hidden />
-      <UpdateHandleRow />
+      <HandleUpdateRow />
+      <PasswordUpdateRow />
+      <hr className="border-none" aria-hidden />
+      <AccountStatusRow />
+      <AccountDeletionRow />
     </div>
   )
 }
 
-function VerifyEmailRow() {
+function EmailVerificationRow() {
   const { account } = useAuthenticatedSession()
-  const { sub, email, email_verified } = account
+  const { did, email, emailVerified } = account
 
   const verifyRequest = useVerifyEmailRequest()
   const verifyConfirm = useVerifyEmailConfirm()
 
-  if (!email || email_verified) return null
+  if (!email || emailVerified) return null
 
   return (
     <Admonition
@@ -63,10 +76,10 @@ function VerifyEmailRow() {
           requestPending={verifyRequest.isPending}
           confirmPending={verifyConfirm.isPending}
           onRequest={async () => {
-            await verifyRequest.mutateAsync({ sub })
+            await verifyRequest.mutateAsync({ did })
           }}
           onConfirm={async ({ token }) => {
-            await verifyConfirm.mutateAsync({ sub, token, email })
+            await verifyConfirm.mutateAsync({ did, token, email })
           }}
         >
           <Button size="sm" color="info">
@@ -80,13 +93,14 @@ function VerifyEmailRow() {
   )
 }
 
-function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
+function EmailUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const data = useCustomizationData()
-  const { sub, email } = account
+  const { did, email } = account
 
   const updateRequest = useUpdateEmailRequest()
   const updateConfirm = useUpdateEmailConfirm()
+  const verifyRequest = useVerifyEmailRequest()
   const verifyConfirm = useVerifyEmailConfirm()
 
   return (
@@ -94,14 +108,17 @@ function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
       email={email}
       requestPending={updateRequest.isPending}
       confirmPending={updateConfirm.isPending}
-      onRequest={async () => {
-        return updateRequest.mutateAsync({ sub })
+      onUpdateRequest={async () => {
+        return updateRequest.mutateAsync({ did })
       }}
-      onConfirm={async ({ email, token }) => {
-        await updateConfirm.mutateAsync({ sub, email, token })
+      onUpdateConfirm={async ({ email, token }) => {
+        await updateConfirm.mutateAsync({ did, email, token })
       }}
-      onVerify={async ({ email, token }) => {
-        await verifyConfirm.mutateAsync({ sub, email, token })
+      onVerifyRequest={async () => {
+        await verifyRequest.mutateAsync({ did })
+      }}
+      onVerifyConfirm={async ({ email, token }) => {
+        await verifyConfirm.mutateAsync({ did, email, token })
       }}
       introMessage={
         data.show2FaWarningOnEmailUpdate && (
@@ -121,7 +138,7 @@ function UpdateEmailRow(props: Omit<RowProps, 'icon' | 'value'>) {
   )
 }
 
-function UpdatePasswordRow(props: Omit<RowProps, 'icon' | 'value'>) {
+function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const { email } = account
 
@@ -153,24 +170,79 @@ function UpdatePasswordRow(props: Omit<RowProps, 'icon' | 'value'>) {
   )
 }
 
-function UpdateHandleRow(props: Omit<RowProps, 'icon' | 'value'>) {
+function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { account } = useAuthenticatedSession()
+  const deactivate = useDeactivateAccount()
+  const reactivate = useReactivateAccount()
+
+  if (account.deactivated) {
+    return (
+      <ReactivateAccountDialog
+        onConfirm={async () => {
+          await reactivate.mutateAsync({ did: account.did })
+        }}
+      >
+        <Row {...props} icon={SnowflakeIcon} color="primary">
+          <Trans>Reactivate account</Trans>
+        </Row>
+      </ReactivateAccountDialog>
+    )
+  }
+
+  return (
+    <DeactivateAccountDialog
+      onConfirm={async () => {
+        await deactivate.mutateAsync({ did: account.did })
+      }}
+    >
+      <Row {...props} icon={SnowflakeIcon} color="error">
+        <Trans>Deactivate account</Trans>
+      </Row>
+    </DeactivateAccountDialog>
+  )
+}
+
+function AccountDeletionRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { account } = useAuthenticatedSession()
+  const { did, email, handle } = account
+
+  const deleteRequest = useDeleteAccountRequest()
+  const deleteConfirm = useDeleteAccountConfirm()
+
+  return (
+    <DeleteAccountDialog
+      handle={handle}
+      email={email}
+      requestPending={deleteRequest.isPending}
+      confirmPending={deleteConfirm.isPending}
+      onRequest={async () => {
+        await deleteRequest.mutateAsync({ did })
+      }}
+      onConfirm={async ({ token, password }) => {
+        await deleteConfirm.mutateAsync({ did, token, password })
+      }}
+    >
+      <Row {...props} icon={TrashIcon} color="error">
+        <Trans>Delete account</Trans>
+      </Row>
+    </DeleteAccountDialog>
+  )
+}
+
+function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const { availableUserDomains = [] } = useCustomizationData()
-  const { sub, preferred_username } = account
-  const handle =
-    preferred_username && isValidHandle(preferred_username)
-      ? preferred_username
-      : undefined
+  const { did, handle } = account
 
   const updateHandle = useUpdateHandle()
 
   return (
     <UpdateHandleDialog
-      did={sub}
+      did={did}
       currentHandle={handle}
       domains={availableUserDomains}
       handler={async ({ handle }) => {
-        await updateHandle.mutateAsync({ sub, handle })
+        await updateHandle.mutateAsync({ did, handle })
       }}
     >
       <Row {...props} icon={AtIcon} value={<Handle handle={handle} />}>
@@ -195,10 +267,16 @@ function Row({
   // ButtonProps
   children,
   className,
+  transparent = true,
   ...props
 }: RowProps) {
   return (
-    <Button shape="padded" {...props} className={clsx('gap-2', className)}>
+    <Button
+      shape="padded"
+      {...props}
+      transparent={transparent}
+      className={clsx('gap-2', className)}
+    >
       <Icon aria-hidden className="size-5 shrink-0 grow-0" />
       <span className="grow-1 truncate text-left font-medium">{children}</span>
       {value != null && (

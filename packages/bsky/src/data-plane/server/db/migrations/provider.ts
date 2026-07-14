@@ -1,4 +1,5 @@
-import { Kysely, Migration, MigrationProvider } from 'kysely'
+import { Kysely } from 'kysely'
+import { Migration, MigrationProvider } from 'kysely/migration'
 
 // Passes a context argument to migrations. We use this to thread the dialect into migrations
 

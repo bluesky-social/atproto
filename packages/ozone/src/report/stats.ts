@@ -674,7 +674,7 @@ export class ReportStatsService {
         del =
           r.reportTypes !== null
             ? del.where(
-                sql`"reportTypes"::jsonb = ${jsonb(r.reportTypes)}::jsonb`,
+                sql<boolean>`"reportTypes"::jsonb = ${jsonb(r.reportTypes)}::jsonb`,
               )
             : del.where('reportTypes', 'is', null)
         await del.execute()
@@ -722,7 +722,7 @@ export class ReportStatsService {
     }
     if (group.reportTypes !== null) {
       qb = qb.where(
-        sql`"reportTypes"::jsonb = ${jsonb(group.reportTypes)}::jsonb`,
+        sql<boolean>`"reportTypes"::jsonb = ${jsonb(group.reportTypes)}::jsonb`,
       )
     } else {
       qb = qb.where('reportTypes', 'is', null)
@@ -788,7 +788,9 @@ export class ReportStatsService {
       qb = qb.where('moderatorDid', 'is', null)
     }
     if (reportTypes !== null) {
-      qb = qb.where(sql`"reportTypes"::jsonb = ${jsonb(reportTypes)}::jsonb`)
+      qb = qb.where(
+        sql<boolean>`"reportTypes"::jsonb = ${jsonb(reportTypes)}::jsonb`,
+      )
     } else {
       qb = qb.where('reportTypes', 'is', null)
     }

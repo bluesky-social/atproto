@@ -20,14 +20,14 @@ export function AccountIdentifier({
 }: AccountIdentifierProps) {
   const { t } = useLingui()
 
-  const handle = account.preferred_username
+  const handle = account.handle
   if (handle) {
     return <Handle handle={handle} aria-label={ariaLabel} {...props} />
   }
 
   return (
     <span {...props} aria-label={ariaLabel ?? t`Account identifier`}>
-      {account.sub}
+      {account.did}
     </span>
   )
 }

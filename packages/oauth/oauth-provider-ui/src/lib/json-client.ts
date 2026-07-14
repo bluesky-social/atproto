@@ -37,13 +37,13 @@ export type JsonClientOptions<Endpoints extends EndpointDefinitions> = {
   ) => void
   onFetchSuccess?: {
     [Path in keyof Endpoints & string]?: (data: {
-      payload: Endpoints[Path] extends { output: infer Output } ? Output : never
       method: string
       input: Endpoints[Path] extends { method: 'GET'; params: infer Params }
         ? Params
         : Endpoints[Path] extends { method: 'POST'; input: infer Input }
           ? Input
           : undefined
+      output: Endpoints[Path] extends { output: infer Output } ? Output : never
       options?: Options
     }) => void
   }
@@ -104,23 +104,23 @@ export class JsonClient<Endpoints extends EndpointDefinitions> {
         })
       }
 
-      const payload = await response.json()
+      const output = await response.json()
 
       if (!response.ok) {
         const error =
-          options?.parseError?.(response, payload) ||
-          this.parseError(response, payload)
+          options?.parseError?.(response, output) ||
+          this.parseError(response, output)
         throw error
       }
 
       this.options?.onFetchSuccess?.[path]?.call(null, {
-        payload,
+        output,
         method,
         input,
         options,
       } as any)
 
-      return payload as Endpoints[Path]['output']
+      return output as Endpoints[Path]['output']
     } catch (err) {
       const context = { method, path, input, options }
       console.warn('API request failed', err, context)

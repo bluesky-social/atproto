@@ -1,7 +1,8 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedDefs, AtUri, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 /**
  * The frontend computes feed slices for display using at-most one
@@ -23,10 +24,10 @@ describe('pds thread views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -47,13 +48,10 @@ describe('pds thread views', () => {
     await sc.follow(dan, alice)
     await sc.follow(dan, bob)
     await sc.follow(dan, carol)
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it(`[A] -> [B], A blocks B, viewed as C`, async () => {
     const A = await sc.post(alice, `A`)

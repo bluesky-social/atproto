@@ -4,8 +4,11 @@ import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { verifyJwt } from '@atproto/xrpc-server'
 import { parseProxyHeader } from '../../src/pipethrough.js'
 
@@ -13,7 +16,7 @@ describe('proxy header', () => {
   let network: TestNetworkNoAppView
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   let proxyServer: ProxyServer
 
@@ -35,8 +38,8 @@ describe('proxy header', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await proxyServer.close()
-    await network.close()
+    await proxyServer?.close()
+    await network?.close()
   })
 
   it('parses proxy header', async () => {
@@ -171,12 +174,16 @@ type ProxyReq = {
 }
 
 class ProxyServer {
+  private terminator: httpTerminator.HttpTerminator
+
   constructor(
-    public server: http.Server,
+    server: http.Server,
     public url: string,
     public did: string,
     public requests: ProxyReq[],
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async create(
     plcClient: plc.Client,
@@ -226,9 +233,7 @@ class ProxyServer {
     return new ProxyServer(server, url, did, requests)
   }
 
-  close(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.server.close(() => resolve())
-    })
+  async close(): Promise<void> {
+    await this.terminator.terminate()
   }
 }

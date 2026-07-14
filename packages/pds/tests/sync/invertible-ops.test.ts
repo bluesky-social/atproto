@@ -1,6 +1,8 @@
+import assert from 'node:assert'
 import { AtUri } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
+import { isValidDid } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
 import { com } from '../../src/lexicons.js'
 import basicSeed from '../seeds/basic.js'
@@ -33,6 +35,7 @@ describe('invertible ops', () => {
       ]
     }
     for (const post of posts) {
+      assert(isValidDid(post.hostname))
       await sc.deletePost(post.hostname, post)
     }
 
@@ -40,7 +43,7 @@ describe('invertible ops', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('works', async () => {

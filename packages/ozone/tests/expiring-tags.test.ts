@@ -23,7 +23,7 @@ describe('expiring tags', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const emitTagEvent = (

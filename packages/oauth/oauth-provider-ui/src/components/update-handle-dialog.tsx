@@ -15,7 +15,7 @@ export type UpdateHandleDialogProps = {
   /** The current user's DID, used in own-domain verification instructions. */
   did: string
   handler: (
-    data: { handle: string },
+    data: { handle: HandleString },
     signal: AbortSignal,
   ) => void | PromiseLike<void>
 }

@@ -34,7 +34,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feeds = await db.db
       .selectFrom('suggested_feed')
       .orderBy('suggested_feed.order', 'asc')
-      .if(!!req.cursor, (q) => q.where('order', '>', parseInt(req.cursor, 10)))
+      .$if(!!req.cursor, (q) => q.where('order', '>', parseInt(req.cursor, 10)))
       .limit(req.limit || 50)
       .selectAll()
       .execute()
@@ -74,7 +74,7 @@ const searchFeedGeneratorsImpl = async (
   const trimmed = query.trim()
   let builder = db.db
     .selectFrom('feed_generator')
-    .if(!!trimmed, (q) => q.where('displayName', 'ilike', `%${trimmed}%`))
+    .$if(!!trimmed, (q) => q.where('displayName', 'ilike', `%${trimmed}%`))
     .selectAll()
   const keyset = new TimeCidKeyset(
     ref('feed_generator.createdAt'),

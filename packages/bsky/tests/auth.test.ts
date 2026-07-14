@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent, ids } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
@@ -20,14 +20,12 @@ describe('auth', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO invalidations do not originate from appview frontends: requires identity event on the repo stream.
   it.skip('handles signing key change for service auth.', async () => {

@@ -107,7 +107,7 @@ describe('queue-router', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('inserts report rows with no queue assignment when no queues are configured', async () => {

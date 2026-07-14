@@ -3,6 +3,8 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application, json } from 'express'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import {
   afterAll,
   afterEach,
@@ -168,14 +170,15 @@ describe('age assurance v2 views', () => {
 
   afterEach(async () => {
     vi.resetAllMocks()
+    // Drain in-flight bsync ops before resetting state directly, so an op from
+    // a test that doesn't read it back can't leak into the next test.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
 
-  afterAll(async () => {
-    await network.close()
-    await kws.stop()
-  })
+  afterAll(async () => network?.close())
+  afterAll(async () => kws?.stop())
 
   const getState = async (params: AppBskyAgeassuranceGetState.QueryParams) => {
     const { data } = await agent.app.bsky.ageassurance.getState(params, {
@@ -667,6 +670,7 @@ class MockKwsServer {
 
   private app: Application
   private server: Server
+  private terminator: httpTerminator.HttpTerminator
   private bskyUrlBase = ''
 
   constructor({
@@ -693,6 +697,9 @@ class MockKwsServer {
       })
 
     this.server = createServer(this.app)
+    this.terminator = httpTerminator.createHttpTerminator({
+      server: this.server,
+    })
   }
 
   async listen(port?: number) {
@@ -701,8 +708,7 @@ class MockKwsServer {
   }
 
   async stop() {
-    this.server.close()
-    await once(this.server, 'close')
+    await this.terminator.terminate()
   }
 
   setBskyBaseUrl(url: string) {

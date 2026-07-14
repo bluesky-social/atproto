@@ -22,7 +22,7 @@ import {
 import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import { Views } from '../../../../views/index.js'
-import { resHeaders } from '../../../util.js'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -50,7 +50,12 @@ export default function (server: Server, ctx: AppContext) {
         ),
       })
       const results = await searchPosts(
-        { ...params, hydrateCtx, isModService },
+        {
+          ...params,
+          hydrateCtx,
+          isModService,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
+        },
         ctx,
       )
       return {
@@ -130,10 +135,10 @@ const skeletonV2 = async (
       domains: params.domain ? [params.domain] : [],
       urls: params.url ? [params.url] : [],
       hashtags: params.tag ?? [],
+      languages: params.lang ? [params.lang] : [],
     },
     since: parseTimestamp(params.since),
     until: parseTimestamp(params.until),
-    language: params.lang,
   })
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
@@ -146,9 +151,10 @@ const skeletonV2 = async (
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useV2 = input.params.hydrateCtx.features.checkGate(
-    input.params.hydrateCtx.features.Gate.SearchV2Enable,
-  )
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
   const skeletonFn = useV2 ? skeletonV2 : skeletonV1
   return skeletonFn(input)
 }
@@ -237,6 +243,7 @@ type Context = {
 type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
   isModService: boolean
+  isV2Override: boolean
 }
 
 type Skeleton = {
