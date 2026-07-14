@@ -3,7 +3,22 @@ import type {
   Transport,
   TransportFactory,
   TransportHandlers,
+  TransportOptions,
 } from './transport.js'
+
+function toHeaderRecord(
+  headers?: Record<string, string> | Headers,
+): Record<string, string> | undefined {
+  if (!headers) return undefined
+  if (headers instanceof Headers) {
+    const record: Record<string, string> = {}
+    headers.forEach((value, key) => {
+      record[key] = value
+    })
+    return record
+  }
+  return headers
+}
 
 export class NodeTransport implements Transport {
   readonly capabilities = { heartbeat: true, pauseResume: true } as const
@@ -11,8 +26,13 @@ export class NodeTransport implements Transport {
 
   private readonly ws: WebSocket
 
-  constructor(url: string | URL, protocols?: string | string[]) {
-    this.ws = new WebSocket(url, protocols)
+  constructor(url: string | URL, options?: TransportOptions) {
+    const headers = toHeaderRecord(options?.headers)
+    this.ws = new WebSocket(
+      url,
+      options?.protocols,
+      headers ? { headers } : undefined,
+    )
     // Pin the default so every frame arrives as a single Buffer. ws's RawData
     // is `Buffer | ArrayBuffer | Buffer[]`; only 'nodebuffer' guarantees Buffer
     // for both text and binary frames, which is what the listener below assumes.
@@ -65,5 +85,5 @@ export class NodeTransport implements Transport {
   }
 }
 
-export const createNodeTransport: TransportFactory = (url, protocols) =>
-  new NodeTransport(url, protocols)
+export const createNodeTransport: TransportFactory = (url, options) =>
+  new NodeTransport(url, options)

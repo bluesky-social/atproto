@@ -2,6 +2,7 @@ import type {
   Transport,
   TransportFactory,
   TransportHandlers,
+  TransportOptions,
 } from './transport.js'
 
 // Minimal WHATWG WebSocket shape this adapter relies on.
@@ -35,12 +36,14 @@ export class BrowserTransport implements Transport {
 
   constructor(
     url: string | URL,
-    protocols?: string | string[],
+    options?: TransportOptions,
     // Injectable for tests; defaults to the browser global.
     WebSocketImpl: WebSocketCtor = (globalThis as { WebSocket: WebSocketCtor })
       .WebSocket,
   ) {
-    this.ws = new WebSocketImpl(url, protocols)
+    // headers are intentionally ignored: the WHATWG WebSocket API has no
+    // request-header mechanism. See WebSocketCoreOptions.headers TSDoc.
+    this.ws = new WebSocketImpl(url, options?.protocols)
     this.ws.binaryType = 'arraybuffer'
     this.ws.addEventListener('open', () => this.handlers.onOpen())
     this.ws.addEventListener('message', (ev: { data: unknown }) => {
@@ -111,5 +114,5 @@ export class BrowserTransport implements Transport {
   }
 }
 
-export const createBrowserTransport: TransportFactory = (url, protocols) =>
-  new BrowserTransport(url, protocols)
+export const createBrowserTransport: TransportFactory = (url, options) =>
+  new BrowserTransport(url, options)

@@ -1,5 +1,5 @@
 import { once } from 'node:events'
-import { createServer } from 'node:http'
+import { type IncomingMessage, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
@@ -8,11 +8,13 @@ import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import { WebSocketCore } from '../src/node.ts'
 
-async function startServer(onConnection: (ws: WebSocket) => void) {
+async function startServer(
+  onConnection: (ws: WebSocket, req: IncomingMessage) => void,
+) {
   const server = createServer()
   const { terminate } = httpTerminator.createHttpTerminator({ server })
   const wss = new WebSocketServer({ server })
-  wss.on('connection', onConnection)
+  wss.on('connection', (ws, req) => onConnection(ws, req))
   await once(server.listen(0), 'listening')
   const port = (server.address() as AddressInfo).port
   return { url: `ws://localhost:${port}`, terminate }
@@ -75,5 +77,39 @@ describe('NodeTransport via WebSocketCore', () => {
     for await (const _msg of ws) {
       /* drain */
     }
+  })
+
+  it('sends custom headers on the upgrade request (record form)', async () => {
+    let seenAuth: string | undefined
+    const { url, terminate } = await startServer((ws, req) => {
+      seenAuth = req.headers['authorization']
+      ws.close(1000)
+    })
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    const wsc = new WebSocketCore(url, {
+      headers: { Authorization: 'Bearer t0ken' },
+    })
+    for await (const _msg of wsc) {
+      /* drain */
+    }
+    expect(seenAuth).toBe('Bearer t0ken')
+  })
+
+  it('sends custom headers from a WHATWG Headers instance', async () => {
+    let seenAuth: string | undefined
+    const { url, terminate } = await startServer((ws, req) => {
+      seenAuth = req.headers['authorization']
+      ws.close(1000)
+    })
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    const wsc = new WebSocketCore(url, {
+      headers: new Headers({ Authorization: 'Bearer hdr' }),
+    })
+    for await (const _msg of wsc) {
+      /* drain */
+    }
+    expect(seenAuth).toBe('Bearer hdr')
   })
 })

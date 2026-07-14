@@ -27,7 +27,12 @@ export interface Transport {
   terminate(): void
 }
 
+export interface TransportOptions {
+  protocols?: string | string[]
+  headers?: Record<string, string> | Headers
+}
+
 export type TransportFactory = (
   url: string | URL,
-  protocols?: string | string[],
+  options?: TransportOptions,
 ) => Transport

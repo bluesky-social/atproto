@@ -9,6 +9,7 @@ import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import { BrowserTransport } from '../src/browser-transport.ts'
 import { WebSocketCoreEngine } from '../src/core.ts'
+import type { TransportOptions } from '../src/transport.ts'
 
 async function startServer(onConnection: (ws: WebSocket) => void) {
   const server = createServer()
@@ -21,8 +22,8 @@ async function startServer(onConnection: (ws: WebSocket) => void) {
 }
 
 // Factory that binds the undici WebSocket as the browser-global stand-in.
-const factory = (url: string | URL, protocols?: string | string[]) =>
-  new BrowserTransport(url, protocols, UndiciWebSocket as never)
+const factory = (url: string | URL, options?: TransportOptions) =>
+  new BrowserTransport(url, options, UndiciWebSocket as never)
 
 describe('BrowserTransport via engine', () => {
   it('reports heartbeat:false, pauseResume:false', async () => {

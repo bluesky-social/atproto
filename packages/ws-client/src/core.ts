@@ -35,6 +35,13 @@ export interface WebSocketCoreOptions<M extends DataMode = 'auto'> {
   highWaterMark?: number
   maxBufferedBytes?: number
   signal?: AbortSignal
+  /**
+   * Node only. Applied to the underlying `ws` upgrade request. Accepts a plain
+   * record or a WHATWG `Headers` (normalized to a record). Ignored in the
+   * browser build — the native WebSocket API has no request-header mechanism;
+   * use URL/subprotocol-based auth there instead.
+   */
+  headers?: Record<string, string> | Headers
 }
 
 type ReadyState = 'connecting' | 'open' | 'closing' | 'closed'
@@ -115,7 +122,10 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     this.opened.catch(() => {})
     this.closed.catch(() => {})
 
-    this.transport = createTransport(url, options.protocols)
+    this.transport = createTransport(url, {
+      protocols: options.protocols,
+      headers: options.headers,
+    })
     this.capabilities = this.transport.capabilities
     this.transport.handlers = this.buildHandlers()
 
