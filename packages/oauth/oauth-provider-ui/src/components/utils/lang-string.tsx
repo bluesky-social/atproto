@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from 'react'
+import { type ReactNode, useMemo } from 'react'
 import type { MultiLangString } from '@atproto/oauth-provider-api'
 import { getLangString } from '#/lib/lang'
 import { useCurrentLocale } from '#/locales/locale-provider'

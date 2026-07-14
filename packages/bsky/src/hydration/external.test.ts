@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { siteStandardRecordKey } from '../util/standard-site.js'
 import {
-  SiteStandardDocument,
-  SiteStandardDocuments,
-  SiteStandardPublication,
-  SiteStandardPublications,
+  type SiteStandardDocument,
+  type SiteStandardDocuments,
+  type SiteStandardPublication,
+  type SiteStandardPublications,
   getSiteStandardRecordsFromHydrationMapsByDocumentUri,
   getSiteStandardRecordsFromHydrationMapsByRefs,
 } from './external.js'

@@ -1,7 +1,7 @@
-import { SqlBool, sql } from 'kysely'
+import { type SqlBool, sql } from 'kysely'
 import { ensureValidRecordKey } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AnyQb, DbRef } from './util.js'
+import type { AnyQb, DbRef } from './util.js'
 
 type KeysetCursor = { primary: string; secondary: string }
 type KeysetLabeledResult = {

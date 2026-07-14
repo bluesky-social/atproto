@@ -13,22 +13,22 @@ import {
   jwtVerify,
 } from 'jose'
 import {
-  Jwk,
+  type Jwk,
   JwkError,
   JwtCreateError,
-  JwtHeader,
-  JwtPayload,
+  type JwtHeader,
+  type JwtPayload,
   JwtVerifyError,
   Key,
-  SignedJwt,
-  VerifyOptions,
-  VerifyResult,
+  type SignedJwt,
+  type VerifyOptions,
+  type VerifyResult,
   isPrivateJwk,
   jwkSchema,
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from '@atproto/jwk'
-import { RequiredKey, either } from './util.js'
+import { type RequiredKey, either } from './util.js'
 
 const { JOSEError } = errors
 

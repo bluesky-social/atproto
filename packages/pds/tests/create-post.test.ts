@@ -1,12 +1,12 @@
 import {
-  AppBskyFeedPost,
+  type AppBskyFeedPost,
   AppBskyRichtextFacet,
   AtUri,
-  AtpAgent,
+  type AtpAgent,
   RichText,
-  Un$Typed,
+  type Un$Typed,
 } from '@atproto/api'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import basicSeed from './seeds/basic.js'
 
 describe('pds posts record creation', () => {
@@ -25,7 +25,7 @@ describe('pds posts record creation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows for creating posts with tags', async () => {

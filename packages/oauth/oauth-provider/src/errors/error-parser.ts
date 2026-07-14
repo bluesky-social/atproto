@@ -118,7 +118,7 @@ function isBoom(v: unknown): v is Error & {
   return (
     v instanceof Error &&
     (v as any).isBoom === true &&
-    isHttpErrorCode(v['output']?.['statusCode'])
+    isHttpErrorCode((v as any).output?.statusCode)
   )
 }
 
@@ -128,8 +128,8 @@ function isXrpcError(v: unknown): v is Error & {
 } {
   return (
     v instanceof Error &&
-    isHttpErrorCode(v['type']) &&
-    isPayloadLike(v['payload'])
+    isHttpErrorCode((v as any).type) &&
+    isPayloadLike((v as any).payload)
   )
 }
 
@@ -141,7 +141,7 @@ function isPayloadLike(v: unknown): v is { error: string; message: string } {
   return (
     v != null &&
     typeof v === 'object' &&
-    typeof v['error'] === 'string' &&
-    typeof v['message'] === 'string'
+    typeof (v as any).error === 'string' &&
+    typeof (v as any).message === 'string'
   )
 }

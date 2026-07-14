@@ -1,54 +1,58 @@
 import { Key, Keyset } from '@atproto/jwk'
 import {
-  OAuthAuthorizationRequestParameters,
-  OAuthClientIdDiscoverable,
-  OAuthClientMetadata,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthClientIdDiscoverable,
+  type OAuthClientMetadata,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 import {
-  AtprotoDid,
-  DidCache,
+  type AtprotoDid,
+  type DidCache,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type DidResolverCommonOptions,
   assertAtprotoDid,
 } from '@atproto-labs/did-resolver'
-import { Fetch } from '@atproto-labs/fetch'
-import { HandleCache, HandleResolver } from '@atproto-labs/handle-resolver'
+import type { Fetch } from '@atproto-labs/fetch'
+import type { HandleCache, HandleResolver } from '@atproto-labs/handle-resolver'
 import { HANDLE_INVALID } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { FALLBACK_ALG } from './constants.js'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
-  CreateIdentityResolverOptions,
+  type CreateIdentityResolverOptions,
   createIdentityResolver,
 } from './identity-resolver.js'
 import {
-  AuthorizationServerMetadataCache,
+  type AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
 } from './oauth-authorization-server-metadata-resolver.js'
 import { OAuthCallbackError } from './oauth-callback-error.js'
 import { negotiateClientAuthMethod } from './oauth-client-auth.js'
 import {
   OAuthProtectedResourceMetadataResolver,
-  ProtectedResourceMetadataCache,
+  type ProtectedResourceMetadataCache,
 } from './oauth-protected-resource-metadata-resolver.js'
 import { OAuthResolver } from './oauth-resolver.js'
-import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
+import type { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { OAuthSession } from './oauth-session.js'
-import { RuntimeImplementation } from './runtime-implementation.js'
+import type { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
 import {
   SessionGetter,
-  SessionHooks,
-  SessionStore,
+  type SessionHooks,
+  type SessionStore,
   isExpectedSessionError,
 } from './session-getter.js'
-import { InternalStateData, StateStore } from './state-store.js'
-import { AuthorizeOptions, CallbackOptions, ClientMetadata } from './types.js'
+import type { InternalStateData, StateStore } from './state-store.js'
+import type {
+  AuthorizeOptions,
+  CallbackOptions,
+  ClientMetadata,
+} from './types.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
 
 // Export all types needed to construct OAuthClientOptions

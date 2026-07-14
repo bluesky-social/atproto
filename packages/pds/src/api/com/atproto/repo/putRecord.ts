@@ -1,26 +1,26 @@
 import { atUri } from '@atproto/lex'
 import {
-  LegacyBlobRef,
-  LexMap,
-  TypedBlobRef,
+  type LegacyBlobRef,
+  type LexMap,
+  type TypedBlobRef,
   isLegacyBlobRef,
   parseCid,
 } from '@atproto/lex-data'
 import {
   AuthRequiredError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor.js'
-import { AppContext } from '../../../../context.js'
+import type { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor.js'
+import type { AppContext } from '../../../../context.js'
 import { app, com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
   InvalidRecordError,
-  PreparedCreate,
-  PreparedUpdate,
+  type PreparedCreate,
+  type PreparedUpdate,
   prepareCreate,
   prepareUpdate,
 } from '../../../../repo/index.js'

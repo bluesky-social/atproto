@@ -3,7 +3,10 @@ import { useRef } from 'react'
 import { FormField } from '#/components/forms/form-field'
 import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type ResetPasswordConfirmData = {
   token: string

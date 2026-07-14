@@ -1,4 +1,5 @@
-import { Cid, isCid } from './cid.js'
+import type { Cid } from './cid.js'
+import { isCid } from './cid.js'
 import { isPlainObject } from './object.js'
 
 /**

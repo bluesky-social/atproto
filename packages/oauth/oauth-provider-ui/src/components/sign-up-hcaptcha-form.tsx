@@ -2,7 +2,10 @@ import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from '@phosphor-icons/react'
 import { useRef, useState } from 'react'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
 import { useCurrentLocale } from '#/locales/locale-provider'
 

@@ -1,11 +1,16 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.json"],
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
+  "references": [
+    { "path": "../lex-builder/tsconfig.build.json" },
+    { "path": "../lex-client/tsconfig.build.json" },
+    { "path": "../lex-data/tsconfig.build.json" },
+    { "path": "../lex-installer/tsconfig.build.json" },
+    { "path": "../lex-json/tsconfig.build.json" },
+    { "path": "../lex-schema/tsconfig.build.json" },
+  ],
   "compilerOptions": {
-    "noImplicitAny": true,
-    "importHelpers": true,
-    "target": "ES2023",
     "rootDir": "./src",
     "outDir": "./dist",
   },

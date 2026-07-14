@@ -1,11 +1,11 @@
 import { MINUTE } from '@atproto/common'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { dbLogger } from '../logger.js'
 import {
   deleteExpiringTagsByIds,
   getExpiredTags,
 } from '../mod-service/expiring-tags.js'
-import {
+import type {
   ModerationServiceCreator,
   ReversalSubject,
 } from '../mod-service/index.js'

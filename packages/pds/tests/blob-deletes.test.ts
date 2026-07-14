@@ -1,6 +1,7 @@
-import { AtpAgent, BlobRef } from '@atproto/api'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { AppContext } from '../src/index.js'
+import type { AtpAgent, BlobRef } from '@atproto/api'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import type { AppContext } from '../src/index.js'
 
 describe('blob deletes', () => {
   let network: TestNetworkNoAppView
@@ -9,14 +10,13 @@ describe('blob deletes', () => {
 
   let ctx: AppContext
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'blob_deletes',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -35,7 +35,7 @@ describe('blob deletes', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getDbBlobsForDid = (did: string) => {
@@ -184,7 +184,7 @@ describe('blob deletes', () => {
 
 async function updateProfile(
   sc: SeedClient,
-  did: string,
+  did: DidString,
   avatar?: BlobRef,
   banner?: BlobRef,
 ) {

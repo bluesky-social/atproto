@@ -1,12 +1,17 @@
-import { AtUriString, DidString, UriString, atUri } from '@atproto/lex'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import {
+  type AtUriString,
+  type DidString,
+  type UriString,
+  atUri,
+} from '@atproto/lex'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, com } from '../lexicons/index.js'
-import { ParsedLabelers } from '../util.js'
-import { Label, LabelerRecord } from '../views/types.js'
+import type { ParsedLabelers } from '../util.js'
+import type { Label, LabelerRecord } from '../views/types.js'
 import {
   HydrationMap,
-  Merges,
-  RecordInfo,
+  type Merges,
+  type RecordInfo,
   parseJsonBytes,
   parseRecord,
   parseString,

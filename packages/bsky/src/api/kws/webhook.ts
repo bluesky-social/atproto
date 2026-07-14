@@ -1,4 +1,5 @@
-import express, { RequestHandler } from 'express'
+import type { RequestHandler } from 'express'
+import type express from 'express'
 import { httpLogger as log } from '../../logger.js'
 import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const.js'
 import {
@@ -8,8 +9,8 @@ import {
 import { createEvent } from '../age-assurance/stash.js'
 import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util.js'
 import {
-  AppContextWithKwsClient,
-  KwsWebhookBody,
+  type AppContextWithKwsClient,
+  type KwsWebhookBody,
   webhookBodyIntermediateSchema,
 } from './types.js'
 import {

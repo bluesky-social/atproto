@@ -1,9 +1,9 @@
 import { useLingui } from '@lingui/react/macro'
 import { QuestionIcon, XIcon } from '@phosphor-icons/react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { HTMLAttributes, ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 import { Button } from '#/components/forms/button.tsx'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 
 export type DescriptionCardProps = Override<
   HTMLAttributes<HTMLDivElement>,

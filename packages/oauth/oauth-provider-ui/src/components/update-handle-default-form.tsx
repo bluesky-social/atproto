@@ -1,6 +1,9 @@
-import { HandleString } from '@atproto/syntax'
+import type { HandleString } from '@atproto/syntax'
 import { InputHandleDefault } from '#/components/forms/input-handle-default.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type UpdateHandleDefaultData = {
   handle: HandleString

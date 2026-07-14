@@ -1,16 +1,17 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { WebSocket, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import {
   ErrorFrame,
-  Frame,
+  type Frame,
   MessageFrame,
+  type Server,
+  type StreamContext,
   Subscription,
   byFrame,
 } from '../src/index.js'
-import * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   buildAddLexicons,
@@ -113,18 +114,14 @@ const LEXICONS = [
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
-  'io.example.streamOne': async function* ({
-    params,
-  }: xrpcServer.StreamContext) {
+  'io.example.streamOne': async function* ({ params }: StreamContext) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
       yield { $type: 'io.example.streamOne#countdownStatus', count: i }
     }
   },
-  'io.example.streamTwo': async function* ({
-    params,
-  }: xrpcServer.StreamContext) {
+  'io.example.streamTwo': async function* ({ params }: StreamContext) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(200)
@@ -151,7 +148,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     // definitions
     const lex = new Lexicons(structuredClone(LEXICONS))
 
-    let server: xrpcServer.Server
+    let server: Server
     let s: http.Server
     let port: number
     beforeAll(async () => {

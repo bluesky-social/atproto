@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import {
-  HandleString,
+  type HandleString,
   ensureValidHandle,
   normalizeHandle,
 } from '@atproto/syntax'

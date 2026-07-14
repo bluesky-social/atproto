@@ -1,12 +1,12 @@
 import {
   DnsHandleResolver,
-  ResolveTxt,
+  type ResolveTxt,
 } from './internal-resolvers/dns-handle-resolver.js'
 import {
   WellKnownHandleResolver,
-  WellKnownHandleResolverOptions,
+  type WellKnownHandleResolverOptions,
 } from './internal-resolvers/well-known-handler-resolver.js'
-import {
+import type {
   HandleResolver,
   ResolveHandleOptions,
   ResolvedHandle,

@@ -1,18 +1,18 @@
 import {
-  AtprotoDid,
-  AtprotoIdentityDidMethods,
-  DidDocument,
-  DidResolver,
-  ResolveDidOptions,
+  type AtprotoDid,
+  type AtprotoIdentityDidMethods,
+  type DidDocument,
+  type DidResolver,
+  type ResolveDidOptions,
   isAtprotoDid,
 } from '@atproto-labs/did-resolver'
-import {
+import type {
   HandleResolver,
   ResolveHandleOptions,
 } from '@atproto-labs/handle-resolver'
 import { HANDLE_INVALID } from './constants.js'
 import { IdentityResolverError } from './identity-resolver-error.js'
-import {
+import type {
   IdentityInfo,
   IdentityResolver,
   ResolveIdentityOptions,

@@ -1,5 +1,70 @@
 # @atproto/lex-client
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [[`1570e44`](https://github.com/bluesky-social/atproto/commit/1570e4471bffb1f3e5e6907f031d025db9ef3198)]:
+  - @atproto/lex-schema@0.2.2
+
+## 0.2.3
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto/lex-schema@0.2.1
+  - @atproto/lex-data@0.1.5
+  - @atproto/lex-json@0.1.4
+
+## 0.2.2
+
+### Patch Changes
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type `Client` binary responses as `Uint8Array<ArrayBuffer>`
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add retry options to `xrpc` requests
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112)]:
+  - @atproto/lex-schema@0.2.0
+
+## 0.2.1
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build using `verbatimModuleSyntax`, reducing runtime import graph
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/lex-schema@0.1.6
+  - @atproto/lex-data@0.1.4
+  - @atproto/lex-json@0.1.3
+
+## 0.2.0
+
+### Minor Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `list()` interface to return `{ valid: boolean; value: InferredType }`
+
+### Patch Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `listAll()` method
+
+## 0.1.5
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/lex-data@0.1.3
+  - @atproto/lex-json@0.1.2
+  - @atproto/lex-schema@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes

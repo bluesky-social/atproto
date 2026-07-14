@@ -1,5 +1,5 @@
 import * as jose from 'jose'
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('com.atproto.server.getServiceAuth', () => {
@@ -23,7 +23,7 @@ describe('com.atproto.server.getServiceAuth', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('issues a token whose aud matches a bare-DID input', async () => {

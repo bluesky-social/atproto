@@ -1,6 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { stripViewer } from '../_util.js'
 
 describe('pds user search views', () => {
@@ -15,24 +15,20 @@ describe('pds user search views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
-
-    const suggestions = [
-      { did: sc.dids.alice, order: 1 },
-      { did: sc.dids.bob, order: 2 },
-      { did: sc.dids.carol, order: 3 },
-      { did: sc.dids.dan, order: 4 },
-    ]
 
     await network.bsky.db.db
       .insertInto('suggested_follow')
-      .values(suggestions)
+      .values([
+        { did: sc.dids.alice, order: 1 },
+        { did: sc.dids.bob, order: 2 },
+        { did: sc.dids.carol, order: 3 },
+        { did: sc.dids.dan, order: 4 },
+      ])
       .execute()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(

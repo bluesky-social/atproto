@@ -2,7 +2,7 @@ import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { lexToJson } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
-import { FetchHandler } from './agent.js'
+import type { FetchHandler } from './agent.js'
 import {
   XrpcAuthenticationError,
   XrpcFetchError,

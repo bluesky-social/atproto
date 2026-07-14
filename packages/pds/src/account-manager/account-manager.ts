@@ -1,28 +1,28 @@
 import assert from 'node:assert'
-import { KeyObject } from 'node:crypto'
-import { Client as PlcClient } from '@did-plc/lib'
+import type { KeyObject } from 'node:crypto'
+import type { Client as PlcClient } from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
 import {
-  AtIdentifierString,
-  DidString,
-  HandleString,
+  type AtIdentifierString,
+  type DidString,
+  type HandleString,
   isAtIdentifierString,
 } from '@atproto/lex'
-import { Cid } from '@atproto/lex-data'
+import type { Cid } from '@atproto/lex-data'
 import {
   INVALID_HANDLE,
   currentDatetimeString,
   isValidTld,
 } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorStore } from '../actor-store/actor-store.js'
+import type { ActorStore } from '../actor-store/actor-store.js'
 import { assertValidDidDocumentForService } from '../api/com/atproto/server/util.js'
 import { AuthScope } from '../auth-scope.js'
-import { ServerConfig } from '../config/config.js'
+import type { ServerConfig } from '../config/config.js'
 import { softDeleted } from '../db/index.js'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import {
@@ -30,13 +30,18 @@ import {
   ensureHandleServiceConstraints,
   isServiceDomain,
 } from '../handle/index.js'
-import { com } from '../lexicons/index.js'
+import type { com } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
-import { ServerMailer } from '../mailer/index.js'
-import { Sequencer } from '../sequencer/index.js'
-import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db/index.js'
+import type { ServerMailer } from '../mailer/index.js'
+import type { Sequencer } from '../sequencer/index.js'
+import {
+  type AccountDb,
+  type EmailTokenPurpose,
+  getDb,
+  getMigrator,
+} from './db/index.js'
 import * as accountHelpers from './helpers/account.js'
-import { AccountStatus, ActorAccount } from './helpers/account.js'
+import { AccountStatus, type ActorAccount } from './helpers/account.js'
 import * as auth from './helpers/auth.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
 import * as emailToken from './helpers/email-token.js'

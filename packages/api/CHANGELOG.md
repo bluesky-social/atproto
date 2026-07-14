@@ -1,5 +1,119 @@
 # @atproto/api
 
+## 0.20.28
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/common-web@0.5.6
+  - @atproto/lexicon@0.7.7
+  - @atproto/xrpc@0.8.6
+
+## 0.20.27
+
+### Patch Changes
+
+- [#5195](https://github.com/bluesky-social/atproto/pull/5195) [`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Update description
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/common-web@0.5.5
+  - @atproto/lexicon@0.7.6
+  - @atproto/syntax@0.7.1
+  - @atproto/xrpc@0.8.5
+
+## 0.20.26
+
+### Patch Changes
+
+- [#2657](https://github.com/bluesky-social/atproto/pull/2657) [`6b493b7`](https://github.com/bluesky-social/atproto/commit/6b493b77f56b7de47f5eb91d29f726cdc7794e46) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Fix hashtag length check in `detectFacets` to count grapheme clusters instead of UTF-16 code units, skipping the grapheme count when the UTF-16 length already fits within the limit.
+
+- [#5178](https://github.com/bluesky-social/atproto/pull/5178) [`1497fea`](https://github.com/bluesky-social/atproto/commit/1497fea9c975e46e56fd99914fba2ad96affa934) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add method for setting bskyAppState.isBetaUser flag
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/common-web@0.5.4
+  - @atproto/lexicon@0.7.5
+  - @atproto/xrpc@0.8.4
+
+## 0.20.25
+
+### Patch Changes
+
+- [#5179](https://github.com/bluesky-social/atproto/pull/5179) [`f6409db`](https://github.com/bluesky-social/atproto/commit/f6409dbcefdd5565b1ba23c52dc71ec7e791e2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support the new timestamp field, along with transactionId and errorCode, on KWS age verification status payloads. Add additionalVerificationMethods to Age Assurance config.
+
+## 0.20.24
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto/common-web@0.5.3
+  - @atproto/lexicon@0.7.4
+  - @atproto/xrpc@0.8.3
+
+## 0.20.23
+
+### Patch Changes
+
+- [#5166](https://github.com/bluesky-social/atproto/pull/5166) [`45278fd`](https://github.com/bluesky-social/atproto/commit/45278fd367ee50654ac5d09bd6da1451c8b0cd98) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `additionalVerificationMethods` to Age Assurance config and add required config for Texas
+
+## 0.20.22
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/common-web@0.5.2
+  - @atproto/lexicon@0.7.3
+  - @atproto/syntax@0.6.3
+  - @atproto/xrpc@0.8.2
+
+## 0.20.21
+
+### Patch Changes
+
+- [#5146](https://github.com/bluesky-social/atproto/pull/5146) [`e4e6e84`](https://github.com/bluesky-social/atproto/commit/e4e6e84b486234686dd995f516a95098e4785a90) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable filtering by multiple languages in search V2
+
+- [#5143](https://github.com/bluesky-social/atproto/pull/5143) [`cf429ac`](https://github.com/bluesky-social/atproto/commit/cf429ac0ee3a76244304aad344d38e88bc643887) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Match V1 search date handling with V2 date handling
+
+- [#5145](https://github.com/bluesky-social/atproto/pull/5145) [`2e8ab4b`](https://github.com/bluesky-social/atproto/commit/2e8ab4bb08bd754f1f3f20722e028294a2169d6b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.20
+
+### Patch Changes
+
+- [#5137](https://github.com/bluesky-social/atproto/pull/5137) [`ec8c90c`](https://github.com/bluesky-social/atproto/commit/ec8c90c88963155f471fd25ad266ab29f91f27fc) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+## 0.20.19
+
+### Patch Changes
+
+- [#5127](https://github.com/bluesky-social/atproto/pull/5127) [`a67858d`](https://github.com/bluesky-social/atproto/commit/a67858df5e4c0ca213e345c14b0283b2e930c68c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Update required query params for searchPostsV2
+
+## 0.20.18
+
+### Patch Changes
+
+- [#5124](https://github.com/bluesky-social/atproto/pull/5124) [`ef3adfa`](https://github.com/bluesky-social/atproto/commit/ef3adfaa0731a57780ccf6f1f81183c1938e1af4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5114](https://github.com/bluesky-social/atproto/pull/5114) [`5206b3a`](https://github.com/bluesky-social/atproto/commit/5206b3aae30b1efe39cff8cccbabb5932cd49a3d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add searchPostsV2 endpoint
+
+## 0.20.17
+
+### Patch Changes
+
+- [#5117](https://github.com/bluesky-social/atproto/pull/5117) [`8a4c88b`](https://github.com/bluesky-social/atproto/commit/8a4c88b0f63fb2d82b1391d64c54e0c760fac48b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make tests less flaky in CI
+
+- [#5123](https://github.com/bluesky-social/atproto/pull/5123) [`cab3ac3`](https://github.com/bluesky-social/atproto/commit/cab3ac321bf939a4c8ba29aed3f632d8a91790bf) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
 ## 0.20.16
 
 ### Patch Changes

@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { DidDocument, DidService } from './did-document.js'
+import type { DidDocument, DidService } from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
-import { DidRefAbsolute, isDidRefAbsolute } from './did-ref.js'
-import { Did } from './did.js'
+import { type DidRefAbsolute, isDidRefAbsolute } from './did-ref.js'
+import type { Did } from './did.js'
 import { canParse } from './lib/uri.js'
 import {
   DID_PLC_PREFIX,
@@ -12,7 +12,7 @@ import {
   isDidPlc,
   isDidWeb,
 } from './methods.js'
-import { Identifier, matchesIdentifier } from './utils.js'
+import { type Identifier, matchesIdentifier } from './utils.js'
 
 // This file contains atproto-specific DID validation utilities.
 

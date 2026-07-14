@@ -1,8 +1,8 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../db/index.js'
-import { Report } from '../db/schema/report.js'
-import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
+import type { Database } from '../db/index.js'
+import type { Report } from '../db/schema/report.js'
+import type { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -173,6 +173,25 @@ export async function getReportById(
       'me.meta',
     ])
     .executeTakeFirst()
+}
+
+export async function getReportsByIds(
+  db: Database,
+  ids: number[],
+): Promise<ReportWithEvent[]> {
+  if (!ids.length) return []
+  return reportQuery(db)
+    .where('r.id', 'in', ids)
+    .selectAll('r')
+    .select([
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.createdBy as reportedBy',
+      'me.comment',
+      'me.meta',
+    ])
+    .execute()
 }
 
 export async function getLatestReport(

@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
+import { type AtpAgent, ids } from '@atproto/api'
 import { DAY } from '@atproto/common'
-import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { DidString } from '@atproto/syntax'
+import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('handle invalidation', () => {
   let network: TestNetwork
@@ -38,10 +38,10 @@ describe('handle invalidation', () => {
       }
       return origResolve(handle)
     }
-  }, 20_000) // @NOTE seeding can take a while
+  })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const backdateIndexedAt = async (did: string) => {

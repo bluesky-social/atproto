@@ -1,5 +1,5 @@
-import { AppBskyActorDefs } from './client/index.js'
-import { ModerationPrefs } from './moderation/types.js'
+import type { AppBskyActorDefs } from './client/index.js'
+import type { ModerationPrefs } from './moderation/types.js'
 
 export type UnknownServiceType = string & NonNullable<unknown>
 export type AtprotoServiceType = 'atproto_labeler' | UnknownServiceType
@@ -155,6 +155,7 @@ export interface BskyPreferences {
     queuedNudges: string[]
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
     nuxs: AppBskyActorDefs.Nux[]
+    isBetaUser?: boolean
   }
   postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
   verificationPrefs: AppBskyActorDefs.VerificationPrefs

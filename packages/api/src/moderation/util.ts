@@ -1,11 +1,11 @@
 import {
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
-  AppBskyLabelerDefs,
+  type AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client/index.js'
 import { asPredicate } from '../client/util.js'
-import {
+import type {
   InterpretedLabelValueDefinition,
   LabelPreference,
   LabelValueDefinitionFlag,

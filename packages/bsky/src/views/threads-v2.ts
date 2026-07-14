@@ -1,6 +1,6 @@
-import { $Typed } from '@atproto/lex'
-import { HydrateCtx } from '../hydration/hydrator.js'
-import {
+import type { $Typed } from '@atproto/lex'
+import type { HydrateCtx } from '../hydration/hydrator.js'
+import type {
   GetPostThreadV2QueryParams,
   ThreadItem,
   ThreadItemBlocked,

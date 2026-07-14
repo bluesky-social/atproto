@@ -1,13 +1,13 @@
 import { dedupeStrs } from '@atproto/common'
-import { AtUriString, DidString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app } from '../lexicons/index.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   uriToDid as didFromUri,
 } from '../util/uris.js'
-import {
+import type {
   FeedGenRecord,
   GateRecord,
   LikeRecord,
@@ -17,8 +17,8 @@ import {
 } from '../views/types.js'
 import {
   HydrationMap,
-  ItemRef,
-  RecordInfo,
+  type ItemRef,
+  type RecordInfo,
   parseRecord,
   parseString,
   split,
@@ -100,8 +100,7 @@ export type FeedItem = {
   post: ItemRef
   repost?: ItemRef
   /**
-   * If true, overrides the `reason` with `app.bsky.feed.defs#reasonPin`. Used
-   * only in author feeds.
+   * If true, overrides the `reason` with `app.bsky.feed.defs#reasonPin`.
    */
   authorPinned?: boolean
 }

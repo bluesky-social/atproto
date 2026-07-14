@@ -1,11 +1,11 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
   CombinedRateLimiter,
   RateLimitExceededError,
-  RateLimiterConsume,
-  RateLimiterI,
-  RateLimiterReset,
-  RateLimiterStatus,
+  type RateLimiterConsume,
+  type RateLimiterI,
+  type RateLimiterReset,
+  type RateLimiterStatus,
 } from './rate-limiter.js'
 
 export interface HttpRateLimiterContext {
@@ -45,6 +45,11 @@ export class HttpRateLimiter<
     } catch (err) {
       if (err instanceof RateLimitExceededError) {
         setStatusHeaders(ctx, err.status)
+
+        ctx.res?.setHeader(
+          'Retry-After',
+          Math.ceil(err.status.msBeforeNext / 1e3),
+        )
       }
 
       throw err

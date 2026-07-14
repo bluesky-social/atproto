@@ -1,5 +1,5 @@
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'
-import {
+import type {
   DigestAlgorithm,
   Key,
   RuntimeImplementation,

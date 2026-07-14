@@ -1,4 +1,4 @@
-import { Generated, GeneratedAlways, Insertable, Selectable } from 'kysely'
+import type { Generated, GeneratedAlways, Insertable, Selectable } from 'kysely'
 
 export type RepoSeqEventType = 'append' | 'sync' | 'identity' | 'account'
 

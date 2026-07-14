@@ -1,5 +1,5 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Unknown$Type } from '@atproto/lex'
 import usersSeed from './seeds/users.js'
 
@@ -29,7 +29,7 @@ describe('user preferences', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('requires auth to set or put preferences.', async () => {

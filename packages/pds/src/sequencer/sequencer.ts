@@ -2,24 +2,24 @@ import EventEmitter from 'node:events'
 import type TypedEmitter from 'typed-emitter'
 import { SECOND, wait } from '@atproto/common'
 import { decode as cborDecode } from '@atproto/lex-cbor'
-import { DatetimeString, DidString, HandleString } from '@atproto/syntax'
+import type { DatetimeString, DidString, HandleString } from '@atproto/syntax'
 import { AccountStatus } from '../account-manager/helpers/account.js'
-import { Crawlers } from '../crawlers.js'
+import type { Crawlers } from '../crawlers.js'
 import { seqLogger as log } from '../logger.js'
-import { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
+import type { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
 import {
-  RepoSeqEntry,
-  RepoSeqInsert,
-  SequencerDb,
+  type RepoSeqEntry,
+  type RepoSeqInsert,
+  type SequencerDb,
   getDb,
   getMigrator,
 } from './db/index.js'
 import {
-  AccountEvt,
-  CommitEvt,
-  IdentityEvt,
-  SeqEvt,
-  SyncEvt,
+  type AccountEvt,
+  type CommitEvt,
+  type IdentityEvt,
+  type SeqEvt,
+  type SyncEvt,
   formatSeqAccountEvt,
   formatSeqCommit,
   formatSeqIdentityEvt,

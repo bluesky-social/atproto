@@ -2,12 +2,12 @@ import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import { ModeratorClient } from './moderator-client.js'
-import { DidAndKey, OzoneConfig } from './types.js'
+import type { DidAndKey, OzoneConfig } from './types.js'
 import { createDidAndKey } from './util.js'
 
 export class TestOzone {
@@ -246,8 +246,15 @@ export class TestOzone {
   }
 
   async close() {
-    await this.daemon.destroy()
-    await this.server.destroy()
+    try {
+      await this.server.destroy()
+    } finally {
+      await this.daemon.destroy()
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 

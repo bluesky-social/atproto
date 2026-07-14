@@ -1,6 +1,6 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -23,7 +23,7 @@ describe('moderation subject content tagging', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getStatus = async (subject: string) => {

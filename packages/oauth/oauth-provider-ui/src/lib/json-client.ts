@@ -1,4 +1,4 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 
 export type JsonScalar = string | number | boolean | null

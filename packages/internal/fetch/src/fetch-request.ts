@@ -1,6 +1,6 @@
 import { FetchError } from './fetch-error.js'
 import { asRequest } from './fetch.js'
-import { extractUrl, isIp } from './util.js'
+import { isIp } from './util.js'
 
 export class FetchRequestError extends FetchError {
   constructor(
@@ -69,7 +69,7 @@ function extractInfo(err: unknown): [statusCode: number, message: string] {
   }
 
   // NodeJS errors
-  const code = err['code']
+  const code = 'code' in err ? err.code : undefined
   if (typeof code === 'string') {
     switch (true) {
       case code === 'ENOTFOUND':
@@ -99,12 +99,14 @@ export function protocolCheckRequestTransform(protocols: {
   'https:'?: boolean | { allowCustomPort: boolean }
 }) {
   return (input: Request | string | URL, init?: RequestInit) => {
-    const { protocol, port } = extractUrl(input)
-
     const request = asRequest(input, init)
 
+    const { protocol, port } = new URL(request.url)
+
     const config: undefined | boolean | { allowCustomPort?: boolean } =
-      Object.hasOwn(protocols, protocol) ? protocols[protocol] : undefined
+      Object.hasOwn(protocols, protocol)
+        ? protocols[protocol as keyof typeof protocols]
+        : undefined
 
     if (!config) {
       throw new FetchRequestError(
@@ -155,9 +157,9 @@ export function requireHostHeaderTransform() {
     // Note that fetch() will automatically add the Host header from the URL and
     // discard any Host header manually set in the request.
 
-    const { protocol, hostname } = extractUrl(input)
-
     const request = asRequest(input, init)
+
+    const { protocol, hostname } = new URL(request.url)
 
     // "Host" header only makes sense in the context of an HTTP request
     if (protocol !== 'http:' && protocol !== 'https:') {
@@ -199,9 +201,9 @@ export function forbiddenDomainNameRequestTransform(
   }
 
   return async (input: Request | string | URL, init?: RequestInit) => {
-    const { hostname } = extractUrl(input)
-
     const request = asRequest(input, init)
+
+    const { hostname } = new URL(request.url)
 
     // Full domain name check
     if (denySet.has(hostname)) {

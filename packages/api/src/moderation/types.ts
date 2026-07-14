@@ -1,4 +1,4 @@
-import {
+import type {
   AppBskyActorDefs,
   AppBskyFeedDefs,
   AppBskyGraphDefs,
@@ -6,8 +6,8 @@ import {
   ChatBskyActorDefs,
   ComAtprotoLabelDefs,
 } from '../client/index.js'
-import { KnownLabelValue } from './const/labels.js'
-import { MuteWordMatch } from './mutewords.js'
+import type { KnownLabelValue } from './const/labels.js'
+import type { MuteWordMatch } from './mutewords.js'
 
 // syntax
 // =

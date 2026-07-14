@@ -3,7 +3,7 @@ import type express from 'express'
 import { featureGatesLogger } from '../logger.js'
 import { Gate, IGNORE_METRICS_FOR_GATES } from './gates.js'
 import { MetricsClient } from './metrics.js'
-import {
+import type {
   CheckedFeatureGatesMap,
   ScopedFeatureGatesClient,
   UserContext,
@@ -72,10 +72,10 @@ export class FeatureGatesClient {
       this.client = new GrowthBookClient({
         apiHost: this.config.growthBookApiHost,
         clientKey: this.config.growthBookClientKey,
-        onFeatureUsage: (feature, result, userContext) => {
+        onFeatureUsage: async (feature, result, userContext) => {
           if (IGNORE_METRICS_FOR_GATES.has(feature as Gate)) return
 
-          this.metrics.track(
+          await this.metrics.track(
             'feature:viewed',
             {
               featureId: feature,
@@ -88,7 +88,7 @@ export class FeatureGatesClient {
             ),
           )
         },
-        trackingCallback: (experiment, result, userContext) => {
+        trackingCallback: async (experiment, result, userContext) => {
           /**
            * Experiments are only fired in a feature gate has an Experiment
            * attached in Growthbook. Howerver, we want to be extra sure that a
@@ -101,7 +101,7 @@ export class FeatureGatesClient {
           )
             return
 
-          this.metrics.track(
+          await this.metrics.track(
             'experiment:viewed',
             {
               experimentId: experiment.key,
@@ -154,14 +154,18 @@ export class FeatureGatesClient {
     }
   }
 
-  destroy() {
+  async destroy() {
     if (this.ready) {
       this.ready = false
       if (this.refreshInterval) {
         clearInterval(this.refreshInterval)
       }
     }
-    this.metrics.stop()
+    await this.metrics.stop()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 
   /**

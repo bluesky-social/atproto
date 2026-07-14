@@ -1,8 +1,8 @@
 import assert from 'node:assert'
 import { ComAtprotoAdminDefs } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -24,7 +24,7 @@ describe('moderation-status-tags', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('manage tags on subject status', () => {

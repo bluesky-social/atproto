@@ -1,8 +1,8 @@
-import { Cid } from '@atproto/lex-data'
+import type { Cid } from '@atproto/lex-data'
 import { BlockMap } from '../block-map.js'
-import { CommitData } from '../types.js'
+import type { CommitData } from '../types.js'
 import { ReadableBlockstore } from './readable-blockstore.js'
-import { RepoStorage } from './types.js'
+import type { RepoStorage } from './types.js'
 
 export class MemoryBlockstore
   extends ReadableBlockstore

@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws'
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import {
   HOUR,
   MINUTE,
@@ -8,14 +8,20 @@ import {
   wait,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { Cid } from '@atproto/lex-data'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
-import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/syntax'
+import {
+  ErrorFrame,
+  type Frame,
+  MessageFrame,
+  byFrame,
+} from '@atproto/xrpc-server'
 import { AccountStatus } from '../../src/account-manager/account-manager.js'
-import { AppContext } from '../../src/index.js'
-import { com } from '../../src/lexicons.js'
+import type { AppContext } from '../../src/index.js'
+import type { com } from '../../src/lexicons.js'
 import basicSeed from '../seeds/basic.js'
 
 describe('repo subscribe repos', () => {
@@ -26,10 +32,10 @@ describe('repo subscribe repos', () => {
 
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -39,7 +45,6 @@ describe('repo subscribe repos', () => {
       },
     })
     serverHost = network.pds.url.replace('http://', '')
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -51,7 +56,7 @@ describe('repo subscribe repos', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {
@@ -219,7 +224,7 @@ describe('repo subscribe repos', () => {
     }
   }
 
-  const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
+  const randomPost = (by: DidString) => sc.post(by, randomStr(8, 'base32'))
   const makePosts = async () => {
     for (let i = 0; i < 10; i++) {
       await Promise.all([

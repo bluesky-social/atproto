@@ -1,6 +1,7 @@
-import { DidString, ensureValidDidRegex, isValidDid } from './did.js'
+import type { DidString } from './did.js'
+import { ensureValidDidRegex, isValidDid } from './did.js'
+import type { HandleString } from './handle.js'
 import {
-  HandleString,
   InvalidHandleError,
   ensureValidHandleRegex,
   isValidHandle,

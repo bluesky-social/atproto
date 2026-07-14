@@ -1,4 +1,4 @@
-import { Cid, parseCid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 
 export class CidSet implements Iterable<Cid> {
   private set: Set<string>

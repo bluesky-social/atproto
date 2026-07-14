@@ -1,8 +1,8 @@
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context.js'
-import { Verification } from '../../db/schema/verification.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Verification } from '../../db/schema/verification.js'
+import type { Server } from '../../lexicon/index.js'
 import { getReposForVerifications } from '../../verification/util.js'
 
 export default function (server: Server, ctx: AppContext) {

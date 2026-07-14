@@ -1,5 +1,74 @@
 # @atproto/oauth-provider-api
 
+## 0.7.6
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+
+## 0.7.5
+
+### Patch Changes
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/oauth-types@0.7.5
+  - @atproto/jwk@0.7.4
+  - @atproto/syntax@0.7.1
+
+## 0.7.4
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed)]:
+  - @atproto/syntax@0.7.0
+
+## 0.7.3
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto/oauth-types@0.7.4
+  - @atproto/jwk@0.7.3
+
+## 0.7.2
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/jwk@0.7.2
+  - @atproto/oauth-types@0.7.3
+  - @atproto/syntax@0.6.3
+
+## 0.7.1
+
+### Patch Changes
+
+- [#5140](https://github.com/bluesky-social/atproto/pull/5140) [`0b165ca`](https://github.com/bluesky-social/atproto/commit/0b165ca96c460d3a30207f81e13eebfe9e8c7a1c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `deleteAfter` field to account deactivation data
+
+## 0.7.0
+
+### Minor Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `Account` properties to contain strongly typed `did`
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update interfaces to use did instead of sub
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to deactivate and delete account from the account manager interface
+
+### Patch Changes
+
+- [#5053](https://github.com/bluesky-social/atproto/pull/5053) [`9acd39b`](https://github.com/bluesky-social/atproto/commit/9acd39b22ead6c0c56428297de425bd2b9a3c61f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `consentRequired` logic from OAuth consent flow UI
+
 ## 0.6.2
 
 ### Patch Changes

@@ -1,4 +1,5 @@
-import express, { RequestHandler } from 'express'
+import type { RequestHandler } from 'express'
+import type express from 'express'
 import { ageAssuranceLogger as logger } from '../../../logger.js'
 import { AGE_ASSURANCE_CONFIG } from '../const.js'
 import {
@@ -7,7 +8,7 @@ import {
 } from '../kws/age-verified.js'
 import { parseKWSExternalPayloadV2 } from '../kws/external-payload.js'
 import { createEvent } from '../stash.js'
-import { type AppContextWithAA } from '../types.js'
+import type { AppContextWithAA } from '../types.js'
 import { computeAgeAssuranceAccessOrThrow } from '../util.js'
 
 export const handler =

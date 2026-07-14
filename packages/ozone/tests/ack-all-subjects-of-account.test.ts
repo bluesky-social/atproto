@@ -1,8 +1,8 @@
 import { ComAtprotoRepoStrongRef } from '@atproto/api'
 import {
-  ModeratorClient,
-  RecordRef,
-  SeedClient,
+  type ModeratorClient,
+  type RecordRef,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -16,7 +16,7 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
-  SubjectStatusView,
+  type SubjectStatusView,
 } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 
 describe('acknowledge all subjects of account', () => {
@@ -93,7 +93,7 @@ describe('acknowledge all subjects of account', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('acknowledges all open/escalated review subjects with takedown.', async () => {

@@ -8,5 +8,5 @@ export const brandingSchema = z.object({
   colors: colorsSchema.optional(),
   links: z.array(linksSchema).optional(),
 })
-export type BrandingInput = z.input<typeof brandingSchema>
+export type BrandingConfig = z.input<typeof brandingSchema>
 export type Branding = z.infer<typeof brandingSchema>

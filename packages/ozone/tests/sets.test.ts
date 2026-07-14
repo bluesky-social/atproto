@@ -1,8 +1,6 @@
-import AtpAgent, {
-  ToolsOzoneSetDefs,
-  ToolsOzoneSetQuerySets,
-} from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { ToolsOzoneSetDefs, ToolsOzoneSetQuerySets } from '@atproto/api'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
 import { forSnapshot } from './_util.js'
 
@@ -97,7 +95,7 @@ describe('ozone-sets', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('querySets', () => {

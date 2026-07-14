@@ -1,20 +1,18 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
-import { app } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
+import type { app } from '../../../lexicons/index.js'
+import type { Service } from '../../../proto/bsky_connect.js'
 import {
-  ChatNotificationInclude,
-  ChatNotificationPreference,
   FilterableNotificationPreference,
   NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
 } from '../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../stash.js'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { IsoSortAtKey } from '../db/pagination.js'
 import { countAll, notSoftDeletedClause } from '../db/util.js'
 
@@ -203,17 +201,6 @@ export const notificationPreferencesLexToProtobuf = (
   p: app.bsky.notification.defs.Preferences,
   json: string,
 ): NotificationPreferences => {
-  const lexChatPreferenceToProtobuf = (
-    p: app.bsky.notification.defs.ChatPreference,
-  ): ChatNotificationPreference =>
-    new ChatNotificationPreference({
-      include:
-        p.include === 'accepted'
-          ? ChatNotificationInclude.ACCEPTED
-          : ChatNotificationInclude.ALL,
-      push: { enabled: p.push ?? true },
-    })
-
   const lexFilterablePreferenceToProtobuf = (
     p: app.bsky.notification.defs.FilterablePreference,
   ): FilterableNotificationPreference =>
@@ -236,7 +223,6 @@ export const notificationPreferencesLexToProtobuf = (
 
   return new NotificationPreferences({
     entry: Buffer.from(json),
-    chat: lexChatPreferenceToProtobuf(p.chat),
     follow: lexFilterablePreferenceToProtobuf(p.follow),
     like: lexFilterablePreferenceToProtobuf(p.like),
     likeViaRepost: lexFilterablePreferenceToProtobuf(p.likeViaRepost),

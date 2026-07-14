@@ -1,7 +1,7 @@
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -111,7 +111,7 @@ describe('queue-router', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('inserts report rows with no queue assignment when no queues are configured', async () => {

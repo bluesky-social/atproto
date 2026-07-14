@@ -1,4 +1,4 @@
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+import { type AtprotoDid, isAtprotoDid } from '@atproto/did'
 export type { AtprotoDid, AtprotoIdentityDidMethods } from '@atproto/did'
 
 export type ResolveHandleOptions = {

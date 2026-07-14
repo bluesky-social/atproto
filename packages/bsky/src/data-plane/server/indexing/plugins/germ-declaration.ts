@@ -1,9 +1,9 @@
-import { Cid } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
+import type { Cid } from '@atproto/lex'
+import type { AtUri } from '@atproto/syntax'
 import { com } from '../../../../lexicons/index.js'
-import { BackgroundQueue } from '../../background.js'
-import { DatabaseSchema } from '../../db/database-schema.js'
-import { Database } from '../../db/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type { DatabaseSchema } from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
 import { RecordProcessor } from '../processor.js'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
@@ -40,7 +40,10 @@ const notifsForDelete = () => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: com.germnetwork.declaration.main,
     insertFn,

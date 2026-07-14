@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX, ReactNode } from 'react'
-import { Override } from '#/lib/util.ts'
+import type { JSX, ReactNode } from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type ErrorDetailsProps = Override<
   JSX.IntrinsicElements['dl'],

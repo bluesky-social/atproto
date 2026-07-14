@@ -4,7 +4,10 @@ import { FormField } from '#/components/forms/form-field'
 import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
 import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
 import { InputText } from '#/components/forms/input-text.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type SignUpCredentialsData = {
   email: string

@@ -1,7 +1,7 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { AppBskyFeedDefs, AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AppBskyFeedDefs, type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util.js'
 
 describe('views with thread gating', () => {
@@ -23,12 +23,10 @@ describe('views with thread gating', () => {
       email: 'eve@eve.com',
       password: 'hunter2',
     })
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // check that replyDisabled state is applied correctly in a simple method like getPosts
   const checkReplyDisabled = async (

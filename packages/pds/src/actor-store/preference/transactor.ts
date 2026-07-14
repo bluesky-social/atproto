@@ -1,10 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import {
-  AccountPreference,
+  type AccountPreference,
   PreferenceReader,
   prefMatchNamespace,
 } from './reader.js'
-import { PrefAllowedOptions, isReadOnlyPref, prefAllowed } from './util.js'
+import { type PrefAllowedOptions, isReadOnlyPref, prefAllowed } from './util.js'
 
 export class PreferenceTransactor extends PreferenceReader {
   async putPreferences(

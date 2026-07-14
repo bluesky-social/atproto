@@ -1,12 +1,12 @@
 import assert from 'node:assert'
 import {
-  AtpAgent,
+  type AtpAgent,
   ComAtprotoAdminDefs,
   ToolsOzoneModerationDefs,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -37,7 +37,7 @@ describe('moderation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows specifying policy for takedown actions.', async () => {

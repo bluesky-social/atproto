@@ -1,8 +1,8 @@
-import { NotNull, Selectable } from 'kysely'
-import { Database } from '../db/index.js'
+import type { NotNull, Selectable } from 'kysely'
+import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import { SetDetail } from '../db/schema/ozone_set.js'
-import { SetView } from '../lexicon/types/tools/ozone/set/defs.js'
+import type { SetDetail } from '../db/schema/ozone_set.js'
+import type { SetView } from '../lexicon/types/tools/ozone/set/defs.js'
 
 export type SetServiceCreator = (db: Database) => SetService
 

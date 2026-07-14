@@ -1,30 +1,35 @@
-import { AtprotoDid } from '@atproto/did'
-import { Key, Keyset } from '@atproto/jwk'
+import type { AtprotoDid } from '@atproto/did'
+import type { Key, Keyset } from '@atproto/jwk'
 import {
-  AtprotoOAuthScope,
-  AtprotoOAuthTokenResponse,
-  OAuthAuthorizationRequestPar,
-  OAuthAuthorizationServerMetadata,
-  OAuthEndpointName,
-  OAuthParResponse,
-  OAuthRedirectUri,
-  OAuthTokenRequest,
+  type AtprotoOAuthScope,
+  type AtprotoOAuthTokenResponse,
+  type OAuthAuthorizationRequestPar,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthEndpointName,
+  type OAuthParResponse,
+  type OAuthRedirectUri,
+  type OAuthTokenRequest,
   atprotoOAuthTokenResponseSchema,
   oauthParResponseSchema,
 } from '@atproto/oauth-types'
-import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
-import { SimpleStore } from '@atproto-labs/simple-store'
+import {
+  type Fetch,
+  type Json,
+  bindFetch,
+  fetchJsonProcessor,
+} from '@atproto-labs/fetch'
+import type { SimpleStore } from '@atproto-labs/simple-store'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import {
-  ClientAuthMethod,
-  ClientCredentialsFactory,
+  type ClientAuthMethod,
+  type ClientCredentialsFactory,
   createClientCredentialsFactory,
 } from './oauth-client-auth.js'
-import { OAuthResolver } from './oauth-resolver.js'
+import type { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
-import { Runtime } from './runtime.js'
-import { ClientMetadata } from './types.js'
+import type { Runtime } from './runtime.js'
+import type { ClientMetadata } from './types.js'
 import { timeoutSignal } from './util.js'
 
 export type { AtprotoOAuthScope, AtprotoOAuthTokenResponse }

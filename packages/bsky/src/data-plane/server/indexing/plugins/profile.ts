@@ -1,9 +1,12 @@
-import { Cid, getBlobCidString } from '@atproto/lex'
+import { type Cid, getBlobCidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../../lexicons/index.js'
-import { BackgroundQueue } from '../../background.js'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
-import { Database } from '../../db/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
 import { RecordProcessor } from '../processor.js'
 
 type IndexedProfile = DatabaseSchemaType['profile']
@@ -73,7 +76,10 @@ const notifsForDelete = () => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: app.bsky.actor.profile.main,
     insertFn,

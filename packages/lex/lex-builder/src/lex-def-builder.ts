@@ -1,10 +1,10 @@
 import {
-  JSDocStructure,
-  OptionalKind,
-  SourceFile,
+  type JSDocStructure,
+  type OptionalKind,
+  type SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import {
+import type {
   LexiconArray,
   LexiconArrayItems,
   LexiconBlob,
@@ -33,8 +33,8 @@ import {
 import { l } from '@atproto/lex-schema'
 import {
   RefResolver,
-  RefResolverOptions,
-  ResolvedRef,
+  type RefResolverOptions,
+  type ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
 import { asNamespaceExport } from './ts-lang.js'

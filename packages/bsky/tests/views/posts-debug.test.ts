@@ -1,6 +1,14 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('post views w/ debug field', () => {
   let network: TestNetwork
@@ -14,16 +22,13 @@ describe('post views w/ debug field', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
   })
 
+  beforeEach(async () => network.processAll())
   afterEach(() => {
     network.bsky.ctx.cfg.debugFieldAllowedDids.clear()
   })
-
-  afterAll(async () => {
-    await network.close()
-  })
+  afterAll(async () => network?.close())
 
   it(`does not include debug field for unauthed requests`, async () => {
     network.bsky.ctx.cfg.debugFieldAllowedDids.add(sc.dids.bob)

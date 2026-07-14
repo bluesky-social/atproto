@@ -1,4 +1,4 @@
-import { Base64Alphabet } from './uint8array.js'
+import type { Base64Alphabet } from './uint8array.js'
 import {
   utf8FromBase64Node,
   utf8FromBase64Ponyfill,

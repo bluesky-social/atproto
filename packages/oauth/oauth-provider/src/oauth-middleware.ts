@@ -1,14 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { asHandler, combineMiddlewares } from './lib/http/middleware.js'
-import { Handler } from './lib/http/types.js'
-import { OAuthProvider } from './oauth-provider.js'
+import type { Handler } from './lib/http/types.js'
+import type { OAuthProvider } from './oauth-provider.js'
 import { assetsMiddleware } from './router/assets/assets.js'
 import { createAccountPageMiddleware } from './router/create-account-page-middleware.js'
 import { createApiMiddleware } from './router/create-api-middleware.js'
 import { createAuthorizationPageMiddleware } from './router/create-authorization-page-middleware.js'
 import { createOAuthMiddleware } from './router/create-oauth-middleware.js'
-import { ErrorHandler } from './router/error-handler.js'
-import { MiddlewareOptions } from './router/middleware-options.js'
+import type { ErrorHandler } from './router/error-handler.js'
+import type { MiddlewareOptions } from './router/middleware-options.js'
 
 // Export all the types exposed
 export type {

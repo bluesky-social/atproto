@@ -1,5 +1,5 @@
-import { OzoneConfig, OzoneSecrets } from '../config/index.js'
-import { AppContextOptions } from '../context.js'
+import type { OzoneConfig, OzoneSecrets } from '../config/index.js'
+import type { AppContextOptions } from '../context.js'
 import { DaemonContext } from './context.js'
 
 export { EventPusher } from './event-pusher.js'

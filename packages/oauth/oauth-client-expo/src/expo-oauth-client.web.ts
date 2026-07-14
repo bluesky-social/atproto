@@ -1,10 +1,10 @@
 import {
-  AuthorizeOptions,
+  type AuthorizeOptions,
   BrowserOAuthClient,
-  OAuthSession,
+  type OAuthSession,
 } from '@atproto/oauth-client-browser'
-import { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
-import { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
+import type { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
+import type { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
 
 export class ExpoOAuthClient
   extends BrowserOAuthClient

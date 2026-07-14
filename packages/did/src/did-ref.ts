@@ -1,4 +1,4 @@
-import { Did, isDid } from './did.js'
+import { type Did, isDid } from './did.js'
 import { isFragment } from './lib/uri.js'
 
 /**

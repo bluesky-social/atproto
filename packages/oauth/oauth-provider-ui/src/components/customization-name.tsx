@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { JSX } from 'react/jsx-runtime'
+import type { ReactNode } from 'react'
+import type { JSX } from 'react/jsx-runtime'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 
 export function CustomizationName(

@@ -1,11 +1,11 @@
 import assert from 'node:assert'
-import { AddressInfo } from 'node:net'
+import type { AddressInfo } from 'node:net'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   AtpAgent,
-  AtpSessionData,
-  AtpSessionEvent,
+  type AtpSessionData,
+  type AtpSessionEvent,
   BSKY_LABELER_DID,
 } from '../src/index.js'
 import { createHeaderEchoServer } from './util/echo-server.js'
@@ -28,7 +28,7 @@ describe('AtpAgent', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('clones correctly', () => {
@@ -446,64 +446,68 @@ describe('AtpAgent', () => {
 
   describe('App labelers header', () => {
     it('adds the labelers header as expected', async () => {
-      const server = await createHeaderEchoServer()
+      await using server = await createHeaderEchoServer()
       const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
       const agent2 = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res1.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact`,
       )
 
       AtpAgent.configure({ appLabelers: ['did:plc:test1', 'did:plc:test2'] })
       const res2 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res2.data['atproto-accept-labelers']).toEqual(
         'did:plc:test1;redact, did:plc:test2;redact',
       )
       const res3 = await agent2.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res3.data['atproto-accept-labelers']).toEqual(
         'did:plc:test1;redact, did:plc:test2;redact',
       )
       AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
-
-      await new Promise((r) => server.close(r))
     })
   })
 
   describe('configureLabelers', () => {
     it('adds the labelers header as expected', async () => {
-      const server = await createHeaderEchoServer()
+      await using server = await createHeaderEchoServer()
+
       const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       agent.configureLabelers(['did:plc:test1'])
       const res1 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res1.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1`,
       )
 
       agent.configureLabelers(['did:plc:test1', 'did:plc:test2'])
       const res2 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res2.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1, did:plc:test2`,
       )
-
-      await new Promise((r) => server.close(r))
     })
   })
 
   describe('configureProxy', () => {
     it('adds the proxy header as expected', async () => {
-      const server = await createHeaderEchoServer()
+      await using server = await createHeaderEchoServer()
       const port = (server.address() as AddressInfo).port
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res1.data['atproto-proxy']).toBeFalsy()
 
       agent.configureProxy('did:plc:test1#atproto_labeler')
       const res2 = await agent.com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res2.data['atproto-proxy']).toEqual(
         'did:plc:test1#atproto_labeler',
       )
@@ -511,11 +515,10 @@ describe('AtpAgent', () => {
       const res3 = await agent
         .withProxy('atproto_labeler', 'did:plc:test2')
         .com.atproto.server.describeServer()
+      // @ts-expect-error non-standard field
       expect(res3.data['atproto-proxy']).toEqual(
         'did:plc:test2#atproto_labeler',
       )
-
-      await new Promise((r) => server.close(r))
     })
   })
 })

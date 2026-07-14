@@ -1,4 +1,4 @@
-import { LexiconDocument } from './lexicon-document.js'
+import type { LexiconDocument } from './lexicon-document.js'
 
 /**
  * Interface for indexing and retrieving Lexicon documents by their NSID.

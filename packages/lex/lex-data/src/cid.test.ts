@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { BytesCid, createCustomCid } from './cid-implementation.test.js'
 import {
   CBOR_DATA_CODEC,
-  Cid,
+  type Cid,
   RAW_DATA_CODEC,
   SHA256_HASH_CODE,
   asMultiformatsCID,

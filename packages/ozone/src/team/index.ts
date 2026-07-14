@@ -1,14 +1,14 @@
-import { Selectable } from 'kysely'
-import AtpAgent from '@atproto/api'
+import type { Selectable } from 'kysely'
+import type AtpAgent from '@atproto/api'
 import { chunkArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
-import { Member } from '../db/schema/member.js'
+import type { Database } from '../db/index.js'
+import type { Member } from '../db/schema/member.js'
 import { ids } from '../lexicon/lexicons.js'
-import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs.js'
-import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
+import type { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs.js'
+import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
 import { httpLogger } from '../logger.js'
-import { AuthHeaders } from '../mod-service/views.js'
+import type { AuthHeaders } from '../mod-service/views.js'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 

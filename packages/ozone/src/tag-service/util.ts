@@ -1,4 +1,4 @@
-import { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
+import type { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
 
 export const getTagForReport = (reasonType: ReasonType) => {
   const reasonWithoutPrefix = reasonType

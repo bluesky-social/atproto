@@ -1,11 +1,14 @@
-import { Selectable } from 'kysely'
-import { Cid } from '@atproto/lex'
+import type { Selectable } from 'kysely'
+import type { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { app } from '../../../../lexicons/index.js'
-import { BackgroundQueue } from '../../background.js'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
-import { Database } from '../../db/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
 import { RecordProcessor } from '../processor.js'
 
 type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
@@ -75,7 +78,10 @@ const notifsForDelete = () => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: app.bsky.graph.listitem.main,
     insertFn,

@@ -1,5 +1,11 @@
 import assert from 'node:assert'
-import { type Browser, Handler, type Page, Target, TargetType } from 'puppeteer'
+import {
+  type Browser,
+  type Handler,
+  type Page,
+  type Target,
+  TargetType,
+} from 'puppeteer'
 
 export class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}

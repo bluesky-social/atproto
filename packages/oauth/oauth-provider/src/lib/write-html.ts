@@ -1,15 +1,15 @@
 import { createHash } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
-import { CspValue, mergeCsp } from './csp/index.js'
+import { type CspValue, mergeCsp } from './csp/index.js'
 import {
-  AssetRef,
-  BuildDocumentOptions,
+  type AssetRef,
+  type BuildDocumentOptions,
   Html,
   buildDocument,
 } from './html/index.js'
-import { WriteResponseOptions, writeBuffer } from './http/response.js'
+import { type WriteResponseOptions, writeBuffer } from './http/response.js'
 import {
-  SecurityHeadersOptions,
+  type SecurityHeadersOptions,
   setSecurityHeaders,
 } from './http/security-headers.js'
 

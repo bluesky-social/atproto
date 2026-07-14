@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 import {
-  ActivityType,
+  type ActivityType,
   createReportActivity,
   formatActivityView,
 } from '../../report/activity.js'

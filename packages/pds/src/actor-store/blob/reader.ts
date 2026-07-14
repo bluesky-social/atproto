@@ -1,11 +1,11 @@
-import stream from 'node:stream'
-import { Cid, parseCid } from '@atproto/lex-data'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { AtUriString } from '@atproto/syntax'
+import type stream from 'node:stream'
+import { type Cid, parseCid } from '@atproto/lex-data'
+import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
+import type { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util.js'
-import { com } from '../../lexicons/index.js'
-import { ActorDb } from '../db/index.js'
+import type { com } from '../../lexicons/index.js'
+import type { ActorDb } from '../db/index.js'
 
 export class BlobReader {
   constructor(

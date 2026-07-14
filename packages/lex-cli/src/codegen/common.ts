@@ -1,7 +1,11 @@
-import { Options as PrettierOptions, format } from 'prettier'
-import { Project, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import { type LexiconDoc } from '@atproto/lexicon'
-import { type GeneratedFile } from '../types.js'
+import { type Options as PrettierOptions, format } from 'prettier'
+import {
+  type Project,
+  type SourceFile,
+  VariableDeclarationKind,
+} from 'ts-morph'
+import type { LexiconDoc } from '@atproto/lexicon'
+import type { GeneratedFile } from '../types.js'
 import { toTitleCase } from './util.js'
 
 const PRETTIER_OPTS: PrettierOptions = {
@@ -12,7 +16,7 @@ const PRETTIER_OPTS: PrettierOptions = {
   trailingComma: 'all',
 }
 
-export const utilTs = (project) =>
+export const utilTs = (project: Project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
 import { type ValidationResult } from '@atproto/lexicon'
@@ -133,7 +137,7 @@ export function asPredicate<V extends Validator>(validate: V) {
 `)
   })
 
-export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
+export const lexiconsTs = (project: Project, lexicons: LexiconDoc[]) =>
   gen(project, '/lexicons.ts', async (file) => {
     //= import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
     file

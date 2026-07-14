@@ -1,11 +1,11 @@
 import assert from 'node:assert'
-import {
+import type {
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationQueryStatuses,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -80,7 +80,7 @@ describe('moderation-statuses', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('query statuses', () => {

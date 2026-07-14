@@ -1,8 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { DidString, NSID } from '@atproto/syntax'
 import {
-  AtprotoLexiconResolver,
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
+import { type DidString, NSID } from '@atproto/syntax'
+import {
+  type AtprotoLexiconResolver,
   buildLexiconResolver,
   resolveLexiconDidAuthority,
 } from '../src/index.js'
@@ -39,7 +43,7 @@ describe('Lexicon resolution', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('resolves Lexicon.', async () => {
