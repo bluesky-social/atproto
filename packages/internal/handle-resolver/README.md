@@ -161,7 +161,10 @@ resolver:
 ```ts
 const resolver = new AtprotoHandleResolverNode({
   onError: (err, { resolver, handle }) => {
-    console.warn(`[handle-resolver:${resolver}] ${handle} failed to resolve:`, err)
+    console.warn(
+      `[handle-resolver:${resolver}] ${handle} failed to resolve:`,
+      err,
+    )
   },
 })
 ```

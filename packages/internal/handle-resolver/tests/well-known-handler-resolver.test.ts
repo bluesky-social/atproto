@@ -39,7 +39,9 @@ describe('handle-resolver onError observability (#4215)', () => {
     it('200 + valid DID resolves and does not fire onError', async () => {
       const onError = vi.fn()
       const resolver = new WellKnownHandleResolver({
-        fetch: fetchReturning(mockResponse({ ok: true, status: 200, body: `${DID}\n` })),
+        fetch: fetchReturning(
+          mockResponse({ ok: true, status: 200, body: `${DID}\n` }),
+        ),
         onError,
       })
       const result = await resolver.resolve('alice.test')
@@ -50,7 +52,9 @@ describe('handle-resolver onError observability (#4215)', () => {
     it('200 + non-DID body returns null and does not fire onError', async () => {
       const onError = vi.fn()
       const resolver = new WellKnownHandleResolver({
-        fetch: fetchReturning(mockResponse({ ok: true, status: 200, body: 'not-a-did' })),
+        fetch: fetchReturning(
+          mockResponse({ ok: true, status: 200, body: 'not-a-did' }),
+        ),
         onError,
       })
       const result = await resolver.resolve('alice.test')
@@ -61,7 +65,13 @@ describe('handle-resolver onError observability (#4215)', () => {
     it('non-2xx returns null and fires onError once with well-known context', async () => {
       const onError = vi.fn()
       const resolver = new WellKnownHandleResolver({
-        fetch: fetchReturning(mockResponse({ ok: false, status: 500, body: 'Internal Server Error' })),
+        fetch: fetchReturning(
+          mockResponse({
+            ok: false,
+            status: 500,
+            body: 'Internal Server Error',
+          }),
+        ),
         onError,
       })
       const result = await resolver.resolve('alice.test')
@@ -75,7 +85,10 @@ describe('handle-resolver onError observability (#4215)', () => {
     it('network error returns null and forwards the underlying error to onError', async () => {
       const onError = vi.fn()
       const boom = new TypeError('fetch failed')
-      const resolver = new WellKnownHandleResolver({ fetch: fetchThrowing(boom), onError })
+      const resolver = new WellKnownHandleResolver({
+        fetch: fetchThrowing(boom),
+        onError,
+      })
       const result = await resolver.resolve('alice.test')
       expect(result).toBeNull()
       expect(onError).toHaveBeenCalledTimes(1)
@@ -84,7 +97,9 @@ describe('handle-resolver onError observability (#4215)', () => {
 
     it('a throwing onError handler cannot change the return contract (still resolves to null)', async () => {
       const resolver = new WellKnownHandleResolver({
-        fetch: fetchReturning(mockResponse({ ok: false, status: 503, body: 'x' })),
+        fetch: fetchReturning(
+          mockResponse({ ok: false, status: 503, body: 'x' }),
+        ),
         onError: () => {
           throw new Error('handler boom')
         },
@@ -95,7 +110,9 @@ describe('handle-resolver onError observability (#4215)', () => {
 
     it('non-2xx without an onError handler still returns null', async () => {
       const resolver = new WellKnownHandleResolver({
-        fetch: fetchReturning(mockResponse({ ok: false, status: 502, body: 'x' })),
+        fetch: fetchReturning(
+          mockResponse({ ok: false, status: 502, body: 'x' }),
+        ),
       })
       await expect(resolver.resolve('alice.test')).resolves.toBeNull()
     })
@@ -104,7 +121,10 @@ describe('handle-resolver onError observability (#4215)', () => {
       const onError = vi.fn()
       const ac = new AbortController()
       ac.abort()
-      const resolver = new WellKnownHandleResolver({ fetch: fetchThrowing(new TypeError('net')), onError })
+      const resolver = new WellKnownHandleResolver({
+        fetch: fetchThrowing(new TypeError('net')),
+        onError,
+      })
       await expect(
         resolver.resolve('alice.test', { signal: ac.signal }),
       ).rejects.toThrow()
@@ -116,7 +136,9 @@ describe('handle-resolver onError observability (#4215)', () => {
     it('resolves via well-known on a DNS miss', async () => {
       const resolver = new AtprotoHandleResolver({
         resolveTxt: async () => null,
-        fetch: fetchReturning(mockResponse({ ok: true, status: 200, body: DID })),
+        fetch: fetchReturning(
+          mockResponse({ ok: true, status: 200, body: DID }),
+        ),
       })
       await expect(resolver.resolve('alice.test')).resolves.toBe(DID)
     })
@@ -125,7 +147,9 @@ describe('handle-resolver onError observability (#4215)', () => {
       const onError = vi.fn()
       const resolver = new AtprotoHandleResolver({
         resolveTxt: async () => null,
-        fetch: fetchReturning(mockResponse({ ok: false, status: 500, body: 'x' })),
+        fetch: fetchReturning(
+          mockResponse({ ok: false, status: 500, body: 'x' }),
+        ),
         onError,
       })
       await expect(resolver.resolve('alice.test')).resolves.toBeNull()
@@ -142,7 +166,9 @@ describe('handle-resolver onError observability (#4215)', () => {
       // instead of returning null. This is the regression this test locks down.
       const resolver = new AtprotoHandleResolver({
         resolveTxt: async () => null,
-        fetch: fetchReturning(mockResponse({ ok: false, status: 500, body: 'x' })),
+        fetch: fetchReturning(
+          mockResponse({ ok: false, status: 500, body: 'x' }),
+        ),
         onError: () => {
           throw new Error('handler boom')
         },
@@ -153,7 +179,9 @@ describe('handle-resolver onError observability (#4215)', () => {
     it('prefers a DNS hit even when the well-known endpoint errors', async () => {
       const resolver = new AtprotoHandleResolver({
         resolveTxt: async () => [`did=${DID}`],
-        fetch: fetchReturning(mockResponse({ ok: false, status: 500, body: 'x' })),
+        fetch: fetchReturning(
+          mockResponse({ ok: false, status: 500, body: 'x' }),
+        ),
       })
       await expect(resolver.resolve('bob.test')).resolves.toBe(DID)
     })
