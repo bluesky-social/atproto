@@ -17,9 +17,11 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
-      (host) => handle.endsWith(host) || handle === host.slice(1),
-    )
+    const supportedHandle =
+      !ctx.cfg.entryway &&
+      ctx.cfg.identity.serviceHandleDomains.some(
+        (host) => handle.endsWith(host) || handle === host.slice(1),
+      )
     // this should be in our DB & we couldn't find it, so fail
     if (supportedHandle) {
       throw new InvalidRequestError('Unable to resolve handle')
