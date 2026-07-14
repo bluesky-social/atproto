@@ -2,21 +2,15 @@ import { isAtprotoDid } from '@atproto/did'
 import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
-import {
+import type {
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 import { isValidHandle } from '@atproto/syntax'
-import { ClientAuth } from '../client/client-auth.js'
-import { ClientId } from '../client/client-id.js'
-import { Client } from '../client/client.js'
-import {
-  AUTHORIZATION_INACTIVITY_TIMEOUT,
-  NODE_ENV,
-  PAR_EXPIRES_IN,
-  TOKEN_MAX_AGE,
-} from '../constants.js'
-import { DeviceId } from '../device/device-id.js'
+import type { ClientAuth } from '../client/client-auth.js'
+import type { ClientId } from '../client/client-id.js'
+import type { Client } from '../client/client.js'
+import type { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
@@ -24,19 +18,25 @@ import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorizatio
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
-import { LexiconManager } from '../lexicon/lexicon-manager.js'
-import { RequestMetadata } from '../lib/http/request.js'
-import { OAuthHooks } from '../oauth-hooks.js'
-import { Signer } from '../signer/signer.js'
-import { Code, generateCode } from './code.js'
+import type { LexiconManager } from '../lexicon/lexicon-manager.js'
+import type { RequestMetadata } from '../lib/http/request.js'
 import {
-  RequestDataAuthorized,
+  AUTHORIZATION_INACTIVITY_TIMEOUT,
+  NODE_ENV,
+  PAR_EXPIRES_IN,
+  TOKEN_MAX_AGE,
+} from '../oauth-constants.js'
+import type { OAuthHooks } from '../oauth-hooks.js'
+import type { Signer } from '../signer/signer.js'
+import { type Code, generateCode } from './code.js'
+import {
+  type RequestDataAuthorized,
   isRequestDataAuthorized,
 } from './request-data.js'
 import { generateRequestId } from './request-id.js'
-import { RequestStore, UpdateRequestData } from './request-store.js'
+import type { RequestStore, UpdateRequestData } from './request-store.js'
 import {
-  RequestUri,
+  type RequestUri,
   decodeRequestUri,
   encodeRequestUri,
 } from './request-uri.js'
@@ -78,7 +78,7 @@ export class RequestManager {
       parameters,
       expiresAt,
       deviceId,
-      sub: null,
+      did: null,
       code: null,
     })
 
@@ -337,7 +337,7 @@ export class RequestManager {
     const updates: UpdateRequestData = {}
 
     try {
-      if (data.sub || data.code) {
+      if (data.did || data.code) {
         // If an account was linked to the request, the next step is to exchange
         // the code for a token.
         throw new AccessDeniedError(
@@ -404,6 +404,13 @@ export class RequestManager {
     let { parameters } = data
 
     try {
+      if (account.deactivated) {
+        throw new AccessDeniedError(
+          parameters,
+          'This account has been deactivated',
+        )
+      }
+
       if (data.expiresAt < new Date()) {
         throw new AccessDeniedError(parameters, 'This request has expired')
       }
@@ -419,7 +426,7 @@ export class RequestManager {
           'This request was initiated from another device',
         )
       }
-      if (data.sub || data.code) {
+      if (data.did || data.code) {
         throw new AccessDeniedError(
           parameters,
           'This request was already authorized',
@@ -453,7 +460,7 @@ export class RequestManager {
 
       // Bind the request to the account, preventing it from being used again.
       await this.store.updateRequest(requestId, {
-        sub: account.sub,
+        did: account.did,
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),

@@ -2,7 +2,7 @@ import { base32 } from 'multiformats/bases/base32'
 import { CID } from 'multiformats/cid'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import { assert, describe, expect, it } from 'vitest'
-import { Cid } from './cid.js'
+import type { Cid } from './cid.js'
 import { ui8Equals } from './uint8array.js'
 
 export class BytesCid implements Cid {

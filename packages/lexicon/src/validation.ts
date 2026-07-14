@@ -1,5 +1,5 @@
-import { Lexicons } from './lexicons.js'
-import {
+import type { Lexicons } from './lexicons.js'
+import type {
   LexRecord,
   LexRefVariant,
   LexUserType,

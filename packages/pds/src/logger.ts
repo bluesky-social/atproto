@@ -1,4 +1,4 @@
-import { type IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'

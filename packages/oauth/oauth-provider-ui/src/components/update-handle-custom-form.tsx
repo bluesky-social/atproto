@@ -1,9 +1,9 @@
 import { Trans } from '@lingui/react/macro'
-import { HandleString, isValidHandle } from '@atproto/syntax'
+import { type HandleString, isValidHandle } from '@atproto/syntax'
 import { InputHandleCustom } from '#/components/forms/input-handle-custom.tsx'
 import {
   SmartForm,
-  WrappedSmartFormProps,
+  type WrappedSmartFormProps,
 } from '#/components/forms/smart-form.tsx'
 import { FormField } from './forms/form-field.tsx'
 import { InputHandleCustomInstructions } from './forms/input-handle-custom-instructions.tsx'

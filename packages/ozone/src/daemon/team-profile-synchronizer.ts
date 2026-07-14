@@ -1,6 +1,6 @@
 import { HOUR } from '@atproto/common'
-import { BackgroundQueue, PeriodicBackgroundTask } from '../background.js'
-import { TeamService } from '../team/index.js'
+import { type BackgroundQueue, PeriodicBackgroundTask } from '../background.js'
+import type { TeamService } from '../team/index.js'
 
 export class TeamProfileSynchronizer extends PeriodicBackgroundTask {
   constructor(

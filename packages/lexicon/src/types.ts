@@ -454,7 +454,7 @@ export function isValidLexiconDoc(v: unknown): v is LexiconDoc {
   return lexiconDoc.safeParse(v).success
 }
 
-export function isObj<V>(v: V): v is V & object {
+export function isObj<V>(v: V): v is V & object & Record<string, unknown> {
   return v != null && typeof v === 'object'
 }
 

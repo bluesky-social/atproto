@@ -1,14 +1,22 @@
 import { Trans } from '@lingui/react/macro'
 import { FormField } from '#/components/forms/form-field'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type VerifyEmailConfirmData = { token: string }
 
 export type VerifyEmailConfirmFormProps =
-  WrappedSmartFormProps<VerifyEmailConfirmData>
+  WrappedSmartFormProps<VerifyEmailConfirmData> & {
+    onResend?: () => void | PromiseLike<void>
+  }
 
-export function VerifyEmailConfirmForm(props: VerifyEmailConfirmFormProps) {
+export function VerifyEmailConfirmForm({
+  onResend,
+  ...props
+}: VerifyEmailConfirmFormProps) {
   return (
     <SmartForm
       {...props}
@@ -24,6 +32,7 @@ export function VerifyEmailConfirmForm(props: VerifyEmailConfirmFormProps) {
             autoFocus={true}
             defaultValue={values.token}
             onToken={(value) => set('token', value ?? undefined)}
+            onResend={onResend}
           />
         </FormField>
       )}

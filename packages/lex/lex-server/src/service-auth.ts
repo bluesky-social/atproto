@@ -1,16 +1,11 @@
 import * as crypto from '@atproto/crypto'
-import {
-  AtprotoDid,
-  AtprotoDidDocument,
-  Did,
-  matchesIdentifier,
-} from '@atproto/did'
+import type { AtprotoDid, AtprotoDidDocument, Did } from '@atproto/did'
+import { matchesIdentifier } from '@atproto/did'
 import { fromBase64, isPlainObject, utf8FromBase64 } from '@atproto/lex-data'
-import { DidString, isDidString } from '@atproto/lex-schema'
-import {
-  CreateDidResolverOptions,
-  createDidResolver,
-} from '@atproto-labs/did-resolver'
+import type { DidString } from '@atproto/lex-schema'
+import { isDidString } from '@atproto/lex-schema'
+import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
+import { createDidResolver } from '@atproto-labs/did-resolver'
 import { LexServerAuthError } from './errors.js'
 import type { LexRouterAuth } from './lex-router.js'
 

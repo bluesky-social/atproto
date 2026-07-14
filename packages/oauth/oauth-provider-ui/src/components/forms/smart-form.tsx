@@ -1,11 +1,17 @@
 import { composeEventHandlers } from '@radix-ui/primitive'
-import { ReactNode, Ref, useImperativeHandle, useMemo, useState } from 'react'
-import { FormCard, FormCardProps } from '#/components/forms/form-card.tsx'
+import {
+  type ReactNode,
+  type Ref,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react'
+import { FormCard, type FormCardProps } from '#/components/forms/form-card.tsx'
 import { useStableCallback } from '#/hooks/use-stable-callback.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { useAsyncAction } from '../../hooks/use-async-action.ts'
 
-export type AsyncFormData = Record<string, unknown>
+export type SmartFormData = Record<string, unknown>
 
 export type SetField<TValues> = <K extends keyof TValues>(
   key: K,
@@ -39,7 +45,7 @@ export type ValidateData<TValues, TData> = (
  * return <SmartForm ref={formRef} ... />
  * ```
  */
-export type FormHandler<TData extends AsyncFormData, TValues = TData> = {
+export type FormHandler<TData extends SmartFormData, TValues = TData> = {
   /**
    * Live snapshot of every field's input value.
    *
@@ -78,7 +84,7 @@ export type FormHandler<TData extends AsyncFormData, TValues = TData> = {
 }
 
 export type SmartFormProps<
-  TData extends AsyncFormData,
+  TData extends SmartFormData,
   TValues = TData,
 > = Override<
   FormCardProps,
@@ -194,7 +200,7 @@ export type SmartFormProps<
  * }
  * ```
  */
-export function SmartForm<TData extends AsyncFormData, TValues = TData>({
+export function SmartForm<TData extends SmartFormData, TValues = TData>({
   fields,
   ref,
   values: initialValues = {},
@@ -219,12 +225,12 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
   )
 
   const set = useStableCallback<SetField<TValues>>((key, value) => {
-    // Reset async error/loading state whenever the user changes any input.
-    reset()
-
     // Skip the state update if the value didn't actually change. Only
     // sound for primitive values.
     if (values[key] !== value) {
+      // Reset async error/loading state whenever the user changes any input.
+      reset()
+
       setValues({ ...values, [key]: value })
       onValues?.({ ...values, [key]: value }, values)
     }
@@ -300,6 +306,6 @@ export function SmartForm<TData extends AsyncFormData, TValues = TData>({
  * ```
  */
 export type WrappedSmartFormProps<
-  TData extends AsyncFormData,
+  TData extends SmartFormData,
   TValues = TData,
 > = Omit<SmartFormProps<TData, TValues>, 'fields' | 'validate'>

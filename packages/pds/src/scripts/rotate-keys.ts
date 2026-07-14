@@ -1,14 +1,14 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import * as plc from '@did-plc/lib'
+import type * as plc from '@did-plc/lib'
 import PQueue from 'p-queue'
-import AtpAgent from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
-import { DidString, isDidString } from '@atproto/lex'
-import { ActorStore } from '../actor-store/actor-store.js'
-import { SyncEvtData } from '../repo/index.js'
-import { Sequencer } from '../sequencer/index.js'
+import type AtpAgent from '@atproto/api'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
+import { type DidString, isDidString } from '@atproto/lex'
+import type { ActorStore } from '../actor-store/actor-store.js'
+import type { SyncEvtData } from '../repo/index.js'
+import type { Sequencer } from '../sequencer/index.js'
 import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db.js'
 import { parseIntArg } from './util.js'
 
@@ -100,13 +100,13 @@ const rotateKeysForRepos = async (
         return
       }
       try {
-        await ctx.sequencer.sequenceIdentityEvt(did)
+        await ctx.sequencer.sequenceIdentity(did)
       } catch (err) {
         console.error(`failed to sequence new identity evt for ${did}: ${err}`)
         return
       }
       try {
-        await ctx.sequencer.sequenceSyncEvt(did, syncData)
+        await ctx.sequencer.sequenceSync(did, syncData)
       } catch (err) {
         console.error(`failed to sequence for ${did}: ${err}`)
         return

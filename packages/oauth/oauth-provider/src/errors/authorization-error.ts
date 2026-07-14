@@ -1,6 +1,6 @@
-import { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
+import type { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
 import {
-  AuthorizationResponseError,
+  type AuthorizationResponseError,
   isAuthorizationResponseError,
 } from '../types/authorization-response-error.js'
 import { buildErrorPayload } from './error-parser.js'

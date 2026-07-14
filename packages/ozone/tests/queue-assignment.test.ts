@@ -1,9 +1,10 @@
-import AtpAgent, {
+import type {
   ToolsOzoneQueueAssignModerator,
   ToolsOzoneQueueGetAssignments,
   ToolsOzoneQueueUnassignModerator,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
 
 describe('queue', () => {
@@ -106,7 +107,7 @@ describe('queue', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('get active assignments', async () => {

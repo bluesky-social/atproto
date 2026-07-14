@@ -1,18 +1,18 @@
-import { AppBskyGraphDefs } from '../client/index.js'
+import type { AppBskyGraphDefs } from '../client/index.js'
 import { LABELS } from './const/labels.js'
-import { MuteWordMatch } from './mutewords.js'
+import type { MuteWordMatch } from './mutewords.js'
 import {
   BLOCK_BEHAVIOR,
   CUSTOM_LABEL_VALUE_RE,
   HIDE_BEHAVIOR,
-  Label,
-  LabelPreference,
-  LabelTarget,
+  type Label,
+  type LabelPreference,
+  type LabelTarget,
   MUTEWORD_BEHAVIOR,
   MUTE_BEHAVIOR,
-  ModerationBehavior,
-  ModerationCause,
-  ModerationOpts,
+  type ModerationBehavior,
+  type ModerationCause,
+  type ModerationOpts,
   NOOP_BEHAVIOR,
 } from './types.js'
 import { ModerationUI } from './ui.js'

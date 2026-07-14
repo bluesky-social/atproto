@@ -1,7 +1,7 @@
 import { parseCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -9,6 +9,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.moderator,
     handler: async ({ input }) => {
       const { subject, takedown, deactivated } = input.body
+
+      if (takedown?.applied && deactivated != null && !deactivated.applied) {
+        throw new InvalidRequestError(
+          `Cannot activate and takedown an account at the same time`,
+        )
+      }
+
       if (takedown) {
         if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
@@ -32,16 +39,21 @@ export default function (server: Server, ctx: AppContext) {
       if (deactivated) {
         if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
           if (deactivated.applied) {
-            await ctx.accountManager.deactivateAccount(subject.did, null)
+            await ctx.accountManager.deactivateAccount(subject.did)
           } else {
             await ctx.accountManager.activateAccount(subject.did)
           }
         }
       }
 
-      if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
-        const status = await ctx.accountManager.getAccountStatus(subject.did)
-        await ctx.sequencer.sequenceAccountEvt(subject.did, status)
+      // @NOTE accountManager will sequence an account status when updating the
+      // status, so we don't *need* to sequence the account status here.
+      // However, this endpoint historically has always sequenced the account
+      // status.
+      if (!takedown && !deactivated) {
+        if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
+          await ctx.accountManager.sequenceAccountStatus(subject.did)
+        }
       }
 
       return {

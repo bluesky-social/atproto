@@ -1,23 +1,24 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
-  AppBskyFeedGetActorFeeds,
-  AppBskyFeedGetFeed,
+  type AppBskyFeedGetActorFeeds,
+  type AppBskyFeedGetFeed,
   AtUri,
-  AtpAgent,
+  type AtpAgent,
   XRPCError,
   ids,
 } from '@atproto/api'
 import { TID } from '@atproto/common'
 import {
   RecordRef,
-  SeedClient,
-  TestFeedGen,
+  type SeedClient,
+  type TestFeedGen,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { SkeletonHandler, app } from '@atproto/pds'
+import type { SkeletonHandler, app } from '@atproto/pds'
+import type { DidString } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { forSnapshot, paginateAll } from './_util.js'
 
@@ -28,7 +29,7 @@ describe('feed generation', () => {
   let sc: SeedClient
   let gen: TestFeedGen
 
-  let alice: string
+  let alice: DidString
   let feedUriAll: string
   let feedUriAllRef: RecordRef
   let feedUriEven: string
@@ -40,12 +41,14 @@ describe('feed generation', () => {
   let feedUriNeedsAuth: string
   let feedUriContentModeVideo: string
   let feedUriAcceptsInteractions: string
+  let feedUriPinned: string
   let starterPackRef: { uri: string; cid: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
     })
+
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -75,6 +78,7 @@ describe('feed generation', () => {
       'app.bsky.feed.generator',
       'accepts-interactions',
     )
+    const pinnedUri = AtUri.make(alice, 'app.bsky.feed.generator', 'pinned')
     gen = await network.createFeedGen({
       [allUri.toString()]: feedGenHandler('all'),
       [evenUri.toString()]: feedGenHandler('even'),
@@ -89,6 +93,7 @@ describe('feed generation', () => {
       [acceptsInteractionsUri.toString()]: feedGenHandler(
         'accepts-interactions',
       ),
+      [pinnedUri.toString()]: feedGenHandler('pinned'),
     })
 
     const feedSuggestions = [
@@ -103,10 +108,9 @@ describe('feed generation', () => {
       .execute()
   })
 
-  afterAll(async () => {
-    await gen.close()
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
+  afterAll(async () => gen?.close())
 
   it('feed gen records can be created.', async () => {
     const all = await pdsAgent.api.app.bsky.feed.generator.create(
@@ -209,6 +213,16 @@ describe('feed generation', () => {
         },
         sc.getHeaders(alice),
       )
+    const pinned = await pdsAgent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'pinned' },
+      {
+        did: gen.did,
+        displayName: 'Pinned',
+        description: 'Returns a post with skeletonReasonPin',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     await network.processAll()
     await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: prime.uri,
@@ -225,6 +239,7 @@ describe('feed generation', () => {
     feedUriNeedsAuth = needsAuth.uri
     feedUriContentModeVideo = contentModeVideo.uri
     feedUriAcceptsInteractions = acceptsInteraction.uri
+    feedUriPinned = pinned.uri
   })
 
   it('feed gen records can be updated', async () => {
@@ -268,15 +283,16 @@ describe('feed generation', () => {
 
     const paginatedAll = results(await paginateAll(paginator))
 
-    expect(paginatedAll.length).toEqual(8)
+    expect(paginatedAll.length).toEqual(9)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
-    expect(paginatedAll[1].uri).toEqual(feedUriAcceptsInteractions)
-    expect(paginatedAll[2].uri).toEqual(feedUriContentModeVideo)
-    expect(paginatedAll[3].uri).toEqual(feedUriNeedsAuth)
-    expect(paginatedAll[4].uri).toEqual(feedUriBadPaginationCursor)
-    expect(paginatedAll[5].uri).toEqual(feedUriBadPaginationLimit)
-    expect(paginatedAll[6].uri).toEqual(feedUriEven)
-    expect(paginatedAll[7].uri).toEqual(feedUriAll)
+    expect(paginatedAll[1].uri).toEqual(feedUriPinned)
+    expect(paginatedAll[2].uri).toEqual(feedUriAcceptsInteractions)
+    expect(paginatedAll[3].uri).toEqual(feedUriContentModeVideo)
+    expect(paginatedAll[4].uri).toEqual(feedUriNeedsAuth)
+    expect(paginatedAll[5].uri).toEqual(feedUriBadPaginationCursor)
+    expect(paginatedAll[6].uri).toEqual(feedUriBadPaginationLimit)
+    expect(paginatedAll[7].uri).toEqual(feedUriEven)
+    expect(paginatedAll[8].uri).toEqual(feedUriAll)
     expect(paginatedAll.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
@@ -812,6 +828,21 @@ describe('feed generation', () => {
       )
     })
 
+    it('propagates skeletonReasonPin as ReasonPin.', async () => {
+      const feed = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriPinned },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+      expect(feed.data.feed).toHaveLength(1)
+      expect(AppBskyFeedDefs.isReasonPin(feed.data.feed[0].reason)).toBe(true)
+    })
+
     it('returns an upstream failure error when the feed is down.', async () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
@@ -837,9 +868,25 @@ describe('feed generation', () => {
         | 'bad-pagination-limit'
         | 'bad-pagination-cursor'
         | 'needs-auth'
-        | 'accepts-interactions',
+        | 'accepts-interactions'
+        | 'pinned',
     ): SkeletonHandler =>
     async ({ req, params }) => {
+      if (feedName === 'pinned') {
+        return {
+          encoding: 'application/json',
+          body: {
+            feed: [
+              {
+                post: sc.posts[sc.dids.alice][0].ref.uriStr,
+                reason: {
+                  $type: 'app.bsky.feed.defs#skeletonReasonPin',
+                },
+              },
+            ],
+          } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
+        }
+      }
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')
       }

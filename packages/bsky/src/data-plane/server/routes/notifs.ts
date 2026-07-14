@@ -1,20 +1,18 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
-import { app } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect.js'
+import type { app } from '../../../lexicons/index.js'
+import type { Service } from '../../../proto/bsky_connect.js'
 import {
-  ChatNotificationInclude,
-  ChatNotificationPreference,
   FilterableNotificationPreference,
   NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
 } from '../../../proto/bsky_pb.js'
 import { Namespaces } from '../../../stash.js'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { IsoSortAtKey } from '../db/pagination.js'
 import { countAll, notSoftDeletedClause } from '../db/util.js'
 
@@ -32,17 +30,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     let builder = db.db
       .selectFrom('notification as notif')
       .where('notif.did', '=', actorDid)
-      .where((clause) =>
-        clause
-          .where('reasonSubject', 'is', null)
-          .orWhereExists(
+      .where((eb) =>
+        eb.or([
+          eb('reasonSubject', 'is', null),
+          eb.exists(
             db.db
               .selectFrom('record as subject')
               .selectAll()
               .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
           ),
+        ]),
       )
-      .if(priority, (qb) => qb.whereExists(priorityFollowQb))
+      .$if(priority, (qb) => qb.where(({ exists }) => exists(priorityFollowQb)))
       .select([
         'notif.author as authorDid',
         'notif.recordUri as uri',
@@ -117,13 +116,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
       .where('notification.did', '=', actorDid)
       .where('notification.sortAt', '>', lastSeen ?? '')
-      .if(priority, (qb) =>
-        qb.whereExists(
-          db.db
-            .selectFrom('follow')
-            .select(sql<boolean>`${true}`.as('val'))
-            .where('creator', '=', actorDid)
-            .whereRef('subjectDid', '=', ref('notification.author')),
+      .$if(priority, (qb) =>
+        qb.where(({ exists }) =>
+          exists(
+            db.db
+              .selectFrom('follow')
+              .select(sql<boolean>`${true}`.as('val'))
+              .where('creator', '=', actorDid)
+              .whereRef('subjectDid', '=', ref('notification.author')),
+          ),
         ),
       )
       .executeTakeFirst()
@@ -200,17 +201,6 @@ export const notificationPreferencesLexToProtobuf = (
   p: app.bsky.notification.defs.Preferences,
   json: string,
 ): NotificationPreferences => {
-  const lexChatPreferenceToProtobuf = (
-    p: app.bsky.notification.defs.ChatPreference,
-  ): ChatNotificationPreference =>
-    new ChatNotificationPreference({
-      include:
-        p.include === 'accepted'
-          ? ChatNotificationInclude.ACCEPTED
-          : ChatNotificationInclude.ALL,
-      push: { enabled: p.push ?? true },
-    })
-
   const lexFilterablePreferenceToProtobuf = (
     p: app.bsky.notification.defs.FilterablePreference,
   ): FilterableNotificationPreference =>
@@ -233,7 +223,6 @@ export const notificationPreferencesLexToProtobuf = (
 
   return new NotificationPreferences({
     entry: Buffer.from(json),
-    chat: lexChatPreferenceToProtobuf(p.chat),
     follow: lexFilterablePreferenceToProtobuf(p.follow),
     like: lexFilterablePreferenceToProtobuf(p.like),
     likeViaRepost: lexFilterablePreferenceToProtobuf(p.likeViaRepost),

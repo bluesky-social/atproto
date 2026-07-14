@@ -1,5 +1,5 @@
-import { GeneratedAlways } from 'kysely'
-import {
+import type { GeneratedAlways } from 'kysely'
+import type {
   SafelinkActionType,
   SafelinkEventType,
   SafelinkPatternType,

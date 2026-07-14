@@ -48,7 +48,7 @@ describe('EventRunner utils', () => {
       runner.addTask('1', async () => {
         complete[1].push(3)
       })
-      expect(runner.partitions.size).toEqual(1)
+      expect(runner.partitionCount).toEqual(1)
       // partition 2 items complete quickly except the last, which is slowest of all events.
       runner.addTask('2', async () => {
         await wait(1)
@@ -65,13 +65,13 @@ describe('EventRunner utils', () => {
         await wait(60)
         complete[2].push(4)
       })
-      expect(runner.partitions.size).toEqual(2)
-      await runner.mainQueue.onIdle()
+      expect(runner.partitionCount).toEqual(2)
+      await runner.processAll()
       expect(complete).toEqual({
         1: [1, 2, 3],
         2: [1, 2, 3, 4],
       })
-      expect(runner.partitions.size).toEqual(0)
+      expect(runner.partitionCount).toEqual(0)
     })
 
     it('limits overall concurrency.', async () => {
@@ -96,10 +96,10 @@ describe('EventRunner utils', () => {
         complete.push(22)
       })
       // only partition 1 exists so far due to the concurrency
-      expect(runner.partitions.size).toEqual(1)
-      await runner.mainQueue.onIdle()
+      expect(runner.partitionCount).toEqual(1)
+      await runner.processAll()
       expect(complete).toEqual([11, 21, 12, 22])
-      expect(runner.partitions.size).toEqual(0)
+      expect(runner.partitionCount).toEqual(0)
     })
 
     it('settles with many items.', async () => {
@@ -114,8 +114,8 @@ describe('EventRunner utils', () => {
           complete.push({ partition, id: i })
         })
       }
-      expect(runner.partitions.size).toBeLessThanOrEqual(partitions.size)
-      await runner.mainQueue.onIdle()
+      expect(runner.partitionCount).toBeLessThanOrEqual(partitions.size)
+      await runner.processAll()
       expect(complete.length).toEqual(500)
       for (const partition of partitions) {
         const ids = complete
@@ -123,7 +123,7 @@ describe('EventRunner utils', () => {
           .map((item) => item.id)
         expect(ids).toEqual([...ids].sort((a, b) => a - b))
       }
-      expect(runner.partitions.size).toEqual(0)
+      expect(runner.partitionCount).toEqual(0)
     })
   })
 })

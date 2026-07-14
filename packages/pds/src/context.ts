@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import express from 'express'
-import { Redis } from 'ioredis'
+import type express from 'express'
+import type { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
-import * as undici from 'undici'
+import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -14,19 +14,14 @@ import {
   JoseKey,
   LexResolver,
   OAuthProvider,
-  OAuthVerifier,
-} from '@atproto/oauth-provider'
-import { BlobStore } from '@atproto/repo'
+} from '@atproto/oauth-provider/provider'
+import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
+import type { BlobStore } from '@atproto/repo'
 import {
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
-import {
-  Fetch,
-  isUnicastIp,
-  safeFetchWrap,
-  unicastLookup,
-} from '@atproto-labs/fetch-node'
+import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager.js'
 import { OAuthStore } from './account-manager/oauth-store.js'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter.js'
@@ -39,7 +34,7 @@ import {
 } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import { BskyAppView } from './bsky-app-view.js'
-import { ServerConfig, ServerSecrets } from './config/index.js'
+import type { ServerConfig, ServerSecrets } from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
@@ -47,7 +42,11 @@ import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
-import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer.js'
+import { buildProxyAgent } from './pipethrough.js'
+import {
+  LocalViewer,
+  type LocalViewerCreator,
+} from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
 
@@ -145,6 +144,7 @@ export class AppContext {
             forcePathStyle: cfg.blobstore.forcePathStyle,
             credentials: cfg.blobstore.credentials,
             uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
+            requestTimeoutMs: cfg.blobstore.requestTimeoutMs,
           })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
@@ -181,7 +181,7 @@ export class AppContext {
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
-    const backgroundQueue = new BackgroundQueue()
+    const backgroundQueue = new BackgroundQueue(undefined, { concurrency: 5 })
     const crawlers = new Crawlers(
       backgroundQueue,
       cfg.service.hostname,
@@ -277,15 +277,14 @@ export class AppContext {
           )
 
     const accountManager = new AccountManager(
+      cfg,
+      actorStore,
       idResolver,
       jwtSecretKey,
       mailer,
       sequencer,
       plcClient,
       plcRotationKey,
-      cfg.service.did,
-      cfg.identity.serviceHandleDomains,
-      cfg.db,
     )
     await accountManager.migrateOrThrow()
 
@@ -296,36 +295,7 @@ export class AppContext {
     )
 
     // An agent for performing HTTP requests based on user provided URLs.
-    const proxyAgentBase = new undici.Agent({
-      allowH2: cfg.proxy.allowHTTP2, // This is experimental
-      headersTimeout: cfg.proxy.headersTimeout,
-      maxResponseSize: cfg.proxy.maxResponseSize,
-      bodyTimeout: cfg.proxy.bodyTimeout,
-      factory: cfg.proxy.disableSsrfProtection
-        ? undefined
-        : (origin, opts) => {
-            const { protocol, hostname } =
-              origin instanceof URL ? origin : new URL(origin)
-            if (protocol !== 'https:') {
-              throw new Error(`Forbidden protocol "${protocol}"`)
-            }
-            if (isUnicastIp(hostname) === false) {
-              throw new Error('Hostname resolved to non-unicast address')
-            }
-            return new undici.Pool(origin, opts)
-          },
-      connect: {
-        lookup: cfg.proxy.disableSsrfProtection ? undefined : unicastLookup,
-      },
-    })
-    const proxyAgent =
-      cfg.proxy.maxRetries > 0
-        ? new undici.RetryAgent(proxyAgentBase, {
-            statusCodes: [], // Only retry on socket errors
-            methods: ['GET', 'HEAD'],
-            maxRetries: cfg.proxy.maxRetries,
-          })
-        : proxyAgentBase
+    const proxyAgent = buildProxyAgent(cfg.proxy)
 
     /**
      * A fetch() function that protects against SSRF attacks, large responses &

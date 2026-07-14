@@ -1,9 +1,6 @@
 {
   "name": "@atproto/oauth-scopes",
-  "version": "0.5.0",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.5.6",
   "license": "MIT",
   "description": "A library for manipulating and validating ATproto OAuth scopes in TypeScript.",
   "keywords": [
@@ -18,6 +15,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/auth-scopes"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -25,16 +26,18 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/did": "workspace:^",
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "typescript": "^6.0.3"
+    "jest": "^30.0.0"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsgo --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   }
 }

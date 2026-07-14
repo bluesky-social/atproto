@@ -1,6 +1,7 @@
-import AtpAgent, { AppBskyLabelerDefs } from '@atproto/api'
+import type AtpAgent from '@atproto/api'
+import { AppBskyLabelerDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { OzoneConfig } from '../config/index.js'
+import type { OzoneConfig } from '../config/index.js'
 import {
   REASONAPPEAL,
   REASONMISLEADING,

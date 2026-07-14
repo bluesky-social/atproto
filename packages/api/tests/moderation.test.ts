@@ -1,5 +1,5 @@
 import {
-  ModerationOpts,
+  type ModerationOpts,
   interpretLabelValueDefinition,
   mock,
   moderatePost,

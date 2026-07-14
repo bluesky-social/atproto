@@ -6,6 +6,7 @@ pnpm-lock.yaml
 .pnpm*
 .changeset
 CHANGELOG.md
+/.claude/settings.local.json
 
 # buf
 packages/bsky/src/proto

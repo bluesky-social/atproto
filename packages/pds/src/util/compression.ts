@@ -1,5 +1,5 @@
 import compression from 'compression'
-import express from 'express'
+import type express from 'express'
 
 export default function () {
   return compression({

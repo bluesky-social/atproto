@@ -3,7 +3,10 @@ import { useRef } from 'react'
 import { FormField } from '#/components/forms/form-field'
 import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import {
+  SmartForm,
+  type WrappedSmartFormProps,
+} from '#/components/forms/smart-form'
 
 export type ResetPasswordConfirmData = {
   token: string
@@ -13,10 +16,12 @@ export type ResetPasswordConfirmData = {
 export type ResetPasswordConfirmFormProps =
   WrappedSmartFormProps<ResetPasswordConfirmData> & {
     email?: string
+    onResend?: () => void | PromiseLike<void>
   }
 
 export function ResetPasswordConfirmForm({
   email,
+  onResend,
   ...props
 }: ResetPasswordConfirmFormProps) {
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -37,7 +42,7 @@ export function ResetPasswordConfirmForm({
               <input
                 type="text"
                 autoComplete="username"
-                value={email}
+                defaultValue={email}
                 readOnly
                 hidden
               />
@@ -50,6 +55,7 @@ export function ResetPasswordConfirmForm({
                 required
                 autoFocus={true}
                 defaultValue={values.token}
+                onResend={onResend}
                 onToken={(value) => {
                   set('token', value ?? undefined)
                   // Auto-focus next field when token is complete

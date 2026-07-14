@@ -1,15 +1,20 @@
 import assert from 'node:assert'
 import { dedupeStrs, mapDefined } from '@atproto/common'
 import { atUri } from '@atproto/lex'
-import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
 import {
+  AtUri,
+  type AtUriString,
+  type DidString,
+  type UriString,
+} from '@atproto/syntax'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
+import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
 } from '../feature-gates/index.js'
 import { app, chat, com } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
-import {
+import type {
   Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
@@ -20,72 +25,72 @@ import {
   parseSiteStandardRecordKey,
 } from '../util/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
-import { ParsedLabelers } from '../util.js'
+import type { ParsedLabelers } from '../util.js'
 import {
-  ProfileRecord,
+  type ProfileRecord,
   isExternalEmbedType,
   isListRuleType,
   isRecordEmbedType,
   isRecordWithMediaType,
 } from '../views/types.js'
 import {
-  ActivitySubscriptionStates,
+  type ActivitySubscriptionStates,
   ActorHydrator,
-  Actors,
-  KnownFollowersStates,
-  ProfileAggs,
-  ProfileViewerState,
-  ProfileViewerStates,
+  type Actors,
+  type KnownFollowersStates,
+  type ProfileAggs,
+  type ProfileViewerState,
+  type ProfileViewerStates,
 } from './actor.js'
 import {
   ExternalHydrator,
-  SiteStandardDocuments,
-  SiteStandardPublications,
+  type SiteStandardDocuments,
+  type SiteStandardPublications,
 } from './external.js'
 import {
-  FeedGenAggs,
-  FeedGenViewerStates,
-  FeedGens,
+  type FeedGenAggs,
+  type FeedGenViewerStates,
+  type FeedGens,
   FeedHydrator,
-  FeedItem,
+  type FeedItem,
   type GetPostsHydrationOptions,
-  Likes,
-  Post,
-  PostAggs,
-  PostViewerStates,
-  Postgates,
-  Posts,
-  Reposts,
-  ThreadContexts,
-  ThreadRef,
-  Threadgates,
+  type Likes,
+  type Post,
+  type PostAggs,
+  type PostViewerStates,
+  type Postgates,
+  type Posts,
+  type Reposts,
+  type ThreadContexts,
+  type ThreadRef,
+  type Threadgates,
 } from './feed.js'
 import {
-  BlockEntry,
-  Follows,
+  type BlockEntry,
+  type Follows,
   GraphHydrator,
-  ListAggs,
-  ListItems,
-  ListMembershipState,
-  ListMembershipStates,
-  ListViewerStates,
-  Lists,
-  RelationshipPair,
-  StarterPackAggs,
-  StarterPacks,
-  Verifications,
+  type ListAggs,
+  type ListItems,
+  type ListMembershipState,
+  type ListMembershipStates,
+  type ListViewerStates,
+  type Lists,
+  type RelationshipPair,
+  type StarterPackAggs,
+  type StarterPacks,
+  type Verifications,
 } from './graph.js'
 import {
   LabelHydrator,
-  LabelerAggs,
-  LabelerViewerStates,
-  Labelers,
+  type LabelerAggs,
+  type LabelerViewerStates,
+  type Labelers,
   Labels,
 } from './label.js'
 import {
   HydrationMap,
-  ItemRef,
-  RecordInfo,
+  type ItemRef,
+  type RecordInfo,
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
@@ -334,29 +339,31 @@ export class Hydrator {
   async hydrateProfilesDetailed(
     dids: DidString[],
     ctx: HydrateCtx,
+    opts?: {
+      // when set, restricts known followers hydration to this subset of dids
+      knownFollowersDids?: DidString[]
+    },
   ): Promise<HydrationState> {
-    let knownFollowers: KnownFollowersStates = new HydrationMap()
-    try {
-      knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get known followers for profiles',
-      )
-    }
-
-    let activitySubscriptions: ActivitySubscriptionStates = new HydrationMap()
-    try {
-      activitySubscriptions = await this.actor.getActivitySubscriptions(
-        dids,
-        ctx.viewer,
-      )
-    } catch (err) {
-      hydrationLogger.error(
-        { err },
-        'Failed to get activity subscriptions state for profiles',
-      )
-    }
+    const [knownFollowers, activitySubscriptions] = await Promise.all([
+      this.actor
+        .getKnownFollowers(opts?.knownFollowersDids ?? dids, ctx.viewer)
+        .catch((err): KnownFollowersStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get known followers for profiles',
+          )
+          return new HydrationMap()
+        }),
+      this.actor
+        .getActivitySubscriptions(dids, ctx.viewer)
+        .catch((err): ActivitySubscriptionStates => {
+          hydrationLogger.error(
+            { err },
+            'Failed to get activity subscriptions state for profiles',
+          )
+          return new HydrationMap()
+        }),
+    ])
 
     const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
 
@@ -1051,12 +1058,11 @@ export class Hydrator {
         )
       },
     )
-    const blocks = await this.hydrateBidirectionalBlocks(
-      pairsToMap(listCreatorMemberPairs),
-      ctx,
-    )
-    // sample top list items per starter pack based on their follows
-    const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
+    const [blocks, listMemberAggs] = await Promise.all([
+      this.hydrateBidirectionalBlocks(pairsToMap(listCreatorMemberPairs), ctx),
+      // sample top list items per starter pack based on their follows
+      this.actor.getProfileAggregates(listMemberDids),
+    ])
     const listItemUris: AtUriString[] = []
     uris.forEach((uri) => {
       const sp = starterPackState.starterPacks?.get(uri)

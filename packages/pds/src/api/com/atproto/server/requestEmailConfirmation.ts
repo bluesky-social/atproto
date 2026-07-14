@@ -1,11 +1,11 @@
 import { DAY, HOUR } from '@atproto/common'
-import {
+import type {
   MethodAuthVerifier,
   MethodRateLimit,
   Server,
 } from '@atproto/xrpc-server'
-import { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
-import { AppContext } from '../../../../context.js'
+import type { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 // Exposed as a utility to ensure auth in confirmEmail and requestEmailConfirmation

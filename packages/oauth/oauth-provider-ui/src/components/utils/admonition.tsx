@@ -1,21 +1,21 @@
 import {
   CheckCircleIcon,
-  type Icon,
+  type Icon as PhosphorIcon,
   InfoIcon,
   ProhibitIcon,
   WarningIcon,
 } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
 import {
-  AriaRole,
-  JSX,
-  ReactNode,
+  type AriaRole,
+  type JSX,
+  type ReactNode,
   createContext,
   useContext,
   useMemo,
 } from 'react'
-import { Button, ButtonProps } from '#/components/forms/button.tsx'
-import { Override } from '#/lib/util.ts'
+import { Button, type ButtonProps } from '#/components/forms/button.tsx'
+import type { Override } from '#/lib/util.ts'
 
 type Variant = 'info' | 'warning' | 'error' | 'success'
 
@@ -30,7 +30,7 @@ const roleToVariant = (role?: AriaRole): Variant => {
   return (ROLE_VARIANT_MAP as ReadonlyMap<unknown, Variant>).get(role) ?? 'info'
 }
 
-const icons: Record<Variant, Icon> = {
+const icons: Record<Variant, PhosphorIcon> = {
   // @ts-expect-error
   __proto__: null,
 
@@ -127,7 +127,7 @@ export function AdmonitionIcon({
 }: {
   variant?: Variant
   children?: ReactNode
-  icon?: Icon
+  icon?: PhosphorIcon
 }) {
   const ctx = useContext(AdmonitionContext)
   const variant: Variant = variantProp ?? ctx.variant
@@ -178,7 +178,7 @@ export type AdmonitionProps = Override<
     title?: ReactNode
     action?: ReactNode
     append?: ReactNode
-    icon?: Icon
+    icon?: PhosphorIcon
   }
 >
 

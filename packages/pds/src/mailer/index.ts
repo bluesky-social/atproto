@@ -1,6 +1,6 @@
-import { SendMailOptions, Transporter } from 'nodemailer'
+import type { SendMailOptions, Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
-import { BrandingConfig, EmailConfig } from '../config/index.js'
+import type { BrandingConfig, EmailConfig } from '../config/index.js'
 import { mailerLogger } from '../logger.js'
 import * as templates from './templates.js'
 
@@ -36,9 +36,10 @@ export class ServerMailer {
   }
 
   async sendResetPassword(
-    params: { handle: string; token: string },
+    params: { handle: string; token: string; locale?: string },
     mailOpts: SendMailOptions,
   ) {
+    // @TODO (later) handle locale in the template
     await this.sendTemplate('resetPassword', params, {
       subject: 'Password Reset Requested',
       ...mailOpts,
@@ -46,9 +47,10 @@ export class ServerMailer {
   }
 
   async sendAccountDelete(
-    params: { token: string },
+    params: { token: string; locale?: string },
     mailOpts: SendMailOptions,
   ) {
+    // @TODO (later) handle locale in the template
     await this.sendTemplate('deleteAccount', params, {
       subject: 'Account Deletion Requested',
       ...mailOpts,

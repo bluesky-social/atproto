@@ -59,7 +59,12 @@
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports", "fixStyle": "inline-type-imports" }
+    ],
+    "@typescript-eslint/no-import-type-side-effects": "error"
   },
   "overrides": [
     {
@@ -106,12 +111,15 @@
     "import/resolver": {
       "typescript": {
         "project": [
-          "tsconfig.json",
-          "packages/lex/*/tsconfig.json",
-          "packages/oauth/*/tsconfig.json",
-          "packages/oauth/*/tsconfig.src.json",
-          "packages/internal/*/tsconfig.json",
-          "packages/*/tsconfig.json"
+          "packages/lex/*/tsconfig.build.json",
+          "packages/lex/*/tsconfig.test.json",
+          "packages/oauth/*/tsconfig.build.json",
+          "packages/oauth/*/tsconfig.test.json",
+          "packages/oauth/*/tsconfig.lib.json",
+          "packages/internal/*/tsconfig.build.json",
+          "packages/internal/*/tsconfig.test.json",
+          "packages/*/tsconfig.build.json",
+          "packages/*/tsconfig.test.json"
         ]
       },
       "node": {

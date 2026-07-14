@@ -1,4 +1,4 @@
-import { Base64Alphabet } from './uint8array-base64.js'
+import type { Base64Alphabet } from './uint8array-base64.js'
 import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
 import {
   fromBase64Native,
@@ -68,7 +68,7 @@ export const toBase64: (
 export const fromBase64: (
   b64: string,
   alphabet?: Base64Alphabet,
-) => Uint8Array =
+) => Uint8Array<ArrayBuffer> =
   /* v8 ignore next -- @preserve */ fromBase64Native ??
   fromBase64Node ??
   fromBase64Ponyfill

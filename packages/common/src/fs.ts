@@ -31,14 +31,12 @@ export const rmIfExists = async (
   filepath: string,
   recursive = false,
 ): Promise<void> => {
-  try {
-    await fs.rm(filepath, { recursive })
-  } catch (err) {
-    if (isErrnoException(err) && err.code === 'ENOENT') {
-      return
-    }
-    throw err
-  }
+  await fs.rm(filepath, {
+    force: true, // ignore errors if the file/directory does not exist
+    recursive,
+    maxRetries: 5,
+    retryDelay: 50,
+  })
 }
 
 export const renameIfExists = async (

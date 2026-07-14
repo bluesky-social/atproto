@@ -1,15 +1,15 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  ValidationResult,
-  Validator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
-import { ObjectSchema } from './object.js'
+import type { ObjectSchema } from './object.js'
 
 /**
  * Type representing a single variant in a discriminated union.

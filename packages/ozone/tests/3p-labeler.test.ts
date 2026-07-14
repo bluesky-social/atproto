@@ -1,8 +1,8 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   TestOzone,
   basicSeed,
@@ -53,8 +53,8 @@ describe('labels from 3p labelers', () => {
   })
 
   afterAll(async () => {
-    await network.close()
-    await thirdPartyLabeler.close()
+    await network?.close()
+    await thirdPartyLabeler?.close()
   })
 
   const getPostSubject = () => ({

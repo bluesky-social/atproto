@@ -1,18 +1,16 @@
-FROM node:24.15-alpine3.23 AS build
+FROM node:24.18-alpine3.23 AS build
 
-RUN corepack enable
+RUN npm install -g pnpm@11.11.0
 
 WORKDIR /app
 
 COPY ./.npmrc ./
 COPY ./.nvmrc ./
 COPY ./package.json ./
-RUN corepack install
 
 # Move files into the image and install
 COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
-COPY ./patches ./patches
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 COPY ./packages/internal ./packages/internal
@@ -64,7 +62,7 @@ RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 # Uses assets from build stage to reduce build size
-FROM node:24.15-alpine3.23
+FROM node:24.18-alpine3.23
 
 # dumb-init is used to handle signals properly.
 # runit is installed so it can be (optionally) used for logging via svlogd.

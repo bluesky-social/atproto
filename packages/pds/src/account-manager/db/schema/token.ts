@@ -1,27 +1,27 @@
-import { Generated, Selectable } from 'kysely'
-import {
+import type { Generated, Selectable } from 'kysely'
+import type {
   ClientAuth,
   ClientAuthLegacy,
+  ClientId,
   Code,
   DeviceId,
+  Did,
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
-  OAuthClientId,
   RefreshToken,
-  Sub,
   TokenId,
-} from '@atproto/oauth-provider'
-import { DateISO, JsonEncoded } from '../../../db/cast.js'
+} from '@atproto/oauth-provider/store'
+import type { DateISO, JsonEncoded } from '../../../db/cast.js'
 
 export interface Token {
   id: Generated<number>
-  did: Sub
+  did: Did
 
   tokenId: TokenId
   createdAt: DateISO
   updatedAt: DateISO
   expiresAt: DateISO
-  clientId: OAuthClientId
+  clientId: ClientId
   clientAuth: JsonEncoded<ClientAuth | ClientAuthLegacy>
   deviceId: DeviceId | null
   parameters: JsonEncoded<OAuthAuthorizationRequestParameters>

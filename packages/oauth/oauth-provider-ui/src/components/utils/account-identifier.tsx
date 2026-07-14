@@ -1,7 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { Handle } from './handle.tsx'
 
 export type AccountIdentifierProps = Override<
@@ -20,14 +20,14 @@ export function AccountIdentifier({
 }: AccountIdentifierProps) {
   const { t } = useLingui()
 
-  const handle = account.preferred_username
+  const handle = account.handle
   if (handle) {
     return <Handle handle={handle} aria-label={ariaLabel} {...props} />
   }
 
   return (
     <span {...props} aria-label={ariaLabel ?? t`Account identifier`}>
-      {account.sub}
+      {account.did}
     </span>
   )
 }

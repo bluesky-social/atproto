@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import type { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
 import { enumSchema } from './enum.js'
 import { integer } from './integer.js'
 import { nullable } from './nullable.js'

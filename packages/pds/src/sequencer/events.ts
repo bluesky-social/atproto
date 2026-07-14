@@ -2,17 +2,17 @@ import assert from 'node:assert'
 import { z } from 'zod'
 import { schema } from '@atproto/common'
 import {
-  DatetimeString,
-  DidString,
-  HandleString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
   isDidString,
   isHandleString,
 } from '@atproto/lex'
 import { encode as cborEncode } from '@atproto/lex-cbor'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager.js'
-import { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
-import { RepoSeqInsert } from './db/index.js'
+import type { CommitDataWithOps, SyncEvtData } from '../repo/index.js'
+import type { RepoSeqInsert } from './db/index.js'
 
 export const formatSeqCommit = async (
   did: string,
@@ -83,12 +83,10 @@ export const formatSeqIdentityEvt = async (
   did: DidString,
   handle?: HandleString,
 ): Promise<RepoSeqInsert> => {
-  const evt: IdentityEvt = {
-    did,
-  }
-  if (handle) {
-    evt.handle = handle
-  }
+  const evt: IdentityEvt = handle //
+    ? { did, handle }
+    : { did }
+
   return {
     did,
     eventType: 'identity',
@@ -101,13 +99,10 @@ export const formatSeqAccountEvt = async (
   did: DidString,
   status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
-  const evt: AccountEvt = {
-    did,
-    active: status === 'active',
-  }
-  if (status !== AccountStatus.Active) {
-    evt.status = status
-  }
+  const evt: AccountEvt =
+    status === AccountStatus.Active
+      ? { did, active: true }
+      : { did, active: false, status }
 
   return {
     did,

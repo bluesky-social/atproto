@@ -1,5 +1,5 @@
 import { base64url } from 'multiformats/bases/base64'
-import { RefinementCtx, ZodIssueCode } from 'zod'
+import { type RefinementCtx, ZodIssueCode } from 'zod'
 
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<V & Omit<T, keyof V>>

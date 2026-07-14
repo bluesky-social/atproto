@@ -1,8 +1,8 @@
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import { SECOND } from '@atproto/common'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -68,7 +68,7 @@ describe('strike expiry processor', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('processes expired strikes and updates active strike count', async () => {

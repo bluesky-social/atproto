@@ -1,5 +1,5 @@
-import { ScopeStringFor } from './syntax.js'
-import { Matchable } from './util.js'
+import type { ScopeStringFor } from './syntax.js'
+import type { Matchable } from './util.js'
 
 /**
  * Interface destined to provide consistency across parsed permission scopes for

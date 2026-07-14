@@ -1,10 +1,10 @@
 import {
   ComAtprotoModerationDefs,
-  ToolsOzoneModerationDefs,
+  type ToolsOzoneModerationDefs,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -29,7 +29,7 @@ describe('report-muting', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const assertSubjectStatus = async (

@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {

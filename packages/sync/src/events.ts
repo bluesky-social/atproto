@@ -1,7 +1,7 @@
-import { DidDocument } from '@atproto/identity'
-import { Cid, LexMap } from '@atproto/lex'
-import { BlockMap } from '@atproto/repo'
-import { AtUri, DidString } from '@atproto/syntax'
+import type { DidDocument } from '@atproto/identity'
+import type { Cid, LexMap } from '@atproto/lex'
+import type { BlockMap } from '@atproto/repo'
+import type { AtUri, DidString } from '@atproto/syntax'
 
 export type Event = CommitEvt | SyncEvt | IdentityEvt | AccountEvt
 

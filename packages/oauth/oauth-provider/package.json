@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider",
-  "version": "0.18.2",
+  "version": "0.20.1",
   "license": "MIT",
   "description": "Generic OAuth2 and OpenID Connect provider for Node.js. Currently only supports features needed for Atproto.",
   "keywords": [
@@ -18,18 +18,49 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-provider"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+    "./errors": {
+      "types": "./dist/oauth-errors.d.ts",
+      "default": "./dist/oauth-errors.js"
+    },
+    "./constants": {
+      "types": "./dist/oauth-constants.d.ts",
+      "default": "./dist/oauth-constants.js"
+    },
+    "./store": {
+      "types": "./dist/oauth-store.d.ts",
+      "default": "./dist/oauth-store.js"
+    },
+    "./hooks": {
+      "types": "./dist/oauth-hooks.d.ts",
+      "default": "./dist/oauth-hooks.js"
+    },
+    "./provider": {
+      "types": "./dist/oauth-provider.d.ts",
+      "default": "./dist/oauth-provider.js"
+    },
+    "./verifier": {
+      "types": "./dist/oauth-verifier.d.ts",
+      "default": "./dist/oauth-verifier.js"
+    },
+    "./middleware": {
+      "types": "./dist/oauth-middleware.d.ts",
+      "default": "./dist/oauth-middleware.js"
+    },
+    "./utils": {
+      "types": "./dist/oauth-utils.d.ts",
+      "default": "./dist/oauth-utils.js"
     }
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
-    "@atproto-labs/fetch": "workspace:^",
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/pipe": "workspace:^",
     "@atproto-labs/simple-store": "workspace:^",
@@ -65,6 +96,6 @@
     "@types/send": "^0.17.4"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

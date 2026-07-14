@@ -1,9 +1,16 @@
-import { DynamicModule, RawBuilder, SelectQueryBuilder, sql } from 'kysely'
+import {
+  type DynamicModule,
+  type RawBuilder,
+  type SelectQueryBuilder,
+  sql,
+} from 'kysely'
 // eslint-disable-next-line import/default
-import pg from 'pg'
+import type pg from 'pg'
 type PgPool = pg.Pool
 
-export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
+export type DbRef =
+  | RawBuilder<unknown>
+  | ReturnType<DynamicModule<unknown>['ref']>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>
 

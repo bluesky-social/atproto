@@ -8,7 +8,7 @@ Type-check from the package directory only — root `pnpm verify:types` is fine 
 
 ```bash
 cd packages/oauth/oauth-provider-ui
-pnpm exec tsc --build tsconfig.json
+pnpm exec tsgo --build tsconfig.json
 ```
 
 The hooks-driven IDE diagnostics surface prettier-tailwind class-ordering violations as errors. When the formatter reorders Tailwind classes, accept its order — don't argue with it.
@@ -46,6 +46,17 @@ Three layers of primitives live under [src/components/forms/](src/components/for
 - **`SmartForm<TData, TValues>`** — `FormCard` + full controlled state. Caller provides `values` (initial), `validate(values) → TData | undefined` (also gates submit — returning `undefined` disables the submit button), and `handler(data, signal)`. The `fields` render-prop receives `{ values, set, setterFor, loading, error, data }` for wiring inputs. Pass a `ref` to expose the same handler imperatively when a parent needs to mutate fields (e.g. clearing the OTP field on credential change in [sign-in-form.tsx](src/components/sign-in-form.tsx)). This is the default for new forms — most `*-form.tsx` components are thin `SmartForm` wrappers (see [reset-password-request-form.tsx](src/components/reset-password-request-form.tsx) for the minimal shape).
 
 When authoring a `SmartForm`-based component, type its props as `WrappedSmartFormProps<TData>` (also exported from `smart-form.tsx`) — that omits `fields` and `validate` so callers only pass the outer `FormCard` props plus any feature-specific extras.
+
+**`*-form.tsx` MUST be built on `SmartForm`** — never hand-roll `<form>` + `useAsyncAction` + `useState` even when the form has unusual extras (extra inputs, a resend button, custom error rendering, an error-colored submit). Pass-throughs that already exist on `FormCardProps` cover almost every case:
+
+- Custom submit label or color: `submitLabel` / pass through `submitColor` (or override the row via `actions`).
+- Cancel / back: `onCancel` + `cancelLabel`, `onBack` + `backLabel` — the parent dialog/page provides them.
+- Wider button styling (e.g. stacked full-width buttons): supply your own row via `actions` and set `submitLabel={null}` if needed; do NOT rebuild the form to get a different layout.
+- Extra pending state from outside the form (e.g. an in-flight resend): merge it into `props.loading` (`loading={props.loading || requestPending}`).
+- Error display: `FormCard` already renders `error` via `errorRender` / `errorParser` — don't call `errorCardRender` yourself.
+- Loading-state mirroring to the parent: pass `onLoadingChange` straight through (it's a `SmartFormProps` prop already).
+
+If a constraint genuinely cannot be expressed through these props, extend `FormCard`/`SmartForm` itself rather than forking the form. See [reset-password-confirm-form.tsx](src/components/reset-password-confirm-form.tsx) and [update-email-form.tsx](src/components/update-email-form.tsx) for the canonical shapes — including a form that already mixes a SmartForm with a `ButtonRequestCode` resend link inside the `fields` render-prop.
 
 ## Input components (`input-*.tsx`)
 

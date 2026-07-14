@@ -1,12 +1,12 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { ReactNode, useRef } from 'react'
+import { type ReactNode, useRef } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Button } from './forms/button.tsx'
-import { FormHandler, SmartForm } from './forms/smart-form.tsx'
+import { type FormHandler, SmartForm } from './forms/smart-form.tsx'
 import { AccountIdentifier } from './utils/account-identifier.tsx'
 import { ClientImage } from './utils/client-image.tsx'
 import { ClientName } from './utils/client-name.tsx'
@@ -80,6 +80,7 @@ export function ConsentForm({
       ref={formRef}
       onBack={onBack}
       error={reject.error}
+      disabled={reject.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
       values={{ allowEmail: true }}
       onValues={() => reject.reset()}
@@ -90,6 +91,8 @@ export function ConsentForm({
       handler={onConsent}
       actions={
         <Button
+          disabled={form?.loading}
+          loading={reject.loading}
           onClick={(event) => {
             event.preventDefault()
             form?.reset()

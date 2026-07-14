@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
 
 describe('auth', () => {
@@ -20,14 +20,12 @@ describe('auth', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO invalidations do not originate from appview frontends: requires identity event on the repo stream.
   it.skip('handles signing key change for service auth.', async () => {

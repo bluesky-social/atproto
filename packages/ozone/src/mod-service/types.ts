@@ -1,8 +1,8 @@
-import { type Selectable } from 'kysely'
-import { ModerationEvent } from '../db/schema/moderation_event.js'
-import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status.js'
-import { ModEventView } from '../lexicon/types/tools/ozone/moderation/defs.js'
-import { ModSubject } from './subject.js'
+import type { Selectable } from 'kysely'
+import type { ModerationEvent } from '../db/schema/moderation_event.js'
+import type { ModerationSubjectStatus } from '../db/schema/moderation_subject_status.js'
+import type { ModEventView } from '../lexicon/types/tools/ozone/moderation/defs.js'
+import type { ModSubject } from './subject.js'
 
 export type ModerationEventRow = Selectable<ModerationEvent>
 export type ReversibleModerationEvent = Pick<

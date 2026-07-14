@@ -1,4 +1,4 @@
-import { app, chat, com, site } from '../lexicons/index.js'
+import { app, type chat, com, type site } from '../lexicons/index.js'
 
 // app.bsky.actor
 

@@ -1,5 +1,5 @@
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
@@ -143,7 +143,7 @@ describe('report-reassign-queue', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('happy path: assigning to a real queue', () => {

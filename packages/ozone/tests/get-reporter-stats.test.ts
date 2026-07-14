@@ -1,10 +1,10 @@
 import {
   ComAtprotoModerationDefs,
-  ToolsOzoneModerationDefs,
+  type ToolsOzoneModerationDefs,
 } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -28,7 +28,7 @@ describe('reporter-stats', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getReporterStats = async (

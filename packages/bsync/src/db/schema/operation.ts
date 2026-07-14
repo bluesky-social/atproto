@@ -1,5 +1,5 @@
-import { GeneratedAlways } from 'kysely'
-import { Method } from '../../proto/bsync_pb.js'
+import type { GeneratedAlways } from 'kysely'
+import type { Method } from '../../proto/bsync_pb.js'
 
 export type OperationMethod = Method.CREATE | Method.UPDATE | Method.DELETE
 

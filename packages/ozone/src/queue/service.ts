@@ -1,10 +1,10 @@
-import { Selectable, sql } from 'kysely'
-import { ToolsOzoneQueueDefs } from '@atproto/api'
+import { type Selectable, sql } from 'kysely'
+import type { ToolsOzoneQueueDefs } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import { ReportQueue } from '../db/schema/report_queue.js'
+import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
@@ -204,7 +204,7 @@ export class QueueService {
     }
 
     if (subjectType !== undefined) {
-      qb = qb.where(sql`"subjectTypes" @> ${jsonb([subjectType])}`)
+      qb = qb.where(sql<boolean>`"subjectTypes" @> ${jsonb([subjectType])}`)
     }
 
     if (collection !== undefined) {
@@ -215,7 +215,7 @@ export class QueueService {
       const conditions = reportTypes.map(
         (t) => sql`"reportTypes" @> ${jsonb([t])}`,
       )
-      qb = qb.where(sql`(${sql.join(conditions, sql` OR `)})`)
+      qb = qb.where(sql<boolean>`(${sql.join(conditions, sql` OR `)})`)
     }
 
     const keyset = new TimeIdKeyset(ref('createdAt'), ref('id'))
@@ -309,9 +309,9 @@ export class QueueService {
       .limit(params.limit)
 
     if (opts?.includeUnmatched) {
-      query = query.where((qb) => {
-        return qb.orWhere('r.queueId', 'is', null).orWhere('r.queueId', '=', -1)
-      })
+      query = query.where((eb) =>
+        eb.or([eb('r.queueId', 'is', null), eb('r.queueId', '=', -1)]),
+      )
     } else {
       query = query.where('r.queueId', 'is', null)
     }

@@ -1,12 +1,12 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import {
-  BrandingInput as BrandingConfig,
+import type {
+  BrandingConfig,
   HcaptchaConfig,
-} from '@atproto/oauth-provider'
-import { ensureValidDid } from '@atproto/syntax'
-import { ServerEnvironment } from './env.js'
+} from '@atproto/oauth-provider/provider'
+import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
+import type { ServerEnvironment } from './env.js'
 
 export type { BrandingConfig }
 
@@ -21,6 +21,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       ? `http://localhost:${port}`
       : `https://${hostname}`
   const did = env.serviceDid ?? `did:web:${hostname}`
+
+  if (!isValidDid(did)) {
+    throw new Error(`Invalid service DID: ${did}`)
+  }
+
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
@@ -64,6 +69,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       provider: 's3',
       bucket: env.blobstoreS3Bucket,
       uploadTimeoutMs: env.blobstoreS3UploadTimeoutMs || 20000,
+      requestTimeoutMs: env.blobstoreS3RequestTimeoutMs,
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
@@ -400,7 +406,7 @@ export type ServiceConfig = {
   port: number
   hostname: string
   publicUrl: string
-  did: string
+  did: DidString
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
@@ -431,6 +437,7 @@ export type S3BlobstoreConfig = {
   endpoint?: string
   forcePathStyle?: boolean
   uploadTimeoutMs?: number
+  requestTimeoutMs?: number
   credentials?: {
     accessKeyId: string
     secretAccessKey: string

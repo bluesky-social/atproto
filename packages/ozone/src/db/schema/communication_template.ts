@@ -1,4 +1,4 @@
-import { Generated, GeneratedAlways } from 'kysely'
+import type { Generated, GeneratedAlways } from 'kysely'
 
 export const communicationTemplateTableName = 'communication_template'
 

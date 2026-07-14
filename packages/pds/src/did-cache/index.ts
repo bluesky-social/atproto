@@ -1,8 +1,8 @@
 import PQueue from 'p-queue'
-import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
+import type { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import { excluded } from '../db/util.js'
 import { didCacheLogger } from '../logger.js'
-import { DidCacheDb, getDb, getMigrator } from './db/index.js'
+import { type DidCacheDb, getDb, getMigrator } from './db/index.js'
 
 export class DidSqliteCache implements DidCache {
   db: DidCacheDb

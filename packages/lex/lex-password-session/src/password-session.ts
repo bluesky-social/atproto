@@ -1,10 +1,5 @@
-import {
-  Agent,
-  XrpcFailure,
-  buildAgent,
-  xrpc,
-  xrpcSafe,
-} from '@atproto/lex-client'
+import type { Agent, XrpcFailure } from '@atproto/lex-client'
+import { buildAgent, xrpc, xrpcSafe } from '@atproto/lex-client'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { extractPdsUrl, extractXrpcErrorCode } from './util.js'

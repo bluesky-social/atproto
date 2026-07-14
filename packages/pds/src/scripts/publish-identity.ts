@@ -2,8 +2,8 @@ import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { wait } from '@atproto/common'
 import { isDidString } from '@atproto/lex'
-import { DidString } from '@atproto/syntax'
-import { Sequencer } from '../sequencer/index.js'
+import type { DidString } from '@atproto/syntax'
+import type { Sequencer } from '../sequencer/index.js'
 import { parseIntArg } from './util.js'
 
 export type PublishIdentityContext = {
@@ -48,7 +48,7 @@ export const publishIdentityEvtForDids = async (
 ) => {
   for (const did of dids) {
     try {
-      await ctx.sequencer.sequenceIdentityEvt(did)
+      await ctx.sequencer.sequenceIdentity(did)
       console.log(`published identity evt for ${did}`)
     } catch (err) {
       console.error(`failed to sequence new identity evt for ${did}: ${err}`)

@@ -2,7 +2,7 @@ import { p256 } from '@noble/curves/p256'
 import { sha256 } from '@noble/hashes/sha256'
 import { equals as ui8equals } from 'uint8arrays'
 import { P256_DID_PREFIX } from '../const.js'
-import { VerifyOptions } from '../types.js'
+import type { VerifyOptions } from '../types.js'
 import { extractMultikey, extractPrefixedBytes, hasPrefix } from '../utils.js'
 
 export const verifyDidSig = async (

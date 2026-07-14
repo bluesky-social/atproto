@@ -1,9 +1,13 @@
-import { DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import {
+  type DidString,
+  type HandleString,
+  INVALID_HANDLE,
+} from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
-import { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
+import type { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
 import { AuthScope } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util.js'
 

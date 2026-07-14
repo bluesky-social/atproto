@@ -1,21 +1,18 @@
 import events from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
+// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import * as prometheus from 'prom-client'
-// eslint-disable-next-line import/no-named-as-default-member
-const { createHttpTerminator } = httpTerminator
-type HttpTerminator = ReturnType<typeof createHttpTerminator>
 import { DAY, SECOND } from '@atproto/common'
 import { extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
-import { OzoneConfig, OzoneSecrets } from './config/index.js'
-import { AppContext, AppContextOptions } from './context.js'
-import { Member } from './db/schema/member.js'
+import type { OzoneConfig, OzoneSecrets } from './config/index.js'
+import { AppContext, type AppContextOptions } from './context.js'
+import type { Member } from './db/schema/member.js'
 import * as error from './error.js'
 import { createServer } from './lexicon/index.js'
 import { dbLogger, loggerMiddleware } from './logger.js'
@@ -31,7 +28,7 @@ export class OzoneService {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
@@ -153,23 +150,25 @@ export class OzoneService {
     // so we need to sync them from env var to the database
     await this.seedInitialMembers()
 
-    const { db, backgroundQueue } = this.ctx
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
-          idleCount: db.pool.idleCount,
-          totalCount: db.pool.totalCount,
-          waitingCount: db.pool.waitingCount,
+          idleCount: this.ctx.db.pool.idleCount,
+          totalCount: this.ctx.db.pool.totalCount,
+          waitingCount: this.ctx.db.pool.waitingCount,
         },
         'db pool stats',
       )
-      dbLogger.info(backgroundQueue.getStats(), 'background queue stats')
+      dbLogger.info(
+        this.ctx.backgroundQueue.getStats(),
+        'background queue stats',
+      )
     }, 10000)
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.assignPort(port)
@@ -177,12 +176,23 @@ export class OzoneService {
   }
 
   async destroy(): Promise<void> {
-    await this.terminator?.terminate()
-    await this.ctx.backgroundQueue.destroy()
-    await this.ctx.sequencer.destroy()
-    await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
+
+    // @TODO Use a disposable stack when Node24 becomes the min supported version
+    try {
+      await this.terminator?.terminate()
+    } finally {
+      try {
+        await this.ctx.backgroundQueue.destroy()
+      } finally {
+        try {
+          await this.ctx.sequencer.destroy()
+        } finally {
+          await this.ctx.db.close()
+        }
+      }
+    }
   }
 }
 
@@ -199,7 +209,7 @@ export type MetricsServiceOpts = {
 // opted in. Also serves Kubernetes-style liveness (/livez) and readiness
 // (/readyz) probes.
 export class MetricsService {
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
 
   constructor(public app: express.Application) {}
 
@@ -250,7 +260,7 @@ export class MetricsService {
   async start(port: number): Promise<http.Server> {
     const server = this.app.listen(port)
     server.keepAliveTimeout = 90000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
   }

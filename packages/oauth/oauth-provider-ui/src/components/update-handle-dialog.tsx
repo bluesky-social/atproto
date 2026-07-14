@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useEffect, useState } from 'react'
-import { HandleString } from '@atproto/syntax'
+import { type ReactNode, useEffect, useState } from 'react'
+import type { HandleString } from '@atproto/syntax'
 import { Button } from '#/components/forms/button.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 import { LinkExternal } from '#/components/utils/link-external.tsx'
@@ -15,7 +15,7 @@ export type UpdateHandleDialogProps = {
   /** The current user's DID, used in own-domain verification instructions. */
   did: string
   handler: (
-    data: { handle: string },
+    data: { handle: HandleString },
     signal: AbortSignal,
   ) => void | PromiseLike<void>
 }

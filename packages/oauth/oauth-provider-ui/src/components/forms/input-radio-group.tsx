@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useId } from 'react'
-import { Override } from '#/lib/util.ts'
+import { type JSX, type ReactNode, useId } from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type RadioGroupOption<T> = {
   value: T

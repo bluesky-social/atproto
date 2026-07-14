@@ -1,11 +1,15 @@
 import assert from 'node:assert'
 import {
-  $Typed,
-  AtpAgent,
+  type $Typed,
+  type AtpAgent,
   ComAtprotoAdminDefs,
   ComAtprotoRepoStrongRef,
 } from '@atproto/api'
-import { ImageRef, SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  type ImageRef,
+  type SeedClient,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import basicSeed from './seeds/basic.js'
 
@@ -47,7 +51,7 @@ describe('moderation', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('takes down accounts', async () => {

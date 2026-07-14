@@ -1,4 +1,4 @@
-import { TypeOf, z } from 'zod'
+import { type TypeOf, z } from 'zod'
 import { atprotoDidSchema } from '@atproto/did'
 import { atprotoOAuthScopeSchema } from './atproto-oauth-scope.js'
 import { oauthTokenResponseSchema } from './oauth-token-response.js'

@@ -1,13 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon, CaretRightIcon } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
-import { JSX, ReactNode } from 'react'
+import type { JSX, ReactNode } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 import { Button } from './forms/button.tsx'
 import { InputContainer } from './forms/input-container.tsx'
 import { AccountCard } from './utils/account-card.tsx'
-import { stringifyAccountHandle } from './utils/account-handle.tsx'
+import { stringifyHandle } from './utils/handle.tsx'
 
 export type SignInPickerProps = Override<
   JSX.IntrinsicElements['div'],
@@ -47,7 +47,7 @@ export function SignInPicker({
 
       {sessions.map((session) => (
         <AccountCard
-          key={session.account.sub}
+          key={session.account.did}
           account={session.account}
           append={<CaretRightIcon aria-hidden className="h-4" />}
           onAction={(event) => {
@@ -56,7 +56,7 @@ export function SignInPicker({
 
             onSession(session)
           }}
-          aria-label={t`Sign in as ${session.account.name ?? stringifyAccountHandle(session.account) ?? session.account.sub}`}
+          aria-label={t`Sign in as ${session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did}`}
         />
       ))}
 

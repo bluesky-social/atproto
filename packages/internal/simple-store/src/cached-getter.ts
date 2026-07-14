@@ -1,5 +1,5 @@
-import { GetOptions, Key, SimpleStore, Value } from './simple-store.js'
-import { Awaitable, ContextOptions } from './util.js'
+import type { GetOptions, Key, SimpleStore, Value } from './simple-store.js'
+import type { Awaitable, ContextOptions } from './util.js'
 
 export type { GetOptions }
 export type GetCachedOptions<C = void> = ContextOptions<C> & {

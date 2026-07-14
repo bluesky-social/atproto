@@ -1,8 +1,8 @@
-import { DatetimeString } from '@atproto/syntax'
-import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { DatetimeString } from '@atproto/syntax'
+import { type Server, UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { ActorInfo } from '../../../../proto/bsky_pb.js'
+import type { ActorInfo } from '../../../../proto/bsky_pb.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.ageassurance.getState, {

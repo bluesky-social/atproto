@@ -1,7 +1,7 @@
 import {
-  HandleResolver,
-  ResolveHandleOptions,
-  ResolvedHandle,
+  type HandleResolver,
+  type ResolveHandleOptions,
+  type ResolvedHandle,
   isResolvedHandle,
 } from '../types.js'
 

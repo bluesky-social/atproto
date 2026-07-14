@@ -1,6 +1,6 @@
 import { DidResolver } from './did/did-resolver.js'
 import { HandleResolver } from './handle/index.js'
-import { IdentityResolverOpts } from './types.js'
+import type { IdentityResolverOpts } from './types.js'
 
 export class IdResolver {
   public handle: HandleResolver

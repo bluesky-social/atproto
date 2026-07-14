@@ -1,5 +1,5 @@
-import { Insertable, Selectable, sql } from 'kysely'
-import { $Typed, Cid, getBlobCidString, lexParse } from '@atproto/lex'
+import { type Insertable, type Selectable, sql } from 'kysely'
+import { type $Typed, type Cid, getBlobCidString, lexParse } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { app } from '../../../../lexicons/index.js'
 import {
@@ -7,12 +7,15 @@ import {
   postUriToThreadgateUri,
   uriToDid,
 } from '../../../../util/uris.js'
-import { RecordWithMedia } from '../../../../views/types.js'
+import type { RecordWithMedia } from '../../../../views/types.js'
 import { parsePostgate } from '../../../../views/util.js'
-import { BackgroundQueue } from '../../background.js'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
-import { Database } from '../../db/index.js'
-import { Notification } from '../../db/tables/notification.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import type { Notification } from '../../db/tables/notification.js'
 import { countAll, excluded } from '../../db/util.js'
 import {
   getAncestorsAndSelfQb,
@@ -505,10 +508,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
           replyCount: db
             .selectFrom('post')
             .where('post.replyParent', '=', postIdx.post.replyParent)
-            .where((qb) =>
-              qb
-                .where('post.violatesThreadGate', 'is', null)
-                .orWhere('post.violatesThreadGate', '=', false),
+            .where((eb) =>
+              eb.or([
+                eb('post.violatesThreadGate', 'is', null),
+                eb('post.violatesThreadGate', '=', false),
+              ]),
             )
             .select(countAll.as('count')),
         })
@@ -534,7 +538,10 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   return new RecordProcessor(db, background, {
     schema: app.bsky.feed.post.main,
     insertFn,

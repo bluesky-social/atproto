@@ -1,11 +1,11 @@
 import {
-  AtpAgent,
+  type AtpAgent,
   COM_ATPROTO_MODERATION,
   ToolsOzoneQueueCreateQueue,
 } from '@atproto/api'
-import { Database } from '@atproto/bsky'
-import { AtUri, AtUriString } from '@atproto/syntax'
-import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index.js'
+import type { Database } from '@atproto/bsky'
+import { AtUri, type AtUriString } from '@atproto/syntax'
+import { EXAMPLE_LABELER, RecordRef, type TestNetwork } from '../index.js'
 import { postTexts, replyTexts } from './data.js'
 import blurHashB64 from './img/blur-hash-avatar-b64.js'
 import labeledImgB64 from './img/labeled-img-b64.js'
@@ -333,19 +333,24 @@ export async function generateMockSetup(env: TestNetwork) {
       rkey: urip.rkey,
     })
     const author = picka(userAgents)
-    posts.push(
-      await author.app.bsky.feed.post.create(
+    try {
+      const post = await author.app.bsky.feed.post.create(
         { repo: author.did },
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply ? target.value.reply.root : target,
+            root: target.value.reply?.root ?? target,
             parent: target,
           },
           createdAt: date.next().value,
         },
-      ),
-    )
+      )
+
+      posts.push(post)
+    } catch (err) {
+      // @TODO Investigate why this sometimes fails.
+      console.error('Failed to create reply', err)
+    }
   }
 
   // a set of likes

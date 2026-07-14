@@ -1,14 +1,14 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyUnspeccedDefs,
-  AppBskyUnspeccedGetPostThreadOtherV2,
-  AppBskyUnspeccedGetPostThreadV2,
-  AtpAgent,
+  type AppBskyUnspeccedGetPostThreadOtherV2,
+  type AppBskyUnspeccedGetPostThreadV2,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
-import {
+import { type SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
+import type {
   ThreadItemValuePost,
   ThreadOtherItemValuePost,
 } from '../../src/views/threads-v2.js'
@@ -54,12 +54,10 @@ describe('appview thread views v2', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     labelerDid = network.bsky.ctx.cfg.modServiceDid
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   describe('not found anchor', () => {
     it('returns not found error', async () => {

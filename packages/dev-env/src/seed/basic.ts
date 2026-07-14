@@ -1,14 +1,14 @@
-import { TestBsky } from '../bsky.js'
+import type { TestBsky } from '../bsky.js'
 import { EXAMPLE_LABELER } from '../const.js'
-import { TestNetworkNoAppView } from '../network-no-appview.js'
+import type { TestNetworkNoAppView } from '../network-no-appview.js'
 import { TestNetwork } from '../network.js'
-import { SeedClient } from './client.js'
+import type { SeedClient } from './client.js'
 import usersSeed from './users.js'
 
-export default async (
+export default async function basicSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
   users = true,
-) => {
+) {
   if (users) await usersSeed(sc)
 
   const alice = sc.dids.alice

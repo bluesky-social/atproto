@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isAbortReason } from '#/lib/util.ts'
 import { useStableCallback } from './use-stable-callback.ts'
 
 export type UseAsyncActionOptions = {
@@ -11,10 +12,17 @@ export type UseAsyncActionOptions = {
   onLoadingChange?: (loading: boolean) => void
 }
 
+export type AsyncActionHandler<Args extends unknown[] = []> = {
+  run: (...args: Args) => Promise<void>
+  reset: () => void
+  loading: boolean
+  error?: Error
+}
+
 export function useAsyncAction<Args extends unknown[] = []>(
   fn: (signal: AbortSignal, ...args: Args) => void | PromiseLike<void>,
   options?: UseAsyncActionOptions,
-) {
+): AsyncActionHandler<Args> {
   const [loading, setLoadingState] = useState(false)
   const [error, setError] = useState<Error | undefined>()
   const controllerRef = useRef<AbortController>(null)
@@ -75,14 +83,5 @@ export function useAsyncAction<Args extends unknown[] = []>(
   return useMemo(
     () => ({ run, reset, loading, error }),
     [run, reset, loading, error],
-  )
-}
-
-function isAbortReason(signal: AbortSignal, err: unknown): boolean {
-  return (
-    signal.aborted &&
-    (signal.reason === err ||
-      signal.reason === err?.['cause'] ||
-      (err instanceof DOMException && err.name === 'AbortError'))
   )
 }

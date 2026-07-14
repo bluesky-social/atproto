@@ -1,22 +1,22 @@
-import { AtUriString, LexMap } from '@atproto/lex'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { AtUriString, LexMap } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  SiteStandardDocuments,
-  SiteStandardPublications,
+  type SiteStandardDocuments,
+  type SiteStandardPublications,
   getSiteStandardRecordsFromHydrationMapsByDocumentUri,
 } from '../../../../hydration/external.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, com } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
 } from '../../../../pipeline.js'
-import { Views } from '../../../../views/index.js'
-import { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
+import type { Views } from '../../../../views/index.js'
+import type { ExternalEmbedView, StrongRef } from '../../../../views/types.js'
 import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {

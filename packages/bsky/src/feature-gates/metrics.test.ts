@@ -1,4 +1,12 @@
-import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  type Mock,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { featureGatesLogger } from '../logger.js'
 import { MetricsClient } from './metrics.js'
 
@@ -32,8 +40,8 @@ describe('MetricsClient', () => {
     global.fetch = fetchMock
   })
 
-  afterEach(() => {
-    client?.stop()
+  afterEach(async () => {
+    await client?.stop()
     vi.useRealTimers()
     vi.clearAllMocks()
   })
@@ -42,8 +50,8 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
-    client.track('view', { screen: 'home' })
+    await client.track('click', { button: 'submit' })
+    await client.track('view', { screen: 'home' })
 
     expect(fetchRequests).toHaveLength(0)
 
@@ -65,13 +73,13 @@ describe('MetricsClient', () => {
 
     // Add events up to maxBatchSize (should not flush yet)
     for (let i = 0; i < 5; i++) {
-      client.track('click', { button: `btn-${i}` })
+      await client.track('click', { button: `btn-${i}` })
     }
 
     expect(fetchRequests).toHaveLength(0)
 
     // One more event should trigger flush (> maxBatchSize)
-    client.track('click', { button: 'btn-trigger' })
+    await client.track('click', { button: 'btn-trigger' })
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -90,7 +98,7 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     // Trigger flush via interval
     vi.advanceTimersByTime(10_000)
@@ -119,7 +127,7 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     // Trigger flush - should not throw
     vi.advanceTimersByTime(10_000)
@@ -140,12 +148,12 @@ describe('MetricsClient', () => {
     client = new MetricsClient<TestEvents>({
       trackingEndpoint: 'https://test.metrics.api',
     })
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     expect(fetchRequests).toHaveLength(0)
 
     // Stop should flush remaining events
-    client.stop()
+    await client.stop()
     await flushPromises()
 
     expect(fetchRequests).toHaveLength(1)
@@ -155,7 +163,7 @@ describe('MetricsClient', () => {
 
   it('does not send if trackingEndpoint is not configured', async () => {
     client = new MetricsClient<TestEvents>({})
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
 
     // Trigger flush via interval
     vi.advanceTimersByTime(10_000)
@@ -170,7 +178,7 @@ describe('MetricsClient', () => {
     })
 
     // track() calls start() internally
-    client.track('click', { button: 'submit' })
+    await client.track('click', { button: 'submit' })
     client.start()
     client.start()
 

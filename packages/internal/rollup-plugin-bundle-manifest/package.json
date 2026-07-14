@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/rollup-plugin-bundle-manifest",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "license": "MIT",
   "description": "Library for generating a manifest of bundled files from a Rollup build",
   "keywords": [
@@ -14,6 +14,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/rollup-plugin-bundle-manifest"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -24,9 +29,6 @@
   "engines": {
     "node": ">=22"
   },
-  "files": [
-    "dist"
-  ],
   "dependencies": {
     "mime": "^3.0.0"
   },
@@ -34,10 +36,9 @@
     "rollup": "^4.0.0"
   },
   "devDependencies": {
-    "rollup": "^4.10.0",
-    "typescript": "^6.0.3"
+    "rollup": "^4.10.0"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsgo --build tsconfig.json"
   }
 }

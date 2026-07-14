@@ -1,1 +1,0 @@
-../../../../interop-test-files/syntax/recordkey_syntax_invalid.txt

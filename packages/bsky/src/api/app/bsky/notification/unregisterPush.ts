@@ -1,9 +1,9 @@
 import {
   InvalidRequestError,
   MethodNotImplementedError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import { assertLexPlatform, lexPlatformToProtoPlatform } from './util.js'
 

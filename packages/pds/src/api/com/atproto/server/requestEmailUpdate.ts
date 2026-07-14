@@ -1,13 +1,13 @@
 import { DAY, HOUR } from '@atproto/common'
 import {
   ForbiddenError,
-  MethodAuthVerifier,
-  MethodRateLimit,
-  Server,
+  type MethodAuthVerifier,
+  type MethodRateLimit,
+  type Server,
 } from '@atproto/xrpc-server'
-import { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
+import type { AccessOutput, OAuthOutput } from '../../../../auth-output.js'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 // Exposed as a utility to ensure auth in updateEmail and requestEmailUpdate

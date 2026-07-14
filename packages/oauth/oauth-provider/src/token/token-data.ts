@@ -1,21 +1,22 @@
-import {
+import type { Did } from '@atproto/did'
+import type {
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
 } from '@atproto/oauth-types'
-import { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
-import { ClientId } from '../client/client-id.js'
-import { DeviceId } from '../device/device-id.js'
-import { Sub } from '../oidc/sub.js'
-import { Code } from '../request/code.js'
+import type { ClientAuth, ClientAuthLegacy } from '../client/client-auth.js'
+import type { ClientId } from '../client/client-id.js'
+import type { DeviceId } from '../device/device-id.js'
+import type { Code } from '../request/code.js'
 
 export type {
   ClientAuth,
+  ClientAuthLegacy,
   ClientId,
   Code,
   DeviceId,
+  Did,
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
-  Sub,
 }
 
 export type TokenData = {
@@ -25,7 +26,7 @@ export type TokenData = {
   clientId: ClientId
   clientAuth: ClientAuth | ClientAuthLegacy
   deviceId: DeviceId | null
-  sub: Sub
+  did: Did
   parameters: OAuthAuthorizationRequestParameters
   details?: null // Legacy field, not used
   code: Code | null

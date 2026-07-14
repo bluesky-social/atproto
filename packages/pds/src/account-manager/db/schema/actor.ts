@@ -1,5 +1,5 @@
-import { Selectable } from 'kysely'
-import { DidString, HandleString } from '@atproto/syntax'
+import type { Selectable } from 'kysely'
+import type { DidString, HandleString } from '@atproto/syntax'
 
 export interface Actor {
   did: DidString

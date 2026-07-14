@@ -1,17 +1,17 @@
 import { DEFAULT_LOOPBACK_CLIENT_REDIRECT_URIS } from './atproto-loopback-client-redirect-uris.js'
 import {
-  AtprotoOAuthScope,
+  type AtprotoOAuthScope,
   DEFAULT_ATPROTO_OAUTH_SCOPE,
   asAtprotoOAuthScope,
   isAtprotoOAuthScope,
 } from './atproto-oauth-scope.js'
 import {
   LOOPBACK_CLIENT_ID_ORIGIN,
-  OAuthClientIdLoopback,
+  type OAuthClientIdLoopback,
   parseOAuthLoopbackClientId,
 } from './oauth-client-id-loopback.js'
 import {
-  OAuthLoopbackRedirectURI,
+  type OAuthLoopbackRedirectURI,
   oauthLoopbackClientRedirectUriSchema,
 } from './oauth-redirect-uri.js'
 import { arrayEquivalent, asArray } from './util.js'

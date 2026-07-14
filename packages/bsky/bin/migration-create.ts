@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'

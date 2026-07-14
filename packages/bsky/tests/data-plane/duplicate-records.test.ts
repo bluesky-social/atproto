@@ -21,7 +21,7 @@ describe('duplicate record', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const countRecords = async (db: Database, table: string) => {

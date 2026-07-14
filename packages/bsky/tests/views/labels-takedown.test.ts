@@ -1,7 +1,12 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyLabelerDefs, AtpAgent, ids } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 
 describe('bsky takedown labels', () => {
   let network: TestNetwork
@@ -131,9 +136,8 @@ describe('bsky takedown labels', () => {
     await network.bsky.db.db.insertInto('label').values(labels).execute()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('takesdown profiles', async () => {
     const attempt = agent.api.app.bsky.actor.getProfile({

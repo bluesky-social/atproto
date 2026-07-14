@@ -1,5 +1,5 @@
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
   REASONRUDE,
   REASONSPAM,
@@ -45,7 +45,7 @@ describe('report reason', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('createReport', () => {

@@ -3,13 +3,13 @@ import { randomInt } from 'node:crypto'
 import {
   Code,
   ConnectError,
-  PromiseClient,
+  type PromiseClient,
   createPromiseClient,
   makeAnyClient,
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import { Service } from '../../proto/bsky_connect.js'
-import { HostList } from './hosts.js'
+import type { HostList } from './hosts.js'
 import { callerInterceptor } from './util.js'
 
 export * from './hosts.js'

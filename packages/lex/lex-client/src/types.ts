@@ -1,4 +1,4 @@
-import { DidString, LexValue, UnknownString } from '@atproto/lex-schema'
+import type { DidString, LexValue, UnknownString } from '@atproto/lex-schema'
 
 export type { DidString, LexValue, UnknownString }
 

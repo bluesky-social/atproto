@@ -1,11 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyGraphGetFollowers,
-  AppBskyGraphGetFollows,
-  AtpAgent,
+  type AppBskyGraphGetFollowers,
+  type AppBskyGraphGetFollows,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, followsSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, followsSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 describe('pds follow views', () => {
@@ -23,13 +23,11 @@ describe('pds follow views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await followsSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
-  }, 20_000) // @NOTE seeding can take a while
-
-  afterAll(async () => {
-    await network.close()
   })
+
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // TODO(bsky) blocks followers by actor takedown via labels
   // TODO(bsky) blocks follows by actor takedown via labels

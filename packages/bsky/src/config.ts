@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
-import { DidString, isDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger.js'
 
 type LiveNowConfig = {
@@ -39,8 +39,8 @@ export interface ServerConfigValues {
   debugMode?: boolean
   port?: number
   publicUrl?: string
-  serverDid: string
-  alternateAudienceDids: string[]
+  serverDid: DidString
+  alternateAudienceDids: DidString[]
   entrywayJwtPublicKeyHex?: string
   liveNowConfig?: LiveNowConfig
   // external services
@@ -63,10 +63,12 @@ export interface ServerConfigValues {
   rolodexIgnoreBadTls?: boolean
   searchUrl?: string
   searchTagsHide: Set<string>
+  searchTagsHideAll: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
   topicsUrl?: string
   topicsApiKey?: string
+  irisUrl?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -76,9 +78,9 @@ export interface ServerConfigValues {
   didPlcUrl: string
   handleResolveNameservers?: string[]
   // moderation and administration
-  modServiceDid: string
+  modServiceDid: DidString
   adminPasswords: string[]
-  labelsFromIssuerDids?: string[]
+  labelsFromIssuerDids?: DidString[]
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
@@ -110,6 +112,7 @@ export interface ServerConfigValues {
   kws?: KwsConfig
   debugFieldAllowedDids: Set<string>
   draftsLimit: number
+  searchV2OverrideHeader?: string
 }
 
 export class ServerConfig {
@@ -123,10 +126,12 @@ export class ServerConfig {
       process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
+    assert(isDidString(serverDid))
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
     const alternateAudienceDids = envList(process.env.BSKY_ALT_AUDIENCE_DIDS)
+    assert(alternateAudienceDids.every(isDidString))
     const entrywayJwtPublicKeyHex =
       process.env.BSKY_ENTRYWAY_JWT_PUBLIC_KEY_HEX || undefined
     let liveNowConfig: LiveNowConfig | undefined
@@ -160,10 +165,14 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
     const searchTagsHide = new Set(envList(process.env.BSKY_SEARCH_TAGS_HIDE))
+    const searchTagsHideAll = new Set(
+      envList(process.env.BSKY_SEARCH_TAGS_HIDE_ALL),
+    )
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
+    const irisUrl = process.env.BSKY_IRIS_URL || undefined
     const dataplaneUrls =
       overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
     const dataplaneUrlsEtcdKeyPrefix =
@@ -183,6 +192,7 @@ export class ServerConfig {
     const labelsFromIssuerDids = envList(
       process.env.BSKY_LABELS_FROM_ISSUER_DIDS,
     )
+    assert(labelsFromIssuerDids.every(isDidString))
     const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
     assert(bsyncUrl)
     const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
@@ -214,7 +224,7 @@ export class ServerConfig {
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
-    assert(modServiceDid)
+    assert(modServiceDid != null && isDidString(modServiceDid))
 
     const eventProxyTrackingEndpoint =
       process.env.BSKY_EVENT_PROXY_TRACKING_ENDPOINT || undefined
@@ -331,6 +341,9 @@ export class ServerConfig {
       ? parseInt(process.env.BSKY_DRAFTS_LIMIT || '', 10)
       : 500
 
+    const searchV2OverrideHeader =
+      process.env.BSKY_SEARCH_V2_OVERRIDE_HEADER || undefined
+
     return new ServerConfig({
       version,
       debugMode,
@@ -347,10 +360,12 @@ export class ServerConfig {
       dataplaneIgnoreBadTls,
       searchUrl,
       searchTagsHide,
+      searchTagsHideAll,
       suggestionsUrl,
       suggestionsApiKey,
       topicsUrl,
       topicsApiKey,
+      irisUrl,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -399,6 +414,7 @@ export class ServerConfig {
       kws,
       debugFieldAllowedDids,
       draftsLimit,
+      searchV2OverrideHeader,
       ...noUndefinedVals(overrides ?? {}),
     })
   }
@@ -516,6 +532,10 @@ export class ServerConfig {
     return this.cfg.searchTagsHide
   }
 
+  get searchTagsHideAll() {
+    return this.cfg.searchTagsHideAll
+  }
+
   get suggestionsUrl() {
     return this.cfg.suggestionsUrl
   }
@@ -530,6 +550,10 @@ export class ServerConfig {
 
   get topicsApiKey() {
     return this.cfg.topicsApiKey
+  }
+
+  get irisUrl() {
+    return this.cfg.irisUrl
   }
 
   get cdnUrl() {
@@ -674,6 +698,10 @@ export class ServerConfig {
 
   get draftsLimit() {
     return this.cfg.draftsLimit
+  }
+
+  get searchV2OverrideHeader() {
+    return this.cfg.searchV2OverrideHeader
   }
 }
 

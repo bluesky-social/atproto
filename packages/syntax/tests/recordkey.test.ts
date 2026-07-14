@@ -1,43 +1,15 @@
-import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { InvalidRecordKeyError, ensureValidRecordKey } from '../src/index.js'
+import { readInteropFile } from './_utils.ts'
 
-describe('recordkey validation', () => {
-  const expectValid = (r: string) => {
-    ensureValidRecordKey(r)
-  }
-  const expectInvalid = (r: string) => {
-    expect(() => ensureValidRecordKey(r)).toThrow(InvalidRecordKeyError)
-  }
-
-  it('conforms to interop valid recordkey', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/recordkey_syntax_valid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectValid(line)
-    })
+describe('valid interop', () => {
+  test.each(readInteropFile(`recordkey_syntax_valid.txt`))('%s', (value) => {
+    ensureValidRecordKey(value)
   })
+})
 
-  it('conforms to interop invalid recordkeys', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/recordkey_syntax_invalid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectInvalid(line)
-    })
+describe('invalid interop', () => {
+  test.each(readInteropFile(`recordkey_syntax_invalid.txt`))('%s', (value) => {
+    expect(() => ensureValidRecordKey(value)).toThrow(InvalidRecordKeyError)
   })
 })

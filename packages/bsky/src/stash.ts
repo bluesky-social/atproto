@@ -1,5 +1,5 @@
-import { LexMap, TypedObjectSchema, lexStringify } from '@atproto/lex'
-import { BsyncClient } from './bsync.js'
+import { type LexMap, type TypedObjectSchema, lexStringify } from '@atproto/lex'
+import type { BsyncClient } from './bsync.js'
 import { app } from './lexicons/index.js'
 import { Method } from './proto/bsync_pb.js'
 

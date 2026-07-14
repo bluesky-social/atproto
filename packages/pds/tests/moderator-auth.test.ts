@@ -1,9 +1,9 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import { AtpAgent } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { $Typed } from '@atproto/lex'
+import type { AtpAgent } from '@atproto/api'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { $Typed } from '@atproto/lex'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
 import usersSeed from './seeds/users.js'
@@ -71,7 +71,7 @@ describe('moderator auth', () => {
   }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows service auth requests from the configured appview did', async () => {

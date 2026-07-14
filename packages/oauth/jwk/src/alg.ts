@@ -1,5 +1,5 @@
 import { JwkError } from './errors.js'
-import { JwkBase, isEncKeyUsage, isSigKeyUsage } from './jwk.js'
+import { type JwkBase, isEncKeyUsage, isSigKeyUsage } from './jwk.js'
 
 // Copy variable to prevent bundlers from automatically polyfilling "process" (e.g. parcel)
 const { process } = globalThis

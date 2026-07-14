@@ -1,7 +1,7 @@
 import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import stream from 'node:stream'
+import type stream from 'node:stream'
 import {
   aggregateErrors,
   chunkArray,
@@ -10,8 +10,8 @@ import {
   rmIfExists,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { Cid } from '@atproto/lex-data'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import type { Cid } from '@atproto/lex-data'
+import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
 import { blobStoreLogger as log } from './logger.js'
 
 export class DiskBlobStore implements BlobStore {

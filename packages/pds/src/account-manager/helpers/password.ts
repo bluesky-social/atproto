@@ -1,8 +1,8 @@
 import { randomStr } from '@atproto/crypto'
-import { DatetimeString, currentDatetimeString } from '@atproto/lex'
+import { type DatetimeString, currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { com } from '../../lexicons/index.js'
-import { AccountDb } from '../db/index.js'
+import type { com } from '../../lexicons/index.js'
+import type { AccountDb } from '../db/index.js'
 import * as scrypt from './scrypt.js'
 
 export type AppPassDescript = {
@@ -126,5 +126,11 @@ export const deleteAppPassword = async (
       .deleteFrom('app_password')
       .where('did', '=', did)
       .where('name', '=', name),
+  )
+}
+
+export const deleteAllAppPasswords = async (db: AccountDb, did: string) => {
+  await db.executeWithRetry(
+    db.db.deleteFrom('app_password').where('did', '=', did),
   )
 }

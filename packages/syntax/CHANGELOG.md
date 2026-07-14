@@ -1,5 +1,62 @@
 # @atproto/syntax
 
+## 0.7.2
+
+### Patch Changes
+
+- [#5189](https://github.com/bluesky-social/atproto/pull/5189) [`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55) Thanks [@ryanda9910](https://github.com/ryanda9910)! - `parseLanguageString` (strict validation) now rejects language tags whose
+  primary language subtag is uppercase (for example `JA`) or is a bare
+  four-letter run (for example `jaja`). The primary language subtag must be a
+  lowercase two-or-three-letter code per RFC 5646 §2.1.1, matching the atproto
+  interop test suite. `isValidLanguage` is unchanged and stays permissive of
+  these legacy forms (well-formed syntax only), so existing records are not
+  retroactively invalidated. Well-formed lowercase tags are unaffected.
+
+## 0.7.1
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+## 0.7.0
+
+### Minor Changes
+
+- [#5162](https://github.com/bluesky-social/atproto/pull/5162) [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112) Thanks [@nnabeyang](https://github.com/nnabeyang)! - `parseLanguageString` now rejects BCP 47 tags with duplicate variant subtags or duplicate extension singleton subtags, per RFC 5646 §4.1. `isValidLanguage` continues to check only well-formed syntax (§2.1) and is unchanged.
+
+### Patch Changes
+
+- [#5183](https://github.com/bluesky-social/atproto/pull/5183) [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Test language syntax against atproto interop test files
+
+## 0.6.4
+
+### Patch Changes
+
+- [#5169](https://github.com/bluesky-social/atproto/pull/5169) [`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9) Thanks [@ryanda9910](https://github.com/ryanda9910)! - `isValidLanguage` and `parseLanguageString` now accept BCP 47 tags whose
+  private-use subtag uses an uppercase `X` (for example `X-fr-CH` or `de-X-foo`).
+  Per RFC 5646 §2.1.1 (and RFC 5234 §2.3, which makes ABNF quoted-string literals
+  case-insensitive), private-use subtags are case-insensitive, so these tags are
+  well-formed. Previously only the lowercase `x` form was matched. Lowercase tags
+  behave exactly as before.
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build using `verbatimModuleSyntax`, reducing runtime import graph
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+## 0.6.3
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+## 0.6.2
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
 ## 0.6.1
 
 ### Patch Changes

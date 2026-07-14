@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import type { Generated } from 'kysely'
 
 export const moderatorAssignmentTableName = 'moderator_assignment'
 

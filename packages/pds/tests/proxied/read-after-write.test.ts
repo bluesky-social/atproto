@@ -6,10 +6,11 @@ import {
   AppBskyEmbedImages,
   AppBskyEmbedRecord,
   AppBskyFeedDefs,
-  AtpAgent,
+  type AtpAgent,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
-import { app } from '../../src/lexicons/index.js'
+import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import type { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic.js'
 
 describe('proxy read after write', () => {
@@ -17,8 +18,8 @@ describe('proxy read after write', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let carol: string
+  let alice: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -27,15 +28,14 @@ describe('proxy read after write', () => {
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
-    await network.processAll()
     alice = sc.dids.alice
     carol = sc.dids.carol
-    await network.bsky.sub.destroy()
+    await network.processAll()
+    await network.bsky.sub.stop()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('handles read after write on profiles', async () => {
     await sc.updateProfile(alice, { displayName: 'blah' })
@@ -206,9 +206,7 @@ describe('proxy read after write', () => {
       { headers: { ...sc.getHeaders(alice) } },
     )
     assert(AppBskyFeedDefs.isThreadViewPost(res.data.thread))
-    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
     assert(res.data.thread.replies, 'replies is undefined')
-    // @ts-ignore "pnpm verify:types" fails though VSCode doesn't complain
     const { replies } = res.data.thread
     expect(replies.length).toBe(1)
     assert(AppBskyFeedDefs.isThreadViewPost(replies[0]))

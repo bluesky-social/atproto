@@ -1,12 +1,12 @@
 import assert from 'node:assert'
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
 import { jest } from '@jest/globals'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
-import { LexiconDoc } from '@atproto/lexicon'
+import type { LexiconDoc } from '@atproto/lexicon'
 import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'
 import { logger } from '../src/logger.js'
@@ -262,23 +262,20 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
 
     test('validation errors on procedures include details in logs', async () => {
       // 500 responses don't include details, so we nab details from the logger.
-      const spy = jest.spyOn(logger, 'error')
-      try {
-        await expect(
-          client.call('io.example.validationTestTwo'),
-        ).rejects.toThrow('Internal Server Error')
+      using spy = jest.spyOn(logger, 'error')
 
-        expect(spy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            err: expect.objectContaining({
-              message: expect.stringContaining('foo'),
-            }),
+      await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
+        'Internal Server Error',
+      )
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          err: expect.objectContaining({
+            message: expect.stringContaining('foo'),
           }),
-          'unhandled exception in xrpc method io.example.validationTestTwo',
-        )
-      } finally {
-        spy.mockRestore()
-      }
+        }),
+        expect.stringContaining('InternalServerError error'),
+      )
     })
 
     it('supports ArrayBuffers', async () => {

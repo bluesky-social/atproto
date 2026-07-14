@@ -2,10 +2,18 @@ import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { composeEventHandlers } from '@radix-ui/primitive'
-import { useEffect, useMemo, useState } from 'react'
-import { ErrorParser, ParsedError, parseError } from '#/lib/error-parser.ts'
-import { Override } from '#/lib/util.ts'
-import { Admonition, AdmonitionAction, AdmonitionProps } from './admonition.tsx'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import {
+  type ErrorParser,
+  type ParsedError,
+  parseError,
+} from '#/lib/error-parser.ts'
+import type { Override } from '#/lib/util.ts'
+import {
+  Admonition,
+  AdmonitionAction,
+  type AdmonitionProps,
+} from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
 
 export type { ErrorParser, ParsedError }
@@ -14,14 +22,16 @@ export type ErrorCardProps = Override<
   Omit<AdmonitionProps, 'role' | 'append' | 'action'>,
   {
     error: unknown
-    reset?: () => void
+    retry?: () => void
+    retryLabel?: ReactNode
     parser?: ErrorParser
   }
 >
 
 export function ErrorCard({
   error,
-  reset,
+  retry,
+  retryLabel,
   parser,
 
   // Admonition
@@ -70,9 +80,9 @@ export function ErrorCard({
         </>
       }
       action={
-        reset != null && (
-          <AdmonitionAction onClick={() => reset()}>
-            <Trans>Retry</Trans>
+        retry != null && (
+          <AdmonitionAction onClick={() => retry()}>
+            {retryLabel || <Trans>Retry</Trans>}
           </AdmonitionAction>
         )
       }

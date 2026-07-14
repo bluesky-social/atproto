@@ -1,4 +1,4 @@
-import { RichText } from './rich-text.js'
+import type { RichText } from './rich-text.js'
 import { UnicodeString } from './unicode.js'
 
 // this regex is intentionally matching on the zero-with-separator codepoint

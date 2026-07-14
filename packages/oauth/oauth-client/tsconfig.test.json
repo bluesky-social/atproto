@@ -1,0 +1,8 @@
+{
+  "extends": ["../../../tsconfig/vitest.tsconfig.json"],
+  "include": ["./tests", "**/*.test.ts", "./src/core-js.d.ts"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "noUnusedLocals": false,
+  },
+}

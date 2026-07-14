@@ -1,14 +1,14 @@
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
 import {
-  $Typed,
-  AppBskyActorDefs,
+  type $Typed,
+  type AppBskyActorDefs,
   AtUri,
-  ToolsOzoneModerationDefs,
-  ToolsOzoneVerificationDefs,
+  type ToolsOzoneModerationDefs,
+  type ToolsOzoneVerificationDefs,
 } from '@atproto/api'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { CreatedAtUriKeyset, paginate } from '../db/pagination.js'
-import { Verification } from '../db/schema/verification.js'
+import type { Verification } from '../db/schema/verification.js'
 
 export type VerificationServiceCreator = (db: Database) => VerificationService
 
@@ -197,8 +197,8 @@ export class VerificationService {
       .updateTable('firehose_cursor')
       .set({ cursor })
       .where('service', '=', 'verification')
-      .where((qb) =>
-        qb.where('cursor', '<', cursor).orWhere('cursor', 'is', null),
+      .where((eb) =>
+        eb.or([eb('cursor', '<', cursor), eb('cursor', 'is', null)]),
       )
       .returningAll()
       .executeTakeFirst()
