@@ -1,15 +1,15 @@
-import type { ClientOptions } from 'ws'
 import { isPlainObject } from '@atproto/lex-data'
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import { ReconnectingWebSocket } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream.js'
 
 export class Subscription<T = unknown> {
   constructor(
-    public opts: ClientOptions & {
+    public opts: {
       service: string
       method: string
       maxReconnectSeconds?: number
       heartbeatIntervalMs?: number
+      headers?: Record<string, string> | Headers
       signal?: AbortSignal
       validate: (obj: unknown) => T | undefined
       onReconnectError?: (
@@ -25,14 +25,31 @@ export class Subscription<T = unknown> {
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncGenerator<T> {
-    const ws = new WebSocketKeepAlive({
-      ...this.opts,
-      getUrl: async () => {
+    const ws = new ReconnectingWebSocket(
+      async () => {
         const params = (await this.opts.getParams?.()) ?? {}
         const query = encodeQueryParams(params)
         return `${this.opts.service}/xrpc/${this.opts.method}?${query}`
       },
-    })
+      {
+        dataMode: 'binary',
+        headers: this.opts.headers,
+        maxReconnectSeconds: this.opts.maxReconnectSeconds,
+        heartbeat: this.opts.heartbeatIntervalMs
+          ? { intervalMs: this.opts.heartbeatIntervalMs }
+          : undefined,
+        signal: this.opts.signal,
+        onError: this.opts.onReconnectError
+          ? (error, { willReconnect, attempt }) => {
+              // Preserve the old (error, n, initialSetup) callback shape:
+              // initialSetup ≈ the first attempt (attempt 0).
+              if (willReconnect) {
+                this.opts.onReconnectError!(error, attempt, attempt === 0)
+              }
+            }
+          : undefined,
+      },
+    )
     for await (const chunk of ws) {
       const message = ensureChunkIsMessage(chunk)
       const t = message.header.t
