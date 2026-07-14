@@ -1,10 +1,10 @@
-import { Cid, LexMap } from '@atproto/lex-data'
-import { BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
-import { com } from '../../lexicons/index.js'
-import { dbLogger as log } from '../../logger'
-import { ActorDb, Backlink } from '../db'
-import { RecordReader, getBacklinks } from './reader'
+import type { Cid, LexMap } from '@atproto/lex-data'
+import { type BlobStore, WriteOpAction } from '@atproto/repo'
+import type { AtUri } from '@atproto/syntax'
+import type { com } from '../../lexicons/index.js'
+import { dbLogger as log } from '../../logger.js'
+import type { ActorDb, Backlink } from '../db/index.js'
+import { RecordReader, getBacklinks } from './reader.js'
 
 export class RecordTransactor extends RecordReader {
   constructor(

@@ -1,11 +1,11 @@
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
   REASONRUDE,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { ModerationServiceProfile } from '../src/mod-service/profile'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { ModerationServiceProfile } from '../src/mod-service/profile.js'
+import { forSnapshot } from './_util.js'
 
 describe('report reason', () => {
   let network: TestNetwork
@@ -45,7 +45,7 @@ describe('report reason', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('createReport', () => {

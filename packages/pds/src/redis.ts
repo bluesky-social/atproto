@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { Redis } from 'ioredis'
-import { redisLogger } from './logger'
+import { redisLogger } from './logger.js'
 
 export const getRedisClient = (host: string, password?: string): Redis => {
   const redisAddr = redisAddressParts(host)

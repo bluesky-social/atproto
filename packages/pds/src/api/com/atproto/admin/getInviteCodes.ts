@@ -1,15 +1,15 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import {
-  CodeDetail,
+  type CodeDetail,
   selectInviteCodesQb,
-} from '../../../../account-manager/helpers/invite'
-import { AppContext } from '../../../../context'
+} from '../../../../account-manager/helpers/invite.js'
+import type { AppContext } from '../../../../context.js'
 import {
-  Cursor,
+  type Cursor,
   GenericKeyset,
-  LabeledResult,
+  type LabeledResult,
   paginate,
-} from '../../../../db/pagination'
+} from '../../../../db/pagination.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

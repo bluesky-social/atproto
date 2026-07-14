@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { DidDocument, DidService } from './did-document.js'
+import type { DidDocument, DidService } from './did-document.js'
 import { DidError, InvalidDidError } from './did-error.js'
-import { Did } from './did.js'
-import { canParse, isFragment } from './lib/uri.js'
+import { type DidRefAbsolute, isDidRefAbsolute } from './did-ref.js'
+import type { Did } from './did.js'
+import { canParse } from './lib/uri.js'
 import {
   DID_PLC_PREFIX,
   DID_WEB_PREFIX,
@@ -11,7 +12,7 @@ import {
   isDidPlc,
   isDidWeb,
 } from './methods.js'
-import { Identifier, matchesIdentifier } from './utils.js'
+import { type Identifier, matchesIdentifier } from './utils.js'
 
 // This file contains atproto-specific DID validation utilities.
 
@@ -113,17 +114,6 @@ function isDidWebWithHttpsPort(did: Did<'web'>): boolean {
         did.lastIndexOf('%3A', pathIdx) !== -1
 
   return hasPort
-}
-
-export type AtprotoAudience = `${AtprotoDid}#${string}`
-export const isAtprotoAudience = (value: unknown): value is AtprotoAudience => {
-  if (typeof value !== 'string') return false
-  const hashIndex = value.indexOf('#')
-  if (hashIndex === -1) return false
-  if (value.indexOf('#', hashIndex + 1) !== -1) return false
-  return (
-    isFragment(value, hashIndex + 1) && isAtprotoDid(value.slice(0, hashIndex))
-  )
 }
 
 export type AtprotoData<
@@ -230,4 +220,16 @@ export function isAtprotoVerificationMethod<
     ) &&
     matchesIdentifier(this.id, 'atproto', method.id)
   )
+}
+
+/**
+ * An atproto-constrained absolute DID reference: `${AtprotoDid}#${fragment}`.
+ */
+export type AtprotoDidRefAbsolute = DidRefAbsolute<AtprotoIdentityDidMethods>
+
+export function isAtprotoDidRefAbsolute(
+  value: unknown,
+): value is AtprotoDidRefAbsolute {
+  if (!isDidRefAbsolute(value)) return false
+  return isAtprotoDid(value.slice(0, value.indexOf('#')))
 }

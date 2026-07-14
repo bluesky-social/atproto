@@ -1,27 +1,30 @@
-import events from 'node:events'
+import events, { setMaxListeners } from 'node:events'
 import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { ServerConfig } from './config'
-import { AppContext, AppContextOptions } from './context'
-import { createMuteOpChannel } from './db/schema/mute_op'
-import { createNotifOpChannel } from './db/schema/notif_op'
-import { createOperationChannel } from './db/schema/operation'
-import { dbLogger, loggerMiddleware } from './logger'
-import routes from './routes'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
+import type { ServerConfig } from './config.js'
+import { AppContext, type AppContextOptions } from './context.js'
+import { createMuteOpChannel } from './db/schema/mute_op.js'
+import { createNotifOpChannel } from './db/schema/notif_op.js'
+import { createOperationChannel } from './db/schema/operation.js'
+import { dbLogger, loggerMiddleware } from './logger.js'
+import routes from './routes/index.js'
 
-export * from './config'
-export * from './client'
-export { Database } from './db'
-export { AppContext } from './context'
-export { httpLogger } from './logger'
+export * from './config.js'
+export * from './client.js'
+export { Database } from './db/index.js'
+export { AppContext } from './context.js'
+export { httpLogger } from './logger.js'
+
+type BsyncServiceState = 'initialized' | 'started' | 'destroyed'
 
 export class BsyncService {
   public ctx: AppContext
   public server: http.Server
+  private terminator: httpTerminator.HttpTerminator
   private ac: AbortController
-  private terminator: HttpTerminator
-  private dbStatsInterval?: NodeJS.Timeout
+  private state: BsyncServiceState = 'initialized'
 
   constructor(opts: {
     ctx: AppContext
@@ -31,7 +34,7 @@ export class BsyncService {
     this.ctx = opts.ctx
     this.server = opts.server
     this.ac = opts.ac
-    this.terminator = createHttpTerminator({ server: this.server })
+    this.terminator = httpTerminator.createHttpTerminator(opts)
   }
 
   static async create(
@@ -39,6 +42,8 @@ export class BsyncService {
     overrides?: Partial<AppContextOptions>,
   ): Promise<BsyncService> {
     const ac = new AbortController()
+    // Prevents unhelpful warnings.
+    setMaxListeners(100, ac.signal)
     const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
     const handler = connectNodeAdapter({
       routes: routes(ctx),
@@ -57,10 +62,12 @@ export class BsyncService {
   }
 
   async start(): Promise<http.Server> {
-    if (this.dbStatsInterval) {
+    if (this.state !== 'initialized') {
       throw new Error(`${this.constructor.name} already started`)
     }
-    this.dbStatsInterval = setInterval(() => {
+    this.state = 'started'
+
+    const dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
           idleCount: this.ctx.db.pool.idleCount,
@@ -70,6 +77,11 @@ export class BsyncService {
         'db pool stats',
       )
     }, 10000)
+
+    this.ac.signal.addEventListener('abort', () => {
+      clearInterval(dbStatsInterval)
+    })
+
     await this.setupAppEvents()
     this.server.listen(this.ctx.cfg.service.port)
     this.server.keepAliveTimeout = 90000
@@ -78,11 +90,14 @@ export class BsyncService {
   }
 
   async destroy(): Promise<void> {
+    if (this.state === 'destroyed') return
+    this.state = 'destroyed'
     this.ac.abort()
-    await this.terminator.terminate()
-    await this.ctx.db.close()
-    clearInterval(this.dbStatsInterval)
-    this.dbStatsInterval = undefined
+    try {
+      await this.terminator.terminate()
+    } finally {
+      await this.ctx.db.close()
+    }
   }
 
   async setupAppEvents() {

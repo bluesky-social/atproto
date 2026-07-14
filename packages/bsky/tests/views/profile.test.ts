@@ -2,29 +2,39 @@ import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { Timestamp } from '@bufbuild/protobuf'
 import {
-  AppBskyEmbedExternal,
-  AtpAgent,
-  ComGermnetworkDeclaration,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import {
+  type AppBskyEmbedExternal,
+  type AtpAgent,
+  type ComGermnetworkDeclaration,
   ids,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewer } from '../_util'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
-  let labelerDid: string
+  let labelerDid: DidString
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let dan: string
-  let eve: string
-  let frank: string
-  let noprofile: string
+  let alice: DidString
+  let bob: DidString
+  let dan: DidString
+  let eve: DidString
+  let frank: DidString
+  let noprofile: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -76,7 +86,6 @@ describe('pds profile views', () => {
       password: 'noprofile-pass',
     })
 
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -85,9 +94,8 @@ describe('pds profile views', () => {
     noprofile = sc.dids.noprofile
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
 
@@ -448,20 +456,12 @@ describe('pds profile views', () => {
       const nowPlus15M = '2021-01-01T01:15:00.000Z'
 
       beforeAll(() => {
-        jest.useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'performance',
-            'setImmediate',
-            'setInterval',
-            'setTimeout',
-          ],
-        })
-        jest.setSystemTime(new Date(now))
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(new Date(now))
       })
 
       afterAll(async () => {
-        jest.useRealTimers()
+        vi.useRealTimers()
       })
 
       it('returns inactive status', async () => {
@@ -484,7 +484,7 @@ describe('pds profile views', () => {
         )
         await network.processAll()
 
-        jest.setSystemTime(new Date(nowPlus15M))
+        vi.setSystemTime(new Date(nowPlus15M))
 
         const { data } = await agent.api.app.bsky.actor.getProfile(
           { actor: alice },
@@ -731,18 +731,14 @@ describe('pds profile views', () => {
   })
 
   it('filters out Go zero-value dates from dataplane', async () => {
-    // Spy on the dataplane getActors method
-    const getActorsSpy = jest.spyOn(network.bsky.ctx.dataplane, 'getActors')
+    using getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
 
-    // Call the original implementation but modify the result
     getActorsSpy.mockImplementationOnce(async (req) => {
-      // Call the real method
       const result = await network.bsky.ctx.dataplane.getActors(req)
 
-      // Modify the result to inject a Go zero-value date
+      // Inject a Go zero-value date (0001-01-01 00:00:00 UTC)
       if (result.actors.length > 0 && result.actors[0]) {
         const actor = result.actors[0]
-        // Create a Timestamp with Go zero-value (0001-01-01 00:00:00 UTC)
         const goZeroDate = new Date(-62135596800000)
         actor.createdAt = Timestamp.fromDate(goZeroDate)
       }
@@ -757,14 +753,14 @@ describe('pds profile views', () => {
       },
     )
 
-    // The createdAt should be undefined because the hydration layer filters it out
+    // The hydration layer filters Go zero-values out
     expect(data.createdAt).toBeUndefined()
-
-    // Clean up
-    getActorsSpy.mockRestore()
   })
 
-  async function updateProfile(did: string, record: Record<string, unknown>) {
+  async function updateProfile(
+    did: DidString,
+    record: Record<string, unknown>,
+  ) {
     return await pdsAgent.api.com.atproto.repo.putRecord(
       {
         repo: did,

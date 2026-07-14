@@ -4,15 +4,15 @@ import { isDisposableEmail } from 'disposable-email-domains-js'
 import {
   InvalidRequestError,
   MethodNotImplementedError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { KwsExternalPayloadError } from '../../../../kws'
+import type { AppContext } from '../../../../context.js'
+import { KwsExternalPayloadError } from '../../../../kws.js'
 import { app } from '../../../../lexicons/index.js'
-import { httpLogger as log } from '../../../../logger'
-import { ActorInfo } from '../../../../proto/bsky_pb'
-import { KwsExternalPayload } from '../../../kws/types'
-import { createStashEvent, getClientUa } from '../../../kws/util'
+import { httpLogger as log } from '../../../../logger.js'
+import type { ActorInfo } from '../../../../proto/bsky_pb.js'
+import type { KwsExternalPayload } from '../../../kws/types.js'
+import { createStashEvent, getClientUa } from '../../../kws/util.js'
 
 type InputSchema = app.bsky.unspecced.initAgeAssurance.$InputBody
 

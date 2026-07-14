@@ -1,13 +1,14 @@
 import assert from 'node:assert'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
+import { jest } from '@jest/globals'
+import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { forSnapshot, identity } from './_util'
+import { forSnapshot, identity } from './_util.js'
 
 describe('blob divert', () => {
   let network: TestNetwork
@@ -29,7 +30,7 @@ describe('blob divert', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const mockReportServiceResponse = (succeeds: boolean) => {

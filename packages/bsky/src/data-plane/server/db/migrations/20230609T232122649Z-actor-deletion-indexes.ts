@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import type { Kysely } from 'kysely'
 
 // Indexes to support efficient actor deletion/unindexing
 

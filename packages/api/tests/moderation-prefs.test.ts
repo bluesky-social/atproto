@@ -1,7 +1,7 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { DEFAULT_LABEL_SETTINGS } from '../src'
-import { isContentLabelPref } from '../src/client/types/app/bsky/actor/defs'
-import './util/moderation-behavior'
+import { isContentLabelPref } from '../src/client/types/app/bsky/actor/defs.js'
+import { DEFAULT_LABEL_SETTINGS } from '../src/index.js'
+import './util/moderation-behavior.js'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -13,7 +13,7 @@ describe('agent', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('migrates legacy content-label prefs (no mutations)', async () => {

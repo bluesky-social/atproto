@@ -4,3 +4,23 @@ packages:
   - 'packages/lex/*'
   - 'packages/oauth/*'
   - 'packages/internal/*'
+
+allowBuilds:
+  '@bufbuild/buf': true
+  '@swc/core': true
+  better-sqlite3: true
+  dd-trace: true
+  esbuild: true
+  protobufjs: true
+  puppeteer: true
+  sharp: true
+  unrs-resolver: true
+  '@datadog/native-appsec': false
+  '@datadog/native-iast-taint-tracking': false
+  '@datadog/native-metrics': false
+  '@datadog/pprof': false
+  core-js: false
+
+overrides:
+  cookie: ^0.7.2
+  opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0

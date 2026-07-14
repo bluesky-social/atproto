@@ -1,15 +1,15 @@
 import {
   Code,
   ConnectError,
-  Interceptor,
-  PromiseClient,
+  type Interceptor,
+  type PromiseClient,
   createPromiseClient,
 } from '@connectrpc/connect'
 import {
-  ConnectTransportOptions,
+  type ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-import { Service } from './proto/bsync_connect'
+import { Service } from './proto/bsync_connect.js'
 
 export type BsyncClient = PromiseClient<typeof Service>
 

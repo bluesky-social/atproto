@@ -1,10 +1,10 @@
-import { Cid } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
-import { chat } from '../../../../lexicons'
-import { BackgroundQueue } from '../../background'
-import { Database } from '../../db'
-import { DatabaseSchema } from '../../db/database-schema'
-import { RecordProcessor } from '../processor'
+import type { Cid } from '@atproto/lex'
+import type { AtUri } from '@atproto/syntax'
+import { chat } from '../../../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type { DatabaseSchema } from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import { RecordProcessor } from '../processor.js'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 
@@ -40,7 +40,10 @@ const notifsForDelete = () => {
 }
 
 export type PluginType = ReturnType<typeof makePlugin>
-export const makePlugin = (db: Database, background: BackgroundQueue) => {
+export const makePlugin = (
+  db: Database,
+  background: BackgroundQueue<Database>,
+) => {
   const processor = new RecordProcessor(db, background, {
     schema: chat.bsky.actor.declaration.main,
     insertFn,

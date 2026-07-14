@@ -1,4 +1,4 @@
-import { MST, NodeEntry } from './mst'
+import type { MST, NodeEntry } from './mst.js'
 
 type WalkerStatusDone = {
   done: true

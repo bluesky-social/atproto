@@ -1,6 +1,6 @@
-import { useLingui } from '@lingui/react/macro'
+import { msg } from '@lingui/core/macro'
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
@@ -8,20 +8,11 @@ import {
   useState,
 } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
-import type {
-  Account,
-  ConfirmResetPasswordInput,
-  InitiatePasswordResetInput,
-  Session,
-  SignInInput,
-  SignOutInput,
-  SignUpInput,
-  VerifyHandleAvailabilityInput,
-} from '@atproto/oauth-provider-api'
+import type { Account, Session } from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
 import { upsert } from '#/lib/util.ts'
-import { useCurrentLocale } from '#/locales/locale-provider'
-import { useNotificationsContext } from './notifications'
+import { useCurrentLocale } from '#/locales/locale-provider.jsx'
+import { useNotificationsContext } from './notifications.js'
 
 export type { Session }
 
@@ -35,20 +26,6 @@ export type SessionContextType = {
   setSession: (session: Pick<Session, 'account'> | null) => void
 
   api: Api
-
-  doSignIn: (data: Omit<SignInInput, 'locale'>) => Promise<void>
-  doSignOut: (data: SignOutInput) => Promise<void>
-  doInitiatePasswordReset: (
-    data: Omit<InitiatePasswordResetInput, 'locale'>,
-  ) => Promise<void>
-  doConfirmResetPassword: (data: ConfirmResetPasswordInput) => Promise<void>
-  doValidateNewHandle: (data: VerifyHandleAvailabilityInput) => Promise<void>
-  doSignUp: (data: Omit<SignUpInput, 'locale'>) => Promise<void>
-  doConsent: (
-    sub: string,
-    scope?: string | undefined,
-  ) => Promise<{ url: string }>
-  doReject: () => Promise<{ url: string }>
 }
 
 const SessionContext = createContext<null | SessionContextType>(null)
@@ -70,20 +47,19 @@ export function SessionProvider({
   initialSessions,
   initialSelected,
 }: SessionProviderProps) {
-  const { t } = useLingui()
   const locale = useCurrentLocale()
   const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
-  const { notify } = useNotificationsContext()
+  const { notifyError } = useNotificationsContext()
   const [current, setCurrent] = useState(() => {
     if (initialSelected === InitialSelectedSession.First) {
-      return initialSessions[0]?.account.sub ?? null
+      return initialSessions[0]?.account.did ?? null
     }
     if (initialSelected === InitialSelectedSession.Only) {
       return initialSessions.length === 1
-        ? initialSessions[0].account.sub
+        ? initialSessions[0].account.did
         : null
     }
-    if (initialSessions.some((s) => s.account.sub === initialSelected)) {
+    if (initialSessions.some((s) => s.account.did === initialSelected)) {
       return initialSelected
     }
     return null
@@ -93,15 +69,15 @@ export function SessionProvider({
 
   const session = useMemo(() => {
     return current
-      ? sessions.find((s) => s.account.sub === current) ?? null
+      ? sessions.find((s) => s.account.did === current) ?? null
       : null
   }, [sessions, current])
 
   const setSession = useCallback(
     (session: { account: Account } | null) => {
       setCurrent(
-        session && sessions.some((s) => s.account.sub === session.account.sub)
-          ? session.account.sub
+        session && sessions.some((s) => s.account.did === session.account.did)
+          ? session.account.did
           : null,
       )
     },
@@ -112,9 +88,6 @@ export function SessionProvider({
     ({
       account,
       ephemeralToken,
-      // The server will tell us if the user needs to consent to the
-      // authorization. Defaults to true in case of sign-ups
-      consentRequired = true,
       // When a new session is inserted, it is assumed that the user just
       // created the session, and therefore, login is not required.
       loginRequired = false,
@@ -126,130 +99,89 @@ export function SessionProvider({
             account,
             ephemeralToken,
             loginRequired,
-            consentRequired,
           },
-          (s) => s.account.sub === account.sub,
+          (s) => s.account.did === account.did,
         )
       })
-      setCurrent(account.sub)
+      setCurrent(account.did)
     },
     [setCurrent, setSessions],
   )
 
-  const removeSession = useCallback((sub: string) => {
-    setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
-    setCurrent((current) => (current === sub ? null : current))
-  }, [])
+  const upsertAccount = useCallback(
+    (account: Account) => {
+      setSessions((sessions) =>
+        sessions.map((s) =>
+          s.account.did === account.did ? { ...s, account } : s,
+        ),
+      )
+    },
+    [setSessions],
+  )
+
+  const removeSession = useCallback(
+    (did: string | string[]) => {
+      if (Array.isArray(did)) {
+        setSessions((sessions) =>
+          sessions.filter((s) => !did.includes(s.account.did)),
+        )
+        setCurrent((current) =>
+          current != null && did.includes(current) ? null : current,
+        )
+      } else {
+        setSessions((sessions) => sessions.filter((s) => s.account.did !== did))
+        setCurrent((current) => (current === did ? null : current))
+      }
+    },
+    [setSessions, setCurrent],
+  )
 
   const api = useMemo(() => {
     return new Api({
+      locale,
       onFetchError(err) {
         if (err instanceof UnknownRequestUriError) showBoundary(err)
         if (err instanceof UnauthorizedError) {
-          if (session) removeSession(session.account.sub)
+          if (session) removeSession(session.account.did)
 
-          notify({
-            variant: 'error',
-            title: t`Unauthorized`,
-            description: t`Your session has expired. Please sign in again.`,
+          notifyError(err, {
+            title: msg`Unauthorized`,
+            description: msg`Your session has expired. Please sign in again.`,
           })
         }
         throw err
+      },
+      onFetchSuccess: {
+        // Session updates
+        '/sign-in': ({ output }) => upsertSession(output),
+        '/sign-up': ({ output }) => upsertSession(output),
+        '/sign-out': ({ input }) => removeSession(input.did),
+        '/delete-account-confirm': ({ input }) => removeSession(input.did),
+
+        // Account updates
+        '/update-handle': ({ output }) => upsertAccount(output.account),
+        '/update-email-confirm': ({ output }) => upsertAccount(output.account),
+        '/verify-email-confirm': ({ output }) => upsertAccount(output.account),
+        '/deactivate-account': ({ output }) => upsertAccount(output.account),
+        '/reactivate-account': ({ output }) => upsertAccount(output.account),
       },
       headers: session?.ephemeralToken
         ? () => ({ Authorization: `Bearer ${session.ephemeralToken}` })
         : undefined,
     })
-  }, [session, showBoundary, setCurrent, notify, t])
+  }, [
+    locale,
+    session,
+    showBoundary,
+    upsertAccount,
+    upsertSession,
+    removeSession,
+    notifyError,
+  ])
 
-  const doSignIn = useCallback(
-    async (data: Omit<SignInInput, 'locale'>) => {
-      const response = await api.fetch('POST', '/sign-in', { ...data, locale })
-      upsertSession(response)
-    },
-    [api, locale, upsertSession],
-  )
-
-  const doInitiatePasswordReset = useCallback(
-    async (data: Omit<InitiatePasswordResetInput, 'locale'>) => {
-      await api.fetch('POST', '/reset-password-request', { ...data, locale })
-    },
-    [api, locale],
-  )
-
-  const doConfirmResetPassword = useCallback(
-    async (data: ConfirmResetPasswordInput) => {
-      await api.fetch('POST', '/reset-password-confirm', data)
-    },
-    [api],
-  )
-
-  const doValidateNewHandle = useCallback(
-    async (data: VerifyHandleAvailabilityInput) => {
-      await api.fetch('POST', '/verify-handle-availability', data)
-    },
-    [api],
-  )
-
-  const doSignUp = useCallback(
-    async (data: Omit<SignUpInput, 'locale'>) => {
-      const response = await api.fetch('POST', '/sign-up', { ...data, locale })
-      upsertSession(response)
-    },
-    [api, locale, upsertSession],
-  )
-
-  const doSignOut = useCallback(
-    async ({ sub }: SignOutInput) => {
-      await api.fetch('POST', '/sign-out', { sub })
-      setSessions((sessions) => sessions.filter((s) => s.account.sub !== sub))
-      setCurrent((sessions) => (sessions === sub ? null : sessions))
-    },
-    [api],
-  )
-
-  const doConsent = useCallback(
-    async (sub: string, scope?: string) => {
-      return api.fetch('POST', '/consent', { sub, scope })
-    },
-    [api, sessions],
-  )
-
-  const doReject = useCallback(async () => {
-    return api.fetch('POST', '/reject', {})
-  }, [api])
-
-  const value = useMemo<SessionContextType>(
-    () => ({
-      api,
-
-      sessions,
-      session,
-      setSession,
-
-      doSignIn,
-      doSignOut,
-      doInitiatePasswordReset,
-      doConfirmResetPassword,
-      doValidateNewHandle,
-      doSignUp,
-      doConsent,
-      doReject,
-    }),
-    [
-      api,
-      sessions,
-      session,
-      setSession,
-      doSignIn,
-      doSignOut,
-      doInitiatePasswordReset,
-      doConfirmResetPassword,
-      doValidateNewHandle,
-      doSignUp,
-      doConsent,
-      doReject,
-    ],
+  const value = useMemo(
+    (): SessionContextType => ({ api, sessions, session, setSession }),
+    [api, sessions, session, setSession],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

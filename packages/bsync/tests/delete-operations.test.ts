@@ -1,13 +1,13 @@
 import getPort from 'get-port'
 import {
-  BsyncClient,
+  type BsyncClient,
   BsyncService,
-  Database,
+  type Database,
   authWithApiKey,
   createClient,
   envToCfg,
-} from '../src'
-import { Method } from '../src/proto/bsync_pb'
+} from '../src/index.js'
+import { Method } from '../src/proto/bsync_pb.js'
 
 describe('operations', () => {
   let bsync: BsyncService

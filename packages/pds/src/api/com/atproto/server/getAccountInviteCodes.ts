@@ -1,13 +1,13 @@
 import {
   ForbiddenError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { CodeDetail } from '../../../../account-manager/helpers/invite'
-import { ACCESS_FULL } from '../../../../auth-scope'
-import { AppContext } from '../../../../context'
+import type { CodeDetail } from '../../../../account-manager/helpers/invite.js'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { genInvCodes } from './util'
+import { genInvCodes } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.getAccountInviteCodes, {

@@ -1,18 +1,18 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { Client, DidString, isDidString } from '@atproto/lex'
-import { Headers as HeadersMap, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
-import {
+import { type Client, type DidString, isDidString } from '@atproto/lex'
+import type { Headers as HeadersMap, Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import type {
   HydrateCtx,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+} from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
-import { createPipeline } from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+import { createPipeline } from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(

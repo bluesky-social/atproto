@@ -1,7 +1,7 @@
 import {
-  JSX,
-  MouseEventHandler,
-  ReactNode,
+  type JSX,
+  type MouseEventHandler,
+  type ReactNode,
   useCallback,
   useRef,
   useState,
@@ -9,7 +9,7 @@ import {
 import { useClickOutside } from '../lib/use-click-outside.ts'
 import { useEscapeKey } from '../lib/use-escape-key.ts'
 import { useRandomString } from '../lib/use-random-string.ts'
-import { Button, ButtonProps } from './Button.tsx'
+import { Button, type ButtonProps } from './Button.tsx'
 
 export type Item = {
   label?: ReactNode

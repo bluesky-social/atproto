@@ -1,6 +1,6 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -21,7 +21,7 @@ describe('revoke account credentials event', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('fails on non account subjects and for non admins', async () => {

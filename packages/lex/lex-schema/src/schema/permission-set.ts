@@ -1,15 +1,17 @@
-import { NsidString } from '../core.js'
-import { Permission } from './permission.js'
+import type { NsidString } from '../core.js'
+import type { Permission } from './permission.js'
 
 /**
  * Configuration options for a permission set.
  *
+ * @property description - Developer-facing documentation for the permission set
  * @property title - Human-readable title for the permission set
  * @property title:lang - Localized titles by language code
  * @property detail - Detailed description of the permission set
  * @property detail:lang - Localized descriptions by language code
  */
 export type PermissionSetOptions = {
+  description?: string
   title?: string
   'title:lang'?: Record<string, undefined | string>
   detail?: string

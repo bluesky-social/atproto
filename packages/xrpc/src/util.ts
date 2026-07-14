@@ -1,18 +1,18 @@
 import {
-  LexXrpcProcedure,
-  LexXrpcQuery,
+  type LexXrpcProcedure,
+  type LexXrpcQuery,
   jsonStringToLex,
   stringifyLex,
 } from '@atproto/lexicon'
 import {
-  CallOptions,
-  ErrorResponseBody,
-  Gettable,
-  QueryParams,
+  type CallOptions,
+  type ErrorResponseBody,
+  type Gettable,
+  type QueryParams,
   ResponseType,
   XRPCError,
   errorResponseBody,
-} from './types'
+} from './types.js'
 
 const ReadableStream =
   globalThis.ReadableStream ||

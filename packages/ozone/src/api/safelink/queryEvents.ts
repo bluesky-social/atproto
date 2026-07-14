@@ -1,6 +1,6 @@
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
-import { getSafelinkPattern } from '../util'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
+import { getSafelinkPattern } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.queryEvents({

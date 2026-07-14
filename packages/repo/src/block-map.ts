@@ -1,7 +1,7 @@
 import { encode } from '@atproto/lex-cbor'
 import {
-  Cid,
-  LexValue,
+  type Cid,
+  type LexValue,
   cidForCbor,
   parseCid,
   ui8Equals,

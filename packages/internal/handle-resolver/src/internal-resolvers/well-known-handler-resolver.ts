@@ -1,9 +1,9 @@
 import { HandleResolverError } from '../handle-resolver-error.js'
 import {
-  HandleResolver,
-  HandleResolverErrorHandler,
-  ResolveHandleOptions,
-  ResolvedHandle,
+  type HandleResolver,
+  type HandleResolverErrorHandler,
+  type ResolveHandleOptions,
+  type ResolvedHandle,
   isResolvedHandle,
 } from '../types.js'
 

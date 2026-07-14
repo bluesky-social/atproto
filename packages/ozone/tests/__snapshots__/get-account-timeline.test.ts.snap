@@ -1,33 +1,33 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`account timeline Returns entire timeline of events for a given account 1`] = `
-Array [
-  Object {
+[
+  {
     "count": 1,
     "eventSubjectType": "record",
     "eventType": "tools.ozone.moderation.defs#modEventReport",
   },
-  Object {
+  {
     "count": 1,
     "eventSubjectType": "record",
     "eventType": "tools.ozone.moderation.defs#modEventTag",
   },
-  Object {
+  {
     "count": 2,
     "eventSubjectType": "account",
     "eventType": "tools.ozone.moderation.defs#modEventReport",
   },
-  Object {
+  {
     "count": 1,
     "eventSubjectType": "account",
     "eventType": "tools.ozone.moderation.defs#modEventTag",
   },
-  Object {
+  {
     "count": 1,
     "eventSubjectType": "account",
     "eventType": "tools.ozone.moderation.defs#modEventTakedown",
   },
-  Object {
+  {
     "count": 1,
     "eventSubjectType": "account",
     "eventType": "tools.ozone.moderation.defs#timelineEventPlcOperation",

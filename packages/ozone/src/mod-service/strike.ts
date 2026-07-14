@@ -1,4 +1,4 @@
-import { Database } from '../db'
+import type { Database } from '../db/index.js'
 
 export type StrikeServiceCreator = (db: Database) => StrikeService
 

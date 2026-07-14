@@ -33,6 +33,8 @@ message Notification {
   google.protobuf.Timestamp timestamp = 7;
   google.protobuf.Struct additional = 8;
   bool client_controlled = 9;
+  // Maps to iOS's `thread-id`: https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification.
+  string thread_id = 10;
 }
 
 message PushNotificationsRequest {
@@ -69,7 +71,13 @@ message SetAgeRestrictedResponse {}
 
 service Service {
   rpc Ping(PingRequest) returns (PingResponse);
+
+  // Push notifications.
+
   rpc PushNotifications(PushNotificationsRequest) returns (PushNotificationsResponse);
+
+  // Device token management.
+
   rpc RegisterDeviceToken(RegisterDeviceTokenRequest) returns (RegisterDeviceTokenResponse);
   rpc UnregisterDeviceToken(UnregisterDeviceTokenRequest) returns (UnregisterDeviceTokenResponse);
   rpc SetAgeRestricted(SetAgeRestrictedRequest) returns (SetAgeRestrictedResponse);

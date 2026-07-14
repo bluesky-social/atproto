@@ -1,10 +1,10 @@
-import { langLogger as log } from '../logger'
-import { ModerationService } from '../mod-service'
-import { ModSubject } from '../mod-service/subject'
-import { ModerationSubjectStatusRow } from '../mod-service/types'
-import { ContentTagger } from './content-tagger'
-import { EmbedTagger } from './embed-tagger'
-import { LanguageTagger } from './language-tagger'
+import { langLogger as log } from '../logger.js'
+import type { ModerationService } from '../mod-service/index.js'
+import type { ModSubject } from '../mod-service/subject.js'
+import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
+import type { ContentTagger } from './content-tagger.js'
+import { EmbedTagger } from './embed-tagger.js'
+import { LanguageTagger } from './language-tagger.js'
 
 export class TagService {
   private taggers: ContentTagger[]

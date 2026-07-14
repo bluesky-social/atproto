@@ -1,7 +1,7 @@
-import './env'
-import { generateMockSetup } from './mock'
-import { TestNetwork } from './network'
-import { mockMailer } from './util'
+import './env.js'
+import { generateMockSetup } from './mock/index.js'
+import { TestNetwork } from './network.js'
+import { mockMailer } from './util.js'
 
 const run = async () => {
   console.log(`
@@ -49,15 +49,16 @@ const run = async () => {
   )
   console.log(`🗼 Ozone server http://localhost:${network.ozone.port}`)
   console.log(`🗼 Ozone service DID ${network.ozone.ctx.cfg.service.did}`)
+  console.log(`🔄 Bsync server http://localhost:${network.bsync.port}`)
   console.log(`🌅 Bsky Appview http://localhost:${network.bsky.port}`)
   console.log(`🌅 Bsky Appview DID ${network.bsky.serverDid}`)
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator (${fg.did}) http://localhost:${fg.port}`)
   }
 
+  console.time('✅ Dev environment is ready')
   await generateMockSetup(network)
-
-  console.log('✅ Dev environment is ready')
+  console.timeEnd('✅ Dev environment is ready')
 }
 
 run()

@@ -1,6 +1,6 @@
 import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
 
-const STRING_PREVIEW_MAX_LENGTH = 48
+const STRING_PREVIEW_MAX_LENGTH = 256
 const STRING_PREVIEW_TRUNCATED_SUFFIX = '…'
 
 /**

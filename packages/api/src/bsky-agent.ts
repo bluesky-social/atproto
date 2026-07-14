@@ -1,4 +1,4 @@
-import { AtpAgent } from './atp-agent'
+import { AtpAgent } from './atp-agent.js'
 
 /** @deprecated use {@link AtpAgent} instead */
 export class BskyAgent extends AtpAgent {

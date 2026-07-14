@@ -13,7 +13,8 @@ const bytes = {
     return data instanceof Uint8Array
   },
   toHex: (data: Uint8Array | ArrayBuffer): string => {
-    return Buffer.from(data).toString('hex')
+    const bytes = data instanceof Uint8Array ? data : new Uint8Array(data)
+    return Buffer.from(bytes).toString('hex')
   },
   fromHex: (hex: string): Uint8Array => {
     return Buffer.from(hex, 'hex')

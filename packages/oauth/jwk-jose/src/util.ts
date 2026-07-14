@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 
 export type RequiredKey<T, K extends keyof T = never> = Simplify<

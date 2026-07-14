@@ -1,15 +1,15 @@
 import {
   Code,
   ConnectError,
-  Interceptor,
-  PromiseClient,
+  type Interceptor,
+  type PromiseClient,
   createPromiseClient,
 } from '@connectrpc/connect'
 import {
-  ConnectTransportOptions,
+  type ConnectTransportOptions,
   createConnectTransport,
 } from '@connectrpc/connect-node'
-import { Service } from './proto/courier_connect'
+import { Service } from './proto/courier_connect.js'
 
 export type CourierClient = PromiseClient<typeof Service>
 

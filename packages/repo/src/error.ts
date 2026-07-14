@@ -1,4 +1,4 @@
-import { Cid } from '@atproto/lex-data'
+import type { Cid } from '@atproto/lex-data'
 
 export class MissingBlockError extends Error {
   constructor(

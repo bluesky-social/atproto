@@ -38,6 +38,7 @@
             "app.bsky.feed.getSuggestedFeeds",
             "app.bsky.feed.getTimeline",
             "app.bsky.feed.searchPosts",
+            "app.bsky.feed.searchPostsV2",
             "app.bsky.graph.getActorStarterPacks",
             "app.bsky.graph.getBlocks",
             "app.bsky.graph.getFollowers",

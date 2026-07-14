@@ -1,11 +1,12 @@
 {
-  "name": "plc-service",
+  "name": "pds-service",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@8.15.9",
   "dependencies": {
     "@atproto/pds": "workspace:^",
     "@opentelemetry/instrumentation": "^0.45.0",
-    "dd-trace": "^4.18.0",
-    "opentelemetry-plugin-better-sqlite3": "^1.1.0"
+    "dd-trace": "^5.103.0",
+    "opentelemetry-plugin-better-sqlite3": "^1.13.0"
   }
 }

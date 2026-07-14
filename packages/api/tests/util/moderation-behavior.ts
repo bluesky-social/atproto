@@ -1,10 +1,10 @@
-import {
+import type {
   ComAtprotoLabelDefs,
   LabelPreference,
   ModerationOpts,
   ModerationUI,
-} from '../../src'
-import { mock as m } from '../../src/mocker'
+} from '../../src/index.js'
+import { mock as m } from '../../src/mocker.js'
 
 export type ModerationTestSuiteResultFlag =
   | 'filter'

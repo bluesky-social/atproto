@@ -1,26 +1,31 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import { AtUriString, Client } from '@atproto/lex'
-import { Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { DataPlaneClient } from '../../../../data-plane'
+import type { AtUriString, Client } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
 import {
-  PostSearchQuery,
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
+import {
+  type PostSearchQuery,
   parsePostSearchQuery,
-} from '../../../../data-plane/server/util'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { parseString } from '../../../../hydration/util'
+} from '../../../../data-plane/server/util.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { uriToDid as creatorFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
+import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -48,7 +53,12 @@ export default function (server: Server, ctx: AppContext) {
         ),
       })
       const results = await searchPosts(
-        { ...params, hydrateCtx, isModService },
+        {
+          ...params,
+          hydrateCtx,
+          isModService,
+          isV2Override: resolveSearchV2Override(req, ctx.cfg),
+        },
         ctx,
       )
       return {
@@ -60,7 +70,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
+const skeletonV1 = async (
   inputs: SkeletonFnInput<Context, Params>,
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
@@ -107,6 +117,55 @@ const skeleton = async (
   }
 }
 
+const skeletonV2 = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const parsedQuery = parsePostSearchQuery(params.q, {
+    author: params.author,
+  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchPostsV2({
+      allTime: true, // match v1 behavior, v2 defaults to false
+      params: {
+        query: params.q,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: sanitizeCursor(params.cursor),
+      },
+      sort: postSortToV2(params.sort),
+      filters: {
+        authors: params.author ? [params.author] : [],
+        mentions: params.mentions ? [params.mentions] : [],
+        domains: params.domain ? [params.domain] : [],
+        urls: params.url ? [params.url] : [],
+        hashtags: params.tag ?? [],
+        languages: params.lang ? [params.lang] : [],
+      },
+      since: parseTimestamp(params.since),
+      until: parseTimestamp(params.until),
+    })
+    .catch(asInvalidRequest())
+  return {
+    posts: res.posts.map(({ uri }) => uri as AtUriString),
+    cursor: parseString(res.pageInfo?.cursor),
+    hitsTotal: res.pageInfo?.hitsTotal
+      ? Number(res.pageInfo.hitsTotal)
+      : undefined,
+    parsedQuery,
+  }
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useV2 =
+    input.params.hydrateCtx.features.checkGate(
+      input.params.hydrateCtx.features.Gate.SearchV2Enable,
+    ) || input.params.isV2Override
+  const skeletonFn = useV2 ? skeletonV2 : skeletonV1
+  return skeletonFn(input)
+}
+
 const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
@@ -144,15 +203,29 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    // Roll the post's own tags together with moderation tags on its author,
+    // so author-level tags are filtered the same way as post-level tags.
+    const author = hydration.actors?.get(creator)
+    const tags = new Set([
+      ...post.tags,
+      ...(author?.accountModerationTags ?? []),
+      ...(author?.profileModerationTags ?? []),
+    ])
+
+    // Tags that are hidden from all search surfaces (Top and Latest),
+    // regardless of curation or author filtering.
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) => tags.has(t))
+    if (alwaysHidden) return false
+
     let tagged = false
     if (
       params.hydrateCtx.features?.checkGate(
         params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
     ) {
-      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
+      tagged = tags.has(ctx.cfg.visibilityTagHide)
     } else {
-      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+      tagged = [...ctx.cfg.searchTagsHide].some((t) => tags.has(t))
     }
 
     // Cases to conditionally show based on tagging.
@@ -191,6 +264,7 @@ type Context = {
 type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
   isModService: boolean
+  isV2Override: boolean
 }
 
 type Skeleton = {
@@ -198,4 +272,31 @@ type Skeleton = {
   hitsTotal?: number
   cursor?: string
   parsedQuery: PostSearchQuery
+}
+
+const postSortToV2 = (sort: string | undefined): SearchSortOrder => {
+  if (sort === 'top') return SearchSortOrder.TOP
+  if (sort === 'latest') return SearchSortOrder.RECENT
+  return SearchSortOrder.UNSPECIFIED
+}
+
+const parseTimestamp = (value: string | undefined): Timestamp | undefined => {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (isNaN(date.getTime())) return undefined
+  return Timestamp.fromDate(date)
+}
+
+const sanitizeCursor = (cursor: string | undefined): string | undefined => {
+  if (!cursor) return undefined
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8')
+    const parsed = JSON.parse(decoded)
+    if (typeof parsed === 'object' && parsed !== null) {
+      return cursor
+    }
+  } catch {
+    // fall through to throw below
+  }
+  throw new InvalidRequestError('Invalid cursor format')
 }

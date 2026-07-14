@@ -1,53 +1,66 @@
 import events from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
+import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { createServer } from '@atproto/xrpc-server'
-import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
-import { createBlobDispatcher } from './api/blob-dispatcher'
-import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
-import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
-import { ServerConfig } from './config'
-import { AppContext } from './context'
-import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { createBlobDispatcher } from './api/blob-dispatcher.js'
+import API, {
+  blobResolver,
+  external,
+  health,
+  sitemap,
+  wellKnown,
+} from './api/index.js'
+import { AuthVerifier, createPublicKeyObject } from './auth-verifier.js'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
+import type { ServerConfig } from './config.js'
+import { AppContext } from './context.js'
+import {
+  authWithApiKey as courierAuth,
+  createCourierClient,
+} from './courier.js'
 import {
   BasicHostList,
   EtcdHostList,
   createDataPlaneClient,
-} from './data-plane/client'
-import * as error from './error'
-import { FeatureGatesClient } from './feature-gates/index'
-import { Hydrator } from './hydration/hydrator'
-import * as imageServer from './image/server'
-import { ImageUriBuilder } from './image/uri'
-import { createKwsClient } from './kws'
-import { loggerMiddleware } from './logger'
-import { authWithApiKey as rolodexAuth, createRolodexClient } from './rolodex'
-import { createStashClient } from './stash'
-import { Views } from './views'
-import { VideoUriBuilder } from './views/util'
+} from './data-plane/client/index.js'
+import * as error from './error.js'
+import { FeatureGatesClient } from './feature-gates/index.js'
+import { Hydrator } from './hydration/hydrator.js'
+import * as imageServer from './image/server.js'
+import { ImageUriBuilder } from './image/uri.js'
+import { createKwsClient } from './kws.js'
+import { loggerMiddleware } from './logger.js'
+import {
+  authWithApiKey as rolodexAuth,
+  createRolodexClient,
+} from './rolodex.js'
+import { createStashClient } from './stash.js'
+import { Views } from './views/index.js'
+import { VideoUriBuilder } from './views/util.js'
 
-export { ServerConfig } from './config'
-export type { ServerConfigValues } from './config'
-export { AppContext } from './context'
-export * from './data-plane'
-export { BackgroundQueue } from './data-plane/server/background'
-export { Database } from './data-plane/server/db'
-export { Redis } from './redis'
+export { ServerConfig } from './config.js'
+export type { ServerConfigValues } from './config.js'
+export { AppContext } from './context.js'
+export * from './data-plane/index.js'
+export { BackgroundQueue } from './data-plane/server/background.js'
+export { Database } from './data-plane/server/db/index.js'
+export { Redis } from './redis.js'
 
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: HttpTerminator
+  private terminator?: httpTerminator.HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -123,6 +136,19 @@ export class BskyAppView {
             headers: config.topicsApiKey
               ? { authorization: `Bearer ${config.topicsApiKey}` }
               : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
+      : undefined
+
+    const irisClient = config.irisUrl
+      ? new Client(
+          {
+            service: config.irisUrl,
           },
           {
             // Trust internal services to send us well-formed responses
@@ -223,6 +249,7 @@ export class BskyAppView {
       searchClient,
       suggestionsClient,
       topicsClient,
+      irisClient,
       hydrator,
       views,
       signingKey,
@@ -272,7 +299,7 @@ export class BskyAppView {
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = createHttpTerminator({ server })
+    this.terminator = httpTerminator.createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
@@ -280,9 +307,19 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.featureGatesClient.destroy()
-    await this.terminator?.terminate()
-    await this.ctx.etcd?.close()
+    try {
+      await this.ctx.featureGatesClient.destroy()
+    } finally {
+      try {
+        await this.terminator?.terminate()
+      } finally {
+        await this.ctx.etcd?.close()
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 

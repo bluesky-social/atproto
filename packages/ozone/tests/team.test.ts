@@ -1,6 +1,6 @@
-import { AtpAgent, ToolsOzoneTeamDefs } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { type AtpAgent, ToolsOzoneTeamDefs } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { forSnapshot } from './_util.js'
 
 describe('team management', () => {
   let network: TestNetwork
@@ -36,7 +36,7 @@ describe('team management', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('listMembers', () => {

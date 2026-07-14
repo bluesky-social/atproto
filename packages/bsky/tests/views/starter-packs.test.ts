@@ -1,13 +1,19 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyActorProfile,
-  AppBskyGraphGetStarterPacksWithMembership,
-  AtpAgent,
+  type AppBskyGraphGetStarterPacksWithMembership,
+  type AtpAgent,
   asPredicate,
   ids,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll } from '../_util'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
+import { forSnapshot, paginateAll } from '../_util.js'
 
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
@@ -79,13 +85,10 @@ describe('starter packs', () => {
       [sc.dids.alice, sc.dids.frankie],
       [],
     )
-
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('gets actor starter packs.', async () => {
     const { data } = await agent.api.app.bsky.graph.getActorStarterPacks({

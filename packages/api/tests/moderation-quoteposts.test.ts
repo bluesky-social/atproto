@@ -1,11 +1,11 @@
 import {
-  InterpretedLabelValueDefinition,
-  ModerationOpts,
+  type InterpretedLabelValueDefinition,
+  type ModerationOpts,
   interpretLabelValueDefinition,
   mock,
   moderatePost,
-} from '../src'
-import './util/moderation-behavior'
+} from '../src/index.js'
+import './util/moderation-behavior.js'
 
 interface ScenarioResult {
   profileList?: string[]

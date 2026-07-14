@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ozone-settings listOptions returns all personal settings 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "description": "List of external labelers that will be plugged into the client views",
@@ -12,13 +12,13 @@ Array [
     "managerRole": "tools.ozone.team.defs#roleAdmin",
     "scope": "instance",
     "updatedAt": "1970-01-01T00:00:00.000Z",
-    "value": Object {
-      "dids": Array [
+    "value": {
+      "dids": [
         "user(0)",
       ],
     },
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "description": "This determines how each queue is balanced when sorted by oldest first",
@@ -28,11 +28,11 @@ Array [
     "managerRole": "tools.ozone.team.defs#roleAdmin",
     "scope": "instance",
     "updatedAt": "1970-01-01T00:00:00.000Z",
-    "value": Object {
+    "value": {
       "val": 10.5,
     },
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "description": "This determines how many queues the client interface will show",
@@ -42,8 +42,8 @@ Array [
     "managerRole": "tools.ozone.team.defs#roleAdmin",
     "scope": "instance",
     "updatedAt": "1970-01-01T00:00:00.000Z",
-    "value": Object {
-      "stratosphere": Object {
+    "value": {
+      "stratosphere": {
         "name": "Stratosphere",
       },
     },

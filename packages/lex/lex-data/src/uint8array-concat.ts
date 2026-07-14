@@ -3,12 +3,16 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 const Buffer = NodeJSBuffer
 
 export const ui8ConcatNode = Buffer
-  ? function ui8ConcatNode(array: readonly Uint8Array[]): Uint8Array {
+  ? function ui8ConcatNode(
+      array: readonly Uint8Array[],
+    ): Uint8Array<ArrayBuffer> {
       return Buffer.concat(array)
     }
   : /* v8 ignore next -- @preserve */ null
 
-export function ui8ConcatPonyfill(array: readonly Uint8Array[]): Uint8Array {
+export function ui8ConcatPonyfill(
+  array: readonly Uint8Array[],
+): Uint8Array<ArrayBuffer> {
   let totalLength = 0
   for (const arr of array) totalLength += arr.length
   const result = new Uint8Array(totalLength)

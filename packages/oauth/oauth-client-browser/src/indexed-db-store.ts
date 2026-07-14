@@ -1,5 +1,5 @@
-import { Key, SimpleStore, Value } from '@atproto-labs/simple-store'
-import { DB, DBObjectStore } from './indexed-db/index.js'
+import type { Key, SimpleStore, Value } from '@atproto-labs/simple-store'
+import { DB, type DBObjectStore } from './indexed-db/index.js'
 
 const storeName = 'store'
 type Item<V> = {
@@ -36,7 +36,7 @@ export class IndexedDBStore<
         fn(tx.objectStore(storeName)),
       )
     } finally {
-      await db[Symbol.dispose]()
+      await db[Symbol.asyncDispose]()
     }
   }
 

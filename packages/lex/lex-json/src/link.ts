@@ -1,10 +1,6 @@
-import {
-  CheckCidOptions,
-  Cid,
-  InferCheckedCid,
-  parseCid,
-} from '@atproto/lex-data'
-import { JsonValue } from './json.js'
+import type { CheckCidOptions, Cid, InferCheckedCid } from '@atproto/lex-data'
+import { parseCid } from '@atproto/lex-data'
+import type { JsonValue } from './json.js'
 
 /**
  * Parses a `{$link: string}` JSON object into a {@link Cid} instance.
@@ -74,7 +70,7 @@ export function parseLexLink(
 
   try {
     return parseCid($link, options)
-  } catch (cause) {
+  } catch {
     return undefined
   }
 }

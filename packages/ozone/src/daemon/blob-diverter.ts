@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream'
+import type { Readable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
 import { CID } from 'multiformats/cid'
 import * as undici from 'undici'
@@ -8,11 +8,11 @@ import {
   createDecoders,
   getPdsEndpoint,
 } from '@atproto/common'
-import { IdResolver } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { BlobDivertConfig } from '../config'
-import { Database } from '../db'
-import { retryHttp } from '../util'
+import type { BlobDivertConfig } from '../config/index.js'
+import type { Database } from '../db/index.js'
+import { retryHttp } from '../util.js'
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig

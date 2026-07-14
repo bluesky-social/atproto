@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { HandleString } from '@atproto/syntax'
-import { AppContext } from './context'
+import type { HandleString } from '@atproto/syntax'
+import type { AppContext } from './context.js'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()

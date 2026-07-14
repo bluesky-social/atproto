@@ -51,6 +51,7 @@
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_|^err$|^error$",
         "ignoreRestSiblings": true
       }
     ],
@@ -58,11 +59,16 @@
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports", "fixStyle": "inline-type-imports" }
+    ],
+    "@typescript-eslint/no-import-type-side-effects": "error"
   },
   "overrides": [
     {
-      "files": ["jest.config.js"],
+      "files": ["jest.config.cjs"],
       "env": { "commonjs": true }
     },
     {
@@ -70,13 +76,13 @@
       "env": { "node": true }
     },
     {
-      "files": ["jest.setup.js"],
+      "files": ["test.setup.ts"],
       "env": { "jest": true }
     },
     {
-      "files": ["*.js", "*.cjs"],
+      "files": ["*.js", "*.cjs", "*.cts"],
       "rules": {
-        "@typescript-eslint/no-var-requires": "off"
+        "@typescript-eslint/no-require-imports": "off"
       }
     },
     {
@@ -85,23 +91,35 @@
         "n/no-extraneous-import": [
           "error",
           { "allowModules": ["@atproto/dev-env"] }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_|^err$|^error$",
+            "ignoreRestSiblings": true
+          }
         ]
       }
     }
   ],
   "settings": {
-    "node": { "version": ">=18.7.0" },
+    "node": { "version": ">=22" },
     "import/internal-regex": "^@atproto(?:-labs)?/",
     "import/parsers": { "@typescript-eslint/parser": [".ts", ".tsx"] },
     "import/resolver": {
       "typescript": {
         "project": [
-          "tsconfig.json",
-          "packages/lex/*/tsconfig.json",
-          "packages/oauth/*/tsconfig.json",
-          "packages/oauth/*/tsconfig.src.json",
-          "packages/internal/*/tsconfig.json",
-          "packages/*/tsconfig.json"
+          "packages/lex/*/tsconfig.build.json",
+          "packages/lex/*/tsconfig.test.json",
+          "packages/oauth/*/tsconfig.build.json",
+          "packages/oauth/*/tsconfig.test.json",
+          "packages/oauth/*/tsconfig.lib.json",
+          "packages/internal/*/tsconfig.build.json",
+          "packages/internal/*/tsconfig.test.json",
+          "packages/*/tsconfig.build.json",
+          "packages/*/tsconfig.test.json"
         ]
       },
       "node": {

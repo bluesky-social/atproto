@@ -1,7 +1,7 @@
-import { Cid } from '@atproto/lex-data'
-import { BlockMap } from './block-map'
-import { CidSet } from './cid-set'
-import { MST, NodeEntry, mstDiff } from './mst'
+import type { Cid } from '@atproto/lex-data'
+import { BlockMap } from './block-map.js'
+import { CidSet } from './cid-set.js'
+import { type MST, type NodeEntry, mstDiff } from './mst/index.js'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}

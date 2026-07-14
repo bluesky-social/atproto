@@ -4,14 +4,12 @@
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta name="x-apple-disable-message-reformatting" />
     <title>Confirm your email</title>
-    <meta
-      name="description"
-      content="To confirm your email, enter the code provided in the app."
-    />
+    <meta name="description" content="{{token}} is your verification code." />
   </head>
   <div
     style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0"
-  >To confirm your email, enter the code provided in the app.<div
+  >{{token}}
+    is your verification code.<div
     > ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿</div>
   </div>
 
@@ -42,8 +40,8 @@
               <tbody>
                 <tr>
                   <td><img
-                      alt="Bluesky"
-                      src="https://bsky.social/about/images/email/email_logo_default.png"
+                      alt="{{config.serviceName}}"
+                      src="{{config.logoUrl}}"
                       style="display:block;outline:none;border:none;text-decoration:none;width:110px;margin:0 auto"
                     /></td>
                 </tr>
@@ -67,12 +65,15 @@
                     <p
                       style="font-size:16px;line-height:1.4;margin:0px 0px;letter-spacing:0.25px;color:hsl(211, 24%, 34.2%);font-family:-apple-system, BlinkMacSystemFont, &#x27;Roboto&#x27;, &#x27;Oxygen&#x27;, &#x27;Ubuntu&#x27;, &#x27;Cantarell&#x27;, &#x27;Fira Sans&#x27;, &#x27;Droid Sans&#x27;, &#x27;Helvetica Neue&#x27;, sans-serif;padding-top:12px;padding-bottom:12px;padding-right:32px"
                     >To confirm this email for your account, please enter the
-                      code below in the app or<!-- -->
-                      <a
-                        href="https://bsky.app/intent/verify-email?code={{token}}"
-                        style="color:#067df7;text-decoration:none;text-decoration-line:underline;font-size:16px;letter-spacing:0.25px"
-                        target="_blank"
-                      >click here.</a></p><code
+                      code below in the app{{#if
+                        config.showBskyAppEmailConfirmationLink
+                      }}
+                        or<!-- -->
+                        <a
+                          href="https://bsky.app/intent/verify-email?code={{token}}"
+                          style="color:{{config.primaryColor}};text-decoration:none;text-decoration-line:underline;font-size:16px;letter-spacing:0.25px"
+                          target="_blank"
+                        >click here</a>{{/if}}.</p><code
                       style="display:block;padding:16px;border-radius:8px;border-width:1px;border-style:solid;background-color:hsl(211, 20%, 95.3%);border-color:hsl(211, 20%, 85.89999999999999%);font-size:14px;letter-spacing:0.25px;font-family:monospace;text-transform:uppercase"
                     >{{token}}</code>
                     <p
@@ -109,17 +110,17 @@
                                     <p
                                       style="font-size:14px;line-height:1.4;margin:0px 0px;color:hsl(211, 20%, 53%);font-family:-apple-system, BlinkMacSystemFont, &#x27;Roboto&#x27;, &#x27;Oxygen&#x27;, &#x27;Ubuntu&#x27;, &#x27;Cantarell&#x27;, &#x27;Fira Sans&#x27;, &#x27;Droid Sans&#x27;, &#x27;Helvetica Neue&#x27;, sans-serif;letter-spacing:0.25px"
                                     ><a
-                                        href="https://bsky.app"
+                                        href="{{config.homeUrl}}"
                                         style="color:hsl(211, 20%, 53%);text-decoration:none;text-decoration-line:underline;font-family:-apple-system, BlinkMacSystemFont, &#x27;Roboto&#x27;, &#x27;Oxygen&#x27;, &#x27;Ubuntu&#x27;, &#x27;Cantarell&#x27;, &#x27;Fira Sans&#x27;, &#x27;Droid Sans&#x27;, &#x27;Helvetica Neue&#x27;, sans-serif;margin:0px 0px;line-height:1.0;font-size:14px;letter-spacing:0.25px"
                                         target="_blank"
-                                      >Bluesky</a>, the social internet</p>
+                                      >{{config.serviceName}}</a></p>
                                   </td>
                                   <td
                                     data-id="__react-email-column"
                                     style="width:24px"
                                   ><img
-                                      alt="🦋"
-                                      src="https://bsky.social/about/images/email/email_mark_dark.png"
+                                      alt="{{config.serviceName}}"
+                                      src="{{config.markUrl}}"
                                       style="display:block;outline:none;border:none;text-decoration:none;width:24px"
                                     /></td>
                                 </tr>

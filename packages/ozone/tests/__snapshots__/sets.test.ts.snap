@@ -1,22 +1,22 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ozone-sets querySets returns all sets when no parameters are provided 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "Another test set",
     "name": "another-set",
     "setSize": 0,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "Test set 1",
     "name": "test-set-1",
     "setSize": 0,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "name": "test-set-2",
     "setSize": 0,
@@ -26,7 +26,7 @@ Array [
 `;
 
 exports[`ozone-sets upsertSet creates a new set 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "description": "A new test set",
   "name": "new-test-set",
@@ -36,7 +36,7 @@ Object {
 `;
 
 exports[`ozone-sets upsertSet updates an existing set 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "description": "Updated description",
   "name": "new-test-set",

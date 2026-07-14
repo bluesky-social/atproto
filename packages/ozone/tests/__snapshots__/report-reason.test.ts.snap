@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`report reason createReport only passes for allowed reason types 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "id": 1,
   "reasonType": "tools.ozone.report.defs#reasonHarassmentTroll",
   "reportedBy": "user(0)",
-  "subject": Object {
+  "subject": {
     "$type": "com.atproto.admin.defs#repoRef",
     "did": "user(1)",
   },

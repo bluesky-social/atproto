@@ -1,18 +1,20 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('label hydration', () => {
   let network: TestNetwork
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
-  let carol: string
-  let labelerDid: string
-  let labeler2Did: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let labelerDid: DidString
+  let labeler2Did: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -48,12 +50,10 @@ describe('label hydration', () => {
       val: 'not-expired',
       exp: new Date(Date.now() + MINUTE).toISOString(),
     })
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('hydrates labels based on a supplied labeler header', async () => {
     AtpAgent.configure({ appLabelers: [alice] })

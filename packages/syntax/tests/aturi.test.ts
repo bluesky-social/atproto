@@ -1,16 +1,12 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
-import { AtUri } from '../src'
+import { AtUri } from '../src/index.js'
+import { readInteropFile } from './_utils.js'
 
 describe(AtUri, () => {
-  describe('parses valid interop', () => {
-    for (const value of readLines(
-      `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_valid.txt`,
-    )) {
-      test(value, () => {
-        expect(() => new AtUri(value)).not.toThrow()
-      })
-    }
+  describe('valid interop', () => {
+    test.each(readInteropFile(`aturi_syntax_valid.txt`))('%s', (value) => {
+      expect(() => new AtUri(value)).not.toThrow()
+    })
   })
 
   describe('valid at uris', () => {
@@ -260,18 +256,16 @@ describe(AtUri, () => {
         '',
       ],
     ]
-    for (const [input, host, path, search, hash] of TESTS) {
-      test(input, () => {
-        const urip = new AtUri(input)
-        expect(urip.protocol).toBe('at:')
-        expect(urip.host).toBe(host)
-        expect(urip.hostname).toBe(host)
-        expect(urip.origin).toBe(`at://${host}`)
-        expect(urip.pathname).toBe(path)
-        expect(urip.search).toBe(search)
-        expect(urip.hash).toBe(hash)
-      })
-    }
+    test.each(TESTS)('%s', (input, host, path, search, hash) => {
+      const urip = new AtUri(input)
+      expect(urip.protocol).toBe('at:')
+      expect(urip.host).toBe(host)
+      expect(urip.hostname).toBe(host)
+      expect(urip.origin).toBe(`at://${host}`)
+      expect(urip.pathname).toBe(path)
+      expect(urip.search).toBe(search)
+      expect(urip.hash).toBe(hash)
+    })
   })
 
   it('handles ATP-specific parsing', () => {
@@ -360,23 +354,19 @@ describe(AtUri, () => {
       'at://did:web:localhost%3A1234/foo/bar?foo=bar&baz=buux#hash',
     ]
 
-    for (const base of BASES) {
-      describe(base, () => {
-        for (const [input, path, search, hash] of TESTS) {
-          test(input, () => {
-            const baseUri = new AtUri(base)
-            const uri = new AtUri(input, base)
-            expect(uri.protocol).toBe('at:')
-            expect(uri.host).toBe(baseUri.host)
-            expect(uri.hostname).toBe(baseUri.hostname)
-            expect(uri.origin).toBe(baseUri.origin)
-            expect(uri.pathname).toBe(path)
-            expect(uri.search).toBe(search)
-            expect(uri.hash).toBe(hash)
-          })
-        }
+    describe.each(BASES)('%s', (base) => {
+      test.each(TESTS)('%s', (input, path, search, hash) => {
+        const baseUri = new AtUri(base)
+        const uri = new AtUri(input, base)
+        expect(uri.protocol).toBe('at:')
+        expect(uri.host).toBe(baseUri.host)
+        expect(uri.hostname).toBe(baseUri.hostname)
+        expect(uri.origin).toBe(baseUri.origin)
+        expect(uri.pathname).toBe(path)
+        expect(uri.search).toBe(search)
+        expect(uri.hash).toBe(hash)
       })
-    }
+    })
   })
 
   it('properly checks that the did property is a valid did', () => {
@@ -426,9 +416,3 @@ describe(AtUri, () => {
     expect(() => urip.rkeySafe).toThrow()
   })
 })
-
-function readLines(filePath: string): string[] {
-  return readFileSync(filePath, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.startsWith('#') && line.length > 0)
-}

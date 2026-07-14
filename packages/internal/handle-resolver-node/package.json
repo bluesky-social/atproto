@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver-node",
-  "version": "0.1.25",
+  "version": "0.2.5",
   "license": "MIT",
   "description": "Node specific ATProto handle to DID resolver",
   "keywords": [
@@ -16,9 +16,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/handle-resolver-node"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,17 +28,14 @@
     }
   },
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^",
     "@atproto/did": "workspace:^"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

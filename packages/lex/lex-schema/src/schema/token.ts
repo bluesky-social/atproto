@@ -1,4 +1,9 @@
-import { $type, NsidString, Schema, ValidationContext } from '../core.js'
+import {
+  $type,
+  type NsidString,
+  Schema,
+  type ValidationContext,
+} from '../core.js'
 
 /**
  * Schema for Lexicon token values.
@@ -24,6 +29,10 @@ export class TokenSchema<
     super()
   }
 
+  get $token(): TValue {
+    return this.value
+  }
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (input === this.value) {
       return ctx.success(this.value)
@@ -31,7 +40,11 @@ export class TokenSchema<
 
     // @NOTE: allow using the token instance itself (but convert to the actual
     // token value)
-    if (input instanceof TokenSchema && input.value === this.value) {
+    if (
+      ctx.options.mode === 'parse' &&
+      input instanceof TokenSchema &&
+      input.value === this.value
+    ) {
       return ctx.success(this.value)
     }
 

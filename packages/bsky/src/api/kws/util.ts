@@ -1,16 +1,16 @@
 import crypto from 'node:crypto'
-import express from 'express'
+import type express from 'express'
 import { TID } from '@atproto/common'
-import { DatetimeString } from '@atproto/syntax'
-import { AppContext } from '../../context'
-import { app } from '../../lexicons/index.js'
-import { Namespaces } from '../../stash'
+import type { DatetimeString } from '@atproto/syntax'
+import type { AppContext } from '../../context.js'
+import type { app } from '../../lexicons/index.js'
+import { Namespaces } from '../../stash.js'
 import {
-  KwsExternalPayload,
-  KwsStatus,
+  type KwsExternalPayload,
+  type KwsStatus,
   externalPayloadSchema,
   statusSchema,
-} from './types'
+} from './types.js'
 
 export const createStashEvent = async (
   ctx: AppContext,

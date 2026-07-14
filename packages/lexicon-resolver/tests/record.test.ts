@@ -1,8 +1,15 @@
-import assert from 'node:assert'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { AtUriString, l } from '@atproto/lex'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
+import {
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
+import { type AtUriString, l } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
-import { AtprotoRecordResolver, buildRecordResolver } from '../src/index.js'
+import {
+  type AtprotoRecordResolver,
+  buildRecordResolver,
+} from '../src/index.js'
 
 describe('Record resolution', () => {
   let network: TestNetworkNoAppView
@@ -19,10 +26,10 @@ describe('Record resolution', () => {
       rpc: { fetch },
       idResolver: network.pds.ctx.idResolver,
     })
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('resolves record by AT-URI object.', async () => {

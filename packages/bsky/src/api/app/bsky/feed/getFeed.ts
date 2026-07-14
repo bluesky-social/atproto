@@ -5,33 +5,33 @@ import {
   xrpcSafe,
 } from '@atproto/lex'
 import {
-  Headers as HeadersMap,
+  type Headers as HeadersMap,
   InvalidRequestError,
-  Server,
+  type Server,
   ServerTimer,
   UpstreamFailureError,
   XRPCError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import type { AppContext } from '../../../../context.js'
 import {
   Code,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../../../../data-plane'
-import { FeedItem } from '../../../../hydration/feed'
-import { HydrateCtx } from '../../../../hydration/hydrator'
+} from '../../../../data-plane/index.js'
+import type { FeedItem } from '../../../../hydration/feed.js'
+import type { HydrateCtx } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
-import { BSKY_USER_AGENT, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -210,6 +210,7 @@ const skeletonFromFeedGen = async (
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
     strictResponseProcessing: false,
+    signal: AbortSignal.timeout(10_000),
     headers,
     params: {
       feed: params.feed,
@@ -249,6 +250,11 @@ const skeletonFromFeedGen = async (
       item.reason != null &&
       app.bsky.feed.defs.skeletonReasonRepost.$isTypeOf(item.reason)
         ? { uri: item.reason.repost }
+        : undefined,
+    authorPinned:
+      item.reason != null &&
+      app.bsky.feed.defs.skeletonReasonPin.$isTypeOf(item.reason)
+        ? true
         : undefined,
     feedContext: item.feedContext,
   }))

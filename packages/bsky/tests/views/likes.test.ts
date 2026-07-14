@@ -1,6 +1,13 @@
-import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AppBskyFeedGetLikes, type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import {
+  constantDate,
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+} from '../_util.js'
 
 describe('pds like views', () => {
   let network: TestNetwork
@@ -8,10 +15,10 @@ describe('pds like views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
-  let frankie: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let frankie: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -25,7 +32,6 @@ describe('pds like views', () => {
       email: 'frankie@frankie.com',
       password: 'password',
     })
-    await network.processAll()
 
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -33,9 +39,8 @@ describe('pds like views', () => {
     frankie = sc.dids.frankie
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   const getCursors = (items: { createdAt?: string }[]) =>
     items.map((item) => item.createdAt ?? constantDate)

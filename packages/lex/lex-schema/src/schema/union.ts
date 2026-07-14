@@ -1,11 +1,11 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
+  type Issue,
   LexValidationError,
   Schema,
-  ValidationContext,
-  ValidationFailure,
-  Validator,
+  type ValidationContext,
+  type Validator,
 } from '../core.js'
 
 /**
@@ -44,16 +44,16 @@ export class UnionSchema<
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    const failures: ValidationFailure[] = []
+    const issues: Issue[] = []
 
     for (const validator of this.validators) {
       const result = ctx.validate(input, validator)
       if (result.success) return result
 
-      failures.push(result)
+      issues.push(...result.issues)
     }
 
-    return ctx.failure(LexValidationError.fromFailures(failures))
+    return new LexValidationError(issues)
   }
 }
 

@@ -7,6 +7,10 @@ This API is a client for ATProtocol servers. It communicates using HTTP. It incl
 - ✔️ Session management.
 - ✔️ A RichText library.
 
+> [!Note]
+>
+> We recommend using [lex](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex), our type-safe SDK with Lexicon code generation, for all new projects.
+
 ## Getting started
 
 First install the package:

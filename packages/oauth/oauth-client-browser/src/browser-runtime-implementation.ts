@@ -1,5 +1,5 @@
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'
-import {
+import type {
   DigestAlgorithm,
   Key,
   RuntimeImplementation,
@@ -44,7 +44,7 @@ export class BrowserRuntimeImplementation implements RuntimeImplementation {
   }
 
   async digest(
-    data: Uint8Array,
+    data: Uint8Array<ArrayBuffer>,
     { name }: DigestAlgorithm,
   ): Promise<Uint8Array> {
     switch (name) {

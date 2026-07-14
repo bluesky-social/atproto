@@ -1,6 +1,7 @@
-import { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
-import {
+import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import type {
   AtIdentifierString,
+  AtUriString,
   CidString,
   DidString,
   Infer,
@@ -11,64 +12,105 @@ import {
   Main,
   NsidString,
   Params,
-  Procedure,
-  Query,
-  RecordSchema,
   Restricted,
-  getMain,
 } from '@atproto/lex-schema'
-import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure } from './errors.js'
-import { com } from './lexicons/index.js'
-import {
+import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
+// @NOTE We could use import { com } from "./lexicons/index.js" here, but some
+// consumers might not know how to properly tree-shake that, so we import only
+// the needed lexicon schemas directly.
+import applyWrites from './lexicons/com/atproto/repo/applyWrites.js'
+import createRecord from './lexicons/com/atproto/repo/createRecord.js'
+import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.js'
+import getRecord from './lexicons/com/atproto/repo/getRecord.js'
+import listRecords, {
+  type Record as ListRecordsRecord,
+} from './lexicons/com/atproto/repo/listRecords.js'
+import putRecord from './lexicons/com/atproto/repo/putRecord.js'
+import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
+import getBlob from './lexicons/com/atproto/sync/getBlob.js'
+import type {
   XrpcResponse,
   XrpcResponseBody,
   XrpcResponseOptions,
 } from './response.js'
-import { BinaryBodyInit, Service } from './types.js'
+import type { BinaryBodyInit, Service } from './types.js'
 import {
-  XrpcRequestHeadersOptions,
+  type RecordKeyOptions,
+  type XrpcRequestHeadersOptions,
   applyDefaults,
   buildXrpcRequestHeaders,
+  getDefaultRecordKey,
+  getLiteralRecordKey,
 } from './util.js'
 import {
-  XrpcOptions,
-  XrpcRequestParams,
-  XrpcRequestProcessingOptions,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
+  WriteOperationHelper,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
+} from './write-operation-builder.js'
+import {
+  type XrpcOptions,
+  type XrpcRequestParams,
+  type XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
 } from './xrpc.js'
 
-export type {
-  AtIdentifierString,
-  CidString,
-  DidString,
-  Infer,
-  InferMethodInputBody,
-  InferMethodOutputBody,
-  InferRecordKey,
-  LexMap,
-  LexValue,
-  LexiconRecordKey,
-  Main,
-  NsidString,
-  Params,
+export {
+  type AtIdentifierString,
+  type CidString,
+  type DidString,
+  type Infer,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type InferRecordKey,
+  type LexMap,
+  type LexValue,
+  type LexiconRecordKey,
+  type Main,
+  type NsidString,
+  type Params,
   Procedure,
   Query,
   RecordSchema,
-  Restricted,
-  TypedLexMap,
+  type Restricted,
+  type TypedLexMap,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
+  WriteOperationHelper,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
 }
 
 /**
  * Configuration options for creating a {@link Client}.
+ *
+ * @property {@link ClientOptions.labelers} - An iterable of labeler DIDs to include in requests. These will be combined with any global app labelers configured via {@link Client.configure}.
+ * @property {@link ClientOptions.service} - An optional service identifier (DID or URL) for routing requests with service proxying.
+ * @property {@link ClientOptions.headers} - Custom headers to include in all requests made by this client instance.
+ * @property {@link ClientOptions.validateRequest} - If true, validates request bodies against their lexicon schemas before sending. Defaults to false for performance.
+ * @property {@link ClientOptions.validateResponse} - If false, skips validation of response bodies against their lexicon schemas. Defaults to true to catch errors, but can be disabled for performance if you trust the server responses. Note that defaults will not be applied if validation is disabled, which can cause typing inconsistencies, so use with caution.
+ * @property {@link ClientOptions.strictResponseProcessing} - If false, relaxes certain validation rules during response processing (e.g., allowing floats, deeper nesting, etc.). Defaults to true for strict compliance with {@link https://atproto.com/specs/data-model lexicon data model}, but can be disabled to handle non-compliant responses.
+ *
+ * @see {@link XrpcRequestHeadersOptions}
+ * @see {@link XrpcRequestProcessingOptions}
+ * @see {@link XrpcResponseOptions}
  *
  * @example
  * ```typescript
  * const options: ClientOptions = {
  *   labelers: ['did:plc:labeler1'],
  *   service: 'did:web:api.bsky.app#bsky_appview',
- *   headers: { 'X-Custom-Header': 'value' }
+ *   headers: { 'X-Custom-Header': 'value' },
+ *   validateRequest: false,
+ *   validateResponse: true,
+ *   strictResponseProcessing: false,
  * }
  * ```
  */
@@ -124,14 +166,21 @@ export type InferActionOutput<A extends Action> =
  * @see {@link Client.createRecord}
  */
 export type CreateRecordOptions = Omit<
-  XrpcOptions<typeof com.atproto.repo.createRecord.main>,
+  XrpcOptions<typeof createRecord>,
   'body'
 > & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
   swapCommit?: string
-  /** Whether to validate the record against its lexicon schema. */
+  /**
+   * Whether the PDS should validate the record against its lexicon schema.
+   * When `true`, the PDS is asked to explicitly validate the record. When
+   * `false`, the PDS is asked to explicitly skip validation. When `undefined`
+   * (default), the PDS decides -- typically validating only collections whose
+   * schemas it knows. This is server-side validation; for client-side
+   * validation before sending, use {@link XrpcRequestProcessingOptions.validateRequest}.
+   */
   validate?: boolean
 }
 
@@ -141,7 +190,7 @@ export type CreateRecordOptions = Omit<
  * @see {@link Client.deleteRecord}
  */
 export type DeleteRecordOptions = Omit<
-  XrpcOptions<typeof com.atproto.repo.deleteRecord.main>,
+  XrpcOptions<typeof deleteRecord>,
   'body'
 > & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
@@ -157,10 +206,7 @@ export type DeleteRecordOptions = Omit<
  *
  * @see {@link Client.getRecord}
  */
-export type GetRecordOptions = Omit<
-  XrpcOptions<typeof com.atproto.repo.getRecord.main>,
-  'params'
-> & {
+export type GetRecordOptions = Omit<XrpcOptions<typeof getRecord>, 'params'> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
 }
@@ -170,17 +216,21 @@ export type GetRecordOptions = Omit<
  *
  * @see {@link Client.putRecord}
  */
-export type PutRecordOptions = Omit<
-  XrpcOptions<typeof com.atproto.repo.putRecord.main>,
-  'body'
-> & {
+export type PutRecordOptions = Omit<XrpcOptions<typeof putRecord>, 'body'> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
   swapCommit?: string
   /** Compare-and-swap on the record CID. If specified, must match current record. */
   swapRecord?: string
-  /** Whether to validate the record against its lexicon schema. */
+  /**
+   * Whether the PDS should validate the record against its lexicon schema.
+   * When `true`, the PDS is asked to explicitly validate the record. When
+   * `false`, the PDS is asked to explicitly skip validation. When `undefined`
+   * (default), the PDS decides — typically validating only collections whose
+   * schemas it knows. This is server-side validation; for client-side
+   * validation before sending, use {@link XrpcRequestProcessingOptions.validateRequest}.
+   */
   validate?: boolean
 }
 
@@ -190,7 +240,7 @@ export type PutRecordOptions = Omit<
  * @see {@link Client.listRecords}
  */
 export type ListRecordsOptions = Omit<
-  XrpcOptions<typeof com.atproto.repo.listRecords.main>,
+  XrpcOptions<typeof listRecords>,
   'params'
 > & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
@@ -203,26 +253,37 @@ export type ListRecordsOptions = Omit<
   reverse?: boolean
 }
 
-export type UploadBlobOptions = Omit<
-  XrpcOptions<typeof com.atproto.repo.uploadBlob.main>,
+/**
+ * Options for applying a batch of writes (create/update/delete) to an AT Protocol repository.
+ *
+ * @see {@link Client.applyWrites}
+ */
+export type ApplyWritesOptions = Omit<
+  XrpcOptions<typeof applyWrites>,
   'body'
->
+> & {
+  /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
+  repo?: AtIdentifierString
+  /**
+   * Whether the PDS should validate the records against their lexicon schemas.
+   * When `true`, the PDS is asked to explicitly validate every record. When
+   * `false`, the PDS is asked to explicitly skip validation. When `undefined`
+   * (default), the PDS decides — typically validating only collections whose
+   * schemas it knows.
+   */
+  validate?: boolean
+  /** Compare-and-swap on the repo commit. If specified, must match current commit. */
+  swapCommit?: CidString
+}
 
-export type GetBlobOptions = Omit<
-  XrpcOptions<typeof com.atproto.sync.getBlob.main>,
-  'params'
->
+export type UploadBlobOptions = Omit<XrpcOptions<typeof uploadBlob>, 'body'>
 
-export type RecordKeyOptions<
-  T extends RecordSchema,
-  AlsoOptionalWhenRecordKeyIs extends LexiconRecordKey = never,
-> = T['key'] extends `literal:${string}` | AlsoOptionalWhenRecordKeyIs
-  ? { rkey?: InferRecordKey<T> }
-  : { rkey: InferRecordKey<T> }
+export type GetBlobOptions = Omit<XrpcOptions<typeof getBlob>, 'params'>
 
 /**
  * Type-safe options for {@link Client.create}, combining record options with key requirements.
  * @typeParam T - The record schema type
+ * @see {@link CreateRecordOptions}
  */
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
   RecordKeyOptions<T, 'tid' | 'any'>
@@ -232,7 +293,7 @@ export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
  * Contains the URI and CID of the newly created record.
  */
 export type CreateOutput = InferMethodOutputBody<
-  typeof com.atproto.repo.createRecord.main,
+  typeof createRecord,
   Uint8Array
 >
 
@@ -247,7 +308,7 @@ export type DeleteOptions<T extends RecordSchema> = DeleteRecordOptions &
  * Output type for record deletion operations.
  */
 export type DeleteOutput = InferMethodOutputBody<
-  typeof com.atproto.repo.deleteRecord.main,
+  typeof deleteRecord,
   Uint8Array
 >
 
@@ -264,7 +325,7 @@ export type GetOptions<T extends RecordSchema> = GetRecordOptions &
  * @typeParam T - The record schema type
  */
 export type GetOutput<T extends RecordSchema> = Omit<
-  InferMethodOutputBody<typeof com.atproto.repo.getRecord.main, Uint8Array>,
+  InferMethodOutputBody<typeof getRecord, Uint8Array>,
   'value'
 > & { value: Infer<T> }
 
@@ -279,10 +340,7 @@ export type PutOptions<T extends RecordSchema> = PutRecordOptions &
  * Output type for record put (create/update) operations.
  * Contains the URI and CID of the record.
  */
-export type PutOutput = InferMethodOutputBody<
-  typeof com.atproto.repo.putRecord.main,
-  Uint8Array
->
+export type PutOutput = InferMethodOutputBody<typeof putRecord, Uint8Array>
 
 /**
  * Options for {@link Client.list} operations.
@@ -294,36 +352,31 @@ export type ListOptions = ListRecordsOptions
  * Contains validated records and any invalid records that failed schema validation.
  * @typeParam T - The record schema type
  */
-export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
-  typeof com.atproto.repo.listRecords.main,
-  Uint8Array
+export type ListOutput<T extends RecordSchema> = Omit<
+  InferMethodOutputBody<typeof listRecords>,
+  'records'
 > & {
   /** Records that successfully validated against the schema. */
-  records: ListRecord<Infer<T>>[]
-  // @NOTE Because the schema uses "type": "unknown" instead of an open union,
-  // we have to use LexMap instead of Unknown$TypedObject here, which is
-  // unfortunate.
-  /** Records that failed schema validation. */
-  invalid: LexMap[]
+  records: ListRecordItem<Infer<T>>[]
 }
 
 /**
- * A record from a list operation with its value typed to the schema.
- * @typeParam Value - The validated record value type
+ * A discriminated union type representing the result of a record listing
+ * operation.
  */
-export type ListRecord<Value extends LexMap> =
-  com.atproto.repo.listRecords.Record & {
-    value: Value
-  }
+export type ListRecordItem<Value extends LexMap> =
+  | { uri: AtUriString; cid: CidString; valid: true; value: Value }
+  | { uri: AtUriString; cid: CidString; valid: false; value: LexMap }
 
 /**
  * The Client class is the primary interface for interacting with AT Protocol
  * services. It provides type-safe methods for XRPC calls, record operations,
  * and blob handling.
  *
- * @example // Basic usage
+ * @example
  * ```typescript
  * import { Client } from '@atproto/lex'
+ * import { app } from '#/lexicons
  *
  * const client = new Client(oauthSession)
  *
@@ -571,7 +624,7 @@ export class Client implements Agent {
     rkey?: string,
     options?: CreateRecordOptions,
   ) {
-    return this.xrpc(com.atproto.repo.createRecord.main, {
+    return this.xrpc(createRecord, {
       ...options,
       body: {
         repo: options?.repo ?? this.assertDid,
@@ -598,7 +651,7 @@ export class Client implements Agent {
     rkey: string,
     options?: DeleteRecordOptions,
   ) {
-    return this.xrpc(com.atproto.repo.deleteRecord.main, {
+    return this.xrpc(deleteRecord, {
       ...options,
       body: {
         repo: options?.repo ?? this.assertDid,
@@ -624,7 +677,7 @@ export class Client implements Agent {
     rkey: string,
     options?: GetRecordOptions,
   ) {
-    return this.xrpc(com.atproto.repo.getRecord.main, {
+    return this.xrpc(getRecord, {
       ...options,
       params: {
         repo: options?.repo ?? this.assertDid,
@@ -648,7 +701,7 @@ export class Client implements Agent {
     rkey: string,
     options?: PutRecordOptions,
   ) {
-    return this.xrpc(com.atproto.repo.putRecord.main, {
+    return this.xrpc(putRecord, {
       ...options,
       body: {
         repo: options?.repo ?? this.assertDid,
@@ -671,7 +724,7 @@ export class Client implements Agent {
    * @see {@link list} for a higher-level typed alternative
    */
   async listRecords(nsid: NsidString, options?: ListRecordsOptions) {
-    return this.xrpc(com.atproto.repo.listRecords.main, {
+    return this.xrpc(listRecords, {
       ...options,
       params: {
         repo: options?.repo ?? this.assertDid,
@@ -679,6 +732,44 @@ export class Client implements Agent {
         cursor: options?.cursor,
         limit: options?.limit,
         reverse: options?.reverse,
+      },
+    })
+  }
+
+  /**
+   * Performs an atomic batch of create, update, and delete operations on records in a repository.
+   *
+   * @param builder - A function that receives an {@link ApplyWritesOperations} instance to build the operations
+   * @param options - ApplyWrites options including repo, validate, swapCommit
+   * @returns The XRPC response from the applyWrites call
+   *
+   * @example
+   * ```typescript
+   * const response = await client.applyWrites((op) => [
+   *   op.create(app.bsky.feed.post, { text: 'Hello!' }),
+   *   op.update(app.bsky.feed.post, { text: 'Updated text' }, { rkey: 'post123' }),
+   *   op.delete(app.bsky.feed.post, 'post456'),
+   *   op.update(app.bsky.actor.profile, { displayName: 'Alice' }),
+   * ], {
+   *   validate: true,
+   * })
+   *
+   * for (const result of response.body.results) {
+   *   console.log(result.uri)
+   * }
+   * ```
+   */
+  async applyWrites(
+    factory: WriteOperationsFactory,
+    options?: ApplyWritesOptions,
+  ) {
+    return this.xrpc(applyWrites, {
+      ...options,
+      body: {
+        repo: options?.repo ?? this.assertDid,
+        writes: WriteOperationHelper.build(factory),
+        validate: options?.validate,
+        swapCommit: options?.swapCommit,
       },
     })
   }
@@ -700,7 +791,7 @@ export class Client implements Agent {
    * ```
    */
   async uploadBlob(body: BinaryBodyInit, options?: UploadBlobOptions) {
-    return this.xrpc(com.atproto.repo.uploadBlob.main, { ...options, body })
+    return this.xrpc(uploadBlob, { ...options, body })
   }
 
   /**
@@ -711,7 +802,7 @@ export class Client implements Agent {
    * @param options - Call options
    */
   async getBlob(did: DidString, cid: CidString, options?: GetBlobOptions) {
-    return this.xrpc(com.atproto.sync.getBlob.main, {
+    return this.xrpc(getBlob, {
       ...options,
       params: { did, cid },
     })
@@ -903,7 +994,7 @@ export class Client implements Agent {
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
     ns: Main<T>,
-    options?: GetOptions<T>,
+    options: GetOptions<T>,
   ): Promise<GetOutput<T>>
   public async get<const T extends RecordSchema>(
     ns: Main<T>,
@@ -955,13 +1046,18 @@ export class Client implements Agent {
    *
    * @param ns - The record schema definition
    * @param options - List options
-   * @returns Records split into valid (matching schema) and invalid arrays
+   * @returns Records validated against the schema, with invalid records included as LexMap
    *
    * @example
    * ```typescript
    * const result = await client.list(app.bsky.feed.post.main, { limit: 100 })
-   * console.log(`Found ${result.records.length} valid posts`)
-   * console.log(`Found ${result.invalid.length} invalid records`)
+   * for (const record of result.records) {
+   *   if (record.valid) {
+   *     record.value // Fully typed
+   *   } else {
+   *     record.value // Invalid record, typed as LexMap
+   *   }
+   * }
    * ```
    */
   async list<const T extends RecordSchema>(
@@ -970,41 +1066,57 @@ export class Client implements Agent {
   ): Promise<ListOutput<T>> {
     const schema = getMain(ns)
     const { body } = await this.listRecords(schema.$type, options)
+    const records = body.records.map(processListRecord, schema)
+    return { ...body, records }
+  }
 
-    const records: ListRecord<Infer<T>>[] = []
-    const invalid: LexMap[] = []
+  /**
+   * Asynchronously iterates over all records in a collection, handling
+   * pagination automatically.
+   *
+   * @param ns - The record schema definition
+   * @param options - List options including limit and cursor
+   * @returns An async generator yielding each record validated against the schema
+   */
+  async *listAll<const T extends RecordSchema>(
+    ns: Main<T>,
+    { maxRetries = 3, ...options }: ListOptions = {},
+  ): AsyncGenerator<ListRecordItem<Infer<T>>, void, unknown> {
+    const schema = getMain(ns)
 
-    for (const record of body.records) {
-      const parsed = schema.safeValidate(record.value)
-      if (parsed.success) {
-        records.push({ ...record, value: parsed.value })
-      } else {
-        invalid.push(record.value)
+    do {
+      options.signal?.throwIfAborted()
+
+      const { body } = await this.listRecords(schema.$type, {
+        ...options,
+        maxRetries,
+      })
+
+      // We don't use this.list() here so that we can lazily process records as
+      // they come in, rather than mapping and yielding the entire page at once.
+      for (const record of body.records) {
+        yield processListRecord.call(schema, record)
       }
-    }
 
-    return { ...body, records, invalid }
+      // If the server returns the same cursor, we may be in a loop. Stop
+      // iteration.
+      if (body.cursor && body.cursor === options.cursor) {
+        return
+      }
+
+      options.cursor = body.cursor
+    } while (options.cursor)
   }
 }
 
-function getDefaultRecordKey<const T extends RecordSchema>(
-  schema: T,
-): undefined | InferRecordKey<T> {
-  // Let the server generate the TID
-  if (schema.key === 'tid') return undefined
-  if (schema.key === 'any') return undefined
-
-  return getLiteralRecordKey(schema)
-}
-
-function getLiteralRecordKey<const T extends RecordSchema>(
-  schema: T,
-): InferRecordKey<T> {
-  if (schema.key.startsWith('literal:')) {
-    return schema.key.slice(8) as InferRecordKey<T>
+function processListRecord<T extends RecordSchema>(
+  this: T,
+  record: ListRecordsRecord,
+): ListRecordItem<Infer<T>> {
+  const result = this.safeValidate(record.value)
+  if (result.success) {
+    return { ...record, valid: true, value: result.value }
+  } else {
+    return { ...record, valid: false }
   }
-
-  throw new TypeError(
-    `An "rkey" must be provided for record key type "${schema.key}" (${schema.$type})`,
-  )
 }

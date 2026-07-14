@@ -2,15 +2,15 @@ import * as crypto from '@atproto/crypto'
 import {
   CidSet,
   Repo,
-  RepoContents,
+  type RepoContents,
   RepoVerificationError,
   getAndParseRecord,
   readCar,
   readCarWithRoot,
-} from '../src'
-import { MemoryBlockstore } from '../src/storage'
-import * as sync from '../src/sync'
-import * as util from './_util'
+} from '../src/index.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
+import * as sync from '../src/sync/index.js'
+import * as util from './_util.js'
 
 describe('Repo Sync', () => {
   let storage: MemoryBlockstore

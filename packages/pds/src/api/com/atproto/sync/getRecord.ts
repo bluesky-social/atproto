@@ -1,12 +1,12 @@
-import stream from 'node:stream'
+import type stream from 'node:stream'
 import { byteIterableToStream } from '@atproto/common'
 import * as repo from '@atproto/repo'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
-import { isUserOrAdmin } from '../../../../auth-verifier'
-import { AppContext } from '../../../../context'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader.js'
+import { isUserOrAdmin } from '../../../../auth-verifier.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertRepoAvailability } from './util'
+import { assertRepoAvailability } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.sync.getRecord, {

@@ -1,7 +1,10 @@
 import PQueue from 'p-queue'
+
+type Queue = InstanceType<typeof PQueue>
+
 export class UserQueues {
-  main: PQueue
-  queues = new Map<string, PQueue>()
+  main: Queue
+  queues: Map<string, Queue> = new Map()
 
   constructor(concurrency: number) {
     this.main = new PQueue({ concurrency })

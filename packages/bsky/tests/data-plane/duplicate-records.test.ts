@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ids } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
@@ -20,7 +21,7 @@ describe('duplicate record', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const countRecords = async (db: Database, table: string) => {

@@ -1,6 +1,6 @@
 import * as ui8 from 'uint8arrays'
 import { CID } from '@atproto/lex-data'
-import { cborDecodeMulti, cborEncode } from '../src'
+import { cborDecodeMulti, cborEncode } from '../src/index.js'
 
 describe('ipld decode multi', () => {
   it('decodes concatenated dag-cbor messages', async () => {
@@ -28,7 +28,7 @@ describe('ipld decode multi', () => {
       test: Number.MAX_SAFE_INTEGER,
     }
     const encoded = cborEncode(one)
-    const decoded = cborDecodeMulti(encoded)
-    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
+    const decoded = cborDecodeMulti(encoded) as [{ test: number }]
+    expect(Number.isInteger(decoded[0]['test'])).toBe(true)
   })
 })

@@ -1,4 +1,4 @@
-import { IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
@@ -19,6 +19,8 @@ export const dataplaneLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:dp')
 export const ageAssuranceLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:aa')
+export const viewsLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:views')
 export const httpLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky')
 

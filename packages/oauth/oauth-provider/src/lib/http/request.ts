@@ -1,14 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { languages, mediaType } from '@hapi/accept'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import accept from '@hapi/accept'
+// eslint-disable-next-line import/no-named-as-default-member
+const { languages, mediaType } = accept
 import {
-  CookieSerializeOptions,
+  type CookieSerializeOptions,
   parse as parseCookie,
   serialize as serializeCookie,
 } from 'cookie'
 import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
 import { appendHeader } from './headers.js'
-import { UrlReference, urlMatch } from './url.js'
+import { type UrlReference, urlMatch } from './url.js'
 
 export function validateHeaderValue(
   req: IncomingMessage,

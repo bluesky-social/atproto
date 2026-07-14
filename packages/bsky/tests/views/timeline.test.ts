@@ -1,18 +1,19 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyFeedDefs,
-  AppBskyFeedGetTimeline,
-  AtpAgent,
+  type AppBskyFeedDefs,
+  type AppBskyFeedGetTimeline,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
 import {
   EXAMPLE_LABELER,
-  SeedClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { Database } from '../../src'
-import { forSnapshot, getOriginator, paginateAll } from '../_util'
+import type { Database } from '../../src/index.js'
+import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
@@ -34,7 +35,7 @@ describe('timeline views', () => {
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.processAll()
+
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -53,9 +54,8 @@ describe('timeline views', () => {
     })
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels

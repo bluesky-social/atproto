@@ -536,6 +536,13 @@ export const lexiconProcedureSchema = l.object({
  */
 export type LexiconProcedure = l.Infer<typeof lexiconProcedureSchema>
 
+export const lexiconMessageSchema = l.object({
+  description: l.optional(l.string()),
+  schema: lexiconRefUnionSchema,
+})
+
+export type LexiconMessage = l.Infer<typeof lexiconMessageSchema>
+
 /**
  * Schema for validating Lexicon subscription (WebSocket) method definitions.
  *
@@ -547,10 +554,7 @@ export const lexiconSubscriptionSchema = l.object({
   type: l.literal('subscription'),
   description: l.optional(l.string()),
   parameters: l.optional(lexiconParameters),
-  message: l.object({
-    description: l.optional(l.string()),
-    schema: lexiconRefUnionSchema,
-  }),
+  message: lexiconMessageSchema,
   errors: l.optional(l.array(lexiconError)),
 })
 

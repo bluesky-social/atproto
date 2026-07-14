@@ -1,25 +1,25 @@
 import { encode } from '@atproto/lex-cbor'
 import {
   LexError,
-  LexErrorData,
-  LexValue,
+  type LexErrorData,
+  type LexValue,
   isPlainObject,
   ui8Concat,
 } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
-  DidString,
-  InferMethodInput,
-  InferMethodMessage,
-  InferMethodOutput,
-  InferMethodOutputBody,
-  InferMethodOutputEncoding,
-  InferMethodParams,
-  Main,
-  NsidString,
-  Procedure,
-  Query,
-  Subscription,
+  type DidString,
+  type InferMethodInput,
+  type InferMethodMessage,
+  type InferMethodOutput,
+  type InferMethodOutputBody,
+  type InferMethodOutputEncoding,
+  type InferMethodParams,
+  type Main,
+  type NsidString,
+  type Procedure,
+  type Query,
+  type Subscription,
   getMain,
   isDidString,
   isNsidString,
@@ -507,7 +507,7 @@ export type LexRouterOptions = {
  * ```typescript
  * import { LexRouter } from '@atproto/lex-server'
  * import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
- * import { getProfile, createPost, subscribeRepos } from './lexicons'
+ * import { getProfile, createPost, subscribeRepos } from './lexicons.js'
  *
  * const router = new LexRouter({ upgradeWebSocket })
  *
@@ -568,12 +568,16 @@ export class LexRouter {
   /** Map of NSID strings to their fetch handlers. */
   readonly handlers: Map<NsidString, FetchHandler> = new Map()
 
+  options: LexRouterOptions
+
   /**
    * Creates a new XRPC router.
    *
    * @param options - Router configuration options
    */
-  constructor(readonly options: LexRouterOptions = {}) {}
+  constructor(options: LexRouterOptions = {}) {
+    this.options = options
+  }
 
   /**
    * Registers a subscription handler without authentication.
@@ -1114,14 +1118,17 @@ function onMessage(this: WebSocket, _event: unknown) {
 // Pre-encoded frame header for error frames
 const ERROR_FRAME_HEADER = /*#__PURE__*/ encode({ op: -1 })
 
-function encodeErrorFrame(errorData: LexErrorData): Uint8Array {
+function encodeErrorFrame(errorData: LexErrorData): Uint8Array<ArrayBuffer> {
   return ui8Concat([ERROR_FRAME_HEADER, encode(errorData)])
 }
 
 // Pre-encoded frame header for message frames with unknown type
 const UNKNOWN_MESSAGE_FRAME_HEADER = /*#__PURE__*/ encode({ op: 1 })
 
-function encodeMessageFrame(method: Subscription, value: LexValue): Uint8Array {
+function encodeMessageFrame(
+  method: Subscription,
+  value: LexValue,
+): Uint8Array<ArrayBuffer> {
   if (isPlainObject(value) && typeof value.$type === 'string') {
     const { $type, ...rest } = value
     return ui8Concat([

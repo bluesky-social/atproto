@@ -1,9 +1,9 @@
-import { Keypair } from '@atproto/crypto'
-import { ActorStoreResources } from './actor-store-resources'
-import { ActorDb } from './db'
-import { PreferenceTransactor } from './preference/transactor'
-import { RecordTransactor } from './record/transactor'
-import { RepoTransactor } from './repo/transactor'
+import type { Keypair } from '@atproto/crypto'
+import type { ActorStoreResources } from './actor-store-resources.js'
+import type { ActorDb } from './db/index.js'
+import { PreferenceTransactor } from './preference/transactor.js'
+import { RecordTransactor } from './record/transactor.js'
+import { RepoTransactor } from './repo/transactor.js'
 
 export class ActorStoreTransactor {
   public readonly record: RecordTransactor

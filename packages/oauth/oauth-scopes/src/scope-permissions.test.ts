@@ -264,4 +264,40 @@ describe('ScopePermissions', () => {
       ).toBe(false)
     })
   })
+
+  describe('assertRpc combined-aud', () => {
+    it('allows did#serviceId aud when scope grants the same combined form', () => {
+      const set = new ScopePermissions(
+        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com%23bsky_appview',
+      )
+      expect(() =>
+        set.assertRpc({
+          aud: 'did:web:example.com#bsky_appview',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
+      ).not.toThrow()
+    })
+
+    it('rejects bare-DID aud when scope grants a combined form', () => {
+      const set = new ScopePermissions(
+        'rpc:app.bsky.feed.getFeed?aud=did:web:example.com%23bsky_appview',
+      )
+      expect(() =>
+        set.assertRpc({
+          aud: 'did:web:example.com',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
+      ).toThrow()
+    })
+
+    it('allows wildcard aud against a combined-form match', () => {
+      const set = new ScopePermissions('rpc:app.bsky.feed.getFeed?aud=*')
+      expect(() =>
+        set.assertRpc({
+          aud: 'did:web:example.com#bsky_appview',
+          lxm: 'app.bsky.feed.getFeed',
+        }),
+      ).not.toThrow()
+    })
+  })
 })

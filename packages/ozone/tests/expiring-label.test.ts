@@ -1,11 +1,11 @@
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 
 describe('expiring label', () => {
   let network: TestNetwork
@@ -25,7 +25,7 @@ describe('expiring label', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const emitExpiringLabel = async (did: string) =>

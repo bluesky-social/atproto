@@ -1,27 +1,27 @@
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 import {
-  ErrorResponseBody,
-  Gettable,
+  type ErrorResponseBody,
+  type Gettable,
   ResponseType,
   XRPCError,
   XrpcClient,
   errorResponseBody,
 } from '@atproto/xrpc'
-import { Agent } from './agent'
+import { Agent } from './agent.js'
 import {
-  ComAtprotoServerCreateAccount,
-  ComAtprotoServerCreateSession,
-  ComAtprotoServerGetSession,
+  type ComAtprotoServerCreateAccount,
+  type ComAtprotoServerCreateSession,
+  type ComAtprotoServerGetSession,
   ComAtprotoServerNS,
-  ComAtprotoServerRefreshSession,
-} from './client'
-import { schemas } from './client/lexicons'
-import { SessionManager } from './session-manager'
-import {
+  type ComAtprotoServerRefreshSession,
+} from './client/index.js'
+import { schemas } from './client/lexicons.js'
+import type { SessionManager } from './session-manager.js'
+import type {
   AtpAgentLoginOpts,
   AtpPersistSessionHandler,
   AtpSessionData,
-} from './types'
+} from './types.js'
 
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream

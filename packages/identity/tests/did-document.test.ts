@@ -1,4 +1,4 @@
-import { DidResolver, ensureAtpDocument } from '../src'
+import { DidResolver, ensureAtpDocument } from '../src/index.js'
 
 describe('did parsing', () => {
   it('throws on bad DID document', async () => {

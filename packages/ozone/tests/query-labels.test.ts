@@ -1,17 +1,17 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { DisconnectError } from '@atproto/ws-client'
 import { Subscription } from '@atproto/xrpc-server'
-import { ids, lexicons } from '../src/lexicon/lexicons'
-import { Label } from '../src/lexicon/types/com/atproto/label/defs'
+import { ids, lexicons } from '../src/lexicon/lexicons.js'
+import type { Label } from '../src/lexicon/types/com/atproto/label/defs.js'
 import {
-  OutputSchema as LabelMessage,
+  type OutputSchema as LabelMessage,
   isLabels,
-} from '../src/lexicon/types/com/atproto/label/subscribeLabels'
-import { ModerationService } from '../src/mod-service'
-import { getSigningKeyId } from '../src/util'
+} from '../src/lexicon/types/com/atproto/label/subscribeLabels.js'
+import { ModerationService } from '../src/mod-service/index.js'
+import { getSigningKeyId } from '../src/util.js'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
@@ -70,7 +70,7 @@ describe('ozone query labels', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('returns all labels', async () => {

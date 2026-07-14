@@ -1,17 +1,21 @@
-import { Generated } from 'kysely'
-import {
+import type { Generated } from 'kysely'
+import type {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
   REVIEWOPEN,
-} from '../../lexicon/types/tools/ozone/moderation/defs'
+} from '../../lexicon/types/tools/ozone/moderation/defs.js'
 
 export const subjectStatusTableName = 'moderation_subject_status'
 
 export interface ModerationSubjectStatus {
   id: Generated<number>
+
+  // unique columns
   did: string
   recordPath: string
+  convoId: string
+
   recordCid: string | null
   blobCids: string[] | null
   reviewState:

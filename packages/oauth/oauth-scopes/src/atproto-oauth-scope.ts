@@ -1,4 +1,4 @@
-import { ScopeStringFor, isScopeStringFor } from './lib/syntax.js'
+import { type ScopeStringFor, isScopeStringFor } from './lib/syntax.js'
 import { isNonNullable } from './lib/util.js'
 import { AccountPermission } from './scopes/account-permission.js'
 import { BlobPermission } from './scopes/blob-permission.js'

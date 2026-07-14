@@ -1,0 +1,63 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.getAssignments",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get moderator assignments, optionally filtered by active status, queue, or moderator.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "onlyActive": {
+            "type": "boolean",
+            "default": true,
+            "description": "When true, only returns active assignments."
+          },
+          "queueIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "If specified, returns assignments for these queues only."
+          },
+          "dids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "did"
+            },
+            "description": "If specified, returns assignments for these moderators only."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["assignments"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "assignments": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.queue.defs#assignmentView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

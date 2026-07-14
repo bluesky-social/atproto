@@ -1,0 +1,115 @@
+{
+  "defs": {
+    "contributor": {
+      "properties": {
+        "did": {
+          "format": "did",
+          "type": "string"
+        },
+        "displayName": {
+          "maxGraphemes": 100,
+          "maxLength": 1000,
+          "type": "string"
+        },
+        "role": {
+          "maxGraphemes": 100,
+          "maxLength": 1000,
+          "type": "string"
+        }
+      },
+      "required": ["did"],
+      "type": "object"
+    },
+    "main": {
+      "description": "A document record representing a published article, blog post, or other content. Documents can belong to a publication or exist independently.",
+      "key": "tid",
+      "record": {
+        "properties": {
+          "bskyPostRef": {
+            "description": "Strong reference to a Bluesky post. Useful to keep track of comments off-platform.",
+            "ref": "com.atproto.repo.strongRef",
+            "type": "ref"
+          },
+          "content": {
+            "closed": false,
+            "description": "Open union used to define the record's content. Each entry must specify a $type and may be extended with other lexicons to support additional content formats.",
+            "refs": [],
+            "type": "union"
+          },
+          "contributors": {
+            "items": {
+              "ref": "#contributor",
+              "type": "ref"
+            },
+            "type": "array"
+          },
+          "coverImage": {
+            "accept": ["image/*"],
+            "description": "Image to used for thumbnail or cover image. Less than 1MB is size.",
+            "maxSize": 1000000,
+            "type": "blob"
+          },
+          "description": {
+            "description": "A brief description or excerpt from the document.",
+            "maxGraphemes": 3000,
+            "maxLength": 30000,
+            "type": "string"
+          },
+          "labels": {
+            "description": "Self-label values for this post. Effectively content warnings.",
+            "refs": ["com.atproto.label.defs#selfLabels"],
+            "type": "union"
+          },
+          "links": {
+            "description": "Array of values describing relationships between this document and external resources",
+            "refs": [],
+            "type": "union"
+          },
+          "path": {
+            "description": "Combine with site or publication url to construct a canonical URL to the document. Prepend with a leading slash.",
+            "type": "string"
+          },
+          "publishedAt": {
+            "description": "Timestamp of the documents publish time.",
+            "format": "datetime",
+            "type": "string"
+          },
+          "site": {
+            "description": "Points to a publication record (at://) or a publication url (https://) for loose documents. Avoid trailing slashes.",
+            "format": "uri",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Array of strings used to tag or categorize the document. Avoid prepending tags with hashtags.",
+            "items": {
+              "maxGraphemes": 128,
+              "maxLength": 1280,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "textContent": {
+            "description": "Plaintext representation of the documents contents. Should not contain markdown or other formatting.",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the document.",
+            "maxGraphemes": 500,
+            "maxLength": 5000,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Timestamp of the documents last edit.",
+            "format": "datetime",
+            "type": "string"
+          }
+        },
+        "required": ["site", "title", "publishedAt"],
+        "type": "object"
+      },
+      "type": "record"
+    }
+  },
+  "id": "site.standard.document",
+  "lexicon": 1
+}

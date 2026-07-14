@@ -1,14 +1,14 @@
-export * from './auth'
-export * from './errors'
-export * from './rate-limiter'
-export * from './server'
-export * from './stream'
-export * from './types'
+export * from './auth.js'
+export * from './errors.js'
+export * from './rate-limiter.js'
+export * from './server.js'
+export * from './stream/index.js'
+export * from './types.js'
 
 export {
   ServerTimer,
   parseReqEncoding,
   parseReqNsid,
   serverTimingHeader,
-} from './util'
-export type { ServerTiming } from './util'
+} from './util.js'
+export type { ServerTiming } from './util.js'

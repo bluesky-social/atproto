@@ -1,7 +1,7 @@
 import { ERR_JWT_INVALID, JwtVerifyError } from './errors.js'
 import {
-  JwtHeader,
-  JwtPayload,
+  type JwtHeader,
+  type JwtPayload,
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from './jwt.js'

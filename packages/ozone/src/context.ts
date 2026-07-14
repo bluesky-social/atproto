@@ -1,54 +1,69 @@
 import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
-import express from 'express'
+import type express from 'express'
 import { AtpAgent } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { AuthVerifier } from './auth-verifier'
-import { BackgroundQueue } from './background'
+import { AssignmentService } from './assignment/index.js'
+import { AuthVerifier } from './auth-verifier.js'
+import { BackgroundQueue } from './background.js'
 import {
   CommunicationTemplateService,
-  CommunicationTemplateServiceCreator,
-} from './communication-service/template'
-import { OzoneConfig, OzoneSecrets } from './config'
-import { EventPusher } from './daemon'
-import { BlobDiverter } from './daemon/blob-diverter'
-import { Database } from './db'
-import { ImageInvalidator } from './image-invalidator'
-import { ModerationService, ModerationServiceCreator } from './mod-service'
+  type CommunicationTemplateServiceCreator,
+} from './communication-service/template.js'
+import type { OzoneConfig, OzoneSecrets } from './config/index.js'
+import { BlobDiverter } from './daemon/blob-diverter.js'
+import { EventPusher } from './daemon/index.js'
+import { Database } from './db/index.js'
+import type { ImageInvalidator } from './image-invalidator.js'
+import {
+  ModerationService,
+  type ModerationServiceCreator,
+} from './mod-service/index.js'
 import {
   ModerationServiceProfile,
-  ModerationServiceProfileCreator,
-} from './mod-service/profile'
-import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
+  type ModerationServiceProfileCreator,
+} from './mod-service/profile.js'
+import {
+  StrikeService,
+  type StrikeServiceCreator,
+} from './mod-service/strike.js'
+import { QueueService, type QueueServiceCreator } from './queue/service.js'
+import {
+  ReportStatsService,
+  type ReportStatsServiceCreator,
+} from './report/stats.js'
 import {
   SafelinkRuleService,
-  SafelinkRuleServiceCreator,
-} from './safelink/service'
+  type SafelinkRuleServiceCreator,
+} from './safelink/service.js'
 import {
   ScheduledActionService,
-  ScheduledActionServiceCreator,
-} from './scheduled-action/service'
-import { Sequencer } from './sequencer/sequencer'
-import { SetService, SetServiceCreator } from './set/service'
-import { SettingService, SettingServiceCreator } from './setting/service'
-import { TeamService, TeamServiceCreator } from './team'
+  type ScheduledActionServiceCreator,
+} from './scheduled-action/service.js'
+import { Sequencer } from './sequencer/sequencer.js'
+import { SetService, type SetServiceCreator } from './set/service.js'
+import {
+  SettingService,
+  type SettingServiceCreator,
+} from './setting/service.js'
+import { TeamService, type TeamServiceCreator } from './team/index.js'
 import {
   LABELER_HEADER_NAME,
-  ParsedLabelers,
+  type ParsedLabelers,
   defaultLabelerHeader,
   getSigningKeyId,
   parseLabelerHeader,
-} from './util'
+} from './util.js'
 import {
   VerificationIssuer,
-  VerificationIssuerCreator,
-} from './verification/issuer'
+  type VerificationIssuerCreator,
+} from './verification/issuer.js'
 import {
   VerificationService,
-  VerificationServiceCreator,
-} from './verification/service'
+  type VerificationServiceCreator,
+} from './verification/service.js'
 
 export type AppContextOptions = {
   db: Database
@@ -58,6 +73,8 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   safelinkRuleService: SafelinkRuleServiceCreator
   scheduledActionService: ScheduledActionServiceCreator
+  queueService: QueueServiceCreator
+  reportStatsService: ReportStatsServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   strikeService: StrikeServiceCreator
@@ -73,6 +90,7 @@ export type AppContextOptions = {
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
+  assignmentService: AssignmentService
   authVerifier: AuthVerifier
   verificationService: VerificationServiceCreator
   verificationIssuer: VerificationIssuerCreator
@@ -123,7 +141,7 @@ export class AppContext {
         keypair: signingKey,
       })
 
-    const backgroundQueue = new BackgroundQueue(db)
+    const backgroundQueue = new BackgroundQueue(db, { concurrency: 20 })
     const blobDiverter = cfg.blobDivert
       ? new BlobDiverter(db, {
           idResolver,
@@ -143,6 +161,8 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
+    const queueService = QueueService.creator()
+    const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
     const strikeService = StrikeService.creator()
@@ -164,6 +184,14 @@ export class AppContext {
       strikeService,
       overrides?.imgInvalidator,
     )
+    const assignmentService = AssignmentService.creator(
+      {
+        queueDurationMs: cfg.assignments.queueDurationMs,
+        reportDurationMs: cfg.assignments.reportDurationMs,
+      },
+      queueService,
+      teamService,
+    )(db)
 
     const sequencer = new Sequencer(modService(db))
 
@@ -183,6 +211,8 @@ export class AppContext {
         safelinkRuleService,
         scheduledActionService,
         teamService,
+        queueService,
+        reportStatsService,
         setService,
         settingService,
         strikeService,
@@ -195,6 +225,7 @@ export class AppContext {
         idResolver,
         backgroundQueue,
         sequencer,
+        assignmentService,
         authVerifier,
         blobDiverter,
         verificationService,
@@ -243,6 +274,14 @@ export class AppContext {
 
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
+  }
+
+  get queueService(): QueueServiceCreator {
+    return this.opts.queueService
+  }
+
+  get reportStatsService(): ReportStatsServiceCreator {
+    return this.opts.reportStatsService
   }
 
   get setService(): SetServiceCreator {
@@ -307,6 +346,10 @@ export class AppContext {
 
   get sequencer(): Sequencer {
     return this.opts.sequencer
+  }
+
+  get assignmentService(): AssignmentService {
+    return this.opts.assignmentService
   }
 
   get authVerifier(): AuthVerifier {

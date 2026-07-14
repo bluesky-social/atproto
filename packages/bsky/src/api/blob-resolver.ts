@@ -1,33 +1,37 @@
-import { Duplex, Transform, Writable } from 'node:stream'
+import { type Duplex, Transform, type Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
-import { Dispatcher } from 'undici'
+import type { Dispatcher } from 'undici'
 import {
   VerifyCidError,
   VerifyCidTransform,
   createDecoders,
 } from '@atproto/common'
-import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import { Cid } from '@atproto/lex'
+import { type AtprotoDid, isAtprotoDid } from '@atproto/did'
+import type { Cid } from '@atproto/lex'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
   buildProxiedContentEncoding,
   formatAcceptHeader,
 } from '@atproto-labs/xrpc-utils'
-import { ServerConfig } from '../config'
-import { AppContext } from '../context'
+import type { ServerConfig } from '../config.js'
+import type { AppContext } from '../context.js'
 import {
   Code,
-  DataPlaneClient,
+  type DataPlaneClient,
   getServiceEndpoint,
   isDataplaneError,
   unpackIdentityServices,
-} from '../data-plane'
-import { parseCid } from '../hydration/util'
-import { httpLogger as log } from '../logger'
-import { Middleware, proxyResponseHeaders, responseSignal } from '../util/http'
-import { BSKY_USER_AGENT } from './util'
+} from '../data-plane/index.js'
+import { parseCid } from '../hydration/util.js'
+import { httpLogger as log } from '../logger.js'
+import {
+  type Middleware,
+  proxyResponseHeaders,
+  responseSignal,
+} from '../util/http.js'
+import { BSKY_USER_AGENT } from './util.js'
 
 export function createMiddleware(ctx: AppContext): Middleware {
   return async (req, res, next) => {
@@ -193,7 +197,6 @@ export async function streamBlob(
         path: url.pathname + url.search,
         headers,
         signal: options.signal,
-        maxRedirections: 10,
       },
       (upstream) => {
         headersReceived = true

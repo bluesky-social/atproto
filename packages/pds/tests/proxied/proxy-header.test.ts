@@ -1,19 +1,26 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-import { Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
+import type { Keypair } from '@atproto/crypto'
+import {
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough'
+import { parseProxyHeader } from '../../src/pipethrough.js'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   let proxyServer: ProxyServer
 
@@ -32,11 +39,11 @@ describe('proxy header', () => {
 
     alice = sc.dids.alice
     await network.processAll()
-  })
+  }, 20_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await proxyServer.close()
-    await network.close()
+    await proxyServer?.close()
+    await network?.close()
   })
 
   it('parses proxy header', async () => {
@@ -77,6 +84,7 @@ describe('proxy header', () => {
     ).resolves.toEqual({
       did: proxyServer.did,
       url: proxyServer.url,
+      serviceId: 'atproto_test',
     })
   })
 
@@ -170,12 +178,16 @@ type ProxyReq = {
 }
 
 class ProxyServer {
+  private terminator: httpTerminator.HttpTerminator
+
   constructor(
-    public server: http.Server,
+    server: http.Server,
     public url: string,
     public did: string,
     public requests: ProxyReq[],
-  ) {}
+  ) {
+    this.terminator = httpTerminator.createHttpTerminator({ server })
+  }
 
   static async create(
     plcClient: plc.Client,
@@ -225,9 +237,7 @@ class ProxyServer {
     return new ProxyServer(server, url, did, requests)
   }
 
-  close(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.server.close(() => resolve())
-    })
+  async close(): Promise<void> {
+    await this.terminator.terminate()
   }
 }

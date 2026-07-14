@@ -1,13 +1,13 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos'
-import { paginateAll } from './_util'
+import { ids } from '../src/lexicon/lexicons.js'
+import type { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos.js'
+import { paginateAll } from './_util.js'
 
 describe('admin repo search view', () => {
   let network: TestNetwork
@@ -28,10 +28,10 @@ describe('admin repo search view', () => {
       ids.ToolsOzoneModerationSearchRepos,
     )
     await network.processAll()
-  })
+  }, 40_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

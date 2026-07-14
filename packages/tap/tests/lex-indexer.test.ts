@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { l } from '@atproto/lex'
 import {
-  CreateEvent,
-  DeleteEvent,
+  type CreateEvent,
+  type DeleteEvent,
   LexIndexer,
-  UpdateEvent,
-} from '../src/lex-indexer'
-import { IdentityEvent, RecordEvent } from '../src/types'
+  type UpdateEvent,
+} from '../src/lex-indexer.js'
+import type { IdentityEvent, RecordEvent } from '../src/types.js'
 import {
   createIdentityEvent,
   createMockOpts,
   createRecordEvent as baseCreateRecordEvent,
-} from './_util'
+} from './_util.js'
 
 // Test lexicon definitions
 const postNsid = 'com.example.post'

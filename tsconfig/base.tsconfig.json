@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // In order to benefit from TS7's parallelized build, we use "references" to
+    // split the project into multiple sub-projects. This requires "composite"
+    // to be set to true for each sub-project and greatly improves the build
+    // time of the project (as opposed to a pnpm topological build). This comes
+    // at the cost of some additional complexity in the project structure: each
+    // sub-project must reference its dependencies in its tsconfig.json file in
+    // addition to their package.json file.
+    //
+    // @TODO We should implement an eslint rule that verifies that every import
+    // is referenced from the tsconfig.json file of the sub-project, just like
+    // "n/no-extraneous-import" does.
+    //
+    // See https://www.typescriptlang.org/docs/handbook/project-references.html
+    "composite": true,
+
+    "checkJs": true,
+    "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": false,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "preserveSymlinks": false,
+    // @TODO We should change this to true to match the upcoming ECMA runtime behavior
+    "useDefineForClassFields": false,
+
+    "lib": [],
+    "moduleResolution": "node16",
+    "resolveJsonModule": true,
+    // @TODO Change this to true and enforce the use of actual file extensions
+    // in imports (through eslint)
+    "rewriteRelativeImportExtensions": false,
+    // The use of "verbatimModuleSyntax" allows typescript files to be executed
+    // in NodeJS without compilation (also requires "erasableSyntaxOnly": true).
+    // This also is also useful to make bundling, tree-shaking & executing the
+    // code faster (through the elision of "import type" statements from the
+    // runtime code tree).
+    "verbatimModuleSyntax": true,
+    "types": [],
+
+    "noErrorTruncation": true,
+    "declaration": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "sourceMap": true,
+    "jsx": "preserve",
+    "module": "Node20",
+    // https://caniuse.com/?search=ES2023
+    "target": "ES2023",
+  },
+  "typeAcquisition": {
+    "enable": false,
+  },
+}

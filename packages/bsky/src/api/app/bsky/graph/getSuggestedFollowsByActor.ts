@@ -1,23 +1,23 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { Client, DidString } from '@atproto/lex'
+import type { Client, DidString } from '@atproto/lex'
 import {
-  Headers as HeadersMap,
+  type Headers as HeadersMap,
   InternalServerError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import type { AppContext } from '../../../../context.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedFollowsByActor = createPipeline(

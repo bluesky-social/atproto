@@ -1,7 +1,9 @@
-import { Awaitable, buildInterfaceChecker } from '../lib/util/type.js'
-import { LexiconData, LexiconDocument } from './lexicon-data.js'
+import type { Awaitable } from '../lib/util/type.js'
+import { buildInterfaceChecker } from '../lib/util/type.js'
+import type { LexiconData } from './lexicon-data.js'
 
-export type { Awaitable, LexiconData, LexiconDocument }
+export type * from './lexicon-data.js'
+export type { Awaitable }
 
 export interface LexiconStore {
   findLexicon(nsid: string): Awaitable<LexiconData | null>
@@ -10,9 +12,9 @@ export interface LexiconStore {
 }
 
 export const isLexiconStore = buildInterfaceChecker<LexiconStore>([
+  'deleteLexicon',
   'findLexicon',
   'storeLexicon',
-  'deleteLexicon',
 ])
 
 export function ifLexiconStore<V extends Partial<LexiconStore>>(

@@ -1,5 +1,113 @@
 # @atproto/common
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.6
+
+## 0.7.1
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto/lex-cbor@0.1.4
+  - @atproto/lex-data@0.1.5
+  - @atproto/common-web@0.5.5
+
+## 0.7.0
+
+### Minor Changes
+
+- [#5162](https://github.com/bluesky-social/atproto/pull/5162) [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Language-tag string-format validation now has strict and lenient variants, matching the pattern already used for `at-uri` and `datetime`. `isLanguageString` (and the default `language` string-format verifier) is now strict and rejects BCP 47 tags that violate RFC 5646 §4.1 (e.g. duplicate variant subtags or duplicate extension singletons). Pass `{ strict: false }` to fall back to the lenient (syntax-only) verifier, `isLanguageStringLenient`.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.4
+
+## 0.6.5
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/lex-cbor@0.1.3
+  - @atproto/lex-data@0.1.4
+  - @atproto/common-web@0.5.3
+
+## 0.6.4
+
+### Patch Changes
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `LOG_ENABLED` now supports upper case (TRUE) for enabling logging
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `pino` logger to version 10
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/common-web@0.5.2
+  - @atproto/lex-cbor@0.1.2
+  - @atproto/lex-data@0.1.3
+
+## 0.6.3
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/lex-cbor@0.1.1
+  - @atproto/lex-data@0.1.2
+  - @atproto/common-web@0.5.1
+
+## 0.6.2
+
+### Patch Changes
+
+- [#5080](https://github.com/bluesky-social/atproto/pull/5080) [`b2c098f`](https://github.com/bluesky-social/atproto/commit/b2c098fdfa26137bb6f7d092ef89757e39748353) Thanks [@devinivy](https://github.com/devinivy)! - Make rmIfExists() more robust to partial failures.
+
+- [#5078](https://github.com/bluesky-social/atproto/pull/5078) [`cc329bf`](https://github.com/bluesky-social/atproto/commit/cc329bf55c658752675d561dba792fedbe9c2626) Thanks [@jcalabro](https://github.com/jcalabro)! - Add `coalesceByteStream` utility to coalesce a byte stream into chunks with a minimal size.
+
+## 0.6.1
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add back support for any `Uint8Array` as input to the `ui8ToArrayBuffer` helper
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1)]:
+  - @atproto/lex-data@0.1.1
+
+## 0.6.0
+
+### Minor Changes
+
+- [`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** `ui8ToArrayBuffer(bytes)` now requires `Uint8Array<ArrayBuffer>` (rather than `Uint8Array`, which defaults to `<ArrayBufferLike>`). Most callers can pass the value through unchanged; in the rare case of a `SharedArrayBuffer`-backed `Uint8Array`, copy into a regular `Uint8Array` first.
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/common-web@0.5.0
+  - @atproto/lex-cbor@0.1.0
+  - @atproto/lex-data@0.1.0
+
 ## 0.5.16
 
 ### Patch Changes

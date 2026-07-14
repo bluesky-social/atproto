@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-types",
-  "version": "0.6.3",
+  "version": "0.7.5",
   "license": "MIT",
   "description": "OAuth typing & validation library",
   "keywords": [
@@ -15,24 +15,27 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-types"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/did": "workspace:^",
     "@atproto/jwk": "workspace:^",
     "zod": "^3.23.8"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

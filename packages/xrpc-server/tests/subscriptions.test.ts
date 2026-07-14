@@ -1,10 +1,17 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { WebSocket, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
-import { ErrorFrame, Frame, MessageFrame, Subscription, byFrame } from '../src'
-import * as xrpcServer from '../src'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
+import {
+  ErrorFrame,
+  type Frame,
+  MessageFrame,
+  type Server,
+  type StreamContext,
+  Subscription,
+  byFrame,
+} from '../src/index.js'
 import {
   basicAuthHeaders,
   buildAddLexicons,
@@ -12,7 +19,7 @@ import {
   closeServer,
   createBasicAuth,
   createServer,
-} from './_util'
+} from './_util.js'
 
 const LEXICONS = [
   {
@@ -107,18 +114,14 @@ const LEXICONS = [
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
-  'io.example.streamOne': async function* ({
-    params,
-  }: xrpcServer.StreamContext) {
+  'io.example.streamOne': async function* ({ params }: StreamContext) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
       yield { $type: 'io.example.streamOne#countdownStatus', count: i }
     }
   },
-  'io.example.streamTwo': async function* ({
-    params,
-  }: xrpcServer.StreamContext) {
+  'io.example.streamTwo': async function* ({ params }: StreamContext) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(200)
@@ -145,7 +148,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     // definitions
     const lex = new Lexicons(structuredClone(LEXICONS))
 
-    let server: xrpcServer.Server
+    let server: Server
     let s: http.Server
     let port: number
     beforeAll(async () => {
@@ -278,8 +281,8 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     it('does not websocket upgrade at bad endpoint', async () => {
       const ws = new WebSocket(`ws://localhost:${port}/xrpc/does.not.exist`)
       const drainStream = async () => {
-        for await (const bytes of createWebSocketStream(ws)) {
-          bytes // drain
+        for await (const _bytes of createWebSocketStream(ws)) {
+          // drain
         }
       }
       await expect(drainStream).rejects.toHaveProperty('code', 'ECONNRESET')

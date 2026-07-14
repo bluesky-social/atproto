@@ -1,12 +1,12 @@
 import {
-  RgbColor,
+  type RgbColor,
   extractHue,
   hslToRgb,
   pickContrastColor,
 } from '../lib/util/color.js'
-import { Branding } from './branding.js'
+import type { Branding } from './branding.js'
 import { COLOR_NAMES } from './colors.js'
-import { Customization } from './customization.js'
+import type { Customization } from './customization.js'
 
 export function buildCustomizationCss({
   branding,

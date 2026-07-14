@@ -1,7 +1,8 @@
-import { AppBskyActorSearchActors, AtpAgent, ids } from '@atproto/api'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { type AppBskyActorSearchActors, type AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
-import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { type SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
+import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface
@@ -10,6 +11,7 @@ describe.skip('pds actor search views', () => {
   let agent: AtpAgent
   let sc: SeedClient
   let headers: { [s: string]: string }
+  let headersTypeahead: { [s: string]: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -19,7 +21,8 @@ describe.skip('pds actor search views', () => {
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.sub.destroy()
+    await network.processAll()
+    await network.bsky.sub.stop()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
@@ -39,21 +42,23 @@ describe.skip('pds actor search views', () => {
 
     // Process remaining profiles
     await network.bsky.sub.restart()
-    await network.processAll(50000)
     headers = await network.serviceHeaders(
+      Object.values(sc.dids)[0],
+      ids.AppBskyActorSearchActors,
+    )
+    headersTypeahead = await network.serviceHeaders(
       Object.values(sc.dids)[0],
       ids.AppBskyActorSearchActorsTypeahead,
     )
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll(50_000), 50_100)
+  afterAll(async () => network?.close())
 
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
@@ -91,7 +96,7 @@ describe.skip('pds actor search views', () => {
   it('typeahead gives empty result set when provided empty term', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: '' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     expect(result.data.actors).toEqual([])
@@ -100,14 +105,14 @@ describe.skip('pds actor search views', () => {
   it('typeahead applies limit', async () => {
     const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p' },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
 
     const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p', limit: 5 },
-      { headers },
+      { headers: headersTypeahead },
     )
 
     // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
@@ -129,7 +134,7 @@ describe.skip('pds actor search views', () => {
     const { data: authed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead(
         { term: 'car' },
-        { headers },
+        { headers: headersTypeahead },
       )
     const { data: unauthed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead({
@@ -246,7 +251,7 @@ describe.skip('pds actor search views', () => {
     })
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
-      { headers },
+      { headers: headersTypeahead },
     )
     const handles = result.data.actors.map((u) => u.handle)
     expect(handles).toContain('carlos6.test')

@@ -1,13 +1,13 @@
-import {
+import type {
   AppBskyActorDefs,
   AppBskyFeedDefs,
   AppBskyGraphDefs,
   AppBskyNotificationListNotifications,
   ChatBskyActorDefs,
   ComAtprotoLabelDefs,
-} from '../client/index'
-import { KnownLabelValue } from './const/labels'
-import { MuteWordMatch } from './mutewords'
+} from '../client/index.js'
+import type { KnownLabelValue } from './const/labels.js'
+import type { MuteWordMatch } from './mutewords.js'
 
 // syntax
 // =

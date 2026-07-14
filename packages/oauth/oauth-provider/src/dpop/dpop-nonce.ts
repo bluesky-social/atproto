@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from 'node:crypto'
 import { z } from 'zod'
-import { DPOP_NONCE_MAX_AGE } from '../constants.js'
+import { DPOP_NONCE_MAX_AGE } from '../oauth-constants.js'
 
 const MAX_ROTATION_INTERVAL = DPOP_NONCE_MAX_AGE / 3
 const MIN_ROTATION_INTERVAL = Math.min(1000, MAX_ROTATION_INTERVAL)
@@ -14,7 +14,7 @@ export const rotationIntervalSchema = z
 const SECRET_BYTE_LENGTH = 32
 
 export const secretBytesSchema = z
-  .instanceof(Uint8Array)
+  .instanceof(Uint8Array<ArrayBufferLike>)
   .refine((secret) => secret.length === SECRET_BYTE_LENGTH, {
     message: `Secret must be exactly ${SECRET_BYTE_LENGTH} bytes long`,
   })

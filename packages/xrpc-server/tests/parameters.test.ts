@@ -1,14 +1,14 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
-import { LexiconDoc } from '@atproto/lexicon'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
+import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
-import * as xrpcServer from '../src'
+import * as xrpcServer from '../src/index.js'
 import {
   buildAddLexicons,
   buildMethodLexicons,
   closeServer,
   createServer,
-} from './_util'
+} from './_util.js'
 
 const LEXICONS: LexiconDoc[] = [
   {

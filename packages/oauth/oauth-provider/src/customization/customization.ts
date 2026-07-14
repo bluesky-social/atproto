@@ -17,9 +17,13 @@ export const customizationSchema = z.object({
    */
   inviteCodeRequired: z.boolean().optional(),
   /**
+   * Show a warning about 2FA being disabled when updating email address
+   */
+  show2FaWarningOnEmailUpdate: z.boolean().optional(),
+  /**
    * Enables hCaptcha during sign-up.
    */
   hcaptcha: hcaptchaConfigSchema.optional(),
 })
-export type CustomizationInput = z.input<typeof customizationSchema>
+export type CustomizationConfig = z.input<typeof customizationSchema>
 export type Customization = z.infer<typeof customizationSchema>

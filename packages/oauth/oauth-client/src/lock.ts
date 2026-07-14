@@ -1,4 +1,4 @@
-import { RuntimeLock } from './runtime-implementation.js'
+import type { RuntimeLock } from './runtime-implementation.js'
 
 const locks = new Map<unknown, Promise<void>>()
 

@@ -1,18 +1,19 @@
 import { once } from 'node:events'
 import {
-  IncomingHttpHeaders,
-  IncomingMessage,
-  RequestListener,
-  Server as HttpServer,
-  ServerOptions,
-  ServerResponse,
+  type IncomingHttpHeaders,
+  type IncomingMessage,
+  type RequestListener,
+  type Server as HttpServer,
+  type ServerOptions,
+  type ServerResponse,
   createServer as createHttpServer,
 } from 'node:http'
-import { ListenOptions } from 'node:net'
+import type { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
-import { createHttpTerminator } from 'http-terminator'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 import type { FetchHandler } from './lex-router.js'
 
@@ -397,7 +398,7 @@ function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
  * const app = express()
  *
  * // Mount the XRPC router
- * app.use('/xrpc', toRequestListener(router.fetch))
+ * app.use(toRequestListener(router.fetch))
  * ```
  */
 export function toRequestListener<
@@ -546,7 +547,7 @@ export function createServer<
   const listener = toRequestListener(fetchHandler)
   const server = createHttpServer(options, listener)
 
-  const terminator = createHttpTerminator({
+  const terminator = httpTerminator.createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
   })

@@ -1,21 +1,21 @@
-import { AtprotoDid } from '@atproto/did'
-import { Key } from '@atproto/jwk'
+import type { AtprotoDid } from '@atproto/did'
+import type { Key } from '@atproto/jwk'
 import {
   CachedGetter,
-  GetCachedOptions,
-  GetOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type GetOptions,
+  type SimpleStore,
 } from '@atproto-labs/simple-store'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
-import { ClientAuthMethod } from './oauth-client-auth.js'
+import type { ClientAuthMethod } from './oauth-client-auth.js'
 import { OAuthResponseError } from './oauth-response-error.js'
-import { TokenSet } from './oauth-server-agent.js'
-import { OAuthServerFactory } from './oauth-server-factory.js'
-import { Runtime } from './runtime.js'
-import { combineSignals } from './util.js'
+import type { TokenSet } from './oauth-server-agent.js'
+import type { OAuthServerFactory } from './oauth-server-factory.js'
+import type { Runtime } from './runtime.js'
+import { combineSignals, timeoutSignal } from './util.js'
 
 export type Session = {
   dpopKey: Key
@@ -247,7 +247,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
       async () => {
         // Make sure, even if there is no signal in the options, that the
         // request will be cancelled after at most 30 seconds.
-        const signal = AbortSignal.timeout(30e3)
+        const signal = timeoutSignal(30e3)
 
         using abortController = combineSignals([options?.signal, signal])
 

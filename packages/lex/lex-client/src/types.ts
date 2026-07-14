@@ -1,4 +1,4 @@
-import { DidString, LexValue, UnknownString } from '@atproto/lex-schema'
+import type { DidString, LexValue, UnknownString } from '@atproto/lex-schema'
 
 export type { DidString, LexValue, UnknownString }
 
@@ -48,12 +48,12 @@ export type Service = `${DidString}#${DidServiceIdentifier}`
  * ```
  */
 export type BinaryBodyInit =
+  | string
+  | Blob
   | Uint8Array
   | ArrayBuffer
-  | Blob
   | ReadableStream<Uint8Array>
   | AsyncIterable<Uint8Array>
-  | string
 
 export type EncodingString = `${string}/${string}`
 

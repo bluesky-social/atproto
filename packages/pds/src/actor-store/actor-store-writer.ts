@@ -1,4 +1,4 @@
-import { ActorStoreTransactor } from './actor-store-transactor'
+import { ActorStoreTransactor } from './actor-store-transactor.js'
 
 export class ActorStoreWriter extends ActorStoreTransactor {
   async transact<T>(

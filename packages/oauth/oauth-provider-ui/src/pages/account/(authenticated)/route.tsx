@@ -1,34 +1,40 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import {
   DevicesIcon,
   GlobeIcon,
   HouseSimpleIcon,
-  IconProps,
-  KeyIcon,
+  type IconProps,
   QuestionIcon,
+  UserIcon,
 } from '@phosphor-icons/react'
 import {
   Outlet,
-  RegisteredRouter,
-  ToPathOption,
+  type RegisteredRouter,
+  type ToPathOption,
   createRoute,
   useRouter,
 } from '@tanstack/react-router'
-import { FunctionComponent, ReactNode, useEffect, useMemo, useRef } from 'react'
+import {
+  type FunctionComponent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react'
 import {
   LayoutPage,
-  LayoutPageLink,
+  type LayoutPageLink,
 } from '#/components/layouts/layout-page.tsx'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
-import { Explicit } from '#/lib/util.ts'
+import type { Explicit } from '#/lib/util.ts'
 import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
 import { Page as AccountOAuthPage } from './apps/page.tsx'
 import { Page as AccountDevicesPage } from './devices/page.tsx'
+import { Page as AccountManagePage } from './manage/page.tsx'
 import { Page as AccountIndexPage } from './page.tsx'
-import { Page as AccountPasswordPage } from './password/page.tsx'
 
 type SubPage = {
   title: string | MessageDescriptor
@@ -47,35 +53,35 @@ const DEFAULT_PAGES = {
   '/': {
     icon: HouseSimpleIcon,
     position: 0,
+    title: msg`Home`,
+    component: () => <AccountIndexPage />,
+  },
+  '/manage': {
+    icon: UserIcon,
+    position: 10,
     title: msg`Account`,
-    component: AccountIndexPage,
+    description: msg`Manage your account`,
+    component: () => <AccountManagePage />,
   },
   '/devices': {
     icon: DevicesIcon,
-    position: 10,
+    position: 20,
     title: msg`Devices`,
     description: msg`Manage your active sessions`,
-    component: AccountDevicesPage,
+    component: () => <AccountDevicesPage />,
   },
   '/apps': {
     icon: GlobeIcon,
-    position: 20,
+    position: 30,
     title: msg`Apps`,
     description: msg`Manage applications that have access to your account`,
-    component: AccountOAuthPage,
-  },
-  '/password': {
-    icon: KeyIcon,
-    position: 30,
-    title: msg`Password`,
-    description: msg`Change your account password`,
-    component: AccountPasswordPage,
+    component: () => <AccountOAuthPage />,
   },
   '/about': {
     icon: QuestionIcon,
     position: 50,
     title: msg`About`,
-    component: AccountAboutPage,
+    component: () => <AccountAboutPage />,
     description: msg`What is an Atmosphere Account?`,
   },
 } satisfies SubPages
@@ -87,11 +93,13 @@ export function buildRoutes<T extends `/${string}`>(
   const subPages = { ...DEFAULT_PAGES, ...customPages }
 
   const route = createRoute({
-    path,
-    component: (props) => (
-      <Page basePath={path} subPages={subPages} {...props} />
-    ),
     getParentRoute: () => RootRoute,
+    path,
+    component: () => (
+      <AuthGate signOutTo={path as any}>
+        <Page basePath={path as any} subPages={subPages} />
+      </AuthGate>
+    ),
   })
 
   const childRoutes = (
@@ -135,15 +143,13 @@ function Page({
   }, [subPages, basePath])
 
   return (
-    <AuthGate signOutTo={basePath}>
-      <LayoutPage
-        title={msg`My Atmosphere Account`}
-        basePath={basePath}
-        links={links}
-      >
-        <Outlet />
-      </LayoutPage>
-    </AuthGate>
+    <LayoutPage
+      title={msg`My Atmosphere Account`}
+      basePath={basePath}
+      links={links}
+    >
+      <Outlet />
+    </LayoutPage>
   )
 }
 

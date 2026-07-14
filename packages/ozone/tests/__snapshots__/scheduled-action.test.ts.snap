@@ -1,16 +1,16 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`scheduled action management listScheduledActions allows moderators to list all scheduled actions 1`] = `
-Array [
-  Object {
+[
+  {
     "action": "takedown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "did": "user(0)",
-    "eventData": Object {
+    "eventData": {
       "$type": "tools.ozone.moderation.scheduleAction#takedown",
       "comment": "test",
-      "policies": Array [
+      "policies": [
         "spam",
       ],
     },
@@ -21,15 +21,15 @@ Array [
     "status": "pending",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "action": "takedown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "did": "user(2)",
-    "eventData": Object {
+    "eventData": {
       "$type": "tools.ozone.moderation.scheduleAction#takedown",
       "comment": "test",
-      "policies": Array [
+      "policies": [
         "spam",
       ],
     },
@@ -39,15 +39,15 @@ Array [
     "status": "pending",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "action": "takedown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "did": "user(3)",
-    "eventData": Object {
+    "eventData": {
       "$type": "tools.ozone.moderation.scheduleAction#takedown",
       "comment": "test",
-      "policies": Array [
+      "policies": [
         "spam",
       ],
     },

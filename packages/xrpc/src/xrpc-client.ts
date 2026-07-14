@@ -1,20 +1,20 @@
-import { LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
 import {
-  FetchHandler,
-  FetchHandlerObject,
-  FetchHandlerOptions,
+  type FetchHandler,
+  type FetchHandlerObject,
+  type FetchHandlerOptions,
   buildFetchHandler,
-} from './fetch-handler'
+} from './fetch-handler.js'
 import {
-  CallOptions,
-  Gettable,
-  QueryParams,
+  type CallOptions,
+  type Gettable,
+  type QueryParams,
   ResponseType,
   XRPCError,
   XRPCInvalidResponseError,
   XRPCResponse,
   httpResponseCodeToEnum,
-} from './types'
+} from './types.js'
 import {
   combineHeaders,
   constructMethodCallHeaders,
@@ -23,7 +23,7 @@ import {
   getMethodSchemaHTTPMethod,
   httpResponseBodyParse,
   isErrorResponseBody,
-} from './util'
+} from './util.js'
 
 export class XrpcClient {
   readonly fetchHandler: FetchHandler

@@ -1,17 +1,17 @@
 import { relative as getRelativePath } from 'node:path/posix'
-import { JSDoc, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import {
-  type LexArray,
-  type LexBlob,
-  type LexBytes,
-  type LexCidLink,
-  type LexIpldType,
-  type LexObject,
-  type LexPrimitive,
-  type LexToken,
+import { type JSDoc, type SourceFile, VariableDeclarationKind } from 'ts-morph'
+import type {
+  LexArray,
+  LexBlob,
+  LexBytes,
+  LexCidLink,
+  LexIpldType,
+  LexObject,
+  LexPrimitive,
+  LexToken,
   Lexicons,
 } from '@atproto/lexicon'
-import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util'
+import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util.js'
 
 interface Commentable {
   addJsDoc: ({ description }: { description: string }) => JSDoc
@@ -50,7 +50,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
       moduleSpecifier: `${baseNsid
         .split('.')
         .map((_str) => '..')
-        .join('/')}/lexicons`,
+        .join('/')}/lexicons.js`,
     })
     .addNamedImports([{ name: 'validate', alias: '_validate' }])
 
@@ -60,7 +60,7 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
       moduleSpecifier: `${baseNsid
         .split('.')
         .map((_str) => '..')
-        .join('/')}/util`,
+        .join('/')}/util.js`,
     })
     .addNamedImports([
       { name: '$Typed', isTypeOnly: true },
@@ -68,11 +68,11 @@ export function genCommonImports(file: SourceFile, baseNsid: string) {
       { name: 'OmitKey', isTypeOnly: true },
     ])
 
-  // tsc adds protection against circular imports, which hurts bundle size.
-  // Since we know that lexicon.ts and util.ts do not depend on the file being
-  // generated, we can safely bypass this protection.
-  // Note that we are not using `import * as util from '../../util'` because
-  // typescript will emit is own helpers for the import, which we want to avoid.
+  // TypeScript adds protection against circular imports, which hurts bundle
+  // size. Since we know that lexicon.ts and util.ts do not depend on the file
+  // being generated, we can safely bypass this protection. Note that we are not
+  // using `import * as util from '../../util.js'` because typescript will emit
+  // is own helpers for the import, which we want to avoid.
   file.addVariableStatement({
     isExported: false,
     declarationKind: VariableDeclarationKind.Const,

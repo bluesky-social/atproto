@@ -1,9 +1,9 @@
 import { lexicons } from '@atproto/api'
-import { BackgroundQueue } from '../background'
-import { Database } from '../db'
-import { CommitCreateEvent, Jetstream } from '../jetstream/service'
-import { verificationLogger } from '../logger'
-import { VerificationService } from '../verification/service'
+import { BackgroundQueue } from '../background.js'
+import type { Database } from '../db/index.js'
+import { type CommitCreateEvent, Jetstream } from '../jetstream/service.js'
+import { verificationLogger } from '../logger.js'
+import { VerificationService } from '../verification/service.js'
 
 type VerificationRecord = {
   subject: string
@@ -156,9 +156,14 @@ export class VerificationListener {
     })
   }
 
-  stop() {
-    this.jetstream?.close()
-    this.backgroundQueue.destroy()
-    this.destroyed = true
+  async stop() {
+    if (!this.destroyed) {
+      this.destroyed = true
+      try {
+        await this.jetstream?.close()
+      } finally {
+        await this.backgroundQueue.destroy()
+      }
+    }
   }
 }

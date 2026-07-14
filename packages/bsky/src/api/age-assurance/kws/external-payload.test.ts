@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
+import { describe, expect, it } from 'vitest'
 import {
   KWSExternalPayloadVersion,
   parseKWSExternalPayloadV1WithV2Compat,
@@ -6,7 +6,7 @@ import {
   parseKWSExternalPayloadVersion,
   serializeKWSExternalPayloadV1,
   serializeKWSExternalPayloadV2,
-} from './external-payload'
+} from './external-payload.js'
 
 describe('parseKWSExternalPayloadVersion', () => {
   it('should return V2 for "2"', () => {

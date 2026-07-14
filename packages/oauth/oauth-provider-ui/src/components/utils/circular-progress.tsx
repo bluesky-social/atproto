@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
-import { JSX } from 'react'
-import { Override } from '#/lib/util.ts'
+import type { JSX } from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type CircularProgressProps = Override<
   JSX.IntrinsicElements['svg'],
@@ -93,7 +93,7 @@ export function CircularProgress({
         strokeDasharray={circumference}
         strokeDashoffset={strokeDashoffset}
         strokeLinecap="round"
-        className="transition-all duration-100 ease-linear"
+        className="transition-all duration-1000 ease-linear"
         style={{
           transform:
             progressDirection === 'counter-clockwise'

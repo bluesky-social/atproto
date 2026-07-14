@@ -1,4 +1,9 @@
-import type { DidString, Service } from './types.js'
+import type {
+  InferRecordKey,
+  LexiconRecordKey,
+  RecordSchema,
+} from '@atproto/lex-schema'
+import type { DidString, Service } from './types.ts'
 
 export function applyDefaults<
   TDefaults extends Record<string, unknown>,
@@ -53,6 +58,19 @@ export function isAsyncIterable<T>(
   return (
     value != null && typeof (value as any)[Symbol.asyncIterator] === 'function'
   )
+}
+
+export function asUint8ArrayArrayBuffer(
+  bytes: Uint8Array,
+): Uint8Array<ArrayBuffer> {
+  // If the Uint8Array is already backed by a non-shared ArrayBuffer, we can use
+  // it directly.
+  if (bytes.buffer instanceof ArrayBuffer) {
+    return bytes as Uint8Array<ArrayBuffer>
+  }
+
+  // Otherwise, we need to create a new ArrayBuffer and copy the data.
+  return new Uint8Array(bytes)
 }
 
 export type XrpcRequestHeadersOptions = {
@@ -115,7 +133,7 @@ export function toReadableStreamPonyfill(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {
   let iterator: AsyncIterator<Uint8Array> | undefined
-  return new ReadableStream({
+  return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         iterator ??= data[Symbol.asyncIterator]()
@@ -131,5 +149,67 @@ export function toReadableStreamPonyfill(
       await iterator?.return?.()
       iterator = undefined
     },
+  })
+}
+
+export type RecordKeyOptions<
+  T extends RecordSchema,
+  AlsoOptionalWhenRecordKeyIs extends LexiconRecordKey = never,
+> = T['key'] extends `literal:${string}` | AlsoOptionalWhenRecordKeyIs
+  ? { rkey?: InferRecordKey<T> }
+  : { rkey: InferRecordKey<T> }
+
+export function getDefaultRecordKey<const T extends RecordSchema>(
+  schema: T,
+): undefined | InferRecordKey<T> {
+  // Let the server generate the TID
+  if (schema.key === 'tid') return undefined
+  if (schema.key === 'any') return undefined
+
+  return getLiteralRecordKey(schema)
+}
+
+export function getLiteralRecordKey<const T extends RecordSchema>(
+  schema: T,
+): InferRecordKey<T> {
+  if (schema.key.startsWith('literal:')) {
+    return schema.key.slice(8) as InferRecordKey<T>
+  }
+
+  throw new TypeError(
+    `An "rkey" must be provided for record key type "${schema.key}" (${schema.$type})`,
+  )
+}
+
+export function wait(
+  ms: number,
+  { signal }: { signal?: AbortSignal } = {},
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    signal?.throwIfAborted()
+
+    const cleanup = () => {
+      clearTimeout(timeout)
+      signal?.removeEventListener('abort', onAbort)
+    }
+
+    const timeout = setTimeout(() => {
+      cleanup()
+      resolve()
+    }, ms)
+
+    const onAbort = () => {
+      cleanup()
+      reject(
+        // @NOTE the signal exists, and the reason should be set at this point.
+        signal?.reason ??
+          // React Native does not have DOMException
+          (typeof DOMException !== 'undefined'
+            ? new DOMException('Aborted', 'AbortError')
+            : new Error('Aborted')),
+      )
+    }
+
+    signal?.addEventListener('abort', onAbort)
   })
 }

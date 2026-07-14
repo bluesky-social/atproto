@@ -1,21 +1,21 @@
 import { mapDefined } from '@atproto/common'
-import { DidString } from '@atproto/lex'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import {
+import type { DidString } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtxWithViewer,
   HydrationState,
   Hydrator,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { RolodexClient } from '../../../../rolodex'
-import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
+} from '../../../../pipeline.js'
+import type { RolodexClient } from '../../../../rolodex.js'
+import type { Views } from '../../../../views/index.js'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)

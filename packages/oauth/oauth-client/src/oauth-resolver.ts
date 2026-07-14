@@ -1,18 +1,18 @@
 import { extractPdsUrl } from '@atproto/did'
 import {
-  OAuthAuthorizationServerMetadata,
+  type OAuthAuthorizationServerMetadata,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
-import {
+import type {
   IdentityInfo,
   IdentityResolver,
   ResolveIdentityOptions,
 } from '@atproto-labs/identity-resolver'
-import {
+import type {
   GetCachedOptions,
   OAuthAuthorizationServerMetadataResolver,
 } from './oauth-authorization-server-metadata-resolver.js'
-import { OAuthProtectedResourceMetadataResolver } from './oauth-protected-resource-metadata-resolver.js'
+import type { OAuthProtectedResourceMetadataResolver } from './oauth-protected-resource-metadata-resolver.js'
 import { OAuthResolverError } from './oauth-resolver-error.js'
 
 export type { GetCachedOptions }

@@ -1,9 +1,9 @@
 import * as util from 'node:util'
-import { AtUriString, DidString, UriString } from '@atproto/lex'
+import type { AtUriString, DidString, UriString } from '@atproto/lex'
 import {
-  GateRecord,
-  PostRecord,
-  PostgateRecord,
+  type GateRecord,
+  type PostRecord,
+  type PostgateRecord,
   isFollowerRuleType,
   isFollowingRuleType,
   isListRuleType,

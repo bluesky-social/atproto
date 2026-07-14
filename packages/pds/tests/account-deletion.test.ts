@@ -1,21 +1,21 @@
 import { EventEmitter, once } from 'node:events'
-import { Selectable } from 'kysely'
-import Mail from 'nodemailer/lib/mailer'
-import { AtpAgent } from '@atproto/api'
+import type { Selectable } from 'kysely'
+import type Mail from 'nodemailer/lib/mailer'
+import type { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
-import { AppContext } from '../src'
-import {
+import type {
   Account,
   AppPassword,
   EmailToken,
   RefreshToken,
   RepoRoot,
-} from '../src/account-manager/db'
-import { ServerMailer } from '../src/mailer'
-import { RepoSeq } from '../src/sequencer/db'
-import basicSeed from './seeds/basic'
+} from '../src/account-manager/db/index.js'
+import type { AppContext } from '../src/index.js'
+import type { ServerMailer } from '../src/mailer/index.js'
+import type { RepoSeq } from '../src/sequencer/db/index.js'
+import basicSeed from './seeds/basic.js'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView
@@ -36,7 +36,6 @@ describe('account deletion', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     mailer = ctx.mailer
     agent = network.pds.getAgent()
@@ -57,7 +56,7 @@ describe('account deletion', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    await network.close()
+    await network?.close()
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {

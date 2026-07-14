@@ -1,6 +1,6 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
+import type { AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../src/lexicon/lexicons.js'
 
 describe('communication-templates', () => {
   let network: TestNetwork
@@ -18,7 +18,7 @@ describe('communication-templates', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const templateOne = {

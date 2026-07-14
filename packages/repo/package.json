@@ -1,27 +1,32 @@
 {
   "name": "@atproto/repo",
-  "version": "0.9.1",
+  "version": "0.10.6",
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT",
   "description": "atproto repo and MST implementation",
   "keywords": [
     "atproto",
     "mst"
   ],
-  "engines": {
-    "node": ">=18.7.0"
-  },
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/repo"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "test": "jest",
-    "test:profile": "node --inspect ../../node_modules/.bin/jest",
-    "build": "tsc --build tsconfig.build.json"
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -34,7 +39,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "jest": "^30.0.0"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

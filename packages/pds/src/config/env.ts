@@ -67,6 +67,7 @@ export function readEnv() {
     blobstoreS3AccessKeyId: envStr('PDS_BLOBSTORE_S3_ACCESS_KEY_ID'),
     blobstoreS3SecretAccessKey: envStr('PDS_BLOBSTORE_S3_SECRET_ACCESS_KEY'),
     blobstoreS3UploadTimeoutMs: envInt('PDS_BLOBSTORE_S3_UPLOAD_TIMEOUT_MS'),
+    blobstoreS3RequestTimeoutMs: envInt('PDS_BLOBSTORE_S3_REQUEST_TIMEOUT_MS'),
     // disk
     blobstoreDiskLocation: envStr('PDS_BLOBSTORE_DISK_LOCATION'),
     blobstoreDiskTmpLocation: envStr('PDS_BLOBSTORE_DISK_TMP_LOCATION'),
@@ -97,6 +98,9 @@ export function readEnv() {
     // email
     emailSmtpUrl: envStr('PDS_EMAIL_SMTP_URL'),
     emailFromAddress: envStr('PDS_EMAIL_FROM_ADDRESS'),
+    emailDisableConfirmationLink: envBool(
+      'PDS_EMAIL_DISABLE_CONFIRMATION_LINK',
+    ),
     moderationEmailSmtpUrl: envStr('PDS_MODERATION_EMAIL_SMTP_URL'),
     moderationEmailAddress: envStr('PDS_MODERATION_EMAIL_ADDRESS'),
 

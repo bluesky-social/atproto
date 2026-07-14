@@ -1,6 +1,6 @@
-import { Selectable } from 'kysely'
-import { DeviceId, SessionId } from '@atproto/oauth-provider'
-import { DateISO } from '../../../db'
+import type { Selectable } from 'kysely'
+import type { DeviceId, SessionId } from '@atproto/oauth-provider/store'
+import type { DateISO } from '../../../db/index.js'
 
 export interface Device {
   id: DeviceId

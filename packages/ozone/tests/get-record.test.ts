@@ -1,18 +1,18 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
-  TestOzone,
+  type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../src/lexicon/lexicons'
+import { ids } from '../src/lexicon/lexicons.js'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from './_util'
+} from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { forSnapshot } from './_util.js'
 
 describe('admin get record view', () => {
   let network: TestNetwork
@@ -38,7 +38,7 @@ describe('admin get record view', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   beforeAll(async () => {

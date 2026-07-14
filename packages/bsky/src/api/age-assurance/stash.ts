@@ -1,8 +1,8 @@
 import { TID } from '@atproto/common'
-import { DatetimeString } from '@atproto/syntax'
-import { AppContext } from '../../context'
-import { app } from '../../lexicons/index.js'
-import { Namespaces } from '../../stash'
+import type { DatetimeString } from '@atproto/syntax'
+import type { AppContext } from '../../context.js'
+import type { app } from '../../lexicons/index.js'
+import { Namespaces } from '../../stash.js'
 
 export async function createEvent(
   ctx: AppContext,

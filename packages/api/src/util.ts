@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { AtUri } from '@atproto/syntax'
-import { AppBskyActorDefs } from './client'
-import { Nux } from './client/types/app/bsky/actor/defs'
+import type { AppBskyActorDefs } from './client/index.js'
+import type { Nux } from './client/types/app/bsky/actor/defs.js'
 
 export function sanitizeMutedWordValue(value: string) {
   return (

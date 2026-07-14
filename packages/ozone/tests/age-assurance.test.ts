@@ -1,10 +1,10 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { forSnapshot } from './_util'
+import { forSnapshot } from './_util.js'
 
 describe('age assurance events', () => {
   let network: TestNetwork
@@ -22,7 +22,7 @@ describe('age assurance events', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('handles age assurance events from user', async () => {

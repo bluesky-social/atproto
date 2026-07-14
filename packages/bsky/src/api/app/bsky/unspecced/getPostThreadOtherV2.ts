@@ -1,19 +1,23 @@
-import { AtUriString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { ServerConfig } from '../../../../config'
-import { AppContext } from '../../../../context'
-import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import type { AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
+import type { AppContext } from '../../../../context.js'
+import {
+  Code,
+  type DataPlaneClient,
+  isDataplaneError,
+} from '../../../../data-plane/index.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
-import { resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
+import { resHeaders } from '../../../util.js'
 
 // No parents for hidden replies (it would be the anchor post).
 const ABOVE = 0

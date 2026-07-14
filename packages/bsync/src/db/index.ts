@@ -1,23 +1,27 @@
 import assert from 'node:assert'
-import { EventEmitter } from 'node:stream'
+import { EventEmitter } from 'node:events'
 import {
   Kysely,
-  KyselyPlugin,
-  Migrator,
-  PluginTransformQueryArgs,
-  PluginTransformResultArgs,
+  type KyselyPlugin,
+  type PluginTransformQueryArgs,
+  type PluginTransformResultArgs,
   PostgresDialect,
-  QueryResult,
-  RootOperationNode,
-  UnknownRow,
+  type QueryResult,
+  type RootOperationNode,
+  type UnknownRow,
 } from 'kysely'
-import { Pool as PgPool, types as pgTypes } from 'pg'
-import TypedEmitter from 'typed-emitter'
-import { dbLogger } from '../logger'
-import * as migrations from './migrations'
-import { DbMigrationProvider } from './migrations/provider'
-import { DatabaseSchema, DatabaseSchemaType } from './schema'
-import { PgOptions } from './types'
+import { Migrator } from 'kysely/migration'
+// eslint-disable-next-line import/default
+import pg from 'pg'
+// eslint-disable-next-line import/no-named-as-default-member
+const { Pool: PgPool, types: pgTypes } = pg
+type PgPool = InstanceType<typeof PgPool>
+import type TypedEmitter from 'typed-emitter'
+import { dbLogger } from '../logger.js'
+import * as migrations from './migrations/index.js'
+import { DbMigrationProvider } from './migrations/provider.js'
+import type { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
+import type { PgOptions } from './types.js'
 
 export class Database {
   pool: PgPool
@@ -187,7 +191,7 @@ class LeakyTxPlugin implements KyselyPlugin {
   }
 }
 
-type TxnEmitter = TypedEmitter<TxnEvents>
+type TxnEmitter = TypedEmitter.default<TxnEvents>
 
 type TxnEvents = {
   commit: () => void

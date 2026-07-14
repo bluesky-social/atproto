@@ -1,8 +1,13 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import { DidDocument, IdResolver, getDid, getHandle } from '@atproto/identity'
-import { Service } from '../../../proto/bsky_connect'
-import { Database } from '../db'
+import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
+import {
+  type DidDocument,
+  type IdResolver,
+  getDid,
+  getHandle,
+} from '@atproto/identity'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
 
 export default (
   _db: Database,

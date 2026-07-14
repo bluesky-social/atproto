@@ -1,2 +1,2 @@
-export * from './consumer'
-export * from './provider'
+export * from './consumer.js'
+export * from './provider.js'

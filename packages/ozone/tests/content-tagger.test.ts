@@ -1,11 +1,11 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
+import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -23,7 +23,7 @@ describe('moderation subject content tagging', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getStatus = async (subject: string) => {

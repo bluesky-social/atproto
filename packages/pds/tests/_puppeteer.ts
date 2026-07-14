@@ -1,5 +1,11 @@
 import assert from 'node:assert'
-import { type Browser, Handler, type Page, Target, TargetType } from 'puppeteer'
+import {
+  type Browser,
+  type Handler,
+  type Page,
+  type Target,
+  TargetType,
+} from 'puppeteer'
 
 export class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}
@@ -85,6 +91,8 @@ export class PageHelper implements AsyncDisposable {
   async typeIn(selector: string, text: string) {
     const elementHandle = await this.getVisibleElement(selector)
     elementHandle.focus()
+    await elementHandle.click({ clickCount: 3 }) // Select all existing text
+    await elementHandle.press('Backspace') // Clear the input
     await elementHandle.type(text)
     return elementHandle
   }
@@ -93,14 +101,18 @@ export class PageHelper implements AsyncDisposable {
     return this.typeIn(`input[name=${JSON.stringify(name)}]`, text)
   }
 
-  async ensureTextVisibility(text: string, tag = 'p') {
+  async ensureTextVisibility(text: string, tag = 'p', timeout = 5_000) {
     await this.page.waitForSelector(
       `${tag}::-p-text(${JSON.stringify(text)})`,
       {
         visible: true,
-        timeout: 5_000,
+        timeout,
       },
     )
+  }
+
+  async ensureNotification(text: string) {
+    return this.ensureTextVisibility(text, 'div')
   }
 
   protected async getVisibleElement(selector: string) {

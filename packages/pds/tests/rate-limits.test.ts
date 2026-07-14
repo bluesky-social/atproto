@@ -1,7 +1,7 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import userSeed from './seeds/basic'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import userSeed from './seeds/basic.js'
 
 describe('rate limits', () => {
   let network: TestNetworkNoAppView
@@ -27,7 +27,7 @@ describe('rate limits', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('rate limits by ip', async () => {

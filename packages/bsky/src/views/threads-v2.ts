@@ -1,6 +1,6 @@
-import { $Typed } from '@atproto/lex'
-import { HydrateCtx } from '../hydration/hydrator'
-import {
+import type { $Typed } from '@atproto/lex'
+import type { HydrateCtx } from '../hydration/hydrator.js'
+import type {
   GetPostThreadV2QueryParams,
   ThreadItem,
   ThreadItemBlocked,
@@ -504,7 +504,7 @@ function parseRankFromTag(prefix: string, tag?: string) {
       return 0
     }
     return rank
-  } catch (e) {
+  } catch {
     return 0
   }
 }

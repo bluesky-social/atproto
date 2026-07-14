@@ -1,6 +1,6 @@
 import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
-  Fetch,
+  type Fetch,
   asRequest,
   explicitRedirectCheckRequestTransform,
   fetchMaxSizeProcessor,
@@ -10,7 +10,7 @@ import {
   timedFetch,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { UnicastFetchWrapOptions, unicastFetchWrap } from './unicast.js'
+import { type UnicastFetchWrapOptions, unicastFetchWrap } from './unicast.js'
 
 export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
   responseMaxSize?: number
@@ -52,7 +52,6 @@ export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
  */
 export function safeFetchWrap<C>({
   fetch = globalThis.fetch as Fetch<C>,
-  dangerouslyForceKeepAliveAgent = false,
   responseMaxSize = 512 * 1024, // 512kB
   ssrfProtection = true,
   allowCustomPort = !ssrfProtection,
@@ -106,9 +105,7 @@ export function safeFetchWrap<C>({
        * input, we need to make sure that the request is not vulnerable to SSRF
        * attacks.
        */
-      allowPrivateIps
-        ? fetch
-        : unicastFetchWrap({ fetch, dangerouslyForceKeepAliveAgent }),
+      allowPrivateIps ? fetch : unicastFetchWrap({ fetch }),
     ),
 
     /**

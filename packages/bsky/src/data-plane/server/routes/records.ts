@@ -1,13 +1,13 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
+import type { ServiceImpl } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { keyBy } from '@atproto/common'
 import { l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app, chat, com } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect'
-import { PostRecordMeta, Record } from '../../../proto/bsky_pb'
-import { Database } from '../db'
+import type { Service } from '../../../proto/bsky_connect.js'
+import { PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
+import type { Database } from '../db/index.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getBlockRecords: getRecords(db, app.bsky.graph.block),
@@ -61,7 +61,7 @@ export const getRecords = (db: Database, ns?: l.Main<l.RecordSchema>) => {
         : undefined
       const recordBytes = ui8.fromString(json, 'utf8')
       return new Record({
-        record: recordBytes,
+        record: recordBytes as Uint8Array<ArrayBuffer>,
         cid: row?.cid,
         createdAt,
         indexedAt,

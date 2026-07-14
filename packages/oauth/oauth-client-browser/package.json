@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser",
-  "version": "0.3.42",
+  "version": "0.4.8",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the browser (relies on WebCrypto & Indexed DB)",
   "keywords": [
@@ -18,18 +18,21 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-browser"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^",
@@ -41,10 +44,7 @@
     "@atproto/oauth-types": "workspace:^",
     "core-js": "^3"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

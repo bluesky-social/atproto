@@ -1,16 +1,16 @@
 import { CID } from 'multiformats/cid'
 import { graphemeLen, utf8Len } from '@atproto/common-web'
-import { Lexicons } from '../lexicons'
-import {
+import type { Lexicons } from '../lexicons.js'
+import { ValidationError } from '../types.js'
+import type {
   LexBoolean,
   LexBytes,
   LexInteger,
   LexString,
   LexUserType,
-  ValidationError,
   ValidationResult,
-} from '../types'
-import * as formats from './formats'
+} from '../types.js'
+import * as formats from './formats.js'
 
 export function validate(
   lexicons: Lexicons,
@@ -156,7 +156,7 @@ function string(
   path: string,
   def: LexUserType,
   value: unknown,
-): ValidationResult {
+): ValidationResult<string> {
   def = def as LexString
 
   // type

@@ -1,11 +1,11 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 import {
   getSafelinkAction,
   getSafelinkPattern,
   getSafelinkReason,
-} from '../util'
+} from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.safelink.updateRule({

@@ -1,5 +1,5 @@
 import { Html } from './html.js'
-import { NestedIterable, stringReplacer } from './util.js'
+import { type NestedIterable, stringReplacer } from './util.js'
 
 export function* javascriptEscaper(code: string) {
   // "</script>" can only appear in javascript strings, so we can safely escape

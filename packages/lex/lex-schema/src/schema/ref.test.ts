@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Schema, Validator } from '../core.js'
+import type { Schema, Validator } from '../core.js'
 import { integer } from './integer.js'
 import { object } from './object.js'
 import { optional } from './optional.js'
@@ -62,7 +62,7 @@ describe('RefSchema', () => {
       const innerSchema = string()
 
       // Access schema property to resolve it
-      schema.validator
+      void schema.validator
 
       // Try to access the original getter again (which should throw)
       // This is internal behavior, but we're testing the protection mechanism

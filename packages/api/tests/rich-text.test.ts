@@ -1,4 +1,4 @@
-import { RichText } from '../src'
+import { RichText } from '../src/index.js'
 
 describe('RichText', () => {
   it('converts entities to facets correctly', () => {

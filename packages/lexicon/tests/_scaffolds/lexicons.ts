@@ -1,4 +1,4 @@
-import { LexiconDoc } from '../../src/index'
+import type { LexiconDoc } from '../../src/index.js'
 
 const lexicons: LexiconDoc[] = [
   {

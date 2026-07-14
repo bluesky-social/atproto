@@ -2,17 +2,17 @@ import assert from 'node:assert'
 import SqliteDB from 'better-sqlite3'
 import {
   Kysely,
-  KyselyPlugin,
-  PluginTransformQueryArgs,
-  PluginTransformResultArgs,
-  QueryResult,
-  RootOperationNode,
+  type KyselyPlugin,
+  type PluginTransformQueryArgs,
+  type PluginTransformResultArgs,
+  type QueryResult,
+  type RootOperationNode,
   SqliteDialect,
-  UnknownRow,
+  type UnknownRow,
   sql,
 } from 'kysely'
-import { dbLogger } from '../logger'
-import { retrySqlite } from './util'
+import { dbLogger } from '../logger.js'
+import { retrySqlite } from './util.js'
 
 const DEFAULT_PRAGMAS = {
   // strict: 'ON', // @TODO strictness should live on table defs instead

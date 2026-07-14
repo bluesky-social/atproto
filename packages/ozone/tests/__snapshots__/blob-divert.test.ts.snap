@@ -1,20 +1,20 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`blob divert sends blobs to configured divert service and marks divert date 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(0)",
-  "event": Object {
+  "event": {
     "$type": "tools.ozone.moderation.defs#modEventDivert",
     "comment": "Diverting for test",
   },
   "id": 1,
-  "subject": Object {
+  "subject": {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
     "uri": "record(0)",
   },
-  "subjectBlobCids": Array [
+  "subjectBlobCids": [
     "cids(1)",
     "cids(2)",
   ],
@@ -22,30 +22,30 @@ Object {
 `;
 
 exports[`blob divert sends blobs to configured divert service and marks divert date 2`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(1)",
-  "event": Object {
+  "event": {
     "$type": "tools.ozone.moderation.defs#modEventDivert",
     "comment": "Diverting for test",
   },
   "id": 1,
-  "subject": Object {
+  "subject": {
     "$type": "tools.ozone.moderation.defs#recordView",
-    "blobCids": Array [
+    "blobCids": [
       "cids(1)",
       "cids(2)",
     ],
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "moderation": Object {
-      "subjectStatus": Object {
-        "accountStats": Object {
+    "moderation": {
+      "subjectStatus": {
+        "accountStats": {
           "$type": "tools.ozone.moderation.defs#accountStats",
         },
         "ageAssuranceState": "unknown",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "hosting": Object {
+        "hosting": {
           "$type": "tools.ozone.moderation.defs#recordHosting",
           "status": "unknown",
         },
@@ -53,21 +53,21 @@ Object {
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
         "priorityScore": 0,
-        "recordsStats": Object {
+        "recordsStats": {
           "$type": "tools.ozone.moderation.defs#recordsStats",
         },
         "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-        "subject": Object {
+        "subject": {
           "$type": "com.atproto.repo.strongRef",
           "cid": "cids(0)",
           "uri": "record(0)",
         },
-        "subjectBlobCids": Array [
+        "subjectBlobCids": [
           "cids(1)",
           "cids(2)",
         ],
         "subjectRepoHandle": "carol.test",
-        "tags": Array [
+        "tags": [
           "lang:it",
           "embed:image",
         ],
@@ -75,39 +75,39 @@ Object {
         "updatedAt": "1970-01-01T00:00:00.000Z",
       },
     },
-    "repo": Object {
+    "repo": {
       "did": "user(0)",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "moderation": Object {},
-      "relatedRecords": Array [],
+      "moderation": {},
+      "relatedRecords": [],
     },
     "uri": "record(0)",
-    "value": Object {
+    "value": {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "embed": Object {
+      "embed": {
         "$type": "app.bsky.embed.recordWithMedia",
-        "media": Object {
+        "media": {
           "$type": "app.bsky.embed.images",
-          "images": Array [
-            Object {
+          "images": [
+            {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "image": Object {
+              "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
-                "ref": Object {
+                "ref": {
                   "$link": "cids(1)",
                 },
                 "size": 4114,
               },
             },
-            Object {
+            {
               "alt": "../dev-env/assets/key-alt.jpg",
-              "image": Object {
+              "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
-                "ref": Object {
+                "ref": {
                   "$link": "cids(2)",
                 },
                 "size": 12736,
@@ -115,8 +115,8 @@ Object {
             },
           ],
         },
-        "record": Object {
-          "record": Object {
+        "record": {
+          "record": {
             "cid": "cids(3)",
             "uri": "record(1)",
           },
@@ -125,23 +125,23 @@ Object {
       "text": "hi im carol",
     },
   },
-  "subjectBlobCids": Array [
+  "subjectBlobCids": [
     "cids(1)",
     "cids(2)",
   ],
-  "subjectBlobs": Array [
-    Object {
+  "subjectBlobs": [
+    {
       "cid": "cids(1)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "mimeType": "image/jpeg",
-      "moderation": Object {
-        "subjectStatus": Object {
-          "accountStats": Object {
+      "moderation": {
+        "subjectStatus": {
+          "accountStats": {
             "$type": "tools.ozone.moderation.defs#accountStats",
           },
           "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "hosting": Object {
+          "hosting": {
             "$type": "tools.ozone.moderation.defs#recordHosting",
             "status": "unknown",
           },
@@ -149,20 +149,20 @@ Object {
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
           "priorityScore": 0,
-          "recordsStats": Object {
+          "recordsStats": {
             "$type": "tools.ozone.moderation.defs#recordsStats",
           },
           "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-          "subject": Object {
+          "subject": {
             "$type": "com.atproto.repo.strongRef",
             "cid": "cids(0)",
             "uri": "record(0)",
           },
-          "subjectBlobCids": Array [
+          "subjectBlobCids": [
             "cids(1)",
             "cids(2)",
           ],
-          "tags": Array [
+          "tags": [
             "lang:it",
             "embed:image",
           ],
@@ -172,18 +172,18 @@ Object {
       },
       "size": 4114,
     },
-    Object {
+    {
       "cid": "cids(2)",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "mimeType": "image/jpeg",
-      "moderation": Object {
-        "subjectStatus": Object {
-          "accountStats": Object {
+      "moderation": {
+        "subjectStatus": {
+          "accountStats": {
             "$type": "tools.ozone.moderation.defs#accountStats",
           },
           "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "hosting": Object {
+          "hosting": {
             "$type": "tools.ozone.moderation.defs#recordHosting",
             "status": "unknown",
           },
@@ -191,20 +191,20 @@ Object {
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
           "priorityScore": 0,
-          "recordsStats": Object {
+          "recordsStats": {
             "$type": "tools.ozone.moderation.defs#recordsStats",
           },
           "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-          "subject": Object {
+          "subject": {
             "$type": "com.atproto.repo.strongRef",
             "cid": "cids(0)",
             "uri": "record(0)",
           },
-          "subjectBlobCids": Array [
+          "subjectBlobCids": [
             "cids(1)",
             "cids(2)",
           ],
-          "tags": Array [
+          "tags": [
             "lang:it",
             "embed:image",
           ],

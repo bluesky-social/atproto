@@ -1,13 +1,16 @@
 import assert from 'node:assert'
-import { IncomingMessage, OutgoingMessage } from 'node:http'
-import { Duplex, Readable, pipeline } from 'node:stream'
+import type { IncomingMessage, OutgoingMessage } from 'node:http'
+import { type Duplex, type Readable, pipeline } from 'node:stream'
 import {
-  Request as ExpressRequest,
-  Response as ExpressResponse,
+  type Request as ExpressRequest,
+  type Response as ExpressResponse,
   json,
   text,
 } from 'express'
-import { contentType } from 'mime-types'
+// eslint-disable-next-line import/default, import/no-named-as-default-member
+import mimeTypes from 'mime-types'
+// eslint-disable-next-line import/no-named-as-default-member
+const { contentType } = mimeTypes
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
@@ -16,28 +19,28 @@ import {
   type LexXrpcProcedure,
   type LexXrpcQuery,
   type LexXrpcSubscription,
-  Lexicons,
+  type Lexicons,
   jsonToLex as jsonToLexWithBlobRef,
 } from '@atproto/lexicon'
 import { ResponseType } from '@atproto/xrpc'
 import {
-  ErrorResult,
+  type ErrorResult,
   InternalServerError,
   InvalidRequestError,
   XRPCError,
-} from './errors'
+} from './errors.js'
 import {
-  Auth,
-  Input,
-  LexMethodInput,
-  LexMethodOutput,
-  LexMethodParams,
-  Output,
-  Params,
-  RouteOptions,
-  UndecodedParams,
+  type Auth,
+  type Input,
+  type LexMethodInput,
+  type LexMethodOutput,
+  type LexMethodParams,
+  type Output,
+  type Params,
+  type RouteOptions,
+  type UndecodedParams,
   handlerSuccess,
-} from './types'
+} from './types.js'
 
 export type ParamsVerifierInternal<P extends Params = Params> = (
   req: IncomingMessage | ExpressRequest,

@@ -1,7 +1,7 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { forSnapshot } from './_util'
+import type { AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { ids } from '../src/lexicon/lexicons.js'
+import { forSnapshot } from './_util.js'
 
 describe('safelink management', () => {
   let network: TestNetwork
@@ -29,7 +29,7 @@ describe('safelink management', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('addRule', () => {

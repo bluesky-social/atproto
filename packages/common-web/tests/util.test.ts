@@ -1,4 +1,4 @@
-import { util } from '../src/index'
+import { util } from '../src/index.js'
 
 describe('util', () => {
   describe('noUndefinedVals', () => {

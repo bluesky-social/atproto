@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`team management addMember only allows admins to add member 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "did": "user(0)",
   "disabled": false,
@@ -12,8 +12,8 @@ Object {
 `;
 
 exports[`team management listMembers allows all members to list all members 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
     "disabled": false,
@@ -21,7 +21,7 @@ Array [
     "role": "tools.ozone.team.defs#roleAdmin",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(2)",
     "disabled": false,
@@ -29,7 +29,7 @@ Array [
     "role": "tools.ozone.team.defs#roleTriage",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(3)",
     "disabled": false,
@@ -37,7 +37,7 @@ Array [
     "role": "tools.ozone.team.defs#roleModerator",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(4)",
     "disabled": false,
@@ -45,14 +45,14 @@ Array [
     "role": "tools.ozone.team.defs#roleModerator",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(1)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -67,9 +67,9 @@ Array [
       "followsCount": 0,
       "handle": "mod-authority.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "postsCount": 0,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -77,14 +77,14 @@ Array [
     "role": "tools.ozone.team.defs#roleAdmin",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(5)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -101,15 +101,15 @@ Array [
       "followsCount": 3,
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [
-        Object {
+      "labels": [
+        {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(5)",
           "uri": "record(0)",
           "val": "self-label-a",
         },
-        Object {
+        {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(5)",
@@ -118,7 +118,7 @@ Array [
         },
       ],
       "postsCount": 4,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -126,14 +126,14 @@ Array [
     "role": "tools.ozone.team.defs#roleAdmin",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(7)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -150,9 +150,9 @@ Array [
       "followsCount": 2,
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "postsCount": 3,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -160,14 +160,14 @@ Array [
     "role": "tools.ozone.team.defs#roleModerator",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(9)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -179,9 +179,9 @@ Array [
       "followersCount": 2,
       "followsCount": 1,
       "handle": "carol.test",
-      "labels": Array [],
+      "labels": [],
       "postsCount": 2,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -193,8 +193,8 @@ Array [
 `;
 
 exports[`team management listMembers allows all members to list all members 2`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(0)",
     "disabled": false,
@@ -202,7 +202,7 @@ Array [
     "role": "tools.ozone.team.defs#roleAdmin",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(2)",
     "disabled": false,
@@ -210,7 +210,7 @@ Array [
     "role": "tools.ozone.team.defs#roleTriage",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(3)",
     "disabled": false,
@@ -218,7 +218,7 @@ Array [
     "role": "tools.ozone.team.defs#roleModerator",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(4)",
     "disabled": false,
@@ -226,14 +226,14 @@ Array [
     "role": "tools.ozone.team.defs#roleModerator",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(1)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -248,9 +248,9 @@ Array [
       "followsCount": 0,
       "handle": "mod-authority.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "postsCount": 0,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -258,14 +258,14 @@ Array [
     "role": "tools.ozone.team.defs#roleAdmin",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(5)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -282,15 +282,15 @@ Array [
       "followsCount": 3,
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [
-        Object {
+      "labels": [
+        {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(5)",
           "uri": "record(0)",
           "val": "self-label-a",
         },
-        Object {
+        {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "user(5)",
@@ -299,7 +299,7 @@ Array [
         },
       ],
       "postsCount": 4,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -307,14 +307,14 @@ Array [
     "role": "tools.ozone.team.defs#roleAdmin",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(7)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -331,9 +331,9 @@ Array [
       "followsCount": 2,
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": [],
       "postsCount": 3,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },
@@ -341,14 +341,14 @@ Array [
     "role": "tools.ozone.team.defs#roleModerator",
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "did": "user(9)",
     "disabled": false,
     "lastUpdatedBy": "user(1)",
-    "profile": Object {
-      "associated": Object {
-        "activitySubscription": Object {
+    "profile": {
+      "associated": {
+        "activitySubscription": {
           "allowSubscriptions": "followers",
         },
         "feedgens": 0,
@@ -360,9 +360,9 @@ Array [
       "followersCount": 2,
       "followsCount": 1,
       "handle": "carol.test",
-      "labels": Array [],
+      "labels": [],
       "postsCount": 2,
-      "viewer": Object {
+      "viewer": {
         "blockedBy": false,
         "muted": false,
       },

@@ -1,5 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
-import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const'
+import { BASE58_MULTIBASE_PREFIX, DID_KEY_PREFIX } from './const.js'
 
 export const extractMultikey = (did: string): string => {
   if (!did.startsWith(DID_KEY_PREFIX)) {

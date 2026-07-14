@@ -1,6 +1,6 @@
-import { HandleResolver } from '../src'
+import { jest } from '@jest/globals'
 
-jest.mock('node:dns/promises', () => {
+jest.unstable_mockModule('node:dns/promises', () => {
   return {
     resolveTxt: (handle: string) => {
       if (handle === '_atproto.simple.test') {
@@ -36,8 +36,10 @@ jest.mock('node:dns/promises', () => {
   }
 })
 
+const { HandleResolver } = await import('../src/index.js')
+
 describe('handle resolver', () => {
-  let resolver: HandleResolver
+  let resolver: InstanceType<typeof HandleResolver>
 
   beforeAll(async () => {
     resolver = new HandleResolver()

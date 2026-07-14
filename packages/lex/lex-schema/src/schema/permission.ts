@@ -1,4 +1,4 @@
-import { Params } from './params.js'
+import type { Params } from './params.js'
 
 /**
  * Type alias for permission options (same as Params).

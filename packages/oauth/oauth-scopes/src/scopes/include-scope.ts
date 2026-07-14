@@ -1,17 +1,20 @@
-import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
-import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
-import { Nsid, isNsid } from '../lib/nsid.js'
+import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
+import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
-  ScopeStringFor,
-  ScopeSyntax,
+  type ScopeStringFor,
+  type ScopeSyntax,
   isScopeStringFor,
   isScopeSyntaxFor,
 } from '../lib/syntax.js'
 import { RepoPermission } from './repo-permission.js'
-import { RpcPermission } from './rpc-permission.js'
+import {
+  type AtprotoDidRefAbsolute,
+  RpcPermission,
+  isAtprotoDidRefAbsolute,
+} from './rpc-permission.js'
 
 export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 
@@ -23,7 +26,7 @@ export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
 export class IncludeScope {
   constructor(
     public readonly nsid: Nsid,
-    public readonly aud: undefined | AtprotoAudience = undefined,
+    public readonly aud: undefined | AtprotoDidRefAbsolute = undefined,
   ) {}
 
   toString() {
@@ -166,7 +169,7 @@ export class IncludeScope {
       aud: {
         multiple: false,
         required: false,
-        validate: isAtprotoAudience,
+        validate: isAtprotoDidRefAbsolute,
       },
     },
     'nsid',

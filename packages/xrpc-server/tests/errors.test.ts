@@ -1,9 +1,9 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
-import { LexiconDoc } from '@atproto/lexicon'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
+import type { LexiconDoc } from '@atproto/lexicon'
 import { XRPCError, XRPCInvalidResponseError, XrpcClient } from '@atproto/xrpc'
-import * as xrpcServer from '../src'
-import { closeServer, createServer } from './_util'
+import * as xrpcServer from '../src/index.js'
+import { closeServer, createServer } from './_util.js'
 
 const UPSTREAM_LEXICONS: LexiconDoc[] = [
   {

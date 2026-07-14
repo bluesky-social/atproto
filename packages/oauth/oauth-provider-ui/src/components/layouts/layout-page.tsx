@@ -1,14 +1,14 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { useLingui } from '@lingui/react'
-import { ArrowLeftIcon, IconProps } from '@phosphor-icons/react'
+import { ArrowLeftIcon, type IconProps } from '@phosphor-icons/react'
 import {
   Link,
-  RegisteredRouter,
-  ToPathOption,
+  type RegisteredRouter,
+  type ToPathOption,
   useRouterState,
 } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { FunctionComponent, ReactNode } from 'react'
+import type { FunctionComponent, ReactNode } from 'react'
 import { LayoutApp } from '#/components/layouts/layout-app.tsx'
 import { AccountSelector } from '#/components/utils/account-selector.tsx'
 
@@ -25,6 +25,7 @@ export type LayoutPageProps = {
   title?: string | MessageDescriptor
   links: ReadonlyArray<LayoutPageLink>
   children?: ReactNode
+  prepend?: ReactNode
 }
 
 export function LayoutPage({
@@ -32,6 +33,7 @@ export function LayoutPage({
   basePath,
   title,
   links,
+  prepend,
 }: LayoutPageProps) {
   const { _ } = useLingui()
   const { pathname } = useRouterState().location
@@ -47,6 +49,8 @@ export function LayoutPage({
       title={title}
       header={<AccountSelector className="shrink-0" size="lg" />}
     >
+      {prepend}
+
       <div className="flex w-full flex-1 flex-col md:flex-row">
         <aside
           className={`shrink-0 p-4 md:px-8 ${atBase ? 'w-full md:w-auto' : 'hidden max-w-xs md:block'}`}
@@ -71,7 +75,7 @@ export function LayoutPage({
                     '[&.active]:bg-slate-100 dark:[&.active]:bg-slate-800',
                     atBase && to === basePath && 'hidden md:flex',
                   )}
-                  activeOptions={{ exact: true }}
+                  activeOptions={{ exact: true, includeSearch: false }}
                   activeProps={{
                     className: 'active',
                     'aria-current': 'page' as const,
@@ -103,11 +107,14 @@ export function LayoutPage({
         </aside>
 
         <main
-          className={`w-4xl mx-auto min-w-0 max-w-full px-4 md:px-8 ${atBase ? '-order-1 md:order-1 md:block' : ''}`}
+          className={clsx(
+            'w-4xl mx-auto flex min-w-0 max-w-full flex-col px-4 md:px-8',
+            { '-order-1 md:order-1': atBase },
+          )}
           role="main"
         >
-          <nav className="mb-4 flex items-center gap-2">
-            {!atBase && (
+          {!atBase && (
+            <nav className="mb-4 flex flex-none items-center gap-2">
               <Link
                 to={basePath}
                 key="back"
@@ -115,16 +122,16 @@ export function LayoutPage({
               >
                 <ArrowLeftIcon className="size-6" />
               </Link>
-            )}
-            {pageTitleStr && (
-              <h2 className="text-text-default text-2xl font-light">
-                <title>{pageTitleStr}</title>
-                <b>{pageTitleStr}</b>
-              </h2>
-            )}
-          </nav>
+              {pageTitleStr && (
+                <h2 className="text-text-default text-2xl font-light">
+                  <title>{pageTitleStr}</title>
+                  <b>{pageTitleStr}</b>
+                </h2>
+              )}
+            </nav>
+          )}
 
-          {children}
+          <div className="flex-auto">{children}</div>
         </main>
       </div>
     </LayoutApp>

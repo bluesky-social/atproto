@@ -5,7 +5,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
-import { errorViewRender } from '#/components/error-view.tsx'
+import { ErrorView } from '#/components/error-view.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import { NotificationsProvider } from '#/contexts/notifications.tsx'
 import { InitialSelectedSession, SessionProvider } from '#/contexts/session.tsx'
@@ -27,7 +27,11 @@ createRoot(container).render(
     <CustomizationProvider value={customizationData}>
       <LocaleProvider>
         <NotificationsProvider>
-          <ErrorBoundary fallbackRender={errorViewRender}>
+          <ErrorBoundary
+            fallbackRender={({ error, resetErrorBoundary }) => (
+              <ErrorView error={error} retry={resetErrorBoundary} />
+            )}
+          >
             <SessionProvider
               initialSessions={deviceSessions}
               initialSelected={InitialSelectedSession.Only}

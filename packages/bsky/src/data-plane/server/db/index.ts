@@ -1,2 +1,2 @@
-export * from './db'
-export type { DatabaseSchema } from './db'
+export * from './db.js'
+export type { DatabaseSchema } from './db.js'

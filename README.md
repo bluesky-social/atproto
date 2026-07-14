@@ -8,18 +8,19 @@ This repository contains Bluesky's reference implementation of AT Protocol, and 
 
 **TypeScript Packages:**
 
-| Package                                                                       | Docs                                       | NPM                                                                                                             |
-| ----------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `@atproto/api`: client library                                                | [README](./packages/api/README.md)         | [![NPM](https://img.shields.io/npm/v/@atproto/api)](https://www.npmjs.com/package/@atproto/api)                 |
-| `@atproto/common-web`: shared code and helpers which can run in web browsers  | [README](./packages/common-web/README.md)  | [![NPM](https://img.shields.io/npm/v/@atproto/common-web)](https://www.npmjs.com/package/@atproto/common-web)   |
-| `@atproto/common`: shared code and helpers which doesn't work in web browsers | [README](./packages/common/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/common)](https://www.npmjs.com/package/@atproto/common)           |
-| `@atproto/crypto`: cryptographic signing and key serialization                | [README](./packages/crypto/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://www.npmjs.com/package/@atproto/crypto)           |
-| `@atproto/identity`: DID and handle resolution                                | [README](./packages/identity/README.md)    | [![NPM](https://img.shields.io/npm/v/@atproto/identity)](https://www.npmjs.com/package/@atproto/identity)       |
-| `@atproto/lexicon`: schema definition language                                | [README](./packages/lexicon/README.md)     | [![NPM](https://img.shields.io/npm/v/@atproto/lexicon)](https://www.npmjs.com/package/@atproto/lexicon)         |
-| `@atproto/repo`: data storage structure, including MST                        | [README](./packages/repo/README.md)        | [![NPM](https://img.shields.io/npm/v/@atproto/repo)](https://www.npmjs.com/package/@atproto/repo)               |
-| `@atproto/syntax`: string parsers for identifiers                             | [README](./packages/syntax/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/syntax)](https://www.npmjs.com/package/@atproto/syntax)           |
-| `@atproto/xrpc`: client-side HTTP API helpers                                 | [README](./packages/xrpc/README.md)        | [![NPM](https://img.shields.io/npm/v/@atproto/xrpc)](https://www.npmjs.com/package/@atproto/xrpc)               |
-| `@atproto/xrpc-server`: server-side HTTP API helpers                          | [README](./packages/xrpc-server/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/xrpc-server)](https://www.npmjs.com/package/@atproto/xrpc-server) |
+| Package                                                                       | Docs                                       | NPMX                                                                                                       |
+| ----------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `@atproto/api`: client library                                                | [README](./packages/api/README.md)         | [![NPM](https://img.shields.io/npm/v/@atproto/api)](https://npmx.dev/package/@atproto/api)                 |
+| `@atproto/common-web`: shared code and helpers which can run in web browsers  | [README](./packages/common-web/README.md)  | [![NPM](https://img.shields.io/npm/v/@atproto/common-web)](https://npmx.dev/package/@atproto/common-web)   |
+| `@atproto/common`: shared code and helpers which doesn't work in web browsers | [README](./packages/common/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/common)](https://npmx.dev/package/@atproto/common)           |
+| `@atproto/crypto`: cryptographic signing and key serialization                | [README](./packages/crypto/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://npmx.dev/package/@atproto/crypto)           |
+| `@atproto/identity`: DID and handle resolution                                | [README](./packages/identity/README.md)    | [![NPM](https://img.shields.io/npm/v/@atproto/identity)](https://npmx.dev/package/@atproto/identity)       |
+| `@atproto/lex`: modern type-safe client library with codegen                  | [README](./packages/lex/lex/README.md)     | [![NPM](https://img.shields.io/npm/v/@atproto/lex)](https://npmx.dev/package/@atproto/lex)                 |
+| `@atproto/lexicon`: schema definition language                                | [README](./packages/lexicon/README.md)     | [![NPM](https://img.shields.io/npm/v/@atproto/lexicon)](https://npmx.dev/package/@atproto/lexicon)         |
+| `@atproto/repo`: data storage structure, including MST                        | [README](./packages/repo/README.md)        | [![NPM](https://img.shields.io/npm/v/@atproto/repo)](https://npmx.dev/package/@atproto/repo)               |
+| `@atproto/syntax`: string parsers for identifiers                             | [README](./packages/syntax/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/syntax)](https://npmx.dev/package/@atproto/syntax)           |
+| `@atproto/xrpc`: client-side HTTP API helpers                                 | [README](./packages/xrpc/README.md)        | [![NPM](https://img.shields.io/npm/v/@atproto/xrpc)](https://npmx.dev/package/@atproto/xrpc)               |
+| `@atproto/xrpc-server`: server-side HTTP API helpers                          | [README](./packages/xrpc-server/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/xrpc-server)](https://npmx.dev/package/@atproto/xrpc-server) |
 
 **TypeScript Services:**
 
@@ -36,12 +37,12 @@ Go programming language source code is in [bluesky-social/indigo](https://github
 
 ## Developer Quickstart
 
-We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 18. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
+We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 22 or later. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
 
 There is a Makefile which can help with basic development tasks:
 
 ```shell
-# use existing nvm to install node 18 and pnpm
+# use existing nvm to install node 22 and pnpm
 make nvm-setup
 
 # pull dependencies and build all local packages

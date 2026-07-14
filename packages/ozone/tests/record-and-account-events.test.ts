@@ -1,20 +1,20 @@
 import assert from 'node:assert'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
+import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/defs.js'
+import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
 import {
   REVIEWOPEN,
-  SubjectStatusView,
+  type SubjectStatusView,
   isAccountHosting,
   isRecordHosting,
-} from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent'
+} from '../src/lexicon/types/tools/ozone/moderation/defs.js'
+import type { InputSchema } from '../src/lexicon/types/tools/ozone/moderation/emitEvent.js'
 
 describe('record and account events on moderation subjects', () => {
   let network: TestNetwork
@@ -32,7 +32,7 @@ describe('record and account events on moderation subjects', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   const getSubjectStatus = async (

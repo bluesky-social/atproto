@@ -1,17 +1,18 @@
-import { AtUri, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { AtUri, type AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import { forSnapshot } from '../_util.js'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxies view requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -45,7 +46,7 @@ describe('proxies view requests', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('actor.getProfile', async () => {

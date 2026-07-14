@@ -1,13 +1,13 @@
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
-import { SeverityLevelSettingKey } from '../src/setting/constants'
-import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons.js'
+import { SeverityLevelSettingKey } from '../src/setting/constants.js'
+import { forSnapshot } from './_util.js'
 
 const strikeConfig = {
   'sev-0': { strikeCount: 0 },
@@ -65,7 +65,7 @@ describe('account-strikes', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('tracks strikes and exposes them through queryStatuses and queryEvents', async () => {

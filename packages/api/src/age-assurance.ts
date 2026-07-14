@@ -1,5 +1,5 @@
-import { AppBskyAgeassuranceDefs } from './client'
-import { ids } from './client/lexicons'
+import { AppBskyAgeassuranceDefs } from './client/index.js'
+import { ids } from './client/lexicons.js'
 
 export type AgeAssuranceRuleID = Exclude<
   | AppBskyAgeassuranceDefs.ConfigRegionRuleDefault['$type']

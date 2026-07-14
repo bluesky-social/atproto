@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   AppBskyFeedGetPostThread,
@@ -6,12 +7,13 @@ import {
   AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import {
   assertIsThreadViewPost,
   forSnapshot,
   stripViewerFromThread,
-} from '../_util'
+} from '../_util.js'
 
 describe('appview thread views', () => {
   let network: TestNetwork
@@ -20,9 +22,9 @@ describe('appview thread views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -39,17 +41,13 @@ describe('appview thread views', () => {
     await sc.like(alice, sc.replies[alice][0].ref)
     await sc.like(alice, sc.replies[bob][0].ref)
     await sc.like(alice, sc.replies[carol][0].ref)
-  })
 
-  beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
-    await network.processAll()
   })
 
-  afterAll(async () => {
-    await network.close()
-  })
+  beforeEach(async () => network.processAll())
+  afterAll(async () => network?.close())
 
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(

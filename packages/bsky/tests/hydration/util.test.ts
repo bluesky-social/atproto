@@ -1,11 +1,12 @@
 import { Timestamp } from '@bufbuild/protobuf'
+import { describe, expect, it } from 'vitest'
 import {
   HydrationMap,
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
   parseDate,
-} from '../../src/hydration/util'
+} from '../../src/hydration/util.js'
 
 const mapToObj = (map: HydrationMap<string, unknown>) => {
   return Object.fromEntries(map) as Record<string, unknown>

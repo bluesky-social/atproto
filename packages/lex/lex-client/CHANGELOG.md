@@ -1,5 +1,145 @@
 # @atproto/lex-client
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [[`1570e44`](https://github.com/bluesky-social/atproto/commit/1570e4471bffb1f3e5e6907f031d025db9ef3198)]:
+  - @atproto/lex-schema@0.2.2
+
+## 0.2.3
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto/lex-schema@0.2.1
+  - @atproto/lex-data@0.1.5
+  - @atproto/lex-json@0.1.4
+
+## 0.2.2
+
+### Patch Changes
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type `Client` binary responses as `Uint8Array<ArrayBuffer>`
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add retry options to `xrpc` requests
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112)]:
+  - @atproto/lex-schema@0.2.0
+
+## 0.2.1
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build using `verbatimModuleSyntax`, reducing runtime import graph
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/lex-schema@0.1.6
+  - @atproto/lex-data@0.1.4
+  - @atproto/lex-json@0.1.3
+
+## 0.2.0
+
+### Minor Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `list()` interface to return `{ valid: boolean; value: InferredType }`
+
+### Patch Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `listAll()` method
+
+## 0.1.5
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/lex-data@0.1.3
+  - @atproto/lex-json@0.1.2
+  - @atproto/lex-schema@0.1.5
+
+## 0.1.4
+
+### Patch Changes
+
+- [#4967](https://github.com/bluesky-social/atproto/pull/4967) [`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use TypeScript 7 to build package
+
+- Updated dependencies [[`9fc720c`](https://github.com/bluesky-social/atproto/commit/9fc720ce75f3ee88a5e48a9be919b07c7647f6f5)]:
+  - @atproto/lex-schema@0.1.4
+  - @atproto/lex-data@0.1.2
+  - @atproto/lex-json@0.1.1
+
+## 0.1.3
+
+### Patch Changes
+
+- [#5006](https://github.com/bluesky-social/atproto/pull/5006) [`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused utilities
+
+- Updated dependencies [[`60721e6`](https://github.com/bluesky-social/atproto/commit/60721e69c8db193eb817c4238ac447505ac855bc)]:
+  - @atproto/lex-schema@0.1.2
+
+## 0.1.2
+
+### Patch Changes
+
+- [#4980](https://github.com/bluesky-social/atproto/pull/4980) [`482767c`](https://github.com/bluesky-social/atproto/commit/482767c4bcce95aa390b2992b028fd8e27d162b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve bundling size of lex-client
+
+## 0.1.1
+
+### Patch Changes
+
+- [#4954](https://github.com/bluesky-social/atproto/pull/4954) [`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `SharedArrayBuffer`-backed `Uint8Array` to be used as `BinaryBodyInit` (used for binary request bodies and unknown response payloads)
+
+- [#4895](https://github.com/bluesky-social/atproto/pull/4895) [`25e0233`](https://github.com/bluesky-social/atproto/commit/25e02339a383740e762c9a9633a701d2fb0cab86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `applyWrites()` method to Lex SDK client class
+
+  Thank you [@TrySound](https://github.com/TrySound) for the suggestion
+
+- Updated dependencies [[`e6c6343`](https://github.com/bluesky-social/atproto/commit/e6c6343bd3727455bd0da12300bb4929a944e4f1)]:
+  - @atproto/lex-data@0.1.1
+
+## 0.1.0
+
+### Minor Changes
+
+- [#4929](https://github.com/bluesky-social/atproto/pull/4929) [`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Drop support for Node.js 18 and 20. Node.js 22 is now the minimum supported version. Docker images now use Node.js 24.
+
+- [#4943](https://github.com/bluesky-social/atproto/pull/4943) [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Convert to pure ESM. All packages now ship `"type": "module"` with ES module output and Node16 module resolution.
+
+  Node.js 22's `require()` compatibility layer can still load these packages in CommonJS code.
+
+- [`affb50c`](https://github.com/bluesky-social/atproto/commit/affb50c040b497a12631df99a6310f8e78cab557) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** `BinaryBodyInit` (used for binary request bodies and unknown response payloads) now uses `Uint8Array<ArrayBuffer>` rather than `Uint8Array`, matching the buffer-backed (not shared-memory) byte arrays expected by Web APIs. Most callers can pass values through unchanged; in the rare case of a `SharedArrayBuffer`-backed `Uint8Array`, copy into a regular `Uint8Array` first.
+
+- [#4930](https://github.com/bluesky-social/atproto/pull/4930) [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705) Thanks [@devinivy](https://github.com/devinivy)! - Build with TypeScript 6.0.
+
+### Patch Changes
+
+- Updated dependencies [[`f01c59f`](https://github.com/bluesky-social/atproto/commit/f01c59f5bd3f75fb8b47a9eecd4858b84033fb7c), [`c459153`](https://github.com/bluesky-social/atproto/commit/c459153395a30ce89e050892c8fab7dc98e019b9), [`908bece`](https://github.com/bluesky-social/atproto/commit/908bece169258bff5ad121e5eec157d6ded6f705)]:
+  - @atproto/lex-data@0.1.0
+  - @atproto/lex-json@0.1.0
+  - @atproto/lex-schema@0.1.0
+
+## 0.0.22
+
+### Patch Changes
+
+- [#4948](https://github.com/bluesky-social/atproto/pull/4948) [`d8b2374`](https://github.com/bluesky-social/atproto/commit/d8b2374e1592d1dec65a33439791bc141f02397a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `options` required for `Client.get` when the schema expects a `rkey` to fetch a record
+
+## 0.0.21
+
+### Patch Changes
+
+- [#4888](https://github.com/bluesky-social/atproto/pull/4888) [`907edfa`](https://github.com/bluesky-social/atproto/commit/907edfa1d16b1074bab4dc617d0bd1a810f3da02) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Small JSDoc improvements
+
+- Updated dependencies [[`2fd8d62`](https://github.com/bluesky-social/atproto/commit/2fd8d62708dc23de6ed21cbcccfebab68b19f588)]:
+  - @atproto/lex-schema@0.0.20
+
 ## 0.0.20
 
 ### Patch Changes

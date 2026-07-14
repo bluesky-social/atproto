@@ -1,4 +1,4 @@
-import { Awaitable } from './util.js'
+import type { Awaitable } from './util.js'
 
 export type Key = NonNullable<unknown>
 export type Value = NonNullable<unknown> | null

@@ -1,16 +1,16 @@
 import {
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
-  AppBskyLabelerDefs,
+  type AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
-} from '../client'
-import { asPredicate } from '../client/util'
-import {
+} from '../client/index.js'
+import { asPredicate } from '../client/util.js'
+import type {
   InterpretedLabelValueDefinition,
   LabelPreference,
   LabelValueDefinitionFlag,
   ModerationBehavior,
-} from './types'
+} from './types.js'
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {
   return Boolean(embed && AppBskyEmbedRecord.isView(embed))

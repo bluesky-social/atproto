@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { join } from 'node:path'
-import { SourceFile } from 'ts-morph'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { SourceFile } from 'ts-morph'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import {
   isGlobalIdentifier,
   isJsKeyword,
@@ -239,7 +239,7 @@ export class RefResolver {
         // > "Cannot use namespace '<nsIdentifier>' as a type."
 
         // Instead the generated code should look like:
-        // import { "<unsafeTypeName>" as <safeIdentifier> } from './<moduleSpecifier>'
+        // import { "<unsafeTypeName>" as <safeIdentifier> } from './<moduleSpecifier>.js'
 
         // Because it requires more complex management of local variables names,
         // and we don't expect this to actually happen with properly designed
@@ -250,7 +250,7 @@ export class RefResolver {
         )
       }
 
-      // import * as <nsIdentifier> from './<moduleSpecifier>'
+      // import * as <nsIdentifier> from './<moduleSpecifier>.js'
       const nsIdentifier = this.getNsIdentifier(nsid, moduleSpecifier)
 
       return {

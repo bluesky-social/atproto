@@ -1,22 +1,22 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { Client } from '@atproto/lex'
-import { AtUri, AtUriString, DidString } from '@atproto/syntax'
-import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import type { Client } from '@atproto/lex'
+import { AtUri, type AtUriString, type DidString } from '@atproto/syntax'
+import { MethodNotImplementedError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  Hydrator,
+  type HydrateCtx,
+  type Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { Views } from '../../../../views'
+} from '../../../../pipeline.js'
+import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedStarterPacks = createPipeline(

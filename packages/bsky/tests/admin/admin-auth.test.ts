@@ -1,7 +1,13 @@
 import assert from 'node:assert'
-import { $Typed, AtpAgent, ComAtprotoAdminDefs, ids } from '@atproto/api'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import {
+  type $Typed,
+  type AtpAgent,
+  ComAtprotoAdminDefs,
+  ids,
+} from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 describe('admin auth', () => {
@@ -64,7 +70,7 @@ describe('admin auth', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows service auth requests from the configured appview did', async () => {

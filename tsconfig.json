@@ -57,6 +57,6 @@
     { "path": "./packages/tap" },
     { "path": "./packages/ws-client" },
     { "path": "./packages/xrpc" },
-    { "path": "./packages/xrpc-server" }
-  ]
+    { "path": "./packages/xrpc-server" },
+  ],
 }

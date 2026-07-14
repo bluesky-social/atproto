@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { HandlerOpts } from '../src/channel'
-import { SimpleIndexer } from '../src/simple-indexer'
-import { IdentityEvent, RecordEvent } from '../src/types'
-import { createIdentityEvent, createMockOpts, createRecordEvent } from './_util'
+import type { HandlerOpts } from '../src/channel.js'
+import { SimpleIndexer } from '../src/simple-indexer.js'
+import type { IdentityEvent, RecordEvent } from '../src/types.js'
+import {
+  createIdentityEvent,
+  createMockOpts,
+  createRecordEvent,
+} from './_util.js'
 
 describe('SimpleIndexer', () => {
   describe('event routing', () => {

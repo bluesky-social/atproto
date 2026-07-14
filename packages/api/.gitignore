@@ -1,5 +1,5 @@
 # @atproto/lex-cli
-# src/client
+src/client
 
 # ./scripts/generate-code.mjs
 src/moderation/const/labels.ts

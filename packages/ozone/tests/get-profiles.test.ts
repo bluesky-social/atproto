@@ -1,6 +1,6 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -26,7 +26,7 @@ describe('get profiles through ozone', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('allows getting profiles by dids for takendown accounts.', async () => {

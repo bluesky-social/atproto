@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store",
-  "version": "0.3.0",
+  "version": "0.4.4",
   "license": "MIT",
   "description": "Simple store interfaces & utilities",
   "keywords": [
@@ -13,19 +13,21 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/simple-store"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
+  "engines": {
+    "node": ">=22"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json"
   }
 }

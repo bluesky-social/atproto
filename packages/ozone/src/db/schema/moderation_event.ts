@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import type { Generated } from 'kysely'
 
 export const eventTableName = 'moderation_event'
 
@@ -31,10 +31,12 @@ export interface ModerationEvent {
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'
     | 'chat.bsky.convo.defs#messageRef'
+    | 'chat.bsky.convo.defs#convoRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   subjectBlobCids: string[] | null
+  subjectConvoId: string | null
   subjectMessageId: string | null
   createLabelVals: string | null
   negateLabelVals: string | null

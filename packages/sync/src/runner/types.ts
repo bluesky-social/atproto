@@ -1,5 +1,5 @@
 export interface EventRunner {
-  getCursor(): Awaited<number | undefined>
+  getCursor(): number | undefined | Promise<number | undefined>
   trackEvent(
     did: string,
     seq: number,

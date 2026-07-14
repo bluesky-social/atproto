@@ -1,4 +1,4 @@
-import { Gate } from './gates'
+import type { Gate } from './gates.js'
 
 /**
  * The user context passed to the feature gates client for evaluation and

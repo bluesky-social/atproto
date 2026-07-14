@@ -1,8 +1,8 @@
-import { Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
+import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
   AtprotoHandleResolver,
-  HandleResolver,
-  HandleResolverErrorHandler,
+  type HandleResolver,
+  type HandleResolverErrorHandler,
 } from '@atproto-labs/handle-resolver'
 import {
   nodeResolveTxtDefault,

@@ -1,13 +1,13 @@
 import {
   IndentationText,
   Project,
-  SourceFile,
+  type SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
 import { type LexRecord, type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
-import { type GeneratedAPI } from '../types'
-import { gen, lexiconsTs, utilTs } from './common'
+import type { GeneratedAPI } from '../types.js'
+import { gen, lexiconsTs, utilTs } from './common.js'
 import {
   genCommonImports,
   genImports,
@@ -16,7 +16,7 @@ import {
   genXrpcInput,
   genXrpcOutput,
   genXrpcParams,
-} from './lex-gen'
+} from './lex-gen.js'
 import {
   type DefTreeNode,
   lexiconsToDefTree,
@@ -24,7 +24,7 @@ import {
   toCamelCase,
   toScreamingSnakeCase,
   toTitleCase,
-} from './util'
+} from './util.js'
 
 const ATP_METHODS = {
   list: 'com.atproto.repo.listRecords',
@@ -431,7 +431,11 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   }
 }
 
-const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
+const lexiconTs = (
+  project: Project,
+  lexicons: Lexicons,
+  lexiconDoc: LexiconDoc,
+) =>
   gen(
     project,
     `/types/${lexiconDoc.id.split('.').join('/')}.ts`,
@@ -447,7 +451,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           moduleSpecifier: '@atproto/xrpc',
         })
         xrpcImport.addNamedImports([
-          { name: 'HeadersMap' },
+          { name: 'HeadersMap', isTypeOnly: true },
           { name: 'XRPCError' },
         ])
       }

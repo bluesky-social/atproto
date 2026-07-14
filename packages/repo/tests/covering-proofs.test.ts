@@ -1,8 +1,8 @@
 import { parseCid } from '@atproto/lex-data'
-import { BlockMap } from '../src'
-import { MST } from '../src/mst'
-import { MemoryBlockstore } from '../src/storage'
-import * as k from './_keys'
+import { BlockMap } from '../src/index.js'
+import { MST } from '../src/mst/index.js'
+import { MemoryBlockstore } from '../src/storage/index.js'
+import * as k from './_keys.js'
 
 // @NOTE these tests are the exact same as the tests in commit-proof-fixtures.json but in code from
 // kept around currently because they are a bit easier to understand/work with

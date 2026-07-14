@@ -1,25 +1,25 @@
 import { mapDefined } from '@atproto/common'
-import { AtUriString, DidString } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
+import type { AtUriString, DidString } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  HydrationState,
-  Hydrator,
+  type HydrateCtx,
+  type HydrationState,
+  type Hydrator,
   mergeManyStates,
-} from '../../../../hydration/hydrator'
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
-} from '../../../../pipeline'
-import { ListItemInfo } from '../../../../proto/bsky_pb'
-import { uriToDid as didFromUri } from '../../../../util/uris'
-import { Views } from '../../../../views'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+} from '../../../../pipeline.js'
+import type { ListItemInfo } from '../../../../proto/bsky_pb.js'
+import { uriToDid as didFromUri } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)

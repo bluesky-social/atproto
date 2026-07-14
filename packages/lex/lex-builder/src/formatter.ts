@@ -1,4 +1,7 @@
-import { Options as PrettierOptions, format as prettierFormat } from 'prettier'
+import {
+  type Options as PrettierOptions,
+  format as prettierFormat,
+} from 'prettier'
 
 const DEFAULT_FORMAT_OPTIONS: PrettierOptions = {
   parser: 'typescript',

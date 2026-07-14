@@ -1,14 +1,15 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import type { AtpAgent } from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
+import { forSnapshot } from '../_util.js'
+import basicSeed from '../seeds/basic.js'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let moderator: string
+  let moderator: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -69,7 +70,7 @@ describe('proxies admin requests', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('creates reports of a repo.', async () => {

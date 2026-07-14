@@ -1,12 +1,12 @@
-import {
+import type {
   AtpAgent,
   ToolsOzoneModerationListScheduledActions,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs'
-import { ids } from '../src/lexicon/lexicons'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs.js'
+import { ids } from '../src/lexicon/lexicons.js'
+import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('scheduled action processor', () => {
   let network: TestNetwork
@@ -73,7 +73,7 @@ describe('scheduled action processor', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('findAndExecuteScheduledActions', () => {

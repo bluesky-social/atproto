@@ -1,9 +1,9 @@
-import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import { AppContext } from '../context'
-import { Service } from '../proto/bsync_connect'
-import { DeleteOperationsByActorAndNamespaceResponse } from '../proto/bsync_pb'
-import { authWithApiKey } from './auth'
-import { isValidDid, validateNamespace } from './util'
+import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
+import type { AppContext } from '../context.js'
+import type { Service } from '../proto/bsync_connect.js'
+import { DeleteOperationsByActorAndNamespaceResponse } from '../proto/bsync_pb.js'
+import { authWithApiKey } from './auth.js'
+import { isValidDid, validateNamespace } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   /**

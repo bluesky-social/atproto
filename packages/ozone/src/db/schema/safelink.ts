@@ -1,10 +1,10 @@
-import { GeneratedAlways } from 'kysely'
-import {
+import type { GeneratedAlways } from 'kysely'
+import type {
   SafelinkActionType,
   SafelinkEventType,
   SafelinkPatternType,
   SafelinkReasonType,
-} from '../../api/util'
+} from '../../api/util.js'
 
 export const safelinkRuleTableName = 'safelink_rule'
 export const safelinkEventTableName = 'safelink_event'

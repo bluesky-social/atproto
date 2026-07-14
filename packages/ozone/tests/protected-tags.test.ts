@@ -1,14 +1,14 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
 import {
   ROLEADMIN,
   ROLEMODERATOR,
-} from '../dist/lexicon/types/tools/ozone/team/defs'
-import { ProtectedTagSettingKey } from '../src/setting/constants'
+} from '../dist/lexicon/types/tools/ozone/team/defs.js'
+import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('protected-tags', () => {
   let network: TestNetwork
@@ -30,7 +30,7 @@ describe('protected-tags', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   describe('Settings management', () => {

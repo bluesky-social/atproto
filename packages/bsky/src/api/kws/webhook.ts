@@ -1,18 +1,23 @@
-import express, { RequestHandler } from 'express'
-import { httpLogger as log } from '../../logger'
-import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const'
+import type { RequestHandler } from 'express'
+import type express from 'express'
+import { httpLogger as log } from '../../logger.js'
+import { AGE_ASSURANCE_CONFIG } from '../age-assurance/const.js'
 import {
   KWSExternalPayloadVersion,
   parseKWSExternalPayloadV1WithV2Compat,
-} from '../age-assurance/kws/external-payload'
-import { createEvent } from '../age-assurance/stash'
-import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util'
+} from '../age-assurance/kws/external-payload.js'
+import { createEvent } from '../age-assurance/stash.js'
+import { computeAgeAssuranceAccessOrThrow } from '../age-assurance/util.js'
 import {
-  AppContextWithKwsClient,
-  KwsWebhookBody,
+  type AppContextWithKwsClient,
+  type KwsWebhookBody,
   webhookBodyIntermediateSchema,
-} from './types'
-import { createStashEvent, kwsWwwAuthenticate, validateSignature } from './util'
+} from './types.js'
+import {
+  createStashEvent,
+  kwsWwwAuthenticate,
+  validateSignature,
+} from './util.js'
 
 export const webhookAuth =
   ({ secret }: { secret: string }): RequestHandler =>

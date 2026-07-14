@@ -1,14 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
-  OAuthAuthorizationRequestQuery,
+  type OAuthAuthorizationRequestQuery,
   oauthAuthorizationRequestQuerySchema,
 } from '@atproto/oauth-types'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import {
-  Middleware,
+  type Middleware,
   Router,
-  RouterCtx,
+  type RouterCtx,
   getCookie,
   setCookie,
   validateFetchDest,
@@ -17,7 +17,7 @@ import {
   validateOrigin,
   validateReferrer,
 } from '../lib/http/index.js'
-import { SecurityHeadersOptions } from '../lib/http/security-headers.js'
+import type { SecurityHeadersOptions } from '../lib/http/security-headers.js'
 import { formatError } from '../lib/util/error.js'
 import type { Awaitable } from '../lib/util/type.js'
 import { writeFormRedirect } from '../lib/write-form-redirect.js'
@@ -71,10 +71,9 @@ export function createAuthorizationPageMiddleware<
 
       // "same-origin" is required to support the redirect test logic below (as
       // well as refreshing the authorization page).
-
-      // @TODO Consider removing this altogether to allow hosting PDS and app on
-      // the same site but different origins (different subdomains).
-      validateFetchSite(req, ['same-origin', 'cross-site', 'none'])
+      // "same-site" supports hosting PDS and app on the same site but different
+      // origins (different subdomains).
+      validateFetchSite(req, ['same-origin', 'same-site', 'cross-site', 'none'])
       validateFetchMode(req, ['navigate'])
       validateFetchDest(req, ['document'])
       validateOrigin(req, issuerOrigin)

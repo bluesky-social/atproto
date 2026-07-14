@@ -1,14 +1,14 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { ServiceImpl } from '@connectrpc/connect'
-import { Selectable, sql } from 'kysely'
+import type { ServiceImpl } from '@connectrpc/connect'
+import { type Selectable, sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { parseJsonBytes } from '../../../hydration/util'
+import { parseJsonBytes } from '../../../hydration/util.js'
 import { app, chat } from '../../../lexicons/index.js'
-import { Service } from '../../../proto/bsky_connect'
-import { VerificationMeta } from '../../../proto/bsky_pb'
-import { Database } from '../db'
-import { Verification } from '../db/tables/verification'
-import { getRecords } from './records'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { VerificationMeta } from '../../../proto/bsky_pb.js'
+import type { Database } from '../db/index.js'
+import type { Verification } from '../db/tables/verification.js'
+import { getRecords } from './records.js'
 
 type VerifiedBy = {
   [handle: string]: Pick<
@@ -185,7 +185,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         statusRecord: status,
         germRecord: germDeclaration,
         tags: [],
-        profileTags: [],
+        profileTags: profiles.records[i].tags,
         allowActivitySubscriptionsFrom: activitySubscription(),
         ageAssuranceStatus: ageAssuranceStatus(),
       }

@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { type LexiconDoc } from '@atproto/lexicon'
+import type { LexiconDoc } from '@atproto/lexicon'
 
 const INSERT_START = [
   '<!-- START lex generated content. Please keep comment here to allow auto update -->',
@@ -13,7 +13,7 @@ export async function process(outFilePath: string, lexicons: LexiconDoc[]) {
   let existingContent = ''
   try {
     existingContent = fs.readFileSync(outFilePath, 'utf8')
-  } catch (e) {
+  } catch {
     // ignore - no existing content
   }
   const fileLines: StringTree = existingContent.split('\n')
@@ -68,10 +68,10 @@ function merge(arr: StringTree): string {
     .join('\n')
 }
 
-function matchesStart(line) {
-  return /<!-- START lex /.test(line)
+function matchesStart(line?: string | StringTree) {
+  return /<!-- START lex /.test(String(line))
 }
 
-function matchesEnd(line) {
-  return /<!-- END lex /.test(line)
+function matchesEnd(line?: string | StringTree) {
+  return /<!-- END lex /.test(String(line))
 }

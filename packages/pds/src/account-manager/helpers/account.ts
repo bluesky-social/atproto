@@ -1,17 +1,25 @@
 import { DAY } from '@atproto/common'
 import {
-  AtIdentifierString,
-  DatetimeString,
-  DidString,
-  HandleString,
+  type AtIdentifierString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
   currentDatetimeString,
   isDidIdentifier,
 } from '@atproto/lex'
-import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { com } from '../../lexicons/index.js'
-import { AccountDb, ActorEntry } from '../db'
+import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
+import type { com } from '../../lexicons/index.js'
+import type { AccountDb, ActorEntry } from '../db/index.js'
 
-export class UserAlreadyExistsError extends Error {}
+export class UserAlreadyExistsError extends Error {
+  name = 'UserAlreadyExistsError'
+  constructor(
+    message = 'This email address is already in use, please use a different email.',
+    options?: ErrorOptions,
+  ) {
+    super(message, options)
+  }
+}
 
 export type ActorAccount = ActorEntry & {
   email: string | null
@@ -38,8 +46,10 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
-    .if(!includeTakenDown, (qb) => qb.where(notSoftDeletedClause(ref('actor'))))
-    .if(!includeDeactivated, (qb) =>
+    .$if(!includeTakenDown, (qb) =>
+      qb.where(notSoftDeletedClause(ref('actor'))),
+    )
+    .$if(!includeDeactivated, (qb) =>
       qb.where('actor.deactivatedAt', 'is', null),
     )
     .select([
@@ -61,11 +71,11 @@ export const getAccount = async (
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
   const found = await selectAccountQB(db, flags)
-    .where((qb) => {
+    .where((eb) => {
       if (isDidIdentifier(handleOrDid)) {
-        return qb.where('actor.did', '=', handleOrDid)
+        return eb('actor.did', '=', handleOrDid)
       } else {
-        return qb.where('actor.handle', '=', handleOrDid)
+        return eb('actor.handle', '=', handleOrDid)
       }
     })
     .executeTakeFirst()
@@ -187,17 +197,29 @@ export const updateHandle = async (
   did: DidString,
   handle: HandleString,
 ) => {
+  // No-op if the handle is the same, but still returns 1 row affected, so that
+  // it can be used to check for existence of the account.
   const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({ handle })
       .where('did', '=', did)
-      .whereNotExists(
-        db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
+      .where(({ not, exists }) =>
+        not(
+          exists(
+            db.db
+              .selectFrom('actor')
+              .where('handle', '=', handle)
+              .where('did', '!=', did)
+              .selectAll(),
+          ),
+        ),
       ),
   )
   if (res.numUpdatedRows < 1) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 
@@ -274,8 +296,8 @@ export const deactivateAccount = async (
   db: AccountDb,
   did: DidString,
   deleteAfter: string | null,
-) => {
-  await db.executeWithRetry(
+): Promise<boolean> => {
+  const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({
@@ -284,18 +306,35 @@ export const deactivateAccount = async (
       })
       .where('did', '=', did),
   )
+
+  return res.numUpdatedRows > 0
 }
 
-export const activateAccount = async (db: AccountDb, did: DidString) => {
-  await db.executeWithRetry(
+export const activateAccount = async (
+  db: AccountDb,
+  did: DidString,
+  flags?: AvailabilityFlags,
+): Promise<boolean> => {
+  const { includeTakenDown = false, includeDeactivated = true } = flags ?? {}
+  const { ref } = db.db.dynamic
+
+  const [res] = await db.executeWithRetry(
     db.db
       .updateTable('actor')
       .set({
         deactivatedAt: null,
         deleteAfter: null,
       })
-      .where('did', '=', did),
+      .where('did', '=', did)
+      .$if(!includeTakenDown, (q) =>
+        q.where(notSoftDeletedClause(ref('actor'))),
+      )
+      .$if(!includeDeactivated, (q) =>
+        q.where('actor.deactivatedAt', 'is not', null),
+      ),
   )
+
+  return res.numUpdatedRows > 0
 }
 
 export const formatAccountStatus = (

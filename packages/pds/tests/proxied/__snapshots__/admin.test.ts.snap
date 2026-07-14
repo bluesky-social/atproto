@@ -1,24 +1,24 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`proxies admin requests creates reports of a repo. 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 1,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(1)",
     },
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 3,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(1)",
     },
@@ -27,122 +27,122 @@ Array [
 `;
 
 exports[`proxies admin requests fetches a list of events. 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "creatorHandle": "testmod.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
     },
     "id": 7,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
     "creatorHandle": "mod-authority.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventTag",
-      "add": Array [
+      "add": [
         "report:other",
       ],
-      "remove": Array [],
+      "remove": [],
     },
     "id": 4,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(3)",
     "creatorHandle": "carol.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "impersonation",
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonOther",
     },
     "id": 3,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
     "creatorHandle": "mod-authority.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventTag",
-      "add": Array [
+      "add": [
         "report:spam",
         "lang:en",
         "lang:i",
       ],
-      "remove": Array [],
+      "remove": [],
     },
     "id": 2,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(4)",
     "creatorHandle": "alice.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventReport",
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 1,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
 ]
 `;
 
 exports[`proxies admin requests fetches event details. 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(2)",
-  "event": Object {
+  "event": {
     "$type": "tools.ozone.moderation.defs#modEventTag",
-    "add": Array [
+    "add": [
       "report:spam",
       "lang:en",
       "lang:i",
     ],
-    "remove": Array [],
+    "remove": [],
   },
   "id": 2,
-  "subject": Object {
+  "subject": {
     "$type": "tools.ozone.moderation.defs#repoView",
     "did": "user(0)",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "moderation": Object {
-      "subjectStatus": Object {
-        "accountStats": Object {
+    "moderation": {
+      "subjectStatus": {
+        "accountStats": {
           "$type": "tools.ozone.moderation.defs#accountStats",
           "appealCount": 0,
           "escalateCount": 0,
@@ -152,7 +152,7 @@ Object {
         },
         "ageAssuranceState": "unknown",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "hosting": Object {
+        "hosting": {
           "$type": "tools.ozone.moderation.defs#accountHosting",
           "status": "unknown",
         },
@@ -161,7 +161,7 @@ Object {
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
         "priorityScore": 0,
-        "recordsStats": Object {
+        "recordsStats": {
           "$type": "tools.ozone.moderation.defs#recordsStats",
           "appealedCount": 0,
           "escalatedCount": 0,
@@ -173,13 +173,13 @@ Object {
           "totalReports": 0,
         },
         "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-        "subject": Object {
+        "subject": {
           "$type": "com.atproto.admin.defs#repoRef",
           "did": "user(0)",
         },
-        "subjectBlobCids": Array [],
+        "subjectBlobCids": [],
         "subjectRepoHandle": "bob.test",
-        "tags": Array [
+        "tags": [
           "report:spam",
           "lang:en",
           "lang:i",
@@ -189,13 +189,13 @@ Object {
         "updatedAt": "1970-01-01T00:00:00.000Z",
       },
     },
-    "relatedRecords": Array [
-      Object {
+    "relatedRecords": [
+      {
         "$type": "app.bsky.actor.profile",
-        "avatar": Object {
+        "avatar": {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object {
+          "ref": {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -206,62 +206,62 @@ Object {
       },
     ],
   },
-  "subjectBlobCids": Array [],
-  "subjectBlobs": Array [],
+  "subjectBlobCids": [],
+  "subjectBlobs": [],
 }
 `;
 
 exports[`proxies admin requests fetches moderation events. 1`] = `
-Array [
-  Object {
+[
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
     "creatorHandle": "mod-authority.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventTag",
-      "add": Array [
+      "add": [
         "lang:en",
       ],
-      "remove": Array [],
+      "remove": [],
     },
     "id": 6,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
       "uri": "record(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
-  Object {
+  {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "creatorHandle": "testmod.test",
-    "event": Object {
+    "event": {
       "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
     },
     "id": 5,
-    "subject": Object {
+    "subject": {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
       "uri": "record(0)",
     },
-    "subjectBlobCids": Array [],
+    "subjectBlobCids": [],
     "subjectHandle": "bob.test",
   },
 ]
 `;
 
 exports[`proxies admin requests fetches record details. 1`] = `
-Object {
-  "blobCids": Array [],
-  "blobs": Array [],
+{
+  "blobCids": [],
+  "blobs": [],
   "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "labels": Array [],
-  "moderation": Object {
-    "subjectStatus": Object {
-      "accountStats": Object {
+  "labels": [],
+  "moderation": {
+    "subjectStatus": {
+      "accountStats": {
         "$type": "tools.ozone.moderation.defs#accountStats",
         "appealCount": 0,
         "escalateCount": 0,
@@ -271,7 +271,7 @@ Object {
       },
       "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "hosting": Object {
+      "hosting": {
         "$type": "tools.ozone.moderation.defs#recordHosting",
         "status": "unknown",
       },
@@ -279,7 +279,7 @@ Object {
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
       "priorityScore": 0,
-      "recordsStats": Object {
+      "recordsStats": {
         "$type": "tools.ozone.moderation.defs#recordsStats",
         "appealedCount": 0,
         "escalatedCount": 0,
@@ -291,59 +291,59 @@ Object {
         "totalReports": 0,
       },
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-      "subject": Object {
+      "subject": {
         "$type": "com.atproto.repo.strongRef",
         "cid": "cids(0)",
         "uri": "record(0)",
       },
-      "subjectBlobCids": Array [],
+      "subjectBlobCids": [],
       "subjectRepoHandle": "bob.test",
-      "tags": Array [
+      "tags": [
         "lang:en",
       ],
       "takendown": false,
       "updatedAt": "1970-01-01T00:00:00.000Z",
     },
   },
-  "repo": Object {
+  "repo": {
     "did": "user(0)",
     "email": "bob@test.com",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invitedBy": Object {
+    "invitedBy": {
       "available": 10,
       "code": "invite-code",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "admin",
       "disabled": false,
       "forAccount": "admin",
-      "uses": Array [
-        Object {
+      "uses": [
+        {
           "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(1)",
         },
-        Object {
+        {
           "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(2)",
         },
-        Object {
+        {
           "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(3)",
         },
-        Object {
+        {
           "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(0)",
         },
-        Object {
+        {
           "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(4)",
         },
       ],
     },
     "invitesDisabled": true,
-    "moderation": Object {
-      "subjectStatus": Object {
-        "accountStats": Object {
+    "moderation": {
+      "subjectStatus": {
+        "accountStats": {
           "$type": "tools.ozone.moderation.defs#accountStats",
           "appealCount": 0,
           "escalateCount": 0,
@@ -353,7 +353,7 @@ Object {
         },
         "ageAssuranceState": "unknown",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "hosting": Object {
+        "hosting": {
           "$type": "tools.ozone.moderation.defs#accountHosting",
           "status": "unknown",
         },
@@ -362,7 +362,7 @@ Object {
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
         "priorityScore": 0,
-        "recordsStats": Object {
+        "recordsStats": {
           "$type": "tools.ozone.moderation.defs#recordsStats",
           "appealedCount": 0,
           "escalatedCount": 0,
@@ -374,13 +374,13 @@ Object {
           "totalReports": 0,
         },
         "reviewState": "tools.ozone.moderation.defs#reviewClosed",
-        "subject": Object {
+        "subject": {
           "$type": "com.atproto.admin.defs#repoRef",
           "did": "user(0)",
         },
-        "subjectBlobCids": Array [],
+        "subjectBlobCids": [],
         "subjectRepoHandle": "bob.test",
-        "tags": Array [
+        "tags": [
           "report:spam",
           "lang:en",
           "lang:i",
@@ -390,13 +390,13 @@ Object {
         "updatedAt": "1970-01-01T00:00:00.000Z",
       },
     },
-    "relatedRecords": Array [
-      Object {
+    "relatedRecords": [
+      {
         "$type": "app.bsky.actor.profile",
-        "avatar": Object {
+        "avatar": {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object {
+          "ref": {
             "$link": "cids(1)",
           },
           "size": 3976,
@@ -408,7 +408,7 @@ Object {
     ],
   },
   "uri": "record(0)",
-  "value": Object {
+  "value": {
     "$type": "app.bsky.feed.post",
     "createdAt": "1970-01-01T00:00:00.000+00:00",
     "text": "bobby boy here",
@@ -417,47 +417,47 @@ Object {
 `;
 
 exports[`proxies admin requests fetches repo details. 1`] = `
-Object {
+{
   "did": "user(0)",
   "email": "eve@test.com",
   "handle": "eve.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "invitedBy": Object {
+  "invitedBy": {
     "available": 1,
     "code": "invite-code",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "admin",
     "disabled": false,
     "forAccount": "user(1)",
-    "uses": Array [
-      Object {
+    "uses": [
+      {
         "usedAt": "1970-01-01T00:00:00.000Z",
         "usedBy": "user(0)",
       },
     ],
   },
-  "invites": Array [],
+  "invites": [],
   "invitesDisabled": false,
-  "labels": Array [],
-  "moderation": Object {},
-  "relatedRecords": Array [],
+  "labels": [],
+  "moderation": {},
+  "relatedRecords": [],
 }
 `;
 
 exports[`proxies admin requests searches repos. 1`] = `
-Array [
-  Object {
+[
+  {
     "did": "user(0)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
+    "moderation": {},
+    "relatedRecords": [
+      {
         "$type": "app.bsky.actor.profile",
-        "avatar": Object {
+        "avatar": {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object {
+          "ref": {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -465,13 +465,13 @@ Array [
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "displayName": "ali",
-        "labels": Object {
+        "labels": {
           "$type": "com.atproto.label.defs#selfLabels",
-          "values": Array [
-            Object {
+          "values": [
+            {
               "val": "self-label-a",
             },
-            Object {
+            {
               "val": "self-label-b",
             },
           ],
@@ -483,34 +483,34 @@ Array [
 `;
 
 exports[`proxies admin requests takes actions and resolves reports 1`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(0)",
-  "event": Object {
+  "event": {
     "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
   },
   "id": 5,
-  "subject": Object {
+  "subject": {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
     "uri": "record(0)",
   },
-  "subjectBlobCids": Array [],
+  "subjectBlobCids": [],
 }
 `;
 
 exports[`proxies admin requests takes actions and resolves reports 2`] = `
-Object {
+{
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(1)",
-  "event": Object {
+  "event": {
     "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
   },
   "id": 7,
-  "subject": Object {
+  "subject": {
     "$type": "com.atproto.admin.defs#repoRef",
     "did": "user(0)",
   },
-  "subjectBlobCids": Array [],
+  "subjectBlobCids": [],
 }
 `;
