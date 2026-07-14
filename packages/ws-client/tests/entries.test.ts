@@ -14,6 +14,11 @@ describe('entrypoint parity', () => {
     expect(typeof browser.WebSocketCore).toBe('function')
   })
 
+  it('both export a constructable ReconnectingWebSocket', () => {
+    expect(typeof node.ReconnectingWebSocket).toBe('function')
+    expect(typeof browser.ReconnectingWebSocket).toBe('function')
+  })
+
   it('WebSocketCore constructors are type-compatible', () => {
     // Pure type-level assertion: constructing a real WebSocketCore here
     // would open a socket to an unreachable URL, which is unnecessary risk

@@ -1,0 +1,109 @@
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import type { IncomingMessage } from 'node:http'
+import type { AddressInfo, Server } from 'node:net'
+// eslint-disable-next-line import/default
+import httpTerminator from 'http-terminator'
+import { describe, expect, it } from 'vitest'
+import { type WebSocket as WsSocket, WebSocketServer } from 'ws'
+import { ReconnectingWebSocket } from '../src/node.ts'
+
+function startServer(
+  onConnection: (ws: WsSocket, req: IncomingMessage) => void,
+) {
+  const server: Server = createServer()
+  const { terminate } = httpTerminator.createHttpTerminator({ server })
+  const wss = new WebSocketServer({ server })
+  wss.on('connection', onConnection)
+  return {
+    ready: (async () => {
+      await once(server.listen(0), 'listening')
+      return `ws://localhost:${(server.address() as AddressInfo).port}`
+    })(),
+    terminate,
+  }
+}
+
+describe('ReconnectingWebSocket (node integration)', () => {
+  it('reconnects after the server drops the connection', async () => {
+    let connections = 0
+    const { ready, terminate } = startServer((ws) => {
+      connections++
+      if (connections === 1) {
+        // `ws.close(1006)` throws in the real `ws` lib — 1006 is a
+        // synthetic code an endpoint MUST NOT send on the wire (RFC 6455
+        // §7.4.1). Simulate a server-forced abnormal drop by terminating
+        // the raw socket (no close handshake) after the send flushes, which
+        // surfaces as code 1006 on the client.
+        ws.send('first', () => ws.terminate())
+      } else {
+        ws.send('second')
+        ws.close(1000)
+      }
+    })
+    const url = await ready
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    const ws = new ReconnectingWebSocket(url, { dataMode: 'text' })
+    const received: string[] = []
+    for await (const msg of ws) {
+      received.push(msg)
+      if (received.length === 2) break
+    }
+    expect(received).toEqual(['first', 'second'])
+    expect(connections).toBeGreaterThanOrEqual(2)
+  })
+
+  it('applies headers on each (re)connect', async () => {
+    const auths: (string | undefined)[] = []
+    let n = 0
+    const { ready, terminate } = startServer((ws, req) => {
+      auths.push(req.headers['authorization'])
+      const isFirst = n++ === 0
+      ws.send(`msg${n - 1}`, () => {
+        // See the note in the previous test: simulate an abnormal drop via
+        // terminate() rather than the invalid `close(1006)`.
+        if (isFirst) ws.terminate()
+        else ws.close(1000)
+      })
+    })
+    const url = await ready
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    const ws = new ReconnectingWebSocket(url, {
+      dataMode: 'text',
+      headers: { Authorization: 'Bearer tok' },
+    })
+    const received: string[] = []
+    for await (const msg of ws) {
+      received.push(msg)
+      if (received.length === 2) break
+    }
+    expect(auths.every((a) => a === 'Bearer tok')).toBe(true)
+  })
+
+  it('send() delivers to the server when connected', async () => {
+    const seen: string[] = []
+    const { ready, terminate } = startServer((ws) => {
+      ws.on('message', (d) => {
+        seen.push(d.toString())
+        ws.close(1000)
+      })
+    })
+    const url = await ready
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    const ws = new ReconnectingWebSocket(url, { dataMode: 'text' })
+    // Kick off iteration so a connection is established.
+    const done = (async () => {
+      for await (const _msg of ws) {
+        /* drain until close */
+      }
+    })()
+    // Wait until connected, then send.
+    while (!ws.connected) await new Promise((r) => setTimeout(r, 5))
+    await ws.send('ping')
+    await done
+    expect(seen).toEqual(['ping'])
+  })
+})
