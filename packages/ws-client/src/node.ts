@@ -56,6 +56,4 @@ export type {
 } from './reconnecting.js'
 export { FATAL_CLOSE_CODES, isReconnectableClose } from './reconnect-policy.js'
 
-// Legacy reconnect client (Node only; depends on the `ws` package).
-export { WebSocketKeepAlive } from './keepalive.js'
 export { CloseCode, DisconnectError } from './keepalive-shared.js'

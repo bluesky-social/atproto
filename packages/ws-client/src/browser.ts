@@ -56,6 +56,4 @@ export type {
 } from './reconnecting.js'
 export { FATAL_CLOSE_CODES, isReconnectableClose } from './reconnect-policy.js'
 
-// Node-only; the browser build exposes a throwing stub (see keepalive-stub).
-export { WebSocketKeepAlive } from './keepalive-stub.js'
 export { CloseCode, DisconnectError } from './keepalive-shared.js'
