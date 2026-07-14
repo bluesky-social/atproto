@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  FATAL_CLOSE_CODES,
-  backoffMs,
-  defaultShouldReconnect,
-  isReconnectableClose,
-} from './reconnect-policy.js'
-import {
   AbnormalCloseError,
   BufferOverflowError,
   DataModeError,
@@ -13,6 +7,12 @@ import {
   IdleTimeoutError,
   SocketError,
 } from './errors.js'
+import {
+  FATAL_CLOSE_CODES,
+  backoffMs,
+  defaultShouldReconnect,
+  isReconnectableClose,
+} from './reconnect-policy.js'
 
 describe('FATAL_CLOSE_CODES', () => {
   it('is exactly the genuine-wire fatal set', () => {
@@ -48,12 +48,20 @@ describe(defaultShouldReconnect, () => {
   })
   it('is fatal on BufferOverflow/DataMode', () => {
     expect(defaultShouldReconnect(new BufferOverflowError(1))).toBe(false)
-    expect(defaultShouldReconnect(new DataModeError('text', 'binary'))).toBe(false)
+    expect(defaultShouldReconnect(new DataModeError('text', 'binary'))).toBe(
+      false,
+    )
   })
   it('classifies AbnormalCloseError by its code', () => {
-    expect(defaultShouldReconnect(new AbnormalCloseError(1011, '', false))).toBe(true)
-    expect(defaultShouldReconnect(new AbnormalCloseError(1008, '', false))).toBe(true)
-    expect(defaultShouldReconnect(new AbnormalCloseError(1002, '', false))).toBe(false)
+    expect(
+      defaultShouldReconnect(new AbnormalCloseError(1011, '', false)),
+    ).toBe(true)
+    expect(
+      defaultShouldReconnect(new AbnormalCloseError(1008, '', false)),
+    ).toBe(true)
+    expect(
+      defaultShouldReconnect(new AbnormalCloseError(1002, '', false)),
+    ).toBe(false)
   })
   it('does not reconnect on an unknown/foreign error', () => {
     expect(defaultShouldReconnect(new Error('nope'))).toBe(false)

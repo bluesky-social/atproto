@@ -1,11 +1,7 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebSocketCoreEngine } from '../src/core.js'
+import { AbnormalCloseError, BufferOverflowError } from '../src/errors.js'
 import { ReconnectingWebSocketBase } from '../src/reconnecting.js'
-import {
-  AbnormalCloseError,
-  BufferOverflowError,
-  DataModeError,
-} from '../src/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeReconnecting<M extends 'auto' | 'text' | 'binary' = 'auto'>(
@@ -34,7 +30,9 @@ describe('ReconnectingWebSocketBase', () => {
 
   it('yields across a clean 1001 reconnect and fires onOpen with reconnect flag', async () => {
     const opens: boolean[] = []
-    const { ws, mocks } = makeReconnecting({ onOpen: ({ reconnect }) => opens.push(reconnect) })
+    const { ws, mocks } = makeReconnecting({
+      onOpen: ({ reconnect }) => opens.push(reconnect),
+    })
     const received: (string | Uint8Array)[] = []
 
     const consume = (async () => {
@@ -93,15 +91,22 @@ describe('ReconnectingWebSocketBase', () => {
     mocks[1].emitOpen()
     mocks[1].emitMessage('ok', false)
     await consume
-    expect(errs[0]).toMatchObject({ willReconnect: true, attempt: expect.any(Number) })
+    expect(errs[0]).toMatchObject({
+      willReconnect: true,
+      attempt: expect.any(Number),
+    })
     expect(received).toEqual(['ok'])
   })
 
   it('propagates a fatal AbnormalCloseError (1002) and stops', async () => {
     const errs: Array<{ willReconnect: boolean }> = []
-    const { ws, mocks } = makeReconnecting({ onError: (_e, info) => errs.push(info) })
+    const { ws, mocks } = makeReconnecting({
+      onError: (_e, info) => errs.push(info),
+    })
     const consume = (async () => {
-      for await (const _msg of ws) { /* noop */ }
+      for await (const _msg of ws) {
+        /* noop */
+      }
     })()
     await tick()
     mocks[0].emitOpen()
@@ -119,7 +124,9 @@ describe('ReconnectingWebSocketBase', () => {
     const { ws, mocks } = makeReconnecting({ maxBufferedBytes: 5 })
     const consume = (async () => {
       // Frames arrive faster than the consumer drains → buffer grows → overflow.
-      for await (const _msg of ws) { /* noop */ }
+      for await (const _msg of ws) {
+        /* noop */
+      }
     })()
     await tick()
     mocks[0].emitOpen()
@@ -141,7 +148,7 @@ describe('ReconnectingWebSocketBase', () => {
       }
     })()
     await tick()
-    mocks[0].emitOpen()          // opens → attempt counter resets to 0
+    mocks[0].emitOpen() // opens → attempt counter resets to 0
     mocks[0].emitClose(1006, '', false) // reconnect, attempt 0 → fast (≤1s)
     await vi.advanceTimersByTimeAsync(1000)
     await tick()
@@ -198,7 +205,9 @@ describe('ReconnectingWebSocketBase', () => {
     const ac = new AbortController()
     const { ws, mocks } = makeReconnecting({ signal: ac.signal })
     const consume = (async () => {
-      for await (const _msg of ws) { /* noop */ }
+      for await (const _msg of ws) {
+        /* noop */
+      }
     })()
     await tick()
     mocks[0].emitOpen()
@@ -218,7 +227,9 @@ describe('ReconnectingWebSocketBase', () => {
       return 'ws://x'
     })
     const consume = (async () => {
-      for await (const _msg of ws) { /* noop */ }
+      for await (const _msg of ws) {
+        /* noop */
+      }
     })()
     await tick() // loop is now awaiting resolveUrl()
     ac.abort(new Error('stop')) // abort DURING url resolution
@@ -252,7 +263,9 @@ describe('ReconnectingWebSocketBase', () => {
   it('escalates backoff across consecutive pre-open failures', async () => {
     const { ws, mocks } = makeReconnecting()
     const consume = (async () => {
-      for await (const _msg of ws) { /* noop */ }
+      for await (const _msg of ws) {
+        /* noop */
+      }
     })()
 
     // Attempt 0: fails before ever opening → retries stays 0, next wait is fast (≤1s).

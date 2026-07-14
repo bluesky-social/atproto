@@ -1,9 +1,9 @@
-import {
-  type CloseInfo,
-  type DataMode,
-  type MessageOf,
-  type WebSocketCoreOptions,
+import type {
+  CloseInfo,
+  DataMode,
+  MessageOf,
   WebSocketCoreEngine,
+  WebSocketCoreOptions,
 } from './core.js'
 import { AbnormalCloseError } from './errors.js'
 import { backoffMs, defaultShouldReconnect } from './reconnect-policy.js'

@@ -56,4 +56,4 @@ export type {
 } from './reconnecting.js'
 export { FATAL_CLOSE_CODES, isReconnectableClose } from './reconnect-policy.js'
 
-export { CloseCode, DisconnectError } from './keepalive-shared.js'
+export { CloseCode, DisconnectError } from './close-codes.js'

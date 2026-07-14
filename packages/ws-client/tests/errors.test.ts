@@ -7,7 +7,7 @@ import {
   IdleTimeoutError,
   SocketError,
   WebSocketCoreError,
-} from './errors.js'
+} from '../src/errors.js'
 
 describe('WebSocketCore errors', () => {
   it('all extend WebSocketCoreError and Error', () => {
