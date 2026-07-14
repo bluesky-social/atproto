@@ -1,9 +1,31 @@
-import type { ClientOptions } from 'ws'
 import { type Deferrable, createDeferrable } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import {
+  AbnormalCloseError,
+  CloseCode,
+  HeartbeatTimeoutError,
+  IdleTimeoutError,
+  ReconnectingWebSocket,
+  SocketError,
+} from '@atproto/ws-client'
 import { type TapEvent, parseTapEvent } from './types.js'
 import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
+
+// Matches the reconnect classification of the legacy WebSocketKeepAlive: only
+// reconnect on a genuine transport failure (socket error, heartbeat/idle
+// timeout) or an abnormal close (code 1006). Any other close code — including
+// the synthetic "no status" 1005 a peer's bare `socket.close()` produces on
+// the wire — ends the session, matching prior behavior exactly.
+function shouldReconnect(error: unknown): boolean {
+  if (error instanceof AbnormalCloseError) {
+    return error.code === CloseCode.Abnormal
+  }
+  return (
+    error instanceof SocketError ||
+    error instanceof HeartbeatTimeoutError ||
+    error instanceof IdleTimeoutError
+  )
+}
 
 export interface HandlerOpts {
   signal: AbortSignal
@@ -15,10 +37,11 @@ export interface TapHandler {
   onError: (err: Error) => void
 }
 
-export type TapWebsocketOptions = ClientOptions & {
+export type TapWebsocketOptions = {
   adminPassword?: string
   maxReconnectSeconds?: number
   heartbeatIntervalMs?: number
+  headers?: Record<string, string> | Headers
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
 }
 
@@ -28,7 +51,7 @@ type BufferedAck = {
 }
 
 export class TapChannel implements AsyncDisposable {
-  private ws: WebSocketKeepAlive
+  private ws: ReconnectingWebSocket<'text'>
   private handler: TapHandler
 
   private readonly abortController: AbortController = new AbortController()
@@ -42,25 +65,34 @@ export class TapChannel implements AsyncDisposable {
     wsOpts: TapWebsocketOptions = {},
   ) {
     this.handler = handler
-    const { adminPassword, ...rest } = wsOpts
-    let headers = rest.headers
+    const { adminPassword, headers: optHeaders, ...rest } = wsOpts
+    const headers = new Headers(optHeaders)
     if (adminPassword) {
-      headers ??= {}
-      headers['Authorization'] = formatAdminAuthHeader(adminPassword)
+      headers.set('Authorization', formatAdminAuthHeader(adminPassword))
     }
-    this.ws = new WebSocketKeepAlive({
-      getUrl: async () => url,
-      onReconnect: () => {
-        this.flushBufferedAcks()
-      },
-      signal: this.abortController.signal,
-      ...rest,
+    this.ws = new ReconnectingWebSocket(url, {
+      dataMode: 'text',
       headers,
+      maxReconnectSeconds: rest.maxReconnectSeconds,
+      heartbeat: rest.heartbeatIntervalMs
+        ? { intervalMs: rest.heartbeatIntervalMs }
+        : undefined,
+      signal: this.abortController.signal,
+      shouldReconnect,
+      onOpen: ({ reconnect }) => {
+        if (reconnect) this.flushBufferedAcks()
+      },
+      onError: rest.onReconnectError
+        ? (error, { willReconnect, attempt }) => {
+            if (willReconnect)
+              rest.onReconnectError!(error, attempt, attempt === 0)
+          }
+        : undefined,
     })
   }
 
   async ackEvent(id: number): Promise<void> {
-    if (this.ws.isConnected()) {
+    if (this.ws.connected) {
       try {
         await this.sendAck(id)
       } catch {
@@ -113,7 +145,15 @@ export class TapChannel implements AsyncDisposable {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      if (!isCausedBySignal(err, this.abortController.signal)) {
+      // An AbnormalCloseError only reaches here once `shouldReconnect` (above)
+      // has already decided not to reconnect — i.e. the peer ended the
+      // session with an ordinary close frame (any code but 1006). That is a
+      // clean, expected stream end, matching WebSocketKeepAlive's prior
+      // behavior of ending silently on any non-abnormal close.
+      if (
+        !isCausedBySignal(err, this.abortController.signal) &&
+        !(err instanceof AbnormalCloseError)
+      ) {
         throw err
       }
     } finally {
@@ -121,10 +161,10 @@ export class TapChannel implements AsyncDisposable {
     }
   }
 
-  private async processWsEvent(chunk: Uint8Array) {
+  private async processWsEvent(chunk: string) {
     let evt: TapEvent
     try {
-      const data = lexParse(chunk.toString(), {
+      const data = lexParse(chunk, {
         // Reject invalid CIDs and blobs
         strict: true,
       })
