@@ -176,6 +176,13 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
       firstAttempt = false
 
       const url = await this.resolveUrl()
+      // resolveUrl() is an async gap: close() or signal abort landing while
+      // it's in flight must not fall through to creating (and leaking) a
+      // connection that nothing will ever terminate. Re-check both before
+      // createCore — an abort here would otherwise be missed entirely, since
+      // an already-aborted signal never fires a listener added after the fact.
+      if (this.stopped) break
+      if (signal?.aborted) throw signal.reason
       const core = this.createCore<M>(url, this.coreOptions())
       this.core = core
       this.state = 'connecting'

@@ -207,6 +207,26 @@ describe('ReconnectingWebSocketBase', () => {
     expect(mocks).toHaveLength(1)
   })
 
+  it('drops no abort that lands while the URL is resolving', async () => {
+    const ac = new AbortController()
+    let releaseUrl!: () => void
+    const urlGate = new Promise<void>((resolve) => {
+      releaseUrl = resolve
+    })
+    const { ws, mocks } = makeReconnecting({ signal: ac.signal }, async () => {
+      await urlGate
+      return 'ws://x'
+    })
+    const consume = (async () => {
+      for await (const _msg of ws) { /* noop */ }
+    })()
+    await tick() // loop is now awaiting resolveUrl()
+    ac.abort(new Error('stop')) // abort DURING url resolution
+    releaseUrl() // let resolveUrl resolve
+    await expect(consume).rejects.toThrow('stop')
+    expect(mocks).toHaveLength(0) // no core was ever constructed
+  })
+
   it('re-resolves a URL thunk on each connect', async () => {
     const urls: string[] = []
     let n = 0

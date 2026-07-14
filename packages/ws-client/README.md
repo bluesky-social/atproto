@@ -289,14 +289,6 @@ the browser through conditional package exports; pre-bundling it into a
 single output collapses that choice to whatever the bundler picked at
 build time, breaking resolution for whichever runtime it didn't choose.
 
-## `WebSocketKeepAlive` (Node)
-
-`WebSocketKeepAlive` is a legacy, reconnecting client and remains available
-on Node, unchanged. It will be reimplemented on top of `WebSocketCore` in a
-follow-up; until then, the browser entry exports a stub of the same name
-that throws on construction (kept only so both entries export the same
-names — see `tests/entries.test.ts`).
-
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:
