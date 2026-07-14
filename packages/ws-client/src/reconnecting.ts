@@ -71,6 +71,11 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
   private state: ReadyState = 'connecting'
   private stopped = false
   private iterated = false
+  // Internal wake signal for close(): lets a parked backoff `sleep` resolve
+  // (not reject) promptly instead of waiting out the full backoff window.
+  // Distinct from `options.signal`, which is the caller's abort — that path
+  // must still reject the iterator with the abort reason.
+  private readonly stopController = new AbortController()
 
   constructor(
     private readonly createCore: CoreFactory,
@@ -95,9 +100,15 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
 
   async close(code = 1000, reason?: string): Promise<void> {
     this.stopped = true
+    this.stopController.abort()
     this.state = 'closing'
     if (this.core) {
-      await this.core.close(code, reason)
+      // `this.core` may be a stale core that already failed (e.g. we're
+      // parked in a backoff sleep after a reconnectable close) — its
+      // `closed` promise is already rejected with that old failure. Mirror
+      // core.ts's own `[Symbol.asyncIterator]().return()` handling: close()
+      // signals user-intended shutdown and must resolve cleanly regardless.
+      await this.core.close(code, reason).catch(() => {})
     }
     this.state = 'closed'
   }
@@ -153,7 +164,10 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
         // Fast first reconnect (attempt 0); exponential backoff afterwards.
         const waitMs =
           retries === 0 ? Math.min(1000, maxMs) : backoffMs(retries, maxMs)
-        await sleep(waitMs, signal) // rejects with signal.reason on abort
+        // Rejects with signal.reason on external abort; resolves promptly
+        // (not rejects) on close()'s internal stop signal — the loop below
+        // observes `this.stopped` and exits the clean way.
+        await sleep(waitMs, signal, this.stopController.signal)
         if (this.stopped) break
         // Escalate the delay for the *next* consecutive failure. Reset to 0
         // happens on open, so the first reconnect after a stable open is fast.
@@ -171,38 +185,44 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
       signal?.addEventListener('abort', onAbort, { once: true })
 
       let cleanClose: CloseInfo | null = null
+      // The `finally` covers every exit from this connection's body: the
+      // normal fall-through below, the `throw`/`break`/`continue` in `catch`,
+      // and a consumer `break` (which resumes the generator's `return()` at
+      // the `yield` and would otherwise skip listener cleanup entirely).
       try {
-        core.opened
-          .then(() => {
-            this.state = 'open'
-            retries = 0 // stable open: next reconnect is fast again
-            this.options.onOpen?.({ reconnect: !firstOpen })
-            firstOpen = false
-          })
-          .catch(() => {})
+        try {
+          core.opened
+            .then(() => {
+              this.state = 'open'
+              retries = 0 // stable open: next reconnect is fast again
+              this.options.onOpen?.({ reconnect: !firstOpen })
+              firstOpen = false
+            })
+            .catch(() => {})
 
-        for await (const msg of core) {
-          yield msg
+          for await (const msg of core) {
+            yield msg
+          }
+          // Clean iterator completion (1000/1001). Read the code to classify.
+          cleanClose = await core.closed
+        } catch (error) {
+          // Abort surfaces to the consumer as a rejection (the terminated core
+          // throws a transport error, which we replace with the abort reason).
+          if (signal?.aborted) throw signal.reason
+          // Consumer-initiated close(): end quietly, no reconnect.
+          if (this.stopped) break
+          const willReconnect = shouldReconnect(error, retries)
+          this.options.onError?.(error, { willReconnect, attempt: retries })
+          if (!willReconnect) {
+            this.state = 'closed'
+            throw error
+          }
+          this.state = 'connecting'
+          continue
         }
-        // Clean iterator completion (1000/1001). Read the code to classify.
-        cleanClose = await core.closed
-      } catch (error) {
+      } finally {
         signal?.removeEventListener('abort', onAbort)
-        // Abort surfaces to the consumer as a rejection (the terminated core
-        // throws a transport error, which we replace with the abort reason).
-        if (signal?.aborted) throw signal.reason
-        // Consumer-initiated close(): end quietly, no reconnect.
-        if (this.stopped) break
-        const willReconnect = shouldReconnect(error, retries)
-        this.options.onError?.(error, { willReconnect, attempt: retries })
-        if (!willReconnect) {
-          this.state = 'closed'
-          throw error
-        }
-        this.state = 'connecting'
-        continue
       }
-      signal?.removeEventListener('abort', onAbort)
 
       if (this.stopped) break
       if (signal?.aborted) throw signal.reason
@@ -228,18 +248,37 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
   }
 }
 
-function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+// `signal` is the caller's external abort: it REJECTS with `signal.reason`
+// (surfaces to the consumer as an iterator rejection). `stopSignal` is
+// close()'s internal wake-up: it RESOLVES instead — a clean stop, not a
+// rejection — so the loop falls through to its own `if (this.stopped) break`.
+function sleep(
+  ms: number,
+  signal?: AbortSignal,
+  stopSignal?: AbortSignal,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(signal.reason)
-    const timer = setTimeout(() => {
+    if (stopSignal?.aborted) return resolve()
+    const cleanup = () => {
+      clearTimeout(timer)
       signal?.removeEventListener('abort', onAbort)
+      stopSignal?.removeEventListener('abort', onStop)
+    }
+    const timer = setTimeout(() => {
+      cleanup()
       resolve()
     }, ms)
     const onAbort = () => {
-      clearTimeout(timer)
+      cleanup()
       reject(signal!.reason)
     }
+    const onStop = () => {
+      cleanup()
+      resolve()
+    }
     signal?.addEventListener('abort', onAbort, { once: true })
+    stopSignal?.addEventListener('abort', onStop, { once: true })
     // Node: don't keep the process alive on the backoff timer.
     ;(timer as { unref?: () => void }).unref?.()
   })

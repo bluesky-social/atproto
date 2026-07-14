@@ -229,6 +229,69 @@ describe('ReconnectingWebSocketBase', () => {
     expect(urls).toEqual(['ws://host/0', 'ws://host/1'])
   })
 
+  it('escalates backoff across consecutive pre-open failures', async () => {
+    const { ws, mocks } = makeReconnecting()
+    const consume = (async () => {
+      for await (const _msg of ws) { /* noop */ }
+    })()
+
+    // Attempt 0: fails before ever opening → retries stays 0, next wait is fast (≤1s).
+    await tick()
+    expect(mocks).toHaveLength(1)
+    mocks[0].emitClose(1006, '', false)
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+
+    // Attempt 1: also fails before opening → retries becomes 1, escalating the
+    // *next* wait to backoffMs(1) (~1.5-2.5s with jitter) since no open reset it.
+    expect(mocks).toHaveLength(2)
+    mocks[1].emitClose(1006, '', false)
+
+    // A short wait shorter than the escalated backoff must NOT yet produce a
+    // third connection attempt.
+    await vi.advanceTimersByTimeAsync(1000)
+    await tick()
+    expect(mocks).toHaveLength(2)
+
+    // Advancing well past the full escalated window (up to ~2.5s more) does.
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    expect(mocks).toHaveLength(3)
+
+    // Clean up: let the loop settle via close() rather than waiting on the wire.
+    // (Don't await `closing` before the echo: ws.close() awaits core.close(),
+    // which itself awaits the core's `closed` promise — that only settles once
+    // the mock's close is echoed below.)
+    const closing = ws.close(1000)
+    mocks[2].emitClose(1000, '', true)
+    await closing
+    await consume
+  })
+
+  it('close() interrupts an active backoff sleep promptly, without waiting out the window', async () => {
+    const { ws, mocks } = makeReconnecting()
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) received.push(msg)
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one', false)
+    mocks[0].emitClose(1006, '', false) // reconnectable → loop parks in backoff sleep
+    await tick() // let the rejection propagate through catch/continue into sleep()
+
+    const closing = ws.close(1000)
+    // Only a tiny advance (well under the backoff window) — the point is that
+    // close() wakes the parked sleep itself, not that we waited it out.
+    await vi.advanceTimersByTimeAsync(2)
+    await tick()
+
+    await expect(closing).resolves.toBeUndefined()
+    await consume
+    expect(received).toEqual(['one'])
+    expect(mocks).toHaveLength(1) // no reconnect attempt was made
+  })
+
   it('send rejects when not connected, resolves when open', async () => {
     const { ws, mocks } = makeReconnecting()
     await expect(ws.send('early' as never)).rejects.toThrow()
