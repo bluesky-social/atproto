@@ -140,7 +140,9 @@ describe('internal actor views', () => {
 
     describe('takedowns', () => {
       afterEach(async () => {
-        await network.bsky.ctx.dataplane.untakedownActor({ did: dids.mix_sub_2 })
+        await network.bsky.ctx.dataplane.untakedownActor({
+          did: dids.mix_sub_2,
+        })
       })
 
       it('omits taken-down accounts by default', async () => {
