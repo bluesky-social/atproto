@@ -1,4 +1,4 @@
-import * as prometheus from 'prom-client'
+import type * as prometheus from 'prom-client'
 import { AtpAgent } from '@atproto/api'
 import { allFulfilled } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
