@@ -51,7 +51,7 @@ export interface CommitDeleteEvent extends EventBase {
 }
 
 export class Jetstream {
-  public ws?: ReconnectingWebSocket<'binary'>
+  public ws?: ReconnectingWebSocket<'text'>
   public url: URL
   /** The current cursor. */
   public cursor?: number
@@ -77,11 +77,11 @@ export class Jetstream {
           this.url.searchParams.set('cursor', this.cursor.toString())
         return this.url.toString()
       },
-      { dataMode: 'binary' },
+      { dataMode: 'text' },
     )
 
     for await (const message of this.ws) {
-      const parsedMessage = JSON.parse(Buffer.from(message).toString())
+      const parsedMessage = JSON.parse(message)
       if (parsedMessage.kind === 'commit') {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
         const { collection, operation, record } = parsedMessage.commit || {}
