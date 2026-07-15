@@ -59,12 +59,7 @@ export type BrowserReconnectingOptions<M extends DataMode = 'auto'> = Omit<
   'headers'
 >
 
-type ReadyState =
-  | 'initialized'
-  | 'connecting'
-  | 'open'
-  | 'closing'
-  | 'closed'
+type ReadyState = 'initialized' | 'connecting' | 'open' | 'closing' | 'closed'
 
 export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
   extends TypedEventTarget<ReconnectingEventMap>

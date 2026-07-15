@@ -1,6 +1,10 @@
 import { assert, describe, expect, it } from 'vitest'
 import { WebSocketCoreEngine } from '../src/core.js'
-import { AbnormalCloseError, SocketError } from '../src/errors.js'
+import {
+  AbnormalCloseError,
+  SocketError,
+  WebSocketCoreError,
+} from '../src/errors.js'
 import type { CloseEventDetail } from '../src/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
@@ -70,6 +74,9 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('drains buffered messages before ending on clean close', async () => {
     const { engine, mock } = makeEngine()
+    // Acquire the iterator before driving terminal events (a never-iterated
+    // engine that is already terminal throws on iteration, by design).
+    const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     // Buffer three messages with no consumer pulling yet.
     mock.emitMessage('x', false)
@@ -77,7 +84,11 @@ describe('WebSocketCoreEngine iterator', () => {
     mock.emitMessage('z', false)
     mock.emitClose(1000, '', true)
     const received: (string | Uint8Array)[] = []
-    for await (const msg of engine) received.push(msg)
+    let result = await it.next()
+    while (!result.done) {
+      received.push(result.value)
+      result = await it.next()
+    }
     expect(received).toEqual(['x', 'y', 'z'])
   })
 
@@ -97,10 +108,10 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('delivers a stored error when no next() is pending', async () => {
     const { engine, mock } = makeEngine()
+    const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     // Abnormal close with NO consumer waiting; error is stored.
     mock.emitClose(1006, 'reset', false)
-    const it = engine[Symbol.asyncIterator]()
     await expect(it.next()).rejects.toSatisfy((err) => {
       assert(err instanceof AbnormalCloseError)
       expect(err.code).toBe(1006)
@@ -124,10 +135,10 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('discards buffered messages after a failure transition', async () => {
     const { engine, mock } = makeEngine()
+    const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     mock.emitMessage('buffered', false) // buffered, no consumer
     mock.emitError(new Error('boom')) // failure discards buffer
-    const it = engine[Symbol.asyncIterator]()
     await expect(it.next()).rejects.toBeInstanceOf(SocketError)
   })
 
@@ -135,12 +146,12 @@ describe('WebSocketCoreEngine iterator', () => {
     const { engine, mock } = makeEngine()
     let errorDetail: unknown
     engine.addEventListener('error', (e) => (errorDetail = e.detail.error))
+    const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     mock.emitMessage('buffered', false) // buffered, no consumer parked
     engine.terminate()
     expect(mock.terminated).toBe(true)
 
-    const it = engine[Symbol.asyncIterator]()
     await expect(it.next()).rejects.toSatisfy((err) => {
       assert(err instanceof SocketError) // terminate() rejects, never yields the buffered value
       return true
@@ -316,7 +327,11 @@ describe('WebSocketCoreEngine lifecycle + events', () => {
     mock.emitOpen()
     mock.emitClose(1011, 'server error', false)
     await expect(pending).rejects.toBeInstanceOf(AbnormalCloseError)
-    expect(detail).toEqual({ code: 1011, reason: 'server error', wasClean: false })
+    expect(detail).toEqual({
+      code: 1011,
+      reason: 'server error',
+      wasClean: false,
+    })
   })
 
   it('close() before iteration is a clean no-op with no events', async () => {
@@ -328,5 +343,33 @@ describe('WebSocketCoreEngine lifecycle + events', () => {
     expect(engine.readyState).toBe('closed')
     expect(mock.opened).toBe(false)
     expect(events).toBe(0)
+  })
+
+  it('iterating after close()-before-iterate throws (programmer error, no hang)', async () => {
+    const { engine, mock } = makeEngine()
+    const events: string[] = []
+    engine.addEventListener('open', () => events.push('open'))
+    engine.addEventListener('close', () => events.push('close'))
+    await engine.close()
+    expect(engine.readyState).toBe('closed')
+    expect(mock.opened).toBe(false)
+    // Iterating an already-closed connection is a caller bug: throw, don't hang
+    // and don't yield an empty stream.
+    expect(() => engine[Symbol.asyncIterator]()).toThrow(WebSocketCoreError)
+    expect(mock.opened).toBe(false) // still never opened
+    expect(events).toEqual([]) // no events for a never-started resource
+  })
+
+  it('iterating after a terminal failure rethrows the failure cause', async () => {
+    const { engine, mock } = makeEngine()
+    // Drive the engine to a terminal error, then abandon it before re-iterating.
+    const first = engine[Symbol.asyncIterator]()
+    const pending = first.next()
+    mock.emitOpen()
+    mock.emitError(new Error('boom'))
+    await expect(pending).rejects.toBeInstanceOf(SocketError)
+    // A fresh iteration on the already-failed engine rethrows the same terminal
+    // error, not the "already being iterated" guard.
+    expect(() => engine[Symbol.asyncIterator]()).toThrow(SocketError)
   })
 })

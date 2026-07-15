@@ -43,12 +43,14 @@ describe('WebSocketCoreEngine backpressure', () => {
     const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
       maxBufferedBytes: 25,
     })
+    // Acquire the iterator before driving terminal events (a never-iterated
+    // engine that is already terminal throws on iteration, by design).
+    const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     mock.emitMessage(frame(), true) // 10
     mock.emitMessage(frame(), true) // 20
     mock.emitMessage(frame(), true) // 30 > 25 -> overflow
     expect(mock.terminated).toBe(true)
-    const it = engine[Symbol.asyncIterator]()
     await expect(it.next()).rejects.toSatisfy((err) => {
       expect(err).toBeInstanceOf(BufferOverflowError)
       expect((err as BufferOverflowError).bufferedBytes).toBeGreaterThan(25)

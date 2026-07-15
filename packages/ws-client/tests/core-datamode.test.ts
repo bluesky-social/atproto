@@ -57,11 +57,13 @@ describe('WebSocketCoreEngine dataMode', () => {
     const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
       dataMode: 'text',
     })
+    // Acquire the iterator before driving terminal events (a never-iterated
+    // engine that is already terminal throws on iteration, by design).
+    const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     // Buffer valid text with no consumer, then a binary violation arrives.
     mock.emitMessage('a', false)
     mock.emitMessage(new Uint8Array([1]), true) // violation while behind
-    const it = engine[Symbol.asyncIterator]()
     // Buffered valid message is discarded by the failure transition.
     await expect(it.next()).rejects.toBeInstanceOf(DataModeError)
   })

@@ -44,12 +44,7 @@ export interface WebSocketCoreOptions<M extends DataMode = 'auto'> {
   headers?: Record<string, string> | Headers
 }
 
-type ReadyState =
-  | 'initialized'
-  | 'connecting'
-  | 'open'
-  | 'closing'
-  | 'closed'
+type ReadyState = 'initialized' | 'connecting' | 'open' | 'closing' | 'closed'
 
 interface QueueItem<T> {
   value: T
@@ -341,6 +336,10 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     if (this.state === 'initialized') {
       // Never opened: clean no-op teardown, no events, resolve immediately.
       this.state = 'closed'
+      // Set a done terminal so an iterate-after-no-op-close resolves { done: true }
+      // instead of parking a waiter that never resolves. Dispatches no events —
+      // there was never a connection to close.
+      this.terminal = { type: 'done' }
       this.detachSignal()
       return Promise.resolve()
     }
@@ -376,6 +375,21 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   // ---- async iteration ----
 
   [Symbol.asyncIterator](): AsyncIterator<MessageOf<M>> {
+    // Starting iteration on a connection that has already terminated (iterating
+    // after close()/abort/failure) is a programmer error — surface it rather
+    // than yielding an empty stream or hanging. Checked before the
+    // already-iterated guard: on a dead connection there are no messages for a
+    // second consumer to steal, and the terminal cause is the more useful
+    // diagnosis. An error terminal rethrows its cause (same as a mid-stream
+    // next() would); a clean terminal throws a descriptive error.
+    if (this.terminal) {
+      if (this.terminal.type === 'error') {
+        throw this.terminal.error
+      }
+      throw new WebSocketCoreError(
+        'Cannot iterate a WebSocketCore that has already closed',
+      )
+    }
     if (this.iterated) {
       throw new WebSocketCoreError('WebSocketCore is already being iterated')
     }

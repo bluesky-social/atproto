@@ -55,10 +55,13 @@ ws.addEventListener('close', ({ detail }) => console.log('closed', detail))
 
 `close()` called before you've ever iterated is a clean no-op — it
 resolves immediately and dispatches no events, since there was never a
-connection to close. Called once open (or connecting), it requests a
-graceful close, and its returned promise settles once the resulting
-`'close'` event fires; the async iterator completes normally (`done:
-true`) at the same time. An aborted `signal` always fails the connection,
+connection to close. Iterating _after_ the connection has already
+terminated (after `close()`, an abort, or a failure) throws: consuming a
+connection that is already over is a programmer error, so it surfaces
+rather than yielding an empty stream. Called once open (or connecting),
+`close()` requests a graceful close, and its returned promise settles once
+the resulting `'close'` event fires; the async iterator completes normally
+(`done: true`) at the same time. An aborted `signal` always fails the connection,
 whether or not you've started iterating: it dispatches `'error'` then
 `'close'` like any other fatal end, and rejects the iterator with the
 signal's own abort `reason` (the value passed to `controller.abort(reason)`,
@@ -171,10 +174,9 @@ underlying connection was torn down and re-established.
 ```ts
 import { ReconnectingWebSocket } from '@atproto/ws-client'
 
-const ws = new ReconnectingWebSocket(
-  'wss://jetstream.example.com/subscribe',
-  { dataMode: 'text' },
-)
+const ws = new ReconnectingWebSocket('wss://jetstream.example.com/subscribe', {
+  dataMode: 'text',
+})
 
 for await (const message of ws) {
   const event = JSON.parse(message)
@@ -229,7 +231,7 @@ before iterating to catch the first `'open'`:
 
 - `'open'` — fires once, on the very first successful connection. No
   `detail`.
-- `'reconnect'` — fires once per successful reopen *after* the first (i.e.
+- `'reconnect'` — fires once per successful reopen _after_ the first (i.e.
   every reconnect, including a clean `1001` reopen). No `detail`.
 - `'error'` — fires when a connection ends with an error, before the loop
   decides whether to retry. `detail` is `{ error }` when giving up, or
@@ -241,7 +243,7 @@ before iterating to catch the first `'open'`:
   `1006` synthesized for a codeless fatal end.
 
 A user-driven stop — `close()`, or an aborted `signal` — ends the loop
-*without* dispatching a `'close'` event: you observe the stop via
+_without_ dispatching a `'close'` event: you observe the stop via
 `close()`'s resolved promise and the iterator ending (for `close()`), or
 via the iterator rejecting with the abort reason (for `signal`) — not via
 an event. As with `WebSocketCore`, `close()` before you've ever iterated is
