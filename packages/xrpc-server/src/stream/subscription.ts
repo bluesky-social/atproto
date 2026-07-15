@@ -1,5 +1,5 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { ReconnectingWebSocket } from '@atproto/ws-client'
+import { WebSocketClient } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream.js'
 
 export class Subscription<T = unknown> {
@@ -25,7 +25,7 @@ export class Subscription<T = unknown> {
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncGenerator<T> {
-    const ws = new ReconnectingWebSocket(
+    const ws = new WebSocketClient(
       async () => {
         const params = (await this.opts.getParams?.()) ?? {}
         const query = encodeQueryParams(params)

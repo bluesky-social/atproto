@@ -5,8 +5,8 @@ import {
   CloseCode,
   HeartbeatTimeoutError,
   IdleTimeoutError,
-  ReconnectingWebSocket,
   SocketError,
+  WebSocketClient,
 } from '@atproto/ws-client'
 import { type TapEvent, parseTapEvent } from './types.js'
 import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
@@ -51,7 +51,7 @@ type BufferedAck = {
 }
 
 export class TapChannel implements AsyncDisposable {
-  private ws: ReconnectingWebSocket<'text'>
+  private ws: WebSocketClient<'text'>
   private handler: TapHandler
 
   private readonly abortController: AbortController = new AbortController()
@@ -70,7 +70,7 @@ export class TapChannel implements AsyncDisposable {
     if (adminPassword) {
       headers.set('Authorization', formatAdminAuthHeader(adminPassword))
     }
-    this.ws = new ReconnectingWebSocket(url, {
+    this.ws = new WebSocketClient(url, {
       dataMode: 'text',
       headers,
       maxReconnectSeconds: rest.maxReconnectSeconds,

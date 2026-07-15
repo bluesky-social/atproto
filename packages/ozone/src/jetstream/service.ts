@@ -1,4 +1,4 @@
-import { ReconnectingWebSocket } from '@atproto/ws-client'
+import { WebSocketClient } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>
 type OnCreateCallback<T extends JetstreamRecord> = (
@@ -51,7 +51,7 @@ export interface CommitDeleteEvent extends EventBase {
 }
 
 export class Jetstream {
-  public ws?: ReconnectingWebSocket<'text'>
+  public ws?: WebSocketClient<'text'>
   public url: URL
   /** The current cursor. */
   public cursor?: number
@@ -71,7 +71,7 @@ export class Jetstream {
     onCreate?: Record<string, OnCreateCallback<any>>
     onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
   }) {
-    this.ws = new ReconnectingWebSocket(
+    this.ws = new WebSocketClient(
       () => {
         if (this.cursor)
           this.url.searchParams.set('cursor', this.cursor.toString())
