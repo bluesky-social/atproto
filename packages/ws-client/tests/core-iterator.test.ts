@@ -22,20 +22,24 @@ describe('WebSocketCoreEngine iterator', () => {
     expect(engine.protocol).toBe('')
   })
 
-  it('resolves opened and reports protocol on open', async () => {
+  it('dispatches open and reports protocol on open', async () => {
     const mock = new MockTransport({ protocol: 'jetstream' })
     const { engine } = makeEngine({ mock })
+    let opened = false
+    engine.addEventListener('open', () => (opened = true))
     // Lazy open: start a pull first so the transport opens.
     const it = engine[Symbol.asyncIterator]()
     void it.next()
     mock.emitOpen()
-    await expect(engine.opened).resolves.toBeUndefined()
+    expect(opened).toBe(true)
     expect(engine.readyState).toBe('open')
     expect(engine.protocol).toBe('jetstream')
   })
 
   it('yields messages in order, then ends cleanly on 1000', async () => {
     const { engine, mock } = makeEngine()
+    let closeDetail: CloseEventDetail | undefined
+    engine.addEventListener('close', (e) => (closeDetail = e.detail))
     mock.emitOpen()
     const received: (string | Uint8Array)[] = []
     const done = (async () => {
@@ -46,11 +50,13 @@ describe('WebSocketCoreEngine iterator', () => {
     mock.emitClose(1000, '', true)
     await done
     expect(received).toEqual(['a', 'b'])
-    await expect(engine.closed).resolves.toEqual({ code: 1000, reason: '' })
+    expect(closeDetail).toEqual({ code: 1000, reason: '', wasClean: true })
   })
 
   it('ends cleanly on 1001 (going away)', async () => {
     const { engine, mock } = makeEngine()
+    let closeDetail: CloseEventDetail | undefined
+    engine.addEventListener('close', (e) => (closeDetail = e.detail))
     mock.emitOpen()
     const done = (async () => {
       for await (const _ of engine) {
@@ -59,7 +65,7 @@ describe('WebSocketCoreEngine iterator', () => {
     })()
     mock.emitClose(1001, 'bye', true)
     await done
-    await expect(engine.closed).resolves.toEqual({ code: 1001, reason: 'bye' })
+    expect(closeDetail).toEqual({ code: 1001, reason: 'bye', wasClean: true })
   })
 
   it('drains buffered messages before ending on clean close', async () => {
@@ -127,6 +133,8 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('terminate() self-settles, drops buffered messages, and ignores a late transport echo', async () => {
     const { engine, mock } = makeEngine()
+    let errorDetail: unknown
+    engine.addEventListener('error', (e) => (errorDetail = e.detail.error))
     mock.emitOpen()
     mock.emitMessage('buffered', false) // buffered, no consumer parked
     engine.terminate()
@@ -137,7 +145,7 @@ describe('WebSocketCoreEngine iterator', () => {
       assert(err instanceof SocketError) // terminate() rejects, never yields the buffered value
       return true
     })
-    await expect(engine.closed).rejects.toBeInstanceOf(SocketError)
+    expect(errorDetail).toBeInstanceOf(SocketError)
 
     // Late async echo from the transport (e.g. browser ws.close() -> onClose)
     // must be a harmless no-op: no second settlement, no unhandled rejection.

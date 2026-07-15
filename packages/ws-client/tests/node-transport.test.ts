@@ -30,10 +30,12 @@ describe('NodeTransport via WebSocketCore', () => {
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
     const ws = new WebSocketCore(url, { dataMode: 'text' })
+    let closeDetail: { code: number } | undefined
+    ws.addEventListener('close', (e) => (closeDetail = e.detail))
     const received: string[] = []
     for await (const msg of ws) received.push(msg)
     expect(received).toEqual(['hello', 'world'])
-    await expect(ws.closed).resolves.toMatchObject({ code: 1000 })
+    expect(closeDetail).toMatchObject({ code: 1000 })
   })
 
   it('yields binary frames as Uint8Array in binary mode', async () => {
@@ -67,7 +69,9 @@ describe('NodeTransport via WebSocketCore', () => {
         /* drain until close */
       }
     })()
-    await ws.opened
+    await new Promise((resolve) =>
+      ws.addEventListener('open', () => resolve(undefined), { once: true }),
+    )
     await ws.send('ping')
     await drained
     expect(seen).toEqual(['ping'])

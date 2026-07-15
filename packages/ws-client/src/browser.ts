@@ -33,12 +33,7 @@ export class ReconnectingWebSocket<
   }
 }
 
-export type {
-  CloseInfo,
-  DataMode,
-  MessageOf,
-  WebSocketCoreOptions,
-} from './core.js'
+export type { DataMode, MessageOf, WebSocketCoreOptions } from './core.js'
 export {
   AbnormalCloseError,
   BufferOverflowError,

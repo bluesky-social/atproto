@@ -48,13 +48,6 @@ export interface ReconnectingOptions<M extends DataMode = 'auto'> {
   maxReconnectSeconds?: number
   /** Abort to end the reconnect loop permanently. */
   signal?: AbortSignal
-  /** Fired after each successful (re)open. `reconnect` is false on the first. */
-  onOpen?: (info: { reconnect: boolean }) => void
-  /** Fired when a connection ends with an error. */
-  onError?: (
-    error: unknown,
-    info: { willReconnect: boolean; attempt: number },
-  ) => void
   /** Override the default reconnect classification. */
   shouldReconnect?: (error: unknown, attempt: number) => boolean
 }
@@ -93,22 +86,6 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
     private readonly options: ReconnectingOptions<M> = {},
   ) {
     super()
-    // Bridge the (transitional) onOpen/onError options to events so existing
-    // consumers keep working until they migrate to addEventListener (Task 5).
-    // Removed in Task 6.
-    const { onOpen, onError } = options
-    if (onOpen) {
-      this.addEventListener('open', () => onOpen({ reconnect: false }))
-      this.addEventListener('reconnect', () => onOpen({ reconnect: true }))
-    }
-    if (onError) {
-      this.addEventListener('error', (e) =>
-        onError(e.detail.error, {
-          willReconnect: !!e.detail.reconnect,
-          attempt: e.detail.reconnect?.attempt ?? 0,
-        }),
-      )
-    }
   }
 
   get readyState(): ReadyState {
@@ -132,8 +109,8 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
     this.state = 'closing'
     if (this.core) {
       // `this.core` may be a stale core that already failed (e.g. we're
-      // parked in a backoff sleep after a reconnectable close) — its
-      // `closed` promise is already rejected with that old failure. Mirror
+      // parked in a backoff sleep after a reconnectable close) — its state
+      // is already 'closed', so `core.close()` resolves immediately. Mirror
       // core.ts's own `[Symbol.asyncIterator]().return()` handling: close()
       // signals user-intended shutdown and must resolve cleanly regardless.
       await this.core.close(code, reason).catch(() => {})
@@ -173,13 +150,13 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
       ((error: unknown) => defaultShouldReconnect(error))
 
     // `retries` is the count of consecutive failed connections since the last
-    // successful open (reset to 0 in the `opened` callback below). `retries ===
-    // 0` means the upcoming attempt is either the first attempt after a stable
+    // successful open (reset to 0 in `onCoreOpen` below). `retries === 0`
+    // means the upcoming attempt is either the first attempt after a stable
     // open or the very first connect — both are "fast" (<=1s). It escalates
     // with `backoffMs` only across repeated failures with no open in between.
     let retries = 0
     let firstAttempt = true // true until the first connection is created
-    let firstOpen = true // true until the first successful open (onOpen flag)
+    let firstOpen = true // true until the first successful open
 
     const signal = this.options.signal
     // End the loop promptly on external abort.
@@ -215,11 +192,10 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
       this.core = core
       this.state = 'connecting'
 
-      // Consume the child core's own lifecycle events instead of its
-      // `opened`/`closed` promises. `onCoreOpen` promotes each successful open
-      // to this layer's `'open'` (first) / `'reconnect'` (subsequent) event;
-      // `onCoreClose` captures the close detail so the terminal path below can
-      // re-emit the real close code/reason/wasClean.
+      // Consume the child core's own lifecycle events. `onCoreOpen` promotes
+      // each successful open to this layer's `'open'` (first) / `'reconnect'`
+      // (subsequent) event; `onCoreClose` captures the close detail so the
+      // terminal path below can re-emit the real close code/reason/wasClean.
       let closeDetail: CloseEventDetail | undefined
       const onCoreOpen = () => {
         this.state = 'open'

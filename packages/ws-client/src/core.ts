@@ -27,11 +27,6 @@ export type MessageOf<M extends DataMode> = M extends 'text'
     ? Uint8Array
     : string | Uint8Array
 
-export interface CloseInfo {
-  code: number
-  reason: string
-}
-
 export interface WebSocketCoreOptions<M extends DataMode = 'auto'> {
   protocols?: string | string[]
   dataMode?: M
@@ -104,13 +99,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   private idleTimeoutMs: number | null = null
   private idleActive = true
 
-  private resolveOpened!: () => void
-  private rejectOpened!: (err: unknown) => void
-  private resolveClosed!: (info: CloseInfo) => void
-  private rejectClosed!: (err: unknown) => void
-  readonly opened: Promise<void>
-  readonly closed: Promise<CloseInfo>
-
   constructor(
     createTransport: TransportFactory,
     url: string | URL,
@@ -121,19 +109,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     this.signal = options.signal
     this.highWaterMark = options.highWaterMark ?? 1_048_576
     this.maxBufferedBytes = options.maxBufferedBytes ?? Infinity
-
-    this.opened = new Promise<void>((resolve, reject) => {
-      this.resolveOpened = resolve
-      this.rejectOpened = reject
-    })
-    this.closed = new Promise<CloseInfo>((resolve, reject) => {
-      this.resolveClosed = resolve
-      this.rejectClosed = reject
-    })
-    // Pre-attach no-op handlers so non-observers never trigger unhandled
-    // rejection warnings.
-    this.opened.catch(() => {})
-    this.closed.catch(() => {})
 
     this.transport = createTransport(url, {
       protocols: options.protocols,
@@ -179,7 +154,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         if (this.terminal || this.state !== 'connecting') return
         this.state = 'open'
         this.negotiatedProtocol = this.transport.protocol
-        this.resolveOpened()
         this.dispatchEvent(new Event('open'))
         this.onOpen()
       },
@@ -196,7 +170,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         if (this.terminal) return
         if (CLEAN_CLOSE_CODES.has(code)) {
           this.state = 'closed'
-          this.resolveClosed({ code, reason })
           this.finishDone({ code, reason, wasClean })
         } else {
           this.fail(new AbnormalCloseError(code, reason, wasClean))
@@ -337,8 +310,6 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     this.buffer.length = 0
     this.bufferedBytes = 0
     if (terminateTransport) this.transport.terminate()
-    this.rejectOpened(error)
-    this.rejectClosed(error)
     let waiter: Waiter<MessageOf<M>> | undefined
     while ((waiter = this.waiters.shift())) {
       waiter.reject(error)
@@ -373,17 +344,21 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
       this.detachSignal()
       return Promise.resolve()
     }
+    if (this.state === 'closed') return Promise.resolve()
+    const done = new Promise<void>((resolve) => {
+      this.addEventListener('close', () => resolve(), { once: true })
+    })
     if (this.state === 'connecting' || this.state === 'open') {
       this.state = 'closing'
       this.transport.close(code, reason)
     }
-    return this.closed.then(() => undefined)
+    return done
   }
 
   terminate(): void {
     // Idempotent teardown: a terminal is already settled (from a prior
     // fail()/finishDone()/terminate()), so just poke the transport again
-    // and return — never double-settle opened/closed/waiters.
+    // and return — never double-settle the close event/waiters.
     if (this.terminal) {
       this.transport.terminate()
       return

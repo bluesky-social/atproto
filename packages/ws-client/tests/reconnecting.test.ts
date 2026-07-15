@@ -29,11 +29,11 @@ describe('ReconnectingWebSocketBase', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  it('yields across a clean 1001 reconnect and fires onOpen with reconnect flag', async () => {
+  it('yields across a clean 1001 reconnect and fires open/reconnect events with the right flag', async () => {
     const opens: boolean[] = []
-    const { ws, mocks } = makeReconnecting({
-      onOpen: ({ reconnect }) => opens.push(reconnect),
-    })
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('open', () => opens.push(false))
+    ws.addEventListener('reconnect', () => opens.push(true))
     const received: (string | Uint8Array)[] = []
 
     const consume = (async () => {
@@ -74,9 +74,13 @@ describe('ReconnectingWebSocketBase', () => {
 
   it('reconnects on AbnormalCloseError with a reconnectable code', async () => {
     const errs: Array<{ willReconnect: boolean; attempt: number }> = []
-    const { ws, mocks } = makeReconnecting({
-      onError: (_e, info) => errs.push(info),
-    })
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('error', (e) =>
+      errs.push({
+        willReconnect: !!e.detail.reconnect,
+        attempt: e.detail.reconnect?.attempt ?? 0,
+      }),
+    )
     const received: unknown[] = []
     const consume = (async () => {
       for await (const msg of ws) {
@@ -101,9 +105,10 @@ describe('ReconnectingWebSocketBase', () => {
 
   it('propagates a fatal AbnormalCloseError (1002) and stops', async () => {
     const errs: Array<{ willReconnect: boolean }> = []
-    const { ws, mocks } = makeReconnecting({
-      onError: (_e, info) => errs.push(info),
-    })
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('error', (e) =>
+      errs.push({ willReconnect: !!e.detail.reconnect }),
+    )
     const consume = (async () => {
       for await (const _msg of ws) {
         /* noop */

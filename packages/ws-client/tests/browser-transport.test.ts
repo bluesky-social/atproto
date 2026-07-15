@@ -86,7 +86,11 @@ describe('BrowserTransport via engine', () => {
         /* drain */
       }
     })()
-    await engine.opened
+    await new Promise((resolve) =>
+      engine.addEventListener('open', () => resolve(undefined), {
+        once: true,
+      }),
+    )
     await engine.send('yo')
     await drained
     expect(seen).toEqual(['yo'])
