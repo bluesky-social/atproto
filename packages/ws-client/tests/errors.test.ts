@@ -6,11 +6,12 @@ import {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
-  WebSocketCoreError,
+  WebSocketClientError,
+  WebSocketConnectionError,
 } from '../src/errors.js'
 
 describe('WebSocketCore errors', () => {
-  it('all extend WebSocketCoreError and Error', () => {
+  it('all extend WebSocketConnectionError and Error', () => {
     const errs = [
       new AbnormalCloseError(1011, 'boom', false),
       new SocketError(new Error('cause')),
@@ -20,7 +21,7 @@ describe('WebSocketCore errors', () => {
       new DataModeError('text', 'binary'),
     ]
     for (const e of errs) {
-      expect(e).toBeInstanceOf(WebSocketCoreError)
+      expect(e).toBeInstanceOf(WebSocketConnectionError)
       expect(e).toBeInstanceOf(Error)
     }
   })
@@ -51,5 +52,16 @@ describe('WebSocketCore errors', () => {
   it('error names match class names', () => {
     expect(new HeartbeatTimeoutError().name).toBe('HeartbeatTimeoutError')
     expect(new IdleTimeoutError().name).toBe('IdleTimeoutError')
+  })
+})
+
+describe(WebSocketClientError, () => {
+  it('is an Error but NOT a WebSocketConnectionError', () => {
+    const e = new WebSocketClientError('nope')
+    expect(e).toBeInstanceOf(Error)
+    expect(e).toBeInstanceOf(WebSocketClientError)
+    expect(e).not.toBeInstanceOf(WebSocketConnectionError)
+    expect(e.name).toBe('WebSocketClientError')
+    expect(e.message).toBe('nope')
   })
 })
