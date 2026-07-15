@@ -79,16 +79,23 @@ export class TapChannel implements AsyncDisposable {
         : undefined,
       signal: this.abortController.signal,
       shouldReconnect,
-      onOpen: ({ reconnect }) => {
-        if (reconnect) this.flushBufferedAcks()
-      },
-      onError: rest.onReconnectError
-        ? (error, { willReconnect, attempt }) => {
-            if (willReconnect)
-              rest.onReconnectError!(error, attempt, attempt === 0)
-          }
-        : undefined,
     })
+    // Flush buffered acks on each reconnect (not the initial open).
+    this.ws.addEventListener('reconnect', () => {
+      this.flushBufferedAcks()
+    })
+    const { onReconnectError } = rest
+    if (onReconnectError) {
+      this.ws.addEventListener('error', (e) => {
+        if (e.detail.reconnect) {
+          onReconnectError(
+            e.detail.error,
+            e.detail.reconnect.attempt,
+            e.detail.reconnect.attempt === 0,
+          )
+        }
+      })
+    }
   }
 
   async ackEvent(id: number): Promise<void> {
