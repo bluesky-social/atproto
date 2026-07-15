@@ -1,5 +1,4 @@
 import type {
-  CloseInfo,
   DataMode,
   MessageOf,
   WebSocketCoreEngine,
@@ -7,6 +6,11 @@ import type {
 } from './core.js'
 import { AbnormalCloseError } from './errors.js'
 import { backoffMs, defaultShouldReconnect } from './reconnect-policy.js'
+import {
+  type CloseEventDetail,
+  type ReconnectingEventMap,
+  TypedEventTarget,
+} from './typed-event-target.js'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -62,13 +66,19 @@ export type BrowserReconnectingOptions<M extends DataMode = 'auto'> = Omit<
   'headers'
 >
 
-type ReadyState = 'connecting' | 'open' | 'closing' | 'closed'
+type ReadyState =
+  | 'initialized'
+  | 'connecting'
+  | 'open'
+  | 'closing'
+  | 'closed'
 
 export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
+  extends TypedEventTarget<ReconnectingEventMap>
   implements AsyncIterable<MessageOf<M>>
 {
   private core: WebSocketCoreEngine<M> | null = null
-  private state: ReadyState = 'connecting'
+  private state: ReadyState = 'initialized'
   private stopped = false
   private iterated = false
   // Internal wake signal for close(): lets a parked backoff `sleep` resolve
@@ -81,7 +91,25 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
     private readonly createCore: CoreFactory,
     private readonly url: string | URL | (() => Awaitable<string | URL>),
     private readonly options: ReconnectingOptions<M> = {},
-  ) {}
+  ) {
+    super()
+    // Bridge the (transitional) onOpen/onError options to events so existing
+    // consumers keep working until they migrate to addEventListener (Task 5).
+    // Removed in Task 6.
+    const { onOpen, onError } = options
+    if (onOpen) {
+      this.addEventListener('open', () => onOpen({ reconnect: false }))
+      this.addEventListener('reconnect', () => onOpen({ reconnect: true }))
+    }
+    if (onError) {
+      this.addEventListener('error', (e) =>
+        onError(e.detail.error, {
+          willReconnect: !!e.detail.reconnect,
+          attempt: e.detail.reconnect?.attempt ?? 0,
+        }),
+      )
+    }
+  }
 
   get readyState(): ReadyState {
     return this.state
@@ -187,41 +215,71 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
       this.core = core
       this.state = 'connecting'
 
+      // Consume the child core's own lifecycle events instead of its
+      // `opened`/`closed` promises. `onCoreOpen` promotes each successful open
+      // to this layer's `'open'` (first) / `'reconnect'` (subsequent) event;
+      // `onCoreClose` captures the close detail so the terminal path below can
+      // re-emit the real close code/reason/wasClean.
+      let closeDetail: CloseEventDetail | undefined
+      const onCoreOpen = () => {
+        this.state = 'open'
+        retries = 0 // stable open: next reconnect is fast again
+        if (firstOpen) {
+          firstOpen = false
+          this.dispatchEvent(new Event('open'))
+        } else {
+          this.dispatchEvent(new Event('reconnect'))
+        }
+      }
+      const onCoreClose = (e: CustomEvent<CloseEventDetail>) => {
+        closeDetail = e.detail
+      }
+      core.addEventListener('open', onCoreOpen)
+      core.addEventListener('close', onCoreClose)
+
       // Wire the external signal to terminate the current core.
       const onAbort = () => core.terminate()
       signal?.addEventListener('abort', onAbort, { once: true })
 
-      let cleanClose: CloseInfo | null = null
       // The `finally` covers every exit from this connection's body: the
       // normal fall-through below, the `throw`/`break`/`continue` in `catch`,
       // and a consumer `break` (which resumes the generator's `return()` at
       // the `yield` and would otherwise skip listener cleanup entirely).
       try {
         try {
-          core.opened
-            .then(() => {
-              this.state = 'open'
-              retries = 0 // stable open: next reconnect is fast again
-              this.options.onOpen?.({ reconnect: !firstOpen })
-              firstOpen = false
-            })
-            .catch(() => {})
-
           for await (const msg of core) {
             yield msg
           }
-          // Clean iterator completion (1000/1001). Read the code to classify.
-          cleanClose = await core.closed
+          // Clean iterator completion (1000/1001): fall through with the
+          // captured `closeDetail` carrying the real close code.
         } catch (error) {
           // Abort surfaces to the consumer as a rejection (the terminated core
           // throws a transport error, which we replace with the abort reason).
           if (signal?.aborted) throw signal.reason
-          // Consumer-initiated close(): end quietly, no reconnect.
+          // Consumer-initiated close(): end quietly, no reconnect, no 'close'
+          // event (the user observes the stop via close() resolving).
           if (this.stopped) break
           const willReconnect = shouldReconnect(error, retries)
-          this.options.onError?.(error, { willReconnect, attempt: retries })
+          this.dispatchEvent(
+            new CustomEvent('error', {
+              detail: willReconnect
+                ? { error, reconnect: { attempt: retries } }
+                : { error },
+            }),
+          )
           if (!willReconnect) {
             this.state = 'closed'
+            // Fatal: emit the final close (the child core already dispatched
+            // its own close carrying the same detail).
+            this.dispatchEvent(
+              new CustomEvent('close', {
+                detail: closeDetail ?? {
+                  code: 1006,
+                  reason: '',
+                  wasClean: false,
+                },
+              }),
+            )
             throw error
           }
           this.state = 'connecting'
@@ -231,6 +289,7 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
         signal?.removeEventListener('abort', onAbort)
       }
 
+      // User-driven stop (close()/abort): break/throw without a 'close' event.
       if (this.stopped) break
       if (signal?.aborted) throw signal.reason
 
@@ -238,15 +297,21 @@ export class ReconnectingWebSocketBase<M extends DataMode = 'auto'>
       // Only 1000/1001 arrive here (core ends cleanly only for those); 1000 is
       // fatal, 1001 reconnects. Reuse `shouldReconnect` via a synthetic
       // AbnormalCloseError so an override applies uniformly to clean codes too.
-      const code = cleanClose?.code ?? 1000
+      const code = closeDetail?.code ?? 1000
       const reconnectClean =
         code !== 1000 &&
         shouldReconnect(
-          new AbnormalCloseError(code, cleanClose?.reason ?? '', true),
+          new AbnormalCloseError(code, closeDetail?.reason ?? '', true),
           retries,
         )
       if (!reconnectClean) {
         this.state = 'closed'
+        // Final clean close (1000, or a non-reconnectable clean code).
+        this.dispatchEvent(
+          new CustomEvent('close', {
+            detail: closeDetail ?? { code: 1000, reason: '', wasClean: true },
+          }),
+        )
         break
       }
       this.state = 'connecting'

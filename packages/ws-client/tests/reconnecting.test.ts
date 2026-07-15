@@ -2,6 +2,7 @@ import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebSocketCoreEngine } from '../src/core.js'
 import { AbnormalCloseError, BufferOverflowError } from '../src/errors.js'
 import { ReconnectingWebSocketBase } from '../src/reconnecting.js'
+import type { CloseEventDetail } from '../src/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeReconnecting<M extends 'auto' | 'text' | 'binary' = 'auto'>(
@@ -340,5 +341,93 @@ describe('ReconnectingWebSocketBase', () => {
     await expect(p).resolves.toBeUndefined()
     mocks[0].emitMessage('x', false)
     await consume
+  })
+})
+
+describe('ReconnectingWebSocket events', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('dispatches open once (initial) and reconnect on each reopen', async () => {
+    const events: string[] = []
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('open', () => events.push('open'))
+    ws.addEventListener('reconnect', () => events.push('reconnect'))
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const m of ws) {
+        received.push(m)
+        if (received.length === 2) break
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('a', false)
+    mocks[0].emitClose(1001, 'going away', true) // clean 1001 → reconnect
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('b', false)
+    await consume
+    expect(events).toEqual(['open', 'reconnect'])
+  })
+
+  it('error event carries reconnect:{attempt} for a reconnectable error, absent for fatal', async () => {
+    const errs: Array<{ hasReconnect: boolean; attempt?: number }> = []
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('error', (e) =>
+      errs.push({
+        hasReconnect: !!e.detail.reconnect,
+        attempt: e.detail.reconnect?.attempt,
+      }),
+    )
+    const consume = (async () => {
+      for await (const _ of ws) {
+        /* */
+      }
+    })().catch(() => {})
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1011, 'server error', false) // reconnectable
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitClose(1002, 'protocol', false) // fatal
+    await consume
+    expect(errs[0]).toMatchObject({ hasReconnect: true })
+    expect(errs[errs.length - 1]).toMatchObject({ hasReconnect: false })
+  })
+
+  it('dispatches a single final close on fatal termination', async () => {
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('close', (e) => closes.push(e.detail))
+    const consume = (async () => {
+      for await (const _ of ws) {
+        /* */
+      }
+    })().catch(() => {})
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1002, 'protocol', false) // fatal → stop
+    await consume
+    expect(closes).toHaveLength(1)
+    expect(closes[0].code).toBe(1002)
+  })
+
+  it('dispatches final close on a clean 1000 stop', async () => {
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeReconnecting()
+    ws.addEventListener('close', (e) => closes.push(e.detail))
+    const consume = (async () => {
+      for await (const _ of ws) {
+        /* */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1000, '', true)
+    await consume
+    expect(closes).toEqual([{ code: 1000, reason: '', wasClean: true }])
   })
 })
