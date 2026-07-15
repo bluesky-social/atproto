@@ -127,11 +127,30 @@ describe('entryway', () => {
     expect(accountFromEntryway?.handle).toEqual('alice3.test')
   })
 
-  it('resolves handle of local account.', async () => {
+  it('resolves handle of local account via entryway.', async () => {
     const res = await pdsAgent.api.com.atproto.identity.resolveHandle({
       handle: 'alice3.test',
     })
     expect(res.data.did).toEqual(alice)
+  })
+
+  it('does not resolve handle from local account store.', async () => {
+    // known locally but not by the entryway, e.g. local state that diverged
+    await pds.ctx.accountManager.updateAccountHandle(
+      alice,
+      'alice-diverged.test' as HandleString,
+    )
+    try {
+      const attempt = pdsAgent.api.com.atproto.identity.resolveHandle({
+        handle: 'alice-diverged.test',
+      })
+      await expect(attempt).rejects.toThrow('Unable to resolve handle')
+    } finally {
+      await pds.ctx.accountManager.updateAccountHandle(
+        alice,
+        'alice3.test' as HandleString,
+      )
+    }
   })
 
   it('resolves handle of account behind entryway on another pds.', async () => {
