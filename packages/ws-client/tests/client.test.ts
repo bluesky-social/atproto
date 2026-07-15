@@ -1,21 +1,25 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
-import { WebSocketCoreEngine } from '../src/core.js'
-import { AbnormalCloseError, BufferOverflowError } from '../src/errors.js'
-import { ReconnectingWebSocketBase } from '../src/reconnecting.js'
+import { WebSocketConnectionEngine } from '../src/connection.js'
+import {
+  AbnormalCloseError,
+  BufferOverflowError,
+  WebSocketClientError,
+} from '../src/errors.js'
+import { WebSocketClientBase } from '../src/client.js'
 import type { CloseEventDetail } from '../src/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
-function makeReconnecting<M extends 'auto' | 'text' | 'binary' = 'auto'>(
-  options?: ConstructorParameters<typeof ReconnectingWebSocketBase<M>>[2],
+function makeClient<M extends 'auto' | 'text' | 'binary' = 'auto'>(
+  options?: ConstructorParameters<typeof WebSocketClientBase<M>>[2],
   url: string | URL | (() => string | URL | Promise<string | URL>) = 'ws://x',
 ) {
   const mocks: MockTransport[] = []
-  const factory = (u: string | URL, coreOptions: any) => {
+  const factory = (u: string | URL, connectionOptions: any) => {
     const mock = new MockTransport()
     mocks.push(mock)
-    return new WebSocketCoreEngine(() => mock, u, coreOptions)
+    return new WebSocketConnectionEngine(() => mock, u, connectionOptions)
   }
-  const ws = new ReconnectingWebSocketBase<M>(factory, url, options)
+  const ws = new WebSocketClientBase<M>(factory, url, options)
   return { ws, mocks }
 }
 
@@ -25,13 +29,13 @@ async function tick() {
   await Promise.resolve()
 }
 
-describe('ReconnectingWebSocketBase', () => {
+describe('WebSocketClientBase', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
   it('yields across a clean 1001 reconnect and fires open/reconnect events with the right flag', async () => {
     const opens: boolean[] = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('open', () => opens.push(false))
     ws.addEventListener('reconnect', () => opens.push(true))
     const received: (string | Uint8Array)[] = []
@@ -58,7 +62,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('stops (no reconnect) on a clean 1000 close', async () => {
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     const received: unknown[] = []
     const consume = (async () => {
       for await (const msg of ws) received.push(msg)
@@ -74,7 +78,7 @@ describe('ReconnectingWebSocketBase', () => {
 
   it('reconnects on AbnormalCloseError with a reconnectable code', async () => {
     const errs: Array<{ willReconnect: boolean; attempt: number }> = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('error', (e) =>
       errs.push({
         willReconnect: !!e.detail.reconnect,
@@ -105,7 +109,7 @@ describe('ReconnectingWebSocketBase', () => {
 
   it('propagates a fatal AbnormalCloseError (1002) and stops', async () => {
     const errs: Array<{ willReconnect: boolean }> = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('error', (e) =>
       errs.push({ willReconnect: !!e.detail.reconnect }),
     )
@@ -127,7 +131,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('propagates a fatal BufferOverflowError and stops', async () => {
-    const { ws, mocks } = makeReconnecting({ maxBufferedBytes: 5 })
+    const { ws, mocks } = makeClient({ maxBufferedBytes: 5 })
     const consume = (async () => {
       // Frames arrive faster than the consumer drains → buffer grows → overflow.
       for await (const _msg of ws) {
@@ -145,7 +149,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('applies backoff between attempts and resets after a successful open', async () => {
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     const received: unknown[] = []
     const consume = (async () => {
       for await (const msg of ws) {
@@ -166,7 +170,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('shouldReconnect override forces a normally-fatal error to reconnect', async () => {
-    const { ws, mocks } = makeReconnecting({
+    const { ws, mocks } = makeClient({
       shouldReconnect: () => true, // even DataModeError reconnects
     })
     const received: unknown[] = []
@@ -190,7 +194,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('close() ends the loop and does not reconnect', async () => {
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     const received: unknown[] = []
     const consume = (async () => {
       for await (const msg of ws) received.push(msg)
@@ -209,7 +213,7 @@ describe('ReconnectingWebSocketBase', () => {
 
   it('signal abort ends the loop', async () => {
     const ac = new AbortController()
-    const { ws, mocks } = makeReconnecting({ signal: ac.signal })
+    const { ws, mocks } = makeClient({ signal: ac.signal })
     const consume = (async () => {
       for await (const _msg of ws) {
         /* noop */
@@ -228,7 +232,7 @@ describe('ReconnectingWebSocketBase', () => {
     const urlGate = new Promise<void>((resolve) => {
       releaseUrl = resolve
     })
-    const { ws, mocks } = makeReconnecting({ signal: ac.signal }, async () => {
+    const { ws, mocks } = makeClient({ signal: ac.signal }, async () => {
       await urlGate
       return 'ws://x'
     })
@@ -247,7 +251,7 @@ describe('ReconnectingWebSocketBase', () => {
   it('re-resolves a URL thunk on each connect', async () => {
     const urls: string[] = []
     let n = 0
-    const { ws, mocks } = makeReconnecting(undefined, () => {
+    const { ws, mocks } = makeClient(undefined, () => {
       const u = `ws://host/${n++}`
       urls.push(u)
       return u
@@ -267,7 +271,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('escalates backoff across consecutive pre-open failures', async () => {
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     const consume = (async () => {
       for await (const _msg of ws) {
         /* noop */
@@ -308,7 +312,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('close() interrupts an active backoff sleep promptly, without waiting out the window', async () => {
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     const received: unknown[] = []
     const consume = (async () => {
       for await (const msg of ws) received.push(msg)
@@ -332,7 +336,7 @@ describe('ReconnectingWebSocketBase', () => {
   })
 
   it('send rejects when not connected, resolves when open', async () => {
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     await expect(ws.send('early' as never)).rejects.toThrow()
     const consume = (async () => {
       for await (const _msg of ws) break
@@ -347,15 +351,67 @@ describe('ReconnectingWebSocketBase', () => {
     mocks[0].emitMessage('x', false)
     await consume
   })
+
+  it('send() before connected rejects with WebSocketClientError', async () => {
+    const { ws } = makeClient()
+    await expect(ws.send('x' as never)).rejects.toBeInstanceOf(
+      WebSocketClientError,
+    )
+  })
+
+  it('iterating twice throws WebSocketClientError', () => {
+    const { ws } = makeClient()
+    ws[Symbol.asyncIterator]()
+    expect(() => ws[Symbol.asyncIterator]()).toThrow(WebSocketClientError)
+  })
 })
 
-describe('ReconnectingWebSocket events', () => {
+describe('shouldReconnect boolean', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('shouldReconnect: false never reconnects (a normally-reconnectable error is fatal)', async () => {
+    const { ws, mocks } = makeClient({ shouldReconnect: false })
+    const consume = (async () => {
+      for await (const _ of ws) {
+        /* */
+      }
+    })().catch(() => {})
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1011, 'server error', false) // normally reconnectable
+    await consume
+    expect(mocks).toHaveLength(1) // never created a second connection
+  })
+
+  it('shouldReconnect: true (default) uses the default predicate — reconnects on 1011', async () => {
+    const { ws, mocks } = makeClient({ shouldReconnect: true })
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const m of ws) {
+        received.push(m)
+        if (received.length === 1) break
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1011, '', false)
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('ok', false)
+    await consume
+    expect(received).toEqual(['ok'])
+  })
+})
+
+describe('WebSocketClient events', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
   it('dispatches open once (initial) and reconnect on each reopen', async () => {
     const events: string[] = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('open', () => events.push('open'))
     ws.addEventListener('reconnect', () => events.push('reconnect'))
     const received: unknown[] = []
@@ -379,7 +435,7 @@ describe('ReconnectingWebSocket events', () => {
 
   it('error event carries reconnect:{attempt} for a reconnectable error, absent for fatal', async () => {
     const errs: Array<{ hasReconnect: boolean; attempt?: number }> = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('error', (e) =>
       errs.push({
         hasReconnect: !!e.detail.reconnect,
@@ -405,7 +461,7 @@ describe('ReconnectingWebSocket events', () => {
 
   it('dispatches a single final close on fatal termination', async () => {
     const closes: CloseEventDetail[] = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('close', (e) => closes.push(e.detail))
     const consume = (async () => {
       for await (const _ of ws) {
@@ -422,7 +478,7 @@ describe('ReconnectingWebSocket events', () => {
 
   it('dispatches final close on a clean 1000 stop', async () => {
     const closes: CloseEventDetail[] = []
-    const { ws, mocks } = makeReconnecting()
+    const { ws, mocks } = makeClient()
     ws.addEventListener('close', (e) => closes.push(e.detail))
     const consume = (async () => {
       for await (const _ of ws) {
