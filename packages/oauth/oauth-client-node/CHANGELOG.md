@@ -1,5 +1,13 @@
 # @atproto/oauth-client-node
 
+## 0.4.9
+
+### Patch Changes
+
+- Updated dependencies [[`ce386ee`](https://github.com/bluesky-social/atproto/commit/ce386eed324f813601db57f873fbb3b987492001)]:
+  - @atproto-labs/handle-resolver-node@0.2.6
+  - @atproto/oauth-client@0.7.11
+
 ## 0.4.8
 
 ### Patch Changes

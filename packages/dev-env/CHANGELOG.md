@@ -1,5 +1,18 @@
 # @atproto/dev-env
 
+## 0.5.32
+
+### Patch Changes
+
+- [#5236](https://github.com/bluesky-social/atproto/pull/5236) [`d6b4379`](https://github.com/bluesky-social/atproto/commit/d6b4379eb4be0c1c6dcb28ac59084f2329a97a94) Thanks [@devinivy](https://github.com/devinivy)! - defer service handle resolution to entryway when configured, allowing PDS_SERVICE_HANDLE_DOMAINS to match the entryway's domains
+
+- Updated dependencies [[`652016a`](https://github.com/bluesky-social/atproto/commit/652016ad57dca26f43b7f79167ecbfcabd5cbd4d), [`29adc81`](https://github.com/bluesky-social/atproto/commit/29adc81fc7925dbb0ce68c638e8092e9c4601a99), [`e408d11`](https://github.com/bluesky-social/atproto/commit/e408d11e723e3d232bcbfdb7247301273138cec6), [`cdc0faa`](https://github.com/bluesky-social/atproto/commit/cdc0faa5b57fe965b8ebb73a92462a01b464e7ef), [`d6b4379`](https://github.com/bluesky-social/atproto/commit/d6b4379eb4be0c1c6dcb28ac59084f2329a97a94), [`349693e`](https://github.com/bluesky-social/atproto/commit/349693e63865a5ba88e56a2b760d9e4ad39fe730)]:
+  - @atproto/ozone@0.2.15
+  - @atproto/bsky@0.0.260
+  - @atproto/pds@0.5.18
+  - @atproto/lex@0.2.3
+  - @atproto/sync@0.3.11
+
 ## 0.5.31
 
 ### Patch Changes

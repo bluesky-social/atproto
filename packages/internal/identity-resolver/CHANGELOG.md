@@ -1,5 +1,12 @@
 # @atproto-labs/identity-resolver
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [[`ce386ee`](https://github.com/bluesky-social/atproto/commit/ce386eed324f813601db57f873fbb3b987492001)]:
+  - @atproto-labs/handle-resolver@0.4.6
+
 ## 0.4.4
 
 ### Patch Changes

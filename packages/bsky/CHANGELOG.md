@@ -1,5 +1,17 @@
 # @atproto/bsky
 
+## 0.0.260
+
+### Patch Changes
+
+- [#5234](https://github.com/bluesky-social/atproto/pull/5234) [`29adc81`](https://github.com/bluesky-social/atproto/commit/29adc81fc7925dbb0ce68c638e8092e9c4601a99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add includeTakedowns param to internal.bsky.actor.getProfiles
+
+- [#5219](https://github.com/bluesky-social/atproto/pull/5219) [`cdc0faa`](https://github.com/bluesky-social/atproto/commit/cdc0faa5b57fe965b8ebb73a92462a01b464e7ef) Thanks [@cuducos](https://github.com/cuducos)! - Gate the new trending topics experiment
+
+- Updated dependencies []:
+  - @atproto/lex@0.2.3
+  - @atproto/sync@0.3.11
+
 ## 0.0.259
 
 ### Patch Changes

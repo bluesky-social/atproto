@@ -1,5 +1,15 @@
 # @atproto/ozone
 
+## 0.2.15
+
+### Patch Changes
+
+- [#5076](https://github.com/bluesky-social/atproto/pull/5076) [`652016a`](https://github.com/bluesky-social/atproto/commit/652016ad57dca26f43b7f79167ecbfcabd5cbd4d) Thanks [@gcwill70](https://github.com/gcwill70)! - Support routing conversation reports to queues: allow the 'conversation' subject type on queue create/list, fix conversation subject typing in report re-routing, and add 'message'/'conversation' subjectType filters to tools.ozone.report.queryReports
+
+- [#5083](https://github.com/bluesky-social/atproto/pull/5083) [`e408d11`](https://github.com/bluesky-social/atproto/commit/e408d11e723e3d232bcbfdb7247301273138cec6) Thanks [@gcwill70](https://github.com/gcwill70)! - add custom queues through moderation_event.modTool.meta.queueId
+
+- [#5237](https://github.com/bluesky-social/atproto/pull/5237) [`349693e`](https://github.com/bluesky-social/atproto/commit/349693e63865a5ba88e56a2b760d9e4ad39fe730) Thanks [@devinivy](https://github.com/devinivy)! - Apply subject status tags in deterministic tagger order
+
 ## 0.2.14
 
 ### Patch Changes

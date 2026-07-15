@@ -1,5 +1,11 @@
 # @atproto-labs/handle-resolver
 
+## 0.4.6
+
+### Patch Changes
+
+- [#5193](https://github.com/bluesky-social/atproto/pull/5193) [`ce386ee`](https://github.com/bluesky-social/atproto/commit/ce386eed324f813601db57f873fbb3b987492001) Thanks [@Rex0Lux](https://github.com/Rex0Lux)! - Add an `onError` observability option to the handle resolvers. `WellKnownHandleResolver` previously swallowed every non-abort failure and returned `null`, indistinguishable from "no `.well-known/atproto-did` endpoint exists". Passing `onError` when constructing a resolver (including `AtprotoHandleResolver` and `AtprotoHandleResolverNode`) exposes the underlying cause (SSRF blocks, 5xx upstream errors, redirects, network errors, etc.) without changing the `null` return contract. Because it is set on the instance, it also covers resolution performed internally, for example by an OAuth client the resolver is passed to.
+
 ## 0.4.5
 
 ### Patch Changes
