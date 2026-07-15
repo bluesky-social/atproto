@@ -1,24 +1,24 @@
 import { assert, describe, expect, it } from 'vitest'
-import { WebSocketCoreEngine } from '../src/core.js'
+import { WebSocketConnectionEngine } from '../src/connection.js'
 import {
   AbnormalCloseError,
   SocketError,
-  WebSocketCoreError,
+  WebSocketConnectionError,
 } from '../src/errors.js'
 import type { CloseEventDetail } from '../src/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(
-  options?: ConstructorParameters<typeof WebSocketCoreEngine<M>>[2] & {
+  options?: ConstructorParameters<typeof WebSocketConnectionEngine<M>>[2] & {
     mock?: MockTransport
   },
 ) {
   const mock = options?.mock ?? new MockTransport()
-  const engine = new WebSocketCoreEngine<M>(() => mock, 'ws://x', options)
+  const engine = new WebSocketConnectionEngine<M>(() => mock, 'ws://x', options)
   return { engine, mock }
 }
 
-describe('WebSocketCoreEngine iterator', () => {
+describe('WebSocketConnectionEngine iterator', () => {
   it('starts in initialized and exposes capabilities', () => {
     const { engine, mock } = makeEngine()
     expect(engine.readyState).toBe('initialized')
@@ -264,7 +264,7 @@ describe('WebSocketCoreEngine iterator', () => {
   })
 })
 
-describe('WebSocketCoreEngine lifecycle + events', () => {
+describe('WebSocketConnectionEngine lifecycle + events', () => {
   it('does not open the transport until iteration begins', () => {
     const { engine, mock } = makeEngine()
     expect(engine.readyState).toBe('initialized')
@@ -355,7 +355,7 @@ describe('WebSocketCoreEngine lifecycle + events', () => {
     expect(mock.opened).toBe(false)
     // Iterating an already-closed connection is a caller bug: throw, don't hang
     // and don't yield an empty stream.
-    expect(() => engine[Symbol.asyncIterator]()).toThrow(WebSocketCoreError)
+    expect(() => engine[Symbol.asyncIterator]()).toThrow(WebSocketConnectionError)
     expect(mock.opened).toBe(false) // still never opened
     expect(events).toEqual([]) // no events for a never-started resource
   })

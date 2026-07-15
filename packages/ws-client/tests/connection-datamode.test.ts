@@ -1,12 +1,12 @@
 import { assert, describe, expect, it } from 'vitest'
-import { WebSocketCoreEngine } from '../src/core.js'
+import { WebSocketConnectionEngine } from '../src/connection.js'
 import { DataModeError } from '../src/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
-describe('WebSocketCoreEngine dataMode', () => {
+describe('WebSocketConnectionEngine dataMode', () => {
   it('auto yields both text and binary', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
       dataMode: 'auto',
     })
     mock.emitOpen()
@@ -20,7 +20,7 @@ describe('WebSocketCoreEngine dataMode', () => {
 
   it('text mode rejects a binary frame with DataModeError', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
       dataMode: 'text',
     })
     mock.emitOpen()
@@ -38,7 +38,7 @@ describe('WebSocketCoreEngine dataMode', () => {
 
   it('binary mode rejects a text frame with DataModeError', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
       dataMode: 'binary',
     })
     mock.emitOpen()
@@ -54,7 +54,7 @@ describe('WebSocketCoreEngine dataMode', () => {
 
   it('enforces even while the consumer is behind (fail-fast at intake)', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketCoreEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
       dataMode: 'text',
     })
     // Acquire the iterator before driving terminal events (a never-iterated

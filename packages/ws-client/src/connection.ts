@@ -5,7 +5,7 @@ import {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
-  WebSocketCoreError,
+  WebSocketConnectionError,
 } from './errors.js'
 import type {
   Transport,
@@ -16,7 +16,7 @@ import type {
 import {
   type CloseEventDetail,
   TypedEventTarget,
-  type WebSocketCoreEventMap,
+  type WebSocketConnectionEventMap,
 } from './typed-event-target.js'
 
 export type DataMode = 'auto' | 'text' | 'binary'
@@ -27,7 +27,7 @@ export type MessageOf<M extends DataMode> = M extends 'text'
     ? Uint8Array
     : string | Uint8Array
 
-export interface WebSocketCoreOptions<M extends DataMode = 'auto'> {
+export interface WebSocketConnectionOptions<M extends DataMode = 'auto'> {
   protocols?: string | string[]
   dataMode?: M
   heartbeat?: { intervalMs?: number } | false
@@ -61,8 +61,8 @@ type Terminal = { type: 'done' } | { type: 'error'; error: unknown }
 
 const CLEAN_CLOSE_CODES = new Set([1000, 1001])
 
-export class WebSocketCoreEngine<M extends DataMode = 'auto'>
-  extends TypedEventTarget<WebSocketCoreEventMap>
+export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
+  extends TypedEventTarget<WebSocketConnectionEventMap>
   implements AsyncIterable<MessageOf<M>>
 {
   readonly capabilities: TransportCapabilities
@@ -97,7 +97,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   constructor(
     createTransport: TransportFactory,
     url: string | URL,
-    private readonly options: WebSocketCoreOptions<M> = {},
+    private readonly options: WebSocketConnectionOptions<M> = {},
   ) {
     super()
     this.dataMode = options.dataMode ?? 'auto'
@@ -386,12 +386,14 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
       if (this.terminal.type === 'error') {
         throw this.terminal.error
       }
-      throw new WebSocketCoreError(
-        'Cannot iterate a WebSocketCore that has already closed',
+      throw new WebSocketConnectionError(
+        'Cannot iterate a WebSocketConnection that has already closed',
       )
     }
     if (this.iterated) {
-      throw new WebSocketCoreError('WebSocketCore is already being iterated')
+      throw new WebSocketConnectionError(
+        'WebSocketConnection is already being iterated',
+      )
     }
     this.iterated = true
     return {
