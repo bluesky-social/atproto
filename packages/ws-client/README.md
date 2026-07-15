@@ -25,17 +25,58 @@ for await (const message of ws) {
 }
 ```
 
+### Lifecycle and events
+
+Constructing a `WebSocketCore` opens nothing — `readyState` starts at
+`'initialized'`, and the underlying socket only opens once you start
+consuming it. `for await` is what starts it: the first pull opens the
+connection lazily. `readyState` then moves through `'connecting'` →
+`'open'` → (`'closing'` →) `'closed'`. Stop it with `close()`, an aborted
+`signal`, or by `break`-ing out of the `for await` loop.
+
+`WebSocketCore` is a typed `EventTarget` — register listeners with
+`addEventListener` **before** you start iterating so you don't miss the
+first `'open'`:
+
+- `'open'` — fires once, when the connection is established. No `detail`.
+- `'error'` — fires on a fatal failure, with `detail: { error }` (one of
+  the errors below). Always followed by a `'close'`.
+- `'close'` — fires once, terminally, with
+  `detail: { code, reason, wasClean }`. On a clean close this carries the
+  real close code (`1000`/`1001`); on a fatal error with no wire close code
+  (`SocketError`, a timeout, overflow, or `DataModeError`) the code is
+  synthesized as `1006`, matching the WHATWG convention for a frame-less
+  end.
+
+```ts
+ws.addEventListener('open', () => console.log('connected'))
+ws.addEventListener('close', ({ detail }) => console.log('closed', detail))
+```
+
+`close()` called before you've ever iterated is a clean no-op — it
+resolves immediately and dispatches no events, since there was never a
+connection to close. Called once open (or connecting), it requests a
+graceful close, and its returned promise settles once the resulting
+`'close'` event fires; the async iterator completes normally (`done:
+true`) at the same time. An aborted `signal` always fails the connection,
+whether or not you've started iterating: it dispatches `'error'` then
+`'close'` like any other fatal end, and rejects the iterator with the
+signal's own abort `reason` (the value passed to `controller.abort(reason)`,
+or a `DOMException` named `AbortError` if none was given).
+
+The read side has no `'message'` event — `for await` is the only way to
+consume messages, and a fatal error also rejects the iterator with the
+same error carried in the `'error'` event's `detail`.
+
 ### Reading messages
 
 `WebSocketCore` implements `AsyncIterable`, so `for await` is the read
 model. There is a single consumer: iterating a second time (or iterating
 concurrently) throws. When the connection ends cleanly (close code `1000`
 or `1001`), the loop exits normally; any other close or socket error
-rejects the iterator with an error from the taxonomy below. An aborted
-`signal` rejects the iterator with the AbortSignal's own `reason` (the
-value passed to `controller.abort(reason)`, or a `DOMException` named
-`AbortError` if no reason was given). Messages received before a consumer
-starts iterating are buffered and delivered in order once iteration begins.
+rejects the iterator with an error from the taxonomy below. Messages
+received before a consumer starts iterating are buffered and delivered in
+order once iteration begins.
 
 ### `dataMode`
 
@@ -70,14 +111,6 @@ ws.capabilities
 - `pauseResume` — whether the transport can exert real read-side
   backpressure by pausing the underlying socket (Node only).
 
-### Lifecycle: `opened` / `closed`
-
-`ws.opened` resolves once the connection is established, and `ws.closed`
-resolves with `{ code, reason }` on a clean close. Both reject on failure.
-They're pre-attached with a no-op rejection handler internally, so it's
-safe to construct a `WebSocketCore` and never await either promise without
-triggering an unhandled rejection warning.
-
 ### `send` / `close` / `terminate`
 
 - `send(data)` — returns a `Promise<void>`. On Node it resolves once `ws`
@@ -85,11 +118,13 @@ triggering an unhandled rejection warning.
   soon as the native `WebSocket.send` call returns** — i.e. once the
   transport accepted the data, not once it's actually on the wire; the
   browser gives no lower-level flush signal.
-- `close(code?, reason?)` — requests a clean close and returns a promise
-  that settles with `ws.closed`.
+- `close(code?, reason?)` — before any iteration, a no-op that resolves
+  immediately (see above); otherwise requests a clean close and returns a
+  promise that settles once the resulting `'close'` event fires.
 - `terminate()` — an immediate, non-graceful teardown. On Node this is a
   hard socket destroy; in the browser (which has no RST equivalent) it's
   the strongest teardown available, a `close()` call.
+- `connected` — `true` only while `readyState === 'open'`.
 
 ### Heartbeat vs. idle timeout
 
@@ -125,24 +160,6 @@ Backpressure options `highWaterMark` (pause the read side once buffered
 bytes exceed this) and `maxBufferedBytes` (hard cap — crash rather than
 grow unbounded) round out `WebSocketCoreOptions`; on the browser, where
 `capabilities.pauseResume` is `false`, only the hard cap applies.
-
-### Browser example
-
-```ts
-import { WebSocketCore } from '@atproto/ws-client'
-
-const ws = new WebSocketCore('wss://example.com/socket', { dataMode: 'text' })
-await ws.opened
-await ws.send(JSON.stringify({ hello: 'world' }))
-
-try {
-  for await (const message of ws) {
-    console.log('received', message)
-  }
-} catch (err) {
-  console.error('connection failed', err)
-}
-```
 
 ## `ReconnectingWebSocket`
 
@@ -199,14 +216,36 @@ because the browser transport lacks capabilities the Node transport has:
   for chatty protocols (e.g. a firehose) this is how a browser client
   detects a silently-dead connection and reconnects.
 
-### Lifecycle callbacks
+### Lifecycle and events
 
-- `onOpen({ reconnect })` — fires after each successful (re)open;
-  `reconnect` is `false` for the first connection and `true` thereafter.
-- `onError(error, { willReconnect, attempt })` — fires when a connection
-  ends with an error, before the loop decides whether to sleep-and-retry or
-  give up; `attempt` is the consecutive-failure count since the last
-  successful open.
+Constructing a `ReconnectingWebSocket` opens nothing — `readyState` starts
+at `'initialized'`. `for await` starts the reconnect loop: the first pull
+opens the first connection lazily, and every subsequent reconnect is
+transparent to the consumer. Stop it with `close()`, an aborted `signal`,
+or by `break`-ing out of the loop.
+
+`ReconnectingWebSocket` is a typed `EventTarget` — register listeners
+before iterating to catch the first `'open'`:
+
+- `'open'` — fires once, on the very first successful connection. No
+  `detail`.
+- `'reconnect'` — fires once per successful reopen *after* the first (i.e.
+  every reconnect, including a clean `1001` reopen). No `detail`.
+- `'error'` — fires when a connection ends with an error, before the loop
+  decides whether to retry. `detail` is `{ error }` when giving up, or
+  `{ error, reconnect: { attempt } }` when it will retry (`attempt` is the
+  consecutive-failure count since the last successful open).
+- `'close'` — fires once, only for a terminal (non-reconnecting) end: a
+  fatal error (right after its `'error'`) or a non-reconnectable clean
+  close (e.g. code `1000`). `detail` is `{ code, reason, wasClean }`, with
+  `1006` synthesized for a codeless fatal end.
+
+A user-driven stop — `close()`, or an aborted `signal` — ends the loop
+*without* dispatching a `'close'` event: you observe the stop via
+`close()`'s resolved promise and the iterator ending (for `close()`), or
+via the iterator rejecting with the abort reason (for `signal`) — not via
+an event. As with `WebSocketCore`, `close()` before you've ever iterated is
+a clean no-op.
 
 ### Reconnect policy
 
@@ -227,7 +266,7 @@ reclassify clean close codes.
 
 - `send(data)` rejects immediately if not currently connected (no
   queueing across a reconnect) — check `connected` first, or catch and
-  retry once the next `onOpen` fires.
+  retry once the next `'open'`/`'reconnect'` fires.
 - `connected` is `true` only while the current underlying core reports
   `readyState === 'open'`.
 - `close(code?, reason?)` stops the reconnect loop for good and closes the
@@ -253,9 +292,11 @@ const ws = new ReconnectingWebSocket(
   {
     dataMode: 'text',
     headers: { Authorization: `Bearer ${process.env.JETSTREAM_TOKEN}` },
-    onError: (error, { willReconnect, attempt }) =>
-      console.warn('jetstream error', { willReconnect, attempt }, error),
   },
+)
+
+ws.addEventListener('error', ({ detail }) =>
+  console.warn('jetstream error', detail),
 )
 
 for await (const message of ws) {
@@ -274,6 +315,9 @@ const ws = new ReconnectingWebSocket(
   `wss://example.com/socket?token=${encodeURIComponent(token)}`,
   { dataMode: 'text', idleTimeoutMs: 30_000 },
 )
+
+ws.addEventListener('open', () => console.log('connected'))
+ws.addEventListener('close', ({ detail }) => console.log('closed', detail))
 
 for await (const message of ws) {
   console.log('received', message)
