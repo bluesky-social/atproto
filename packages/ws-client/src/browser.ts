@@ -55,5 +55,9 @@ export type {
   ReconnectingOptions,
 } from './reconnecting.js'
 export { FATAL_CLOSE_CODES, isReconnectableClose } from './reconnect-policy.js'
+export type {
+  CloseEventDetail,
+  WebSocketCoreEventMap,
+} from './typed-event-target.js'
 
 export { CloseCode, DisconnectError } from './close-codes.js'

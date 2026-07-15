@@ -80,11 +80,15 @@ describe('BrowserTransport via engine', () => {
     const engine = new WebSocketCoreEngine<'text'>(factory, url, {
       dataMode: 'text',
     })
+    // Lazy open: begin draining so the transport opens, then send once open.
+    const drained = (async () => {
+      for await (const _msg of engine) {
+        /* drain */
+      }
+    })()
     await engine.opened
     await engine.send('yo')
-    for await (const _msg of engine) {
-      /* drain */
-    }
+    await drained
     expect(seen).toEqual(['yo'])
   })
 })

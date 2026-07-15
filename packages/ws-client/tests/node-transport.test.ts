@@ -61,11 +61,15 @@ describe('NodeTransport via WebSocketCore', () => {
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
     const ws = new WebSocketCore(url, { dataMode: 'text' })
+    // Lazy open: begin draining so the transport opens, then send once open.
+    const drained = (async () => {
+      for await (const _msg of ws) {
+        /* drain until close */
+      }
+    })()
     await ws.opened
     await ws.send('ping')
-    for await (const _msg of ws) {
-      /* drain until close */
-    }
+    await drained
     expect(seen).toEqual(['ping'])
   })
 

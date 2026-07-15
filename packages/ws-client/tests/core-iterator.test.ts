@@ -1,6 +1,7 @@
 import { assert, describe, expect, it } from 'vitest'
 import { WebSocketCoreEngine } from '../src/core.js'
 import { AbnormalCloseError, SocketError } from '../src/errors.js'
+import type { CloseEventDetail } from '../src/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(
@@ -14,9 +15,9 @@ function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(
 }
 
 describe('WebSocketCoreEngine iterator', () => {
-  it('starts in connecting and exposes capabilities', () => {
+  it('starts in initialized and exposes capabilities', () => {
     const { engine, mock } = makeEngine()
-    expect(engine.readyState).toBe('connecting')
+    expect(engine.readyState).toBe('initialized')
     expect(engine.capabilities).toEqual(mock.capabilities)
     expect(engine.protocol).toBe('')
   })
@@ -24,6 +25,9 @@ describe('WebSocketCoreEngine iterator', () => {
   it('resolves opened and reports protocol on open', async () => {
     const mock = new MockTransport({ protocol: 'jetstream' })
     const { engine } = makeEngine({ mock })
+    // Lazy open: start a pull first so the transport opens.
+    const it = engine[Symbol.asyncIterator]()
+    void it.next()
     mock.emitOpen()
     await expect(engine.opened).resolves.toBeUndefined()
     expect(engine.readyState).toBe('open')
@@ -175,6 +179,9 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('send resolves on transport flush', async () => {
     const { engine, mock } = makeEngine()
+    // Lazy open: start a pull first so the transport opens.
+    const it = engine[Symbol.asyncIterator]()
+    void it.next()
     mock.emitOpen()
     const p = engine.send('hello' as never)
     expect(mock.sent).toHaveLength(1)
@@ -185,6 +192,9 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('send rejects when transport reports a flush error', async () => {
     const { engine, mock } = makeEngine()
+    // Lazy open: start a pull first so the transport opens.
+    const it = engine[Symbol.asyncIterator]()
+    void it.next()
     mock.emitOpen()
     const p = engine.send('hello' as never)
     mock.sent[0].onFlush(new Error('flush failed'))
@@ -207,17 +217,22 @@ describe('WebSocketCoreEngine iterator', () => {
 
   it('does not leak an unhandled rejection when consumer breaks then connection fails', async () => {
     const { engine, mock } = makeEngine()
-    mock.emitOpen()
 
     const unhandled: unknown[] = []
     const onUnhandled = (reason: unknown) => unhandled.push(reason)
     process.on('unhandledRejection', onUnhandled)
     try {
       // Consumer receives one message then abandons iteration -> return() -> close(1000).
+      // The for-await loop's first pull triggers lazy open; deliver open before
+      // the message so the socket reaches 'open'.
+      const pump = (async () => {
+        for await (const _msg of engine) {
+          break
+        }
+      })()
+      mock.emitOpen()
       mock.emitMessage('one', false)
-      for await (const _msg of engine) {
-        break
-      }
+      await pump
       // The graceful close never completes cleanly; the connection fails.
       mock.emitError(new Error('dropped during close'))
       // Let any microtasks/rejections settle.
@@ -227,5 +242,83 @@ describe('WebSocketCoreEngine iterator', () => {
     }
 
     expect(unhandled).toEqual([])
+  })
+})
+
+describe('WebSocketCoreEngine lifecycle + events', () => {
+  it('does not open the transport until iteration begins', () => {
+    const { engine, mock } = makeEngine()
+    expect(engine.readyState).toBe('initialized')
+    expect(mock.opened).toBe(false)
+    const it = engine[Symbol.asyncIterator]()
+    void it.next()
+    expect(mock.opened).toBe(true)
+    expect(engine.readyState).toBe('connecting')
+  })
+
+  it('dispatches open once on open', async () => {
+    const { engine, mock } = makeEngine()
+    let opens = 0
+    engine.addEventListener('open', () => opens++)
+    const it = engine[Symbol.asyncIterator]()
+    void it.next()
+    mock.emitOpen()
+    expect(opens).toBe(1)
+    expect(engine.connected).toBe(true)
+  })
+
+  it('dispatches close with real code on clean 1000', async () => {
+    const { engine, mock } = makeEngine()
+    const closes: unknown[] = []
+    engine.addEventListener('close', (e) => closes.push(e.detail))
+    const done = (async () => {
+      for await (const _ of engine) {
+        /* drain */
+      }
+    })()
+    mock.emitOpen()
+    mock.emitClose(1000, 'bye', true)
+    await done
+    expect(closes).toEqual([{ code: 1000, reason: 'bye', wasClean: true }])
+  })
+
+  it('dispatches error then close (code 1006) on a codeless fatal error', async () => {
+    const { engine, mock } = makeEngine()
+    const order: string[] = []
+    engine.addEventListener('error', (e) =>
+      order.push(`error:${(e.detail.error as Error).constructor.name}`),
+    )
+    engine.addEventListener('close', (e) =>
+      order.push(`close:${e.detail.code}:${e.detail.wasClean}`),
+    )
+    const it = engine[Symbol.asyncIterator]()
+    const pending = it.next()
+    mock.emitOpen()
+    mock.emitError(new Error('boom'))
+    await expect(pending).rejects.toBeInstanceOf(SocketError)
+    expect(order).toEqual(['error:SocketError', 'close:1006:false'])
+  })
+
+  it('dispatches close with the real abnormal code (not synthesized) on server close', async () => {
+    const { engine, mock } = makeEngine()
+    let detail: CloseEventDetail | undefined
+    engine.addEventListener('close', (e) => (detail = e.detail))
+    const it = engine[Symbol.asyncIterator]()
+    const pending = it.next()
+    mock.emitOpen()
+    mock.emitClose(1011, 'server error', false)
+    await expect(pending).rejects.toBeInstanceOf(AbnormalCloseError)
+    expect(detail).toEqual({ code: 1011, reason: 'server error', wasClean: false })
+  })
+
+  it('close() before iteration is a clean no-op with no events', async () => {
+    const { engine, mock } = makeEngine()
+    let events = 0
+    engine.addEventListener('close', () => events++)
+    engine.addEventListener('open', () => events++)
+    await engine.close()
+    expect(engine.readyState).toBe('closed')
+    expect(mock.opened).toBe(false)
+    expect(events).toBe(0)
   })
 })

@@ -13,6 +13,11 @@ import type {
   TransportFactory,
   TransportHandlers,
 } from './transport.js'
+import {
+  type CloseEventDetail,
+  TypedEventTarget,
+  type WebSocketCoreEventMap,
+} from './typed-event-target.js'
 
 export type DataMode = 'auto' | 'text' | 'binary'
 
@@ -44,7 +49,12 @@ export interface WebSocketCoreOptions<M extends DataMode = 'auto'> {
   headers?: Record<string, string> | Headers
 }
 
-type ReadyState = 'connecting' | 'open' | 'closing' | 'closed'
+type ReadyState =
+  | 'initialized'
+  | 'connecting'
+  | 'open'
+  | 'closing'
+  | 'closed'
 
 interface QueueItem<T> {
   value: T
@@ -62,6 +72,7 @@ type Terminal = { type: 'done' } | { type: 'error'; error: unknown }
 const CLEAN_CLOSE_CODES = new Set([1000, 1001])
 
 export class WebSocketCoreEngine<M extends DataMode = 'auto'>
+  extends TypedEventTarget<WebSocketCoreEventMap>
   implements AsyncIterable<MessageOf<M>>
 {
   readonly capabilities: TransportCapabilities
@@ -71,7 +82,8 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   private readonly signal?: AbortSignal
   private onAbort?: () => void
 
-  private state: ReadyState = 'connecting'
+  private state: ReadyState = 'initialized'
+  private openTriggered = false
   private negotiatedProtocol = ''
 
   private readonly buffer: QueueItem<MessageOf<M>>[] = []
@@ -104,6 +116,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     url: string | URL,
     private readonly options: WebSocketCoreOptions<M> = {},
   ) {
+    super()
     this.dataMode = options.dataMode ?? 'auto'
     this.signal = options.signal
     this.highWaterMark = options.highWaterMark ?? 1_048_576
@@ -144,14 +157,14 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         this.signal.addEventListener('abort', this.onAbort, { once: true })
       }
     }
-
-    // Behavior preserved for now: open eagerly on construction. Task 3 moves
-    // this to iteration-start for the lazy lifecycle.
-    this.transport.open()
   }
 
   get readyState(): ReadyState {
     return this.state
+  }
+
+  get connected(): boolean {
+    return this.state === 'open'
   }
 
   get protocol(): string {
@@ -167,6 +180,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         this.state = 'open'
         this.negotiatedProtocol = this.transport.protocol
         this.resolveOpened()
+        this.dispatchEvent(new Event('open'))
         this.onOpen()
       },
       onMessage: (data, isBinary) => {
@@ -182,8 +196,8 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         if (this.terminal) return
         if (CLEAN_CLOSE_CODES.has(code)) {
           this.state = 'closed'
-          this.finishDone()
           this.resolveClosed({ code, reason })
+          this.finishDone({ code, reason, wasClean })
         } else {
           this.fail(new AbnormalCloseError(code, reason, wasClean))
         }
@@ -297,7 +311,11 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
 
   // ---- terminal transitions ----
 
-  private finishDone(): void {
+  private dispatchClose(detail: CloseEventDetail): void {
+    this.dispatchEvent(new CustomEvent('close', { detail }))
+  }
+
+  private finishDone(info: CloseEventDetail): void {
     this.terminal = { type: 'done' }
     this.clearTimers()
     this.detachSignal()
@@ -306,6 +324,7 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     while ((waiter = this.waiters.shift())) {
       waiter.resolve({ value: undefined as never, done: true })
     }
+    this.dispatchClose(info)
   }
 
   private fail(error: unknown, terminateTransport = false): void {
@@ -324,6 +343,8 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     while ((waiter = this.waiters.shift())) {
       waiter.reject(error)
     }
+    this.dispatchEvent(new CustomEvent('error', { detail: { error } }))
+    this.dispatchClose(closeDetailForError(error))
   }
 
   private detachSignal(): void {
@@ -346,6 +367,12 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
   }
 
   close(code = 1000, reason?: string): Promise<void> {
+    if (this.state === 'initialized') {
+      // Never opened: clean no-op teardown, no events, resolve immediately.
+      this.state = 'closed'
+      this.detachSignal()
+      return Promise.resolve()
+    }
     if (this.state === 'connecting' || this.state === 'open') {
       this.state = 'closing'
       this.transport.close(code, reason)
@@ -390,7 +417,19 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
     }
   }
 
+  private triggerOpen(): void {
+    if (this.openTriggered) return
+    this.openTriggered = true
+    // Only open if still in the pre-open state (close()/abort before the first
+    // pull may have already moved us to 'closed').
+    if (this.state === 'initialized') {
+      this.state = 'connecting'
+      this.transport.open()
+    }
+  }
+
   private next(): Promise<IteratorResult<MessageOf<M>>> {
+    this.triggerOpen()
     // 1. Drain buffered messages first (even after a clean-close terminal).
     const item = this.buffer.shift()
     if (item) {
@@ -418,6 +457,15 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
       this.transport.resume()
     }
   }
+}
+
+function closeDetailForError(error: unknown): CloseEventDetail {
+  if (error instanceof AbnormalCloseError) {
+    return { code: error.code, reason: error.reason, wasClean: error.wasClean }
+  }
+  // Codeless fatal error (SocketError / timeouts / overflow / dataMode):
+  // synthesize an abnormal close, matching WHATWG's 1006 for a frame-less end.
+  return { code: 1006, reason: '', wasClean: false }
 }
 
 // Byte accounting: binary counts byteLength; strings approximate via UTF-16
