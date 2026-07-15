@@ -32,7 +32,10 @@ export class BrowserTransport implements Transport {
   readonly capabilities = { heartbeat: false, pauseResume: false } as const
   handlers!: TransportHandlers
 
-  private readonly ws: WHATWGWebSocket
+  private ws?: WHATWGWebSocket
+  private readonly url: string | URL
+  private readonly options?: TransportOptions
+  private readonly WebSocketImpl: WebSocketCtor
 
   constructor(
     url: string | URL,
@@ -41,12 +44,19 @@ export class BrowserTransport implements Transport {
     WebSocketImpl: WebSocketCtor = (globalThis as { WebSocket: WebSocketCtor })
       .WebSocket,
   ) {
+    this.url = url
+    this.options = options
+    this.WebSocketImpl = WebSocketImpl
+  }
+
+  open(): void {
     // headers are intentionally ignored: the WHATWG WebSocket API has no
     // request-header mechanism. See WebSocketCoreOptions.headers TSDoc.
-    this.ws = new WebSocketImpl(url, options?.protocols)
-    this.ws.binaryType = 'arraybuffer'
-    this.ws.addEventListener('open', () => this.handlers.onOpen())
-    this.ws.addEventListener('message', (ev: { data: unknown }) => {
+    const ws = new this.WebSocketImpl(this.url, this.options?.protocols)
+    this.ws = ws
+    ws.binaryType = 'arraybuffer'
+    ws.addEventListener('open', () => this.handlers.onOpen())
+    ws.addEventListener('message', (ev: { data: unknown }) => {
       const { data } = ev
       if (typeof data === 'string') {
         this.handlers.onMessage(data, false)
@@ -67,25 +77,25 @@ export class BrowserTransport implements Transport {
         )
       }
     })
-    this.ws.addEventListener(
+    ws.addEventListener(
       'close',
       (ev: { code: number; reason: string; wasClean: boolean }) => {
         this.handlers.onClose(ev.code, ev.reason, ev.wasClean)
       },
     )
-    this.ws.addEventListener('error', () => {
+    ws.addEventListener('error', () => {
       this.handlers.onError(new Error('WebSocket error'))
     })
   }
 
   get protocol(): string {
-    return this.ws.protocol
+    return this.ws?.protocol ?? ''
   }
 
   send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {
     // No completion callback in the browser: resolve on hand-off ("accepted").
     try {
-      this.ws.send(data)
+      this.ws!.send(data)
       onFlush()
     } catch (err) {
       onFlush(err instanceof Error ? err : new Error(String(err)))
@@ -105,12 +115,12 @@ export class BrowserTransport implements Transport {
   }
 
   close(code?: number, reason?: string): void {
-    this.ws.close(code, reason)
+    this.ws?.close(code, reason)
   }
 
   terminate(): void {
     // No RST equivalent; a polite close is the strongest teardown available.
-    this.ws.close()
+    this.ws?.close()
   }
 }
 

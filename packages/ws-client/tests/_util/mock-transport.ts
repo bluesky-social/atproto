@@ -24,6 +24,8 @@ export class MockTransport implements Transport {
   closedWith: { code?: number; reason?: string } | null = null
   terminated = false
 
+  opened = false
+
   private autoFlush: boolean
 
   constructor(options?: {
@@ -37,6 +39,10 @@ export class MockTransport implements Transport {
     }
     this.protocol = options?.protocol ?? ''
     this.autoFlush = options?.autoFlush ?? false
+  }
+
+  open(): void {
+    this.opened = true
   }
 
   send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {

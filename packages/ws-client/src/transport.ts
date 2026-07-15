@@ -19,6 +19,8 @@ export interface Transport {
   readonly protocol: string
   /** Set once by the engine before events begin. */
   handlers: TransportHandlers
+  /** Instantiate and connect the underlying socket, wiring it to `handlers`. */
+  open(): void
   send(data: string | Uint8Array, onFlush: (err?: Error) => void): void
   ping(): void
   pause(): void

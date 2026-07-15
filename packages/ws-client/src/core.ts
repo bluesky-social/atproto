@@ -144,6 +144,10 @@ export class WebSocketCoreEngine<M extends DataMode = 'auto'>
         this.signal.addEventListener('abort', this.onAbort, { once: true })
       }
     }
+
+    // Behavior preserved for now: open eagerly on construction. Task 3 moves
+    // this to iteration-start for the lazy lifecycle.
+    this.transport.open()
   }
 
   get readyState(): ReadyState {

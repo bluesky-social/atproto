@@ -3,7 +3,7 @@ import { type IncomingMessage, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import { WebSocketCore } from '../src/node.ts'
@@ -111,5 +111,28 @@ describe('NodeTransport via WebSocketCore', () => {
       /* drain */
     }
     expect(seenAuth).toBe('Bearer hdr')
+  })
+
+  it('does not open the socket until open() is called', async () => {
+    const { url, terminate } = await startServer((ws) => ws.close(1000))
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+    const { NodeTransport } = await import('../src/node-transport.js')
+    const transport = new NodeTransport(url)
+    // Wire minimal handlers so open() has something to call.
+    let opened = false
+    transport.handlers = {
+      onOpen: () => (opened = true),
+      onMessage: () => {},
+      onPong: () => {},
+      onClose: () => {},
+      onError: () => {},
+    }
+    // Before open(): no connection attempt, so no open callback can fire.
+    await new Promise((r) => setTimeout(r, 20))
+    expect(opened).toBe(false)
+    transport.open()
+    // After open(): the socket connects and fires onOpen.
+    await vi.waitFor(() => expect(opened).toBe(true))
+    transport.close(1000)
   })
 })
