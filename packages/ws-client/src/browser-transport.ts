@@ -51,7 +51,7 @@ export class BrowserTransport implements Transport {
 
   open(): void {
     // headers are intentionally ignored: the WHATWG WebSocket API has no
-    // request-header mechanism. See WebSocketCoreOptions.headers TSDoc.
+    // request-header mechanism. See WebSocketConnectionOptions.headers TSDoc.
     const ws = new this.WebSocketImpl(this.url, this.options?.protocols)
     this.ws = ws
     ws.binaryType = 'arraybuffer'

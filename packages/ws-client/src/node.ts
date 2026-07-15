@@ -1,39 +1,43 @@
 import {
   type DataMode,
-  WebSocketCoreEngine,
-  type WebSocketCoreOptions,
-} from './core.js'
+  WebSocketConnectionEngine,
+  type WebSocketConnectionOptions,
+} from './connection.js'
 import { createNodeTransport } from './node-transport.js'
 import {
   type Awaitable,
-  type CoreFactory,
-  type ReconnectingOptions,
-  ReconnectingWebSocketBase,
-} from './reconnecting.js'
+  type ConnectionFactory,
+  type WebSocketClientOptions,
+  WebSocketClientBase,
+} from './client.js'
 
-export class WebSocketCore<
+export class WebSocketConnection<
   M extends DataMode = 'auto',
-> extends WebSocketCoreEngine<M> {
-  constructor(url: string | URL, options?: WebSocketCoreOptions<M>) {
+> extends WebSocketConnectionEngine<M> {
+  constructor(url: string | URL, options?: WebSocketConnectionOptions<M>) {
     super(createNodeTransport, url, options)
   }
 }
 
-const nodeCoreFactory: CoreFactory = (url, options) =>
-  new WebSocketCoreEngine(createNodeTransport, url, options)
+const nodeConnectionFactory: ConnectionFactory = (url, options) =>
+  new WebSocketConnectionEngine(createNodeTransport, url, options)
 
-export class ReconnectingWebSocket<
+export class WebSocketClient<
   M extends DataMode = 'auto',
-> extends ReconnectingWebSocketBase<M> {
+> extends WebSocketClientBase<M> {
   constructor(
     url: string | URL | (() => Awaitable<string | URL>),
-    options?: ReconnectingOptions<M>,
+    options?: WebSocketClientOptions<M>,
   ) {
-    super(nodeCoreFactory, url, options)
+    super(nodeConnectionFactory, url, options)
   }
 }
 
-export type { DataMode, MessageOf, WebSocketCoreOptions } from './core.js'
+export type {
+  DataMode,
+  MessageOf,
+  WebSocketConnectionOptions,
+} from './connection.js'
 export {
   AbnormalCloseError,
   BufferOverflowError,
@@ -41,19 +45,20 @@ export {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
-  WebSocketCoreError,
+  WebSocketClientError,
+  WebSocketConnectionError,
 } from './errors.js'
 export type {
   Awaitable,
-  BrowserReconnectingOptions,
-  NodeReconnectingOptions,
-  ReconnectingOptions,
-} from './reconnecting.js'
+  BrowserWebSocketClientOptions,
+  NodeWebSocketClientOptions,
+  WebSocketClientOptions,
+} from './client.js'
 export { FATAL_CLOSE_CODES, isReconnectableClose } from './reconnect-policy.js'
 export type {
   CloseEventDetail,
-  ReconnectingEventMap,
-  WebSocketCoreEventMap,
+  WebSocketClientEventMap,
+  WebSocketConnectionEventMap,
 } from './typed-event-target.js'
 
 export { CloseCode, DisconnectError } from './close-codes.js'

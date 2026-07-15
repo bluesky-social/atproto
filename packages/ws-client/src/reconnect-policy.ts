@@ -25,7 +25,7 @@ export function isReconnectableClose(code: number): boolean {
 }
 
 /**
- * Default reconnect policy over WebSocketCore's typed errors:
+ * Default reconnect policy over WebSocketConnection's typed errors:
  * - AbnormalCloseError → classify by close code (isReconnectableClose)
  * - SocketError / HeartbeatTimeoutError / IdleTimeoutError → reconnect
  * - anything else (BufferOverflowError, DataModeError, foreign errors) → fatal

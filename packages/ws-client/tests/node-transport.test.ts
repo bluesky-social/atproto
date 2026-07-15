@@ -6,7 +6,7 @@ import httpTerminator from 'http-terminator'
 import { describe, expect, it, vi } from 'vitest'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { WebSocketCore } from '../src/node.ts'
+import { WebSocketConnection } from '../src/node.ts'
 
 async function startServer(
   onConnection: (ws: WebSocket, req: IncomingMessage) => void,
@@ -20,7 +20,7 @@ async function startServer(
   return { url: `ws://localhost:${port}`, terminate }
 }
 
-describe('NodeTransport via WebSocketCore', () => {
+describe('NodeTransport via WebSocketConnection', () => {
   it('yields text messages then ends on clean close', async () => {
     const { url, terminate } = await startServer((ws) => {
       ws.send('hello')
@@ -29,7 +29,7 @@ describe('NodeTransport via WebSocketCore', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketCore(url, { dataMode: 'text' })
+    const ws = new WebSocketConnection(url, { dataMode: 'text' })
     let closeDetail: { code: number } | undefined
     ws.addEventListener('close', (e) => (closeDetail = e.detail))
     const received: string[] = []
@@ -45,7 +45,7 @@ describe('NodeTransport via WebSocketCore', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketCore(url, { dataMode: 'binary' })
+    const ws = new WebSocketConnection(url, { dataMode: 'binary' })
     const received: Uint8Array[] = []
     for await (const msg of ws) received.push(msg)
     expect(received).toHaveLength(1)
@@ -62,7 +62,7 @@ describe('NodeTransport via WebSocketCore', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketCore(url, { dataMode: 'text' })
+    const ws = new WebSocketConnection(url, { dataMode: 'text' })
     // Lazy open: begin draining so the transport opens, then send once open.
     const drained = (async () => {
       for await (const _msg of ws) {
@@ -80,7 +80,7 @@ describe('NodeTransport via WebSocketCore', () => {
   it('reports pauseResume + heartbeat capabilities', async () => {
     const { url, terminate } = await startServer((ws) => ws.close(1000))
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const ws = new WebSocketCore(url)
+    const ws = new WebSocketConnection(url)
     expect(ws.capabilities).toEqual({ heartbeat: true, pauseResume: true })
     for await (const _msg of ws) {
       /* drain */
@@ -95,7 +95,7 @@ describe('NodeTransport via WebSocketCore', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const wsc = new WebSocketCore(url, {
+    const wsc = new WebSocketConnection(url, {
       headers: { Authorization: 'Bearer t0ken' },
     })
     for await (const _msg of wsc) {
@@ -112,7 +112,7 @@ describe('NodeTransport via WebSocketCore', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const wsc = new WebSocketCore(url, {
+    const wsc = new WebSocketConnection(url, {
       headers: new Headers({ Authorization: 'Bearer hdr' }),
     })
     for await (const _msg of wsc) {

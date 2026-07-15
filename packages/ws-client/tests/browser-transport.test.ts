@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import { BrowserTransport } from '../src/browser-transport.ts'
-import { WebSocketCoreEngine } from '../src/core.ts'
+import { WebSocketConnectionEngine } from '../src/connection.ts'
 import type { TransportOptions } from '../src/transport.ts'
 
 async function startServer(onConnection: (ws: WebSocket) => void) {
@@ -29,7 +29,7 @@ describe('BrowserTransport via engine', () => {
   it('reports heartbeat:false, pauseResume:false', async () => {
     const { url, terminate } = await startServer((ws) => ws.close(1000))
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const engine = new WebSocketCoreEngine(factory, url)
+    const engine = new WebSocketConnectionEngine(factory, url)
     expect(engine.capabilities).toEqual({
       heartbeat: false,
       pauseResume: false,
@@ -45,7 +45,7 @@ describe('BrowserTransport via engine', () => {
       ws.close(1000)
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const engine = new WebSocketCoreEngine<'text'>(factory, url, {
+    const engine = new WebSocketConnectionEngine<'text'>(factory, url, {
       dataMode: 'text',
     })
     const received: string[] = []
@@ -59,7 +59,7 @@ describe('BrowserTransport via engine', () => {
       ws.close(1000)
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const engine = new WebSocketCoreEngine<'binary'>(factory, url, {
+    const engine = new WebSocketConnectionEngine<'binary'>(factory, url, {
       dataMode: 'binary',
     })
     const received: Uint8Array[] = []
@@ -77,7 +77,7 @@ describe('BrowserTransport via engine', () => {
       })
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const engine = new WebSocketCoreEngine<'text'>(factory, url, {
+    const engine = new WebSocketConnectionEngine<'text'>(factory, url, {
       dataMode: 'text',
     })
     // Lazy open: begin draining so the transport opens, then send once open.

@@ -6,7 +6,7 @@ import type { AddressInfo, Server } from 'node:net'
 import httpTerminator from 'http-terminator'
 import { describe, expect, it } from 'vitest'
 import { type WebSocket as WsSocket, WebSocketServer } from 'ws'
-import { ReconnectingWebSocket } from '../src/node.ts'
+import { WebSocketClient } from '../src/node.ts'
 
 function startServer(
   onConnection: (ws: WsSocket, req: IncomingMessage) => void,
@@ -24,7 +24,7 @@ function startServer(
   }
 }
 
-describe('ReconnectingWebSocket (node integration)', () => {
+describe('WebSocketClient (node integration)', () => {
   it('reconnects after the server drops the connection', async () => {
     let connections = 0
     const { ready, terminate } = startServer((ws) => {
@@ -44,7 +44,7 @@ describe('ReconnectingWebSocket (node integration)', () => {
     const url = await ready
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new ReconnectingWebSocket(url, { dataMode: 'text' })
+    const ws = new WebSocketClient(url, { dataMode: 'text' })
     const received: string[] = []
     for await (const msg of ws) {
       received.push(msg)
@@ -70,7 +70,7 @@ describe('ReconnectingWebSocket (node integration)', () => {
     const url = await ready
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new ReconnectingWebSocket(url, {
+    const ws = new WebSocketClient(url, {
       dataMode: 'text',
       headers: { Authorization: 'Bearer tok' },
     })
@@ -93,7 +93,7 @@ describe('ReconnectingWebSocket (node integration)', () => {
     const url = await ready
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new ReconnectingWebSocket(url, { dataMode: 'text' })
+    const ws = new WebSocketClient(url, { dataMode: 'text' })
     // Kick off iteration so a connection is established.
     const done = (async () => {
       for await (const _msg of ws) {

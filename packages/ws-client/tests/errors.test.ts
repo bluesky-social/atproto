@@ -10,7 +10,7 @@ import {
   WebSocketConnectionError,
 } from '../src/errors.js'
 
-describe('WebSocketCore errors', () => {
+describe('WebSocketConnection errors', () => {
   it('all extend WebSocketConnectionError and Error', () => {
     const errs = [
       new AbnormalCloseError(1011, 'boom', false),

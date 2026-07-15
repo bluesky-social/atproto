@@ -9,33 +9,35 @@ describe('entrypoint parity', () => {
     expect(nodeKeys).toEqual(browserKeys)
   })
 
-  it('both export a constructable WebSocketCore', () => {
-    expect(typeof node.WebSocketCore).toBe('function')
-    expect(typeof browser.WebSocketCore).toBe('function')
+  it('both export a constructable WebSocketConnection', () => {
+    expect(typeof node.WebSocketConnection).toBe('function')
+    expect(typeof browser.WebSocketConnection).toBe('function')
   })
 
-  it('both export a constructable ReconnectingWebSocket', () => {
-    expect(typeof node.ReconnectingWebSocket).toBe('function')
-    expect(typeof browser.ReconnectingWebSocket).toBe('function')
+  it('both export a constructable WebSocketClient', () => {
+    expect(typeof node.WebSocketClient).toBe('function')
+    expect(typeof browser.WebSocketClient).toBe('function')
   })
 
-  it('WebSocketCore constructors are type-compatible', () => {
-    // Pure type-level assertion: constructing a real WebSocketCore here
+  it('WebSocketConnection constructors are type-compatible', () => {
+    // Pure type-level assertion: constructing a real WebSocketConnection here
     // would open a socket to an unreachable URL, which is unnecessary risk
     // for what is otherwise a type-only check.
-    expectTypeOf(node.WebSocketCore).toEqualTypeOf<
-      typeof browser.WebSocketCore
+    expectTypeOf(node.WebSocketConnection).toEqualTypeOf<
+      typeof browser.WebSocketConnection
     >()
   })
 
   it('binary dataMode binds Uint8Array on both entries', () => {
     // Type-level only: no instance is constructed (that would open a real
     // socket). MessageOf<'binary'> resolves to Uint8Array on both entries,
-    // and the two WebSocketCore<'binary'> instance types are identical.
+    // and the two WebSocketConnection<'binary'> instance types are identical.
     expectTypeOf<node.MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
     expectTypeOf<browser.MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
     expectTypeOf<
-      InstanceType<typeof node.WebSocketCore<'binary'>>
-    >().toEqualTypeOf<InstanceType<typeof browser.WebSocketCore<'binary'>>>()
+      InstanceType<typeof node.WebSocketConnection<'binary'>>
+    >().toEqualTypeOf<
+      InstanceType<typeof browser.WebSocketConnection<'binary'>>
+    >()
   })
 })
