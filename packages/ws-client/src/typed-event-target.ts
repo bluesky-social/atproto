@@ -37,13 +37,13 @@ export interface CloseEventDetail {
   wasClean: boolean
 }
 
-export type WebSocketCoreEventMap = {
+export type WebSocketConnectionEventMap = {
   open: Event
   error: CustomEvent<{ error: unknown }>
   close: CustomEvent<CloseEventDetail>
 }
 
-export type ReconnectingEventMap = {
+export type WebSocketClientEventMap = {
   open: Event
   reconnect: Event
   error: CustomEvent<{ error: unknown; reconnect?: { attempt: number } }>
