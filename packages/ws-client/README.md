@@ -1,21 +1,21 @@
 # @atproto/ws-client: WebSocket Client Library
 
 An isomorphic WebSocket client for a single long-lived connection, consumed
-as an `AsyncIterable` of messages. The same `WebSocketCore` API works in
-Node (via [`ws`](https://www.npmjs.com/package/ws)) and in the browser (via
-the native `WebSocket`), through conditional package exports — you always
-import from `@atproto/ws-client`, and the right transport is wired in for
-you.
+as an `AsyncIterable` of messages. The same `WebSocketConnection` API works
+in Node (via [`ws`](https://www.npmjs.com/package/ws)) and in the browser
+(via the native `WebSocket`), through conditional package exports — you
+always import from `@atproto/ws-client`, and the right transport is wired
+in for you.
 
 [![NPM](https://img.shields.io/npm/v/@atproto/ws-client)](https://www.npmjs.com/package/@atproto/ws-client)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
-## `WebSocketCore`
+## `WebSocketConnection`
 
 ```ts
-import { WebSocketCore } from '@atproto/ws-client'
+import { WebSocketConnection } from '@atproto/ws-client'
 
-const ws = new WebSocketCore('wss://jetstream.example.com/subscribe', {
+const ws = new WebSocketConnection('wss://jetstream.example.com/subscribe', {
   dataMode: 'text',
 })
 
@@ -27,14 +27,14 @@ for await (const message of ws) {
 
 ### Lifecycle and events
 
-Constructing a `WebSocketCore` opens nothing — `readyState` starts at
+Constructing a `WebSocketConnection` opens nothing — `readyState` starts at
 `'initialized'`, and the underlying socket only opens once you start
 consuming it. `for await` is what starts it: the first pull opens the
 connection lazily. `readyState` then moves through `'connecting'` →
 `'open'` → (`'closing'` →) `'closed'`. Stop it with `close()`, an aborted
 `signal`, or by `break`-ing out of the `for await` loop.
 
-`WebSocketCore` is a typed `EventTarget` — register listeners with
+`WebSocketConnection` is a typed `EventTarget` — register listeners with
 `addEventListener` **before** you start iterating so you don't miss the
 first `'open'`:
 
@@ -73,18 +73,19 @@ same error carried in the `'error'` event's `detail`.
 
 ### Reading messages
 
-`WebSocketCore` implements `AsyncIterable`, so `for await` is the read
-model. There is a single consumer: iterating a second time (or iterating
-concurrently) throws. When the connection ends cleanly (close code `1000`
-or `1001`), the loop exits normally; any other close or socket error
-rejects the iterator with an error from the taxonomy below. Messages
+`WebSocketConnection` implements `AsyncIterable`, so `for await` is the
+read model. There is a single consumer: iterating a second time (or
+iterating concurrently) throws. When the connection ends cleanly (close
+code `1000` or `1001`), the loop exits normally; any other close or socket
+error rejects the iterator with an error from the taxonomy below. Messages
 received before a consumer starts iterating are buffered and delivered in
 order once iteration begins.
 
 ### `dataMode`
 
-`WebSocketCoreOptions#dataMode` is `'auto' | 'text' | 'binary'` (default
-`'auto'`), and it also types what the iterator yields via `MessageOf<M>`:
+`WebSocketConnectionOptions#dataMode` is `'auto' | 'text' | 'binary'`
+(default `'auto'`), and it also types what the iterator yields via
+`MessageOf<M>`:
 
 - `'auto'` — messages yield as `string | Uint8Array`, whichever the frame
   actually was.
@@ -100,7 +101,7 @@ behavior agree.
 ### Capabilities
 
 Node and the browser differ in what the underlying transport can actually
-do; `WebSocketCore#capabilities` is the one place that difference is
+do; `WebSocketConnection#capabilities` is the one place that difference is
 observable (everything else about the API is identical across entries):
 
 ```ts
@@ -148,7 +149,8 @@ Both timers are `unref()`'d on Node so they never keep the process alive.
 
 ### Errors
 
-All errors extend `WebSocketCoreError`:
+All errors extend `WebSocketConnectionError`, which — like every error in
+this taxonomy — only ever originates from a `WebSocketConnection`:
 
 | Error                   | Cause                                                                             |
 | ----------------------- | --------------------------------------------------------------------------------- |
@@ -161,20 +163,23 @@ All errors extend `WebSocketCoreError`:
 
 Backpressure options `highWaterMark` (pause the read side once buffered
 bytes exceed this) and `maxBufferedBytes` (hard cap — crash rather than
-grow unbounded) round out `WebSocketCoreOptions`; on the browser, where
-`capabilities.pauseResume` is `false`, only the hard cap applies.
+grow unbounded) round out `WebSocketConnectionOptions`; on the browser,
+where `capabilities.pauseResume` is `false`, only the hard cap applies.
 
-## `ReconnectingWebSocket`
+`WebSocketClient` (below) has its own, separate `WebSocketClientError` for
+misuse of the client itself, rather than a connection-level failure.
 
-`ReconnectingWebSocket` wraps `WebSocketCore` with an automatic reconnect
+## `WebSocketClient`
+
+`WebSocketClient` wraps `WebSocketConnection` with an automatic reconnect
 loop, while presenting the same `AsyncIterable` read model — `for await`
 transparently spans reconnects, so a consumer never has to notice that the
 underlying connection was torn down and re-established.
 
 ```ts
-import { ReconnectingWebSocket } from '@atproto/ws-client'
+import { WebSocketClient } from '@atproto/ws-client'
 
-const ws = new ReconnectingWebSocket('wss://jetstream.example.com/subscribe', {
+const ws = new WebSocketClient('wss://jetstream.example.com/subscribe', {
   dataMode: 'text',
 })
 
@@ -186,13 +191,13 @@ for await (const message of ws) {
 
 ### Constructing
 
-`new ReconnectingWebSocket(url, options)` — `url` is a `string | URL`, or a
+`new WebSocketClient(url, options)` — `url` is a `string | URL`, or a
 thunk `() => string | URL | Promise<string | URL>` that's re-invoked on
 every (re)connect attempt. Use the thunk form to refresh a cursor, token, or
 other query param each time — e.g. resuming a firehose from the last-seen
 event after a drop. `options.dataMode` (`'auto' | 'text' | 'binary'`,
-default `'auto'`) is forwarded to the underlying core and, as with
-`WebSocketCore`, types what the iterator yields via `MessageOf<M>`.
+default `'auto'`) is forwarded to the underlying connection and, as with
+`WebSocketConnection`, types what the iterator yields via `MessageOf<M>`.
 
 ### Node-only `headers`
 
@@ -200,13 +205,14 @@ default `'auto'`) is forwarded to the underlying core and, as with
 underlying `ws` connection on Node. It's ignored in the browser build — the
 native `WebSocket` API has no request-header mechanism — so browser
 consumers authenticate via the URL (query param, cookie) or a subprotocol
-instead. `BrowserReconnectingOptions` omits `headers` entirely for
+instead. `BrowserWebSocketClientOptions` omits `headers` entirely for
 `satisfies`-style option objects that must work on both entries.
 
 ### Browser backstops: `maxBufferedBytes` and `idleTimeoutMs`
 
-Both options are forwarded to the core on every (re)connect, and both exist
-because the browser transport lacks capabilities the Node transport has:
+Both options are forwarded to the connection on every (re)connect, and both
+exist because the browser transport lacks capabilities the Node transport
+has:
 
 - `maxBufferedBytes` is the hard cap on unconsumed buffered bytes. On Node,
   exceeding `highWaterMark` first pauses the socket for real backpressure;
@@ -220,14 +226,14 @@ because the browser transport lacks capabilities the Node transport has:
 
 ### Lifecycle and events
 
-Constructing a `ReconnectingWebSocket` opens nothing — `readyState` starts
-at `'initialized'`. `for await` starts the reconnect loop: the first pull
+Constructing a `WebSocketClient` opens nothing — `readyState` starts at
+`'initialized'`. `for await` starts the reconnect loop: the first pull
 opens the first connection lazily, and every subsequent reconnect is
 transparent to the consumer. Stop it with `close()`, an aborted `signal`,
 or by `break`-ing out of the loop.
 
-`ReconnectingWebSocket` is a typed `EventTarget` — register listeners
-before iterating to catch the first `'open'`:
+`WebSocketClient` is a typed `EventTarget` — register listeners before
+iterating to catch the first `'open'`:
 
 - `'open'` — fires once, on the very first successful connection. No
   `detail`.
@@ -246,31 +252,38 @@ A user-driven stop — `close()`, or an aborted `signal` — ends the loop
 _without_ dispatching a `'close'` event: you observe the stop via
 `close()`'s resolved promise and the iterator ending (for `close()`), or
 via the iterator rejecting with the abort reason (for `signal`) — not via
-an event. As with `WebSocketCore`, `close()` before you've ever iterated is
-a clean no-op.
+an event. As with `WebSocketConnection`, `close()` before you've ever
+iterated is a clean no-op.
 
 ### Reconnect policy
 
-By default, a connection failure or close reconnects unless the close code
-is genuinely fatal. `FATAL_CLOSE_CODES` (`1000, 1002, 1003, 1007, 1009`) and
-`isReconnectableClose(code)` are exported so callers can inspect or reuse
-the same classification. Only close codes a peer can deliberately put on
-the wire to mean normal shutdown (`1000`) or a malformed-protocol condition
-(`1002`/`1003`/`1007`/`1009`) are fatal; the synthetic codes a runtime
-generates locally to describe transient trouble (`1005` no-status, `1006`
-abnormal, `1015` TLS) are reconnectable, matching how the same failures
-surface as `SocketError` on the other transport. Pass
-`shouldReconnect(error, attempt)` to override the classification for any
-error, including a synthetic `AbnormalCloseError` used internally to
-reclassify clean close codes.
+`options.shouldReconnect` controls reconnection and accepts
+`boolean | ((error: unknown, attempt: number) => boolean)`:
+
+- `true` (the default) uses the built-in policy — a connection failure or
+  close reconnects unless the close code is genuinely fatal.
+  `FATAL_CLOSE_CODES` (`1000, 1002, 1003, 1007, 1009`) and
+  `isReconnectableClose(code)` are exported so callers can inspect or reuse
+  the same classification. Only close codes a peer can deliberately put on
+  the wire to mean normal shutdown (`1000`) or a malformed-protocol
+  condition (`1002`/`1003`/`1007`/`1009`) are fatal; the synthetic codes a
+  runtime generates locally to describe transient trouble (`1005`
+  no-status, `1006` abnormal, `1015` TLS) are reconnectable, matching how
+  the same failures surface as `SocketError` on the other transport.
+- `false` disables reconnection entirely — every terminal error or close is
+  treated as fatal, so the iterator ends on the first one.
+- A function `(error, attempt) => boolean` fully replaces the default
+  classification with your own — return `true` to reconnect, `false` to
+  end the loop. It's called for any error, including a synthetic
+  `AbnormalCloseError` used internally to reclassify clean close codes.
 
 ### `send` / `connected` / `close` / `signal`
 
-- `send(data)` rejects immediately if not currently connected (no
-  queueing across a reconnect) — check `connected` first, or catch and
-  retry once the next `'open'`/`'reconnect'` fires.
-- `connected` is `true` only while the current underlying core reports
-  `readyState === 'open'`.
+- `send(data)` rejects with `WebSocketClientError` if not currently
+  connected (no queueing across a reconnect) — check `connected` first, or
+  catch and retry once the next `'open'`/`'reconnect'` fires.
+- `connected` is `true` only while the current underlying connection
+  reports `readyState === 'open'`.
 - `close(code?, reason?)` stops the reconnect loop for good and closes the
   current connection cleanly; the async iterator then completes normally.
 - `options.signal` (`AbortSignal`) ends the reconnect loop permanently on
@@ -278,15 +291,26 @@ reclassify clean close codes.
   for caller-driven shutdown instead of `close()` when you already have a
   signal wired through your application.
 
+### `WebSocketClientError`
+
+`WebSocketClient` throws or rejects with `WebSocketClientError` for its own
+misuse/state errors — `send()` before the client is connected, or
+iterating the client a second time — rather than the
+`WebSocketConnectionError` taxonomy above, which only ever originates from
+a `WebSocketConnection`. A reconnecting consumer that wants to distinguish
+"my own mistake" from "a connection-level failure surfaced through
+`'error'`/the iterator rejection" can check `instanceof WebSocketClientError`
+versus `instanceof WebSocketConnectionError`.
+
 ### Node example: Jetstream-style consumer with headers
 
 ```ts
-import { ReconnectingWebSocket } from '@atproto/ws-client'
+import { WebSocketClient } from '@atproto/ws-client'
 
 let cursor: number | undefined
 const url = new URL('wss://jetstream.example.com/subscribe')
 
-const ws = new ReconnectingWebSocket(
+const ws = new WebSocketClient(
   () => {
     if (cursor) url.searchParams.set('cursor', String(cursor))
     return url
@@ -311,9 +335,9 @@ for await (const message of ws) {
 ### Browser example: URL-based auth, no headers
 
 ```ts
-import { ReconnectingWebSocket } from '@atproto/ws-client'
+import { WebSocketClient } from '@atproto/ws-client'
 
-const ws = new ReconnectingWebSocket(
+const ws = new WebSocketClient(
   `wss://example.com/socket?token=${encodeURIComponent(token)}`,
   { dataMode: 'text', idleTimeoutMs: 30_000 },
 )
@@ -328,7 +352,7 @@ for await (const message of ws) {
 
 ### A note for downstream library authors
 
-If your library re-exports or wraps `ReconnectingWebSocket`/`WebSocketCore`
+If your library re-exports or wraps `WebSocketClient`/`WebSocketConnection`
 and you bundle your own package for distribution, keep `@atproto/ws-client`
 **external** (not pre-bundled). It resolves to different files on Node vs.
 the browser through conditional package exports; pre-bundling it into a
