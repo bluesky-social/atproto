@@ -48,8 +48,10 @@ export class WebSocketClient<
 }
 
 export type {
+  BrowserWebSocketConnectionOptions,
   DataMode,
   MessageOf,
+  NodeWebSocketConnectionOptions,
   WebSocketConnectionOptions,
 } from './connection.js'
 export {

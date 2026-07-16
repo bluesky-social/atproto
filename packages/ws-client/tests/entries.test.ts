@@ -19,13 +19,33 @@ describe('entrypoint parity', () => {
     expect(typeof browser.WebSocketClient).toBe('function')
   })
 
-  it('WebSocketConnection constructors are type-compatible', () => {
-    // Pure type-level assertion: constructing a real WebSocketConnection here
+  it('browser constructor options are a subset of node constructor options', () => {
+    // Pure type-level assertions: constructing a real WebSocketConnection here
     // would open a socket to an unreachable URL, which is unnecessary risk
     // for what is otherwise a type-only check.
-    expectTypeOf(node.WebSocketConnection).toEqualTypeOf<
-      typeof browser.WebSocketConnection
+    //
+    // The two entrypoints intentionally differ: the browser signatures narrow
+    // the options to the browser-supported subset (no `headers`), so any valid
+    // browser options object is also valid node options — not vice versa.
+    expectTypeOf<
+      NonNullable<ConstructorParameters<typeof browser.WebSocketConnection>[1]>
+    >().toExtend<
+      NonNullable<ConstructorParameters<typeof node.WebSocketConnection>[1]>
     >()
+    expectTypeOf<
+      NonNullable<ConstructorParameters<typeof browser.WebSocketClient>[1]>
+    >().toExtend<
+      NonNullable<ConstructorParameters<typeof node.WebSocketClient>[1]>
+    >()
+    // headers is the one node-only option: present on node, absent on browser.
+    expectTypeOf<
+      NonNullable<ConstructorParameters<typeof node.WebSocketConnection>[1]>
+    >().toHaveProperty('headers')
+    expectTypeOf<
+      keyof NonNullable<
+        ConstructorParameters<typeof browser.WebSocketConnection>[1]
+      >
+    >().not.toExtend<'headers'>()
   })
 
   it('binary dataMode binds Uint8Array on both entries', () => {

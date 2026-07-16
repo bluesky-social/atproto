@@ -49,14 +49,22 @@ export class BrowserTransport implements Transport {
     WebSocketImpl: WebSocketCtor = (globalThis as { WebSocket: WebSocketCtor })
       .WebSocket,
   ) {
+    // The WHATWG WebSocket API has no request-header mechanism, so headers
+    // would be silently dropped — which usually means broken auth. Fail loudly
+    // at construction instead. (The browser entrypoint's option types omit
+    // `headers`, but a consumer type-checking against the Node.js entrypoint
+    // can still reach here at runtime.)
+    if (hasHeaders(options?.headers)) {
+      throw new TypeError(
+        'WebSocket headers are not supported in the browser; use URL or subprotocol-based auth instead',
+      )
+    }
     this.url = url
     this.options = options
     this.WebSocketImpl = WebSocketImpl
   }
 
   open(): void {
-    // headers are intentionally ignored: the WHATWG WebSocket API has no
-    // request-header mechanism. See WebSocketConnectionOptions.headers TSDoc.
     const ws = new this.WebSocketImpl(this.url, this.options?.protocols)
     this.ws = ws
     ws.binaryType = 'arraybuffer'
@@ -131,3 +139,12 @@ export class BrowserTransport implements Transport {
 
 export const createBrowserTransport: TransportFactory = (url, options) =>
   new BrowserTransport(url, options)
+
+function hasHeaders(headers?: Record<string, string> | Headers): boolean {
+  if (!headers) return false
+  if (headers instanceof Headers) {
+    for (const _ of headers) return true
+    return false
+  }
+  return Object.keys(headers).length > 0
+}

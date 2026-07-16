@@ -1,14 +1,14 @@
 import { createBrowserTransport } from './browser-transport.js'
 import {
   type Awaitable,
+  type BrowserWebSocketClientOptions,
   type ConnectionFactory,
   WebSocketClientBase,
-  type WebSocketClientOptions,
 } from './client.js'
 import {
+  type BrowserWebSocketConnectionOptions,
   type DataMode,
   WebSocketConnectionEngine,
-  type WebSocketConnectionOptions,
 } from './connection.js'
 
 /**
@@ -21,7 +21,14 @@ import {
 export class WebSocketConnection<
   M extends DataMode = 'auto',
 > extends WebSocketConnectionEngine<M> {
-  constructor(url: string | URL, options?: WebSocketConnectionOptions<M>) {
+  // The browser signature narrows the options to the browser-supported subset
+  // (no `headers`), so tooling that resolves this entrypoint flags unsupported
+  // options at compile time. The transport still validates at runtime for
+  // consumers whose type checker resolved the Node.js entrypoint.
+  constructor(
+    url: string | URL,
+    options?: BrowserWebSocketConnectionOptions<M>,
+  ) {
     super(createBrowserTransport, url, options)
   }
 }
@@ -39,17 +46,20 @@ const browserConnectionFactory: ConnectionFactory = (url, options) =>
 export class WebSocketClient<
   M extends DataMode = 'auto',
 > extends WebSocketClientBase<M> {
+  // Narrowed to the browser-supported option subset; see WebSocketConnection.
   constructor(
     url: string | URL | (() => Awaitable<string | URL>),
-    options?: WebSocketClientOptions<M>,
+    options?: BrowserWebSocketClientOptions<M>,
   ) {
     super(browserConnectionFactory, url, options)
   }
 }
 
 export type {
+  BrowserWebSocketConnectionOptions,
   DataMode,
   MessageOf,
+  NodeWebSocketConnectionOptions,
   WebSocketConnectionOptions,
 } from './connection.js'
 export {

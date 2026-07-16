@@ -95,4 +95,30 @@ describe('BrowserTransport via engine', () => {
     await drained
     expect(seen).toEqual(['yo'])
   })
+
+  it('throws on construction when headers are provided (record form)', () => {
+    expect(
+      () =>
+        new BrowserTransport('ws://x', {
+          headers: { Authorization: 'Bearer t0ken' },
+        }),
+    ).toThrow(TypeError)
+  })
+
+  it('throws on construction when headers are provided (Headers form)', () => {
+    expect(
+      () =>
+        new BrowserTransport('ws://x', {
+          headers: new Headers({ Authorization: 'Bearer t0ken' }),
+        }),
+    ).toThrow(TypeError)
+  })
+
+  it('does not throw for absent or empty headers', () => {
+    expect(() => new BrowserTransport('ws://x')).not.toThrow()
+    expect(() => new BrowserTransport('ws://x', { headers: {} })).not.toThrow()
+    expect(
+      () => new BrowserTransport('ws://x', { headers: new Headers() }),
+    ).not.toThrow()
+  })
 })

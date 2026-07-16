@@ -24,9 +24,11 @@ export interface WebSocketClientOptions<M extends DataMode = 'auto'> {
   protocols?: string | string[]
   dataMode?: M
   /**
-   * Node only. Applied to the underlying `ws` connection. Accepts a plain
-   * record or a WHATWG `Headers`. Ignored in the browser build — the native
-   * WebSocket API has no request-header mechanism; use URL/subprotocol auth.
+   * Node.js only. Applied to the underlying `ws` connection. Accepts a plain
+   * record or a WHATWG `Headers`. The browser build throws on construction if
+   * headers are provided — the native WebSocket API has no request-header
+   * mechanism; use URL/subprotocol auth instead. See
+   * {@link BrowserWebSocketClientOptions}.
    */
   headers?: Record<string, string> | Headers
   heartbeat?: { intervalMs?: number } | false

@@ -37,13 +37,19 @@ export interface WebSocketConnectionOptions<M extends DataMode = 'auto'> {
   maxBufferedBytes?: number
   signal?: AbortSignal
   /**
-   * Node only. Applied to the underlying `ws` upgrade request. Accepts a plain
-   * record or a WHATWG `Headers` (normalized to a record). Ignored in the
-   * browser build — the native WebSocket API has no request-header mechanism;
-   * use URL/subprotocol-based auth there instead.
+   * Node.js only. Applied to the underlying `ws` upgrade request. Accepts a
+   * plain record or a WHATWG `Headers` (normalized to a record). The browser
+   * build throws on construction if headers are provided — the native
+   * WebSocket API has no request-header mechanism; use URL/subprotocol-based
+   * auth there instead. See {@link BrowserWebSocketConnectionOptions}.
    */
   headers?: Record<string, string> | Headers
 }
+
+export type NodeWebSocketConnectionOptions<M extends DataMode = 'auto'> =
+  WebSocketConnectionOptions<M>
+export type BrowserWebSocketConnectionOptions<M extends DataMode = 'auto'> =
+  Omit<WebSocketConnectionOptions<M>, 'headers'>
 
 type ReadyState = 'initialized' | 'connecting' | 'open' | 'closing' | 'closed'
 
