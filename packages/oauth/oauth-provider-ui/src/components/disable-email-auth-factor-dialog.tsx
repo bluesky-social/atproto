@@ -9,7 +9,7 @@ export type DisableEmailAuthFactorDialogProps = {
   email: string
   requestPending?: boolean
   confirmPending?: boolean
-  onRequest: () => void | PromiseLike<void>
+  onRequest: () => void | PromiseLike<{ tokenRequired: boolean } | void>
   onConfirm: (data: { token: string }) => void | PromiseLike<void>
   children: Exclude<ReactNode, false | null | undefined>
 }
@@ -72,8 +72,15 @@ export function DisableEmailAuthFactorDialog({
             loading={requestPending}
             className="w-full"
             onClick={async () => {
-              await onRequest()
-              setStep(Step.EnterCode)
+              const result = await onRequest()
+              // Only advance to code entry when an OTP was actually dispatched.
+              // If the factor was already disabled (e.g. a stale second tab),
+              // there is nothing to confirm, close the dialog.
+              if (result && result.tokenRequired === true) {
+                setStep(Step.EnterCode)
+              } else {
+                setOpen(false)
+              }
             }}
           >
             <Trans>Send email to verify</Trans>
@@ -89,7 +96,12 @@ export function DisableEmailAuthFactorDialog({
           submitColor="error"
           submitLabel={<Trans>Disable 2FA</Trans>}
           onLoadingChange={setConfirmSubmitting}
-          onResend={onRequest}
+          onResend={async () => {
+            const result = await onRequest()
+            if (!result || !result.tokenRequired) {
+              setOpen(false)
+            }
+          }}
           handler={async (data) => {
             await onConfirm(data)
             setOpen(false)

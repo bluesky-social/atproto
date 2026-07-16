@@ -147,7 +147,7 @@ msgstr "alice.com"
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
-#: src/components/disable-email-auth-factor-dialog.tsx:83
+#: src/components/disable-email-auth-factor-dialog.tsx:90
 msgid "Already have a code?"
 msgstr "Har du redan en kod?"
 
@@ -447,7 +447,7 @@ msgstr "Har du inte fått någon kod? <0>Klicka här för att skicka en ny.</0>"
 msgid "Disable"
 msgstr ""
 
-#: src/components/disable-email-auth-factor-dialog.tsx:90
+#: src/components/disable-email-auth-factor-dialog.tsx:97
 msgid "Disable 2FA"
 msgstr ""
 
@@ -496,11 +496,11 @@ msgstr "Begäran om ändring av e-postadress har skickats"
 msgid "Email change successful"
 msgstr "E-postadressen har ändrats"
 
-#: src/data/email.ts:142
+#: src/data/email.ts:149
 msgid "Email login verification disabled"
 msgstr ""
 
-#: src/data/email.ts:116
+#: src/data/email.ts:119
 msgid "Email login verification enabled"
 msgstr ""
 
@@ -586,11 +586,11 @@ msgstr "Det gick inte att inaktivera kontot"
 msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
 
-#: src/data/email.ts:150
+#: src/data/email.ts:157
 msgid "Failed to disable email login verification"
 msgstr ""
 
-#: src/data/email.ts:122
+#: src/data/email.ts:126
 msgid "Failed to enable email login verification"
 msgstr ""
 
@@ -627,7 +627,7 @@ msgstr "Det gick inte att återkalla åtkomsten"
 msgid "Failed to send confirmation email"
 msgstr "Det gick inte att skicka bekräftelsemejlet"
 
-#: src/data/email.ts:151
+#: src/data/email.ts:158
 msgid "Failed to send security code"
 msgstr ""
 
@@ -975,8 +975,8 @@ msgid "Please enter the security code that was sent to your email address."
 msgstr "Ange den säkerhetskod som har skickats till din e-postadress."
 
 #: src/data/email.ts:77
-#: src/data/email.ts:123
-#: src/data/email.ts:152
+#: src/data/email.ts:127
+#: src/data/email.ts:159
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -1087,7 +1087,7 @@ msgstr "Välj ett befintligt konto"
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
 
-#: src/components/disable-email-auth-factor-dialog.tsx:79
+#: src/components/disable-email-auth-factor-dialog.tsx:86
 msgid "Send email to verify"
 msgstr ""
 
@@ -1495,7 +1495,7 @@ msgstr "Du kan nu logga in med ditt nya lösenord."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "Du har tidigare inaktiverat <0/>. Du kan återaktivera kontot för att fortsätta logga in. Ditt innehåll (profil, inlägg, flöden, listor m.m.) kommer att bli synligt för andra användare igen."
 
-#: src/data/email.ts:143
+#: src/data/email.ts:150
 msgid "You will no longer be prompted for a code to sign in."
 msgstr ""
 
@@ -1556,7 +1556,7 @@ msgstr "Din e-postadress behöver verifieras."
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"
 
-#: src/data/email.ts:117
+#: src/data/email.ts:120
 msgid "Your next login will require a code that is sent to your email address."
 msgstr ""
 

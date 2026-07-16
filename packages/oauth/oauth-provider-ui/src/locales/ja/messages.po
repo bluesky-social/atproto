@@ -147,7 +147,7 @@ msgstr "alice.com"
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
-#: src/components/disable-email-auth-factor-dialog.tsx:83
+#: src/components/disable-email-auth-factor-dialog.tsx:90
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
@@ -447,7 +447,7 @@ msgstr "コードが届いていませんか？<0>ここをクリックすれば
 msgid "Disable"
 msgstr ""
 
-#: src/components/disable-email-auth-factor-dialog.tsx:90
+#: src/components/disable-email-auth-factor-dialog.tsx:97
 msgid "Disable 2FA"
 msgstr ""
 
@@ -496,11 +496,11 @@ msgstr "メールアドレス変更リクエストが送信されました"
 msgid "Email change successful"
 msgstr "メールアドレスの変更に成功しました"
 
-#: src/data/email.ts:142
+#: src/data/email.ts:149
 msgid "Email login verification disabled"
 msgstr ""
 
-#: src/data/email.ts:116
+#: src/data/email.ts:119
 msgid "Email login verification enabled"
 msgstr ""
 
@@ -586,11 +586,11 @@ msgstr "アカウントの無効化に失敗しました"
 msgid "Failed to delete account"
 msgstr "アカウントの削除に失敗しました"
 
-#: src/data/email.ts:150
+#: src/data/email.ts:157
 msgid "Failed to disable email login verification"
 msgstr ""
 
-#: src/data/email.ts:122
+#: src/data/email.ts:126
 msgid "Failed to enable email login verification"
 msgstr ""
 
@@ -627,7 +627,7 @@ msgstr "アクセスの取消に失敗しました"
 msgid "Failed to send confirmation email"
 msgstr "確認メールの送信に失敗しました"
 
-#: src/data/email.ts:151
+#: src/data/email.ts:158
 msgid "Failed to send security code"
 msgstr ""
 
@@ -975,8 +975,8 @@ msgid "Please enter the security code that was sent to your email address."
 msgstr "メールアドレスに送信されたセキュリティコードを入力してください。"
 
 #: src/data/email.ts:77
-#: src/data/email.ts:123
-#: src/data/email.ts:152
+#: src/data/email.ts:127
+#: src/data/email.ts:159
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -1087,7 +1087,7 @@ msgstr "既存のアカウントから選択"
 msgid "Send email"
 msgstr "メールを送信"
 
-#: src/components/disable-email-auth-factor-dialog.tsx:79
+#: src/components/disable-email-auth-factor-dialog.tsx:86
 msgid "Send email to verify"
 msgstr ""
 
@@ -1495,7 +1495,7 @@ msgstr "新しいパスワードでサインインできるようになりまし
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "以前に <0/> を無効化しました。アカウントを再有効化してログインを続行できます。あなたのコンテンツ（プロフィール、投稿、フィード、リストなど）は、他のユーザーに再び表示されるようになります。"
 
-#: src/data/email.ts:143
+#: src/data/email.ts:150
 msgid "You will no longer be prompted for a code to sign in."
 msgstr ""
 
@@ -1556,7 +1556,7 @@ msgstr "メールアドレスを確認する必要があります。"
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
-#: src/data/email.ts:117
+#: src/data/email.ts:120
 msgid "Your next login will require a code that is sent to your email address."
 msgstr ""
 

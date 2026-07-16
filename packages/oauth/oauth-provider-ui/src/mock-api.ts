@@ -493,7 +493,7 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         }
 
         account.emailAuthFactor = true
-        return Response.json({ account })
+        return Response.json({ account, tokenRequired: false })
       }
       case `POST ${API_ENDPOINT_PREFIX}/disable-email-otp`: {
         const { did, token } = await request.json()
@@ -508,8 +508,14 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
           )
         }
 
+        // Already disabled → idempotent no-op, no OTP dispatched.
+        if (!account.emailAuthFactor) {
+          return Response.json({ account, tokenRequired: false })
+        }
+
+        // Phase one: no token yet → an OTP would be dispatched.
         if (!token) {
-          return Response.json({ account })
+          return Response.json({ account, tokenRequired: true })
         }
 
         if (token !== 'AAAAA-AAAAA') {
@@ -523,7 +529,7 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         }
 
         account.emailAuthFactor = false
-        return Response.json({ account })
+        return Response.json({ account, tokenRequired: false })
       }
       case `POST ${API_ENDPOINT_PREFIX}/update-handle`: {
         const { did, handle } = await request.json()

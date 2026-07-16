@@ -273,6 +273,7 @@ export class OAuthStore
       // so it must be checked first. Surfacing the matched `did` as the
       // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
       // "identifier known, credentials wrong" from "identifier unknown".
+      // TODO: Add SecondFactor here
       if (err instanceof InvalidPasswordError) {
         throw new InvalidCredentialsError(err.message, err.did, err)
       }
@@ -691,13 +692,13 @@ export class OAuthStore
   async enableEmailAuthFactor({
     did,
     email,
-  }: EnableEmailAuthFactorInput): Promise<Account | null> {
+  }: EnableEmailAuthFactorInput): Promise<Account> {
     const account = await this.accountManager.enableEmailAuthFactor({
       did,
       email,
     })
 
-    return this.buildAccount(account)
+    return await this.buildAccount(account)
   }
 
   async disableEmailAuthFactor({
@@ -705,17 +706,29 @@ export class OAuthStore
     email,
     token,
     locale,
-  }: DisableEmailAuthFactorInput): Promise<Account | null> {
-    // A `null` account signals the OTP was dispatched and the change is
-    // pending confirmation (no token was supplied yet).
-    const account = await this.accountManager.disableEmailAuthFactor({
-      did,
-      email,
-      token,
-      locale,
-    })
+  }: DisableEmailAuthFactorInput): Promise<{
+    updatedAccount: Account | null
+    tokenRequired: boolean
+  }> {
+    // `tokenRequired: true` signals the OTP was dispatched and the change is
+    // pending confirmation (no token was supplied yet); `false` means the
+    // factor is now disabled (or was already disabled).
+    const { account, tokenRequired } =
+      await this.accountManager.disableEmailAuthFactor({
+        did,
+        email,
+        token,
+        locale,
+      })
 
-    return account ? this.buildAccount(account) : null
+    if (!account) {
+      return { updatedAccount: null, tokenRequired }
+    }
+
+    return {
+      updatedAccount: await this.buildAccount(account),
+      tokenRequired,
+    }
   }
 
   async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {

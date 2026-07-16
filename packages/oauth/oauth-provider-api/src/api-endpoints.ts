@@ -278,6 +278,7 @@ export type DisableEmailAuthFactorInput = {
 
 export type EmailAuthFactorOutput = {
   account: Account
+  tokenRequired: boolean
 }
 
 export type VerifyHandleAvailabilityInput = {

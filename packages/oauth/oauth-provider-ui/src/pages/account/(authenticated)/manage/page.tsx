@@ -224,7 +224,7 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
       requestPending={disableEmailAuthFactor.isPending}
       confirmPending={disableEmailAuthFactor.isPending}
       onRequest={async () => {
-        await disableEmailAuthFactor.mutateAsync({ email, did })
+        return disableEmailAuthFactor.mutateAsync({ email, did })
       }}
       onConfirm={async ({ token }) => {
         await disableEmailAuthFactor.mutateAsync({ email, did, token })

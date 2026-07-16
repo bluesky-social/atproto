@@ -655,6 +655,7 @@ export class AccountManager {
           { to: user.email },
         )
 
+        // FIXME:
         const hint = obfuscateEmail(user.email)
         throw new SecondAuthenticationFactorRequiredError('emailOtp', hint)
       }
@@ -942,7 +943,10 @@ export class AccountManager {
   /**
    * Enable email-based two-factor authentication. Enabling is immediate: the
    * account must already have a confirmed email matching `email`, since the
-   * factor delivers one-time codes to that address.
+   * factor delivers one-time codes to that address. Returns
+   * `{ account, tokenRequired }` for symmetry with future factors that require
+   * a confirmation step; email-based 2FA never does, so `tokenRequired` is
+   * always `false`.
    *
    * @throws InvalidRequestError if the account has no confirmed, matching email
    */
@@ -971,6 +975,11 @@ export class AccountManager {
       )
     }
 
+    // Already enabled → nothing to change (idempotent).
+    if (account.emailAuthFactorAt) {
+      return account
+    }
+
     await this.updateAccountEmailAuthFactor({
       did,
       email: account.email,
@@ -983,14 +992,15 @@ export class AccountManager {
   }
 
   /**
-   * Disable email-based two-factor authentication. This is a two-phase flow:
-   * the first call (no `token`) dispatches a one-time code to the account email
-   * and returns `null` to indicate the change is pending confirmation. Proving
-   * control of the inbox prevents a hijacked session from silently turning off
-   * the factor. The second call (with a valid `token`) actually disables it.
+   * Disable email-based two-factor authentication. This supports a two-phase
+   * flow, if a token isn't initially supplied for proving control of the inbox
+   * which prevents a hijacked session from silently turning off the factor. The
+   * second call (with a valid `token`) actually disables it. Disabling an
+   * already-disabled factor is an idempotent no-op.
    *
-   * @returns the updated account once disabled, or `null` while an OTP is
-   * pending confirmation
+   * @returns the (possibly updated) account together with `tokenRequired`:
+   * `true` while an OTP is pending confirmation, `false` once the factor is
+   * disabled or was already disabled
    * @throws InvalidRequestError if the account has no matching email, or the
    * token is invalid
    */
@@ -999,7 +1009,7 @@ export class AccountManager {
     email: string
     token?: string
     locale?: string
-  }): Promise<ActorAccount | null> {
+  }): Promise<{ account: ActorAccount | null; tokenRequired: boolean }> {
     const { did, email, token, locale } = opts
 
     const account = await this.getAccount(did, {
@@ -1015,6 +1025,11 @@ export class AccountManager {
       throw new InvalidRequestError('Email address does not match the account')
     }
 
+    // Already disabled → idempotent no-op; nothing to confirm, no OTP sent.
+    if (!account.emailAuthFactorAt) {
+      return { account: null, tokenRequired: false }
+    }
+
     // Phase one: no token yet, send a one-time code and signal "pending". MUST
     // use `update_email` due to social-app using requestEmailUpdate, not
     // two-step updateEmail:
@@ -1024,7 +1039,7 @@ export class AccountManager {
         { token: otp, locale: locale },
         { to: account.email },
       )
-      return null
+      return { account: account, tokenRequired: true }
     }
 
     // Phase two: verify the one-time code, then disable the factor.
@@ -1038,7 +1053,7 @@ export class AccountManager {
 
     account.emailAuthFactorAt = null
 
-    return account
+    return { account, tokenRequired: false }
   }
 
   async resetPassword(opts: { password: string; token: string }) {

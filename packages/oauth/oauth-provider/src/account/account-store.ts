@@ -217,18 +217,30 @@ export interface AccountStore {
   verifyEmailRequest(data: VerifyEmailRequestInput): Awaitable<void>
   verifyEmailConfirm(data: VerifyEmailConfirmInput): Awaitable<Account | null>
 
+  /**
+   * Enables the email auth factor on the account.
+   * @throws {InvalidRequestError} - To indicate enabling cannot take place due
+   * to mismatch of email or email not being verified.
+   */
   enableEmailAuthFactor(
     data: EnableEmailAuthFactorInput,
   ): Awaitable<Account | null>
+
   /**
-   * Must trigger a verification email to be sent to the current email address
-   * when the `token` is undefined. An email-based OTP code will be sent and
-   * used to confirm that the account's email auth factor should indeed be
-   * disabled.
+   * Two-phase disable flow. When `token` is undefined and the factor is still
+   * enabled, an email-based OTP is dispatched and `{ tokenRequired: true }` is
+   * returned (the account is unchanged, nothing has been disabled yet). Calling
+   * again with a valid `token` disables the factor and returns
+   * `{ tokenRequired: false }`. Disabling an already-disabled factor is an
+   * idempotent no-op that returns `{ tokenRequired: false }` without
+   * dispatching an email.
+   *
+   * @throws {InvalidRequestError} - To indicate disabling cannot take place due
+   * to mismatch of email or email not being verified.
    */
   disableEmailAuthFactor(
     data: DisableEmailAuthFactorInput,
-  ): Awaitable<Account | null>
+  ): Awaitable<{ updatedAccount: Account | null; tokenRequired: boolean }>
 
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken

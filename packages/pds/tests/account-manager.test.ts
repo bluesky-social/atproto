@@ -213,10 +213,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Compte utilisateur', 'a')
 
-    await page.ensureTextVisibility(
-      'Auth. à deux facteurs (2FA)',
-      'span',
-    )
+    await page.ensureTextVisibility('Auth. à deux facteurs (2FA)', 'span')
 
     await page.clickOnText('Auth. à deux facteurs (2FA)')
 

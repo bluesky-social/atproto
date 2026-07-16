@@ -481,8 +481,9 @@ export class AccountManager {
 
     const updatedAccount = await this.store.enableEmailAuthFactor(input)
 
+    // Bypass the analytics if no update actually occurred:
     if (!updatedAccount) {
-      throw new InvalidRequestError('Failed to enable email auth factor')
+      return account
     }
 
     await this.hooks.onUpdateEmailAuthFactorConfirmed?.call(null, {
@@ -500,7 +501,7 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: DisableEmailAuthFactorInput,
     account: Account,
-  ): Promise<Account> {
+  ): Promise<{ account: Account; tokenRequired: boolean }> {
     await this.hooks.onUpdateEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
@@ -508,16 +509,13 @@ export class AccountManager {
       account,
     })
 
-    const updatedAccount = await this.store.disableEmailAuthFactor(input)
+    const { updatedAccount, tokenRequired } =
+      await this.store.disableEmailAuthFactor(input)
 
-    // Disabling is a two-phase flow. When no token is supplied, the store
-    // dispatches an OTP email and returns `null` to signal the change is
-    // pending confirmation: nothing has changed yet, so return the account
-    // as-is and do not fire the "confirmed" hook. Once a valid token is
-    // supplied, the store actually disables the factor and returns the
-    // updated account, at which point the change is confirmed.
-    if (!updatedAccount) {
-      return account
+    // Once email auth factor is actually disabled, fire the "confirmed" hook.
+    // If there is a token required or no modification, don't fire the confirmed hook:
+    if (tokenRequired || !updatedAccount) {
+      return { account: account, tokenRequired }
     }
 
     await this.hooks.onUpdateEmailAuthFactorConfirmed?.call(null, {
@@ -527,7 +525,7 @@ export class AccountManager {
       account: updatedAccount,
     })
 
-    return updatedAccount
+    return { account: updatedAccount, tokenRequired }
   }
 
   public async updateHandle(

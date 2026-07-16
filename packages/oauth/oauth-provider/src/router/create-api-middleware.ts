@@ -359,16 +359,17 @@ export function createApiMiddleware<
         })
         .strict(),
       async handler(req, res) {
-        let { account } = await authenticate.call(this, req, res)
+        const { account } = await authenticate.call(this, req, res)
 
-        account = await server.accountManager.enableEmailAuthFactor(
-          this.deviceId,
-          this.deviceMetadata,
-          this.input,
-          account,
-        )
+        const updatedAccount =
+          await server.accountManager.enableEmailAuthFactor(
+            this.deviceId,
+            this.deviceMetadata,
+            this.input,
+            account,
+          )
 
-        return { json: { account } }
+        return { json: { account: updatedAccount, tokenRequired: false } }
       },
     }),
   )
@@ -386,18 +387,20 @@ export function createApiMiddleware<
         })
         .strict(),
       async handler(req, res) {
-        let { account } = await authenticate.call(this, req, res)
+        const { account } = await authenticate.call(this, req, res)
 
-        // Two-phase: the first call (no token) dispatches an OTP and returns
-        // the account unchanged; the second (with token) disables the factor.
-        account = await server.accountManager.disableEmailAuthFactor(
-          this.deviceId,
-          this.deviceMetadata,
-          this.input,
-          account,
-        )
+        // Two-phase: the first call (no token) dispatches an OTP and reports
+        // `tokenRequired: true` with the account unchanged; the second (with a
+        // valid token) disables the factor and reports `tokenRequired: false`.
+        const { account: updatedAccount, tokenRequired } =
+          await server.accountManager.disableEmailAuthFactor(
+            this.deviceId,
+            this.deviceMetadata,
+            this.input,
+            account,
+          )
 
-        return { json: { account } }
+        return { json: { account: updatedAccount, tokenRequired } }
       },
     }),
   )

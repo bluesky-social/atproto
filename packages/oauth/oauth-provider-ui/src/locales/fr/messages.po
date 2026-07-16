@@ -147,7 +147,7 @@ msgstr "alice.com"
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
-#: src/components/disable-email-auth-factor-dialog.tsx:83
+#: src/components/disable-email-auth-factor-dialog.tsx:90
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
@@ -447,7 +447,7 @@ msgstr "Vous n'avez pas reçu de code ? <0>Renvoyer un code</0>"
 msgid "Disable"
 msgstr "Désactiver"
 
-#: src/components/disable-email-auth-factor-dialog.tsx:90
+#: src/components/disable-email-auth-factor-dialog.tsx:97
 msgid "Disable 2FA"
 msgstr "Désactiver la 2FA"
 
@@ -496,11 +496,11 @@ msgstr "Demande de modification d'adresse email envoyée"
 msgid "Email change successful"
 msgstr "Modification de l'adresse email réussie"
 
-#: src/data/email.ts:142
+#: src/data/email.ts:149
 msgid "Email login verification disabled"
 msgstr "Vérification de connexion par email désactivée"
 
-#: src/data/email.ts:116
+#: src/data/email.ts:119
 msgid "Email login verification enabled"
 msgstr "Vérification de connexion par email activée"
 
@@ -586,11 +586,11 @@ msgstr "Échec de la désactivation du compte"
 msgid "Failed to delete account"
 msgstr "Échec de la suppression du compte"
 
-#: src/data/email.ts:150
+#: src/data/email.ts:157
 msgid "Failed to disable email login verification"
 msgstr "Échec de la désactivation de la vérification de connexion par email"
 
-#: src/data/email.ts:122
+#: src/data/email.ts:126
 msgid "Failed to enable email login verification"
 msgstr "Échec de l'activation de la vérification de connexion par email"
 
@@ -627,7 +627,7 @@ msgstr "Échec de la révocation de l'accès"
 msgid "Failed to send confirmation email"
 msgstr "Échec de l'envoi de l'email de confirmation"
 
-#: src/data/email.ts:151
+#: src/data/email.ts:158
 msgid "Failed to send security code"
 msgstr "Échec de l'envoi du code de sécurité"
 
@@ -975,8 +975,8 @@ msgid "Please enter the security code that was sent to your email address."
 msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adresse email."
 
 #: src/data/email.ts:77
-#: src/data/email.ts:123
-#: src/data/email.ts:152
+#: src/data/email.ts:127
+#: src/data/email.ts:159
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -1087,7 +1087,7 @@ msgstr "Sélectionner un compte"
 msgid "Send email"
 msgstr "Envoyer l'email"
 
-#: src/components/disable-email-auth-factor-dialog.tsx:79
+#: src/components/disable-email-auth-factor-dialog.tsx:86
 msgid "Send email to verify"
 msgstr "Envoyer un email de vérification"
 
@@ -1495,7 +1495,7 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre compte pour continuer à vous connecter. Votre contenu (profil, publications, feeds, listes, etc.) redeviendra visible pour les autres utilisateurs."
 
-#: src/data/email.ts:143
+#: src/data/email.ts:150
 msgid "You will no longer be prompted for a code to sign in."
 msgstr "Un code ne vous sera plus demandé pour vous connecter."
 
@@ -1556,7 +1556,7 @@ msgstr "Votre adresse email doit être vérifiée."
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
-#: src/data/email.ts:117
+#: src/data/email.ts:120
 msgid "Your next login will require a code that is sent to your email address."
 msgstr "Votre prochaine connexion nécessitera un code envoyé à votre adresse email."
 

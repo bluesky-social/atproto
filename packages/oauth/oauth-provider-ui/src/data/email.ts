@@ -111,11 +111,15 @@ export function useEnableEmailAuthFactor() {
     async mutationFn(data: EnableEmailAuthFactorInput) {
       return api.enableEmailAuthFactor(data)
     },
-    onSuccess(_data, _variables, _context) {
-      notify({
-        title: msg`Email login verification enabled`,
-        description: msg`Your next login will require a code that is sent to your email address.`,
-      })
+    onSuccess(data, _variables, _context) {
+      // Email-based enable has no confirmation step (`tokenRequired` is always
+      // false); the guard keeps this correct if a future factor adds one.
+      if (!data.tokenRequired) {
+        notify({
+          title: msg`Email login verification enabled`,
+          description: msg`Your next login will require a code that is sent to your email address.`,
+        })
+      }
     },
     onError(error, _variables, _context) {
       notifyError(error, {
@@ -134,10 +138,13 @@ export function useDisableEmailAuthFactor() {
     async mutationFn(data: DisableEmailAuthFactorInput) {
       return api.disableEmailAuthFactor(data)
     },
-    onSuccess(_data, variables, _context) {
-      // The same endpoint backs both steps: a call without a token only emails
-      // a security code, while a call with a token actually disables the factor.
-      if (variables.token) {
+    onSuccess(data, _variables, _context) {
+      // `tokenRequired` is false once the factor is actually off — either the
+      // confirming call with a valid token, or a no-token call that found it
+      // already disabled (e.g. a stale second tab). While an OTP is pending
+      // (`tokenRequired: true`) the dialog advances to the code-entry step and
+      // we stay quiet.
+      if (!data.tokenRequired) {
         notify({
           title: msg`Email login verification disabled`,
           description: msg`You will no longer be prompted for a code to sign in.`,
