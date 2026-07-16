@@ -1,4 +1,3 @@
-import type { ClientOptions } from 'ws'
 import { type Deferrable, createDeferrable, wait } from '@atproto/common'
 import {
   type DidDocument,
@@ -30,7 +29,7 @@ import { com } from '../lexicons/index.js'
 import type { EventRunner } from '../runner/index.js'
 import { didAndSeqForEvt } from '../util.js'
 
-export type FirehoseOptions = ClientOptions & {
+export type FirehoseOptions = {
   idResolver: IdResolver
 
   handleEvent: (evt: Event) => void | Promise<void>
@@ -41,6 +40,9 @@ export type FirehoseOptions = ClientOptions & {
 
   service?: string
   subscriptionReconnectDelay?: number
+  maxReconnectSeconds?: number
+  heartbeatIntervalMs?: number
+  headers?: Record<string, string> | Headers
 
   unauthenticatedCommits?: boolean
   unauthenticatedHandles?: boolean
@@ -84,9 +86,11 @@ export class Firehose {
       }
     }
     this.sub = new Subscription({
-      ...opts,
       service: opts.service ?? 'wss://bsky.network',
       method: com.atproto.sync.subscribeRepos.$lxm,
+      maxReconnectSeconds: opts.maxReconnectSeconds,
+      heartbeatIntervalMs: opts.heartbeatIntervalMs,
+      headers: opts.headers,
       signal: this.abortController.signal,
       getParams: async () => {
         let cursor: number | undefined
