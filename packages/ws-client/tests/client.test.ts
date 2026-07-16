@@ -202,6 +202,37 @@ describe('WebSocketClientBase', () => {
     expect(received).toEqual(['recovered'])
   })
 
+  it('shouldReconnect override can reconnect across a server-sent clean 1000 close', async () => {
+    const consulted: Array<{ code: number; wasClean: boolean }> = []
+    const { ws, mocks } = makeClient({
+      shouldReconnect: (error) => {
+        assert(error instanceof CloseError)
+        consulted.push({ code: error.code, wasClean: error.wasClean })
+        return true
+      },
+    })
+    const received: unknown[] = []
+    const consume = (async () => {
+      for await (const msg of ws) {
+        received.push(msg)
+        if (received.length === 2) break
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('a', false)
+    mocks[0].emitClose(1000, 'batch done', true) // server-sent clean close
+    await vi.advanceTimersByTimeAsync(2000)
+    await tick()
+    mocks[1].emitOpen()
+    mocks[1].emitMessage('b', false)
+    await consume
+    expect(received).toEqual(['a', 'b'])
+    expect(mocks).toHaveLength(2)
+    // The predicate was consulted with the clean 1000 close, not bypassed.
+    expect(consulted).toEqual([{ code: 1000, wasClean: true }])
+  })
+
   it('close() ends the loop and does not reconnect', async () => {
     const { ws, mocks } = makeClient()
     const closes: CloseEventDetail[] = []

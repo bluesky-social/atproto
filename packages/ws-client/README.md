@@ -47,7 +47,7 @@ Failures reconnect with exponential backoff (capped by `options.maxReconnectSeco
 
 - `true` (default) — the built-in policy: transient failures (network errors, timeouts, abnormal closes, server restarts) reconnect; deliberate shutdown (`1000`) and malformed-protocol closes do not. The policy is exported as `defaultShouldReconnect(error)`, alongside its close-code classification `FATAL_CLOSE_CODES` and `isReconnectableClose(code)`.
 - `false` — never reconnect; the first terminal error ends the stream.
-- `(error, attempt) => boolean` — your own policy, replacing the default. Compose with the exported `defaultShouldReconnect` to extend rather than replace.
+- `(error, attempt) => boolean` — your own policy, replacing the default. Compose with the exported `defaultShouldReconnect` to extend rather than replace. Every stream end is consulted, including a clean `1000` close (as a `CloseError` with `wasClean: true`) — so a policy can even re-dial a server that cleanly closes after each batch.
 
 ### Liveness
 

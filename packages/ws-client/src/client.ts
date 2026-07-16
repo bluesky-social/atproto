@@ -307,9 +307,9 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
               }),
             )
             if (!willReconnect) {
-              this.state = 'closed'
-              // Fatal: the enclosing finally emits the final 'close' as this
-              // throw unwinds, so 'error' (above) precedes 'close'.
+              // Fatal: the enclosing finally settles state and emits the final
+              // 'close' as this throw unwinds, so 'error' (above) precedes
+              // 'close'.
               throw error
             }
             this.state = 'connecting'
@@ -324,22 +324,18 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         if (this.stopped) break
         if (signal?.aborted) throw signal.reason
 
-        // Clean close: 1000 stops; 1001 (and any non-fatal clean code)
-        // reconnects. Only 1000/1001 arrive here (connection ends cleanly
-        // only for those); 1000 is fatal, 1001 reconnects. Reuse
-        // `shouldReconnect` via a synthetic CloseError so an override
-        // applies uniformly to clean codes too.
+        // Clean close (only 1000/1001 end the connection's iterator cleanly):
+        // consult `shouldReconnect` via a synthetic CloseError so the policy
+        // applies uniformly to clean codes too. The default policy stops on
+        // 1000 (it's in FATAL_CLOSE_CODES) and reconnects on 1001; an override
+        // may reconnect on either — a server-sent 1000 reaching this point is
+        // the server's choice, not the user's (user close() breaks above).
         const code = closeDetail?.code ?? CloseCode.Normal
-        const reconnectClean =
-          code !== CloseCode.Normal &&
-          shouldReconnect(
-            new CloseError(code, closeDetail?.reason ?? '', true),
-            retries,
-          )
-        if (!reconnectClean) {
-          this.state = 'closed'
-          break
-        }
+        const reconnectClean = shouldReconnect(
+          new CloseError(code, closeDetail?.reason ?? '', true),
+          retries,
+        )
+        if (!reconnectClean) break
         this.state = 'connecting'
       }
     } finally {
