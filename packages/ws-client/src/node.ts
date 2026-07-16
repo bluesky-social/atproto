@@ -68,7 +68,11 @@ export type {
   NodeWebSocketClientOptions,
   WebSocketClientOptions,
 } from './client.js'
-export { FATAL_CLOSE_CODES, isReconnectableClose } from './reconnect-policy.js'
+export {
+  FATAL_CLOSE_CODES,
+  defaultShouldReconnect,
+  isReconnectableClose,
+} from './reconnect-policy.js'
 export type {
   CloseEventDetail,
   WebSocketClientEventMap,

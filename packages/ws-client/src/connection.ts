@@ -326,7 +326,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   send(data: MessageOf<M>): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (this.state !== 'open') {
-        reject(new Error('WebSocket is not open'))
+        reject(new WebSocketConnectionError('WebSocketConnection is not open'))
         return
       }
       this.transport.send(data, (err) => (err ? reject(err) : resolve()))

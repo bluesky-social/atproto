@@ -1,11 +1,12 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
+import { WebSocketClientBase } from '../src/client.js'
 import { WebSocketConnectionEngine } from '../src/connection.js'
 import {
   AbnormalCloseError,
   BufferOverflowError,
   WebSocketClientError,
+  WebSocketConnectionError,
 } from '../src/errors.js'
-import { WebSocketClientBase } from '../src/client.js'
 import type { CloseEventDetail } from '../src/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
@@ -196,6 +197,8 @@ describe('WebSocketClientBase', () => {
 
   it('close() ends the loop and does not reconnect', async () => {
     const { ws, mocks } = makeClient()
+    const closes: CloseEventDetail[] = []
+    ws.addEventListener('close', (e) => closes.push(e.detail))
     const received: unknown[] = []
     const consume = (async () => {
       for await (const msg of ws) received.push(msg)
@@ -210,11 +213,35 @@ describe('WebSocketClientBase', () => {
     await consume
     expect(received).toEqual(['one'])
     expect(mocks).toHaveLength(1)
+    // Exactly one final 'close', carrying the handshake's real detail.
+    expect(closes).toEqual([{ code: 1000, reason: '', wasClean: true }])
   })
 
-  it('signal abort ends the loop', async () => {
+  it('close() mid-backoff dispatches one final close with 1005 (no status)', async () => {
+    const { ws, mocks } = makeClient()
+    const closes: CloseEventDetail[] = []
+    ws.addEventListener('close', (e) => closes.push(e.detail))
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1006, '', false) // reconnectable → loop enters backoff
+    await tick()
+    await ws.close()
+    await consume
+    expect(mocks).toHaveLength(1) // never reconnected
+    // No close handshake applied to this stop: synthesized 1005 per WHATWG.
+    expect(closes).toEqual([{ code: 1005, reason: '', wasClean: false }])
+  })
+
+  it('signal abort ends the loop and dispatches one final close', async () => {
     const ac = new AbortController()
     const { ws, mocks } = makeClient({ signal: ac.signal })
+    const closes: CloseEventDetail[] = []
+    ws.addEventListener('close', (e) => closes.push(e.detail))
     const consume = (async () => {
       for await (const _msg of ws) {
         /* noop */
@@ -225,6 +252,25 @@ describe('WebSocketClientBase', () => {
     ac.abort(new Error('user stop'))
     await expect(consume).rejects.toThrow('user stop')
     expect(mocks).toHaveLength(1)
+    expect(closes).toHaveLength(1)
+  })
+
+  it('send() while a connection exists but is not open rejects with WebSocketConnectionError', async () => {
+    const { ws, mocks } = makeClient()
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })().catch(() => {})
+    await tick()
+    // A connection exists but has not opened yet ('connecting').
+    expect(mocks).toHaveLength(1)
+    await expect(ws.send('x' as never)).rejects.toBeInstanceOf(
+      WebSocketConnectionError,
+    )
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1000, '', true)
+    await consume
   })
 
   it('drops no abort that lands while the URL is resolving', async () => {
