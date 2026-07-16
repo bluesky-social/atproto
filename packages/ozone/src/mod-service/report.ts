@@ -294,6 +294,106 @@ export async function findReportsForSubject(
   return reports
 }
 
+export type CloseReportsForSubjectParams = {
+  db: Database
+  subjectDid: string
+  subjectUri: string | null
+  reportTypes?: string[]
+  internalNote?: string
+  isAutomated: boolean
+  createdBy: string
+}
+
+export type CloseReportsResult = {
+  closedCount: number
+  reportIds: number[]
+}
+
+/**
+ * Closes all non-closed reports on a subject, optionally filtered by report
+ * type. Reports whose current status doesn't permit a transition to closed
+ * are skipped silently. Unlike `processReportAction` there is no moderation
+ * event involved — reports are closed directly via close activities.
+ */
+export async function closeReportsForSubject(
+  params: CloseReportsForSubjectParams,
+): Promise<CloseReportsResult> {
+  const {
+    db,
+    subjectDid,
+    subjectUri,
+    reportTypes,
+    internalNote,
+    isAutomated,
+    createdBy,
+  } = params
+
+  return db.transaction(async (dbTxn) => {
+    const matchingReports = await findReportsForSubject(dbTxn, {
+      subjectDid,
+      subjectUri,
+      reportTypes: reportTypes?.length ? reportTypes : undefined,
+      targetAll: !reportTypes?.length,
+    })
+
+    const validUpdates: { id: number; previousStatus: string }[] = []
+    for (const report of matchingReports) {
+      try {
+        const result = handleReportUpdate(report.status, {
+          type: 'activity',
+          activityType: 'closeActivity',
+        })
+        if (result.nextStatus && result.activity) {
+          validUpdates.push({
+            id: report.id,
+            previousStatus: result.activity.previousStatus,
+          })
+        }
+      } catch (err) {
+        if (
+          err instanceof AlreadyInTargetState ||
+          err instanceof InvalidStateTransition
+        ) {
+          continue
+        }
+        throw err
+      }
+    }
+
+    if (!validUpdates.length) {
+      return { closedCount: 0, reportIds: [] }
+    }
+
+    const now = new Date().toISOString()
+    const updateIds = validUpdates.map((u) => u.id)
+
+    await dbTxn.db
+      .updateTable('report')
+      .set({ status: 'closed', updatedAt: now, closedAt: now })
+      .where('id', 'in', updateIds)
+      .execute()
+
+    await dbTxn.db
+      .insertInto('report_activity')
+      .values(
+        validUpdates.map((u) => ({
+          reportId: u.id,
+          activityType: 'closeActivity',
+          previousStatus: u.previousStatus,
+          internalNote: internalNote ?? null,
+          publicNote: null,
+          meta: null,
+          isAutomated,
+          createdBy,
+          createdAt: now,
+        })),
+      )
+      .execute()
+
+    return { closedCount: validUpdates.length, reportIds: updateIds }
+  })
+}
+
 export type ProcessReportActionParams = {
   db: Database
   reportAction: {
