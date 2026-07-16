@@ -22,6 +22,9 @@ export class NodeTransport implements Transport {
 
   open(): void {
     const headers = toHeaderRecord(this.options?.headers)
+    // ws offers permessage-deflate by default (`perMessageDeflate: true`),
+    // sending the same extension offer a browser WebSocket does. Leave it in
+    // place — cross-platform behavior is deliberately identical here.
     const ws = new WebSocket(
       this.url,
       this.options?.protocols,

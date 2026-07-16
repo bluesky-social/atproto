@@ -60,6 +60,10 @@ Two independent, optional checks control whether quiet connections stay live:
 
 If your consumer falls behind, the client buffers and then pushes back. On Node.js it pauses the socket once buffered bytes pass `options.highWaterMark`, so backpressure reaches the server. The browser can't pause a socket, so `options.maxBufferedBytes` is the backstop there: a hard cap that fails the connection (and reconnects) rather than growing memory without bound.
 
+### Compression
+
+permessage-deflate compression is offered by default, identically on Node.js and in the browser — whether it's used depends on the server accepting the extension during the handshake. There is intentionally no configuration for it.
+
 ### Sending
 
 `send(data)` resolves when the data is handed off, and rejects with `WebSocketClientError` if the client isn't currently connected, so there's no message queueing across reconnects. Check `connected` first, or catch and retry after the next `'reconnect'`.
