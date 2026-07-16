@@ -1,5 +1,0 @@
----
-'@atproto/ws-client': minor
----
-
-**BREAKING:** Remove `WebSocketKeepAlive` (and its default export) in favor of `WebSocketClient`: a robust, isomorphic WebSocket client built on `WebSocketConnection` that prioritizes liveness, flow control, and transparent reconnects. Reads are an `AsyncIterable` whose stream spans reconnects; lifecycle is observable via `addEventListener('open' | 'reconnect' | 'error' | 'close')`, and `'close'` fires exactly once per started client. Reconnect decisions use the typed error taxonomy and RFC-6455 close codes instead of errno string-matching (a stream now survives graceful server restarts, close `1001`), controlled by `options.shouldReconnect: boolean | ((error, attempt) => boolean)` with the default policy exported as `defaultShouldReconnect`. `WebSocketClient` throws `WebSocketClientError` for misuse of the client itself. Also **BREAKING:** `DisconnectError` is no longer exported (it moves to `@atproto/xrpc-server`, its only consumer), and `CloseCode` is expanded to cover the full RFC 6455 close-code registry.
