@@ -9,7 +9,7 @@ import {
   WebSocketConnectionEngine,
   type WebSocketConnectionOptions,
 } from './connection.js'
-import { createNodeTransport } from './node-transport.js'
+import { createNodeTransport } from './transport/node-transport.js'
 
 /**
  * A single WebSocket connection, consumed as an `AsyncIterable` of messages.
@@ -63,7 +63,7 @@ export {
   SocketError,
   WebSocketClientError,
   WebSocketConnectionError,
-} from './errors.js'
+} from './lib/errors.js'
 export type {
   Awaitable,
   BrowserWebSocketClientOptions,
@@ -74,11 +74,11 @@ export {
   FATAL_CLOSE_CODES,
   defaultShouldReconnect,
   isReconnectableClose,
-} from './reconnect-policy.js'
+} from './lib/reconnect-policy.js'
 export type {
   CloseEventDetail,
   WebSocketClientEventMap,
   WebSocketConnectionEventMap,
-} from './typed-event-target.js'
+} from './lib/typed-event-target.js'
 
-export { CloseCode } from './close-codes.js'
+export { CloseCode } from './lib/close-codes.js'

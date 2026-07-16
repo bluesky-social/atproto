@@ -1,6 +1,6 @@
 import { assert, describe, expect, it } from 'vitest'
 import { WebSocketConnectionEngine } from '../src/connection.js'
-import { DataModeError } from '../src/errors.js'
+import { DataModeError } from '../src/lib/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 describe('WebSocketConnectionEngine dataMode', () => {

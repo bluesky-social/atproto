@@ -2,7 +2,7 @@ import type {
   Transport,
   TransportCapabilities,
   TransportHandlers,
-} from '../../src/transport.js'
+} from '../../src/transport/transport.js'
 
 const noopHandlers: TransportHandlers = {
   onOpen() {},

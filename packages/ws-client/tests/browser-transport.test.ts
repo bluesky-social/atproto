@@ -7,9 +7,9 @@ import { WebSocket as UndiciWebSocket } from 'undici'
 import { describe, expect, it } from 'vitest'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { BrowserTransport } from '../src/browser-transport.ts'
 import { WebSocketConnectionEngine } from '../src/connection.ts'
-import type { TransportOptions } from '../src/transport.ts'
+import { BrowserTransport } from '../src/transport/browser-transport.ts'
+import type { TransportOptions } from '../src/transport/transport.ts'
 
 async function startServer(onConnection: (ws: WebSocket) => void) {
   const server = createServer()

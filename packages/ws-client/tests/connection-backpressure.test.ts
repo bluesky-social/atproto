@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { WebSocketConnectionEngine } from '../src/connection.js'
-import { BufferOverflowError } from '../src/errors.js'
+import { BufferOverflowError } from '../src/lib/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 // 10-byte binary frame (byteLength = 10).

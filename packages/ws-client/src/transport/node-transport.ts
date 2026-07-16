@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws'
-import { CloseCode } from './close-codes.js'
+import { CloseCode } from '../lib/close-codes.js'
 import type {
   Transport,
   TransportFactory,

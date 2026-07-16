@@ -1,17 +1,17 @@
-import { CloseCode } from './close-codes.js'
 import type {
   DataMode,
   MessageOf,
   WebSocketConnectionEngine,
   WebSocketConnectionOptions,
 } from './connection.js'
-import { AbnormalCloseError, WebSocketClientError } from './errors.js'
-import { backoffMs, defaultShouldReconnect } from './reconnect-policy.js'
+import { CloseCode } from './lib/close-codes.js'
+import { AbnormalCloseError, WebSocketClientError } from './lib/errors.js'
+import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import {
   type CloseEventDetail,
   TypedEventTarget,
   type WebSocketClientEventMap,
-} from './typed-event-target.js'
+} from './lib/typed-event-target.js'
 
 export type Awaitable<T> = T | Promise<T>
 

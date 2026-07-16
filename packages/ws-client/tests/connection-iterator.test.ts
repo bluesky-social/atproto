@@ -4,8 +4,8 @@ import {
   AbnormalCloseError,
   SocketError,
   WebSocketConnectionError,
-} from '../src/errors.js'
-import type { CloseEventDetail } from '../src/typed-event-target.js'
+} from '../src/lib/errors.js'
+import type { CloseEventDetail } from '../src/lib/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(

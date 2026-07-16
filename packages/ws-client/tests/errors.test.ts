@@ -8,7 +8,7 @@ import {
   SocketError,
   WebSocketClientError,
   WebSocketConnectionError,
-} from '../src/errors.js'
+} from '../src/lib/errors.js'
 
 describe('WebSocketConnection errors', () => {
   it('all extend WebSocketConnectionError and Error', () => {

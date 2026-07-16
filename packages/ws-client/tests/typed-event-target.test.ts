@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TypedEventTarget } from '../src/typed-event-target.js'
+import { TypedEventTarget } from '../src/lib/typed-event-target.js'
 
 type TestMap = {
   ping: Event

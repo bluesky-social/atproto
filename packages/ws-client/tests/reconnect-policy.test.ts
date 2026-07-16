@@ -6,13 +6,13 @@ import {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
-} from '../src/errors.js'
+} from '../src/lib/errors.js'
 import {
   FATAL_CLOSE_CODES,
   backoffMs,
   defaultShouldReconnect,
   isReconnectableClose,
-} from '../src/reconnect-policy.js'
+} from '../src/lib/reconnect-policy.js'
 
 describe('FATAL_CLOSE_CODES', () => {
   it('is exactly the genuine-wire fatal set', () => {

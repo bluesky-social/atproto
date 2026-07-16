@@ -1,4 +1,4 @@
-import { CloseCode } from './close-codes.js'
+import { CloseCode } from './lib/close-codes.js'
 import {
   AbnormalCloseError,
   BufferOverflowError,
@@ -7,18 +7,18 @@ import {
   IdleTimeoutError,
   SocketError,
   WebSocketConnectionError,
-} from './errors.js'
+} from './lib/errors.js'
+import {
+  type CloseEventDetail,
+  TypedEventTarget,
+  type WebSocketConnectionEventMap,
+} from './lib/typed-event-target.js'
 import type {
   Transport,
   TransportCapabilities,
   TransportFactory,
   TransportHandlers,
-} from './transport.js'
-import {
-  type CloseEventDetail,
-  TypedEventTarget,
-  type WebSocketConnectionEventMap,
-} from './typed-event-target.js'
+} from './transport/transport.js'
 
 export type DataMode = 'auto' | 'text' | 'binary'
 

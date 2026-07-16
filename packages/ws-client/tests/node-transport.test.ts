@@ -124,7 +124,7 @@ describe('NodeTransport via WebSocketConnection', () => {
   it('does not open the socket until open() is called', async () => {
     const { url, terminate } = await startServer((ws) => ws.close(1000))
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const { NodeTransport } = await import('../src/node-transport.js')
+    const { NodeTransport } = await import('../src/transport/node-transport.js')
     const transport = new NodeTransport(url)
     // Wire minimal handlers so open() has something to call.
     let opened = false

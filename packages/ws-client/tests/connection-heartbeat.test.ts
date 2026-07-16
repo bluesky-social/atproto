@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebSocketConnectionEngine } from '../src/connection.js'
-import { HeartbeatTimeoutError } from '../src/errors.js'
+import { HeartbeatTimeoutError } from '../src/lib/errors.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 describe('WebSocketConnectionEngine heartbeat', () => {
