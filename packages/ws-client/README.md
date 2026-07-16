@@ -130,12 +130,12 @@ for await (const message of ws) {
 }
 ```
 
-It shares `WebSocketClient`'s lifecycle and options: construct (no I/O) → iterate (opens lazily) → stop via `close()` / `signal` / `break`. Same `dataMode` typing and enforcement, same heartbeat/idle-timeout and backpressure options, same Node-only `headers`, same `send()` behavior. Differences:
+It shares `WebSocketClient`'s lifecycle and options: construct (no I/O) → iterate (opens lazily) → stop via `close()` / `signal` / `break`. Same `dataMode` typing and enforcement, same heartbeat/idle-timeout and backpressure options, same Node.js-only `headers`, same `send()` behavior. Differences:
 
 - The stream ends when the connection ends. A clean close (`1000`/`1001`) ends the loop normally; anything else rejects the iterator with a typed error (below).
 - Events: `'open'` and `'close'` fire once each; `'error'` fires on failure, always followed by `'close'`. The `'close'` detail carries the real close code when there was one, or `1006` when the connection ended without a close frame.
 - `terminate()` tears the connection down immediately, without a close handshake.
-- `capabilities` reports what the platform supports: `{ heartbeat, pauseResume }` — both `true` on Node, both `false` in the browser. This is the one observable difference between platforms; the API is otherwise identical.
+- `capabilities` reports what the platform supports: `{ heartbeat, pauseResume }` — both `true` on Node.js, both `false` in the browser. This is the one observable difference between platforms; the API is otherwise identical.
 
 ### Errors
 
@@ -145,14 +145,14 @@ Every connection-level failure is a typed subclass of `WebSocketConnectionError`
 | ----------------------- | --------------------------------------------------------------------------------- |
 | `AbnormalCloseError`    | Close with a code other than `1000`/`1001`. Carries `code`, `reason`, `wasClean`. |
 | `SocketError`           | A transport-level error. Carries the underlying `cause`.                          |
-| `HeartbeatTimeoutError` | No ping/pong activity within the heartbeat window (Node only).                    |
+| `HeartbeatTimeoutError` | No ping/pong activity within the heartbeat window (Node.js only).                 |
 | `IdleTimeoutError`      | No message received within `idleTimeoutMs`.                                       |
 | `BufferOverflowError`   | Buffered, unconsumed bytes exceeded `maxBufferedBytes`. Carries `bufferedBytes`.  |
 | `DataModeError`         | A frame's type didn't match a strict `dataMode`. Carries `expected`/`received`.   |
 
 ## A note for downstream library authors
 
-If your library wraps or re-exports these classes and you bundle your package for distribution, keep `@atproto/ws-client` **external** (not pre-bundled). It resolves to different files on Node vs. the browser through conditional package exports; pre-bundling collapses that choice to a single runtime.
+If your library wraps or re-exports these classes and you bundle your package for distribution, keep `@atproto/ws-client` **external** (not pre-bundled). It resolves to different files on Node.js vs. the browser through conditional package exports; pre-bundling collapses that choice to a single runtime.
 
 ## License
 
