@@ -32,7 +32,7 @@ Messages are typed by `options.dataMode` (`'auto' | 'text' | 'binary'`, default 
 
 Constructing a client initializes it into `readyState: 'initialized'` with no open connection. Iterating the client causes a connection to open. Stop the client with `close()`, an aborted `options.signal`, or by `break`-ing out of the loop.
 
-Lifecycle is observable via `addEventListener`. Register listeners before iterating to catch the first `'open'`:
+The lifecycle is observable via `addEventListener`. Register listeners before iterating to catch the first `'open'`:
 
 - `'open'` — the first connection succeeded.
 - `'reconnect'` — a later connection succeeded (fires on every reconnect).
@@ -58,11 +58,11 @@ Two independent, optional checks control whether quiet connections stay live:
 
 ### Flow control
 
-If your consumer falls behind, the client buffers and then pushes back. On Node.js it pauses the socket once buffered bytes pass `options.highWaterMark`, so backpressure reaches the server for real. The browser can't pause a socket, so `options.maxBufferedBytes` is the backstop there: a hard cap that fails the connection (and reconnects) rather than growing memory without bound.
+If your consumer falls behind, the client buffers and then pushes back. On Node.js it pauses the socket once buffered bytes pass `options.highWaterMark`, so backpressure reaches the server. The browser can't pause a socket, so `options.maxBufferedBytes` is the backstop there: a hard cap that fails the connection (and reconnects) rather than growing memory without bound.
 
 ### Sending
 
-`send(data)` resolves when the data is handed off, and rejects with `WebSocketClientError` if the client isn't currently connected — there's no hidden queueing across reconnects. Check `connected` first, or catch and retry after the next `'reconnect'`.
+`send(data)` resolves when the data is handed off, and rejects with `WebSocketClientError` if the client isn't currently connected, so there's no message queueing across reconnects. Check `connected` first, or catch and retry after the next `'reconnect'`.
 
 ### Node.js-only `headers`
 
@@ -116,7 +116,7 @@ for await (const message of ws) {
 
 ## `WebSocketConnection`
 
-`WebSocketConnection` represents a single WebSocket connection — the lower-level primitive that provides the core liveness and flow control functionality leveraged by `WebSocketClient`. It never reconnects: when the connection ends, so does the iterator. Reach for it when you want to handle connection failures yourself.
+`WebSocketConnection` represents a single WebSocket connection — the lower-level primitive that provides the core liveness and flow control functionality leveraged by `WebSocketClient`. It never reconnects: when the connection ends, the iterator does as well.
 
 ```ts
 import { WebSocketConnection } from '@atproto/ws-client'
