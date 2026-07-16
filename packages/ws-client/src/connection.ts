@@ -222,6 +222,14 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   // any incoming message) since the previous tick and pings again, or finds
   // none and terminates. Detection latency is therefore 1x-2x intervalMs.
   private heartbeatTick(): void {
+    // A backpressure pause halts inbound frames — including pongs — so no
+    // evidence can arrive. Treat the self-initiated pause as liveness rather
+    // than false-timing-out a healthy connection; the refreshed flag grants
+    // a full detection window after resume.
+    if (this.paused) {
+      this.heartbeatAlive = true
+      return
+    }
     if (!this.heartbeatAlive) {
       this.fail(new HeartbeatTimeoutError(), true)
       return
@@ -235,6 +243,11 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   // previous tick and clears the flag, or finds none and terminates.
   // Detection latency is therefore 1x-2x idleTimeoutMs.
   private idleTick(): void {
+    // See heartbeatTick: no messages can arrive while paused for backpressure.
+    if (this.paused) {
+      this.idleActive = true
+      return
+    }
     if (!this.idleActive) {
       this.fail(new IdleTimeoutError(), true)
       return

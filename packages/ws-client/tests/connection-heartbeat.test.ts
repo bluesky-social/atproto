@@ -54,6 +54,39 @@ describe('WebSocketConnectionEngine heartbeat', () => {
     await expect(pending).rejects.toBeInstanceOf(HeartbeatTimeoutError)
   })
 
+  it('does not time out while paused for backpressure (pongs cannot arrive)', async () => {
+    const mock = new MockTransport()
+    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+      heartbeat: { intervalMs: 1000 },
+      highWaterMark: 15, // 2 frames (20 bytes) crosses it
+    })
+    const it = engine[Symbol.asyncIterator]()
+    void it.next()
+    mock.emitOpen()
+    // The first frame feeds the parked it.next(); the next two buffer.
+    mock.emitMessage(new Uint8Array(10), true)
+    mock.emitMessage(new Uint8Array(10), true) // buffered: 10
+    mock.emitMessage(new Uint8Array(10), true) // buffered: 20 > 15 -> pause
+    expect(mock.paused).toBe(true)
+
+    // Well past 2x the interval with no pong: a paused socket delivers no
+    // frames, so this must NOT be treated as a dead connection.
+    vi.advanceTimersByTime(5000)
+    expect(mock.terminated).toBe(false)
+
+    // Drain below the low-water mark (7.5 bytes) to resume.
+    await it.next() // buffered: 10
+    await it.next() // buffered: 0 -> resume
+    expect(mock.paused).toBe(false)
+
+    // Detection works normally again after resume: a full window of silence
+    // (ping tick, then no-evidence tick) times out.
+    vi.advanceTimersByTime(1000) // ping, clear flag
+    vi.advanceTimersByTime(1000) // no evidence -> terminate
+    expect(mock.terminated).toBe(true)
+    await expect(it.next()).rejects.toBeInstanceOf(HeartbeatTimeoutError)
+  })
+
   it('is never scheduled without capabilities.heartbeat', () => {
     const mock = new MockTransport({
       capabilities: { heartbeat: false, pauseResume: true },
