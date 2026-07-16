@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import type { IncomingMessage } from 'node:http'
-import type { AddressInfo, Server } from 'node:net'
+import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { describe, expect, it } from 'vitest'
@@ -11,7 +11,7 @@ import { WebSocketClient } from '../src/node.ts'
 function startServer(
   onConnection: (ws: WsSocket, req: IncomingMessage) => void,
 ) {
-  const server: Server = createServer()
+  const server = createServer()
   const { terminate } = httpTerminator.createHttpTerminator({ server })
   const wss = new WebSocketServer({ server })
   wss.on('connection', onConnection)

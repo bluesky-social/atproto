@@ -1,6 +1,10 @@
 import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
-import { WebSocketClientBase } from '../src/client.js'
-import { WebSocketConnectionEngine } from '../src/connection.js'
+import { type ConnectionFactory, WebSocketClientBase } from '../src/client.js'
+import {
+  type DataMode,
+  WebSocketConnectionEngine,
+  type WebSocketConnectionOptions,
+} from '../src/connection.js'
 import {
   AbnormalCloseError,
   BufferOverflowError,
@@ -15,10 +19,13 @@ function makeClient<M extends 'auto' | 'text' | 'binary' = 'auto'>(
   url: string | URL | (() => string | URL | Promise<string | URL>) = 'ws://x',
 ) {
   const mocks: MockTransport[] = []
-  const factory = (u: string | URL, connectionOptions: any) => {
+  const factory: ConnectionFactory = <F extends DataMode>(
+    u: string | URL,
+    connectionOptions: WebSocketConnectionOptions<F>,
+  ) => {
     const mock = new MockTransport()
     mocks.push(mock)
-    return new WebSocketConnectionEngine(() => mock, u, connectionOptions)
+    return new WebSocketConnectionEngine<F>(() => mock, u, connectionOptions)
   }
   const ws = new WebSocketClientBase<M>(factory, url, options)
   return { ws, mocks }
