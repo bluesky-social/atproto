@@ -2,7 +2,7 @@ import type { AtpAgent } from '@atproto/api'
 import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
-import { DisconnectError, Subscription } from '@atproto/xrpc-server'
+import { Subscription } from '@atproto/xrpc-server'
 import { ids, lexicons } from '../src/lexicon/lexicons.js'
 import type { Label } from '../src/lexicon/types/com/atproto/label/defs.js'
 import {
@@ -199,10 +199,11 @@ describe('ozone query labels', () => {
   describe('subscribeLabels', () => {
     it('streams all labels from initial cursor.', async () => {
       const ac = new AbortController()
+      const doneReason = new Error('caught up with label stream')
       let doneTimer: NodeJS.Timeout
       const resetDoneTimer = () => {
         clearTimeout(doneTimer)
-        doneTimer = setTimeout(() => ac.abort(new DisconnectError()), 100)
+        doneTimer = setTimeout(() => ac.abort(doneReason), 100)
       }
       const sub = new Subscription({
         signal: ac.signal,
@@ -219,17 +220,23 @@ describe('ozone query labels', () => {
         },
       })
       const streamedLabels: Label[] = []
-      for await (const message of sub) {
-        resetDoneTimer()
-        if (isLabels(message)) {
-          for (const label of message.labels) {
-            // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
-            streamedLabels.push({
-              ...label,
-              sig: label.sig ? new Uint8Array(label.sig) : undefined,
-            })
+      try {
+        for await (const message of sub) {
+          resetDoneTimer()
+          if (isLabels(message)) {
+            for (const label of message.labels) {
+              // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
+              streamedLabels.push({
+                ...label,
+                sig: label.sig ? new Uint8Array(label.sig) : undefined,
+              })
+            }
           }
         }
+      } catch (err) {
+        // Aborting the subscription rejects the iterator with the abort
+        // reason; our own timer-driven stop is the expected way out.
+        if (err !== doneReason) throw err
       }
       expect(streamedLabels).toEqual(labels)
     })
