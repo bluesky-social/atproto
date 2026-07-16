@@ -1,8 +1,8 @@
 import { type Deferrable, createDeferrable } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import {
-  AbnormalCloseError,
   CloseCode,
+  CloseError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
@@ -17,7 +17,7 @@ import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
 // the synthetic "no status" 1005 a peer's bare `socket.close()` produces on
 // the wire — ends the session, matching prior behavior exactly.
 function shouldReconnect(error: unknown): boolean {
-  if (error instanceof AbnormalCloseError) {
+  if (error instanceof CloseError) {
     return error.code === CloseCode.Abnormal
   }
   return (
@@ -152,14 +152,14 @@ export class TapChannel implements AsyncDisposable {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      // An AbnormalCloseError only reaches here once `shouldReconnect` (above)
+      // A CloseError only reaches here once `shouldReconnect` (above)
       // has already decided not to reconnect — i.e. the peer ended the
       // session with an ordinary close frame (any code but 1006). That is a
       // clean, expected stream end, matching WebSocketKeepAlive's prior
       // behavior of ending silently on any non-abnormal close.
       if (
         !isCausedBySignal(err, this.abortController.signal) &&
-        !(err instanceof AbnormalCloseError)
+        !(err instanceof CloseError)
       ) {
         throw err
       }

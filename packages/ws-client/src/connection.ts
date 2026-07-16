@@ -1,7 +1,7 @@
 import { CloseCode } from './lib/close-codes.js'
 import {
-  AbnormalCloseError,
   BufferOverflowError,
+  CloseError,
   DataModeError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
@@ -174,7 +174,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
           this.state = 'closed'
           this.finishDone({ code, reason, wasClean })
         } else {
-          this.fail(new AbnormalCloseError(code, reason, wasClean))
+          this.fail(new CloseError(code, reason, wasClean))
         }
       },
       onError: (err) => {
@@ -472,7 +472,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 }
 
 function closeDetailForError(error: unknown): CloseEventDetail {
-  if (error instanceof AbnormalCloseError) {
+  if (error instanceof CloseError) {
     return { code: error.code, reason: error.reason, wasClean: error.wasClean }
   }
   // Codeless fatal error (SocketError / timeouts / overflow / dataMode):

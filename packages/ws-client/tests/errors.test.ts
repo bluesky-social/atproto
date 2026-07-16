@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  AbnormalCloseError,
   BufferOverflowError,
+  CloseError,
   DataModeError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
@@ -13,7 +13,7 @@ import {
 describe('WebSocketConnection errors', () => {
   it('all extend WebSocketConnectionError and Error', () => {
     const errs = [
-      new AbnormalCloseError(1011, 'boom', false),
+      new CloseError(1011, 'boom', false),
       new SocketError(new Error('cause')),
       new HeartbeatTimeoutError(),
       new IdleTimeoutError(),
@@ -26,8 +26,8 @@ describe('WebSocketConnection errors', () => {
     }
   })
 
-  it('AbnormalCloseError carries code/reason/wasClean', () => {
-    const e = new AbnormalCloseError(1011, 'server error', false)
+  it('CloseError carries code/reason/wasClean', () => {
+    const e = new CloseError(1011, 'server error', false)
     expect(e.code).toBe(1011)
     expect(e.reason).toBe('server error')
     expect(e.wasClean).toBe(false)

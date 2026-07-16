@@ -6,8 +6,8 @@ import {
   type WebSocketConnectionOptions,
 } from '../src/connection.js'
 import {
-  AbnormalCloseError,
   BufferOverflowError,
+  CloseError,
   WebSocketClientError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
@@ -84,7 +84,7 @@ describe('WebSocketClientBase', () => {
     expect(mocks).toHaveLength(1) // never reconnected
   })
 
-  it('reconnects on AbnormalCloseError with a reconnectable code', async () => {
+  it('reconnects on CloseError with a reconnectable code', async () => {
     const errs: Array<{ willReconnect: boolean; attempt: number }> = []
     const { ws, mocks } = makeClient()
     ws.addEventListener('error', (e) =>
@@ -102,7 +102,7 @@ describe('WebSocketClientBase', () => {
     })()
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitClose(1011, 'server error', false) // AbnormalCloseError(1011) → reconnect
+    mocks[0].emitClose(1011, 'server error', false) // CloseError(1011) → reconnect
     await vi.advanceTimersByTimeAsync(2000)
     await tick()
     mocks[1].emitOpen()
@@ -115,7 +115,7 @@ describe('WebSocketClientBase', () => {
     expect(received).toEqual(['ok'])
   })
 
-  it('propagates a fatal AbnormalCloseError (1002) and stops', async () => {
+  it('propagates a fatal CloseError (1002) and stops', async () => {
     const errs: Array<{ willReconnect: boolean }> = []
     const { ws, mocks } = makeClient()
     ws.addEventListener('error', (e) =>
@@ -130,7 +130,7 @@ describe('WebSocketClientBase', () => {
     mocks[0].emitOpen()
     mocks[0].emitClose(1002, 'protocol error', false)
     await expect(consume).rejects.toSatisfy((err) => {
-      assert(err instanceof AbnormalCloseError)
+      assert(err instanceof CloseError)
       expect(err.code).toBe(1002)
       return true
     })

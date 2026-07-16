@@ -1,6 +1,6 @@
 import { CloseCode } from './close-codes.js'
 import {
-  AbnormalCloseError,
+  CloseError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
@@ -31,12 +31,12 @@ export function isReconnectableClose(code: number): boolean {
 
 /**
  * Default reconnect policy over WebSocketConnection's typed errors:
- * - AbnormalCloseError → classify by close code (isReconnectableClose)
+ * - CloseError → classify by close code (isReconnectableClose)
  * - SocketError / HeartbeatTimeoutError / IdleTimeoutError → reconnect
  * - anything else (BufferOverflowError, DataModeError, foreign errors) → fatal
  */
 export function defaultShouldReconnect(error: unknown): boolean {
-  if (error instanceof AbnormalCloseError) {
+  if (error instanceof CloseError) {
     return isReconnectableClose(error.code)
   }
   return (

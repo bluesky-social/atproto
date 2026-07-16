@@ -147,7 +147,7 @@ Every connection-level failure is a typed subclass of `WebSocketConnectionError`
 
 | Error                   | Cause                                                                             |
 | ----------------------- | --------------------------------------------------------------------------------- |
-| `AbnormalCloseError`    | Close with a code other than `1000`/`1001`. Carries `code`, `reason`, `wasClean`. |
+| `CloseError`            | Close with a code other than `1000`/`1001`. Carries `code`, `reason`, `wasClean`. |
 | `SocketError`           | A transport-level error. Carries the underlying `cause`.                          |
 | `HeartbeatTimeoutError` | No ping/pong activity within the heartbeat window (Node.js only).                 |
 | `IdleTimeoutError`      | No message received within `idleTimeoutMs`.                                       |

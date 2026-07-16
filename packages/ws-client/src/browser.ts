@@ -63,8 +63,8 @@ export type {
   WebSocketConnectionOptions,
 } from './connection.js'
 export {
-  AbnormalCloseError,
   BufferOverflowError,
+  CloseError,
   DataModeError,
   HeartbeatTimeoutError,
   IdleTimeoutError,

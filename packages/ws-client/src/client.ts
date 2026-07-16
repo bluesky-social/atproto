@@ -5,7 +5,7 @@ import type {
   WebSocketConnectionOptions,
 } from './connection.js'
 import { CloseCode } from './lib/close-codes.js'
-import { AbnormalCloseError, WebSocketClientError } from './lib/errors.js'
+import { CloseError, WebSocketClientError } from './lib/errors.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import {
   type CloseEventDetail,
@@ -327,13 +327,13 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         // Clean close: 1000 stops; 1001 (and any non-fatal clean code)
         // reconnects. Only 1000/1001 arrive here (connection ends cleanly
         // only for those); 1000 is fatal, 1001 reconnects. Reuse
-        // `shouldReconnect` via a synthetic AbnormalCloseError so an override
+        // `shouldReconnect` via a synthetic CloseError so an override
         // applies uniformly to clean codes too.
         const code = closeDetail?.code ?? CloseCode.Normal
         const reconnectClean =
           code !== CloseCode.Normal &&
           shouldReconnect(
-            new AbnormalCloseError(code, closeDetail?.reason ?? '', true),
+            new CloseError(code, closeDetail?.reason ?? '', true),
             retries,
           )
         if (!reconnectClean) {

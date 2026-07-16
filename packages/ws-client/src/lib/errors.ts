@@ -5,13 +5,13 @@ export class WebSocketConnectionError extends Error {
   }
 }
 
-export class AbnormalCloseError extends WebSocketConnectionError {
+export class CloseError extends WebSocketConnectionError {
   constructor(
     readonly code: number,
     readonly reason: string,
     readonly wasClean: boolean,
   ) {
-    super(`Abnormal WebSocket close (${code}): ${reason}`)
+    super(`WebSocket closed (${code}): ${reason}`)
   }
 }
 

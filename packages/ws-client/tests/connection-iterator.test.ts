@@ -1,7 +1,7 @@
 import { assert, describe, expect, it } from 'vitest'
 import { WebSocketConnectionEngine } from '../src/connection.js'
 import {
-  AbnormalCloseError,
+  CloseError,
   SocketError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
@@ -92,14 +92,14 @@ describe('WebSocketConnectionEngine iterator', () => {
     expect(received).toEqual(['x', 'y', 'z'])
   })
 
-  it('throws AbnormalCloseError on non-1000/1001 close (pending consumer)', async () => {
+  it('throws CloseError on non-1000/1001 close (pending consumer)', async () => {
     const { engine, mock } = makeEngine()
     mock.emitOpen()
     const it = engine[Symbol.asyncIterator]()
     const pending = it.next()
     mock.emitClose(1011, 'server error', false)
     await expect(pending).rejects.toSatisfy((err) => {
-      assert(err instanceof AbnormalCloseError)
+      assert(err instanceof CloseError)
       expect(err.code).toBe(1011)
       expect(err.reason).toBe('server error')
       return true
@@ -113,7 +113,7 @@ describe('WebSocketConnectionEngine iterator', () => {
     // Abnormal close with NO consumer waiting; error is stored.
     mock.emitClose(1006, 'reset', false)
     await expect(it.next()).rejects.toSatisfy((err) => {
-      assert(err instanceof AbnormalCloseError)
+      assert(err instanceof CloseError)
       expect(err.code).toBe(1006)
       expect(err.wasClean).toBe(false)
       return true
@@ -326,7 +326,7 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     const pending = it.next()
     mock.emitOpen()
     mock.emitClose(1011, 'server error', false)
-    await expect(pending).rejects.toBeInstanceOf(AbnormalCloseError)
+    await expect(pending).rejects.toBeInstanceOf(CloseError)
     expect(detail).toEqual({
       code: 1011,
       reason: 'server error',

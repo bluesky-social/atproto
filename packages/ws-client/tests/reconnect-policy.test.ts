@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  AbnormalCloseError,
   BufferOverflowError,
+  CloseError,
   DataModeError,
   HeartbeatTimeoutError,
   IdleTimeoutError,
@@ -52,16 +52,10 @@ describe(defaultShouldReconnect, () => {
       false,
     )
   })
-  it('classifies AbnormalCloseError by its code', () => {
-    expect(
-      defaultShouldReconnect(new AbnormalCloseError(1011, '', false)),
-    ).toBe(true)
-    expect(
-      defaultShouldReconnect(new AbnormalCloseError(1008, '', false)),
-    ).toBe(true)
-    expect(
-      defaultShouldReconnect(new AbnormalCloseError(1002, '', false)),
-    ).toBe(false)
+  it('classifies CloseError by its code', () => {
+    expect(defaultShouldReconnect(new CloseError(1011, '', false))).toBe(true)
+    expect(defaultShouldReconnect(new CloseError(1008, '', false))).toBe(true)
+    expect(defaultShouldReconnect(new CloseError(1002, '', false))).toBe(false)
   })
   it('does not reconnect on an unknown/foreign error', () => {
     expect(defaultShouldReconnect(new Error('nope'))).toBe(false)
