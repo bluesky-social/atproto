@@ -1,8 +1,23 @@
 import type { IncomingMessage } from 'node:http'
 import { type ServerOptions, type WebSocket, WebSocketServer } from 'ws'
-import { CloseCode, DisconnectError } from '@atproto/ws-client'
+import { CloseCode } from '@atproto/ws-client'
 import { ErrorFrame, type Frame } from './frames.js'
 import { logger } from './logger.js'
+
+/**
+ * Thrown by a stream handler to end the connection deliberately. Carries the
+ * WebSocket close code to send, plus an optional XRPC error string (e.g.
+ * `"AuthenticationRequired"`) transmitted as the Close frame's reason so
+ * clients can see why the stream was terminated.
+ */
+export class DisconnectError extends Error {
+  constructor(
+    public wsCode: CloseCode = CloseCode.Policy,
+    public xrpcCode?: string,
+  ) {
+    super()
+  }
+}
 
 export class XrpcStreamServer {
   wss: WebSocketServer

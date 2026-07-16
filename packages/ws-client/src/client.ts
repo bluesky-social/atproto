@@ -4,12 +4,13 @@ import type {
   WebSocketConnectionEngine,
   WebSocketConnectionOptions,
 } from './connection.js'
+import { CloseCode } from './close-codes.js'
 import { AbnormalCloseError, WebSocketClientError } from './errors.js'
 import { backoffMs, defaultShouldReconnect } from './reconnect-policy.js'
 import {
   type CloseEventDetail,
-  type WebSocketClientEventMap,
   TypedEventTarget,
+  type WebSocketClientEventMap,
 } from './typed-event-target.js'
 
 export type Awaitable<T> = T | Promise<T>
@@ -107,7 +108,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     return this.connection.send(data)
   }
 
-  async close(code = 1000, reason?: string): Promise<void> {
+  async close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
     this.stopped = true
     this.stopController.abort()
     this.state = 'closing'
@@ -168,11 +169,9 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
           : () => false
 
     // `retries` is the count of consecutive failed connections since the last
-    // successful open (reset to 0 in `onConnectionOpen` below). `retries ===
-    // 0` means the upcoming attempt is either the first attempt after a
-    // stable open or the very first connect — both are "fast" (<=1s). It
-    // escalates with `backoffMs` only across repeated failures with no open
-    // in between.
+    // successful open (reset to 0 in `onConnectionOpen` below), so the backoff
+    // starts over at ~1s after any stable open and escalates only across
+    // repeated failures with no open in between.
     let retries = 0
     let firstAttempt = true // true until the first connection is created
     let firstOpen = true // true until the first successful open
@@ -185,16 +184,19 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       if (signal?.aborted) throw signal.reason
 
       if (!firstAttempt) {
-        // Fast first reconnect (attempt 0); exponential backoff afterwards.
-        const waitMs =
-          retries === 0 ? Math.min(1000, maxMs) : backoffMs(retries, maxMs)
+        // Exponential backoff: ~1s (with jitter) on the first reconnect after
+        // an open, escalating across consecutive failures.
         // Rejects with signal.reason on external abort; resolves promptly
         // (not rejects) on close()'s internal stop signal — the loop below
         // observes `this.stopped` and exits the clean way.
-        await sleep(waitMs, signal, this.stopController.signal)
+        await sleep(
+          backoffMs(retries, maxMs),
+          signal,
+          this.stopController.signal,
+        )
         if (this.stopped) break
         // Escalate the delay for the *next* consecutive failure. Reset to 0
-        // happens on open, so the first reconnect after a stable open is fast.
+        // happens on open, so the backoff starts over after a stable open.
         retries++
       }
       firstAttempt = false
@@ -208,10 +210,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       // the fact.
       if (this.stopped) break
       if (signal?.aborted) throw signal.reason
-      const connection = this.createConnection<M>(
-        url,
-        this.connectionOptions(),
-      )
+      const connection = this.createConnection<M>(url, this.connectionOptions())
       this.connection = connection
       this.state = 'connecting'
 
@@ -223,7 +222,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       let closeDetail: CloseEventDetail | undefined
       const onConnectionOpen = () => {
         this.state = 'open'
-        retries = 0 // stable open: next reconnect is fast again
+        retries = 0 // stable open: backoff starts over
         if (firstOpen) {
           firstOpen = false
           this.dispatchEvent(new Event('open'))
@@ -247,9 +246,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       // the `yield` and would otherwise skip listener cleanup entirely).
       try {
         try {
-          for await (const msg of connection) {
-            yield msg
-          }
+          yield* connection
           // Clean iterator completion (1000/1001): fall through with the
           // captured `closeDetail` carrying the real close code.
         } catch (error) {
@@ -275,7 +272,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
             this.dispatchEvent(
               new CustomEvent('close', {
                 detail: closeDetail ?? {
-                  code: 1006,
+                  code: CloseCode.Abnormal,
                   reason: '',
                   wasClean: false,
                 },
@@ -299,9 +296,9 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       // 1000 is fatal, 1001 reconnects. Reuse `shouldReconnect` via a
       // synthetic AbnormalCloseError so an override applies uniformly to
       // clean codes too.
-      const code = closeDetail?.code ?? 1000
+      const code = closeDetail?.code ?? CloseCode.Normal
       const reconnectClean =
-        code !== 1000 &&
+        code !== CloseCode.Normal &&
         shouldReconnect(
           new AbnormalCloseError(code, closeDetail?.reason ?? '', true),
           retries,
@@ -311,7 +308,11 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         // Final clean close (1000, or a non-reconnectable clean code).
         this.dispatchEvent(
           new CustomEvent('close', {
-            detail: closeDetail ?? { code: 1000, reason: '', wasClean: true },
+            detail: closeDetail ?? {
+              code: CloseCode.Normal,
+              reason: '',
+              wasClean: true,
+            },
           }),
         )
         break

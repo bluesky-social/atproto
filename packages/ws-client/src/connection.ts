@@ -1,3 +1,4 @@
+import { CloseCode } from './close-codes.js'
 import {
   AbnormalCloseError,
   BufferOverflowError,
@@ -59,7 +60,7 @@ interface Waiter<T> {
 // The two terminal outcomes. `done` drains the buffer first; `error` discards it.
 type Terminal = { type: 'done' } | { type: 'error'; error: unknown }
 
-const CLEAN_CLOSE_CODES = new Set([1000, 1001])
+const CLEAN_CLOSE_CODES = new Set([CloseCode.Normal, CloseCode.GoingAway])
 
 export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   extends TypedEventTarget<WebSocketConnectionEventMap>
@@ -272,8 +273,8 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     expected: 'text' | 'binary',
     received: 'text' | 'binary',
   ): void {
-    // Attempt a protocol-level close (1003 = unsupported data), then hard kill.
-    this.transport.close(1003)
+    // Attempt a protocol-level close (unsupported data), then hard kill.
+    this.transport.close(CloseCode.UnsupportedData)
     this.fail(new DataModeError(expected, received), true)
   }
 
@@ -332,7 +333,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     })
   }
 
-  close(code = 1000, reason?: string): Promise<void> {
+  close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
     if (this.state === 'initialized') {
       // Never opened: clean no-op teardown, no events, resolve immediately.
       this.state = 'closed'
@@ -401,7 +402,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
       return: async () => {
         // Consumer abandoned iteration: polite close.
         if (this.state === 'open' || this.state === 'connecting') {
-          void this.close(1000).catch(() => {})
+          void this.close(CloseCode.Normal).catch(() => {})
         }
         return { value: undefined as never, done: true }
       },
@@ -442,7 +443,8 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   }
 
   private afterDrain(): void {
-    // Hysteresis: only resume once well below the high-water mark.
+    // Only resume once well below the high-water mark, so the transport
+    // doesn't rapidly flip between paused and resumed around the threshold.
     if (this.paused && this.bufferedBytes < this.highWaterMark / 2) {
       this.paused = false
       this.transport.resume()
@@ -456,7 +458,7 @@ function closeDetailForError(error: unknown): CloseEventDetail {
   }
   // Codeless fatal error (SocketError / timeouts / overflow / dataMode):
   // synthesize an abnormal close, matching WHATWG's 1006 for a frame-less end.
-  return { code: 1006, reason: '', wasClean: false }
+  return { code: CloseCode.Abnormal, reason: '', wasClean: false }
 }
 
 // Byte accounting: binary counts byteLength; strings approximate via UTF-16

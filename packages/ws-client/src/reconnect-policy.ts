@@ -1,3 +1,4 @@
+import { CloseCode } from './close-codes.js'
 import {
   AbnormalCloseError,
   HeartbeatTimeoutError,
@@ -17,7 +18,11 @@ import {
  * other runtime, and must classify identically (reconnect). Do not add them.
  */
 export const FATAL_CLOSE_CODES: ReadonlySet<number> = new Set([
-  1000, 1002, 1003, 1007, 1009,
+  CloseCode.Normal,
+  CloseCode.ProtocolError,
+  CloseCode.UnsupportedData,
+  CloseCode.InvalidPayload,
+  CloseCode.MessageTooBig,
 ])
 
 export function isReconnectableClose(code: number): boolean {

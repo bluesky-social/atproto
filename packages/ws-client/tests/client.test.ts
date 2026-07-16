@@ -159,8 +159,9 @@ describe('WebSocketClientBase', () => {
     })()
     await tick()
     mocks[0].emitOpen() // opens → attempt counter resets to 0
-    mocks[0].emitClose(1006, '', false) // reconnect, attempt 0 → fast (≤1s)
-    await vi.advanceTimersByTimeAsync(1000)
+    mocks[0].emitClose(1006, '', false) // reconnect, attempt 0 → backoffMs(0)
+    // backoffMs(0) is jittered 500-1500ms; advance past its maximum.
+    await vi.advanceTimersByTimeAsync(1500)
     await tick()
     mocks[1].emitOpen()
     mocks[1].emitMessage('done', false)
@@ -262,7 +263,8 @@ describe('WebSocketClientBase', () => {
     await tick()
     mocks[0].emitOpen()
     mocks[0].emitClose(1006, '', false)
-    await vi.advanceTimersByTimeAsync(1000)
+    // backoffMs(0) is jittered 500-1500ms; advance past its maximum.
+    await vi.advanceTimersByTimeAsync(1500)
     await tick()
     mocks[1].emitOpen()
     mocks[1].emitMessage('x', false)
@@ -278,26 +280,27 @@ describe('WebSocketClientBase', () => {
       }
     })()
 
-    // Attempt 0: fails before ever opening → retries stays 0, next wait is fast (≤1s).
+    // Attempt 0: fails before ever opening → retries stays 0, next wait is
+    // backoffMs(0), jittered 500-1500ms. Advance past its maximum.
     await tick()
     expect(mocks).toHaveLength(1)
     mocks[0].emitClose(1006, '', false)
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(1500)
     await tick()
 
     // Attempt 1: also fails before opening → retries becomes 1, escalating the
-    // *next* wait to backoffMs(1) (~1.5-2.5s with jitter) since no open reset it.
+    // *next* wait to backoffMs(1) (1.5-2.5s with jitter) since no open reset it.
     expect(mocks).toHaveLength(2)
     mocks[1].emitClose(1006, '', false)
 
-    // A short wait shorter than the escalated backoff must NOT yet produce a
-    // third connection attempt.
+    // A wait shorter than the escalated backoff's minimum (1.5s) must NOT yet
+    // produce a third connection attempt.
     await vi.advanceTimersByTimeAsync(1000)
     await tick()
     expect(mocks).toHaveLength(2)
 
-    // Advancing well past the full escalated window (up to ~2.5s more) does.
-    await vi.advanceTimersByTimeAsync(2000)
+    // Advancing past the escalated window's maximum (up to 1.5s more) does.
+    await vi.advanceTimersByTimeAsync(1500)
     await tick()
     expect(mocks).toHaveLength(3)
 

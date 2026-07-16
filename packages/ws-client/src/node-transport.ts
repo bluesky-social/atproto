@@ -1,24 +1,11 @@
 import { WebSocket } from 'ws'
+import { CloseCode } from './close-codes.js'
 import type {
   Transport,
   TransportFactory,
   TransportHandlers,
   TransportOptions,
 } from './transport.js'
-
-function toHeaderRecord(
-  headers?: Record<string, string> | Headers,
-): Record<string, string> | undefined {
-  if (!headers) return undefined
-  if (headers instanceof Headers) {
-    const record: Record<string, string> = {}
-    headers.forEach((value, key) => {
-      record[key] = value
-    })
-    return record
-  }
-  return headers
-}
 
 export class NodeTransport implements Transport {
   readonly capabilities = { heartbeat: true, pauseResume: true } as const
@@ -59,7 +46,11 @@ export class NodeTransport implements Transport {
     })
     ws.on('pong', () => this.handlers.onPong())
     ws.on('close', (code: number, reason: Buffer) => {
-      this.handlers.onClose(code, reason.toString('utf8'), code === 1000)
+      this.handlers.onClose(
+        code,
+        reason.toString('utf8'),
+        code === CloseCode.Normal,
+      )
     })
     ws.on('error', (err: Error) => this.handlers.onError(err))
   }
@@ -95,3 +86,17 @@ export class NodeTransport implements Transport {
 
 export const createNodeTransport: TransportFactory = (url, options) =>
   new NodeTransport(url, options)
+
+function toHeaderRecord(
+  headers?: Record<string, string> | Headers,
+): Record<string, string> | undefined {
+  if (!headers) return undefined
+  if (headers instanceof Headers) {
+    const record: Record<string, string> = {}
+    headers.forEach((value, key) => {
+      record[key] = value
+    })
+    return record
+  }
+  return headers
+}

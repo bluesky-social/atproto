@@ -1,16 +1,23 @@
 import { createBrowserTransport } from './browser-transport.js'
 import {
+  type Awaitable,
+  type ConnectionFactory,
+  WebSocketClientBase,
+  type WebSocketClientOptions,
+} from './client.js'
+import {
   type DataMode,
   WebSocketConnectionEngine,
   type WebSocketConnectionOptions,
 } from './connection.js'
-import {
-  type Awaitable,
-  type ConnectionFactory,
-  type WebSocketClientOptions,
-  WebSocketClientBase,
-} from './client.js'
 
+/**
+ * A single WebSocket connection, consumed as an `AsyncIterable` of messages.
+ * Provides the core liveness (heartbeat, idle timeout) and flow control
+ * (read-side backpressure) functionality leveraged by {@link WebSocketClient}.
+ * Constructing one opens nothing; the socket opens when iteration begins, and
+ * it does not reconnect — when the connection ends, so does the iterator.
+ */
 export class WebSocketConnection<
   M extends DataMode = 'auto',
 > extends WebSocketConnectionEngine<M> {
@@ -22,6 +29,13 @@ export class WebSocketConnection<
 const browserConnectionFactory: ConnectionFactory = (url, options) =>
   new WebSocketConnectionEngine(createBrowserTransport, url, options)
 
+/**
+ * A robust WebSocket client that prioritizes liveness (e.g. via heartbeats),
+ * flow control (backpressure), and handles reconnects transparently — using
+ * whatever capabilities are available on each platform. Consumed as an
+ * `AsyncIterable` of messages whose stream spans reconnects; lifecycle is
+ * observable via `addEventListener('open' | 'reconnect' | 'error' | 'close')`.
+ */
 export class WebSocketClient<
   M extends DataMode = 'auto',
 > extends WebSocketClientBase<M> {
@@ -61,4 +75,4 @@ export type {
   WebSocketConnectionEventMap,
 } from './typed-event-target.js'
 
-export { CloseCode, DisconnectError } from './close-codes.js'
+export { CloseCode } from './close-codes.js'

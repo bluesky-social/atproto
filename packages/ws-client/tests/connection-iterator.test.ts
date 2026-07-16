@@ -355,7 +355,9 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     expect(mock.opened).toBe(false)
     // Iterating an already-closed connection is a caller bug: throw, don't hang
     // and don't yield an empty stream.
-    expect(() => engine[Symbol.asyncIterator]()).toThrow(WebSocketConnectionError)
+    expect(() => engine[Symbol.asyncIterator]()).toThrow(
+      WebSocketConnectionError,
+    )
     expect(mock.opened).toBe(false) // still never opened
     expect(events).toEqual([]) // no events for a never-started resource
   })

@@ -11,8 +11,13 @@ type WebSocketCtor = new (
   protocols?: string | string[],
 ) => WHATWGWebSocket
 
+// Checked against the WHATWG WebSockets Standard (and undici's implementation):
+// `binaryType` is 'blob' | 'arraybuffer'; the 'close' event is a CloseEvent
+// with { code, reason, wasClean }; `send` also accepts Blob per spec, but this
+// adapter only ever sends string | Uint8Array so the narrower type is accurate
+// for our use.
 interface WHATWGWebSocket {
-  binaryType: string
+  binaryType: 'blob' | 'arraybuffer'
   readonly protocol: string
   send(data: string | ArrayBufferLike | ArrayBufferView): void
   close(code?: number, reason?: string): void
