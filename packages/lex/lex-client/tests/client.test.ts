@@ -206,6 +206,53 @@ describe('Client', () => {
       expect(headers.get('atproto-accept-labelers')).toBe(labeler)
     })
 
+    it('ignores the client\'s default "service" and "labelers" in record helper methods', async () => {
+      const service = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz#bsky_appview'
+      const labeler = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz'
+      const did = 'did:plc:alice'
+
+      const fetchHandler = vi.fn<FetchHandler>(async (url, _init) => {
+        if (url.includes('listRecords')) {
+          return Response.json({ records: [] })
+        }
+        return Response.json({
+          uri: `at://${did}/app.bsky.feed.post/2222222222222`,
+          cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        })
+      })
+
+      const client = new Client(
+        { fetchHandler, did },
+        { service, labelers: [labeler] },
+      )
+
+      await client.createRecord(
+        app.bsky.feed.post.$build({
+          text: 'Hello!',
+          createdAt: currentDatetimeString(),
+        }),
+      )
+      await client.listRecords(app.bsky.feed.post.$type)
+
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      for (const [, init] of fetchHandler.mock.calls) {
+        const headers = new Headers(init?.headers)
+        expect(headers.has('atproto-proxy')).toBe(false)
+        expect(headers.has('atproto-accept-labelers')).toBe(false)
+      }
+
+      // Explicit per-call options still apply
+      await client.listRecords(app.bsky.feed.post.$type, {
+        service,
+        labelers: [labeler],
+      })
+
+      const [, init] = fetchHandler.mock.calls[2]
+      const headers = new Headers(init?.headers)
+      expect(headers.get('atproto-proxy')).toBe(service)
+      expect(headers.get('atproto-accept-labelers')).toBe(labeler)
+    })
+
     it('propagates custom (non atproto-*) headers when composing clients', async () => {
       const fetch = vi.fn<typeof globalThis.fetch>(async (_url, _init) => {
         return Response.json({ preferences: [] })
