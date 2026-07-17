@@ -5,7 +5,11 @@ import {
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
-import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  type Account,
+  type SeedClient,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
 import type { ServerMailer } from '../src/mailer/index.js'
 import userSeed from './seeds/users.js'
 
@@ -18,7 +22,7 @@ describe('email confirmation', () => {
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
-  let alice
+  let alice: Account
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -79,7 +83,7 @@ describe('email confirmation', () => {
     )
     expect(session.data.email).toEqual('new-alice@example.com')
     expect(session.data.emailConfirmed).toEqual(false)
-    alice.email = session.data.email
+    alice.email = session.data.email!
   })
 
   let confirmToken

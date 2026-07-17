@@ -3,7 +3,11 @@ import type { Selectable } from 'kysely'
 import type Mail from 'nodemailer/lib/mailer'
 import type { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
-import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  type Account as SeedAccount,
+  type SeedClient,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import type {
   Account,
@@ -30,7 +34,7 @@ describe('account deletion', () => {
   let _origSendMail
 
   // chose carol because she has blobs
-  let carol
+  let carol: SeedAccount
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

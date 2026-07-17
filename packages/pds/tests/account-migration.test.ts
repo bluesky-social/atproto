@@ -1,13 +1,13 @@
 import assert from 'node:assert'
 import { AtUri, type AtpAgent } from '@atproto/api'
 import {
+  type Account,
   type SeedClient,
   TestNetworkNoAppView,
   TestPds,
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
-import type { DidString } from '@atproto/syntax'
 
 describe('account migration', () => {
   let network: TestNetworkNoAppView
@@ -17,7 +17,7 @@ describe('account migration', () => {
   let oldAgent: AtpAgent
   let newAgent: AtpAgent
 
-  let alice: DidString
+  let alice: Account
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -37,36 +37,36 @@ describe('account migration', () => {
       handle: 'alice.test',
       password: 'alice-pass',
     })
-    alice = sc.dids.alice
+    alice = sc.accounts[sc.dids.alice]
 
     for (let i = 0; i < 100; i++) {
-      await sc.post(alice, 'test post')
+      await sc.post(alice.did, 'test post')
     }
     const img1 = await sc.uploadFile(
-      alice,
+      alice.did,
       '../dev-env/assets/at.png',
       'image/png',
     )
     const img2 = await sc.uploadFile(
-      alice,
+      alice.did,
       '../dev-env/assets/key-alt.jpg',
       'image/jpeg',
     )
     const img3 = await sc.uploadFile(
-      alice,
+      alice.did,
       '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
 
-    await sc.post(alice, 'test', undefined, [img1])
-    await sc.post(alice, 'test', undefined, [img1, img2])
-    await sc.post(alice, 'test', undefined, [img3])
+    await sc.post(alice.did, 'test', undefined, [img1])
+    await sc.post(alice.did, 'test', undefined, [img1, img2])
+    await sc.post(alice.did, 'test', undefined, [img3])
 
     await network.processAll()
 
     await oldAgent.login({
-      identifier: sc.accounts[alice].handle,
-      password: sc.accounts[alice].password,
+      identifier: alice.handle,
+      password: alice.password,
     })
   })
 
@@ -90,7 +90,7 @@ describe('account migration', () => {
         handle: 'new-alice.test',
         email: 'alice@test.com',
         password: 'alice-pass',
-        did: alice,
+        did: alice.did,
       },
       {
         headers: { authorization: `Bearer ${serviceJwt}` },
@@ -113,7 +113,7 @@ describe('account migration', () => {
       importedBlobs: 0,
     })
 
-    const repoRes = await oldAgent.com.atproto.sync.getRepo({ did: alice })
+    const repoRes = await oldAgent.com.atproto.sync.getRepo({ did: alice.did })
     const carBlocks = await readCar(repoRes.data)
 
     await newAgent.com.atproto.repo.importRepo(repoRes.data, {
@@ -137,12 +137,12 @@ describe('account migration', () => {
     let blobCursor: string | undefined = undefined
     do {
       const listedBlobs = await oldAgent.com.atproto.sync.listBlobs({
-        did: alice,
+        did: alice.did,
         cursor: blobCursor,
       })
       for (const cid of listedBlobs.data.cids) {
         const blobRes = await oldAgent.com.atproto.sync.getBlob({
-          did: alice,
+          did: alice.did,
           cid,
         })
         await newAgent.com.atproto.repo.uploadBlob(blobRes.data, {
@@ -203,7 +203,7 @@ describe('account migration', () => {
     })
 
     const postRes = await newAgent.api.app.bsky.feed.post.create(
-      { repo: alice },
+      { repo: alice.did },
       {
         text: 'new pds!',
         createdAt: new Date().toISOString(),

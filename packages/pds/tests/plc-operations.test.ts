@@ -6,11 +6,11 @@ import type { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
+  type Account,
   type SeedClient,
   TestNetworkNoAppView,
   basicSeed,
 } from '@atproto/dev-env'
-import type { DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
 
 describe('plc operations', () => {
@@ -22,7 +22,7 @@ describe('plc operations', () => {
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
-  let alice: DidString
+  let alice: Account
 
   let sampleKey: string
 
@@ -37,7 +37,7 @@ describe('plc operations', () => {
     agent = network.pds.getAgent()
 
     await basicSeed(sc)
-    alice = sc.dids.alice
+    alice = sc.accounts[sc.dids.alice]
     await network.processAll()
 
     sampleKey = (await Secp256k1Keypair.create()).did()
@@ -87,7 +87,7 @@ describe('plc operations', () => {
       { operation },
       {
         encoding: 'application/json',
-        headers: sc.getHeaders(alice),
+        headers: sc.getHeaders(alice.did),
       },
     )
     await expect(attempt).rejects.toThrow(expectedErr)
@@ -95,7 +95,7 @@ describe('plc operations', () => {
 
   it("prevents submitting an operation that removes the server's rotation key", async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       { rotationKeys: [sampleKey] },
       "Rotation keys do not include server's rotation key",
     )
@@ -103,7 +103,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the signing key', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         verificationMethods: {
           atproto: sampleKey,
@@ -115,7 +115,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the handle', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         alsoKnownAs: ['at://new-alice.test'],
       },
@@ -125,7 +125,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the pds endpoint', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         services: {
           atproto_pds: {
@@ -140,7 +140,7 @@ describe('plc operations', () => {
 
   it('prevents submitting an operation that incorrectly sets the pds service type', async () => {
     await expectFailedOp(
-      alice,
+      alice.did,
       {
         services: {
           atproto_pds: {
@@ -158,7 +158,7 @@ describe('plc operations', () => {
       {
         rotationKeys: [sampleKey],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
     )
     await expect(attempt).rejects.toThrow(
       'email confirmation token required to sign PLC operations',
@@ -188,7 +188,7 @@ describe('plc operations', () => {
         token: '123456',
         rotationKeys: [sampleKey],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
     )
     await expect(attempt).rejects.toThrow('Token is invalid')
   })
@@ -201,9 +201,9 @@ describe('plc operations', () => {
         token,
         rotationKeys: [sampleKey, ctx.plcRotationKey.did()],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { encoding: 'application/json', headers: sc.getHeaders(alice.did) },
     )
-    const currData = await ctx.plcClient.getDocumentData(alice)
+    const currData = await ctx.plcClient.getDocumentData(alice.did)
     expect(res.data.operation['alsoKnownAs']).toEqual(currData.alsoKnownAs)
     expect(res.data.operation['verificationMethods']).toEqual(
       currData.verificationMethods,
@@ -221,10 +221,10 @@ describe('plc operations', () => {
       { operation },
       {
         encoding: 'application/json',
-        headers: sc.getHeaders(alice),
+        headers: sc.getHeaders(alice.did),
       },
     )
-    const didData = await ctx.plcClient.getDocumentData(alice)
+    const didData = await ctx.plcClient.getDocumentData(alice.did)
     expect(didData.rotationKeys).toEqual([sampleKey, ctx.plcRotationKey.did()])
   })
 
@@ -236,7 +236,7 @@ describe('plc operations', () => {
       .limit(1)
       .executeTakeFirst()
     assert(lastEvt)
-    expect(lastEvt.did).toBe(alice)
+    expect(lastEvt.did).toBe(alice.did)
     expect(lastEvt.eventType).toBe('identity')
   })
 })
