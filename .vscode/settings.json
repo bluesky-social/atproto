@@ -57,16 +57,4 @@
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.experimental.useTsgo": true,
   "markdown.extension.toc.levels": "2..6",
-  "chat.tools.terminal.autoApprove": {
-    "mkdir": true,
-    "pnpm prettier": true,
-    "pnpm tsgo": true,
-    "pnpm vitest": true,
-    "pnpm exec prettier": true,
-    "pnpm exec tsgo": true,
-    "pnpm exec vitest": true,
-    "pnpm run build": true,
-    "pnpm run test": true,
-    "tail": true,
-  },
 }
