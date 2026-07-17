@@ -1,5 +1,12 @@
 # @atproto/oauth-provider
 
+## 0.20.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.2.2
+
 ## 0.20.1
 
 ### Patch Changes
