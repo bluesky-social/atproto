@@ -1,7 +1,6 @@
 import assert from 'node:assert'
-import { EventEmitter, once } from 'node:events'
 import * as plc from '@did-plc/lib'
-import type { SendMailOptions } from 'nodemailer'
+import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
@@ -19,19 +18,18 @@ describe('plc operations', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
-
   let alice: Account
 
   let sampleKey: string
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'plc_operations',
     })
     ctx = network.pds.ctx
-    const mailer = ctx.mailer
 
     sc = network.getSeedClient()
     agent = network.pds.getAgent()
@@ -41,27 +39,19 @@ describe('plc operations', () => {
     await network.processAll()
 
     sampleKey = (await Secp256k1Keypair.create()).did()
+    sendMailMock = jest
+      .spyOn(ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+  beforeEach(() => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
     await network?.close()
   })
-
-  const getMailFrom = async (promise): Promise<SendMailOptions> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: SendMailOptions) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   const signOp = async (did: string, op: Partial<plc.Operation>) => {
     const lastOp = await ctx.plcClient.getLastOp(did)
@@ -168,18 +158,27 @@ describe('plc operations', () => {
   let token: string
 
   it('requests a plc signature', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.identity.requestPlcOperationSignature(undefined, {
-        headers: sc.getHeaders(alice),
-      }),
-    )
+    using sendPlcOperationMock = jest.spyOn(ctx.mailer, 'sendPlcOperation')
 
-    expect(mail.to).toEqual(sc.accounts[alice].email)
+    await agent.api.com.atproto.identity.requestPlcOperationSignature(
+      undefined,
+      {
+        headers: sc.getHeaders(alice.did),
+      },
+    )
+    expect(sendPlcOperationMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendPlcOperationMock.mock.lastCall!
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
+    expect(mail.to).toEqual(alice.email)
+    expect(mail.subject).toBe('PLC Update Operation Requested')
     expect(mail.html).toContain('PLC update requested')
 
-    const gotToken = getTokenFromMail(mail)
-    assert(gotToken)
-    token = gotToken
+    token = params.token
   })
 
   it('does not sign a plc operation with a bad token', async () => {

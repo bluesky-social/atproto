@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import { jest } from '@jest/globals'
 import { AtUri, type AtpAgent } from '@atproto/api'
 import {
   type Account,
@@ -8,6 +8,7 @@ import {
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
+import type { AppContext } from '../src/index.js'
 
 describe('account migration', () => {
   let network: TestNetworkNoAppView
@@ -18,6 +19,9 @@ describe('account migration', () => {
   let newAgent: AtpAgent
 
   let alice: Account
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -68,6 +72,15 @@ describe('account migration', () => {
       identifier: alice.handle,
       password: alice.password,
     })
+
+    sendMailMock = jest
+      .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(() => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
@@ -162,18 +175,26 @@ describe('account migration', () => {
     const getDidCredentials =
       await newAgent.com.atproto.identity.getRecommendedDidCredentials()
 
+    using sendPlcOperationMock = jest.spyOn(
+      network.pds.ctx.mailer,
+      'sendPlcOperation',
+    )
+
     await oldAgent.com.atproto.identity.requestPlcOperationSignature()
-    const res = await network.pds.ctx.accountManager.db.db
-      .selectFrom('email_token')
-      .selectAll()
-      .where('did', '=', alice)
-      .where('purpose', '=', 'plc_operation')
-      .executeTakeFirst()
-    const token = res?.token
-    assert(token)
+
+    expect(sendPlcOperationMock).toHaveBeenCalledTimes(1)
+    const [params] = sendPlcOperationMock.mock.lastCall!
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
+    expect(mail.to).toBe(alice.email)
+    expect(mail.subject).toEqual('PLC Update Operation Requested')
+    expect(mail.html).toContain('We received a request to update your PLC')
 
     const plcOp = await oldAgent.com.atproto.identity.signPlcOperation({
-      token,
+      token: params.token,
       ...getDidCredentials.data,
     })
 
