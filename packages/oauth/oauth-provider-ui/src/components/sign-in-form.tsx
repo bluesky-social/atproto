@@ -251,6 +251,7 @@ export function SignInForm({
                   autoFocus={true}
                   defaultValue={values.otp ?? ''}
                   onToken={setterFor('otp')}
+                  name="otp"
                 />
 
                 <p className="text-text-light text-sm">

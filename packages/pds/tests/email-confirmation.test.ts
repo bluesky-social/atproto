@@ -1,22 +1,17 @@
-import { EventEmitter, once } from 'node:events'
-import type { SendMailOptions } from 'nodemailer'
 import {
   type AtpAgent,
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import type { ServerMailer } from '../src/mailer/index.js'
+import { MailCatcher } from './_mailcatcher.js'
 import userSeed from './seeds/users.js'
 
 describe('email confirmation', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
-
-  let mailer: ServerMailer
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
+  let mailCatcher: MailCatcher
 
   let alice
 
@@ -24,33 +19,19 @@ describe('email confirmation', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'email_confirmation',
     })
-    mailer = network.pds.ctx.mailer
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]
 
     // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+    mailCatcher = new MailCatcher(network.pds.ctx.mailer)
   })
 
   afterAll(async () => {
-    mailer.transporter.sendMail = _origSendMail
+    await mailCatcher.restore()
     await network?.close()
   })
-
-  const getMailFrom = async (promise): Promise<SendMailOptions> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: SendMailOptions) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   it('starts a user out unverified', async () => {
     const session = await agent.api.com.atproto.server.getSession(
@@ -85,14 +66,14 @@ describe('email confirmation', () => {
   let confirmToken
 
   it('requests email confirmation', async () => {
-    const mail = await getMailFrom(
+    const { mail } = await mailCatcher.getMailFrom(
       agent.api.com.atproto.server.requestEmailConfirmation(undefined, {
         headers: sc.getHeaders(alice.did),
       }),
     )
     expect(mail.to).toEqual(alice.email)
     expect(mail.html).toContain('Confirm your email')
-    confirmToken = getTokenFromMail(mail)
+    confirmToken = mailCatcher.getTokenFromMail(mail)
     expect(confirmToken).toBeDefined()
   })
 
@@ -161,10 +142,10 @@ describe('email confirmation', () => {
       )
       expect(res.data.tokenRequired).toBe(true)
     }
-    const mail = await getMailFrom(reqUpdate())
+    const { mail } = await mailCatcher.getMailFrom(reqUpdate())
     expect(mail.to).toEqual(alice.email)
     expect(mail.html).toContain('Update your email')
-    updateToken = getTokenFromMail(mail)
+    updateToken = mailCatcher.getTokenFromMail(mail)
     expect(updateToken).toBeDefined()
   })
 

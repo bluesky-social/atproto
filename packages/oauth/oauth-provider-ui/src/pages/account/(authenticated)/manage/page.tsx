@@ -1,10 +1,11 @@
-import { Trans } from '@lingui/react/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   AtIcon,
   CaretRightIcon,
   EnvelopeIcon,
   type Icon,
   LockIcon,
+  ShieldCheckIcon,
   ShieldWarningIcon,
   SnowflakeIcon,
   TrashIcon,
@@ -13,6 +14,8 @@ import { clsx } from 'clsx'
 import type { ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
+import { DisableEmailAuthFactorDialog } from '#/components/disable-email-auth-factor-dialog.tsx'
+import { EnableEmailAuthFactorDialog } from '#/components/enable-email-auth-factor-dialog.tsx'
 import { Button, type ButtonProps } from '#/components/forms/button.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
@@ -30,6 +33,8 @@ import {
   useReactivateAccount,
 } from '#/data/account.ts'
 import {
+  useDisableEmailAuthFactor,
+  useEnableEmailAuthFactor,
   useUpdateEmailConfirm,
   useUpdateEmailRequest,
   useVerifyEmailConfirm,
@@ -47,9 +52,11 @@ export function Page() {
     <div className="flex flex-col gap-2">
       <EmailVerificationRow />
       <EmailUpdateRow />
+      <EmailAuthFactorUpdateRow />
       <hr className="border-none" aria-hidden />
       <HandleUpdateRow />
       <PasswordUpdateRow />
+
       <hr className="border-none" aria-hidden />
       <AccountStatusRow />
       <AccountDeletionRow />
@@ -167,6 +174,66 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
         <Trans>Password</Trans>
       </Row>
     </UpdatePasswordDialog>
+  )
+}
+
+function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { t } = useLingui()
+  const { account } = useAuthenticatedSession()
+  const { did, email, emailVerified, emailAuthFactor } = account
+
+  const enableEmailAuthFactor = useEnableEmailAuthFactor()
+  const disableEmailAuthFactor = useDisableEmailAuthFactor()
+
+  // These endpoints requires an email, so if the user doesn't have one, we can't
+  // let them update their email auth factor. These users should not exist in
+  // normal conditions (may have been created manually by an admin), and are
+  // expected to contact support.
+  if (!email) return null
+
+  if (!emailVerified) {
+    return (
+      <Row
+        {...props}
+        disabled
+        icon={ShieldWarningIcon}
+        value={t`Verify email to enable`}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    )
+  }
+
+  if (!emailAuthFactor) {
+    return (
+      <EnableEmailAuthFactorDialog
+        onConfirm={async () => {
+          await enableEmailAuthFactor.mutateAsync({ email, did })
+        }}
+      >
+        <Row {...props} icon={ShieldWarningIcon} value={t`Enable`}>
+          <Trans>Two-factor authentication (2FA)</Trans>
+        </Row>
+      </EnableEmailAuthFactorDialog>
+    )
+  }
+
+  return (
+    <DisableEmailAuthFactorDialog
+      email={email}
+      requestPending={disableEmailAuthFactor.isPending}
+      confirmPending={disableEmailAuthFactor.isPending}
+      onRequest={async () => {
+        await disableEmailAuthFactor.mutateAsync({ email, did })
+      }}
+      onConfirm={async ({ token }) => {
+        await disableEmailAuthFactor.mutateAsync({ email, did, token })
+      }}
+    >
+      <Row {...props} icon={ShieldCheckIcon} value={t`Disable`}>
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    </DisableEmailAuthFactorDialog>
   )
 }
 

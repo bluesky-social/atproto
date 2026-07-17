@@ -74,7 +74,7 @@ msgstr "2FA-bekräftelse"
 msgid "A local app"
 msgstr "En lokal app"
 
-#: src/lib/api.ts:467
+#: src/lib/api.ts:502
 msgid "A second authentication factor is required ({hint})"
 msgstr "En andra autentiseringsfaktor krävs ({hint})"
 
@@ -147,6 +147,7 @@ msgstr "alice.com"
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
+#: src/components/disable-email-auth-factor-dialog.tsx:83
 msgid "Already have a code?"
 msgstr "Har du redan en kod?"
 
@@ -159,7 +160,7 @@ msgstr "En applikation på din enhet"
 msgid "An error occurred"
 msgstr "Ett fel uppstod"
 
-#: src/lib/api.ts:355
+#: src/lib/api.ts:390
 msgid "An unexpected error occurred. Please try again."
 msgstr "Ett oväntat fel uppstod. Försök igen."
 
@@ -289,7 +290,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange den nedan:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:258
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Titta i inkorgen för {0} efter en inloggningskod och ange den här."
 
@@ -301,12 +302,12 @@ msgstr "Titta i din inkorg efter bekräftelsekoden och ange den nedan:"
 msgid "Check your inbox for the confirmation code."
 msgstr "Titta i din inkorg efter bekräftelsekoden."
 
-#: src/data/email.ts:69
+#: src/data/email.ts:71
 msgid "Check your inbox for the verification code."
 msgstr "Titta efter verifieringskoden i din inkorg."
 
 #: src/data/password.ts:22
-#: src/data/email.ts:23
+#: src/data/email.ts:25
 msgid "Check your inbox."
 msgstr "Titta i din inkorg."
 
@@ -391,7 +392,7 @@ msgstr "Skapa ett nytt konto"
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Skapa, ändra och radera vilken publik data som helst som är kopplad till ditt konto"
 
-#: src/lib/api.ts:436
+#: src/lib/api.ts:471
 msgid "Custom domains are not supported"
 msgstr "Anpassade domäner stöds inte"
 
@@ -399,7 +400,7 @@ msgstr "Anpassade domäner stöds inte"
 msgid "Data"
 msgstr "Data"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/pages/account/(authenticated)/manage/page.tsx:266
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Inaktivera konto"
@@ -412,7 +413,7 @@ msgstr "Inaktiverat konto"
 msgid "Delete"
 msgstr "Radera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/pages/account/(authenticated)/manage/page.tsx:293
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Radera konto"
@@ -442,6 +443,22 @@ msgstr "Enheter"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Har du inte fått någon kod? <0>Klicka här för att skicka en ny.</0>"
 
+#: src/pages/account/(authenticated)/manage/page.tsx:233
+msgid "Disable"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:90
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:43
+msgid "Disable email 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx:64
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "DNS"
 msgstr "DNS"
@@ -460,7 +477,7 @@ msgstr "t.ex <0>alice{0}</0>"
 msgid "Email"
 msgstr "E-post"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:142
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
@@ -471,21 +488,38 @@ msgstr "E-postadress"
 msgid "Email address successfully updated"
 msgstr "E-postadressen har uppdaterats"
 
-#: src/data/email.ts:22
+#: src/data/email.ts:24
 msgid "Email change request sent"
 msgstr "Begäran om ändring av e-postadress har skickats"
 
-#: src/data/email.ts:45
+#: src/data/email.ts:47
 msgid "Email change successful"
 msgstr "E-postadressen har ändrats"
+
+#: src/data/email.ts:142
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts:116
+msgid "Email login verification enabled"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:157
 msgid "Email these instructions"
 msgstr "Skicka dessa instruktioner via e-post"
 
-#: src/data/email.ts:91
+#: src/data/email.ts:93
 msgid "Email verified"
 msgstr "E-postadressen har verifierats"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:214
+#: src/components/enable-email-auth-factor-dialog.tsx:34
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx:22
+msgid "Enable email 2FA"
+msgstr ""
 
 #: src/components/forms/input-new-password.tsx:39
 msgid "Enter a password"
@@ -502,6 +536,10 @@ msgstr "Ange den domän du vill använda"
 #: src/components/reset-password-view.tsx:42
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Ange den e-postadress som du använde för att skapa ditt konto. Vi skickar ”återställningskod” till dig så att du kan ange ett nytt lösenord."
+
+#: src/components/disable-email-auth-factor-dialog.tsx:51
+msgid "Enter the security code we sent to <0>{email}</0> to disable two-factor authentication."
+msgstr ""
 
 #: src/components/reset-password-request-form.tsx:34
 msgid "Enter your email address"
@@ -536,7 +574,7 @@ msgstr "Utöka detaljer"
 msgid "Extra"
 msgstr "Extra"
 
-#: src/data/email.ts:51
+#: src/data/email.ts:53
 msgid "Failed to change email"
 msgstr "Det gick inte att ändra e-postadressen"
 
@@ -547,6 +585,14 @@ msgstr "Det gick inte att inaktivera kontot"
 #: src/data/account.ts:98
 msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
+
+#: src/data/email.ts:150
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts:122
+msgid "Failed to enable email login verification"
+msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
 #: src/pages/account/(authenticated)/apps/page.tsx:34
@@ -561,7 +607,7 @@ msgstr "Det gick inte att återaktivera kontot"
 msgid "Failed to remove device"
 msgstr "Det gick inte att ta bort enheten"
 
-#: src/data/email.ts:28
+#: src/data/email.ts:30
 msgid "Failed to request email change"
 msgstr "Det gick inte att begära ändring av e-postadressen"
 
@@ -581,7 +627,11 @@ msgstr "Det gick inte att återkalla åtkomsten"
 msgid "Failed to send confirmation email"
 msgstr "Det gick inte att skicka bekräftelsemejlet"
 
-#: src/data/email.ts:74
+#: src/data/email.ts:151
+msgid "Failed to send security code"
+msgstr ""
+
+#: src/data/email.ts:76
 msgid "Failed to send verification email"
 msgstr "Det gick inte att skicka verifieringsmejlet"
 
@@ -589,7 +639,7 @@ msgstr "Det gick inte att skicka verifieringsmejlet"
 msgid "Failed to update username"
 msgstr "Det gick inte att uppdatera användarnamnet"
 
-#: src/data/email.ts:97
+#: src/data/email.ts:99
 msgid "Failed to verify email"
 msgstr "Det gick inte att verifiera e-postadressen"
 
@@ -687,7 +737,7 @@ msgstr "Om du har åtkomst till din domäns webbutrymme (t.ex. via FTP)"
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Om du har en egen domän kan du använda den som användarnamn. På så sätt kan du själv verifiera din identitet. <0>Läs mer här.</0>"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:126
+#: src/pages/account/(authenticated)/manage/page.tsx:133
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Om du uppdaterar din e-postadress kommer tvåfaktorsautentisering via e-post att inaktiveras (om det är aktiverat)."
 
@@ -845,7 +895,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Endast bokstäver, siffror och bindestreck"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:167
+#: src/pages/account/(authenticated)/manage/page.tsx:174
 #: src/components/sign-up-credentials-form.tsx:71
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
@@ -899,7 +949,7 @@ msgid "Please authenticate to continue"
 msgstr "Autentisera för att fortsätta"
 
 #: src/data/password.ts:28
-#: src/data/email.ts:29
+#: src/data/email.ts:31
 msgid "Please check the email address and try again."
 msgstr "Kontrollera e-postadressen och försök igen."
 
@@ -912,11 +962,11 @@ msgid "Please check your code and password, then try again."
 msgstr "Kontrollera din kod och ditt lösenord. Försök sedan igen."
 
 #: src/data/password.ts:51
-#: src/data/email.ts:52
+#: src/data/email.ts:54
 msgid "Please check your reset code and try again."
 msgstr "Kontrollera din återställningskod och försök igen."
 
-#: src/data/email.ts:98
+#: src/data/email.ts:100
 msgid "Please check your verification code and try again."
 msgstr "Kontrollera din verifieringskod och försök igen."
 
@@ -924,7 +974,9 @@ msgstr "Kontrollera din verifieringskod och försök igen."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Ange den säkerhetskod som har skickats till din e-postadress."
 
-#: src/data/email.ts:75
+#: src/data/email.ts:77
+#: src/data/email.ts:123
+#: src/data/email.ts:152
 #: src/data/account.ts:30
 #: src/data/account.ts:53
 #: src/data/account.ts:76
@@ -949,7 +1001,7 @@ msgstr "Publicera ändringar"
 msgid "Reactivate"
 msgstr "Återaktivera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/pages/account/(authenticated)/manage/page.tsx:253
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Återaktivera konto"
@@ -979,6 +1031,10 @@ msgstr "Kom ihåg det här kontot på den här enheten"
 #: src/components/utils/scope-description.tsx:643
 msgid "Repository"
 msgstr "Dataarkiv"
+
+#: src/components/enable-email-auth-factor-dialog.tsx:24
+msgid "Require an email code to sign in to your account."
+msgstr ""
 
 #: src/components/reset-password-confirm-form.tsx:51
 msgid "Reset code"
@@ -1030,6 +1086,10 @@ msgstr "Välj ett befintligt konto"
 #: src/components/delete-account-dialog.tsx:195
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
+
+#: src/components/disable-email-auth-factor-dialog.tsx:79
+msgid "Send email to verify"
+msgstr ""
 
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
@@ -1129,35 +1189,35 @@ msgstr "Applikationen begär de behörigheter som krävs för att utföra följa
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "AT‑protokollnätverket använder en autentiserings­mekanism som gör det möjligt att entydigt identifiera användare vid kommunikation med externa tjänster. Den används vanligtvis för att hämta eller ändra data som är kopplad till ditt konto, till exempel chattmeddelanden, flöden eller modererat innehåll. Applikationen begär de behörigheter som krävs för att utföra följande autentiserade åtgärder å dina vägnar:"
 
-#: src/lib/api.ts:394
+#: src/lib/api.ts:429
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "Uppgifterna du skickade in är ogiltiga. Kontrollera formuläret och försök igen."
 
-#: src/lib/api.ts:424
+#: src/lib/api.ts:459
 msgid "The domain name is not allowed"
 msgstr "Domännamnet är inte tillåtet"
 
-#: src/lib/api.ts:494
+#: src/lib/api.ts:529
 msgid "The invite code is not valid"
 msgstr "Inbjudningskoden är ogiltig"
 
-#: src/lib/api.ts:353
+#: src/lib/api.ts:388
 msgid "The server encountered an unexpected error. Please try again."
 msgstr "Servern stötte på ett oväntat fel. Försök igen."
 
-#: src/lib/api.ts:426
+#: src/lib/api.ts:461
 msgid "The username contains inappropriate language"
 msgstr "Användarnamnet innehåller olämpligt språk"
 
-#: src/lib/api.ts:432
+#: src/lib/api.ts:467
 msgid "The username could not be resolved"
 msgstr "Användarnamnet kunde inte slås upp"
 
-#: src/lib/api.ts:430
+#: src/lib/api.ts:465
 msgid "The username is already in use"
 msgstr "Användarnamnet används redan"
 
-#: src/lib/api.ts:422
+#: src/lib/api.ts:457
 msgid "The username is invalid"
 msgstr "Användarnamnet är ogiltigt"
 
@@ -1173,21 +1233,21 @@ msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gå
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Den här applikationen begär följande behörigheter (omfång) för att få åtkomst till ditt konto:"
 
-#: src/lib/api.ts:379
+#: src/lib/api.ts:414
 msgid "This authorization request has been denied. Please try again."
 msgstr "Denna auktoriseringsbegäran har nekats. Försök igen."
 
-#: src/lib/api.ts:558
+#: src/lib/api.ts:593
 msgid "This email is already used"
 msgstr "Den här e-postadressen används redan"
 
-#: src/lib/api.ts:364
-#: src/lib/api.ts:515
-#: src/lib/api.ts:546
+#: src/lib/api.ts:399
+#: src/lib/api.ts:550
+#: src/lib/api.ts:581
 msgid "This sign-in session has expired"
 msgstr "Inloggningssessionen har gått ut"
 
-#: src/lib/api.ts:428
+#: src/lib/api.ts:463
 msgid "This username is reserved"
 msgstr "Det här användarnamnet är reserverat"
 
@@ -1203,6 +1263,10 @@ msgstr "Detta kommer att permanent radera ditt Bluesky-konto och all tillhörand
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr "För att byta lösenord behöver du ange den säkerhetskod som har skickats till dig via e-post."
 
+#: src/components/disable-email-auth-factor-dialog.tsx:46
+msgid "To disable your email 2FA method, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx:48
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "För att verifiera din e-postadress behöver du ange den säkerhetskod som har skickats till <0>{email}</0>."
@@ -1215,6 +1279,12 @@ msgstr "Gentemot"
 #: src/components/forms/input-handle-custom-instructions.tsx:150
 msgid "Troubleshoot"
 msgstr "Felsök"
+
+#: src/pages/account/(authenticated)/manage/page.tsx:202
+#: src/pages/account/(authenticated)/manage/page.tsx:215
+#: src/pages/account/(authenticated)/manage/page.tsx:234
+msgid "Two-factor authentication (2FA)"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Type"
@@ -1276,7 +1346,7 @@ msgstr "Använd ett användarnamn med standarddomän"
 msgid "Use a domain name I own"
 msgstr "Använd ett domännamn jag äger"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:249
+#: src/pages/account/(authenticated)/manage/page.tsx:316
 msgid "Username"
 msgstr "Användarnamn"
 
@@ -1298,10 +1368,11 @@ msgstr "Värde"
 
 #: src/components/verify-email-confirm-form.tsx:27
 #: src/components/update-email-dialog.tsx:86
+#: src/components/disable-email-auth-factor-confirm-form.tsx:27
 msgid "Verification code"
 msgstr "Verifieringskod"
 
-#: src/data/email.ts:68
+#: src/data/email.ts:70
 msgid "Verification email sent"
 msgstr "Ett e-postmeddelande för verifiering har skickats"
 
@@ -1317,7 +1388,11 @@ msgstr "Verifieringen lyckades!"
 msgid "Verify and Save"
 msgstr "Verifiera och spara"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/pages/account/(authenticated)/manage/page.tsx:200
+msgid "Verify email to enable"
+msgstr ""
+
+#: src/pages/account/(authenticated)/manage/page.tsx:93
 #: src/components/update-email-dialog.tsx:76
 msgctxt "verify email"
 msgid "Verify now"
@@ -1371,7 +1446,7 @@ msgstr "Vad innebär det?"
 msgid "What is an Atmosphere Account?"
 msgstr "Vad är ett Atmosphere-konto?"
 
-#: src/lib/api.ts:530
+#: src/lib/api.ts:565
 msgid "Wrong identifier or password"
 msgstr "Fel identifierare eller lösenord"
 
@@ -1407,7 +1482,7 @@ msgstr "Du kan ändra ditt användarnamn till ett domännamn du kontrollerar eft
 msgid "You can deactivate your account again at any time from this page."
 msgstr "Du kan när som helst inaktivera ditt konto igen från den här sidan."
 
-#: src/data/email.ts:46
+#: src/data/email.ts:48
 msgid "You can now sign in with your new email."
 msgstr "Du kan nu logga in med din nya e-postadress."
 
@@ -1419,6 +1494,10 @@ msgstr "Du kan nu logga in med ditt nya lösenord."
 #: src/components/reactivate-account-view.tsx:29
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "Du har tidigare inaktiverat <0/>. Du kan återaktivera kontot för att fortsätta logga in. Ditt innehåll (profil, inlägg, flöden, listor m.m.) kommer att bli synligt för andra användare igen."
+
+#: src/data/email.ts:143
+msgid "You will no longer be prompted for a code to sign in."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:77
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
@@ -1464,11 +1543,11 @@ msgstr "Ditt innehåll (profil, inlägg, flöden, listor m.m.) kommer inte läng
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifieringskoden som skickades till <0>{email}</0>."
 
-#: src/data/email.ts:92
+#: src/data/email.ts:94
 msgid "Your email address has been verified."
 msgstr "Din e-postadress har verifierats."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:91
+#: src/pages/account/(authenticated)/manage/page.tsx:98
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 
@@ -1476,6 +1555,10 @@ msgstr "Din e-postadress behöver verifieras."
 #: src/components/forms/input-handle-default.tsx:184
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"
+
+#: src/data/email.ts:117
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:100
 msgid "Your password has been updated!"

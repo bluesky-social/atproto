@@ -6,6 +6,8 @@ import type {
   ConfirmEmailVerificationInput,
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
   InitiateEmailUpdateOutput,
@@ -34,6 +36,8 @@ export type {
   DeviceData,
   DeviceId,
   Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleString,
   HandleUnavailableReason,
   HcaptchaVerifyResult,
@@ -213,6 +217,19 @@ export interface AccountStore {
   verifyEmailRequest(data: VerifyEmailRequestInput): Awaitable<void>
   verifyEmailConfirm(data: VerifyEmailConfirmInput): Awaitable<Account | null>
 
+  enableEmailAuthFactor(
+    data: EnableEmailAuthFactorInput,
+  ): Awaitable<Account | null>
+  /**
+   * Must trigger a verification email to be sent to the current email address
+   * when the `token` is undefined. An email-based OTP code will be sent and
+   * used to confirm that the account's email auth factor should indeed be
+   * disabled.
+   */
+  disableEmailAuthFactor(
+    data: DisableEmailAuthFactorInput,
+  ): Awaitable<Account | null>
+
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
    */
@@ -267,6 +284,8 @@ export const isAccountStore = buildInterfaceChecker<AccountStore>([
   'deactivateAccount',
   'deleteAccountConfirm',
   'deleteAccountRequest',
+  'disableEmailAuthFactor',
+  'enableEmailAuthFactor',
   'getAccount',
   'getDeviceAccount',
   'listDeviceAccounts',
