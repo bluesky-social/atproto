@@ -95,6 +95,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Must configure either S3 or disk blobstore')
   }
 
+  // @NOTE when behind an entryway, this should be configured to match the entryway's domains
   let serviceHandleDomains: string[]
   if (env.serviceHandleDomains && env.serviceHandleDomains.length > 0) {
     serviceHandleDomains = env.serviceHandleDomains

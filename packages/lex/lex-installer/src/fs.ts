@@ -73,7 +73,9 @@ export async function writeJsonFile(
   data: unknown,
 ): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
-  const contents = JSON.stringify(data, null, 2)
+  // Trailing newline so the written file is POSIX-friendly and does not thrash against
+  // formatters/linters that enforce final newlines (e.g. the tooling in issue #5232).
+  const contents = JSON.stringify(data, null, 2) + '\n'
   await writeFile(path, contents, {
     encoding: 'utf8',
     mode: 0o644,

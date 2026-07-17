@@ -50,19 +50,29 @@ const client = new Client(session, {
 })
 ```
 
-### From another client (config inheritance)
+### One client, multiple services
 
-A child client merges its config with the base client's at request time —
-changes to the base client (`setLabelers`, headers) propagate to children.
+`service` and `labelers` are _defaults_, overridable per request. `null`
+disables the corresponding header for that request. This lets a single
+AppView-configured client also reach the user's PDS directly. Record helpers
+(`create`, `get`, `put`, `delete`, `list`, `*Record`, `applyWrites`,
+`uploadBlob`, `getBlob`) always default to `service: null` /
+`labelers: null` (PDS-targeted). Static `appLabelers` (via
+`Client.configure()`) are always applied with `;redact` unless overridden
+via the `appLabelers` option (`null` disables).
 
 ```ts
-const baseClient = new Client(session)
-baseClient.setLabelers(['did:plc:labelerA'])
-baseClient.headers.set('x-app-version', '1.0.0')
-
-const proxied = new Client(baseClient, {
+const client = new Client(session, {
   service: 'did:web:api.bsky.app#bsky_appview',
-  headers: { 'x-trace-id': 'abc' },
+})
+
+// Proxied to the AppView (client default)
+await client.call(app.bsky.feed.getTimeline)
+
+// Straight to the user's PDS (no atproto-proxy header)
+await client.xrpc(com.atproto.repo.getRecord, {
+  service: null,
+  params: { repo: client.assertDid, collection, rkey: 'self' },
 })
 ```
 

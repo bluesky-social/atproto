@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import type { AppBskyActorDefs, AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
@@ -43,13 +51,19 @@ describe('internal actor views', () => {
 
   describe('getProfiles', () => {
     const getProfiles = async (
-      params: { dids: string[]; socialProof?: string[]; viewer?: string },
+      params: {
+        dids: string[]
+        socialProof?: string[]
+        viewer?: string
+        includeTakedowns?: boolean
+      },
       headers: Record<string, string> = network.bsky.adminAuthHeaders(),
     ) => {
       const search = new URLSearchParams()
       params.dids.forEach((did) => search.append('dids', did))
       params.socialProof?.forEach((did) => search.append('socialProof', did))
       if (params.viewer) search.append('viewer', params.viewer)
+      if (params.includeTakedowns) search.append('includeTakedowns', 'true')
       const res = await fetch(
         `${network.bsky.url}/xrpc/internal.bsky.actor.getProfiles?${search.toString()}`,
         { headers },
@@ -122,6 +136,37 @@ describe('internal actor views', () => {
       expect(status).toBe(200)
       expect(body.profiles).toHaveLength(1)
       expect(body.profiles[0].viewer).toBeUndefined()
+    })
+
+    describe('takedowns', () => {
+      afterEach(async () => {
+        await network.bsky.ctx.dataplane.untakedownActor({
+          did: dids.mix_sub_2,
+        })
+      })
+
+      it('omits taken-down accounts by default', async () => {
+        await network.bsky.ctx.dataplane.takedownActor({ did: dids.mix_sub_2 })
+        const { status, body } = await getProfiles({
+          dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
+          viewer: dids.mix_view,
+        })
+        expect(status).toBe(200)
+        expect(body.profiles).toHaveLength(2)
+        expect(body.profiles.map((p) => p.did)).not.toContain(dids.mix_sub_2)
+      })
+
+      it('includes taken-down accounts when includeTakedowns is set', async () => {
+        await network.bsky.ctx.dataplane.takedownActor({ did: dids.mix_sub_2 })
+        const { status, body } = await getProfiles({
+          dids: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3],
+          viewer: dids.mix_view,
+          includeTakedowns: true,
+        })
+        expect(status).toBe(200)
+        expect(body.profiles).toHaveLength(3)
+        expect(body.profiles.map((p) => p.did)).toContain(dids.mix_sub_2)
+      })
     })
   })
 })

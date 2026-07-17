@@ -304,6 +304,18 @@ export class MockEntryway {
       },
     })
 
+    server.routes.get('/.well-known/atproto-did', (req, res) => {
+      const handle = req.hostname
+      const account = [...accounts.values()].find(
+        (acc) => acc.handle === handle,
+      )
+      if (!account) {
+        res.status(404).send('User not found')
+        return
+      }
+      res.type('text/plain').send(account.did)
+    })
+
     const httpServer = server.listen(opts.port)
     const terminator = createHttpTerminator({ server: httpServer })
 
@@ -315,6 +327,11 @@ export class MockEntryway {
 
   getAccount(did: string): Account | undefined {
     return this.accounts.get(did)
+  }
+
+  // e.g. for representing accounts on other pdses behind the entryway
+  addAccount(account: Account): void {
+    this.accounts.set(account.did, account)
   }
 
   async destroy(): Promise<void> {

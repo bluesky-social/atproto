@@ -21,6 +21,11 @@ allowBuilds:
   '@datadog/pprof': false
   core-js: false
 
+minimumReleaseAgeExclude:
+  - '@smithy/core@3.29.5'
+
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
+  # Remove once @aws-sdk/core requires >=3.29.5 transitively.
+  '@smithy/core': ^3.29.5

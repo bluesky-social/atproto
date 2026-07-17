@@ -82,14 +82,22 @@ export class S3BlobStore implements BlobStore {
     this.client = new S3({
       ...rest,
       apiVersion: '2006-03-01',
-      // Ensures that all requests timeout under "requestTimeoutMs".
+      // Reaps any request whose socket stays idle for "requestTimeoutMs".
       //
       // @NOTE This will also apply to the upload of each individual blob
       // chunk when using Upload from @aws-sdk/lib-storage. This is fine
       // because chunks are buffered in memory before being sent, meaning that
       // requests to S3 are not client-paced.
+      //
+      // @NOTE "socketTimeout" (not "requestTimeout") is the socket idle
+      // timeout. The handler's "requestTimeout" option used to mean socket
+      // idle timeout, but was redefined as a total request & response timer
+      // (warn-only unless throwOnRequestTimeout is set) — see
+      // NodeHttpHandlerOptions in @smithy/types. We intentionally don't arm
+      // that total-request timer: it would reap slow client-paced downloads
+      // mid-stream, and uploads are already bounded by "uploadTimeoutMs".
       requestHandler: {
-        requestTimeout: requestTimeoutMs,
+        socketTimeout: requestTimeoutMs,
         connectionTimeout: connectionTimeoutMs,
       },
     })
@@ -137,7 +145,6 @@ export class S3BlobStore implements BlobStore {
         Body: bytes,
         Key: path,
       },
-      // @ts-ignore native implementation fine in node >=15
       abortController,
     })
 
