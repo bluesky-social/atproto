@@ -722,7 +722,7 @@ describe('appview thread views v2', () => {
       {
         postKey: 'root',
         length: 9,
-        opThreadPostKeys: ['root', '0', '0.0', '0.0.0', '2'],
+        opThreadPostKeys: ['root', '0', '0.0', '0.0.0'],
       },
       {
         postKey: '0',
@@ -752,17 +752,17 @@ describe('appview thread views v2', () => {
       {
         postKey: '2',
         length: 4,
-        opThreadPostKeys: ['root', '2'],
+        opThreadPostKeys: ['root'],
       },
       {
         postKey: '2.0',
         length: 4,
-        opThreadPostKeys: ['root', '2'],
+        opThreadPostKeys: ['root'],
       },
       {
         postKey: '2.0.0',
         length: 4,
-        opThreadPostKeys: ['root', '2'],
+        opThreadPostKeys: ['root'],
       },
     ]
 
@@ -788,13 +788,72 @@ describe('appview thread views v2', () => {
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
           ),
         )
+        const opThreadIndexByUri = new Map<string, number>([
+          [seed.root.ref.uriStr, 1],
+          [seed.r['0'].ref.uriStr, 2],
+          [seed.r['0.0'].ref.uriStr, 3],
+          [seed.r['0.0.0'].ref.uriStr, 4],
+        ])
 
         expect(t).toHaveLength(length)
         t.forEach((i) => {
-          expect(i.value.opThread).toBe(opThreadPostsUris.has(i.uri))
+          const isOpThread = opThreadPostsUris.has(i.uri)
+          expect(i.value.opThread).toBe(isOpThread)
+          expect(i.value.opThreadPostIndex).toBe(
+            isOpThread ? opThreadIndexByUri.get(i.uri) : undefined,
+          )
+          expect(i.value.opThreadPostCount).toBe(isOpThread ? 4 : undefined)
         })
       },
     )
+
+    it(`preserves the full OP thread count when replies are truncated`, async () => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { anchor: seed.root.ref.uriStr, below: 1 },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+
+      assertPosts(data.thread)
+      const opThreadPosts = data.thread.filter((item) => item.value.opThread)
+      expect(opThreadPosts.map((item) => item.uri)).toEqual([
+        seed.root.ref.uriStr,
+        seed.r['0'].ref.uriStr,
+      ])
+      expect(
+        opThreadPosts.map((item) => ({
+          index: item.value.opThreadPostIndex,
+          count: item.value.opThreadPostCount,
+        })),
+      ).toEqual([
+        { index: 1, count: 4 },
+        { index: 2, count: 4 },
+      ])
+    })
+
+    it(`does not number a post without an OP thread`, async () => {
+      const post = await sc.post(seed.users.op.did, 'standalone post')
+      await network.processAll()
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { anchor: post.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+
+      assertPosts(data.thread)
+      expect(data.thread).toHaveLength(1)
+      expect(data.thread[0].value.opThread).toBe(true)
+      expect(data.thread[0].value.opThreadPostIndex).toBeUndefined()
+      expect(data.thread[0].value.opThreadPostCount).toBeUndefined()
+    })
   })
 
   describe('bumping and sorting', () => {

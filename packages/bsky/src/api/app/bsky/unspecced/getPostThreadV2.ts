@@ -75,6 +75,15 @@ const skeleton = async (
     return {
       anchor,
       uris: res.uris as AtUriString[],
+      opThread: res.opThread
+        ? {
+            postCount: res.opThread.postCount,
+            posts: res.opThread.posts.map((post) => ({
+              uri: post.uri as AtUriString,
+              index: post.index,
+            })),
+          }
+        : undefined,
     }
   } catch (err) {
     if (isDataplaneError(err, Code.NotFound)) {
@@ -133,6 +142,10 @@ type Params = app.bsky.unspecced.getPostThreadV2.$Params & {
 type Skeleton = {
   anchor: AtUriString
   uris: AtUriString[]
+  opThread?: {
+    postCount: number
+    posts: Array<{ uri: AtUriString; index: number }>
+  }
 }
 
 const calculateAbove = (ctx: Context, params: Params) => {

@@ -1075,6 +1075,17 @@ message GetThreadRequest {
 
 message GetThreadResponse {
   repeated string uris = 1;
+  OpThreadInfo op_thread = 2;
+}
+
+message OpThreadInfo {
+  int32 post_count = 1;
+  repeated OpThreadPost posts = 2;
+}
+
+message OpThreadPost {
+  string uri = 1;
+  int32 index = 2;
 }
 
 //

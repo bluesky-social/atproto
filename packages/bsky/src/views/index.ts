@@ -1329,7 +1329,14 @@ export class Views {
   // ------------
 
   threadV2(
-    skeleton: { anchor: AtUriString; uris: AtUriString[] },
+    skeleton: {
+      anchor: AtUriString
+      uris: AtUriString[]
+      opThread?: {
+        postCount: number
+        posts: Array<{ uri: AtUriString; index: number }>
+      }
+    },
     state: HydrationState,
     {
       above,
@@ -1471,6 +1478,26 @@ export class Views {
         state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       ),
     )
+
+    if (skeleton.opThread) {
+      const postsByUri = new Map(
+        skeleton.opThread.posts.map((post) => [post.uri, post]),
+      )
+      for (const item of thread) {
+        if (!app.bsky.unspecced.defs.threadItemPost.$isTypeOf(item.value)) {
+          continue
+        }
+        const opThreadPost = postsByUri.get(item.uri)
+        item.value.opThread = !!opThreadPost
+        if (opThreadPost) {
+          item.value.opThreadPostIndex = opThreadPost.index
+          item.value.opThreadPostCount = skeleton.opThread.postCount
+        } else {
+          delete item.value.opThreadPostIndex
+          delete item.value.opThreadPostCount
+        }
+      }
+    }
 
     return {
       hasOtherReplies,
