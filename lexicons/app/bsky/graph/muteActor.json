@@ -12,10 +12,13 @@
           "required": ["actor"],
           "properties": {
             "actor": { "type": "string", "format": "at-identifier" },
-            "kind": {
-              "type": "string",
-              "knownValues": ["all", "reposts"],
-              "default": "all"
+            "kinds": {
+              "type": "array",
+              "description": "Scope the mute to specific kinds of content from the account. Omit for a full mute.",
+              "items": {
+                "type": "string",
+                "knownValues": ["reposts", "quoteposts"]
+              }
             }
           }
         }

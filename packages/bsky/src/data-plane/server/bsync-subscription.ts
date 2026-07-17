@@ -12,12 +12,12 @@ import { subLogger as log } from '../../logger.js'
 import {
   Method,
   type MuteOperation,
-  MuteKind,
   MuteOperation_Type,
   type NotifOperation,
   type Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
+import { muteKindsToString } from '../../util/mute-kinds.js'
 import type { Database } from './db/index.js'
 import { countAll, excluded } from './db/util.js'
 
@@ -161,7 +161,7 @@ export class BsyncSubscription {
   private async processMuteOperations(operations: MuteOperation[]) {
     for (const op of operations) {
       const { type, actorDid, subject } = op
-      const kind = op.kind === MuteKind.REPOSTS ? 'reposts' : 'all'
+      const kinds = muteKindsToString(op.kinds)
       if (type === MuteOperation_Type.ADD) {
         if (subject.startsWith('did:')) {
           await this.db.db
@@ -170,10 +170,10 @@ export class BsyncSubscription {
               mutedByDid: actorDid,
               subjectDid: subject,
               createdAt: new Date().toISOString(),
-              kind,
+              kinds,
             })
             .onConflict((oc) =>
-              oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kind }),
+              oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kinds }),
             )
             .execute()
         } else {

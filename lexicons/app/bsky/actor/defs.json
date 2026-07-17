@@ -197,6 +197,7 @@
       "properties": {
         "muted": { "type": "boolean" },
         "mutedReposts": { "type": "boolean" },
+        "mutedQuoteposts": { "type": "boolean" },
         "mutedByList": {
           "type": "ref",
           "ref": "app.bsky.graph.defs#listViewBasic"

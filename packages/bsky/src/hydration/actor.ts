@@ -100,6 +100,7 @@ export type ProfileViewerState = {
   did: DidString
   muted?: boolean
   mutedReposts?: boolean
+  mutedQuoteposts?: boolean
   mutedByList?: AtUriString
   blockedBy?: AtUriString
   blocking?: AtUriString
@@ -468,6 +469,7 @@ export class ActorHydrator {
         did,
         muted: rels.muted ?? false,
         mutedReposts: rels.mutedReposts ?? false,
+        mutedQuoteposts: rels.mutedQuoteposts ?? false,
         mutedByList: parseString(rels.mutedByList),
         blockedBy: parseString(rels.blockedBy),
         blocking: parseString<AtUriString>(rels.blocking),

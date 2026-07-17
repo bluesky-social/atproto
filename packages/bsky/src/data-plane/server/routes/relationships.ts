@@ -2,6 +2,8 @@ import type { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import type { Service } from '../../../proto/bsky_connect.js'
+import { MuteKind } from '../../../proto/bsky_pb.js'
+import { stringHasMuteKind } from '../../../util/mute-kinds.js'
 import type { Database } from '../db/index.js'
 import { valuesList } from '../db/util.js'
 
@@ -21,16 +23,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .selectFrom('mute')
           .where('mute.mutedByDid', '=', actorDid)
           .whereRef('mute.subjectDid', '=', ref('actor.did'))
-          .where('mute.kind', '=', 'all')
-          .select(sql<true>`${true}`.as('val'))
-          .as('muted'),
-        db.db
-          .selectFrom('mute')
-          .where('mute.mutedByDid', '=', actorDid)
-          .whereRef('mute.subjectDid', '=', ref('actor.did'))
-          .where('mute.kind', '=', 'reposts')
-          .select(sql<true>`${true}`.as('val'))
-          .as('mutedReposts'),
+          .select('mute.kinds')
+          .as('muteKinds'),
         db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
@@ -82,8 +76,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const relationships = targetDids.map((did) => {
       const row = byDid.get(did)
       return {
-        muted: row?.muted ?? false,
-        mutedReposts: row?.mutedReposts ?? false,
+        muted: row?.muteKinds === '',
+        mutedReposts:
+          row?.muteKinds != null &&
+          stringHasMuteKind(row.muteKinds, MuteKind.REPOSTS),
+        mutedQuoteposts:
+          row?.muteKinds != null &&
+          stringHasMuteKind(row.muteKinds, MuteKind.QUOTEPOSTS),
         mutedByList: row?.mutedByList ?? '',
         blockedBy: row?.blockedBy ?? '',
         blocking: row?.blocking ?? '',

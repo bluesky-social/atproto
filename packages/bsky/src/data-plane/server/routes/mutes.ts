@@ -5,6 +5,11 @@ import { AtUri } from '@atproto/syntax'
 import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { MuteKind } from '../../../proto/bsky_pb.js'
+import {
+  muteKindsFromString,
+  muteKindsToString,
+  stringHasMuteKind,
+} from '../../../util/mute-kinds.js'
 import type { Database } from '../db/index.js'
 import {
   CreatedAtDidKeyset,
@@ -22,8 +27,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('subjectDid', '=', targetDid)
       .executeTakeFirst()
     return {
-      muted: res?.kind === 'all',
-      mutedReposts: res?.kind === 'reposts',
+      muted: res != null && res.kinds === '',
+      mutedReposts:
+        res != null && stringHasMuteKind(res.kinds, MuteKind.REPOSTS),
+      mutedQuoteposts:
+        res != null && stringHasMuteKind(res.kinds, MuteKind.QUOTEPOSTS),
     }
   },
 
@@ -37,7 +45,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('mute.mutedByDid', '=', actorDid)
       .selectAll('actor')
       .select('mute.createdAt as createdAt')
-      .select('mute.kind as kind')
+      .select('mute.kinds as kinds')
 
     const keyset = new CreatedAtDidKeyset(
       ref('mute.createdAt'),
@@ -55,7 +63,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       dids: mutes.map((m) => m.did),
       mutes: mutes.map((m) => ({
         did: m.did,
-        kind: m.kind === 'reposts' ? MuteKind.REPOSTS : MuteKind.ALL,
+        kinds: muteKindsFromString(m.kinds),
       })),
       cursor: keyset.packFromResult(mutes),
     }
@@ -121,19 +129,19 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async createActorMute(req) {
-    const { actorDid, subjectDid, kind: reqKind } = req
+    const { actorDid, subjectDid } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
-    const kind = reqKind === MuteKind.REPOSTS ? 'reposts' : 'all'
+    const kinds = muteKindsToString(req.kinds)
     await db.db
       .insertInto('mute')
       .values({
         subjectDid,
         mutedByDid: actorDid,
         createdAt: new Date().toISOString(),
-        kind,
+        kinds,
       })
       .onConflict((oc) =>
-        oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kind }),
+        oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kinds }),
       )
       .execute()
   },

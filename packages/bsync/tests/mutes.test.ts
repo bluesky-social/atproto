@@ -14,6 +14,7 @@ import {
   MuteKind,
   MuteOperation_Type,
 } from '../src/proto/bsync_pb.js'
+import { muteKindsFromString } from '../src/routes/mute-kinds.js'
 
 describe('mutes', () => {
   let bsync: BsyncService
@@ -114,25 +115,37 @@ describe('mutes', () => {
       })
     })
 
-    it('upserts mute kind and removes mutes regardless of kind.', async () => {
+    it('upserts mute kinds and removes mutes regardless of kinds.', async () => {
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kind: MuteKind.REPOSTS,
+        kinds: [MuteKind.REPOSTS],
       })
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': MuteKind.REPOSTS },
+        'did:example:a': { 'did:example:b': [MuteKind.REPOSTS] },
       })
 
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kind: MuteKind.ALL,
+        kinds: [MuteKind.REPOSTS, MuteKind.QUOTEPOSTS],
       })
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': MuteKind.ALL },
+        'did:example:a': {
+          'did:example:b': [MuteKind.REPOSTS, MuteKind.QUOTEPOSTS],
+        },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        kinds: [],
+      })
+      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
+        'did:example:a': { 'did:example:b': [] },
       })
 
       await client.addMuteOperation({
@@ -143,15 +156,15 @@ describe('mutes', () => {
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({})
     })
 
-    it('defaults missing mute kind to all.', async () => {
+    it('defaults missing mute kinds to a full mute.', async () => {
       const { operation } = await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
       })
-      expect(operation?.kind).toBe(MuteKind.ALL)
+      expect(operation?.kinds).toEqual([])
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': MuteKind.ALL },
+        'did:example:a': { 'did:example:b': [] },
       })
     })
 
@@ -271,7 +284,7 @@ describe('mutes', () => {
           type: MuteOperation_Type.ADD,
           actorDid: 'did:example:a',
           subject: 'did:example:b',
-          kind: 100 as any,
+          kinds: [100 as any],
         }),
       ).rejects.toEqual(new ConnectError('bad mute kind', Code.InvalidArgument))
       await expect(
@@ -279,11 +292,11 @@ describe('mutes', () => {
           type: MuteOperation_Type.ADD,
           actorDid: 'did:example:a',
           subject: 'at://did:example:b/app.bsky.graph.list/rkey1',
-          kind: MuteKind.REPOSTS,
+          kinds: [MuteKind.REPOSTS],
         }),
       ).rejects.toEqual(
         new ConnectError(
-          'mute kind reposts only applies to actor mutes',
+          'mute kinds only apply to actor mutes',
           Code.InvalidArgument,
         ),
       )
@@ -377,7 +390,7 @@ describe('mutes', () => {
       const operationIds = operations.map((op) => parseInt(op.id, 10))
       const ascending = (a: number, b: number) => a - b
       expect(operationIds).toEqual([...operationIds].sort(ascending))
-      expect(operations.every((op) => op.kind === MuteKind.ALL)).toBe(true)
+      expect(operations.every((op) => op.kinds.length === 0)).toBe(true)
     })
 
     it('supports long-poll, finding an operation.', async () => {
@@ -415,10 +428,10 @@ const dumpMuteState = async (db: Database) => {
 
 const dumpMuteKinds = async (db: Database) => {
   const items = await db.db.selectFrom('mute_item').selectAll().execute()
-  const result: Record<string, Record<string, MuteKind>> = {}
+  const result: Record<string, Record<string, MuteKind[]>> = {}
   items.forEach((item) => {
     result[item.actorDid] ??= {}
-    result[item.actorDid][item.subject] = item.kind
+    result[item.actorDid][item.subject] = muteKindsFromString(item.kinds)
   })
   return result
 }

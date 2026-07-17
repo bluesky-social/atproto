@@ -19,20 +19,22 @@ message MuteOperation {
   Type type = 2;
   string actor_did = 3;
   string subject = 4;
-  MuteKind kind = 5;
+  // scopes the mute to specific kinds of content; empty means a full mute
+  repeated MuteKind kinds = 5;
 }
 
 enum MuteKind {
   MUTE_KIND_UNSPECIFIED = 0;
-  MUTE_KIND_ALL = 1;
-  MUTE_KIND_REPOSTS = 2;
+  MUTE_KIND_REPOSTS = 1;
+  MUTE_KIND_QUOTEPOSTS = 2;
 }
 
 message AddMuteOperationRequest {
   MuteOperation.Type type = 1;
   string actor_did = 2;
   string subject = 3;
-  MuteKind kind = 4;
+  // scopes the mute to specific kinds of content; empty means a full mute
+  repeated MuteKind kinds = 4;
 }
 
 message AddMuteOperationResponse {

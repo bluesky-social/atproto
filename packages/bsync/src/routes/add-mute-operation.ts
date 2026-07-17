@@ -7,10 +7,11 @@ import { createMuteOpChannel } from '../db/schema/mute_op.js'
 import type { Service } from '../proto/bsync_connect.js'
 import {
   AddMuteOperationResponse,
-  MuteKind,
+  type MuteKind,
   MuteOperation_Type,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
+import { muteKindsFromString, muteKindsToString } from './mute-kinds.js'
 import { isValidAtUri, isValidDid } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
@@ -40,7 +41,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
-        kind: op.kind,
+        kinds: muteKindsFromString(op.kinds),
       },
     })
   },
@@ -54,7 +55,7 @@ const createMuteOp = async (db: Database, op: MuteOpInfoValid) => {
       type: op.type,
       actorDid: op.actorDid,
       subject: op.subject,
-      kind: op.kind,
+      kinds: op.kinds,
     })
     .returning('id')
     .executeTakeFirstOrThrow()
@@ -74,18 +75,18 @@ const addMuteItem = async (
       actorDid: op.actorDid,
       subject: op.subject,
       fromId,
-      kind: op.kind,
+      kinds: op.kinds,
     })
     .onConflict((oc) =>
       oc.constraint('mute_item_pkey').doUpdateSet({
         fromId: sql`${ref('excluded.fromId')}`,
-        kind: sql`${ref('excluded.kind')}`,
+        kinds: sql`${ref('excluded.kinds')}`,
       }),
     )
     .execute()
 }
 
-const removeMuteItem = async (db: Database, op: MuteOpInfo) => {
+const removeMuteItem = async (db: Database, op: MuteOpInfoValid) => {
   await db.db
     .deleteFrom('mute_item')
     .where('actorDid', '=', op.actorDid)
@@ -93,7 +94,7 @@ const removeMuteItem = async (db: Database, op: MuteOpInfo) => {
     .execute()
 }
 
-const clearMuteItems = async (db: Database, op: MuteOpInfo) => {
+const clearMuteItems = async (db: Database, op: MuteOpInfoValid) => {
   await db.db
     .deleteFrom('mute_item')
     .where('actorDid', '=', op.actorDid)
@@ -104,7 +105,7 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
-  const kind = validMuteKind(op.kind)
+  const kinds = muteKindsToString(op.kinds ?? [])
   if (op.type === MuteOperation_Type.UNSPECIFIED) {
     throw new ConnectError(
       'unspecified mute operation type',
@@ -128,9 +129,9 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
     if (isValidDid(op.subject)) {
       // all good
     } else if (isValidAtUri(op.subject)) {
-      if (kind !== MuteKind.ALL) {
+      if (kinds !== '') {
         throw new ConnectError(
-          'mute kind reposts only applies to actor mutes',
+          'mute kinds only apply to actor mutes',
           Code.InvalidArgument,
         )
       }
@@ -151,24 +152,14 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
       )
     }
   }
-  return { ...op, kind } as MuteOpInfoValid // op.type has been checked
-}
-
-const validMuteKind = (kind: MuteKind | undefined): MuteKind => {
-  if (kind === undefined || kind === MuteKind.UNSPECIFIED) {
-    return MuteKind.ALL
-  }
-  if (kind === MuteKind.ALL || kind === MuteKind.REPOSTS) {
-    return kind
-  }
-  throw new ConnectError('bad mute kind', Code.InvalidArgument)
+  return { ...op, kinds } as MuteOpInfoValid // op.type has been checked
 }
 
 type MuteOpInfo = {
   type: MuteOperation_Type
   actorDid: string
   subject: string
-  kind?: MuteKind
+  kinds?: MuteKind[]
 }
 
 type MuteOpInfoValid = {
@@ -178,5 +169,5 @@ type MuteOpInfoValid = {
     | MuteOperation_Type.CLEAR
   actorDid: string
   subject: string
-  kind: MuteKind
+  kinds: string // comma-separated kind names; empty means a full mute
 }

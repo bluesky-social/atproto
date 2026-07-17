@@ -548,6 +548,7 @@ message Relationships {
   string following = 7;
   string followed_by = 8;
   bool muted_reposts = 9;
+  bool muted_quoteposts = 10;
 }
 
 message GetRelationshipsResponse {
@@ -649,17 +650,19 @@ message GetActorMutesActorRequest {
 message GetActorMutesActorResponse {
   bool muted = 1;
   bool muted_reposts = 2;
+  bool muted_quoteposts = 3;
 }
 
 enum MuteKind {
   MUTE_KIND_UNSPECIFIED = 0;
-  MUTE_KIND_ALL = 1;
-  MUTE_KIND_REPOSTS = 2;
+  MUTE_KIND_REPOSTS = 1;
+  MUTE_KIND_QUOTEPOSTS = 2;
 }
 
 message MuteInfo {
   string did = 1;
-  MuteKind kind = 2;
+  // scopes the mute to specific kinds of content; empty means a full mute
+  repeated MuteKind kinds = 2;
 }
 
 // - return list of user dids of users who A mutes
@@ -1871,7 +1874,8 @@ message UntakedownRecordResponse {
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
-  MuteKind kind = 3;
+  // scopes the mute to specific kinds of content; empty means a full mute
+  repeated MuteKind kinds = 3;
 }
 
 message CreateActorMuteResponse {}

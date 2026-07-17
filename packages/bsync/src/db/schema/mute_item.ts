@@ -1,11 +1,10 @@
 import type { Selectable } from 'kysely'
-import type { MuteKind } from '../../proto/bsync_pb.js'
 
 export interface MuteItem {
   actorDid: string
   subject: string // did or aturi for list
   fromId: number
-  kind: MuteKind
+  kinds: string // comma-separated MuteKind names; empty means a full mute
 }
 
 export type MuteItemEntry = Selectable<MuteItem>
