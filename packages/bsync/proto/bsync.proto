@@ -33,7 +33,9 @@ message AddMuteOperationRequest {
   MuteOperation.Type type = 1;
   string actor_did = 2;
   string subject = 3;
-  // scopes the mute to specific kinds of content; empty means a full mute
+  // scopes the mute to specific kinds of content; empty means a full mute.
+  // On an add for an already-muted subject, the stored kinds are replaced
+  // with this set.
   repeated MuteKind kinds = 4;
 }
 

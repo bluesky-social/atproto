@@ -539,6 +539,9 @@ message GetRelationshipsRequest {
 }
 
 message Relationships {
+  // whether a full (unscoped) direct mute exists. Mutually exclusive with
+  // the scoped muted_* fields: a reposts- or quoteposts-scoped mute reports
+  // muted=false.
   bool muted = 1;
   string muted_by_list = 2;
   string blocked_by = 3;
@@ -648,6 +651,8 @@ message GetActorMutesActorRequest {
 }
 
 message GetActorMutesActorResponse {
+  // whether a full (unscoped) mute exists. Mutually exclusive with the
+  // scoped muted_* fields.
   bool muted = 1;
   bool muted_reposts = 2;
   bool muted_quoteposts = 3;
@@ -674,6 +679,7 @@ message GetMutesRequest {
 }
 
 message GetMutesResponse {
+  // Deprecated: use mutes, which carries the kinds of each mute.
   repeated string dids = 1;
   string cursor = 2;
   repeated MuteInfo mutes = 3;
@@ -1874,7 +1880,9 @@ message UntakedownRecordResponse {
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
-  // scopes the mute to specific kinds of content; empty means a full mute
+  // scopes the mute to specific kinds of content; empty means a full mute.
+  // If a mute already exists for the pair, its stored kinds are replaced
+  // with this set.
   repeated MuteKind kinds = 3;
 }
 
