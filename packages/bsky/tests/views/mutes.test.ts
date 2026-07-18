@@ -329,6 +329,114 @@ describe('mute views', () => {
     }
   })
 
+  it('supports muting only quote posts from an account', async () => {
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: dan, kinds: ['quoteposts'] },
+      {
+        headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
+        encoding: 'application/json',
+      },
+    )
+
+    try {
+      const plainPost = await sc.post(
+        dan,
+        'dan post visible through quotepost mute',
+      )
+      const quotePost = await sc.post(
+        dan,
+        'dan quote post hidden by quotepost mute',
+        undefined,
+        undefined,
+        sc.posts[alice][0].ref,
+      )
+      const listRef = await sc.createList(alice, 'quote mute test', 'curate')
+      await sc.addToList(alice, dan, listRef)
+      await network.processAll()
+
+      const profile = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(profile.data.viewer?.muted).toBe(false)
+      expect(profile.data.viewer?.mutedReposts).toBe(false)
+      expect(profile.data.viewer?.mutedQuoteposts).toBe(true)
+
+      const timeline = await agent.api.app.bsky.feed.getTimeline(
+        { limit: 100 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetTimeline,
+          ),
+        },
+      )
+      expect(
+        timeline.data.feed.some(
+          (item) => item.post.uri === plainPost.ref.uriStr,
+        ),
+      ).toBe(true)
+      expect(
+        timeline.data.feed.some(
+          (item) => item.post.uri === quotePost.ref.uriStr,
+        ),
+      ).toBe(false)
+
+      const listFeed = await agent.api.app.bsky.feed.getListFeed(
+        { list: listRef.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetListFeed,
+          ),
+        },
+      )
+      expect(
+        listFeed.data.feed.some(
+          (item) => item.post.uri === plainPost.ref.uriStr,
+        ),
+      ).toBe(true)
+      expect(
+        listFeed.data.feed.some(
+          (item) => item.post.uri === quotePost.ref.uriStr,
+        ),
+      ).toBe(false)
+
+      // author feed is unaffected by quotepost mutes
+      const authorFeed = await agent.api.app.bsky.feed.getAuthorFeed(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
+      )
+      expect(
+        authorFeed.data.feed.some(
+          (item) => item.post.uri === quotePost.ref.uriStr,
+        ),
+      ).toBe(true)
+    } finally {
+      await agent.api.app.bsky.graph.unmuteActor(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphUnmuteActor,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+    }
+  })
+
   it('returns mute status on getProfiles', async () => {
     const res = await agent.api.app.bsky.actor.getProfiles(
       { actors: [bob, carol, dan] },
