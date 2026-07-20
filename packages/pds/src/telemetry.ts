@@ -259,5 +259,5 @@ function extractNormalizedXrpcNsid(url: unknown): string | undefined {
     return undefined
   }
 
-  return `${url.substring(0, lastDotPos).toLowerCase()}${url.substring(lastDotPos, lastMethodCharPos + 1)}`
+  return `${url.substring(firstMethodCharPos, lastDotPos).toLowerCase()}${url.substring(lastDotPos, lastMethodCharPos + 1)}`
 }
