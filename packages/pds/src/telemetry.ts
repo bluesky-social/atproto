@@ -111,12 +111,8 @@ function getInstrumentations(): Instrumentation[] {
 
         // set the xrpc.method attribute for both incoming and outgoing requests
         if (nsid) {
+          span.updateName(`${method} /xrpc/${nsid}`)
           span.setAttribute(ATTR_XRPC_METHOD, nsid)
-        }
-
-        // incoming requests only
-        if ('url' in request) {
-          span.updateName(`${method} ${route}`)
         }
       },
     }),
