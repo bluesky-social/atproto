@@ -23,6 +23,7 @@ import * as authRoutes from './auth-routes.js'
 import * as basicRoutes from './basic-routes.js'
 import {
   type ServerConfig,
+  type ServerEnvironment,
   type ServerSecrets,
   envToCfg,
   envToSecrets,
@@ -74,8 +75,7 @@ export class PDS {
     this.app = opts.app
   }
 
-  static async fromEnv(): Promise<PDS> {
-    const env = readEnv()
+  static async fromEnv(env: ServerEnvironment = readEnv()): Promise<PDS> {
     const cfg = envToCfg(env)
     const secrets = envToSecrets(env)
     return PDS.create(cfg, secrets)

@@ -30,7 +30,7 @@ export class TestPds {
     const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
     await fs.mkdir(dataDirectory, { recursive: true })
 
-    const env: pds.ServerEnvironment = {
+    const server = await pds.PDS.fromEnv({
       devMode: true,
       port,
       dataDirectory: dataDirectory,
@@ -63,11 +63,7 @@ export class TestPds {
       privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
       supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
       ...config,
-    }
-    const cfg = pds.envToCfg(env)
-    const secrets = pds.envToSecrets(env)
-
-    const server = await pds.PDS.create(cfg, secrets)
+    })
 
     await server.start()
 
