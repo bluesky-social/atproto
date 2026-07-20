@@ -4,7 +4,7 @@
 // leave at top of file before importing Routes
 import 'express-async-errors'
 
-import events from 'node:events'
+import events, { once } from 'node:events'
 import type http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
@@ -21,11 +21,17 @@ import {
 import apiRoutes from './api/index.js'
 import * as authRoutes from './auth-routes.js'
 import * as basicRoutes from './basic-routes.js'
-import type { ServerConfig, ServerSecrets } from './config/index.js'
+import {
+  type ServerConfig,
+  type ServerSecrets,
+  envToCfg,
+  envToSecrets,
+  readEnv,
+} from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
 import * as error from './error.js'
 import type { app } from './lexicons.js'
-import { loggerMiddleware } from './logger.js'
+import { loggerMiddleware, pdsLogger } from './logger.js'
 import { proxyHandler } from './pipethrough.js'
 import { buildRateLimitsConfig } from './rate-limits.js'
 import compression from './util/compression.js'
@@ -62,12 +68,46 @@ export class PDS {
   public app: express.Application
   public server?: http.Server
   private terminator?: httpTerminator.HttpTerminator
-  private dbStatsInterval?: NodeJS.Timeout
-  private sequencerStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
+  }
+
+  static async fromEnv(): Promise<PDS> {
+    const env = readEnv()
+    const cfg = envToCfg(env)
+    const secrets = envToSecrets(env)
+    return PDS.create(cfg, secrets)
+  }
+
+  static async run(
+    signal: AbortSignal,
+    onBeforeStart?: (pds: PDS) => void | Promise<void>,
+  ): Promise<void> {
+    signal.throwIfAborted()
+    const pds = await PDS.fromEnv()
+    try {
+      signal.throwIfAborted()
+
+      pdsLogger.info('initialized')
+      await onBeforeStart?.(pds)
+
+      signal.throwIfAborted()
+
+      pdsLogger.info('starting')
+      await pds.start()
+
+      signal.throwIfAborted()
+
+      // Wait for the signal to abort, which indicates that the PDS should stop
+      pdsLogger.info('running')
+      await once(signal, 'abort')
+    } finally {
+      pdsLogger.info('stopping')
+      await pds.destroy()
+      pdsLogger.info('stopped')
+    }
   }
 
   static async create(
@@ -149,30 +189,10 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    clearInterval(this.dbStatsInterval)
-    clearInterval(this.sequencerStatsInterval)
-
-    // @TODO Use disposable stack when it becomes available (Node24+)
     try {
       await this.terminator?.terminate()
     } finally {
-      try {
-        await this.ctx.backgroundQueue.destroy()
-      } finally {
-        try {
-          await this.ctx.sequencer.destroy()
-        } finally {
-          try {
-            await this.ctx.accountManager.close()
-          } finally {
-            try {
-              await this.ctx.redisScratch?.quit()
-            } finally {
-              await this.ctx.proxyAgent.destroy()
-            }
-          }
-        }
-      }
+      await this.ctx.destroy()
     }
   }
 

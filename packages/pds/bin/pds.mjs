@@ -5,25 +5,23 @@
 // allows package managers to properly link the CLI command when the monorepo is
 // being setup (during initial "pnpm install" from the root).
 
-import { PDS, envToCfg, envToSecrets, httpLogger, readEnv } from '@atproto/pds'
-import pkg from '@atproto/pds/package.json' with { type: 'json' }
+import { PDS } from '@atproto/pds'
 
-const main = async () => {
-  const env = readEnv()
-  env.version ??= pkg.version
-  const cfg = envToCfg(env)
-  const secrets = envToSecrets(env)
-  const pds = await PDS.create(cfg, secrets)
+const abortController = new AbortController()
 
-  await pds.start()
+/** @param {string} eventName */
+function shutdown() {
+  // Remove the listeners, which should cause NodeJS's default behavior to kick
+  // in and exit the process with a non-zero code if triggered again.
+  process.off('SIGINT', shutdown)
+  process.off('SIGTERM', shutdown)
 
-  httpLogger.info('pds is running')
-  // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
-  process.on('SIGTERM', async () => {
-    httpLogger.info('pds is stopping')
-    await pds.destroy()
-    httpLogger.info('pds is stopped')
-  })
+  abortController.abort()
 }
 
-main()
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
+
+// @NOTE Will trigger "unhandledRejection" if the promise rejects, which will
+// cause NodeJS to exit with a non-zero code.
+void PDS.run(abortController.signal)

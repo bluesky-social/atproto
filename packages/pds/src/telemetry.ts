@@ -63,16 +63,13 @@ if (otelEnabled) {
     instrumentations: getInstrumentations(),
   })
 
-  const onExit = () => {
-    process.removeListener('SIGTERM', onExit)
-    process.removeListener('SIGINT', onExit)
-    process.removeListener('beforeExit', onExit)
-    void shutdown()
-  }
-
-  process.addListener('SIGTERM', onExit)
-  process.addListener('SIGINT', onExit)
-  process.addListener('beforeExit', onExit)
+  // @NOTE The PDS will destroy all the resources it owns when it shuts down
+  // (SIGINT/SIGTERM), and does not explicitly call process.exit(). This will
+  // cause NodeJS to trigger the "beforeExit" event (see
+  // https://nodejs.org/api/process.html#event-beforeexit), allowing us to
+  // shutdown the OpenTelemetry SDK and flush any telemetry before the process
+  // exits because of the event loop being empty.
+  process.once('beforeExit', shutdown)
 }
 
 function getInstrumentations(): Instrumentation[] {

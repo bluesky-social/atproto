@@ -3,6 +3,7 @@ import { stdSerializers } from 'pino'
 import { pinoHttp } from 'pino-http'
 import { obfuscateHeaders, subsystemLogger } from '@atproto/common'
 
+export const pdsLogger = subsystemLogger('pds')
 export const blobStoreLogger = subsystemLogger('pds:blob-store')
 export const dbLogger = subsystemLogger('pds:db')
 export const didCacheLogger = subsystemLogger('pds:did-cache')
@@ -12,13 +13,14 @@ export const seqLogger = subsystemLogger('pds:sequencer')
 export const mailerLogger = subsystemLogger('pds:mailer')
 export const labelerLogger = subsystemLogger('pds:labeler')
 export const crawlerLogger = subsystemLogger('pds:crawler')
-export const httpLogger = subsystemLogger('pds')
+// @TODO Use a distinct namespace for the "http" subsystem
+export const httpLogger = pdsLogger
 export const fetchLogger = subsystemLogger('pds:fetch')
 export const oauthLogger = subsystemLogger('pds:oauth')
 export const lexiconResolverLogger = subsystemLogger('pds:lexicon-resolver')
 
 export const loggerMiddleware = pinoHttp({
-  logger: httpLogger,
+  logger: pdsLogger,
   serializers: {
     req: reqSerializer,
     err: (err: unknown) => ({

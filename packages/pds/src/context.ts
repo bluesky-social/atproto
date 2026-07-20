@@ -82,7 +82,7 @@ export type AppContextOptions = {
   cfg: ServerConfig
 }
 
-export class AppContext {
+export class AppContext implements AsyncDisposable {
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
   public localViewer: LocalViewerCreator
@@ -140,6 +140,8 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
+    // @TODO Use disposable stack when it becomes available (Node24+)
+
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({
@@ -532,6 +534,30 @@ export class AppContext {
       lxm,
       keypair,
     })
+  }
+
+  async destroy(): Promise<void> {
+    try {
+      await this.backgroundQueue.destroy()
+    } finally {
+      try {
+        await this.sequencer.destroy()
+      } finally {
+        try {
+          await this.accountManager.close()
+        } finally {
+          try {
+            await this.redisScratch?.quit()
+          } finally {
+            await this.proxyAgent.destroy()
+          }
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 
