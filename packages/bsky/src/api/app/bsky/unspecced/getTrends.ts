@@ -115,7 +115,7 @@ const noBlocks: RulesFn<Context, Params, SkeletonState> = (input) => {
   const blocks = hydration.bidirectionalBlocks?.get(viewer)
 
   return {
-    ...skeleton,
+    recIdStr: skeleton.recIdStr,
     trends: skeleton.trends.map((t) => ({
       ...t,
       dids: t.dids.filter((did) => !blocks?.get(did)),
