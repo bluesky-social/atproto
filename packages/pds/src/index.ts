@@ -37,7 +37,6 @@ import { buildRateLimitsConfig } from './rate-limits.js'
 import compression from './util/compression.js'
 import * as wellKnown from './well-known.js'
 
-export * from './lexicons.js'
 export {
   bearerTokenFromReq,
   createPublicKeyObject,
@@ -47,6 +46,7 @@ export * from './config/index.js'
 export { AppContext } from './context.js'
 export { Database } from './db/index.js'
 export { DiskBlobStore } from './disk-blobstore.js'
+export * from './lexicons.js'
 export { httpLogger } from './logger.js'
 export { type CommitDataWithOps, type PreparedWrite } from './repo/index.js'
 export * as repoPrepare from './repo/prepare.js'
@@ -81,28 +81,57 @@ export class PDS {
     return PDS.create(cfg, secrets)
   }
 
-  static async run(
-    signal: AbortSignal,
-    onBeforeStart?: (pds: PDS) => void | Promise<void>,
-  ): Promise<void> {
-    signal.throwIfAborted()
+  static async run({
+    signal: inputSignal,
+    signals = ['SIGINT', 'SIGTERM'],
+    onBeforeStart,
+  }: {
+    signal?: AbortSignal
+    signals?: readonly NodeJS.Signals[]
+    /**
+     * Hook that allows attaching additional logic (like adding custom HTTP
+     * routes) before the PDS is started.
+     */
+    onBeforeStart?: (pds: PDS) => void | Promise<void>
+  } = {}): Promise<void> {
+    inputSignal?.throwIfAborted()
+
+    const ac = new AbortController()
+    const { signal } = ac
+    const abort = () => ac.abort()
+
+    // Always abort the internal signal, allowing to use it as cleanup signal
+    using _ = { [Symbol.dispose]: abort }
+
+    // Bind the internal signal to the input signal
+    inputSignal?.addEventListener('abort', abort, { signal })
+
+    // Bind the internal signal to the process signals
+    for (const sig of signals) {
+      process.on(sig, abort)
+      signal.addEventListener('abort', () => process.off(sig, abort))
+    }
+
     const pds = await PDS.fromEnv()
     try {
-      signal.throwIfAborted()
+      if (!signal.aborted) {
+        pdsLogger.info('initializing')
+        await onBeforeStart?.(pds)
 
-      pdsLogger.info('initialized')
-      await onBeforeStart?.(pds)
+        if (!signal.aborted) {
+          pdsLogger.info('starting')
+          await pds.start()
 
-      signal.throwIfAborted()
+          if (!signal.aborted) {
+            // Wait for the signal to abort, which indicates that the PDS should stop
+            pdsLogger.info('running')
+            await once(signal, 'abort')
+          }
+        }
+      }
 
-      pdsLogger.info('starting')
-      await pds.start()
-
-      signal.throwIfAborted()
-
-      // Wait for the signal to abort, which indicates that the PDS should stop
-      pdsLogger.info('running')
-      await once(signal, 'abort')
+      // Propagate input signal abortion as error
+      inputSignal?.throwIfAborted()
     } finally {
       pdsLogger.info('stopping')
       await pds.destroy()
