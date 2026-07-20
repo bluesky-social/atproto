@@ -81,11 +81,17 @@ export class PDS {
     return PDS.create(cfg, secrets)
   }
 
+  /**
+   * Creates and starts a PDS instance, and waits for a termination signal to
+   * stop it.
+   */
   static async run({
+    env = undefined,
     signal: inputSignal,
     signals = ['SIGINT', 'SIGTERM'],
-    onBeforeStart,
+    onBeforeStart = undefined,
   }: {
+    env?: ServerEnvironment
     signal?: AbortSignal
     signals?: readonly NodeJS.Signals[]
     /**
@@ -112,7 +118,7 @@ export class PDS {
       signal.addEventListener('abort', () => process.off(sig, abort))
     }
 
-    const pds = await PDS.fromEnv()
+    const pds = await PDS.fromEnv(env)
     try {
       if (!signal.aborted) {
         pdsLogger.info('initializing')
