@@ -136,6 +136,7 @@ const presentation: PresentationFn<
     trends: skeleton.trends.map((t) => ({
       topic: t.topic,
       displayName: t.displayName,
+      description: t.description,
       link: t.link,
       startedAt: t.startedAt,
       postCount: t.postCount,
