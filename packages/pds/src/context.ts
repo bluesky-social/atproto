@@ -44,7 +44,7 @@ import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import {
   accountCreatedCounter,
-  oauthClientAuthorizedCounter,
+  oauthAuthorizationCounter,
   oauthTokenRefreshedCounter,
 } from './metrics.js'
 import { buildProxyAgent } from './pipethrough.js'
@@ -415,7 +415,7 @@ export class AppContext implements AsyncDisposable {
             })
           },
           onAuthorized({ client }) {
-            oauthClientAuthorizedCounter.add(1, { clientId: client.id })
+            oauthAuthorizationCounter.add(1, { clientId: client.id })
           },
           onTokenRefreshed({ client }) {
             oauthTokenRefreshedCounter.add(1, { clientId: client.id })

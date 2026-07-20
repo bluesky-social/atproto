@@ -24,10 +24,10 @@ export const sessionRefreshedCounter = meter.createCounter<{
   valueType: ValueType.INT,
 })
 
-export const oauthClientAuthorizedCounter = meter.createCounter<{
+export const oauthAuthorizationCounter = meter.createCounter<{
   clientId: string
-}>('oauth.client.authorized', {
-  description: 'Number of OAuth clients authorized on this PDS',
+}>('oauth.authorization', {
+  description: 'Increased when an OAuth authorization is granted on this PDS',
   valueType: ValueType.INT,
 })
 
