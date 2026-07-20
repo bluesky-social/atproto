@@ -20,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         viewer: params.viewer ?? null,
         labelers,
+        includeTakedowns: params.includeTakedowns,
       })
 
       const result = await getProfiles({ ...params, hydrateCtx }, ctx)

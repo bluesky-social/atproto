@@ -1,5 +1,58 @@
 # @atproto/dev-env
 
+## 0.5.34
+
+### Patch Changes
+
+- Updated dependencies [[`f8267c3`](https://github.com/bluesky-social/atproto/commit/f8267c3ada1645a2472c81c1ba95157466108b6e), [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f)]:
+  - @atproto/lex@0.3.0
+  - @atproto/api@0.20.30
+  - @atproto/bsky@0.0.262
+  - @atproto/xrpc-server@0.11.10
+  - @atproto/pds@0.5.19
+  - @atproto/sync@0.3.12
+  - @atproto/ozone@0.2.17
+
+## 0.5.33
+
+### Patch Changes
+
+- Updated dependencies [[`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f)]:
+  - @atproto/api@0.20.29
+  - @atproto/bsky@0.0.261
+  - @atproto/ozone@0.2.16
+
+## 0.5.32
+
+### Patch Changes
+
+- [#5236](https://github.com/bluesky-social/atproto/pull/5236) [`d6b4379`](https://github.com/bluesky-social/atproto/commit/d6b4379eb4be0c1c6dcb28ac59084f2329a97a94) Thanks [@devinivy](https://github.com/devinivy)! - defer service handle resolution to entryway when configured, allowing PDS_SERVICE_HANDLE_DOMAINS to match the entryway's domains
+
+- Updated dependencies [[`652016a`](https://github.com/bluesky-social/atproto/commit/652016ad57dca26f43b7f79167ecbfcabd5cbd4d), [`29adc81`](https://github.com/bluesky-social/atproto/commit/29adc81fc7925dbb0ce68c638e8092e9c4601a99), [`e408d11`](https://github.com/bluesky-social/atproto/commit/e408d11e723e3d232bcbfdb7247301273138cec6), [`cdc0faa`](https://github.com/bluesky-social/atproto/commit/cdc0faa5b57fe965b8ebb73a92462a01b464e7ef), [`d6b4379`](https://github.com/bluesky-social/atproto/commit/d6b4379eb4be0c1c6dcb28ac59084f2329a97a94), [`349693e`](https://github.com/bluesky-social/atproto/commit/349693e63865a5ba88e56a2b760d9e4ad39fe730)]:
+  - @atproto/ozone@0.2.15
+  - @atproto/bsky@0.0.260
+  - @atproto/pds@0.5.18
+  - @atproto/lex@0.2.3
+  - @atproto/sync@0.3.11
+
+## 0.5.31
+
+### Patch Changes
+
+- Updated dependencies [[`7505dd4`](https://github.com/bluesky-social/atproto/commit/7505dd4acb0d3940620025a0b75a69221e62e6fe), [`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/bsky@0.0.259
+  - @atproto/syntax@0.7.2
+  - @atproto/pds@0.5.17
+  - @atproto/api@0.20.28
+  - @atproto/bsync@0.0.36
+  - @atproto/common-web@0.5.6
+  - @atproto/lexicon@0.7.7
+  - @atproto/ozone@0.2.14
+  - @atproto/sync@0.3.10
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/identity@0.5.6
+
 ## 0.5.30
 
 ### Patch Changes

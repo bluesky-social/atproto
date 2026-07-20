@@ -13,6 +13,7 @@ export default defineConfig({
     },
     projects: [
       'packages/aws',
+      'packages/internal/handle-resolver',
       'packages/lex/*',
       'packages/oauth/oauth-client',
       'packages/syntax',

@@ -1,5 +1,24 @@
 # @atproto/xrpc-server
 
+## 0.11.10
+
+### Patch Changes
+
+- Updated dependencies [[`f8267c3`](https://github.com/bluesky-social/atproto/commit/f8267c3ada1645a2472c81c1ba95157466108b6e)]:
+  - @atproto/lex-client@0.3.0
+
+## 0.11.9
+
+### Patch Changes
+
+- Updated dependencies [[`1570e44`](https://github.com/bluesky-social/atproto/commit/1570e4471bffb1f3e5e6907f031d025db9ef3198)]:
+  - @atproto/lex-schema@0.2.2
+  - @atproto/lexicon@0.7.7
+  - @atproto/lex-client@0.2.4
+  - @atproto/common@0.7.2
+  - @atproto/xrpc@0.8.6
+  - @atproto/ws-client@0.1.7
+
 ## 0.11.8
 
 ### Patch Changes

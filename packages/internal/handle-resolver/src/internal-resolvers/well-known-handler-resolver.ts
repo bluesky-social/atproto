@@ -1,5 +1,7 @@
+import { HandleResolverError } from '../handle-resolver-error.js'
 import {
   type HandleResolver,
+  type HandleResolverErrorHandler,
   type ResolveHandleOptions,
   type ResolvedHandle,
   isResolvedHandle,
@@ -15,13 +17,26 @@ export type WellKnownHandleResolverOptions = {
    * @default `globalThis.fetch`
    */
   fetch?: typeof globalThis.fetch
+
+  /**
+   * Optional observability hook, invoked when resolution fails for a non-abort
+   * reason (network error, SSRF block, non-2xx response, redirect, etc.). The
+   * resolver still returns `null` per its contract; this only exposes the cause
+   * for logging, telemetry, or surfacing a specific failure to end users.
+   *
+   * Configuring it on the instance (rather than per call) means it also covers
+   * resolution performed internally on your behalf, e.g. by an OAuth client.
+   */
+  onError?: HandleResolverErrorHandler
 }
 
 export class WellKnownHandleResolver implements HandleResolver {
   protected readonly fetch: typeof globalThis.fetch
+  protected readonly onError?: HandleResolverErrorHandler
 
   constructor(options?: WellKnownHandleResolverOptions) {
     this.fetch = options?.fetch ?? globalThis.fetch
+    this.onError = options?.onError
   }
 
   public async resolve(
@@ -36,6 +51,17 @@ export class WellKnownHandleResolver implements HandleResolver {
         signal: options?.signal,
         redirect: 'error',
       })
+
+      // A non-2xx response (e.g. 5xx upstream, 4xx misconfigured endpoint) is
+      // not a resolution success, but fetch() does not throw on it. Route it
+      // through the same catch path so an onError handler sees operational
+      // failures, not just transport-level errors.
+      if (!response.ok) {
+        throw new HandleResolverError(
+          `Resolver returned HTTP ${response.status} for ${url.origin}/.well-known/atproto-did`,
+        )
+      }
+
       const text = await response.text()
       const firstLine = text.split('\n')[0]!.trim()
 
@@ -43,9 +69,22 @@ export class WellKnownHandleResolver implements HandleResolver {
 
       return null
     } catch (err) {
-      // The the request failed, assume the handle does not resolve to a DID,
-      // unless the failure was due to the signal being aborted.
+      // If the abort signal fired, propagate that to the caller. Otherwise the
+      // request failed for a reason that prevents resolution (network error,
+      // SSRF block, 5xx, redirect, etc.). We still return null per the resolver
+      // contract, but expose the cause through onError so callers can tell "no
+      // .well-known endpoint exists" apart from operational failures.
       options?.signal?.throwIfAborted()
+
+      // Observational only: a throwing handler must not change the return
+      // contract, so isolate it in its own catch.
+      if (this.onError) {
+        try {
+          this.onError(err, { resolver: 'well-known', handle })
+        } catch {
+          // Ignore errors from the observability handler.
+        }
+      }
 
       return null
     }

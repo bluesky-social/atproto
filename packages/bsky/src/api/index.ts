@@ -60,6 +60,7 @@ import muteActor from './app/bsky/graph/muteActor.js'
 import muteActorList from './app/bsky/graph/muteActorList.js'
 import muteThread from './app/bsky/graph/muteThread.js'
 import searchStarterPacks from './app/bsky/graph/searchStarterPacks.js'
+import searchStarterPacksV2 from './app/bsky/graph/searchStarterPacksV2.js'
 import unmuteActor from './app/bsky/graph/unmuteActor.js'
 import unmuteActorList from './app/bsky/graph/unmuteActorList.js'
 import unmuteThread from './app/bsky/graph/unmuteThread.js'
@@ -164,6 +165,7 @@ export default function (server: Server, ctx: AppContext) {
   getStarterPacks(server, ctx)
   getStarterPacksWithMembership(server, ctx)
   searchStarterPacks(server, ctx)
+  searchStarterPacksV2(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)

@@ -2,6 +2,7 @@ import { type Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
   AtprotoHandleResolver,
   type HandleResolver,
+  type HandleResolverErrorHandler,
 } from '@atproto-labs/handle-resolver'
 import {
   nodeResolveTxtDefault,
@@ -24,6 +25,15 @@ export type AtprotoHandleResolverNodeOptions = {
    * @default `globalThis.fetch`
    */
   fetch?: Fetch
+
+  /**
+   * Optional observability hook, invoked when handle resolution fails for a
+   * non-abort reason (network error, SSRF block, non-2xx response, etc.). The
+   * resolver still returns `null`; this only exposes the cause for logging or
+   * telemetry. Handy for diagnosing why a handle fails to resolve, e.g. when a
+   * PDS sits behind a firewall that trips SSRF protection.
+   */
+  onError?: HandleResolverErrorHandler
 }
 
 export class AtprotoHandleResolverNode
@@ -33,6 +43,7 @@ export class AtprotoHandleResolverNode
   constructor({
     fetch = globalThis.fetch,
     fallbackNameservers,
+    onError,
   }: AtprotoHandleResolverNodeOptions = {}) {
     super({
       fetch: safeFetchWrap({
@@ -45,6 +56,7 @@ export class AtprotoHandleResolverNode
       resolveTxtFallback: fallbackNameservers?.length
         ? nodeResolveTxtFactory(fallbackNameservers)
         : undefined,
+      onError,
     })
   }
 }

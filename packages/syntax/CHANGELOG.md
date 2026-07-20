@@ -1,5 +1,17 @@
 # @atproto/syntax
 
+## 0.7.2
+
+### Patch Changes
+
+- [#5189](https://github.com/bluesky-social/atproto/pull/5189) [`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55) Thanks [@ryanda9910](https://github.com/ryanda9910)! - `parseLanguageString` (strict validation) now rejects language tags whose
+  primary language subtag is uppercase (for example `JA`) or is a bare
+  four-letter run (for example `jaja`). The primary language subtag must be a
+  lowercase two-or-three-letter code per RFC 5646 §2.1.1, matching the atproto
+  interop test suite. `isValidLanguage` is unchanged and stays permissive of
+  these legacy forms (well-formed syntax only), so existing records are not
+  retroactively invalidated. Well-formed lowercase tags are unaffected.
+
 ## 0.7.1
 
 ### Patch Changes

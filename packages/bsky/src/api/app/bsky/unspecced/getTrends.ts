@@ -24,7 +24,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
@@ -50,12 +59,19 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton: SkeletonFn<Context, Params, SkeletonState> = async (input) => {
   const { params, ctx } = input
 
-  if (!ctx.topicsClient) {
+  // Route treatment users to iris (trending-topics v2), everyone else stays on
+  // the existing hot-topic service.
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.TrendingTopicsV2,
+  )
+  const topicsClient = (useIris && ctx.irisClient) || ctx.topicsClient
+
+  if (!topicsClient) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
     throw new MethodNotImplementedError('Topics agent not available')
   }
 
-  const skeleton = await ctx.topicsClient.call(
+  const skeleton = await topicsClient.call(
     app.bsky.unspecced.getTrendsSkeleton,
     {
       limit: params.limit,
@@ -134,6 +150,7 @@ type Context = {
   hydrator: Hydrator
   views: Views
   topicsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getTrendingTopics.$Params & {

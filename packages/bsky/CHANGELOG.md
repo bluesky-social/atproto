@@ -1,5 +1,54 @@
 # @atproto/bsky
 
+## 0.0.262
+
+### Patch Changes
+
+- [#5244](https://github.com/bluesky-social/atproto/pull/5244) [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new searchStarterPacksV2 endpoint
+
+- Updated dependencies [[`f8267c3`](https://github.com/bluesky-social/atproto/commit/f8267c3ada1645a2472c81c1ba95157466108b6e), [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f)]:
+  - @atproto/lex@0.3.0
+  - @atproto/api@0.20.30
+  - @atproto/xrpc-server@0.11.10
+  - @atproto/sync@0.3.12
+  - @atproto-labs/xrpc-utils@0.1.9
+
+## 0.0.261
+
+### Patch Changes
+
+- Updated dependencies [[`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f)]:
+  - @atproto/api@0.20.29
+
+## 0.0.260
+
+### Patch Changes
+
+- [#5234](https://github.com/bluesky-social/atproto/pull/5234) [`29adc81`](https://github.com/bluesky-social/atproto/commit/29adc81fc7925dbb0ce68c638e8092e9c4601a99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add includeTakedowns param to internal.bsky.actor.getProfiles
+
+- [#5219](https://github.com/bluesky-social/atproto/pull/5219) [`cdc0faa`](https://github.com/bluesky-social/atproto/commit/cdc0faa5b57fe965b8ebb73a92462a01b464e7ef) Thanks [@cuducos](https://github.com/cuducos)! - Gate the new trending topics experiment
+
+- Updated dependencies []:
+  - @atproto/lex@0.2.3
+  - @atproto/sync@0.3.11
+
+## 0.0.259
+
+### Patch Changes
+
+- [#5218](https://github.com/bluesky-social/atproto/pull/5218) [`7505dd4`](https://github.com/bluesky-social/atproto/commit/7505dd4acb0d3940620025a0b75a69221e62e6fe) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable age assurance in Texas
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/api@0.20.28
+  - @atproto/repo@0.10.6
+  - @atproto/sync@0.3.10
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto-labs/xrpc-utils@0.1.8
+
 ## 0.0.258
 
 ### Patch Changes

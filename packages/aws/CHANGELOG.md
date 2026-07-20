@@ -1,5 +1,20 @@
 # @atproto/aws
 
+## 0.3.7
+
+### Patch Changes
+
+- [#5233](https://github.com/bluesky-social/atproto/pull/5233) [`692ec0b`](https://github.com/bluesky-social/atproto/commit/692ec0bf7202227f26298ebe98ff25e46b1bd4bc) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade `@aws-sdk/*` dependencies (^3.879.0 to ^3.1073.0). `S3BlobStore` now passes its stall detection timeout (`requestTimeoutMs`) to the request handler's `socketTimeout` option: the upgraded SDK redefined `requestTimeout` from a socket idle timeout to a warn-only total request timer, so stalled S3 connections continue to be reaped and retried as intended.
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.6
+  - @atproto/repo@0.10.6
+  - @atproto/common@0.7.2
+
 ## 0.3.5
 
 ### Patch Changes

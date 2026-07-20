@@ -9,20 +9,24 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
     const handle = baseNormalizeAndValidate(params.handle)
 
-    const user = await ctx.accountManager.getAccount(handle)
-    if (user) {
-      return {
-        encoding: 'application/json' as const,
-        body: { did: user.did as DidString },
+    // when behind an entryway, the entryway is authoritative for handles
+    // rather than this pds' local accounts
+    if (!ctx.cfg.entryway) {
+      const user = await ctx.accountManager.getAccount(handle)
+      if (user) {
+        return {
+          encoding: 'application/json' as const,
+          body: { did: user.did as DidString },
+        }
       }
-    }
 
-    const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
-      (host) => handle.endsWith(host) || handle === host.slice(1),
-    )
-    // this should be in our DB & we couldn't find it, so fail
-    if (supportedHandle) {
-      throw new InvalidRequestError('Unable to resolve handle')
+      const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
+        (host) => handle.endsWith(host) || handle === host.slice(1),
+      )
+      // this should be in our DB & we couldn't find it, so fail
+      if (supportedHandle) {
+        throw new InvalidRequestError('Unable to resolve handle')
+      }
     }
 
     const did: DidString = ctx.bskyAppView

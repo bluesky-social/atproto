@@ -1,5 +1,27 @@
 # @atproto/api
 
+## 0.20.30
+
+### Patch Changes
+
+- [#5244](https://github.com/bluesky-social/atproto/pull/5244) [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new searchStarterPacksV2 endpoint
+
+## 0.20.29
+
+### Patch Changes
+
+- [#5239](https://github.com/bluesky-social/atproto/pull/5239) [`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `tools.ozone.report` to include `isAutomated` field. Update `tools.ozone.queue` to mark `subjectTypes` and `reportTypes` as optional.
+
+## 0.20.28
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/common-web@0.5.6
+  - @atproto/lexicon@0.7.7
+  - @atproto/xrpc@0.8.6
+
 ## 0.20.27
 
 ### Patch Changes
