@@ -6,9 +6,9 @@ import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { MuteKind } from '../../../proto/bsky_pb.js'
 import {
-  muteKindsFromString,
-  muteKindsToString,
-  stringHasMuteKind,
+  muteKindsFromStored,
+  muteKindsToStored,
+  storedHasMuteKind,
 } from '../../../util/mute-kinds.js'
 import type { Database } from '../db/index.js'
 import {
@@ -29,9 +29,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     return {
       muted: res != null && res.kinds === '',
       mutedReposts:
-        res != null && stringHasMuteKind(res.kinds, MuteKind.REPOSTS),
+        res != null && storedHasMuteKind(res.kinds, MuteKind.REPOSTS),
       mutedQuoteposts:
-        res != null && stringHasMuteKind(res.kinds, MuteKind.QUOTEPOSTS),
+        res != null && storedHasMuteKind(res.kinds, MuteKind.QUOTEPOSTS),
     }
   },
 
@@ -63,7 +63,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       dids: mutes.map((m) => m.did),
       mutes: mutes.map((m) => ({
         did: m.did,
-        kinds: muteKindsFromString(m.kinds),
+        kinds: muteKindsFromStored(m.kinds),
       })),
       cursor: keyset.packFromResult(mutes),
     }
@@ -131,7 +131,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async createActorMute(req) {
     const { actorDid, subjectDid } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
-    const kinds = muteKindsToString(req.kinds)
+    const kinds = muteKindsToStored(req.kinds)
     await db.db
       .insertInto('mute')
       .values({

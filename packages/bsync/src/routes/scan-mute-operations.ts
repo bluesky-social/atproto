@@ -5,7 +5,7 @@ import { createMuteOpChannel } from '../db/schema/mute_op.js'
 import type { Service } from '../proto/bsync_connect.js'
 import { ScanMuteOperationsResponse } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
-import { muteKindsFromString } from './mute-kinds.js'
+import { muteKindsFromStored } from './mute-kinds.js'
 import { combineSignals, validCursor } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
@@ -59,7 +59,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
-        kinds: muteKindsFromString(op.kinds),
+        kinds: muteKindsFromStored(op.kinds),
       })),
       cursor: lastOp.id.toString(),
     })

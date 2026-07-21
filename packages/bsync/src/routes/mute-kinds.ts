@@ -1,8 +1,11 @@
 import { Code, ConnectError } from '@connectrpc/connect'
 import { MuteKind } from '../proto/bsync_pb.js'
 
-// mute kinds are stored as a comma-separated string of kind names, sorted
-// and deduped. an empty string means a full mute.
+/**
+ * The database encoding of a mute's kinds: a comma-separated string of kind
+ * names, sorted and deduped. An empty string means a full mute.
+ */
+export type StoredMuteKinds = string
 
 const kindNames = new Map<MuteKind, string>([
   [MuteKind.REPOSTS, 'reposts'],
@@ -13,7 +16,7 @@ const kindsByName = new Map<string, MuteKind>(
   [...kindNames].map(([kind, name]) => [name, kind]),
 )
 
-export const muteKindsToString = (kinds: MuteKind[]): string => {
+export const muteKindsToStored = (kinds: MuteKind[]): StoredMuteKinds => {
   const names = kinds.map((kind) => {
     const name = kindNames.get(kind)
     if (name === undefined) {
@@ -24,7 +27,7 @@ export const muteKindsToString = (kinds: MuteKind[]): string => {
   return [...new Set(names)].sort().join(',')
 }
 
-export const muteKindsFromString = (kinds: string): MuteKind[] => {
+export const muteKindsFromStored = (kinds: StoredMuteKinds): MuteKind[] => {
   if (kinds === '') return []
   return kinds
     .split(',')

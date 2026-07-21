@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { MuteKind } from '../../../proto/bsky_pb.js'
-import { stringHasMuteKind } from '../../../util/mute-kinds.js'
+import { storedHasMuteKind } from '../../../util/mute-kinds.js'
 import type { Database } from '../db/index.js'
 import { valuesList } from '../db/util.js'
 
@@ -79,10 +79,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         muted: row?.muteKinds === '',
         mutedReposts:
           row?.muteKinds != null &&
-          stringHasMuteKind(row.muteKinds, MuteKind.REPOSTS),
+          storedHasMuteKind(row.muteKinds, MuteKind.REPOSTS),
         mutedQuoteposts:
           row?.muteKinds != null &&
-          stringHasMuteKind(row.muteKinds, MuteKind.QUOTEPOSTS),
+          storedHasMuteKind(row.muteKinds, MuteKind.QUOTEPOSTS),
         mutedByList: row?.mutedByList ?? '',
         blockedBy: row?.blockedBy ?? '',
         blocking: row?.blocking ?? '',

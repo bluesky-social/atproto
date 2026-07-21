@@ -1,10 +1,11 @@
 import type { Selectable } from 'kysely'
+import type { StoredMuteKinds } from '../../routes/mute-kinds.js'
 
 export interface MuteItem {
   actorDid: string
   subject: string // did or aturi for list
   fromId: number
-  kinds: string // comma-separated MuteKind names; empty means a full mute
+  kinds: StoredMuteKinds
 }
 
 export type MuteItemEntry = Selectable<MuteItem>

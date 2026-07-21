@@ -11,7 +11,11 @@ import {
   MuteOperation_Type,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
-import { muteKindsFromString, muteKindsToString } from './mute-kinds.js'
+import {
+  type StoredMuteKinds,
+  muteKindsFromStored,
+  muteKindsToStored,
+} from './mute-kinds.js'
 import { isValidAtUri, isValidDid } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
@@ -41,7 +45,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
-        kinds: muteKindsFromString(op.kinds),
+        kinds: muteKindsFromStored(op.kinds),
       },
     })
   },
@@ -105,7 +109,7 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
-  const kinds = muteKindsToString(op.kinds ?? [])
+  const kinds = muteKindsToStored(op.kinds ?? [])
   if (op.type === MuteOperation_Type.UNSPECIFIED) {
     throw new ConnectError(
       'unspecified mute operation type',
@@ -169,5 +173,5 @@ type MuteOpInfoValid = {
     | MuteOperation_Type.CLEAR
   actorDid: string
   subject: string
-  kinds: string // comma-separated kind names; empty means a full mute
+  kinds: StoredMuteKinds
 }

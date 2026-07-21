@@ -17,7 +17,7 @@ import {
   type Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
-import { muteKindsToString } from '../../util/mute-kinds.js'
+import { muteKindsToStored } from '../../util/mute-kinds.js'
 import type { Database } from './db/index.js'
 import { countAll, excluded } from './db/util.js'
 
@@ -161,7 +161,7 @@ export class BsyncSubscription {
   private async processMuteOperations(operations: MuteOperation[]) {
     for (const op of operations) {
       const { type, actorDid, subject } = op
-      const kinds = muteKindsToString(op.kinds)
+      const kinds = muteKindsToStored(op.kinds)
       if (type === MuteOperation_Type.ADD) {
         if (subject.startsWith('did:')) {
           await this.db.db

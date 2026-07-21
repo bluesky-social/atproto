@@ -1,8 +1,10 @@
+import type { StoredMuteKinds } from '../../../../util/mute-kinds.js'
+
 export interface Mute {
   subjectDid: string
   mutedByDid: string
   createdAt: string
-  kinds: string // comma-separated MuteKind names; empty means a full mute
+  kinds: StoredMuteKinds
 }
 
 export const tableName = 'mute'

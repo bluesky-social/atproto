@@ -14,7 +14,7 @@ import {
   MuteKind,
   MuteOperation_Type,
 } from '../src/proto/bsync_pb.js'
-import { muteKindsFromString } from '../src/routes/mute-kinds.js'
+import { muteKindsFromStored } from '../src/routes/mute-kinds.js'
 
 describe('mutes', () => {
   let bsync: BsyncService
@@ -431,7 +431,7 @@ const dumpMuteKinds = async (db: Database) => {
   const result: Record<string, Record<string, MuteKind[]>> = {}
   items.forEach((item) => {
     result[item.actorDid] ??= {}
-    result[item.actorDid][item.subject] = muteKindsFromString(item.kinds)
+    result[item.actorDid][item.subject] = muteKindsFromStored(item.kinds)
   })
   return result
 }
