@@ -658,16 +658,11 @@ message GetActorMutesActorResponse {
   bool muted_quoteposts = 3;
 }
 
-enum MuteKind {
-  MUTE_KIND_UNSPECIFIED = 0;
-  MUTE_KIND_REPOSTS = 1;
-  MUTE_KIND_QUOTEPOSTS = 2;
-}
-
 message MuteInfo {
   string did = 1;
-  // scopes the mute to specific kinds of content; empty means a full mute
-  repeated MuteKind kinds = 2;
+  // scopes the mute to specific kinds of content (e.g. "reposts",
+  // "quoteposts"); empty means a full mute
+  repeated string kinds = 2;
 }
 
 // - return list of user dids of users who A mutes
@@ -1883,7 +1878,7 @@ message CreateActorMuteRequest {
   // scopes the mute to specific kinds of content; empty means a full mute.
   // If a mute already exists for the pair, its stored kinds are replaced
   // with this set.
-  repeated MuteKind kinds = 3;
+  repeated string kinds = 3;
 }
 
 message CreateActorMuteResponse {}

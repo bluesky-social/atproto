@@ -19,14 +19,11 @@ message MuteOperation {
   Type type = 2;
   string actor_did = 3;
   string subject = 4;
-  // scopes the mute to specific kinds of content; empty means a full mute
-  repeated MuteKind kinds = 5;
-}
-
-enum MuteKind {
-  MUTE_KIND_UNSPECIFIED = 0;
-  MUTE_KIND_REPOSTS = 1;
-  MUTE_KIND_QUOTEPOSTS = 2;
+  // scopes the mute to specific kinds of content (e.g. "reposts",
+  // "quoteposts"); empty means a full mute. bsync does not validate kind
+  // values — producers validate on write, consumers ignore values they
+  // don't recognize.
+  repeated string kinds = 5;
 }
 
 message AddMuteOperationRequest {
@@ -36,7 +33,7 @@ message AddMuteOperationRequest {
   // scopes the mute to specific kinds of content; empty means a full mute.
   // On an add for an already-muted subject, the stored kinds are replaced
   // with this set.
-  repeated MuteKind kinds = 4;
+  repeated string kinds = 4;
 }
 
 message AddMuteOperationResponse {

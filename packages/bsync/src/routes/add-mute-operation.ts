@@ -7,7 +7,6 @@ import { createMuteOpChannel } from '../db/schema/mute_op.js'
 import type { Service } from '../proto/bsync_connect.js'
 import {
   AddMuteOperationResponse,
-  type MuteKind,
   MuteOperation_Type,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
@@ -163,7 +162,7 @@ type MuteOpInfo = {
   type: MuteOperation_Type
   actorDid: string
   subject: string
-  kinds?: MuteKind[]
+  kinds?: string[]
 }
 
 type MuteOpInfoValid = {

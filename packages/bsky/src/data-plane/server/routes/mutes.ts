@@ -4,7 +4,6 @@ import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
-import { MuteKind } from '../../../proto/bsky_pb.js'
 import {
   muteKindsFromStored,
   muteKindsToStored,
@@ -28,10 +27,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .executeTakeFirst()
     return {
       muted: res != null && res.kinds === '',
-      mutedReposts:
-        res != null && storedHasMuteKind(res.kinds, MuteKind.REPOSTS),
+      mutedReposts: res != null && storedHasMuteKind(res.kinds, 'reposts'),
       mutedQuoteposts:
-        res != null && storedHasMuteKind(res.kinds, MuteKind.QUOTEPOSTS),
+        res != null && storedHasMuteKind(res.kinds, 'quoteposts'),
     }
   },
 

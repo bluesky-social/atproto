@@ -10,7 +10,6 @@ import {
   envToCfg,
 } from '../src/index.js'
 import {
-  MuteKind,
   type MuteOperation,
   MuteOperation_Type,
 } from '../src/proto/bsync_pb.js'
@@ -120,21 +119,21 @@ describe('mutes', () => {
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kinds: [MuteKind.REPOSTS],
+        kinds: ['reposts'],
       })
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': [MuteKind.REPOSTS] },
+        'did:example:a': { 'did:example:b': ['reposts'] },
       })
 
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kinds: [MuteKind.REPOSTS, MuteKind.QUOTEPOSTS],
+        kinds: ['quoteposts', 'reposts'],
       })
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
         'did:example:a': {
-          'did:example:b': [MuteKind.REPOSTS, MuteKind.QUOTEPOSTS],
+          'did:example:b': ['quoteposts', 'reposts'],
         },
       })
 
@@ -172,16 +171,16 @@ describe('mutes', () => {
       // bsync does not validate kind values: producers validate on write and
       // consumers ignore values they don't recognize. This keeps bsync from
       // needing a deploy when new kinds are added.
-      const unknownKind = 100 as MuteKind
+      const unknownKind = 'someday-kind'
       const { operation } = await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kinds: [MuteKind.REPOSTS, unknownKind],
+        kinds: ['reposts', unknownKind],
       })
-      expect(operation?.kinds).toEqual([MuteKind.REPOSTS, unknownKind])
+      expect(operation?.kinds).toEqual(['reposts', unknownKind])
       expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': [MuteKind.REPOSTS, unknownKind] },
+        'did:example:a': { 'did:example:b': ['reposts', unknownKind] },
       })
     })
 
@@ -301,7 +300,7 @@ describe('mutes', () => {
           type: MuteOperation_Type.ADD,
           actorDid: 'did:example:a',
           subject: 'at://did:example:b/app.bsky.graph.list/rkey1',
-          kinds: [MuteKind.REPOSTS],
+          kinds: ['reposts'],
         }),
       ).rejects.toEqual(
         new ConnectError(
@@ -437,7 +436,7 @@ const dumpMuteState = async (db: Database) => {
 
 const dumpMuteKinds = async (db: Database) => {
   const items = await db.db.selectFrom('mute_item').selectAll().execute()
-  const result: Record<string, Record<string, MuteKind[]>> = {}
+  const result: Record<string, Record<string, string[]>> = {}
   items.forEach((item) => {
     result[item.actorDid] ??= {}
     result[item.actorDid][item.subject] = muteKindsFromStored(item.kinds)
