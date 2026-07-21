@@ -10,8 +10,8 @@ import {
   envToCfg,
 } from '../src/index.js'
 import {
-  type MuteOperation,
   MuteKind,
+  type MuteOperation,
   MuteOperation_Type,
 } from '../src/proto/bsync_pb.js'
 import { muteKindsFromStored } from '../src/routes/mute-kinds.js'
@@ -168,6 +168,23 @@ describe('mutes', () => {
       })
     })
 
+    it('stores and replays mute kinds it does not recognize.', async () => {
+      // bsync does not validate kind values: producers validate on write and
+      // consumers ignore values they don't recognize. This keeps bsync from
+      // needing a deploy when new kinds are added.
+      const unknownKind = 100 as MuteKind
+      const { operation } = await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        kinds: [MuteKind.REPOSTS, unknownKind],
+      })
+      expect(operation?.kinds).toEqual([MuteKind.REPOSTS, unknownKind])
+      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
+        'did:example:a': { 'did:example:b': [MuteKind.REPOSTS, unknownKind] },
+      })
+    })
+
     it('adds mute operations to clear mutes.', async () => {
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
@@ -279,14 +296,6 @@ describe('mutes', () => {
       ).rejects.toEqual(
         new ConnectError('bad mute operation type', Code.InvalidArgument),
       )
-      await expect(
-        client.addMuteOperation({
-          type: MuteOperation_Type.ADD,
-          actorDid: 'did:example:a',
-          subject: 'did:example:b',
-          kinds: [100 as any],
-        }),
-      ).rejects.toEqual(new ConnectError('bad mute kind', Code.InvalidArgument))
       await expect(
         client.addMuteOperation({
           type: MuteOperation_Type.ADD,

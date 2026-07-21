@@ -6,6 +6,12 @@ import { MuteKind } from '../../proto/bsky_pb.js'
  *
  * The bsync proto's MuteKind uses the same values as the bsky proto's, so
  * these helpers accept either enum.
+ *
+ * Unknown kind values are deliberately dropped rather than rejected: bsync
+ * does not validate kinds (bsky's muteActor is the validation gate), so a
+ * newer producer may deliver kinds this consumer doesn't know. Dropping
+ * degrades a scoped mute toward a full mute — over-hiding — rather than
+ * stalling ingestion.
  */
 export type StoredMuteKinds = string
 
