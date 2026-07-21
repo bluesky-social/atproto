@@ -74,269 +74,272 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 {
   readonly capabilities: TransportCapabilities
 
-  private readonly transport: Transport
-  private readonly dataMode: DataMode
-  private readonly signal?: AbortSignal
-  private onAbort?: () => void
+  readonly #transport: Transport
+  readonly #dataMode: DataMode
+  readonly #signal?: AbortSignal
+  #onAbort?: () => void
 
-  private state: ReadyState = 'initialized'
-  private openTriggered = false
-  private negotiatedProtocol = ''
+  #state: ReadyState = 'initialized'
+  #openTriggered = false
+  #negotiatedProtocol = ''
 
-  private readonly buffer: QueueItem<MessageOf<M>>[] = []
-  private readonly waiters: Waiter<MessageOf<M>>[] = []
-  private bufferedBytes = 0
-  private terminal: Terminal | null = null
-  private iterated = false
+  readonly #buffer: QueueItem<MessageOf<M>>[] = []
+  readonly #waiters: Waiter<MessageOf<M>>[] = []
+  #bufferedBytes = 0
+  #terminal: Terminal | null = null
+  #iterated = false
 
-  private readonly highWaterMark: number
-  private readonly maxBufferedBytes: number
-  private paused = false
+  readonly #highWaterMark: number
+  readonly #maxBufferedBytes: number
+  #paused = false
 
-  private heartbeatInterval: ReturnType<typeof setInterval> | null = null
-  private heartbeatIntervalMs: number | null = null
-  private heartbeatAlive = true
+  #heartbeatInterval: ReturnType<typeof setInterval> | null = null
+  #heartbeatIntervalMs: number | null = null
+  #heartbeatAlive = true
 
-  private idleInterval: ReturnType<typeof setInterval> | null = null
-  private idleTimeoutMs: number | null = null
-  private idleActive = true
+  #idleInterval: ReturnType<typeof setInterval> | null = null
+  #idleTimeoutMs: number | null = null
+  #idleActive = true
 
   constructor(
     createTransport: TransportFactory,
     url: string | URL,
-    private readonly options: WebSocketConnectionOptions<M> = {},
+    options: WebSocketConnectionOptions<M> = {},
   ) {
     super()
-    this.dataMode = options.dataMode ?? 'auto'
-    this.signal = options.signal
-    this.highWaterMark = options.highWaterMark ?? 1_048_576
-    this.maxBufferedBytes = options.maxBufferedBytes ?? Infinity
+    this.#dataMode = options.dataMode ?? 'auto'
+    this.#signal = options.signal
+    this.#highWaterMark = options.highWaterMark ?? 1_048_576
+    this.#maxBufferedBytes = options.maxBufferedBytes ?? Infinity
 
-    this.transport = createTransport(url, {
+    this.#transport = createTransport(url, {
       protocols: options.protocols,
       headers: options.headers,
     })
-    this.capabilities = this.transport.capabilities
-    this.transport.handlers = this.buildHandlers()
+    this.capabilities = this.#transport.capabilities
+    this.#transport.handlers = this.#buildHandlers()
 
     const hb = options.heartbeat
-    if (hb !== false && this.transport.capabilities.heartbeat) {
-      this.heartbeatIntervalMs = hb?.intervalMs ?? 10_000
+    if (hb !== false && this.#transport.capabilities.heartbeat) {
+      this.#heartbeatIntervalMs = hb?.intervalMs ?? 10_000
     }
-    this.idleTimeoutMs = this.options.idleTimeoutMs ?? null
+    this.#idleTimeoutMs = options.idleTimeoutMs ?? null
 
-    if (this.signal) {
-      if (this.signal.aborted) {
+    if (this.#signal) {
+      if (this.#signal.aborted) {
         // Defer so the caller can attach consumers first.
-        queueMicrotask(() => this.fail(this.signal!.reason, true))
+        queueMicrotask(() => this.#fail(this.#signal!.reason, true))
       } else {
-        this.onAbort = () => this.fail(this.signal!.reason, true)
-        this.signal.addEventListener('abort', this.onAbort, { once: true })
+        this.#onAbort = () => this.#fail(this.#signal!.reason, true)
+        this.#signal.addEventListener('abort', this.#onAbort, { once: true })
       }
     }
   }
 
   get readyState(): ReadyState {
-    return this.state
+    return this.#state
   }
 
   get connected(): boolean {
-    return this.state === 'open'
+    return this.#state === 'open'
   }
 
   get protocol(): string {
-    return this.negotiatedProtocol
+    return this.#negotiatedProtocol
   }
 
   // ---- transport handlers ----
 
-  private buildHandlers(): TransportHandlers {
+  #buildHandlers(): TransportHandlers {
     return {
       onOpen: () => {
-        if (this.terminal || this.state !== 'connecting') return
-        this.state = 'open'
-        this.negotiatedProtocol = this.transport.protocol
+        if (this.#terminal || this.#state !== 'connecting') return
+        this.#state = 'open'
+        this.#negotiatedProtocol = this.#transport.protocol
         this.dispatchEvent(new Event('open'))
-        this.onOpen()
+        this.#onOpen()
       },
       onMessage: (data, isBinary) => {
-        if (this.terminal) return // post-failure discard
-        this.recordLiveness()
-        this.onMessage(data, isBinary)
+        if (this.#terminal) return // post-failure discard
+        this.#recordLiveness()
+        this.#onMessage(data, isBinary)
       },
       onPong: () => {
-        if (this.terminal) return
-        this.recordPong()
+        if (this.#terminal) return
+        this.#recordPong()
       },
       onClose: (code, reason, wasClean) => {
-        if (this.terminal) return
+        if (this.#terminal) return
         if (CLEAN_CLOSE_CODES.has(code)) {
-          this.state = 'closed'
-          this.finishDone({ code, reason, wasClean })
+          this.#state = 'closed'
+          this.#finishDone({ code, reason, wasClean })
         } else {
-          this.fail(new CloseError(code, reason, wasClean))
+          this.#fail(new CloseError(code, reason, wasClean))
         }
       },
       onError: (err) => {
-        if (this.terminal) return
-        this.fail(new SocketError(err))
+        if (this.#terminal) return
+        this.#fail(new SocketError(err))
       },
     }
   }
 
   // Start the liveness timers once the socket is open.
-  private onOpen(): void {
-    if (this.heartbeatIntervalMs != null) {
-      this.heartbeatAlive = true
-      this.heartbeatInterval = setInterval(
-        () => this.heartbeatTick(),
-        this.heartbeatIntervalMs,
+  #onOpen(): void {
+    if (this.#heartbeatIntervalMs != null) {
+      this.#heartbeatAlive = true
+      this.#heartbeatInterval = setInterval(
+        () => this.#heartbeatTick(),
+        this.#heartbeatIntervalMs,
       )
-      this.heartbeatInterval.unref?.()
+      this.#heartbeatInterval.unref?.()
     }
-    if (this.idleTimeoutMs != null) {
-      this.idleActive = true
-      this.idleInterval = setInterval(() => this.idleTick(), this.idleTimeoutMs)
-      this.idleInterval.unref?.()
+    if (this.#idleTimeoutMs != null) {
+      this.#idleActive = true
+      this.#idleInterval = setInterval(
+        () => this.#idleTick(),
+        this.#idleTimeoutMs,
+      )
+      this.#idleInterval.unref?.()
     }
   }
-  private recordLiveness(): void {
-    this.heartbeatAlive = true
-    this.idleActive = true
+  #recordLiveness(): void {
+    this.#heartbeatAlive = true
+    this.#idleActive = true
   }
-  private recordPong(): void {
-    this.heartbeatAlive = true
+  #recordPong(): void {
+    this.#heartbeatAlive = true
   }
-  private clearTimers(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval)
-      this.heartbeatInterval = null
+  #clearTimers(): void {
+    if (this.#heartbeatInterval) {
+      clearInterval(this.#heartbeatInterval)
+      this.#heartbeatInterval = null
     }
-    if (this.idleInterval) {
-      clearInterval(this.idleInterval)
-      this.idleInterval = null
+    if (this.#idleInterval) {
+      clearInterval(this.#idleInterval)
+      this.#idleInterval = null
     }
   }
 
   // Flag-based liveness check: each tick either finds evidence (a pong or
   // any incoming message) since the previous tick and pings again, or finds
   // none and terminates. Detection latency is therefore 1x-2x intervalMs.
-  private heartbeatTick(): void {
+  #heartbeatTick(): void {
     // A backpressure pause halts inbound frames — including pongs — so no
     // evidence can arrive. Treat the self-initiated pause as liveness rather
     // than false-timing-out a healthy connection; the refreshed flag grants
     // a full detection window after resume.
-    if (this.paused) {
-      this.heartbeatAlive = true
+    if (this.#paused) {
+      this.#heartbeatAlive = true
       return
     }
-    if (!this.heartbeatAlive) {
-      this.fail(new HeartbeatTimeoutError(), true)
+    if (!this.#heartbeatAlive) {
+      this.#fail(new HeartbeatTimeoutError(), true)
       return
     }
-    this.heartbeatAlive = false
-    this.transport.ping()
+    this.#heartbeatAlive = false
+    this.#transport.ping()
   }
 
   // Flag-based idle check, independent of the heartbeat timer: each tick
   // either finds evidence (an incoming message, not a pong) since the
   // previous tick and clears the flag, or finds none and terminates.
   // Detection latency is therefore 1x-2x idleTimeoutMs.
-  private idleTick(): void {
+  #idleTick(): void {
     // See heartbeatTick: no messages can arrive while paused for backpressure.
-    if (this.paused) {
-      this.idleActive = true
+    if (this.#paused) {
+      this.#idleActive = true
       return
     }
-    if (!this.idleActive) {
-      this.fail(new IdleTimeoutError(), true)
+    if (!this.#idleActive) {
+      this.#fail(new IdleTimeoutError(), true)
       return
     }
-    this.idleActive = false
+    this.#idleActive = false
   }
 
   // ---- message intake: dataMode enforcement, then buffering/watermarks ----
 
-  private onMessage(data: string | Uint8Array, isBinary: boolean): void {
+  #onMessage(data: string | Uint8Array, isBinary: boolean): void {
     const received = isBinary ? 'binary' : 'text'
-    if (this.dataMode === 'text' && isBinary) {
-      this.rejectDataMode('text', received)
+    if (this.#dataMode === 'text' && isBinary) {
+      this.#rejectDataMode('text', received)
       return
     }
-    if (this.dataMode === 'binary' && !isBinary) {
-      this.rejectDataMode('binary', received)
+    if (this.#dataMode === 'binary' && !isBinary) {
+      this.#rejectDataMode('binary', received)
       return
     }
     const value = data as MessageOf<M>
     const bytes = messageBytes(data, isBinary)
-    const waiter = this.waiters.shift()
+    const waiter = this.#waiters.shift()
     if (waiter) {
       waiter.resolve({ value, done: false })
       return
     }
-    this.buffer.push({ value, bytes })
-    this.bufferedBytes += bytes
+    this.#buffer.push({ value, bytes })
+    this.#bufferedBytes += bytes
     // Hard ceiling first: crash over silent unbounded growth.
-    if (this.bufferedBytes > this.maxBufferedBytes) {
-      this.fail(new BufferOverflowError(this.bufferedBytes), true)
+    if (this.#bufferedBytes > this.#maxBufferedBytes) {
+      this.#fail(new BufferOverflowError(this.#bufferedBytes), true)
       return
     }
     // High-water mark: request the transport pause the socket.
-    if (!this.paused && this.bufferedBytes > this.highWaterMark) {
-      this.paused = true
-      this.transport.pause()
+    if (!this.#paused && this.#bufferedBytes > this.#highWaterMark) {
+      this.#paused = true
+      this.#transport.pause()
     }
   }
 
-  private rejectDataMode(
+  #rejectDataMode(
     expected: 'text' | 'binary',
     received: 'text' | 'binary',
   ): void {
     // Attempt a protocol-level close (unsupported data), then hard kill.
-    this.transport.close(CloseCode.UnsupportedData)
-    this.fail(new DataModeError(expected, received), true)
+    this.#transport.close(CloseCode.UnsupportedData)
+    this.#fail(new DataModeError(expected, received), true)
   }
 
   // ---- terminal transitions ----
 
-  private dispatchClose(detail: CloseEventDetail): void {
+  #dispatchClose(detail: CloseEventDetail): void {
     this.dispatchEvent(new CustomEvent('close', { detail }))
   }
 
-  private finishDone(info: CloseEventDetail): void {
-    this.terminal = { type: 'done' }
-    this.clearTimers()
-    this.detachSignal()
+  #finishDone(info: CloseEventDetail): void {
+    this.#terminal = { type: 'done' }
+    this.#clearTimers()
+    this.#detachSignal()
     // Deliver `done` to any pending waiters (buffer is empty when waiters exist).
     let waiter: Waiter<MessageOf<M>> | undefined
-    while ((waiter = this.waiters.shift())) {
+    while ((waiter = this.#waiters.shift())) {
       waiter.resolve({ value: undefined as never, done: true })
     }
-    this.dispatchClose(info)
+    this.#dispatchClose(info)
   }
 
-  private fail(error: unknown, terminateTransport = false): void {
-    if (this.terminal) return
-    this.terminal = { type: 'error', error }
-    this.state = 'closed'
-    this.clearTimers()
-    this.detachSignal()
+  #fail(error: unknown, terminateTransport = false): void {
+    if (this.#terminal) return
+    this.#terminal = { type: 'error', error }
+    this.#state = 'closed'
+    this.#clearTimers()
+    this.#detachSignal()
     // Discard undelivered buffered messages: never yield post-failure data.
-    this.buffer.length = 0
-    this.bufferedBytes = 0
-    if (terminateTransport) this.transport.terminate()
+    this.#buffer.length = 0
+    this.#bufferedBytes = 0
+    if (terminateTransport) this.#transport.terminate()
     let waiter: Waiter<MessageOf<M>> | undefined
-    while ((waiter = this.waiters.shift())) {
+    while ((waiter = this.#waiters.shift())) {
       waiter.reject(error)
     }
     this.dispatchEvent(new CustomEvent('error', { detail: { error } }))
-    this.dispatchClose(closeDetailForError(error))
+    this.#dispatchClose(closeDetailForError(error))
   }
 
-  private detachSignal(): void {
-    if (this.signal && this.onAbort) {
-      this.signal.removeEventListener('abort', this.onAbort)
-      this.onAbort = undefined
+  #detachSignal(): void {
+    if (this.#signal && this.#onAbort) {
+      this.#signal.removeEventListener('abort', this.#onAbort)
+      this.#onAbort = undefined
     }
   }
 
@@ -344,32 +347,32 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   send(data: MessageOf<M>): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      if (this.state !== 'open') {
+      if (this.#state !== 'open') {
         reject(new WebSocketConnectionError('WebSocketConnection is not open'))
         return
       }
-      this.transport.send(data, (err) => (err ? reject(err) : resolve()))
+      this.#transport.send(data, (err) => (err ? reject(err) : resolve()))
     })
   }
 
   close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
-    if (this.state === 'initialized') {
+    if (this.#state === 'initialized') {
       // Never opened: clean no-op teardown, no events, resolve immediately.
-      this.state = 'closed'
+      this.#state = 'closed'
       // Set a done terminal so an iterate-after-no-op-close resolves { done: true }
       // instead of parking a waiter that never resolves. Dispatches no events —
       // there was never a connection to close.
-      this.terminal = { type: 'done' }
-      this.detachSignal()
+      this.#terminal = { type: 'done' }
+      this.#detachSignal()
       return Promise.resolve()
     }
-    if (this.state === 'closed') return Promise.resolve()
+    if (this.#state === 'closed') return Promise.resolve()
     const done = new Promise<void>((resolve) => {
       this.addEventListener('close', () => resolve(), { once: true })
     })
-    if (this.state === 'connecting' || this.state === 'open') {
-      this.state = 'closing'
-      this.transport.close(code, reason)
+    if (this.#state === 'connecting' || this.#state === 'open') {
+      this.#state = 'closing'
+      this.#transport.close(code, reason)
     }
     return done
   }
@@ -378,8 +381,8 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     // Idempotent teardown: a terminal is already settled (from a prior
     // fail()/finishDone()/terminate()), so just poke the transport again
     // and return — never double-settle the close event/waiters.
-    if (this.terminal) {
-      this.transport.terminate()
+    if (this.#terminal) {
+      this.#transport.terminate()
       return
     }
     // Self-settle synchronously (discarding the buffer) instead of waiting
@@ -389,7 +392,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     // otherwise route through finishDone() and deliver buffered messages —
     // contradicting "no handshake". Once this sets a terminal, that later
     // echo is a harmless no-op (fail()/finishDone() both guard on it).
-    this.fail(new SocketError(new Error('WebSocket terminated')), true)
+    this.#fail(new SocketError(new Error('WebSocket terminated')), true)
   }
 
   // ---- async iteration ----
@@ -402,25 +405,25 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     // second consumer to steal, and the terminal cause is the more useful
     // diagnosis. An error terminal rethrows its cause (same as a mid-stream
     // next() would); a clean terminal throws a descriptive error.
-    if (this.terminal) {
-      if (this.terminal.type === 'error') {
-        throw this.terminal.error
+    if (this.#terminal) {
+      if (this.#terminal.type === 'error') {
+        throw this.#terminal.error
       }
       throw new WebSocketConnectionError(
         'Cannot iterate a WebSocketConnection that has already closed',
       )
     }
-    if (this.iterated) {
+    if (this.#iterated) {
       throw new WebSocketConnectionError(
         'WebSocketConnection is already being iterated',
       )
     }
-    this.iterated = true
+    this.#iterated = true
     return {
-      next: () => this.next(),
+      next: () => this.#next(),
       return: async () => {
         // Consumer abandoned iteration: polite close.
-        if (this.state === 'open' || this.state === 'connecting') {
+        if (this.#state === 'open' || this.#state === 'connecting') {
           void this.close(CloseCode.Normal).catch(() => {})
         }
         return { value: undefined as never, done: true }
@@ -428,45 +431,45 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     }
   }
 
-  private triggerOpen(): void {
-    if (this.openTriggered) return
-    this.openTriggered = true
+  #triggerOpen(): void {
+    if (this.#openTriggered) return
+    this.#openTriggered = true
     // Only open if still in the pre-open state (close()/abort before the first
     // pull may have already moved us to 'closed').
-    if (this.state === 'initialized') {
-      this.state = 'connecting'
-      this.transport.open()
+    if (this.#state === 'initialized') {
+      this.#state = 'connecting'
+      this.#transport.open()
     }
   }
 
-  private next(): Promise<IteratorResult<MessageOf<M>>> {
-    this.triggerOpen()
+  #next(): Promise<IteratorResult<MessageOf<M>>> {
+    this.#triggerOpen()
     // 1. Drain buffered messages first (even after a clean-close terminal).
-    const item = this.buffer.shift()
+    const item = this.#buffer.shift()
     if (item) {
-      this.bufferedBytes -= item.bytes
-      this.afterDrain() // resume the transport once below the low-water mark
+      this.#bufferedBytes -= item.bytes
+      this.#afterDrain() // resume the transport once below the low-water mark
       return Promise.resolve({ value: item.value, done: false })
     }
     // 2. Buffer empty: honor a stored terminal.
-    if (this.terminal) {
-      if (this.terminal.type === 'done') {
+    if (this.#terminal) {
+      if (this.#terminal.type === 'done') {
         return Promise.resolve({ value: undefined as never, done: true })
       }
-      return Promise.reject(this.terminal.error)
+      return Promise.reject(this.#terminal.error)
     }
     // 3. Otherwise park a waiter.
     return new Promise<IteratorResult<MessageOf<M>>>((resolve, reject) => {
-      this.waiters.push({ resolve, reject })
+      this.#waiters.push({ resolve, reject })
     })
   }
 
-  private afterDrain(): void {
+  #afterDrain(): void {
     // Only resume once well below the high-water mark, so the transport
     // doesn't rapidly flip between paused and resumed around the threshold.
-    if (this.paused && this.bufferedBytes < this.highWaterMark / 2) {
-      this.paused = false
-      this.transport.resume()
+    if (this.#paused && this.#bufferedBytes < this.#highWaterMark / 2) {
+      this.#paused = false
+      this.#transport.resume()
     }
   }
 }

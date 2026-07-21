@@ -11,26 +11,26 @@ export class NodeTransport implements Transport {
   readonly capabilities = { heartbeat: true, pauseResume: true } as const
   handlers!: TransportHandlers
 
-  private ws?: WebSocket
-  private readonly url: string | URL
-  private readonly options?: TransportOptions
+  #ws?: WebSocket
+  readonly #url: string | URL
+  readonly #options?: TransportOptions
 
   constructor(url: string | URL, options?: TransportOptions) {
-    this.url = url
-    this.options = options
+    this.#url = url
+    this.#options = options
   }
 
   open(): void {
-    const headers = toHeaderRecord(this.options?.headers)
+    const headers = toHeaderRecord(this.#options?.headers)
     // ws offers permessage-deflate by default (`perMessageDeflate: true`),
     // sending the same extension offer a browser WebSocket does. Leave it in
     // place — cross-platform behavior is deliberately identical here.
     const ws = new WebSocket(
-      this.url,
-      this.options?.protocols,
+      this.#url,
+      this.#options?.protocols,
       headers ? { headers } : undefined,
     )
-    this.ws = ws
+    this.#ws = ws
     // Pin the default so every frame arrives as a single Buffer. ws's RawData
     // is `Buffer | ArrayBuffer | Buffer[]`; only 'nodebuffer' guarantees Buffer
     // for both text and binary frames, which is what the listener below assumes.
@@ -59,31 +59,31 @@ export class NodeTransport implements Transport {
   }
 
   get protocol(): string {
-    return this.ws?.protocol ?? ''
+    return this.#ws?.protocol ?? ''
   }
 
   send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {
-    this.ws!.send(data, (err) => onFlush(err ?? undefined))
+    this.#ws!.send(data, (err) => onFlush(err ?? undefined))
   }
 
   ping(): void {
-    this.ws?.ping()
+    this.#ws?.ping()
   }
 
   pause(): void {
-    this.ws?.pause()
+    this.#ws?.pause()
   }
 
   resume(): void {
-    this.ws?.resume()
+    this.#ws?.resume()
   }
 
   close(code?: number, reason?: string): void {
-    this.ws?.close(code, reason)
+    this.#ws?.close(code, reason)
   }
 
   terminate(): void {
-    this.ws?.terminate()
+    this.#ws?.terminate()
   }
 }
 

@@ -37,10 +37,10 @@ export class BrowserTransport implements Transport {
   readonly capabilities = { heartbeat: false, pauseResume: false } as const
   handlers!: TransportHandlers
 
-  private ws?: WHATWGWebSocket
-  private readonly url: string | URL
-  private readonly options?: TransportOptions
-  private readonly WebSocketImpl: WebSocketCtor
+  #ws?: WHATWGWebSocket
+  readonly #url: string | URL
+  readonly #options?: TransportOptions
+  readonly #WebSocketImpl: WebSocketCtor
 
   constructor(
     url: string | URL,
@@ -59,14 +59,14 @@ export class BrowserTransport implements Transport {
         'WebSocket headers are not supported in the browser; use URL or subprotocol-based auth instead',
       )
     }
-    this.url = url
-    this.options = options
-    this.WebSocketImpl = WebSocketImpl
+    this.#url = url
+    this.#options = options
+    this.#WebSocketImpl = WebSocketImpl
   }
 
   open(): void {
-    const ws = new this.WebSocketImpl(this.url, this.options?.protocols)
-    this.ws = ws
+    const ws = new this.#WebSocketImpl(this.#url, this.#options?.protocols)
+    this.#ws = ws
     ws.binaryType = 'arraybuffer'
     ws.addEventListener('open', () => this.handlers.onOpen())
     ws.addEventListener('message', (ev: { data: unknown }) => {
@@ -102,13 +102,13 @@ export class BrowserTransport implements Transport {
   }
 
   get protocol(): string {
-    return this.ws?.protocol ?? ''
+    return this.#ws?.protocol ?? ''
   }
 
   send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {
     // No completion callback in the browser: resolve on hand-off ("accepted").
     try {
-      this.ws!.send(data)
+      this.#ws!.send(data)
       onFlush()
     } catch (err) {
       onFlush(err instanceof Error ? err : new Error(String(err)))
@@ -128,12 +128,12 @@ export class BrowserTransport implements Transport {
   }
 
   close(code?: number, reason?: string): void {
-    this.ws?.close(code, reason)
+    this.#ws?.close(code, reason)
   }
 
   terminate(): void {
     // No RST equivalent; a polite close is the strongest teardown available.
-    this.ws?.close()
+    this.#ws?.close()
   }
 }
 
