@@ -46,7 +46,11 @@ export async function up(db: Kysely<any>): Promise<void> {
     .materialized()
     .ifExists()
     .execute()
-  await db.schema.dropView('record_events_stats_old').materialized().ifExists().execute()
+  await db.schema
+    .dropView('record_events_stats_old')
+    .materialized()
+    .ifExists()
+    .execute()
   await db.schema
     .dropView('account_record_status_stats_old')
     .materialized()
