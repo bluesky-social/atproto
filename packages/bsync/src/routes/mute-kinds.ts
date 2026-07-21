@@ -1,21 +1,35 @@
-import type { MuteKind } from '../proto/bsync_pb.js'
+import { MuteKind } from '../proto/bsync_pb.js'
 
 /**
- * The database encoding of a mute's kinds: a comma-separated string of
- * MuteKind enum values, sorted and deduped. An empty string means a full
- * mute.
+ * The database encoding of a mute's kinds: a comma-separated string of kind
+ * names, sorted and deduped. An empty string means a full mute.
  *
- * bsync does not validate kind values — it stores and replays whatever the
- * producer sent. Validation happens upstream (bsky's muteActor); consumers
- * are expected to ignore values they don't recognize.
+ * bsync does not validate kind values — bsky's muteActor is the validation
+ * gate, and consumers ignore values they don't recognize. Kinds bsync knows
+ * are stored by name for legibility; unrecognized enum values are stored as
+ * their numeric value so they still round-trip to consumers, letting new
+ * kinds ship without a bsync deploy.
  */
 export type StoredMuteKinds = string
 
+const kindNames = new Map<MuteKind, string>([
+  [MuteKind.REPOSTS, 'reposts'],
+  [MuteKind.QUOTEPOSTS, 'quoteposts'],
+])
+
+const kindsByName = new Map<string, MuteKind>(
+  [...kindNames].map(([kind, name]) => [name, kind]),
+)
+
 export const muteKindsToStored = (kinds: MuteKind[]): StoredMuteKinds => {
-  return [...new Set(kinds)].sort((a, b) => a - b).join(',')
+  const names = kinds.map((kind) => kindNames.get(kind) ?? String(kind))
+  return [...new Set(names)].sort().join(',')
 }
 
 export const muteKindsFromStored = (kinds: StoredMuteKinds): MuteKind[] => {
   if (kinds === '') return []
-  return kinds.split(',').map((value) => Number(value) as MuteKind)
+  return kinds
+    .split(',')
+    .map((name) => kindsByName.get(name) ?? (Number(name) as MuteKind))
+    .sort((a, b) => a - b)
 }

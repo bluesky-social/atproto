@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely'
 
-// comma-separated MuteKind enum values; empty means a full mute
+// comma-separated MuteKind names; empty means a full mute
 const fullMute = ''
 
 export async function up(db: Kysely<unknown>): Promise<void> {
