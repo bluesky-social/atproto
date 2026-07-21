@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.11.11
+
+### Patch Changes
+
+- [#5231](https://github.com/bluesky-social/atproto/pull/5231) [`3358df6`](https://github.com/bluesky-social/atproto/commit/3358df61caab20c4258ea7673121a03236993d7b) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Add the rate limit response headers `RateLimit-Limit`, `RateLimit-Reset`, `RateLimit-Remaining`, `RateLimit-Policy`, and `Retry-After` on 429s to `Access-Control-Expose-Headers` so browser clients can read them on cross-origin requests.
+
 ## 0.11.10
 
 ### Patch Changes
