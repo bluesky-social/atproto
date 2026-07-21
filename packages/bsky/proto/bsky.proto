@@ -675,7 +675,7 @@ message GetMutesRequest {
 
 message GetMutesResponse {
   // Deprecated: use mutes, which carries the kinds of each mute.
-  repeated string dids = 1;
+  repeated string dids = 1 [deprecated = true];
   string cursor = 2;
   repeated MuteInfo mutes = 3;
 }
