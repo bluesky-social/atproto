@@ -1,4 +1,4 @@
-import type { StoredMuteKinds } from '../../../../util/mute-kinds.js'
+import type { StoredMuteKinds } from '../../../util/mute-kinds.js'
 
 export interface Mute {
   subjectDid: string

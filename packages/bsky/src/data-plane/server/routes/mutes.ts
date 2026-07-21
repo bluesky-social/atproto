@@ -9,7 +9,7 @@ import {
   muteKindsFromStored,
   muteKindsToStored,
   storedHasMuteKind,
-} from '../../../util/mute-kinds.js'
+} from '../../util/mute-kinds.js'
 import type { Database } from '../db/index.js'
 import {
   CreatedAtDidKeyset,

@@ -1,4 +1,4 @@
-import { MuteKind } from '../proto/bsky_pb.js'
+import { MuteKind } from '../../proto/bsky_pb.js'
 
 /**
  * The database encoding of a mute's kinds: a comma-separated string of kind

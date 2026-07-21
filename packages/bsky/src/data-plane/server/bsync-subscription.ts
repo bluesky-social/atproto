@@ -17,7 +17,7 @@ import {
   type Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
-import { muteKindsToStored } from '../../util/mute-kinds.js'
+import { muteKindsToStored } from '../util/mute-kinds.js'
 import type { Database } from './db/index.js'
 import { countAll, excluded } from './db/util.js'
 
