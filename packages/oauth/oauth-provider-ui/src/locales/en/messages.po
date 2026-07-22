@@ -123,7 +123,7 @@ msgstr "Account name"
 msgid "Account overview"
 msgstr "Account overview"
 
-#: src/authorization-page.tsx:228
+#: src/authorization-page.tsx:232
 #: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Account reactivated"
@@ -146,7 +146,7 @@ msgstr "alice.com"
 
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
-#: src/components/reset-password-view.tsx:61
+#: src/components/reset-password-view.tsx:81
 msgid "Already have a code?"
 msgstr "Already have a code?"
 
@@ -259,7 +259,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
 
-#: src/contexts/authentication.tsx:190
+#: src/contexts/authentication.tsx:255
 #: src/components/reactivate-account-view.tsx:44
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
@@ -491,7 +491,7 @@ msgstr "Email verified"
 msgid "Enter a password"
 msgstr "Enter a password"
 
-#: src/components/reset-password-view.tsx:73
+#: src/components/reset-password-view.tsx:93
 msgid "Enter the code you received to reset your password."
 msgstr "Enter the code you received to reset your password."
 
@@ -499,7 +499,7 @@ msgstr "Enter the code you received to reset your password."
 msgid "Enter the domain you want to use"
 msgstr "Enter the domain you want to use"
 
-#: src/components/reset-password-view.tsx:42
+#: src/components/reset-password-view.tsx:62
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 
@@ -605,7 +605,7 @@ msgstr "For security reasons, we'll need to send a confirmation code to your ema
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address."
 
-#: src/components/reset-password-view.tsx:38
+#: src/components/reset-password-view.tsx:58
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
@@ -740,15 +740,15 @@ msgctxt "verify email"
 msgid "Later"
 msgstr "Later"
 
-#: src/components/reset-password-view.tsx:39
+#: src/components/reset-password-view.tsx:59
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:166
 msgid "Login canceled"
 msgstr "Login canceled"
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:166
 msgid "Login complete"
 msgstr "Login complete"
 
@@ -831,13 +831,13 @@ msgstr "New email address"
 msgid "New password"
 msgstr "New password"
 
-#: src/components/reset-password-view.tsx:50
-#: src/components/reset-password-view.tsx:85
+#: src/components/reset-password-view.tsx:70
+#: src/components/reset-password-view.tsx:105
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "Next"
 
-#: src/components/reset-password-view.tsx:111
+#: src/components/reset-password-view.tsx:131
 msgid "Okay"
 msgstr "Okay"
 
@@ -869,11 +869,11 @@ msgstr "Password strength"
 msgid "Password strength indicator"
 msgstr "Password strength indicator"
 
-#: src/components/reset-password-view.tsx:99
+#: src/components/reset-password-view.tsx:119
 msgid "Password Updated"
 msgstr "Password Updated"
 
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:124
 msgid "Password updated!"
 msgstr "Password updated!"
 
@@ -984,7 +984,7 @@ msgstr "Repository"
 msgid "Reset code"
 msgstr "Reset code"
 
-#: src/components/reset-password-view.tsx:71
+#: src/components/reset-password-view.tsx:91
 msgid "Reset Password"
 msgstr "Reset Password"
 
@@ -1412,7 +1412,7 @@ msgid "You can now sign in with your new email."
 msgstr "You can now sign in with your new email."
 
 #: src/data/password.ts:45
-#: src/components/reset-password-view.tsx:107
+#: src/components/reset-password-view.tsx:127
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
@@ -1420,7 +1420,7 @@ msgstr "You can now sign in with your new password."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 
-#: src/components/reset-password-view.tsx:77
+#: src/components/reset-password-view.tsx:97
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 
@@ -1432,7 +1432,7 @@ msgstr "Your account"
 msgid "Your account and all associated data have been deleted."
 msgstr "Your account and all associated data have been deleted."
 
-#: src/authorization-page.tsx:229
+#: src/authorization-page.tsx:233
 msgid "Your account has been successfully reactivated."
 msgstr "Your account has been successfully reactivated."
 
@@ -1477,7 +1477,7 @@ msgstr "Your email address needs to be verified."
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
-#: src/components/reset-password-view.tsx:100
+#: src/components/reset-password-view.tsx:120
 msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
 

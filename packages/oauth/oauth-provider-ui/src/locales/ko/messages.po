@@ -123,7 +123,7 @@ msgstr "계정 이름"
 msgid "Account overview"
 msgstr "계정 개요"
 
-#: src/authorization-page.tsx:228
+#: src/authorization-page.tsx:232
 #: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr ""
@@ -146,7 +146,7 @@ msgstr ""
 
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
-#: src/components/reset-password-view.tsx:61
+#: src/components/reset-password-view.tsx:81
 msgid "Already have a code?"
 msgstr "이미 코드가 있나요?"
 
@@ -259,7 +259,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "호출"
 
-#: src/contexts/authentication.tsx:190
+#: src/contexts/authentication.tsx:255
 #: src/components/reactivate-account-view.tsx:44
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
@@ -491,7 +491,7 @@ msgstr ""
 msgid "Enter a password"
 msgstr "비밀번호 입력"
 
-#: src/components/reset-password-view.tsx:73
+#: src/components/reset-password-view.tsx:93
 msgid "Enter the code you received to reset your password."
 msgstr "비밀번호를 재설정하려면 받은 코드를 입력하세요."
 
@@ -499,7 +499,7 @@ msgstr "비밀번호를 재설정하려면 받은 코드를 입력하세요."
 msgid "Enter the domain you want to use"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:42
+#: src/components/reset-password-view.tsx:62
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
 
@@ -605,7 +605,7 @@ msgstr ""
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr ""
 
-#: src/components/reset-password-view.tsx:38
+#: src/components/reset-password-view.tsx:58
 msgid "Forgot Password"
 msgstr "비밀번호 분실"
 
@@ -730,15 +730,15 @@ msgctxt "verify email"
 msgid "Later"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:39
+#: src/components/reset-password-view.tsx:59
 msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:166
 msgid "Login canceled"
 msgstr ""
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:166
 msgid "Login complete"
 msgstr "로그인 완료"
 
@@ -821,13 +821,13 @@ msgstr ""
 msgid "New password"
 msgstr "새 비밀번호"
 
-#: src/components/reset-password-view.tsx:50
-#: src/components/reset-password-view.tsx:85
+#: src/components/reset-password-view.tsx:70
+#: src/components/reset-password-view.tsx:105
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "다음"
 
-#: src/components/reset-password-view.tsx:111
+#: src/components/reset-password-view.tsx:131
 msgid "Okay"
 msgstr "확인"
 
@@ -859,11 +859,11 @@ msgstr "비밀번호 강도"
 msgid "Password strength indicator"
 msgstr "비밀번호 강도 표시자"
 
-#: src/components/reset-password-view.tsx:99
+#: src/components/reset-password-view.tsx:119
 msgid "Password Updated"
 msgstr "비밀번호 변경됨"
 
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:124
 msgid "Password updated!"
 msgstr "비밀번호를 변경했습니다!"
 
@@ -974,7 +974,7 @@ msgstr "저장소"
 msgid "Reset code"
 msgstr "재설정 코드"
 
-#: src/components/reset-password-view.tsx:71
+#: src/components/reset-password-view.tsx:91
 msgid "Reset Password"
 msgstr "비밀번호 재설정"
 
@@ -1402,7 +1402,7 @@ msgid "You can now sign in with your new email."
 msgstr ""
 
 #: src/data/password.ts:45
-#: src/components/reset-password-view.tsx:107
+#: src/components/reset-password-view.tsx:127
 msgid "You can now sign in with your new password."
 msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
@@ -1410,7 +1410,7 @@ msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr ""
 
-#: src/components/reset-password-view.tsx:77
+#: src/components/reset-password-view.tsx:97
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "‘재설정 코드’가 포함된 이메일을 받게 되면 여기에 해당 코드를 입력한 다음 새 비밀번호를 입력하세요."
 
@@ -1422,7 +1422,7 @@ msgstr "내 계정"
 msgid "Your account and all associated data have been deleted."
 msgstr ""
 
-#: src/authorization-page.tsx:229
+#: src/authorization-page.tsx:233
 msgid "Your account has been successfully reactivated."
 msgstr ""
 
@@ -1467,7 +1467,7 @@ msgstr ""
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
 
-#: src/components/reset-password-view.tsx:100
+#: src/components/reset-password-view.tsx:120
 msgid "Your password has been updated!"
 msgstr "비밀번호를 변경했습니다!"
 

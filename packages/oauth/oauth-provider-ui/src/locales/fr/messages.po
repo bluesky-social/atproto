@@ -123,7 +123,7 @@ msgstr "Nom du compte"
 msgid "Account overview"
 msgstr "Aperçu du compte"
 
-#: src/authorization-page.tsx:228
+#: src/authorization-page.tsx:232
 #: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Compte réactivé"
@@ -146,7 +146,7 @@ msgstr "alice.com"
 
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
-#: src/components/reset-password-view.tsx:61
+#: src/components/reset-password-view.tsx:81
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
@@ -259,7 +259,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Appeler"
 
-#: src/contexts/authentication.tsx:190
+#: src/contexts/authentication.tsx:255
 #: src/components/reactivate-account-view.tsx:44
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
@@ -491,7 +491,7 @@ msgstr "Adresse email vérifiée"
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
-#: src/components/reset-password-view.tsx:73
+#: src/components/reset-password-view.tsx:93
 msgid "Enter the code you received to reset your password."
 msgstr "Saisissez le code que vous avez reçu pour réinitialiser votre mot de passe."
 
@@ -499,7 +499,7 @@ msgstr "Saisissez le code que vous avez reçu pour réinitialiser votre mot de p
 msgid "Enter the domain you want to use"
 msgstr "Saisissez le domaine que vous souhaitez utiliser"
 
-#: src/components/reset-password-view.tsx:42
+#: src/components/reset-password-view.tsx:62
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
 
@@ -605,7 +605,7 @@ msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmat
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email."
 
-#: src/components/reset-password-view.tsx:38
+#: src/components/reset-password-view.tsx:58
 msgid "Forgot Password"
 msgstr "Mot de passe oublié"
 
@@ -740,15 +740,15 @@ msgctxt "verify email"
 msgid "Later"
 msgstr "Plus tard"
 
-#: src/components/reset-password-view.tsx:39
+#: src/components/reset-password-view.tsx:59
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:166
 msgid "Login canceled"
 msgstr "Connexion annulée"
 
-#: src/authorization-page.tsx:162
+#: src/authorization-page.tsx:166
 msgid "Login complete"
 msgstr "Connexion terminée"
 
@@ -831,13 +831,13 @@ msgstr "Nouvelle adresse email"
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: src/components/reset-password-view.tsx:50
-#: src/components/reset-password-view.tsx:85
+#: src/components/reset-password-view.tsx:70
+#: src/components/reset-password-view.tsx:105
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "Suivant"
 
-#: src/components/reset-password-view.tsx:111
+#: src/components/reset-password-view.tsx:131
 msgid "Okay"
 msgstr "OK"
 
@@ -869,11 +869,11 @@ msgstr "Complexité du mot de passe"
 msgid "Password strength indicator"
 msgstr "Indicateur de complexité du mot de passe"
 
-#: src/components/reset-password-view.tsx:99
+#: src/components/reset-password-view.tsx:119
 msgid "Password Updated"
 msgstr "Mot de passe mis à jour"
 
-#: src/components/reset-password-view.tsx:104
+#: src/components/reset-password-view.tsx:124
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
@@ -984,7 +984,7 @@ msgstr "Données publiques"
 msgid "Reset code"
 msgstr "Code de réinitialisation"
 
-#: src/components/reset-password-view.tsx:71
+#: src/components/reset-password-view.tsx:91
 msgid "Reset Password"
 msgstr "Réinitialiser le mot de passe"
 
@@ -1412,7 +1412,7 @@ msgid "You can now sign in with your new email."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email."
 
 #: src/data/password.ts:45
-#: src/components/reset-password-view.tsx:107
+#: src/components/reset-password-view.tsx:127
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 
@@ -1420,7 +1420,7 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre compte pour continuer à vous connecter. Votre contenu (profil, publications, feeds, listes, etc.) redeviendra visible pour les autres utilisateurs."
 
-#: src/components/reset-password-view.tsx:77
+#: src/components/reset-password-view.tsx:97
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
@@ -1432,7 +1432,7 @@ msgstr "Votre compte"
 msgid "Your account and all associated data have been deleted."
 msgstr "Votre compte et toutes les données associées ont été supprimés."
 
-#: src/authorization-page.tsx:229
+#: src/authorization-page.tsx:233
 msgid "Your account has been successfully reactivated."
 msgstr "Votre compte a été réactivé avec succès."
 
@@ -1477,7 +1477,7 @@ msgstr "Votre adresse email doit être vérifiée."
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
-#: src/components/reset-password-view.tsx:100
+#: src/components/reset-password-view.tsx:120
 msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
 

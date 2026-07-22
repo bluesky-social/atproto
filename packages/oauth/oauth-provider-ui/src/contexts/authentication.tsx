@@ -15,6 +15,11 @@ import { SignUpView } from '#/components/sign-up-view.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { type Session, useSessionContext } from '#/contexts/session.tsx'
 import type { Api } from '#/lib/api'
+import {
+  type AuthStep,
+  readLocationStep,
+  syncLocationStep,
+} from '#/lib/location-step.ts'
 
 enum View {
   Welcome,
@@ -22,6 +27,39 @@ enum View {
   SignIn,
   ResetPassword,
   Authenticated,
+}
+
+function viewFromStep(step: AuthStep): View | undefined {
+  switch (step) {
+    case 'welcome':
+      return View.Welcome
+    case 'sign-in':
+      return View.SignIn
+    case 'sign-up':
+      return View.SignUp
+    case 'reset-password':
+    case 'reset-password-confirm':
+      return View.ResetPassword
+    case 'consent':
+      // The consent view is derived from the session state (which
+      // survives refresh through cookies); nothing to restore here.
+      return undefined
+  }
+}
+
+function stepFromView(view: View): AuthStep {
+  switch (view) {
+    case View.Welcome:
+      return 'welcome'
+    case View.SignIn:
+      return 'sign-in'
+    case View.SignUp:
+      return 'sign-up'
+    case View.ResetPassword:
+      return 'reset-password'
+    case View.Authenticated:
+      return 'consent'
+  }
 }
 
 export type AuthenticationContextType = {
@@ -103,13 +141,38 @@ export function AuthenticationProvider({
       ? View.Welcome
       : View.SignIn
 
+  // Step restored from the URL fragment (if any), read once at mount.
+  // Allows refreshing the page without being sent back to the initial
+  // view.
+  const [initialStep] = useState(readLocationStep)
+
   const [view, setView] = useState<View>(() => {
+    // A step in the URL means the user was already navigating the flow
+    // before a refresh; restore it in preference to the prompt default.
+    const initialView = initialStep ? viewFromStep(initialStep) : undefined
+    if (initialView != null) return initialView
+
     if (promptMode === 'create' && canSignUp) {
       return View.SignUp
     }
 
     return homeView
   })
+
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState(
+    initialStep === 'reset-password-confirm',
+  )
+
+  // Reflect the current step in the URL fragment so that refreshing the
+  // page restores the user to the same place. replaceState is used so
+  // that view changes never create browser history entries.
+  useEffect(() => {
+    syncLocationStep(
+      view === View.ResetPassword && resetPasswordConfirm
+        ? 'reset-password-confirm'
+        : stepFromView(view),
+    )
+  }, [view, resetPasswordConfirm])
 
   const showHome = () => setView(homeView)
   const showSignIn = () => setView(View.SignIn)
@@ -164,6 +227,8 @@ export function AuthenticationProvider({
       return (
         <ResetPasswordView
           emailDefault={resetPasswordHint}
+          initialView={resetPasswordConfirm ? 'confirm' : 'request'}
+          onViewChange={(v) => setResetPasswordConfirm(v === 'confirm')}
           onResetPasswordRequest={async (data) => {
             await api.initiatePasswordReset(data)
           }}
@@ -189,6 +254,7 @@ export function AuthenticationProvider({
         onBack={homeView === View.SignIn ? onCancel : showHome}
         backLabel={homeView === View.SignIn ? <Trans>Cancel</Trans> : undefined}
         onForgotPassword={(email) => {
+          setResetPasswordConfirm(false)
           setView(View.ResetPassword)
           setResetPasswordHint(email)
         }}
