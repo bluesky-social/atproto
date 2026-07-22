@@ -93,9 +93,13 @@ const presentation: PresentationFn<
   Context,
   Params,
   SkeletonState,
-  SkeletonState
+  app.bsky.unspecced.getTrendingTopics.$OutputBody
 > = (input) => {
-  return input.skeleton
+  return {
+    topics: input.skeleton.topics,
+    suggested: input.skeleton.suggested,
+    recIdStr: input.skeleton.recIdStr,
+  }
 }
 
 type Context = {
