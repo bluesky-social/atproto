@@ -16,6 +16,7 @@ export default defineConfig({
       'packages/internal/handle-resolver',
       'packages/lex/*',
       'packages/oauth/oauth-client',
+      'packages/oauth/oauth-provider-ui',
       'packages/syntax',
       'packages/tap',
 
