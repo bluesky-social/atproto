@@ -259,7 +259,7 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Llamar"
 
-#: src/contexts/authentication.tsx:255
+#: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:44
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203

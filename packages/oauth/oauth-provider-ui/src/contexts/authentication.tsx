@@ -149,8 +149,8 @@ export function AuthenticationProvider({
   const [view, setView] = useState<View>(() => {
     // A step in the URL means the user was already navigating the flow
     // before a refresh; restore it in preference to the prompt default.
-    const initialView = initialStep ? viewFromStep(initialStep) : undefined
-    if (initialView != null) return initialView
+    const restoredView = initialStep ? viewFromStep(initialStep) : undefined
+    if (restoredView != null) return restoredView
 
     if (promptMode === 'create' && canSignUp) {
       return View.SignUp
@@ -159,6 +159,10 @@ export function AuthenticationProvider({
     return homeView
   })
 
+  // Whether the reset-password flow is on its "confirm" sub-step. Must be
+  // reset on every path that enters or leaves View.ResetPassword (see
+  // showSignIn and onForgotPassword below), or a stale `true` would make a
+  // later visit start on the confirm step.
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState(
     initialStep === 'reset-password-confirm',
   )
@@ -175,7 +179,11 @@ export function AuthenticationProvider({
   }, [view, resetPasswordConfirm])
 
   const showHome = () => setView(homeView)
-  const showSignIn = () => setView(View.SignIn)
+  const showSignIn = () => {
+    // Leaving the reset-password flow (its onBack): drop its sub-step.
+    setResetPasswordConfirm(false)
+    setView(View.SignIn)
+  }
   const showSignUpIfAllowed = canSignUp ? () => setView(View.SignUp) : undefined
 
   // Fool-proofing
