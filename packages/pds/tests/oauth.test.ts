@@ -186,6 +186,56 @@ describe('oauth', () => {
     sendTemplateMock.mockRestore()
   })
 
+  it('restores the reset-password step after a page refresh', async () => {
+    const sendTemplateMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(appUrl)
+
+    await page.assertTitle('OAuth Client Example')
+
+    const input = await page.typeInInput('identifier', 'alice.test')
+
+    await page.navigationAction(async () => input.press('Enter'))
+
+    await page.assertTitle('Connexion')
+
+    await page.clickOnText('Oublié ?')
+
+    await page.assertTitle('Mot de passe oublié')
+
+    await page.typeInInput('email', 'alice@test.com')
+
+    await page.clickOnText('Suivant')
+
+    await page.assertTitle('Réinitialiser le mot de passe')
+
+    // Refreshing the page must bring the user back to the "confirm" step
+    // (the reset code was already emailed), not the initial sign-in view.
+    await page.reload()
+
+    await page.assertTitle('Réinitialiser le mot de passe')
+
+    const [params] = sendTemplateMock.mock.lastCall!
+
+    await page.typeInInput('code', params.token)
+
+    // Keep the same password as the previous test so later tests
+    // (which sign in with 'alice-new-pass') are unaffected.
+    await page.typeInInput('password', 'alice-new-pass')
+
+    await page.clickOnText('Suivant')
+
+    await page.assertTitle('Mot de passe mis à jour')
+
+    sendTemplateMock.mockRestore()
+  })
+
   it('Allows to sign-in through OAuth', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
