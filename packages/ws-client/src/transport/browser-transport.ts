@@ -137,7 +137,7 @@ export class BrowserTransport implements Transport {
   }
 }
 
-export const createBrowserTransport: TransportFactory = (url, options) =>
+export const createTransport: TransportFactory = (url, options) =>
   new BrowserTransport(url, options)
 
 function hasHeaders(headers?: Record<string, string> | Headers): boolean {

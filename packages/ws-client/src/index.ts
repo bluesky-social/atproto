@@ -1,3 +1,4 @@
+import { createTransport } from '#transport'
 import {
   type Awaitable,
   type ConnectionFactory,
@@ -9,7 +10,6 @@ import {
   WebSocketConnectionEngine,
   type WebSocketConnectionOptions,
 } from './connection.js'
-import { createNodeTransport } from './transport/node-transport.js'
 
 /**
  * A single WebSocket connection, consumed as an `AsyncIterable` of messages.
@@ -22,12 +22,12 @@ export class WebSocketConnection<
   M extends DataMode = 'auto',
 > extends WebSocketConnectionEngine<M> {
   constructor(url: string | URL, options?: WebSocketConnectionOptions<M>) {
-    super(createNodeTransport, url, options)
+    super(createTransport, url, options)
   }
 }
 
-const nodeConnectionFactory: ConnectionFactory = (url, options) =>
-  new WebSocketConnectionEngine(createNodeTransport, url, options)
+const connectionFactory: ConnectionFactory = (url, options) =>
+  new WebSocketConnectionEngine(createTransport, url, options)
 
 /**
  * A robust WebSocket client that prioritizes liveness (e.g. via heartbeats),
@@ -43,7 +43,7 @@ export class WebSocketClient<
     url: string | URL | (() => Awaitable<string | URL>),
     options?: WebSocketClientOptions<M>,
   ) {
-    super(nodeConnectionFactory, url, options)
+    super(connectionFactory, url, options)
   }
 }
 

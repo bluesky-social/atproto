@@ -6,7 +6,7 @@ import httpTerminator from 'http-terminator'
 import { describe, expect, it, vi } from 'vitest'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { WebSocketConnection } from '../src/node.ts'
+import { WebSocketConnection } from '../src/index.ts'
 
 async function startServer(
   onConnection: (ws: WebSocket, req: IncomingMessage) => void,

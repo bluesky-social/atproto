@@ -70,7 +70,7 @@ permessage-deflate compression is offered by default, identically on Node.js and
 
 ### Node.js-only `headers`
 
-`options.headers` (`Record<string, string> | Headers`) is applied to the connection request on Node.js — useful for `Authorization`. Browsers offer no way to set WebSocket headers, so passing headers there throws on construction rather than silently dropping what is usually auth; authenticate via the URL or a subprotocol instead. The browser entrypoint's types omit `headers` entirely, so tooling that resolves it flags the option at compile time.
+`options.headers` (`Record<string, string> | Headers`) is applied to the connection request on Node.js — useful for `Authorization`. Browsers offer no way to set WebSocket headers, so passing headers there throws on construction rather than silently dropping what is usually auth; authenticate via the URL or a subprotocol instead. Browser-targeted code can opt into platform-accurate compile-time checking with the exported `BrowserWebSocketClientOptions` / `BrowserWebSocketConnectionOptions` types, which omit `headers`.
 
 ### Errors
 

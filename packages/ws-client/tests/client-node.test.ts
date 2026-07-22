@@ -6,7 +6,7 @@ import type { AddressInfo } from 'node:net'
 import httpTerminator from 'http-terminator'
 import { describe, expect, it } from 'vitest'
 import { type WebSocket as WsSocket, WebSocketServer } from 'ws'
-import { WebSocketClient } from '../src/node.ts'
+import { WebSocketClient } from '../src/index.ts'
 
 function startServer(
   onConnection: (ws: WsSocket, req: IncomingMessage) => void,

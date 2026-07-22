@@ -21,13 +21,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "imports": {
+    "#transport": {
       "node": {
-        "types": "./dist/node.d.ts",
-        "default": "./dist/node.js"
+        "types": "./dist/transport/node-transport.d.ts",
+        "default": "./dist/transport/node-transport.js"
       },
       "default": {
-        "types": "./dist/browser.d.ts",
-        "default": "./dist/browser.js"
+        "types": "./dist/transport/browser-transport.d.ts",
+        "default": "./dist/transport/browser-transport.js"
       }
     }
   },

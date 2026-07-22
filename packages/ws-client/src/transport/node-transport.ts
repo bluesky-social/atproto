@@ -87,7 +87,7 @@ export class NodeTransport implements Transport {
   }
 }
 
-export const createNodeTransport: TransportFactory = (url, options) =>
+export const createTransport: TransportFactory = (url, options) =>
   new NodeTransport(url, options)
 
 function toHeaderRecord(

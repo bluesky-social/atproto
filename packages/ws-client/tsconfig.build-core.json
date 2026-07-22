@@ -1,0 +1,15 @@
+{
+  // Shared, platform-neutral code (client/connection engines, lib, transport
+  // interface): compiled against the isomorphic lib set.
+  "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "exclude": [
+    "./src/index.ts",
+    "./src/transport/node-transport.ts",
+    "./src/transport/browser-transport.ts",
+  ],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
+}
