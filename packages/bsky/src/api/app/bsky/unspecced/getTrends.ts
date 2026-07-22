@@ -115,6 +115,7 @@ const noBlocks: RulesFn<Context, Params, SkeletonState> = (input) => {
   const blocks = hydration.bidirectionalBlocks?.get(viewer)
 
   return {
+    recIdStr: skeleton.recIdStr,
     trends: skeleton.trends.map((t) => ({
       ...t,
       dids: t.dids.filter((did) => !blocks?.get(did)),
@@ -131,9 +132,11 @@ const presentation: PresentationFn<
   const { ctx, skeleton, hydration } = input
 
   return {
+    recIdStr: skeleton.recIdStr,
     trends: skeleton.trends.map((t) => ({
       topic: t.topic,
       displayName: t.displayName,
+      description: t.description,
       link: t.link,
       startedAt: t.startedAt,
       postCount: t.postCount,

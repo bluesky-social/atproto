@@ -1,5 +1,11 @@
 # @atproto/aws
 
+## 0.3.8
+
+### Patch Changes
+
+- [#5247](https://github.com/bluesky-social/atproto/pull/5247) [`0af78cf`](https://github.com/bluesky-social/atproto/commit/0af78cf2b15a2b541f0f1889178ae64086d982f3) Thanks [@jcalabro](https://github.com/jcalabro)! - Pin `@smithy/core` to `>=3.29.5` to fix an outbound S3/R2 socket leak. Earlier versions did not destroy the underlying stream's socket when a `getObject` download was aborted mid-transfer (`ChecksumStream` swallowed the premature close), so `S3BlobStore` blob downloads that clients cancelled leaked sockets and file descriptors until the host exhausted TCP memory. `@smithy/core` 3.29.5 (smithy-typescript#2152) destroys the source and removes its listeners on premature closure.
+
 ## 0.3.7
 
 ### Patch Changes

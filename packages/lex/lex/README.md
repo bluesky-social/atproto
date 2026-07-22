@@ -174,7 +174,7 @@ This generates TypeScript files in `./src/lexicons` (by default) with type-safe 
 > To avoid committing generated files, add the output directory to your `.gitignore`:
 >
 > ```bash
-> echo "./src/lexicons" >> .gitignore
+> echo "/src/lexicons" >> .gitignore
 > ```
 
 **4. Use in your code**

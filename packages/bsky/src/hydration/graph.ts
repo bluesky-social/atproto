@@ -282,12 +282,14 @@ export class GraphHydrator {
     did: DidString
     cursor?: string
     limit?: number
+    sort?: string
   }): Promise<{ follows: FollowInfo[]; cursor: string }> {
-    const { did, cursor, limit } = input
+    const { did, cursor, limit, sort } = input
     const res = await this.dataplane.getFollows({
       actorDid: did,
       cursor,
       limit,
+      sort,
     })
     return { follows: res.follows, cursor: res.cursor }
   }
@@ -296,12 +298,14 @@ export class GraphHydrator {
     did: DidString
     cursor?: string
     limit?: number
+    sort?: string
   }): Promise<{ followers: FollowInfo[]; cursor: string }> {
-    const { did, cursor, limit } = input
+    const { did, cursor, limit, sort } = input
     const res = await this.dataplane.getFollowers({
       actorDid: did,
       cursor,
       limit,
+      sort,
     })
     return { followers: res.followers, cursor: res.cursor }
   }

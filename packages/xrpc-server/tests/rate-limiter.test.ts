@@ -239,6 +239,35 @@ describe('Parameters', () => {
     await expect(makeCall).rejects.toThrow('Rate Limit Exceeded')
   })
 
+  it('exposes rate limit headers to browsers (CORS)', async () => {
+    const { port } = s.address() as AddressInfo
+    const url = `http://localhost:${port}/xrpc/io.example.routeLimit?str=cors-headers`
+
+    const okRes = await fetch(url)
+    await okRes.arrayBuffer()
+    expect(okRes.status).toBe(200)
+    expect(okRes.headers.get('ratelimit-limit')).toBe('5')
+    expect(okRes.headers.get('ratelimit-remaining')).toBe('4')
+    expect(okRes.headers.get('ratelimit-reset')).toBeTruthy()
+    expect(okRes.headers.get('ratelimit-policy')).toBe('5;w=300')
+    expect(okRes.headers.get('access-control-expose-headers')).toBe(
+      'RateLimit-Limit, RateLimit-Reset, RateLimit-Remaining, RateLimit-Policy',
+    )
+
+    for (let i = 0; i < 4; i++) {
+      await fetch(url).then((res) => res.arrayBuffer())
+    }
+
+    const limitedRes = await fetch(url)
+    await limitedRes.arrayBuffer()
+    expect(limitedRes.status).toBe(429)
+    expect(limitedRes.headers.get('ratelimit-remaining')).toBe('0')
+    expect(limitedRes.headers.get('retry-after')).toBeTruthy()
+    expect(limitedRes.headers.get('access-control-expose-headers')).toBe(
+      'RateLimit-Limit, RateLimit-Reset, RateLimit-Remaining, RateLimit-Policy, Retry-After',
+    )
+  })
+
   it('can reset route rate limits', async () => {
     // Limit is 2.
     // Call 0 is OK (1/2).

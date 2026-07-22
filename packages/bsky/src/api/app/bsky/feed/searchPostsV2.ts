@@ -148,9 +148,10 @@ const skeleton = async (
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),
-    hitsTotal: res.pageInfo?.hitsTotal
-      ? Number(res.pageInfo.hitsTotal)
-      : undefined,
+    hitsTotal:
+      res.pageInfo?.hitsTotal != null
+        ? Number(res.pageInfo.hitsTotal)
+        : undefined,
     detectedQueryLanguages: res.detectedQueryLanguages,
     parsedQuery,
   }

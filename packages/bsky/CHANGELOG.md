@@ -1,5 +1,25 @@
 # @atproto/bsky
 
+## 0.0.264
+
+### Patch Changes
+
+- [#5254](https://github.com/bluesky-social/atproto/pull/5254) [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add description to trending topics
+
+- Updated dependencies [[`3358df6`](https://github.com/bluesky-social/atproto/commit/3358df61caab20c4258ea7673121a03236993d7b), [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa)]:
+  - @atproto/xrpc-server@0.11.11
+  - @atproto/api@0.20.31
+  - @atproto-labs/xrpc-utils@0.1.10
+  - @atproto/sync@0.3.13
+
+## 0.0.263
+
+### Patch Changes
+
+- [#5251](https://github.com/bluesky-social/atproto/pull/5251) [`ac691c7`](https://github.com/bluesky-social/atproto/commit/ac691c7df9555df939076ed7b506329129ce2841) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Return 0 for hitsTotal when there are no results
+
+- [#5250](https://github.com/bluesky-social/atproto/pull/5250) [`5baa874`](https://github.com/bluesky-social/atproto/commit/5baa87496f4d68cba980c2e1011c67ec19c94190) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add recIdStr field to getTrends endpoint
+
 ## 0.0.262
 
 ### Patch Changes
