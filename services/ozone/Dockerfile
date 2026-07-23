@@ -12,8 +12,8 @@ COPY ./pnpm-workspace.yaml ./
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
 
-# bsync is not a runtime dep but bsky's codegen:buf reads ../bsync/proto at build time
-COPY ./packages/bsync ./packages/bsync
+# bsync is not a runtime dep but bsky's "codegen:buf" script reads ../bsync/proto at build time
+COPY ./packages/bsync/proto ./packages/bsync/proto
 
 # NOTE ozones's transitive dependencies go here: if that changes, this needs to be updated.
 # pnpm list --filter 'ozone-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"

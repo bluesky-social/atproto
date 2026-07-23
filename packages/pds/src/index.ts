@@ -64,7 +64,7 @@ export type SkeletonHandler = MethodHandler<
   app.bsky.feed.getFeedSkeleton.$Output
 >
 
-export class PDS {
+export class PDS implements AsyncDisposable {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
@@ -89,7 +89,8 @@ export class PDS {
     env = undefined,
     signal: inputSignal,
     signals = ['SIGINT', 'SIGTERM'],
-    onBeforeStart = undefined,
+    onCreated = undefined,
+    onStarted = undefined,
   }: {
     env?: ServerEnvironment
     signal?: AbortSignal
@@ -98,51 +99,51 @@ export class PDS {
      * Hook that allows attaching additional logic (like adding custom HTTP
      * routes) before the PDS is started.
      */
-    onBeforeStart?: (pds: PDS) => void | Promise<void>
+    onCreated?: (pds: PDS) => void | Promise<void>
+    onStarted?: (pds: PDS) => void | Promise<void>
   } = {}): Promise<void> {
-    inputSignal?.throwIfAborted()
-
     const ac = new AbortController()
     const { signal } = ac
     const abort = () => ac.abort()
 
-    // Always abort the internal signal, allowing to use it as cleanup signal
+    // Always abort the internal signal, ensuring proper resource cleanup
     using _ = { [Symbol.dispose]: abort }
 
-    // Bind the internal signal to the input signal
+    // Bind the internal signal to the input signal (will automatically remove
+    // the listener when the internal signal is aborted)
+    inputSignal?.throwIfAborted()
     inputSignal?.addEventListener('abort', abort, { signal })
 
-    // Bind the internal signal to the process signals
+    // Bind the internal signal to the process signals (will automatically
+    // remove the listener when the internal signal is aborted)
     for (const sig of signals) {
       process.on(sig, abort)
       signal.addEventListener('abort', () => process.off(sig, abort))
     }
 
-    const pds = await PDS.fromEnv(env)
-    try {
-      if (!signal.aborted) {
-        pdsLogger.info('initializing')
-        await onBeforeStart?.(pds)
+    await using pds = await PDS.fromEnv(env)
 
-        if (!signal.aborted) {
-          pdsLogger.info('starting')
-          await pds.start()
+    if (signal.aborted) return
 
-          if (!signal.aborted) {
-            // Wait for the signal to abort, which indicates that the PDS should stop
-            pdsLogger.info('running')
-            await once(signal, 'abort')
-          }
-        }
-      }
+    await onCreated?.(pds)
 
-      // Propagate input signal abortion as error
-      inputSignal?.throwIfAborted()
-    } finally {
-      pdsLogger.info('stopping')
-      await pds.destroy()
-      pdsLogger.info('stopped')
-    }
+    if (signal.aborted) return
+
+    pdsLogger.info('starting')
+
+    await pds.start()
+
+    if (signal.aborted) return
+
+    await onStarted?.(pds)
+
+    if (signal.aborted) return
+
+    pdsLogger.info('started')
+
+    await once(signal, 'abort')
+
+    pdsLogger.info('stopping')
   }
 
   static async create(

@@ -13,14 +13,15 @@ export const seqLogger = subsystemLogger('pds:sequencer')
 export const mailerLogger = subsystemLogger('pds:mailer')
 export const labelerLogger = subsystemLogger('pds:labeler')
 export const crawlerLogger = subsystemLogger('pds:crawler')
-// @TODO Use a distinct namespace for the "http" subsystem
+// @TODO Use a distinct namespace for the "http" subsystem. Also, review uses of
+// the httpLogger.
 export const httpLogger = pdsLogger
 export const fetchLogger = subsystemLogger('pds:fetch')
 export const oauthLogger = subsystemLogger('pds:oauth')
 export const lexiconResolverLogger = subsystemLogger('pds:lexicon-resolver')
 
 export const loggerMiddleware = pinoHttp({
-  logger: pdsLogger,
+  logger: httpLogger,
   serializers: {
     req: reqSerializer,
     err: (err: unknown) => ({

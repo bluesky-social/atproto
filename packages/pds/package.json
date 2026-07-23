@@ -14,14 +14,10 @@
     "directory": "packages/pds"
   },
   "files": [
-    "./bin",
     "./dist",
     "./README.md",
     "./CHANGELOG.md"
   ],
-  "bin": {
-    "pds": "./bin/pds.mjs"
-  },
   "type": "module",
   "exports": {
     ".": {
@@ -32,7 +28,6 @@
       "types": "./dist/telemetry.d.ts",
       "default": "./dist/telemetry.js"
     },
-    "./bin": "./bin/pds.mjs",
     "./package.json": "./package.json"
   },
   "engines": {
