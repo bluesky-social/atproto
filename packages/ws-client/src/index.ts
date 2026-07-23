@@ -34,7 +34,7 @@ const connectionFactory: ConnectionFactory = (url, options) =>
  * flow control (backpressure), and handles reconnects transparently — using
  * whatever capabilities are available on each platform. Consumed as an
  * `AsyncIterable` of messages whose stream spans reconnects; lifecycle is
- * observable via `addEventListener('open' | 'reconnect' | 'error' | 'close')`.
+ * observable via the `onOpen`/`onReconnect`/`onError`/`onClose` hook options.
  */
 export class WebSocketClient<
   M extends DataMode = 'auto',
