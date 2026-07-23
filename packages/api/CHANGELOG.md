@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.32
+
+### Patch Changes
+
+- [#5257](https://github.com/bluesky-social/atproto/pull/5257) [`e133a65`](https://github.com/bluesky-social/atproto/commit/e133a65cba992e6429d4526dc3e7cfe8bf87426f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add sort parameter to getFollows and getFollowers
+
 ## 0.20.31
 
 ### Patch Changes
