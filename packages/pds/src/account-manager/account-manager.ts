@@ -591,6 +591,7 @@ export class AccountManager {
     identifier: string
     password: string
   }): Promise<{
+    // @TODO we should rename this "account" for consistency
     user: ActorAccount
     appPassword: password.AppPassDescript | null
     isSoftDeleted: boolean

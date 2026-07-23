@@ -17,23 +17,20 @@ export const sessionCreatedCounter = meter.createCounter<{
   valueType: ValueType.INT,
 })
 
-export const sessionRefreshedCounter = meter.createCounter<{
-  source: 'xrpc'
-}>('session.refreshed', {
-  description: 'Number of sessions refreshed on this PDS',
-  valueType: ValueType.INT,
-})
-
 export const oauthAuthorizationCounter = meter.createCounter<{
-  clientId: string
+  clientTrusted: boolean
+  clientFirstParty: boolean
+  clientConfidential: boolean
 }>('oauth.authorization', {
   description: 'Increased when an OAuth authorization is granted on this PDS',
   valueType: ValueType.INT,
 })
 
-export const oauthTokenRefreshedCounter = meter.createCounter<{
-  clientId: string
-}>('oauth.token.refreshed', {
-  description: 'Number of OAuth tokens refreshed on this PDS',
+export const oauthTokenIssuedCounter = meter.createCounter<{
+  clientTrusted: boolean
+  clientFirstParty: boolean
+  clientConfidential: boolean
+}>('oauth.token.issued', {
+  description: 'Number of OAuth tokens issued on this PDS',
   valueType: ValueType.INT,
 })

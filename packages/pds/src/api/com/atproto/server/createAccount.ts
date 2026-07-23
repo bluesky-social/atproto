@@ -18,10 +18,11 @@ import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scr
 import type { AppContext } from '../../../../context.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
+import { accountLogger, sessionLogger } from '../../../../logger.js'
 import {
   accountCreatedCounter,
   sessionCreatedCounter,
-} from '../../../../metrics.js'
+} from '../../../../meter.js'
 import { safeResolveDidDoc } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -104,7 +105,23 @@ export default function (server: Server, ctx: AppContext) {
                 })
 
               accountCreatedCounter.add(1, { source: 'xrpc', deactivated })
+              accountLogger.info(
+                {
+                  source: 'xrpc',
+                  account: { did },
+                  invited: !!inviteCode,
+                  deactivated,
+                },
+                'sign up',
+              )
               sessionCreatedCounter.add(1, { source: 'xrpc' })
+              sessionLogger.info(
+                {
+                  source: com.atproto.server.createAccount.$lxm,
+                  account: { did },
+                },
+                'token created',
+              )
 
               return {
                 encoding: 'application/json' as const,

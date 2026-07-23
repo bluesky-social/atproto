@@ -39,14 +39,19 @@ import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
 import { ImageUrlBuilder } from './image/image-url-builder.js'
-import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
+import {
+  fetchLogger,
+  lexiconResolverLogger,
+  oauthLogger,
+  sessionLogger,
+} from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import {
   accountCreatedCounter,
   oauthAuthorizationCounter,
-  oauthTokenRefreshedCounter,
-} from './metrics.js'
+  oauthTokenIssuedCounter,
+} from './meter.js'
 import { buildProxyAgent } from './pipethrough.js'
 import {
   LocalViewer,
@@ -408,17 +413,68 @@ export class AppContext implements AsyncDisposable {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
           },
-          onSignedUp() {
+          onSignedUp({ account, data, clientId }) {
+            oauthLogger.info(
+              {
+                account,
+                clientId, // if present, the user is signing up as part of an OAuth flow
+                invited: data.inviteCode != null,
+                deactivated: false,
+              },
+              'sign up',
+            )
             accountCreatedCounter.add(1, {
               source: 'oauth',
               deactivated: false,
             })
           },
-          onAuthorized({ client }) {
-            oauthAuthorizationCounter.add(1, { clientId: client.id })
+          onSignedIn({ account, clientId }) {
+            oauthLogger.info(
+              {
+                account,
+                clientId, // if present, the user is signing in as part of an OAuth flow
+              },
+              'sign in',
+            )
           },
-          onTokenRefreshed({ client }) {
-            oauthTokenRefreshedCounter.add(1, { clientId: client.id })
+          onAuthorized({ account, client }) {
+            oauthAuthorizationCounter.add(1, {
+              clientFirstParty: client.isFirstParty,
+              clientTrusted: client.isTrusted,
+              clientConfidential: client.isConfidential,
+            })
+            oauthLogger.info(
+              {
+                account,
+                clientId: client.id,
+              },
+              'authorized',
+            )
+          },
+          onTokenCreated({ account, client }) {
+            oauthTokenIssuedCounter.add(1, {
+              clientFirstParty: client.isFirstParty,
+              clientTrusted: client.isTrusted,
+              clientConfidential: client.isConfidential,
+            })
+            sessionLogger.info(
+              {
+                source: 'oauth',
+                account,
+                clientId: client.id,
+              },
+              'token created',
+            )
+          },
+          onTokenRefreshed({ account, client }) {
+            sessionLogger.info(
+              {
+                source: 'oauth',
+                account,
+                clientId: client.id,
+              },
+              'token refreshed',
+            )
           },
         })
       : undefined

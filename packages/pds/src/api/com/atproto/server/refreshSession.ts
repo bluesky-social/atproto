@@ -12,7 +12,7 @@ import { formatAccountStatus } from '../../../../account-manager/account-manager
 import type { AppContext } from '../../../../context.js'
 import { softDeleted } from '../../../../db/util.js'
 import { com } from '../../../../lexicons/index.js'
-import { sessionRefreshedCounter } from '../../../../metrics.js'
+import { sessionLogger } from '../../../../logger.js'
 import { didDocForSession } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -56,7 +56,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const { status, active } = formatAccountStatus(user)
 
-      sessionRefreshedCounter.add(1, { source: 'xrpc' })
+      sessionLogger.info(
+        {
+          source: com.atproto.server.refreshSession.$lxm,
+          account: user,
+        },
+        'token refreshed',
+      )
 
       return {
         encoding: 'application/json' as const,

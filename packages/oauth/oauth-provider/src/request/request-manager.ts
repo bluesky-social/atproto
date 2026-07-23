@@ -258,11 +258,7 @@ export class RequestManager {
     // force users to consent to authorization requests. We do this to avoid
     // unauthenticated clients from being able to silently re-authenticate
     // users.
-    if (
-      !client.info.isTrusted &&
-      !client.info.isFirstParty &&
-      client.metadata.token_endpoint_auth_method === 'none'
-    ) {
+    if (!client.isTrusted && !client.isFirstParty && !client.isConfidential) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
           parameters,

@@ -62,6 +62,18 @@ export class Client {
         : createRemoteJWKSet(new URL(metadata.jwks_uri), {})
   }
 
+  get isFirstParty(): boolean {
+    return this.info.isFirstParty
+  }
+
+  get isTrusted(): boolean {
+    return this.info.isTrusted
+  }
+
+  get isConfidential(): boolean {
+    return this.metadata.token_endpoint_auth_method !== 'none'
+  }
+
   /**
    * @see {@link https://www.rfc-editor.org/rfc/rfc9101.html#name-request-object-2}
    */

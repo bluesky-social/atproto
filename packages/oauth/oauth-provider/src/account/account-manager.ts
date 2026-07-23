@@ -129,12 +129,14 @@ export class AccountManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     input: SignUpInput,
+    clientId?: ClientId,
   ): Promise<Account> {
     return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
       await this.hooks.onSignUpAttempt?.call(null, {
         input,
         deviceId,
         deviceMetadata,
+        clientId,
       })
 
       const data = await this.buildSignupData(input, deviceId, deviceMetadata)
@@ -151,6 +153,7 @@ export class AccountManager {
           account,
           deviceId,
           deviceMetadata,
+          clientId,
         })
 
         return account

@@ -13,7 +13,8 @@ import { formatAccountStatus } from '../../../../account-manager/account-manager
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { sessionCreatedCounter } from '../../../../metrics.js'
+import { sessionLogger } from '../../../../logger.js'
+import { sessionCreatedCounter } from '../../../../meter.js'
 import { didDocForSession } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -81,6 +82,13 @@ export default function (server: Server, ctx: AppContext) {
         const { status, active } = formatAccountStatus(user)
 
         sessionCreatedCounter.add(1, { source: 'xrpc' })
+        sessionLogger.info(
+          {
+            source: com.atproto.server.createSession.$lxm,
+            account: user,
+          },
+          'token created',
+        )
 
         return {
           encoding: 'application/json',

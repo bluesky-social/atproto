@@ -290,6 +290,7 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId?: ClientId
   }) => Awaitable<void>
 
   /**
@@ -358,6 +359,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId?: ClientId
   }) => Awaitable<void>
 
   /**

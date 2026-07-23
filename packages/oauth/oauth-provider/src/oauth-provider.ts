@@ -1038,7 +1038,7 @@ export class OAuthProvider extends OAuthVerifier {
     data: TokenData,
   ): Promise<void> {
     const [sessionLifetime, refreshLifetime] =
-      clientAuth.method !== 'none' || client.info.isFirstParty
+      client.isFirstParty || client.isConfidential
         ? [
             CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
             CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
