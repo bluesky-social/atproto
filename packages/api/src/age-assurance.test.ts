@@ -17,6 +17,13 @@ describe('age-assurance', () => {
           rules: [],
         },
         {
+          platforms: ['ios', 'android'],
+          countryCode: 'US',
+          regionCode: 'TX',
+          minAccessAge: 18,
+          rules: [],
+        },
+        {
           countryCode: 'US',
           minAccessAge: 13,
           rules: [],
@@ -56,6 +63,52 @@ describe('age-assurance', () => {
       })
 
       expect(result).toBeUndefined()
+    })
+
+    it('should find platform-restricted region when platform matches', () => {
+      const result = getAgeAssuranceRegionConfig(config, {
+        countryCode: 'US',
+        regionCode: 'TX',
+        platform: 'ios',
+      })
+
+      expect(result).toEqual({
+        platforms: ['ios', 'android'],
+        countryCode: 'US',
+        regionCode: 'TX',
+        minAccessAge: 18,
+        rules: [],
+      })
+    })
+
+    it('should skip platform-restricted region when platform does not match', () => {
+      const result = getAgeAssuranceRegionConfig(config, {
+        countryCode: 'US',
+        regionCode: 'TX',
+        platform: 'web',
+      })
+
+      // falls through to the country-wide US config
+      expect(result).toEqual({
+        countryCode: 'US',
+        minAccessAge: 13,
+        rules: [],
+      })
+    })
+
+    it('should ignore platform restrictions when platform is not provided', () => {
+      const result = getAgeAssuranceRegionConfig(config, {
+        countryCode: 'US',
+        regionCode: 'TX',
+      })
+
+      expect(result).toEqual({
+        platforms: ['ios', 'android'],
+        countryCode: 'US',
+        regionCode: 'TX',
+        minAccessAge: 18,
+        rules: [],
+      })
     })
   })
 
