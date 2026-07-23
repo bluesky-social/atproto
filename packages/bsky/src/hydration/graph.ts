@@ -49,9 +49,13 @@ export const getStarterPackUriFromFollow = (
 ): AtUriString | undefined => {
   const viaUri = follow.via?.uri
   if (!viaUri) return
-  const parsed = new AtUri(viaUri)
-  if (parsed.collection !== app.bsky.graph.starterpack.$type) return
-  return viaUri as AtUriString
+  try {
+    const parsed = new AtUri(viaUri)
+    if (parsed.collection !== app.bsky.graph.starterpack.$type) return
+    return viaUri as AtUriString
+  } catch {
+    return
+  }
 }
 
 export type Block = RecordInfo<BlockRecord>
