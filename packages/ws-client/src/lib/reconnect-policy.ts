@@ -1,49 +1,15 @@
-import { CloseCode } from './close-codes.js'
-import {
-  CloseError,
-  HeartbeatTimeoutError,
-  IdleTimeoutError,
-  SocketError,
-} from './errors.js'
+import { WebSocketConnectionError } from './errors.js'
+
+export { FATAL_CLOSE_CODES, isReconnectableClose } from './close-codes.js'
 
 /**
- * Close codes that are FATAL — the connection should not be retried. These are
- * only codes a peer deliberately sends on the wire to signal normal shutdown
- * (1000) or a malformed-protocol condition (1002/1003/1007/1009).
- *
- * Synthetic codes (1005 no-status, 1006 abnormal, 1015 TLS) are intentionally
- * absent: per RFC 6455 §7.4.1 they MUST NOT appear in a wire Close frame — an
- * endpoint generates them locally to describe transient connection trouble.
- * They therefore represent the same failures that surface as SocketError in the
- * other runtime, and must classify identically (reconnect). Do not add them.
- */
-export const FATAL_CLOSE_CODES: ReadonlySet<number> = new Set([
-  CloseCode.Normal,
-  CloseCode.ProtocolError,
-  CloseCode.UnsupportedData,
-  CloseCode.InvalidPayload,
-  CloseCode.MessageTooBig,
-])
-
-export function isReconnectableClose(code: number): boolean {
-  return !FATAL_CLOSE_CODES.has(code)
-}
-
-/**
- * Default reconnect policy over WebSocketConnection's typed errors:
- * - CloseError → classify by close code (isReconnectableClose)
- * - SocketError / HeartbeatTimeoutError / IdleTimeoutError → reconnect
- * - anything else (BufferOverflowError, DataModeError, foreign errors) → fatal
+ * Default reconnect policy: each `WebSocketConnectionError` subclass
+ * classifies itself via `shouldRetry()` (`CloseError` by close code, network
+ * trouble and liveness timeouts retryable, local resource/protocol errors
+ * fatal). Anything outside the taxonomy (foreign errors) is fatal.
  */
 export function defaultShouldReconnect(error: unknown): boolean {
-  if (error instanceof CloseError) {
-    return isReconnectableClose(error.code)
-  }
-  return (
-    error instanceof SocketError ||
-    error instanceof HeartbeatTimeoutError ||
-    error instanceof IdleTimeoutError
-  )
+  return error instanceof WebSocketConnectionError && error.shouldRetry()
 }
 
 /** Exponential backoff with ±0.5s jitter, capped at maxMs. Ported from WebSocketKeepAlive. */

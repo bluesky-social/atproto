@@ -53,6 +53,35 @@ describe('WebSocketConnection errors', () => {
     expect(new HeartbeatTimeoutError().name).toBe('HeartbeatTimeoutError')
     expect(new IdleTimeoutError().name).toBe('IdleTimeoutError')
   })
+
+  describe('shouldRetry()', () => {
+    it('transient failures retry', () => {
+      expect(new SocketError(new Error('econnreset')).shouldRetry()).toBe(true)
+      expect(new HeartbeatTimeoutError().shouldRetry()).toBe(true)
+      expect(new IdleTimeoutError().shouldRetry()).toBe(true)
+    })
+
+    it('local resource/protocol misuse does not retry', () => {
+      expect(new BufferOverflowError(2048).shouldRetry()).toBe(false)
+      expect(new DataModeError('text', 'binary').shouldRetry()).toBe(false)
+      // Base-class errors (state misuse, e.g. send while not open) are fatal.
+      expect(new WebSocketConnectionError('not open').shouldRetry()).toBe(false)
+    })
+
+    it('CloseError classifies by close code', () => {
+      // Deliberate peer shutdown / malformed-protocol closes: fatal.
+      expect(new CloseError(1000, '', true).shouldRetry()).toBe(false)
+      expect(new CloseError(1002, '', false).shouldRetry()).toBe(false)
+      expect(new CloseError(1003, '', false).shouldRetry()).toBe(false)
+      expect(new CloseError(1007, '', false).shouldRetry()).toBe(false)
+      expect(new CloseError(1009, '', false).shouldRetry()).toBe(false)
+      // Going-away, abnormal, no-status, server-error closes: retry.
+      expect(new CloseError(1001, '', true).shouldRetry()).toBe(true)
+      expect(new CloseError(1005, '', false).shouldRetry()).toBe(true)
+      expect(new CloseError(1006, '', false).shouldRetry()).toBe(true)
+      expect(new CloseError(1011, '', false).shouldRetry()).toBe(true)
+    })
+  })
 })
 
 describe(WebSocketClientError, () => {
