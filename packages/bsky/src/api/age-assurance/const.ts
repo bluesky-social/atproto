@@ -159,6 +159,7 @@ export const AGE_ASSURANCE_CONFIG = app.bsky.ageassurance.defs.config.$build({
       ],
     },
     {
+      platforms: ['ios', 'android'],
       countryCode: 'US',
       regionCode: 'TX',
       minAccessAge: 18,
