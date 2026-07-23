@@ -27,14 +27,8 @@
   },
   "imports": {
     "#transport": {
-      "node": {
-        "types": "./dist/transport/node-transport.d.ts",
-        "default": "./dist/transport/node-transport.js"
-      },
-      "default": {
-        "types": "./dist/transport/browser-transport.d.ts",
-        "default": "./dist/transport/browser-transport.js"
-      }
+      "node": "./dist/transport/node-transport.js",
+      "default": "./dist/transport/browser-transport.js"
     }
   },
   "engines": {
