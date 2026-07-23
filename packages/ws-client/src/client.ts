@@ -9,6 +9,7 @@ import type {
 import { CloseCode } from './lib/close-codes.js'
 import { CloseError, WebSocketClientError } from './lib/errors.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
+import type { HeadersInit } from './transport/transport.js'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -21,13 +22,13 @@ export interface WebSocketClientOptions<M extends DataMode = 'auto'> {
   protocols?: string | string[]
   dataMode?: M
   /**
-   * Node.js only. Applied to the underlying `ws` connection. Accepts a plain
-   * record or a WHATWG `Headers`. The browser build throws on construction if
-   * headers are provided — the native WebSocket API has no request-header
-   * mechanism; use URL/subprotocol auth instead. See
-   * {@link BrowserWebSocketClientOptions}.
+   * Node.js only. Applied to the underlying `ws` connection. Accepts any
+   * `HeadersInit` (a plain record, entry pairs, or a WHATWG `Headers`). The
+   * browser throws on construction if headers are provided — the native
+   * WebSocket API has no request-header mechanism; use URL/subprotocol auth
+   * instead. See {@link BrowserWebSocketClientOptions}.
    */
-  headers?: Record<string, string> | Headers
+  headers?: HeadersInit
   heartbeat?: { intervalMs?: number } | false
   /**
    * Forwarded to the connection. Doubles as the browser's dead-connection

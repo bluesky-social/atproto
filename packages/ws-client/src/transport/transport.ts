@@ -1,3 +1,8 @@
+// The web's HeadersInit (a record, entry pairs, or a Headers), derived from
+// the Headers constructor so it resolves under both DOM lib and @types/node —
+// the latter has the Headers global but no HeadersInit type name.
+export type HeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>
+
 export interface TransportCapabilities {
   /** Can send protocol pings and observe pongs. */
   heartbeat: boolean
@@ -32,7 +37,7 @@ export interface Transport {
 
 export interface TransportOptions {
   protocols?: string | string[]
-  headers?: Record<string, string> | Headers
+  headers?: HeadersInit
 }
 
 export type TransportFactory = (

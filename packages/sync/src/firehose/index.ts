@@ -15,7 +15,7 @@ import {
   verifyProofs,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { Subscription } from '@atproto/xrpc-server'
+import { type HeadersInit, Subscription } from '@atproto/xrpc-server'
 import type {
   AccountEvt,
   AccountStatus,
@@ -42,7 +42,7 @@ export type FirehoseOptions = {
   subscriptionReconnectDelay?: number
   maxReconnectSeconds?: number
   heartbeatIntervalMs?: number
-  headers?: Record<string, string> | Headers
+  headers?: HeadersInit
 
   unauthenticatedCommits?: boolean
   unauthenticatedHandles?: boolean

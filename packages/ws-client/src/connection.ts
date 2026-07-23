@@ -9,6 +9,7 @@ import {
   WebSocketConnectionError,
 } from './lib/errors.js'
 import type {
+  HeadersInit,
   Transport,
   TransportCapabilities,
   TransportFactory,
@@ -44,13 +45,14 @@ export interface WebSocketConnectionOptions<M extends DataMode = 'auto'> {
   /** Called once when the connection ends, whichever way. */
   onClose?: (detail: CloseEventDetail) => void
   /**
-   * Node.js only. Applied to the underlying `ws` upgrade request. Accepts a
-   * plain record or a WHATWG `Headers` (normalized to a record). The browser
-   * build throws on construction if headers are provided — the native
-   * WebSocket API has no request-header mechanism; use URL/subprotocol-based
-   * auth there instead. See {@link BrowserWebSocketConnectionOptions}.
+   * Node.js only. Applied to the underlying `ws` upgrade request. Accepts any
+   * `HeadersInit` (a plain record, entry pairs, or a WHATWG `Headers`;
+   * normalized to a record). The browser throws on construction if headers
+   * are provided — the native WebSocket API has no request-header mechanism;
+   * use URL/subprotocol-based auth there instead. See
+   * {@link BrowserWebSocketConnectionOptions}.
    */
-  headers?: Record<string, string> | Headers
+  headers?: HeadersInit
 }
 
 export type NodeWebSocketConnectionOptions<M extends DataMode = 'auto'> =

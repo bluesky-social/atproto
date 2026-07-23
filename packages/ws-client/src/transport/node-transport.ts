@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws'
 import { CloseCode } from '../lib/close-codes.js'
 import type {
+  HeadersInit,
   Transport,
   TransportFactory,
   TransportHandlers,
@@ -96,15 +97,13 @@ export const createTransport: TransportFactory = (url, options) =>
   new NodeTransport(url, options)
 
 function toHeaderRecord(
-  headers?: Record<string, string> | Headers,
+  headers?: HeadersInit,
 ): Record<string, string> | undefined {
   if (!headers) return undefined
-  if (headers instanceof Headers) {
-    const record: Record<string, string> = {}
-    headers.forEach((value, key) => {
-      record[key] = value
-    })
-    return record
-  }
-  return headers
+  // Headers normalizes every HeadersInit form (record, entry pairs, Headers).
+  const record: Record<string, string> = {}
+  new Headers(headers).forEach((value, key) => {
+    record[key] = value
+  })
+  return record
 }

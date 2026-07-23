@@ -1,4 +1,5 @@
 import type {
+  HeadersInit,
   Transport,
   TransportFactory,
   TransportHandlers,
@@ -158,11 +159,9 @@ export class BrowserTransport implements Transport {
 export const createTransport: TransportFactory = (url, options) =>
   new BrowserTransport(url, options)
 
-function hasHeaders(headers?: Record<string, string> | Headers): boolean {
+function hasHeaders(headers?: HeadersInit): boolean {
   if (!headers) return false
-  if (headers instanceof Headers) {
-    for (const _ of headers) return true
-    return false
-  }
-  return Object.keys(headers).length > 0
+  // Headers normalizes every HeadersInit form (record, entry pairs, Headers).
+  for (const _ of new Headers(headers)) return true
+  return false
 }

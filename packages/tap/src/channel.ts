@@ -3,6 +3,7 @@ import { lexParse } from '@atproto/lex'
 import {
   CloseCode,
   CloseError,
+  type HeadersInit,
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
@@ -41,7 +42,7 @@ export type TapWebsocketOptions = {
   adminPassword?: string
   maxReconnectSeconds?: number
   heartbeatIntervalMs?: number
-  headers?: Record<string, string> | Headers
+  headers?: HeadersInit
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
 }
 

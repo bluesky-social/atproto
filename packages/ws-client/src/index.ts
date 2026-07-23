@@ -78,3 +78,4 @@ export {
   isReconnectableClose,
 } from './lib/reconnect-policy.js'
 export { CloseCode } from './lib/close-codes.js'
+export type { HeadersInit } from './transport/transport.js'

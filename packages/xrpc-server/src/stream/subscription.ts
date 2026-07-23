@@ -1,5 +1,7 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { WebSocketClient } from '@atproto/ws-client'
+import { type HeadersInit, WebSocketClient } from '@atproto/ws-client'
+
+export type { HeadersInit } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream.js'
 
 export class Subscription<T = unknown> {
@@ -9,7 +11,7 @@ export class Subscription<T = unknown> {
       method: string
       maxReconnectSeconds?: number
       heartbeatIntervalMs?: number
-      headers?: Record<string, string> | Headers
+      headers?: HeadersInit
       signal?: AbortSignal
       validate: (obj: unknown) => T | undefined
       onReconnectError?: (
