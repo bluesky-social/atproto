@@ -4,7 +4,7 @@ import type { IncomingMessage } from 'node:http'
 import type { AddressInfo } from 'node:net'
 // eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { type WebSocket as WsSocket, WebSocketServer } from 'ws'
 import { WebSocketClient } from '../src/index.ts'
 
@@ -81,6 +81,56 @@ describe('WebSocketClient (node integration)', () => {
     }
     expect(auths.every((a) => a === 'Bearer tok')).toBe(true)
   })
+
+  it('backoff timer keeps an otherwise-idle process alive to reconnect', async () => {
+    // A process whose only pending work is the client's reconnect backoff
+    // must not exit mid-backoff — the backoff timer must stay ref'd. Capture
+    // the timer created during backoff and assert it holds the event loop.
+    let connections = 0
+    const { ready, terminate } = startServer((ws) => {
+      connections++
+      if (connections === 1) {
+        // Abnormal drop (see note in the first test): client should back off
+        // ~1s and reconnect.
+        ws.send('first', () => ws.terminate())
+      } else {
+        ws.send('second')
+        ws.close(1000)
+      }
+    })
+    const url = await ready
+    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+
+    // Sample each timer's ref state one microtask after creation: the sleep
+    // helper calls unref() synchronously right after setTimeout returns, so
+    // this observes the state the timer actually parks with (sampling later
+    // won't do — fired timers report hasRef() === false).
+    const timerRefs: boolean[] = []
+    const realSetTimeout = globalThis.setTimeout
+    const spy = vi
+      .spyOn(globalThis, 'setTimeout')
+      .mockImplementation(((...args: Parameters<typeof setTimeout>) => {
+        const timer = realSetTimeout(...args)
+        queueMicrotask(() => timerRefs.push(timer.hasRef()))
+        return timer
+      }) as typeof setTimeout)
+    try {
+      const ws = new WebSocketClient(url, { dataMode: 'text' })
+      const received: string[] = []
+      for await (const msg of ws) {
+        received.push(msg)
+        if (msg === 'second') break
+      }
+      expect(received).toEqual(['first', 'second'])
+      expect(connections).toBeGreaterThanOrEqual(2)
+      // Every timer the client scheduled (the backoff sleep) must be ref'd,
+      // else a process with no other work exits instead of reconnecting.
+      expect(timerRefs.length).toBeGreaterThanOrEqual(1)
+      expect(timerRefs.every(Boolean)).toBe(true)
+    } finally {
+      spy.mockRestore()
+    }
+  }, 15_000)
 
   it('send() delivers to the server when connected', async () => {
     const seen: string[] = []

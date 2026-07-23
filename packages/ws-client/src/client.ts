@@ -390,7 +390,7 @@ function sleep(
     }
     signal?.addEventListener('abort', onAbort, { once: true })
     stopSignal?.addEventListener('abort', onStop, { once: true })
-    // Node: don't keep the process alive on the backoff timer.
-    ;(timer as { unref?: () => void }).unref?.()
+    // NB: the timer stays ref'd — a process whose only pending work is this
+    // backoff must stay alive to reconnect, not exit mid-backoff.
   })
 }
