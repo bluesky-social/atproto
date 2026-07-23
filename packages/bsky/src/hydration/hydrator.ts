@@ -79,6 +79,7 @@ import {
   type StarterPackAggs,
   type StarterPacks,
   type Verifications,
+  getStarterPackUriFromFollow,
 } from './graph.js'
 import {
   LabelHydrator,
@@ -1190,11 +1191,20 @@ export class Hydrator {
         }
       }
     }
-    const threadgates = await this.feed.getThreadgatesForPosts([
-      ...viewerRootPostUris.values(),
+    const starterPackUris = new Set<AtUriString>()
+    follows.forEach((follow) => {
+      if (!follow) return
+      const starterPackUri = getStarterPackUriFromFollow(follow.record)
+      if (starterPackUri) starterPackUris.add(starterPackUri)
+    })
+    const [threadgates, starterPackState] = await Promise.all([
+      this.feed.getThreadgatesForPosts([...viewerRootPostUris.values()]),
+      starterPackUris.size
+        ? this.hydrateStarterPacksBasic([...starterPackUris], ctx)
+        : {},
     ])
     actionTakedownLabels(postUris, posts, labels)
-    return mergeStates(profileState, {
+    return mergeManyStates(profileState, starterPackState, {
       posts,
       likes,
       reposts,
