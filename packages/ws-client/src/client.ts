@@ -1,4 +1,5 @@
 import type {
+  CloseEventDetail,
   DataMode,
   MessageOf,
   ReadyState,
@@ -8,11 +9,6 @@ import type {
 import { CloseCode } from './lib/close-codes.js'
 import { CloseError, WebSocketClientError } from './lib/errors.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
-import {
-  type CloseEventDetail,
-  TypedEventTarget,
-  type WebSocketClientEventMap,
-} from './lib/typed-event-target.js'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -61,6 +57,24 @@ export interface WebSocketClientOptions<M extends DataMode = 'auto'> {
    * => boolean` fully replaces the default classification.
    */
   shouldReconnect?: boolean | ((error: unknown, attempt: number) => boolean)
+  /** Called when the first connection succeeds. */
+  onOpen?: () => void
+  /** Called when a later connection succeeds (every reconnect). */
+  onReconnect?: () => void
+  /**
+   * Called when a connection ends with an error. `reconnect` is present
+   * (with the attempt count) when the client will retry, and absent when
+   * it's giving up (onClose follows).
+   */
+  onError?: (error: unknown, reconnect?: { attempt: number }) => void
+  /**
+   * Called exactly once per started client when it stops, terminally —
+   * whether it stopped on its own (a fatal error, or a non-reconnectable
+   * clean close) or was stopped (close(), an aborted `signal`). `detail`
+   * carries the real close code when a close frame provided one, or 1005
+   * (no status) when none did (e.g. a stop mid-backoff).
+   */
+  onClose?: (detail: CloseEventDetail) => void
 }
 
 export type NodeWebSocketClientOptions<M extends DataMode = 'auto'> =
@@ -76,17 +90,16 @@ export type BrowserWebSocketClientOptions<M extends DataMode = 'auto'> = Omit<
 const STOPPED_BY_CLOSE = Symbol('WebSocketClient stopped by close()')
 
 export class WebSocketClientBase<M extends DataMode = 'auto'>
-  extends TypedEventTarget<WebSocketClientEventMap>
   implements AsyncIterable<MessageOf<M>>
 {
   #connection: WebSocketConnectionEngine<M> | null = null
   #state: ReadyState = 'initialized'
   #iterated = false
   // The most recent child connection's close detail, and whether this
-  // client's own final 'close' event has been dispatched. Together these let
-  // every started lifecycle end with exactly one 'close' — carrying the real
-  // close code when a close frame provided one, or the WHATWG-conventional
-  // 1005 (no status) when none did (e.g. a stop mid-backoff).
+  // client's own final onClose hook has fired. Together these let every
+  // started lifecycle end with exactly one onClose — carrying the real close
+  // code when a close frame provided one, or the WHATWG-conventional 1005
+  // (no status) when none did (e.g. a stop mid-backoff).
   #lastCloseDetail?: CloseEventDetail
   #closeDispatched = false
   // The single internal stop signal. Aborts exactly once, with the stop cause
@@ -105,7 +118,6 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     url: string | URL | (() => Awaitable<string | URL>),
     options: WebSocketClientOptions<M> = {},
   ) {
-    super()
     this.#createConnection = createConnection
     this.#url = url
     this.#options = options
@@ -149,38 +161,36 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     this.#stopController.abort(STOPPED_BY_CLOSE)
     this.#state = 'closing'
     if (this.#connection && this.#connection.readyState !== 'closed') {
-      // A live connection: run the close handshake. Its 'close' event supplies
-      // the real close detail for this client's own final 'close' event.
+      // A live connection: run the close handshake. Its onClose hook supplies
+      // the real close detail for this client's own final onClose hook.
       // close() signals user-intended shutdown and must resolve cleanly even
       // if the connection fails mid-handshake.
       await this.#connection.close(code, reason).catch(() => {})
     } else {
       // No live connection to hand-shake with (never opened, or stopped
       // mid-backoff after a failure): no status code from the server applies
-      // to this stop, so drop any stale detail — the final 'close' event
+      // to this stop, so drop any stale detail — the final onClose hook
       // synthesizes 1005 (no status) per the WHATWG convention.
       this.#lastCloseDetail = undefined
     }
     this.#state = 'closed'
   }
 
-  // Dispatch this client's single, final 'close' event. Guarded so every
-  // started lifecycle ends with exactly one 'close' no matter which terminal
-  // path fires it (fatal error, clean stop, user close(), or abort). Uses the
+  // Fire this client's single, final onClose hook. Guarded so every started
+  // lifecycle ends with exactly one onClose no matter which terminal path
+  // fires it (fatal error, clean stop, user close(), or abort). Uses the
   // child connection's real close detail when a close frame provided one;
   // otherwise synthesizes 1005 (no status received), matching the WHATWG
   // convention for an end with no status code from the server.
   #dispatchClose(): void {
     if (this.#closeDispatched) return
     this.#closeDispatched = true
-    this.dispatchEvent(
-      new CustomEvent('close', {
-        detail: this.#lastCloseDetail ?? {
-          code: CloseCode.NoStatus,
-          reason: '',
-          wasClean: false,
-        },
-      }),
+    this.#options.onClose?.(
+      this.#lastCloseDetail ?? {
+        code: CloseCode.NoStatus,
+        reason: '',
+        wasClean: false,
+      },
     )
   }
 
@@ -269,35 +279,31 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         // since an already-aborted signal never fires a listener added after
         // the fact.
         if (checkStop()) break
-        const connection = this.#createConnection<M>(
-          url,
-          this.#connectionOptions(),
-        )
+        // Observe the child connection's lifecycle via its hooks: `onOpen`
+        // promotes each successful open to this layer's onOpen (first) /
+        // onReconnect (subsequent) hook; `onClose` captures the close detail
+        // so the terminal path below can re-emit the real close
+        // code/reason/wasClean.
+        let closeDetail: CloseEventDetail | undefined
+        const connection = this.#createConnection<M>(url, {
+          ...this.#connectionOptions(),
+          onOpen: () => {
+            this.#state = 'open'
+            retries = 0 // stable open: backoff starts over
+            if (firstOpen) {
+              firstOpen = false
+              this.#options.onOpen?.()
+            } else {
+              this.#options.onReconnect?.()
+            }
+          },
+          onClose: (detail) => {
+            closeDetail = detail
+            this.#lastCloseDetail = detail
+          },
+        })
         this.#connection = connection
         this.#state = 'connecting'
-
-        // Consume the child connection's own lifecycle events.
-        // `onConnectionOpen` promotes each successful open to this layer's
-        // `'open'` (first) / `'reconnect'` (subsequent) event;
-        // `onConnectionClose` captures the close detail so the terminal path
-        // below can re-emit the real close code/reason/wasClean.
-        let closeDetail: CloseEventDetail | undefined
-        const onConnectionOpen = () => {
-          this.#state = 'open'
-          retries = 0 // stable open: backoff starts over
-          if (firstOpen) {
-            firstOpen = false
-            this.dispatchEvent(new Event('open'))
-          } else {
-            this.dispatchEvent(new Event('reconnect'))
-          }
-        }
-        const onConnectionClose = (e: CustomEvent<CloseEventDetail>) => {
-          closeDetail = e.detail
-          this.#lastCloseDetail = e.detail
-        }
-        connection.addEventListener('open', onConnectionOpen)
-        connection.addEventListener('close', onConnectionClose)
 
         // Terminate the current connection when an external abort stops the
         // client (a close() stop instead hand-shakes via connection.close()).
@@ -324,21 +330,18 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
           } catch (error) {
             // A stop surfaces per its cause: external abort rejects with the
             // abort reason (replacing the terminated connection's transport
-            // error); close() ends quietly — no reconnect, no 'close' event
+            // error); close() ends quietly — no reconnect, no onClose hook
             // (the user observes the stop via close() resolving).
             if (checkStop()) break
             const willReconnect = shouldReconnect(error, retries)
-            this.dispatchEvent(
-              new CustomEvent('error', {
-                detail: willReconnect
-                  ? { error, reconnect: { attempt: retries } }
-                  : { error },
-              }),
+            this.#options.onError?.(
+              error,
+              willReconnect ? { attempt: retries } : undefined,
             )
             if (!willReconnect) {
-              // Fatal: the enclosing finally settles state and emits the final
-              // 'close' as this throw unwinds, so 'error' (above) precedes
-              // 'close'.
+              // Fatal: the enclosing finally settles state and fires the final
+              // onClose as this throw unwinds, so onError (above) precedes
+              // onClose.
               throw error
             }
             this.#state = 'connecting'
@@ -349,7 +352,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         }
 
         // User-driven stop (close()/abort): break/throw — the enclosing
-        // finally emits the final 'close' event.
+        // finally emits the final onClose hook.
         if (checkStop()) break
 
         // Clean close (only 1000/1001 end the connection's iterator cleanly):
@@ -367,7 +370,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         this.#state = 'connecting'
       }
     } finally {
-      // Every started lifecycle ends with exactly one 'close', whichever way
+      // Every started lifecycle ends with exactly one onClose, whichever way
       // the loop exits: fatal error, clean stop, user close(), or abort. A
       // client that never attempted a connection (e.g. close() before any
       // iteration) dispatches nothing — there was no lifecycle to close.

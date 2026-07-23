@@ -8,17 +8,18 @@ import {
   SocketError,
   WebSocketConnectionError,
 } from './lib/errors.js'
-import {
-  type CloseEventDetail,
-  TypedEventTarget,
-  type WebSocketConnectionEventMap,
-} from './lib/typed-event-target.js'
 import type {
   Transport,
   TransportCapabilities,
   TransportFactory,
   TransportHandlers,
 } from './transport/transport.js'
+
+export interface CloseEventDetail {
+  code: number
+  reason: string
+  wasClean: boolean
+}
 
 export type DataMode = 'auto' | 'text' | 'binary'
 
@@ -36,6 +37,12 @@ export interface WebSocketConnectionOptions<M extends DataMode = 'auto'> {
   highWaterMark?: number
   maxBufferedBytes?: number
   signal?: AbortSignal
+  /** Called once when the socket opens. */
+  onOpen?: () => void
+  /** Called once when the connection ends with an error, before onClose. */
+  onError?: (error: unknown) => void
+  /** Called once when the connection ends, whichever way. */
+  onClose?: (detail: CloseEventDetail) => void
   /**
    * Node.js only. Applied to the underlying `ws` upgrade request. Accepts a
    * plain record or a WHATWG `Headers` (normalized to a record). The browser
@@ -74,13 +81,15 @@ type Terminal = { type: 'done' } | { type: 'error'; error: unknown }
 const CLEAN_CLOSE_CODES = new Set([CloseCode.Normal, CloseCode.GoingAway])
 
 export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
-  extends TypedEventTarget<WebSocketConnectionEventMap>
   implements AsyncIterable<MessageOf<M>>
 {
   readonly capabilities: TransportCapabilities
 
   readonly #transport: Transport
   readonly #dataMode: DataMode
+  readonly #onOpenHook?: () => void
+  readonly #onErrorHook?: (error: unknown) => void
+  readonly #onCloseHook?: (detail: CloseEventDetail) => void
   // Aborts when the connection settles a terminal (done or error). External
   // signal listeners are bound with `{ signal: #doneController.signal }`, so
   // they detach themselves — no explicit cleanup bookkeeping.
@@ -113,8 +122,10 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     url: string | URL,
     options: WebSocketConnectionOptions<M> = {},
   ) {
-    super()
     this.#dataMode = options.dataMode ?? 'auto'
+    this.#onOpenHook = options.onOpen
+    this.#onErrorHook = options.onError
+    this.#onCloseHook = options.onClose
     this.#highWaterMark = options.highWaterMark ?? 1_048_576
     this.#maxBufferedBytes = options.maxBufferedBytes ?? Infinity
 
@@ -172,7 +183,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
         if (this.#terminal || this.#state !== 'connecting') return
         this.#state = 'open'
         this.#negotiatedProtocol = this.#transport.protocol
-        this.dispatchEvent(new Event('open'))
+        this.#onOpenHook?.()
         this.#onOpen()
       },
       onMessage: (data, isBinary) => {
@@ -318,8 +329,17 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   // ---- terminal transitions ----
 
+  // The single "connection closed" moment: settles the internal closed
+  // promise (awaited by close()) and invokes the onClose hook, exactly once
+  // per settled terminal.
+  #resolveClosed!: (detail: CloseEventDetail) => void
+  readonly #closed = new Promise<CloseEventDetail>((resolve) => {
+    this.#resolveClosed = resolve
+  })
+
   #dispatchClose(detail: CloseEventDetail): void {
-    this.dispatchEvent(new CustomEvent('close', { detail }))
+    this.#resolveClosed(detail)
+    this.#onCloseHook?.(detail)
   }
 
   #finishDone(info: CloseEventDetail): void {
@@ -348,7 +368,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     while ((waiter = this.#waiters.shift())) {
       waiter.reject(error)
     }
-    this.dispatchEvent(new CustomEvent('error', { detail: { error } }))
+    this.#onErrorHook?.(error)
     this.#dispatchClose(closeDetailForError(error))
   }
 
@@ -373,9 +393,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
       return Promise.resolve()
     }
     if (this.#state === 'closed') return Promise.resolve()
-    const done = new Promise<void>((resolve) => {
-      this.addEventListener('close', () => resolve(), { once: true })
-    })
+    const done = this.#closed.then(() => undefined)
     if (this.#state === 'connecting' || this.#state === 'open') {
       this.#state = 'closing'
       this.#transport.close(code, reason)

@@ -1,11 +1,13 @@
 import { assert, describe, expect, it } from 'vitest'
-import { WebSocketConnectionEngine } from '../src/connection.js'
+import {
+  type CloseEventDetail,
+  WebSocketConnectionEngine,
+} from '../src/connection.js'
 import {
   CloseError,
   SocketError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
-import type { CloseEventDetail } from '../src/lib/typed-event-target.js'
 import { MockTransport } from './_util/mock-transport.js'
 
 function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(
@@ -26,11 +28,10 @@ describe('WebSocketConnectionEngine iterator', () => {
     expect(engine.protocol).toBe(null)
   })
 
-  it('dispatches open and reports protocol on open', async () => {
+  it('fires onOpen and reports protocol on open', async () => {
     const mock = new MockTransport({ protocol: 'jetstream' })
-    const { engine } = makeEngine({ mock })
     let opened = false
-    engine.addEventListener('open', () => (opened = true))
+    const { engine } = makeEngine({ mock, onOpen: () => (opened = true) })
     // Lazy open: start a pull first so the transport opens.
     const it = engine[Symbol.asyncIterator]()
     void it.next()
@@ -41,9 +42,10 @@ describe('WebSocketConnectionEngine iterator', () => {
   })
 
   it('yields messages in order, then ends cleanly on 1000', async () => {
-    const { engine, mock } = makeEngine()
     let closeDetail: CloseEventDetail | undefined
-    engine.addEventListener('close', (e) => (closeDetail = e.detail))
+    const { engine, mock } = makeEngine({
+      onClose: (detail) => (closeDetail = detail),
+    })
     mock.emitOpen()
     const received: (string | Uint8Array)[] = []
     const done = (async () => {
@@ -58,9 +60,10 @@ describe('WebSocketConnectionEngine iterator', () => {
   })
 
   it('ends cleanly on 1001 (going away)', async () => {
-    const { engine, mock } = makeEngine()
     let closeDetail: CloseEventDetail | undefined
-    engine.addEventListener('close', (e) => (closeDetail = e.detail))
+    const { engine, mock } = makeEngine({
+      onClose: (detail) => (closeDetail = detail),
+    })
     mock.emitOpen()
     const done = (async () => {
       for await (const _ of engine) {
@@ -143,9 +146,10 @@ describe('WebSocketConnectionEngine iterator', () => {
   })
 
   it('terminate() self-settles, drops buffered messages, and ignores a late transport echo', async () => {
-    const { engine, mock } = makeEngine()
     let errorDetail: unknown
-    engine.addEventListener('error', (e) => (errorDetail = e.detail.error))
+    const { engine, mock } = makeEngine({
+      onError: (error) => (errorDetail = error),
+    })
     const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     mock.emitMessage('buffered', false) // buffered, no consumer parked
@@ -275,10 +279,9 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     expect(engine.readyState).toBe('connecting')
   })
 
-  it('dispatches open once on open', async () => {
-    const { engine, mock } = makeEngine()
+  it('fires onOpen once on open', async () => {
     let opens = 0
-    engine.addEventListener('open', () => opens++)
+    const { engine, mock } = makeEngine({ onOpen: () => opens++ })
     const it = engine[Symbol.asyncIterator]()
     void it.next()
     mock.emitOpen()
@@ -286,10 +289,11 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     expect(engine.connected).toBe(true)
   })
 
-  it('dispatches close with real code on clean 1000', async () => {
-    const { engine, mock } = makeEngine()
+  it('fires onClose with real code on clean 1000', async () => {
     const closes: unknown[] = []
-    engine.addEventListener('close', (e) => closes.push(e.detail))
+    const { engine, mock } = makeEngine({
+      onClose: (detail) => closes.push(detail),
+    })
     const done = (async () => {
       for await (const _ of engine) {
         /* drain */
@@ -301,15 +305,14 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     expect(closes).toEqual([{ code: 1000, reason: 'bye', wasClean: true }])
   })
 
-  it('dispatches error then close (code 1006) on a codeless fatal error', async () => {
-    const { engine, mock } = makeEngine()
+  it('fires onError then onClose (code 1006) on a codeless fatal error', async () => {
     const order: string[] = []
-    engine.addEventListener('error', (e) =>
-      order.push(`error:${(e.detail.error as Error).constructor.name}`),
-    )
-    engine.addEventListener('close', (e) =>
-      order.push(`close:${e.detail.code}:${e.detail.wasClean}`),
-    )
+    const { engine, mock } = makeEngine({
+      onError: (error) =>
+        order.push(`error:${(error as Error).constructor.name}`),
+      onClose: (detail) =>
+        order.push(`close:${detail.code}:${detail.wasClean}`),
+    })
     const it = engine[Symbol.asyncIterator]()
     const pending = it.next()
     mock.emitOpen()
@@ -318,10 +321,11 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     expect(order).toEqual(['error:SocketError', 'close:1006:false'])
   })
 
-  it('dispatches close with the real abnormal code (not synthesized) on server close', async () => {
-    const { engine, mock } = makeEngine()
+  it('fires onClose with the real abnormal code (not synthesized) on server close', async () => {
     let detail: CloseEventDetail | undefined
-    engine.addEventListener('close', (e) => (detail = e.detail))
+    const { engine, mock } = makeEngine({
+      onClose: (d) => (detail = d),
+    })
     const it = engine[Symbol.asyncIterator]()
     const pending = it.next()
     mock.emitOpen()
@@ -334,11 +338,12 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
     })
   })
 
-  it('close() before iteration is a clean no-op with no events', async () => {
-    const { engine, mock } = makeEngine()
+  it('close() before iteration is a clean no-op with no hooks fired', async () => {
     let events = 0
-    engine.addEventListener('close', () => events++)
-    engine.addEventListener('open', () => events++)
+    const { engine, mock } = makeEngine({
+      onClose: () => events++,
+      onOpen: () => events++,
+    })
     await engine.close()
     expect(engine.readyState).toBe('closed')
     expect(mock.opened).toBe(false)
@@ -346,10 +351,11 @@ describe('WebSocketConnectionEngine lifecycle + events', () => {
   })
 
   it('iterating after close()-before-iterate throws (programmer error, no hang)', async () => {
-    const { engine, mock } = makeEngine()
     const events: string[] = []
-    engine.addEventListener('open', () => events.push('open'))
-    engine.addEventListener('close', () => events.push('close'))
+    const { engine, mock } = makeEngine({
+      onOpen: () => events.push('open'),
+      onClose: () => events.push('close'),
+    })
     await engine.close()
     expect(engine.readyState).toBe('closed')
     expect(mock.opened).toBe(false)

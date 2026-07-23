@@ -29,9 +29,11 @@ describe('NodeTransport via WebSocketConnection', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketConnection(url, { dataMode: 'text' })
     let closeDetail: { code: number } | undefined
-    ws.addEventListener('close', (e) => (closeDetail = e.detail))
+    const ws = new WebSocketConnection(url, {
+      dataMode: 'text',
+      onClose: (detail) => (closeDetail = detail),
+    })
     const received: string[] = []
     for await (const msg of ws) received.push(msg)
     expect(received).toEqual(['hello', 'world'])
@@ -62,16 +64,16 @@ describe('NodeTransport via WebSocketConnection', () => {
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketConnection(url, { dataMode: 'text' })
+    let onOpen!: () => void
+    const opened = new Promise<void>((resolve) => (onOpen = resolve))
+    const ws = new WebSocketConnection(url, { dataMode: 'text', onOpen })
     // Lazy open: begin draining so the transport opens, then send once open.
     const drained = (async () => {
       for await (const _msg of ws) {
         /* drain until close */
       }
     })()
-    await new Promise((resolve) =>
-      ws.addEventListener('open', () => resolve(undefined), { once: true }),
-    )
+    await opened
     await ws.send('ping')
     await drained
     expect(seen).toEqual(['ping'])

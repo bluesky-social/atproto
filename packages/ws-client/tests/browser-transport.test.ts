@@ -77,8 +77,11 @@ describe('BrowserTransport via engine', () => {
       })
     })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+    let onOpen!: () => void
+    const opened = new Promise<void>((resolve) => (onOpen = resolve))
     const engine = new WebSocketConnectionEngine<'text'>(factory, url, {
       dataMode: 'text',
+      onOpen,
     })
     // Lazy open: begin draining so the transport opens, then send once open.
     const drained = (async () => {
@@ -86,11 +89,7 @@ describe('BrowserTransport via engine', () => {
         /* drain */
       }
     })()
-    await new Promise((resolve) =>
-      engine.addEventListener('open', () => resolve(undefined), {
-        once: true,
-      }),
-    )
+    await opened
     await engine.send('yo')
     await drained
     expect(seen).toEqual(['yo'])

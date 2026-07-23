@@ -49,6 +49,7 @@ export class WebSocketClient<
 
 export type {
   BrowserWebSocketConnectionOptions,
+  CloseEventDetail,
   DataMode,
   MessageOf,
   NodeWebSocketConnectionOptions,
@@ -76,10 +77,4 @@ export {
   defaultShouldReconnect,
   isReconnectableClose,
 } from './lib/reconnect-policy.js'
-export type {
-  CloseEventDetail,
-  WebSocketClientEventMap,
-  WebSocketConnectionEventMap,
-} from './lib/typed-event-target.js'
-
 export { CloseCode } from './lib/close-codes.js'

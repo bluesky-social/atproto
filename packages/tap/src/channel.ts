@@ -70,6 +70,7 @@ export class TapChannel implements AsyncDisposable {
     if (adminPassword) {
       headers.set('Authorization', formatAdminAuthHeader(adminPassword))
     }
+    const { onReconnectError } = rest
     this.ws = new WebSocketClient(url, {
       dataMode: 'text',
       headers,
@@ -79,23 +80,16 @@ export class TapChannel implements AsyncDisposable {
         : undefined,
       signal: this.abortController.signal,
       shouldReconnect,
-    })
-    // Flush buffered acks on each reconnect (not the initial open).
-    this.ws.addEventListener('reconnect', () => {
-      this.flushBufferedAcks()
-    })
-    const { onReconnectError } = rest
-    if (onReconnectError) {
-      this.ws.addEventListener('error', (e) => {
-        if (e.detail.reconnect) {
-          onReconnectError(
-            e.detail.error,
-            e.detail.reconnect.attempt,
-            e.detail.reconnect.attempt === 0,
-          )
+      // Flush buffered acks on each reconnect (not the initial open).
+      onReconnect: () => {
+        this.flushBufferedAcks()
+      },
+      onError: (error, reconnect) => {
+        if (reconnect) {
+          onReconnectError?.(error, reconnect.attempt, reconnect.attempt === 0)
         }
-      })
-    }
+      },
+    })
   }
 
   async ackEvent(id: number): Promise<void> {

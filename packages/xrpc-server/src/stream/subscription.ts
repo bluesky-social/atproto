@@ -39,20 +39,17 @@ export class Subscription<T = unknown> {
           ? { intervalMs: this.opts.heartbeatIntervalMs }
           : undefined,
         signal: this.opts.signal,
+        onError: (error, reconnect) => {
+          if (reconnect) {
+            this.opts.onReconnectError?.(
+              error,
+              reconnect.attempt,
+              reconnect.attempt === 0,
+            )
+          }
+        },
       },
     )
-    const { onReconnectError } = this.opts
-    if (onReconnectError) {
-      ws.addEventListener('error', (e) => {
-        if (e.detail.reconnect) {
-          onReconnectError(
-            e.detail.error,
-            e.detail.reconnect.attempt,
-            e.detail.reconnect.attempt === 0,
-          )
-        }
-      })
-    }
     for await (const chunk of ws) {
       const message = ensureChunkIsMessage(chunk)
       const t = message.header.t

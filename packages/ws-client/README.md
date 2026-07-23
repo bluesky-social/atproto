@@ -32,12 +32,12 @@ Messages are typed by `options.dataMode` (`'auto' | 'text' | 'binary'`, default 
 
 Constructing a client initializes it into `readyState: 'initialized'` with no open connection. Iterating the client causes a connection to open. Stop the client with `close()`, an aborted `options.signal`, or by `break`-ing out of the loop.
 
-The lifecycle is observable via `addEventListener`. Register listeners before iterating to catch the first `'open'`:
+The lifecycle is observable via hooks passed as options:
 
-- `'open'` — the first connection succeeded.
-- `'reconnect'` — a later connection succeeded (fires on every reconnect).
-- `'error'` — a connection ended with an error. `detail.reconnect` is present (with the attempt count) when the client will retry, absent when it's giving up.
-- `'close'` — the client stopped, terminally. Fires exactly once for every started client, whether it stopped on its own (a fatal error, right after its `'error'`; or a non-reconnectable clean close) or was stopped by you (`close()`, an aborted `signal`). `detail` is `{ code, reason, wasClean }` — the real close code when a close frame provided one, or `1005` (no status) when the stop happened without one, e.g. between reconnect attempts.
+- `onOpen()` — the first connection succeeded.
+- `onReconnect()` — a later connection succeeded (fires on every reconnect).
+- `onError(error, reconnect?)` — a connection ended with an error. `reconnect` is present (with the attempt count) when the client will retry, absent when it's giving up.
+- `onClose(detail)` — the client stopped, terminally. Fires exactly once for every started client, whether it stopped on its own (a fatal error, right after its `onError`; or a non-reconnectable clean close) or was stopped by you (`close()`, an aborted `signal`). `detail` is `{ code, reason, wasClean }` — the real close code when a close frame provided one, or `1005` (no status) when the stop happened without one, e.g. between reconnect attempts.
 
 ### Reconnects
 
@@ -66,7 +66,7 @@ permessage-deflate compression is offered by default, identically on Node.js and
 
 ### Sending
 
-`send(data)` resolves when the data is handed off, and rejects with `WebSocketClientError` if the client isn't currently connected, so there's no message queueing across reconnects. Check `connected` first, or catch and retry after the next `'reconnect'`.
+`send(data)` resolves when the data is handed off, and rejects with `WebSocketClientError` if the client isn't currently connected, so there's no message queueing across reconnects. Check `connected` first, or catch and retry after the next `onReconnect`.
 
 ### Node.js-only `headers`
 
@@ -74,7 +74,7 @@ permessage-deflate compression is offered by default, identically on Node.js and
 
 ### Errors
 
-`WebSocketClient` throws `WebSocketClientError` for misuse of the client itself (sending while disconnected, iterating twice). Connection-level failures surface through `'error'` events and the iterator rejection as errors from the `WebSocketConnection` taxonomy below.
+`WebSocketClient` throws `WebSocketClientError` for misuse of the client itself (sending while disconnected, iterating twice). Connection-level failures surface through the `onError` hook and the iterator rejection as errors from the `WebSocketConnection` taxonomy below.
 
 ### Example: resuming a firehose from a cursor
 
@@ -109,9 +109,8 @@ const ws = new WebSocketClient('wss://example.com/socket', {
   // The browser has no ping/pong API, so on a chatty protocol an idle window
   // is how a dead connection gets detected (and reconnected).
   idleTimeoutMs: 30_000,
+  onReconnect: () => console.log('reconnected'),
 })
-
-ws.addEventListener('reconnect', () => console.log('reconnected'))
 
 for await (const message of ws) {
   console.log('received', message)
@@ -137,7 +136,7 @@ for await (const message of ws) {
 It shares `WebSocketClient`'s lifecycle and options: construct (no I/O) → iterate (opens lazily) → stop via `close()` / `signal` / `break`. Same `dataMode` typing and enforcement, same heartbeat/idle-timeout and backpressure options, same Node.js-only `headers`, same `send()` behavior. Differences:
 
 - The stream ends when the connection ends. A clean close (`1000`/`1001`) ends the loop normally; anything else rejects the iterator with a typed error (below).
-- Events: `'open'` and `'close'` fire once each; `'error'` fires on failure, always followed by `'close'`. The `'close'` detail carries the real close code when there was one, or `1006` when the connection ended without a close frame.
+- Hooks: `onOpen()` and `onClose(detail)` fire once each; `onError(error)` fires on failure, always followed by `onClose`. The `onClose` detail carries the real close code when there was one, or `1006` when the connection ended without a close frame.
 - `terminate()` tears the connection down immediately, without a close handshake.
 - `capabilities` reports what the platform supports: `{ heartbeat, pauseResume }` — both `true` on Node.js, both `false` in the browser. This is the one observable difference between platforms; the API is otherwise identical.
 
@@ -156,7 +155,7 @@ Every connection-level failure is a typed subclass of `WebSocketConnectionError`
 
 ## A note for downstream library authors
 
-If your library wraps or re-exports these classes and you bundle your package for distribution, keep `@atproto/ws-client` **external** (not pre-bundled). It resolves to different files on Node.js vs. the browser through conditional package exports; pre-bundling collapses that choice to a single runtime.
+If your library wraps or re-exports these classes and you bundle your package for distribution, keep `@atproto/ws-client` **external** (not pre-bundled). It routes to a different transport on Node.js vs. the browser through conditional package `imports`; pre-bundling collapses that choice to a single runtime.
 
 ## License
 
