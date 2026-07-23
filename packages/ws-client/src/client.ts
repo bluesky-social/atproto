@@ -70,13 +70,17 @@ export type BrowserWebSocketClientOptions<M extends DataMode = 'auto'> = Omit<
   'headers'
 >
 
+// Sentinel abort reason distinguishing a clean, user-intended close() from an
+// external signal abort on the shared stop signal: close() resolves the
+// iterator; an external abort rejects it with the signal's reason.
+const STOPPED_BY_CLOSE = Symbol('WebSocketClient stopped by close()')
+
 export class WebSocketClientBase<M extends DataMode = 'auto'>
   extends TypedEventTarget<WebSocketClientEventMap>
   implements AsyncIterable<MessageOf<M>>
 {
   #connection: WebSocketConnectionEngine<M> | null = null
   #state: ReadyState = 'initialized'
-  #stopped = false
   #iterated = false
   // The most recent child connection's close detail, and whether this
   // client's own final 'close' event has been dispatched. Together these let
@@ -85,10 +89,11 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
   // 1005 (no status) when none did (e.g. a stop mid-backoff).
   #lastCloseDetail?: CloseEventDetail
   #closeDispatched = false
-  // Internal wake signal for close(): lets a parked backoff `sleep` resolve
-  // (not reject) promptly instead of waiting out the full backoff window.
-  // Distinct from `options.signal`, which is the caller's abort — that path
-  // must still reject the iterator with the abort reason.
+  // The single internal stop signal. Aborts exactly once, with the stop cause
+  // as its reason: STOPPED_BY_CLOSE for close() (a clean stop — the iterator
+  // resolves), or the external signal's abort reason (the iterator rejects
+  // with it). The external signal is bound into it at construction; a parked
+  // backoff `sleep` also wakes on it. First cause wins.
   readonly #stopController = new AbortController()
 
   readonly #createConnection: ConnectionFactory
@@ -104,6 +109,16 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     this.#createConnection = createConnection
     this.#url = url
     this.#options = options
+    const { signal } = options
+    if (signal?.aborted) {
+      this.#stopController.abort(signal.reason)
+    } else {
+      signal?.addEventListener(
+        'abort',
+        () => this.#stopController.abort(signal.reason),
+        { once: true, signal: this.#stopController.signal },
+      )
+    }
   }
 
   get readyState(): ReadyState {
@@ -129,9 +144,9 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     return this.#connection.send(data)
   }
 
+  // Idempotent, matching WHATWG WebSocket and `ws` close() behavior.
   async close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
-    this.#stopped = true
-    this.#stopController.abort()
+    this.#stopController.abort(STOPPED_BY_CLOSE)
     this.#state = 'closing'
     if (this.#connection && this.#connection.readyState !== 'closed') {
       // A live connection: run the close handshake. Its 'close' event supplies
@@ -221,26 +236,25 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     let firstAttempt = true // true until the first connection is created
     let firstOpen = true // true until the first successful open
 
-    const signal = this.#options.signal
-    // End the loop promptly on external abort.
-    if (signal?.aborted) throw signal.reason
+    const stopSignal = this.#stopController.signal
+    // Returns true when stopped cleanly by close() — the caller breaks the
+    // loop; an external signal abort instead throws its reason, surfacing to
+    // the consumer as an iterator rejection.
+    const checkStop = (): boolean => {
+      if (!stopSignal.aborted) return false
+      if (stopSignal.reason !== STOPPED_BY_CLOSE) throw stopSignal.reason
+      return true
+    }
 
     try {
-      while (!this.#stopped) {
-        if (signal?.aborted) throw signal.reason
-
+      while (!checkStop()) {
         if (!firstAttempt) {
           // Exponential backoff: ~1s (with jitter) on the first reconnect after
-          // an open, escalating across consecutive failures.
-          // Rejects with signal.reason on external abort; resolves promptly
-          // (not rejects) on close()'s internal stop signal — the loop below
-          // observes `this.#stopped` and exits the clean way.
-          await sleep(
-            backoffMs(retries, maxMs),
-            signal,
-            this.#stopController.signal,
-          )
-          if (this.#stopped) break
+          // an open, escalating across consecutive failures. Wakes promptly
+          // (resolves, never rejects) when the stop signal aborts; the loop
+          // condition then classifies the stop.
+          await sleep(backoffMs(retries, maxMs), stopSignal)
+          if (checkStop()) break
           // Escalate the delay for the *next* consecutive failure. Reset to 0
           // happens on open, so the backoff starts over after a stable open.
           retries++
@@ -250,12 +264,11 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         const url = await this.#resolveUrl()
         // resolveUrl() is an async gap: close() or signal abort landing while
         // it's in flight must not fall through to creating (and leaking) a
-        // connection that nothing will ever terminate. Re-check both before
-        // createConnection — an abort here would otherwise be missed entirely,
+        // connection that nothing will ever terminate. Re-check before
+        // createConnection — a stop here would otherwise be missed entirely,
         // since an already-aborted signal never fires a listener added after
         // the fact.
-        if (this.#stopped) break
-        if (signal?.aborted) throw signal.reason
+        if (checkStop()) break
         const connection = this.#createConnection<M>(
           url,
           this.#connectionOptions(),
@@ -286,9 +299,18 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         connection.addEventListener('open', onConnectionOpen)
         connection.addEventListener('close', onConnectionClose)
 
-        // Wire the external signal to terminate the current connection.
-        const onAbort = () => connection.terminate()
-        signal?.addEventListener('abort', onAbort, { once: true })
+        // Terminate the current connection when an external abort stops the
+        // client (a close() stop instead hand-shakes via connection.close()).
+        // The listener detaches itself when this connection ends (its own
+        // controller aborts on either path).
+        const connectionDone = new AbortController()
+        stopSignal.addEventListener(
+          'abort',
+          () => {
+            if (stopSignal.reason !== STOPPED_BY_CLOSE) connection.terminate()
+          },
+          { once: true, signal: connectionDone.signal },
+        )
 
         // The `finally` covers every exit from this connection's body: the
         // normal fall-through below, the `throw`/`break`/`continue` in `catch`,
@@ -300,13 +322,11 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
             // Clean iterator completion (1000/1001): fall through with the
             // captured `closeDetail` carrying the real close code.
           } catch (error) {
-            // Abort surfaces to the consumer as a rejection (the terminated
-            // connection throws a transport error, which we replace with the
-            // abort reason).
-            if (signal?.aborted) throw signal.reason
-            // Consumer-initiated close(): end quietly, no reconnect, no 'close'
-            // event (the user observes the stop via close() resolving).
-            if (this.#stopped) break
+            // A stop surfaces per its cause: external abort rejects with the
+            // abort reason (replacing the terminated connection's transport
+            // error); close() ends quietly — no reconnect, no 'close' event
+            // (the user observes the stop via close() resolving).
+            if (checkStop()) break
             const willReconnect = shouldReconnect(error, retries)
             this.dispatchEvent(
               new CustomEvent('error', {
@@ -325,13 +345,12 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
             continue
           }
         } finally {
-          signal?.removeEventListener('abort', onAbort)
+          connectionDone.abort()
         }
 
         // User-driven stop (close()/abort): break/throw — the enclosing
         // finally emits the final 'close' event.
-        if (this.#stopped) break
-        if (signal?.aborted) throw signal.reason
+        if (checkStop()) break
 
         // Clean close (only 1000/1001 end the connection's iterator cleanly):
         // consult `shouldReconnect` via a synthetic CloseError so the policy
@@ -358,37 +377,20 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
   }
 }
 
-// `signal` is the caller's external abort: it REJECTS with `signal.reason`
-// (surfaces to the consumer as an iterator rejection). `stopSignal` is
-// close()'s internal wake-up: it RESOLVES instead — a clean stop, not a
-// rejection — so the loop falls through to its own `if (this.#stopped) break`.
-function sleep(
-  ms: number,
-  signal?: AbortSignal,
-  stopSignal?: AbortSignal,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) return reject(signal.reason)
-    if (stopSignal?.aborted) return resolve()
-    const cleanup = () => {
-      clearTimeout(timer)
-      signal?.removeEventListener('abort', onAbort)
-      stopSignal?.removeEventListener('abort', onStop)
-    }
+// Resolves after `ms`, or promptly (never rejects) when `stopSignal` aborts —
+// the caller classifies the stop via the signal's reason.
+function sleep(ms: number, stopSignal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (stopSignal.aborted) return resolve()
     const timer = setTimeout(() => {
-      cleanup()
+      stopSignal.removeEventListener('abort', onStop)
       resolve()
     }, ms)
-    const onAbort = () => {
-      cleanup()
-      reject(signal!.reason)
-    }
     const onStop = () => {
-      cleanup()
+      clearTimeout(timer)
       resolve()
     }
-    signal?.addEventListener('abort', onAbort, { once: true })
-    stopSignal?.addEventListener('abort', onStop, { once: true })
+    stopSignal.addEventListener('abort', onStop, { once: true })
     // NB: the timer stays ref'd — a process whose only pending work is this
     // backoff must stay alive to reconnect, not exit mid-backoff.
   })

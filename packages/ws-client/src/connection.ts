@@ -81,8 +81,10 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   readonly #transport: Transport
   readonly #dataMode: DataMode
-  readonly #signal?: AbortSignal
-  #onAbort?: () => void
+  // Aborts when the connection settles a terminal (done or error). External
+  // signal listeners are bound with `{ signal: #doneController.signal }`, so
+  // they detach themselves — no explicit cleanup bookkeeping.
+  readonly #doneController = new AbortController()
 
   #state: ReadyState = 'initialized'
   #openTriggered = false
@@ -113,7 +115,6 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   ) {
     super()
     this.#dataMode = options.dataMode ?? 'auto'
-    this.#signal = options.signal
     this.#highWaterMark = options.highWaterMark ?? 1_048_576
     this.#maxBufferedBytes = options.maxBufferedBytes ?? Infinity
 
@@ -130,13 +131,22 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     }
     this.#idleTimeoutMs = options.idleTimeoutMs ?? null
 
-    if (this.#signal) {
-      if (this.#signal.aborted) {
+    const { signal } = options
+    if (signal) {
+      if (signal.aborted) {
         // Defer so the caller can attach consumers first.
-        queueMicrotask(() => this.#fail(this.#signal!.reason, true))
+        queueMicrotask(() => this.#fail(signal.reason, true))
       } else {
-        this.#onAbort = () => this.#fail(this.#signal!.reason, true)
-        this.#signal.addEventListener('abort', this.#onAbort, { once: true })
+        // Self-detaching: removed automatically when the connection settles
+        // its terminal (#doneController aborts in #fail/#finishDone).
+        signal.addEventListener(
+          'abort',
+          () => this.#fail(signal.reason, true),
+          {
+            once: true,
+            signal: this.#doneController.signal,
+          },
+        )
       }
     }
   }
@@ -315,7 +325,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   #finishDone(info: CloseEventDetail): void {
     this.#terminal = { type: 'done' }
     this.#clearTimers()
-    this.#detachSignal()
+    this.#doneController.abort() // detach external-signal binding
     // Deliver `done` to any pending waiters (buffer is empty when waiters exist).
     let waiter: Waiter<MessageOf<M>> | undefined
     while ((waiter = this.#waiters.shift())) {
@@ -329,7 +339,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     this.#terminal = { type: 'error', error }
     this.#state = 'closed'
     this.#clearTimers()
-    this.#detachSignal()
+    this.#doneController.abort() // detach external-signal binding
     // Discard undelivered buffered messages: never yield post-failure data.
     this.#buffer.length = 0
     this.#bufferedBytes = 0
@@ -340,13 +350,6 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     }
     this.dispatchEvent(new CustomEvent('error', { detail: { error } }))
     this.#dispatchClose(closeDetailForError(error))
-  }
-
-  #detachSignal(): void {
-    if (this.#signal && this.#onAbort) {
-      this.#signal.removeEventListener('abort', this.#onAbort)
-      this.#onAbort = undefined
-    }
   }
 
   // ---- public methods ----
@@ -366,7 +369,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
       // instead of parking a waiter that never resolves. Dispatches no events —
       // there was never a connection to close.
       this.#terminal = { type: 'done' }
-      this.#detachSignal()
+      this.#doneController.abort() // detach external-signal binding
       return Promise.resolve()
     }
     if (this.#state === 'closed') return Promise.resolve()
