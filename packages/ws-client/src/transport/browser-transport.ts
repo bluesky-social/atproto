@@ -16,6 +16,22 @@ type WebSocketCtor = new (
 // with { code, reason, wasClean }; `send` also accepts Blob per spec, but this
 // adapter only ever sends string | Uint8Array so the narrower type is accurate
 // for our use.
+interface WHATWGMessageEvent extends Event {
+  readonly data: unknown
+}
+
+interface WHATWGCloseEvent extends Event {
+  readonly code: number
+  readonly reason: string
+  readonly wasClean: boolean
+}
+
+// Browser 'error' events are ErrorEvents (which carry `error`); undici and
+// some runtimes dispatch a plain Event. `error` is optional to span both.
+interface WHATWGErrorEvent extends Event {
+  readonly error?: unknown
+}
+
 interface WHATWGWebSocket {
   binaryType: 'blob' | 'arraybuffer'
   readonly protocol: string
@@ -24,13 +40,16 @@ interface WHATWGWebSocket {
   addEventListener(type: 'open', listener: () => void): void
   addEventListener(
     type: 'message',
-    listener: (ev: { data: unknown }) => void,
+    listener: (ev: WHATWGMessageEvent) => void,
   ): void
   addEventListener(
     type: 'close',
-    listener: (ev: { code: number; reason: string; wasClean: boolean }) => void,
+    listener: (ev: WHATWGCloseEvent) => void,
   ): void
-  addEventListener(type: 'error', listener: (ev: unknown) => void): void
+  addEventListener(
+    type: 'error',
+    listener: (ev: WHATWGErrorEvent) => void,
+  ): void
 }
 
 export class BrowserTransport implements Transport {
@@ -59,6 +78,12 @@ export class BrowserTransport implements Transport {
         'WebSocket headers are not supported in the browser; use URL or subprotocol-based auth instead',
       )
     }
+    // We only explicitly support Node.js and browsers, but this transport is
+    // also the fallback for other runtimes (Expo, Bun, Deno, workers) — fail
+    // loudly where a global WebSocket is genuinely absent.
+    if (!WebSocketImpl) {
+      throw new TypeError('WebSocket is not available in this environment')
+    }
     this.#url = url
     this.#options = options
     this.#WebSocketImpl = WebSocketImpl
@@ -69,7 +94,7 @@ export class BrowserTransport implements Transport {
     this.#ws = ws
     ws.binaryType = 'arraybuffer'
     ws.addEventListener('open', () => this.handlers.onOpen())
-    ws.addEventListener('message', (ev: { data: unknown }) => {
+    ws.addEventListener('message', (ev) => {
       const { data } = ev
       if (typeof data === 'string') {
         this.handlers.onMessage(data, false)
@@ -90,29 +115,22 @@ export class BrowserTransport implements Transport {
         )
       }
     })
-    ws.addEventListener(
-      'close',
-      (ev: { code: number; reason: string; wasClean: boolean }) => {
-        this.handlers.onClose(ev.code, ev.reason, ev.wasClean)
-      },
-    )
-    ws.addEventListener('error', () => {
-      this.handlers.onError(new Error('WebSocket error'))
+    ws.addEventListener('close', (ev) => {
+      this.handlers.onClose(ev.code, ev.reason, ev.wasClean)
+    })
+    ws.addEventListener('error', (ev) => {
+      this.handlers.onError(new Error('WebSocket error', { cause: ev.error }))
     })
   }
 
-  get protocol(): string {
-    return this.#ws?.protocol ?? ''
+  get protocol(): string | null {
+    // See NodeTransport: normalize the WHATWG '' unset/none marker to null.
+    return this.#ws?.protocol || null
   }
 
-  send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {
-    // No completion callback in the browser: resolve on hand-off ("accepted").
-    try {
-      this.#ws!.send(data)
-      onFlush()
-    } catch (err) {
-      onFlush(err instanceof Error ? err : new Error(String(err)))
-    }
+  async send(data: string | Uint8Array): Promise<void> {
+    // No flush notification in the browser: resolve on hand-off ("accepted").
+    this.#ws!.send(data)
   }
 
   ping(): void {

@@ -14,11 +14,14 @@ const noopHandlers: TransportHandlers = {
 
 export class MockTransport implements Transport {
   readonly capabilities: TransportCapabilities
-  protocol: string
+  protocol: string | null
   handlers: TransportHandlers = noopHandlers
 
-  sent: Array<{ data: string | Uint8Array; onFlush: (err?: Error) => void }> =
-    []
+  sent: Array<{
+    data: string | Uint8Array
+    // Settle the pending send() promise: no arg resolves, an Error rejects.
+    onFlush: (err?: Error) => void
+  }> = []
   pinged = 0
   paused = false
   closedWith: { code?: number; reason?: string } | null = null
@@ -37,7 +40,7 @@ export class MockTransport implements Transport {
       heartbeat: true,
       pauseResume: true,
     }
-    this.protocol = options?.protocol ?? ''
+    this.protocol = options?.protocol ?? null
     this.autoFlush = options?.autoFlush ?? false
   }
 
@@ -45,9 +48,12 @@ export class MockTransport implements Transport {
     this.opened = true
   }
 
-  send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {
-    this.sent.push({ data, onFlush })
-    if (this.autoFlush) onFlush()
+  send(data: string | Uint8Array): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const onFlush = (err?: Error) => (err ? reject(err) : resolve())
+      this.sent.push({ data, onFlush })
+      if (this.autoFlush) onFlush()
+    })
   }
 
   ping(): void {

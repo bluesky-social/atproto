@@ -52,6 +52,7 @@ export type {
   DataMode,
   MessageOf,
   NodeWebSocketConnectionOptions,
+  ReadyState,
   WebSocketConnectionOptions,
 } from './connection.js'
 export {

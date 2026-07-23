@@ -58,12 +58,17 @@ export class NodeTransport implements Transport {
     ws.on('error', (err: Error) => this.handlers.onError(err))
   }
 
-  get protocol(): string {
-    return this.#ws?.protocol ?? ''
+  get protocol(): string | null {
+    // Both `ws` and WHATWG WebSocket report '' until the connection opens and
+    // when no subprotocol was negotiated; normalize that marker to null ('' is
+    // not a valid subprotocol name, so nothing is lost).
+    return this.#ws?.protocol || null
   }
 
-  send(data: string | Uint8Array, onFlush: (err?: Error) => void): void {
-    this.#ws!.send(data, (err) => onFlush(err ?? undefined))
+  send(data: string | Uint8Array): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.#ws!.send(data, (err) => (err ? reject(err) : resolve()))
+    })
   }
 
   ping(): void {

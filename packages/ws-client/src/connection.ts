@@ -51,7 +51,12 @@ export type NodeWebSocketConnectionOptions<M extends DataMode = 'auto'> =
 export type BrowserWebSocketConnectionOptions<M extends DataMode = 'auto'> =
   Omit<WebSocketConnectionOptions<M>, 'headers'>
 
-type ReadyState = 'initialized' | 'connecting' | 'open' | 'closing' | 'closed'
+export type ReadyState =
+  | 'initialized'
+  | 'connecting'
+  | 'open'
+  | 'closing'
+  | 'closed'
 
 interface QueueItem<T> {
   value: T
@@ -81,7 +86,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   #state: ReadyState = 'initialized'
   #openTriggered = false
-  #negotiatedProtocol = ''
+  #negotiatedProtocol: string | null = null
 
   readonly #buffer: QueueItem<MessageOf<M>>[] = []
   readonly #waiters: Waiter<MessageOf<M>>[] = []
@@ -144,7 +149,8 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     return this.#state === 'open'
   }
 
-  get protocol(): string {
+  /** Negotiated subprotocol; `null` until open (and if none negotiated). */
+  get protocol(): string | null {
     return this.#negotiatedProtocol
   }
 
@@ -345,14 +351,11 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   // ---- public methods ----
 
-  send(data: MessageOf<M>): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      if (this.#state !== 'open') {
-        reject(new WebSocketConnectionError('WebSocketConnection is not open'))
-        return
-      }
-      this.#transport.send(data, (err) => (err ? reject(err) : resolve()))
-    })
+  async send(data: MessageOf<M>): Promise<void> {
+    if (this.#state !== 'open') {
+      throw new WebSocketConnectionError('WebSocketConnection is not open')
+    }
+    return this.#transport.send(data)
   }
 
   close(code: number = CloseCode.Normal, reason?: string): Promise<void> {

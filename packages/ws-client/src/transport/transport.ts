@@ -15,13 +15,14 @@ export interface TransportHandlers {
 
 export interface Transport {
   readonly capabilities: TransportCapabilities
-  /** Negotiated subprotocol; '' until open (and if none negotiated). */
-  readonly protocol: string
+  /** Negotiated subprotocol; `null` until open (and if none negotiated). */
+  readonly protocol: string | null
   /** Set once by the engine before events begin. */
   handlers: TransportHandlers
   /** Instantiate and connect the underlying socket, wiring it to `handlers`. */
   open(): void
-  send(data: string | Uint8Array, onFlush: (err?: Error) => void): void
+  /** Resolves once the data is flushed (Node.js) or handed off (browser). */
+  send(data: string | Uint8Array): Promise<void>
   ping(): void
   pause(): void
   resume(): void

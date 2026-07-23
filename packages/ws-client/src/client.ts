@@ -1,6 +1,7 @@
 import type {
   DataMode,
   MessageOf,
+  ReadyState,
   WebSocketConnectionEngine,
   WebSocketConnectionOptions,
 } from './connection.js'
@@ -68,8 +69,6 @@ export type BrowserWebSocketClientOptions<M extends DataMode = 'auto'> = Omit<
   WebSocketClientOptions<M>,
   'headers'
 >
-
-type ReadyState = 'initialized' | 'connecting' | 'open' | 'closing' | 'closed'
 
 export class WebSocketClientBase<M extends DataMode = 'auto'>
   extends TypedEventTarget<WebSocketClientEventMap>
@@ -170,7 +169,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     )
   }
 
-  #resolveUrl(): Awaitable<string | URL> {
+  async #resolveUrl(): Promise<string | URL> {
     return typeof this.#url === 'function' ? this.#url() : this.#url
   }
 

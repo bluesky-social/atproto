@@ -107,13 +107,13 @@ describe('WebSocketClient (node integration)', () => {
     // won't do — fired timers report hasRef() === false).
     const timerRefs: boolean[] = []
     const realSetTimeout = globalThis.setTimeout
-    const spy = vi
-      .spyOn(globalThis, 'setTimeout')
-      .mockImplementation(((...args: Parameters<typeof setTimeout>) => {
-        const timer = realSetTimeout(...args)
-        queueMicrotask(() => timerRefs.push(timer.hasRef()))
-        return timer
-      }) as typeof setTimeout)
+    const spy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+      ...args: Parameters<typeof setTimeout>
+    ) => {
+      const timer = realSetTimeout(...args)
+      queueMicrotask(() => timerRefs.push(timer.hasRef()))
+      return timer
+    }) as typeof setTimeout)
     try {
       const ws = new WebSocketClient(url, { dataMode: 'text' })
       const received: string[] = []

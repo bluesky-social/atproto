@@ -23,7 +23,7 @@ describe('WebSocketConnectionEngine iterator', () => {
     const { engine, mock } = makeEngine()
     expect(engine.readyState).toBe('initialized')
     expect(engine.capabilities).toEqual(mock.capabilities)
-    expect(engine.protocol).toBe('')
+    expect(engine.protocol).toBe(null)
   })
 
   it('dispatches open and reports protocol on open', async () => {
