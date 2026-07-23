@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.33
+
+### Patch Changes
+
+- [#5261](https://github.com/bluesky-social/atproto/pull/5261) [`5d6dae2`](https://github.com/bluesky-social/atproto/commit/5d6dae261032033eb4c818944208b9342c1d49d4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support platform-specific Age Assurance config
+
 ## 0.20.32
 
 ### Patch Changes
