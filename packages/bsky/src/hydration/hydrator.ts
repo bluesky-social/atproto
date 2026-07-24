@@ -79,7 +79,6 @@ import {
   type StarterPackAggs,
   type StarterPacks,
   type Verifications,
-  getStarterPackUriFromFollow,
 } from './graph.js'
 import {
   LabelHydrator,
@@ -92,6 +91,7 @@ import {
   HydrationMap,
   type ItemRef,
   type RecordInfo,
+  getStarterPackUriFromFollow,
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,

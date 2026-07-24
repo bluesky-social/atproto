@@ -23,14 +23,14 @@ import {
   getSiteStandardRecordsFromHydrationMapsByRefs,
 } from '../hydration/external.js'
 import type { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
-import {
-  type Follow,
-  type Verification,
-  getStarterPackUriFromFollow,
-} from '../hydration/graph.js'
+import type { Follow, Verification } from '../hydration/graph.js'
 import type { HydrationState } from '../hydration/hydrator.js'
 import type { Label } from '../hydration/label.js'
-import { type RecordInfo, parseString } from '../hydration/util.js'
+import {
+  type RecordInfo,
+  getStarterPackUriFromFollow,
+  parseString,
+} from '../hydration/util.js'
 import type { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
 import { viewsLogger } from '../logger.js'

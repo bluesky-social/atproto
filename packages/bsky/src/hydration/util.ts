@@ -14,7 +14,9 @@ import {
   parseCidSafe,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
+import { app } from '../lexicons/index.js'
 import type { Record as RecordEntry } from '../proto/bsky_pb.js'
+import type { FollowRecord } from '../views/types.js'
 
 const PARSE_OPTIONS: LexParseOptions & ValidateOptions = {
   strict: false,
@@ -197,3 +199,16 @@ export const isActivitySubscriptionEnabled = ({
   post: boolean
   reply: boolean
 }): boolean => post || reply
+export const getStarterPackUriFromFollow = (
+  follow: FollowRecord,
+): AtUriString | undefined => {
+  const viaUri = follow.via?.uri
+  if (!viaUri) return
+  try {
+    const parsed = new AtUri(viaUri)
+    if (parsed.collection !== app.bsky.graph.starterpack.$type) return
+    return viaUri as AtUriString
+  } catch {
+    return
+  }
+}

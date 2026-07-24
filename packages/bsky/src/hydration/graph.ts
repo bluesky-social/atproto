@@ -1,4 +1,4 @@
-import { AtUri, type AtUriString, type DidString } from '@atproto/syntax'
+import type { AtUriString, DidString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app } from '../lexicons/index.js'
 import type { FollowInfo } from '../proto/bsky_pb.js'
@@ -43,20 +43,6 @@ export type ListMembershipStates = HydrationMap<
 
 export type Follow = RecordInfo<FollowRecord>
 export type Follows = HydrationMap<AtUriString, Follow>
-
-export const getStarterPackUriFromFollow = (
-  follow: FollowRecord,
-): AtUriString | undefined => {
-  const viaUri = follow.via?.uri
-  if (!viaUri) return
-  try {
-    const parsed = new AtUri(viaUri)
-    if (parsed.collection !== app.bsky.graph.starterpack.$type) return
-    return viaUri as AtUriString
-  } catch {
-    return
-  }
-}
 
 export type Block = RecordInfo<BlockRecord>
 
