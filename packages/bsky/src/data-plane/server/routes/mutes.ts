@@ -4,11 +4,6 @@ import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
-import {
-  muteKindsFromStored,
-  muteKindsToStored,
-  storedHasMuteKind,
-} from '../../util/mute-kinds.js'
 import type { Database } from '../db/index.js'
 import {
   CreatedAtDidKeyset,
@@ -26,10 +21,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('subjectDid', '=', targetDid)
       .executeTakeFirst()
     return {
-      muted: res != null && res.kinds === '',
-      mutedReposts: res != null && storedHasMuteKind(res.kinds, 'reposts'),
-      mutedQuoteposts:
-        res != null && storedHasMuteKind(res.kinds, 'quoteposts'),
+      muted: res != null && !res.onlyReposts && !res.onlyQuoteposts,
+      mutedReposts: res?.onlyReposts ?? false,
+      mutedQuoteposts: res?.onlyQuoteposts ?? false,
     }
   },
 
@@ -43,7 +37,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('mute.mutedByDid', '=', actorDid)
       .selectAll('actor')
       .select('mute.createdAt as createdAt')
-      .select('mute.kinds as kinds')
+      .select('mute.onlyReposts as onlyReposts')
+      .select('mute.onlyQuoteposts as onlyQuoteposts')
 
     const keyset = new CreatedAtDidKeyset(
       ref('mute.createdAt'),
@@ -61,7 +56,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       dids: mutes.map((m) => m.did),
       mutes: mutes.map((m) => ({
         did: m.did,
-        kinds: muteKindsFromStored(m.kinds),
+        onlyReposts: m.onlyReposts,
+        onlyQuoteposts: m.onlyQuoteposts,
       })),
       cursor: keyset.packFromResult(mutes),
     }
@@ -127,19 +123,21 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async createActorMute(req) {
-    const { actorDid, subjectDid } = req
+    const { actorDid, subjectDid, onlyReposts, onlyQuoteposts } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
-    const kinds = muteKindsToStored(req.kinds)
     await db.db
       .insertInto('mute')
       .values({
         subjectDid,
         mutedByDid: actorDid,
         createdAt: new Date().toISOString(),
-        kinds,
+        onlyReposts,
+        onlyQuoteposts,
       })
       .onConflict((oc) =>
-        oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kinds }),
+        oc
+          .columns(['mutedByDid', 'subjectDid'])
+          .doUpdateSet({ onlyReposts, onlyQuoteposts }),
       )
       .execute()
   },

@@ -17,7 +17,6 @@ import {
   type Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
-import { muteKindsToStored } from '../util/mute-kinds.js'
 import type { Database } from './db/index.js'
 import { countAll, excluded } from './db/util.js'
 
@@ -160,8 +159,7 @@ export class BsyncSubscription {
 
   private async processMuteOperations(operations: MuteOperation[]) {
     for (const op of operations) {
-      const { type, actorDid, subject } = op
-      const kinds = muteKindsToStored(op.kinds)
+      const { type, actorDid, subject, onlyReposts, onlyQuoteposts } = op
       if (type === MuteOperation_Type.ADD) {
         if (subject.startsWith('did:')) {
           await this.db.db
@@ -170,10 +168,13 @@ export class BsyncSubscription {
               mutedByDid: actorDid,
               subjectDid: subject,
               createdAt: new Date().toISOString(),
-              kinds,
+              onlyReposts,
+              onlyQuoteposts,
             })
             .onConflict((oc) =>
-              oc.columns(['mutedByDid', 'subjectDid']).doUpdateSet({ kinds }),
+              oc
+                .columns(['mutedByDid', 'subjectDid'])
+                .doUpdateSet({ onlyReposts, onlyQuoteposts }),
             )
             .execute()
         } else {

@@ -58,5 +58,5 @@ export * as _20250813T174955711Z from './20250813T174955711Z-add-post-agg-bookma
 export * as _20251120T004738098Z from './20251120T004738098Z-update-actor-age-assurance-v2.js'
 export * as _20260112T133951271Z from './20260112T133951271Z-add-drafts.js'
 export * as _20260604T224952774Z from './20260604T224952774Z-post-embed-gallery-image.js'
-export * as _20260618T200000000Z from './20260618T200000000Z-add-mute-kinds.js'
+export * as _20260618T200000000Z from './20260618T200000000Z-add-mute-scope.js'
 export * as _20260729T223157563Z from './20260729T223157563Z-add-op-thread-reply.js'

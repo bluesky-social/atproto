@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Creates a mute relationship for the specified account. If a mute already exists for the account, it is updated in place: the stored kinds are replaced with the kinds in this request. Mutes are private in Bluesky. Requires auth.",
+      "description": "Creates a mute relationship for the specified account. If a mute already exists for the account, it is updated in place: the stored scope is replaced with the scope in this request. Mutes are private in Bluesky. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -12,13 +12,13 @@
           "required": ["actor"],
           "properties": {
             "actor": { "type": "string", "format": "at-identifier" },
-            "kinds": {
-              "type": "array",
-              "description": "Scope the mute to specific kinds of content from the account. Omit for a full mute. Always send the full desired set: repeat calls replace the stored kinds rather than adding to them.",
-              "items": {
-                "type": "string",
-                "knownValues": ["reposts", "quoteposts"]
-              }
+            "onlyReposts": {
+              "type": "boolean",
+              "description": "Restrict the mute to the account's reposts. When any 'only' scope is set, just the scoped content is muted; when none are set, the account is fully muted. Repeat calls replace the stored scope rather than adding to it."
+            },
+            "onlyQuoteposts": {
+              "type": "boolean",
+              "description": "Restrict the mute to the account's quote posts. See onlyReposts."
             }
           }
         }

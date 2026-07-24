@@ -660,9 +660,10 @@ message GetActorMutesActorResponse {
 
 message MuteInfo {
   string did = 1;
-  // scopes the mute to specific kinds of content (e.g. "reposts",
-  // "quoteposts"); empty means a full mute
-  repeated string kinds = 2;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted.
+  bool only_reposts = 2;
+  bool only_quoteposts = 3;
 }
 
 // - return list of user dids of users who A mutes
@@ -674,7 +675,7 @@ message GetMutesRequest {
 }
 
 message GetMutesResponse {
-  // Deprecated: use mutes, which carries the kinds of each mute.
+  // Deprecated: use mutes, which carries the scope of each mute.
   repeated string dids = 1 [deprecated = true];
   string cursor = 2;
   repeated MuteInfo mutes = 3;
@@ -1875,10 +1876,11 @@ message UntakedownRecordResponse {
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
-  // scopes the mute to specific kinds of content; empty means a full mute.
-  // If a mute already exists for the pair, its stored kinds are replaced
-  // with this set.
-  repeated string kinds = 3;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted. If a mute already exists
+  // for the pair, its stored scope is replaced with this one.
+  bool only_reposts = 3;
+  bool only_quoteposts = 4;
 }
 
 message CreateActorMuteResponse {}

@@ -13,7 +13,6 @@ import {
   type MuteOperation,
   MuteOperation_Type,
 } from '../src/proto/bsync_pb.js'
-import { muteKindsFromStored } from '../src/routes/mute-kinds.js'
 
 describe('mutes', () => {
   let bsync: BsyncService
@@ -114,26 +113,16 @@ describe('mutes', () => {
       })
     })
 
-    it('upserts mute kinds and removes mutes regardless of kinds.', async () => {
+    it('upserts mute scopes and removes mutes regardless of scope.', async () => {
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kinds: ['reposts'],
+        onlyReposts: true,
       })
-      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': ['reposts'] },
-      })
-
-      await client.addMuteOperation({
-        type: MuteOperation_Type.ADD,
-        actorDid: 'did:example:a',
-        subject: 'did:example:b',
-        kinds: ['quoteposts', 'reposts'],
-      })
-      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
         'did:example:a': {
-          'did:example:b': ['quoteposts', 'reposts'],
+          'did:example:b': { onlyReposts: true, onlyQuoteposts: false },
         },
       })
 
@@ -141,10 +130,26 @@ describe('mutes', () => {
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
-        kinds: [],
+        onlyReposts: true,
+        onlyQuoteposts: true,
       })
-      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': [] },
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: true, onlyQuoteposts: true },
+        },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        onlyReposts: false,
+        onlyQuoteposts: false,
+      })
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: false, onlyQuoteposts: false },
+        },
       })
 
       await client.addMuteOperation({
@@ -152,35 +157,21 @@ describe('mutes', () => {
         actorDid: 'did:example:a',
         subject: 'did:example:b',
       })
-      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({})
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({})
     })
 
-    it('defaults missing mute kinds to a full mute.', async () => {
+    it('defaults a missing mute scope to a full mute.', async () => {
       const { operation } = await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
         subject: 'did:example:b',
       })
-      expect(operation?.kinds).toEqual([])
-      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': [] },
-      })
-    })
-
-    it('stores and replays mute kinds it does not recognize.', async () => {
-      // bsync does not validate kind values: producers validate on write and
-      // consumers ignore values they don't recognize. This keeps bsync from
-      // needing a deploy when new kinds are added.
-      const unknownKind = 'someday-kind'
-      const { operation } = await client.addMuteOperation({
-        type: MuteOperation_Type.ADD,
-        actorDid: 'did:example:a',
-        subject: 'did:example:b',
-        kinds: ['reposts', unknownKind],
-      })
-      expect(operation?.kinds).toEqual(['reposts', unknownKind])
-      expect(await dumpMuteKinds(bsync.ctx.db)).toEqual({
-        'did:example:a': { 'did:example:b': ['reposts', unknownKind] },
+      expect(operation?.onlyReposts).toBe(false)
+      expect(operation?.onlyQuoteposts).toBe(false)
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: false, onlyQuoteposts: false },
+        },
       })
     })
 
@@ -300,11 +291,11 @@ describe('mutes', () => {
           type: MuteOperation_Type.ADD,
           actorDid: 'did:example:a',
           subject: 'at://did:example:b/app.bsky.graph.list/rkey1',
-          kinds: ['reposts'],
+          onlyReposts: true,
         }),
       ).rejects.toEqual(
         new ConnectError(
-          'mute kinds only apply to actor mutes',
+          'mute scopes only apply to actor mutes',
           Code.InvalidArgument,
         ),
       )
@@ -398,7 +389,9 @@ describe('mutes', () => {
       const operationIds = operations.map((op) => parseInt(op.id, 10))
       const ascending = (a: number, b: number) => a - b
       expect(operationIds).toEqual([...operationIds].sort(ascending))
-      expect(operations.every((op) => op.kinds.length === 0)).toBe(true)
+      expect(
+        operations.every((op) => !op.onlyReposts && !op.onlyQuoteposts),
+      ).toBe(true)
     })
 
     it('supports long-poll, finding an operation.', async () => {
@@ -434,12 +427,18 @@ const dumpMuteState = async (db: Database) => {
   return result
 }
 
-const dumpMuteKinds = async (db: Database) => {
+const dumpMuteScopes = async (db: Database) => {
   const items = await db.db.selectFrom('mute_item').selectAll().execute()
-  const result: Record<string, Record<string, string[]>> = {}
+  const result: Record<
+    string,
+    Record<string, { onlyReposts: boolean; onlyQuoteposts: boolean }>
+  > = {}
   items.forEach((item) => {
     result[item.actorDid] ??= {}
-    result[item.actorDid][item.subject] = muteKindsFromStored(item.kinds)
+    result[item.actorDid][item.subject] = {
+      onlyReposts: item.onlyReposts,
+      onlyQuoteposts: item.onlyQuoteposts,
+    }
   })
   return result
 }

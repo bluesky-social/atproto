@@ -505,12 +505,14 @@ export class Agent extends XrpcClient {
   async mute(
     actor: string,
     options: {
-      kinds?: ('reposts' | 'quoteposts')[]
+      onlyReposts?: boolean
+      onlyQuoteposts?: boolean
     } = {},
   ) {
     return this.app.bsky.graph.muteActor({
       actor,
-      kinds: options.kinds,
+      onlyReposts: options.onlyReposts,
+      onlyQuoteposts: options.onlyQuoteposts,
     })
   }
 

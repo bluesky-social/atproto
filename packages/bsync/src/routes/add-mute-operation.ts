@@ -10,11 +10,6 @@ import {
   MuteOperation_Type,
 } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
-import {
-  type StoredMuteKinds,
-  muteKindsFromStored,
-  muteKindsToStored,
-} from './mute-kinds.js'
 import { isValidAtUri, isValidDid } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
@@ -44,7 +39,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
-        kinds: muteKindsFromStored(op.kinds),
+        onlyReposts: op.onlyReposts,
+        onlyQuoteposts: op.onlyQuoteposts,
       },
     })
   },
@@ -58,7 +54,8 @@ const createMuteOp = async (db: Database, op: MuteOpInfoValid) => {
       type: op.type,
       actorDid: op.actorDid,
       subject: op.subject,
-      kinds: op.kinds,
+      onlyReposts: op.onlyReposts,
+      onlyQuoteposts: op.onlyQuoteposts,
     })
     .returning('id')
     .executeTakeFirstOrThrow()
@@ -78,12 +75,14 @@ const addMuteItem = async (
       actorDid: op.actorDid,
       subject: op.subject,
       fromId,
-      kinds: op.kinds,
+      onlyReposts: op.onlyReposts,
+      onlyQuoteposts: op.onlyQuoteposts,
     })
     .onConflict((oc) =>
       oc.constraint('mute_item_pkey').doUpdateSet({
         fromId: sql`${ref('excluded.fromId')}`,
-        kinds: sql`${ref('excluded.kinds')}`,
+        onlyReposts: sql`${ref('excluded.onlyReposts')}`,
+        onlyQuoteposts: sql`${ref('excluded.onlyQuoteposts')}`,
       }),
     )
     .execute()
@@ -108,7 +107,8 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
-  const kinds = muteKindsToStored(op.kinds ?? [])
+  const onlyReposts = op.onlyReposts ?? false
+  const onlyQuoteposts = op.onlyQuoteposts ?? false
   if (op.type === MuteOperation_Type.UNSPECIFIED) {
     throw new ConnectError(
       'unspecified mute operation type',
@@ -132,9 +132,9 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
     if (isValidDid(op.subject)) {
       // all good
     } else if (isValidAtUri(op.subject)) {
-      if (kinds !== '') {
+      if (onlyReposts || onlyQuoteposts) {
         throw new ConnectError(
-          'mute kinds only apply to actor mutes',
+          'mute scopes only apply to actor mutes',
           Code.InvalidArgument,
         )
       }
@@ -155,14 +155,15 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
       )
     }
   }
-  return { ...op, kinds } as MuteOpInfoValid // op.type has been checked
+  return { ...op, onlyReposts, onlyQuoteposts } as MuteOpInfoValid // op.type has been checked
 }
 
 type MuteOpInfo = {
   type: MuteOperation_Type
   actorDid: string
   subject: string
-  kinds?: string[]
+  onlyReposts?: boolean
+  onlyQuoteposts?: boolean
 }
 
 type MuteOpInfoValid = {
@@ -172,5 +173,6 @@ type MuteOpInfoValid = {
     | MuteOperation_Type.CLEAR
   actorDid: string
   subject: string
-  kinds: StoredMuteKinds
+  onlyReposts: boolean
+  onlyQuoteposts: boolean
 }

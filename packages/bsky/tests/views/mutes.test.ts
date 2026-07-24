@@ -157,7 +157,7 @@ describe('mute views', () => {
   it('supports muting only reposts from an account', async () => {
     let cleanedUp = false
     await agent.api.app.bsky.graph.muteActor(
-      { actor: dan, kinds: ['reposts'] },
+      { actor: dan, onlyReposts: true },
       {
         headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
         encoding: 'application/json',
@@ -197,7 +197,7 @@ describe('mute views', () => {
       expect(replacedWithFull.data.viewer?.mutedReposts).toBe(false)
 
       await agent.api.app.bsky.graph.muteActor(
-        { actor: dan, kinds: ['reposts'] },
+        { actor: dan, onlyReposts: true },
         {
           headers: await network.serviceHeaders(
             alice,
@@ -331,7 +331,7 @@ describe('mute views', () => {
 
   it('supports muting only quote posts from an account', async () => {
     await agent.api.app.bsky.graph.muteActor(
-      { actor: dan, kinds: ['quoteposts'] },
+      { actor: dan, onlyQuoteposts: true },
       {
         headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
         encoding: 'application/json',
