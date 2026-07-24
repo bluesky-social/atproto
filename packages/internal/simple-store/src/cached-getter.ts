@@ -138,8 +138,14 @@ export class CachedGetter<
         if (storedValue !== undefined && (await allowStored(storedValue))) {
           // Use the stored value as return value for the current execution
           // flow. Notify other concurrent execution flows (that should be
-          // "stuck" in the loop before until this promise resolves) that we got
-          // a value, but that it came from the store (isFresh = false).
+          // "awaiting" in the loop above until this promise resolves) that we
+          // got a value, but that it came from the store (isFresh = false).
+
+          // We don't throw if the signal is aborted because we do want to
+          // return the stored value to allow concurrent execution flows to use
+          // it. If we want to return a failed promise, we can
+          // signal?.throwIfAborted before returning at the end of this
+          // method.
           return { isFresh: false, value: storedValue }
         }
 
