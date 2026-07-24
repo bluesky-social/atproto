@@ -14,6 +14,7 @@ export default defineConfig({
     projects: [
       'packages/aws',
       'packages/internal/handle-resolver',
+      'packages/internal/simple-store',
       'packages/lex/*',
       'packages/oauth/oauth-client',
       'packages/syntax',
