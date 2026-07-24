@@ -1,6 +1,7 @@
 import {
   CachedHandleResolver,
   type HandleCache,
+  type HandleCacheErrorHandler,
 } from './cached-handle-resolver.js'
 import type { HandleResolver } from './types.js'
 import {
@@ -11,12 +12,13 @@ import {
 export type CreateHandleResolverOptions = {
   handleResolver: URL | string | HandleResolver
   handleCache?: HandleCache
+  onHandleCacheError?: HandleCacheErrorHandler
 } & Partial<XrpcHandleResolverOptions>
 
 export function createHandleResolver(
   options: CreateHandleResolverOptions,
 ): HandleResolver {
-  const { handleResolver, handleCache } = options
+  const { handleResolver, handleCache, onHandleCacheError } = options
 
   if (handleResolver instanceof CachedHandleResolver && !handleCache) {
     return handleResolver
@@ -27,5 +29,6 @@ export function createHandleResolver(
       ? new XrpcHandleResolver(handleResolver, options)
       : handleResolver,
     handleCache,
+    onHandleCacheError,
   )
 }

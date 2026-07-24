@@ -1,6 +1,6 @@
 import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
 import type { Nsid } from '@atproto/oauth-scopes'
-import { CachedGetter } from '@atproto-labs/simple-store'
+import { CachedGetter, swallowStoreErrors } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../oauth-constants.js'
 import type { LexiconData, LexiconStore } from './lexicon-store.js'
 
@@ -39,11 +39,14 @@ export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
           lexicon: result ? result.lexicon : storedData?.lexicon ?? null,
         }
       },
-      {
+      // The lexicon store acts as a cache in front of the lexicon resolver.
+      // Store failures should degrade to a cache miss (and re-resolution)
+      // rather than break lexicon retrieval, so we swallow (and log) them.
+      swallowStoreErrors({
         set: async (nsid, data) => store.storeLexicon(nsid, data),
         get: async (nsid) => (await store.findLexicon(nsid)) ?? undefined,
         del: async (nsid) => store.deleteLexicon(nsid),
-      },
+      }),
       {
         isStale: (nsid, data) => {
           const timeSinceLastUpdate = Date.now() - data.updatedAt.getTime()
