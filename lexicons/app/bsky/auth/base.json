@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.auth.base",
+  "defs": {
+    "main": {
+      "type": "auth-bundle",
+      "description": "Create and delete data in your Bluesky account including your profile, posts, follows, lists, blocks, and viewing feeds.",
+      "permissions": [
+        "com.atproto.resource.repo?collection=app.bsky.actor.profile&create=true&delete=true&update=true",
+        "com.atproto.resource.repo?collection=app.bsky.feed.post&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.feed.postgate&create=true&delete=true&update=true",
+        "com.atproto.resource.repo?collection=app.bsky.feed.threadgate&create=true&delete=true&update=true",
+        "com.atproto.resource.repo?collection=app.bsky.feed.like&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.feed.repost&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.graph.follow&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.graph.block&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.graph.list&create=true&delete=true&update=true",
+        "com.atproto.resource.repo?collection=app.bsky.graph.listitem&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.graph.listblock&create=true&delete=true",
+        "com.atproto.resource.repo?collection=app.bsky.graph.starterpack&create=true&delete=true&update=true",
+        "com.atproto.resource.authentication?aud=*&lxm=app.bsky.feed.getFeedSkeleton",
+        "com.atproto.resource.authentication?aud=*&lxm=app.bsky.feed.sendInteractions"
+      ]
+    }
+  }
+}
