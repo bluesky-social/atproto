@@ -62,7 +62,10 @@
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "record": { "type": "unknown" },
+        "record": {
+          "type": "ref",
+          "ref": "app.bsky.graph.starterpack"
+        },
         "creator": {
           "type": "ref",
           "ref": "app.bsky.actor.defs#profileViewBasic"
@@ -93,7 +96,10 @@
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "record": { "type": "unknown" },
+        "record": {
+          "type": "ref",
+          "ref": "app.bsky.graph.starterpack"
+        },
         "creator": {
           "type": "ref",
           "ref": "app.bsky.actor.defs#profileViewBasic"

@@ -79,7 +79,15 @@
           ]
         },
         "reasonSubject": { "type": "string", "format": "at-uri" },
-        "record": { "type": "unknown" },
+        "record": {
+          "type": "union",
+          "refs": [
+            "app.bsky.feed.post",
+            "app.bsky.feed.like",
+            "app.bsky.graph.follow",
+            "app.bsky.graph.starterpack"
+          ]
+        },
         "isRead": { "type": "boolean" },
         "indexedAt": { "type": "string", "format": "datetime" },
         "labels": {
