@@ -750,10 +750,18 @@ export class Client {
   async putRecord(
     record: TypedLexMap<NsidString>,
     rkey: string,
-    { service = null, labelers = null, ...options }: PutRecordOptions = {},
+    {
+      service = null,
+      labelers = null,
+      // The default is just "failure.shouldRetry()". We also check for expected swap failures and don't retry those.
+      retry = (failure) =>
+        failure.error !== 'InvalidSwap' && failure.shouldRetry(),
+      ...options
+    }: PutRecordOptions = {},
   ) {
     return this.xrpc(putRecord, {
       ...options,
+      retry,
       service,
       labelers,
       body: {
