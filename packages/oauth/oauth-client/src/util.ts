@@ -44,7 +44,7 @@ function timeoutError(ms: number): unknown {
 
 export function combineSignals(
   signals: readonly (AbortSignal | undefined)[],
-): AbortController & Disposable {
+): DisposableAbortController {
   const controller = new DisposableAbortController()
 
   const onAbort = function (this: AbortSignal, _event: Event) {

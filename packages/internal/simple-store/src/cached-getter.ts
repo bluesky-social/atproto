@@ -39,7 +39,6 @@ export type Getter<K extends Key, V extends Value, C = void> = (
 
 export type CachedGetterOptions<K extends Key, V extends Value> = {
   isStale?: (key: K, value: V) => boolean | PromiseLike<boolean>
-  onStoreError?: (err: unknown, key: K, value: V) => void | PromiseLike<void>
   deleteOnError?: (
     err: unknown,
     key: K,
@@ -61,13 +60,20 @@ export class CachedGetter<
   V extends Value = Value,
   C = void,
 > {
-  private readonly pending = new Map<K, PendingItem<V>>()
+  readonly #pending = new Map<K, PendingItem<V>>()
+  readonly #getter: Getter<K, V, C>
+  readonly #store: SimpleStore<K, V>
+  readonly #options: CachedGetterOptions<K, V> = {}
 
   constructor(
-    readonly getter: Getter<K, V, C>,
-    readonly store: SimpleStore<K, V>,
-    readonly options: CachedGetterOptions<K, V> = {},
-  ) {}
+    getter: Getter<K, V, C>,
+    store: SimpleStore<K, V>,
+    options: CachedGetterOptions<K, V> = {},
+  ) {
+    this.#getter = getter
+    this.#store = store
+    this.#options = options
+  }
 
   async get(
     key: C extends void ? K : never,
@@ -88,7 +94,7 @@ export class CachedGetter<
   ): Promise<V> {
     signal?.throwIfAborted()
 
-    const { isStale, deleteOnError } = this.options
+    const { isStale, deleteOnError } = this.#options
 
     const allowStored: (value: V) => Awaitable<boolean> = noCache
       ? returnFalse // Never allow stored values to be returned
@@ -103,7 +109,7 @@ export class CachedGetter<
     // JavaScript, the pending item will be set before the next iteration of the
     // while loop of any concurrent request.
     let previousExecutionFlow: undefined | PendingItem<V>
-    while ((previousExecutionFlow = this.pending.get(key))) {
+    while ((previousExecutionFlow = this.#pending.get(key))) {
       try {
         // If a concurrent request is already in progress, wait for it to finish
         const { isFresh, value } = await previousExecutionFlow
@@ -124,6 +130,9 @@ export class CachedGetter<
 
     const currentExecutionFlow: PendingItem<V> = Promise.resolve()
       .then(async () => {
+        // @NOTE that the signal should not be aborted at this point, because
+        // the loop above would have thrown an error if it was.
+
         const storedValue = await this.getStored(key, { signal })
 
         if (storedValue !== undefined && (await allowStored(storedValue))) {
@@ -134,10 +143,14 @@ export class CachedGetter<
           return { isFresh: false, value: storedValue }
         }
 
+        // Don't call the getter function if the signal was aborted, because it
+        // may be an expensive operation.
+        signal?.throwIfAborted()
+
         return Promise.resolve()
           .then(async () => {
             const options = { signal, noCache, context } as GetterOptions<C>
-            return this.getter.call(null, key, options, storedValue)
+            return this.#getter.call(null, key, options, storedValue)
           })
           .catch(async (err) => {
             if (storedValue !== undefined) {
@@ -155,16 +168,16 @@ export class CachedGetter<
             throw err
           })
           .then(async (value) => {
-            // The value should be stored even is the signal was aborted.
+            // The value is stored even is the signal was aborted.
             await this.setStored(key, value)
             return { isFresh: true, value }
           })
       })
       .finally(() => {
-        this.pending.delete(key)
+        this.#pending.delete(key)
       })
 
-    if (this.pending.has(key)) {
+    if (this.#pending.has(key)) {
       // This should never happen. Indeed, there must not be any 'await'
       // statement between this and the loop iteration check meaning that
       // this.pending.get returned undefined. It is there to catch bugs that
@@ -172,30 +185,28 @@ export class CachedGetter<
       throw new Error('Concurrent request for the same key')
     }
 
-    this.pending.set(key, currentExecutionFlow)
+    this.#pending.set(key, currentExecutionFlow)
 
     const { value } = await currentExecutionFlow
     return value
   }
 
+  // @NOTE We propagate errors from the store. If the use-case prefers to ignore
+  // errors from the store, it should be handled in the store implementation
+  // (eg. by returning `undefined` instead of throwing).
+
+  // @NOTE We define the store methods here to allow for overriding them in
+  // subclasses.
+
   async getStored(key: K, options?: GetOptions): Promise<V | undefined> {
-    try {
-      return await this.store.get(key, options)
-    } catch (err) {
-      return undefined
-    }
+    return this.#store.get(key, options)
   }
 
   async setStored(key: K, value: V): Promise<void> {
-    try {
-      await this.store.set(key, value)
-    } catch (err) {
-      const onStoreError = this.options?.onStoreError
-      await onStoreError?.(err, key, value)
-    }
+    await this.#store.set(key, value)
   }
 
   async delStored(key: K, _cause?: unknown): Promise<void> {
-    await this.store.del(key)
+    await this.#store.del(key)
   }
 }
