@@ -1,5 +1,5 @@
 import type { GetOptions, Key, SimpleStore, Value } from './simple-store.js'
-import type { Awaitable, ContextOptions } from './util.js'
+import { type Awaitable, type ContextOptions, assert } from './util.js'
 
 export type { GetOptions }
 export type GetCachedOptions<C = void> = ContextOptions<C> & {
@@ -174,20 +174,21 @@ export class CachedGetter<
           })
       })
       .finally(() => {
-        // Fool-proofing, should never happen because of the while() loop above.
-        if (this.#pending.get(key) !== currentExecutionFlow) {
-          throw new Error('Pending item was replaced before it finished')
-        }
+        assert(
+          this.#pending.get(key) === currentExecutionFlow,
+          `Pending item for key "${key}" was replaced before it finished.`,
+        )
         this.#pending.delete(key)
       })
 
-    if (this.#pending.has(key)) {
-      // This should never happen. Indeed, there must not be any 'await'
-      // statement between this and the loop iteration check meaning that
-      // this.pending.get returned undefined. It is there to catch bugs that
-      // would occur in future changes to the code.
-      throw new Error('Concurrent request for the same key')
-    }
+    // This should never happen. Indeed, there must not be any 'await'
+    // statement between this and the loop iteration check meaning that
+    // this.pending.get returned undefined. It is there to catch bugs that
+    // would occur in future changes to the code.
+    assert(
+      !this.#pending.has(key),
+      `Concurrent execution flow for key "${key}" should not exist.`,
+    )
 
     this.#pending.set(key, currentExecutionFlow)
 
