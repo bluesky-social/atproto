@@ -744,18 +744,6 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/authorization-page.tsx:162
-msgid "Login canceled"
-msgstr "Login canceled"
-
-#: src/authorization-page.tsx:162
-msgid "Login complete"
-msgstr "Login complete"
-
-#: src/components/sign-in-picker.tsx:67
-msgid "Login to account that is not listed"
-msgstr "Login to account that is not listed"
-
 #: src/components/layouts/layout-app.tsx:28
 msgid "Logo"
 msgstr "Logo"
@@ -1055,6 +1043,10 @@ msgstr "Sign in as {0}"
 msgid "Sign in as..."
 msgstr "Sign in as..."
 
+#: src/components/sign-in-picker.tsx:67
+msgid "Sign in to an account that is not listed"
+msgstr "Sign in to an account that is not listed"
+
 #: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Sign out"
@@ -1069,6 +1061,14 @@ msgstr "Sign out"
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Sign up"
+
+#: src/authorization-page.tsx:162
+msgid "Sign-in canceled"
+msgstr "Sign-in canceled"
+
+#: src/authorization-page.tsx:162
+msgid "Sign-in complete"
+msgstr "Sign-in complete"
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"

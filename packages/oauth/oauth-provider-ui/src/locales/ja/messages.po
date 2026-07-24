@@ -744,18 +744,6 @@ msgstr "後で"
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/authorization-page.tsx:162
-msgid "Login canceled"
-msgstr "ログインキャンセル"
-
-#: src/authorization-page.tsx:162
-msgid "Login complete"
-msgstr "ログイン完了"
-
-#: src/components/sign-in-picker.tsx:67
-msgid "Login to account that is not listed"
-msgstr "リストにないアカウントにログイン"
-
 #: src/components/layouts/layout-app.tsx:28
 msgid "Logo"
 msgstr "ロゴ"
@@ -1055,6 +1043,10 @@ msgstr "{0} でサインイン"
 msgid "Sign in as..."
 msgstr "アカウントの選択"
 
+#: src/components/sign-in-picker.tsx:67
+msgid "Sign in to an account that is not listed"
+msgstr ""
+
 #: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Sign out"
@@ -1069,6 +1061,14 @@ msgstr "サインアウト"
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "サインアップ"
+
+#: src/authorization-page.tsx:162
+msgid "Sign-in canceled"
+msgstr ""
+
+#: src/authorization-page.tsx:162
+msgid "Sign-in complete"
+msgstr ""
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"
