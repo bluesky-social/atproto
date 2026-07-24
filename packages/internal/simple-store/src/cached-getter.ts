@@ -174,6 +174,10 @@ export class CachedGetter<
           })
       })
       .finally(() => {
+        // Fool-proofing, should never happen because of the while() loop above.
+        if (this.#pending.get(key) !== currentExecutionFlow) {
+          throw new Error('Pending item was replaced before it finished')
+        }
         this.#pending.delete(key)
       })
 
