@@ -790,6 +790,102 @@ describe('Client', () => {
     })
   })
 
+  describe('putRecord retry', () => {
+    const did = 'did:plc:alice'
+
+    const buildRecord = () =>
+      app.bsky.feed.post.$build({
+        text: 'Hello, world!',
+        createdAt: currentDatetimeString(),
+      })
+
+    it('does not retry InvalidSwap failures by default, even when the status is retryable', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        // 503 is a normally-retryable status, but the "InvalidSwap" error code
+        // is a compare-and-swap conflict that retrying cannot resolve.
+        return Response.json(
+          { error: 'InvalidSwap', message: 'Record was at a different CID' },
+          { status: 503 },
+        )
+      })
+
+      const client = new Client({ fetchHandler, did })
+
+      await expect(
+        client.putRecord(buildRecord(), 'self', {
+          maxRetries: 3,
+          minRetryTimeout: 0,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcResponseError)
+        expect(err.error).toBe('InvalidSwap')
+        return true
+      })
+
+      // The default retry predicate skips "InvalidSwap", so no retries happen
+      // despite the retryable status and maxRetries > 0.
+      expect(fetchHandler).toHaveBeenCalledTimes(1)
+    })
+
+    it('still retries other retryable failures by default', async () => {
+      let calls = 0
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        calls++
+        if (calls < 3) {
+          return Response.json(
+            { error: 'InternalServerError', message: 'oops' },
+            { status: 503 },
+          )
+        }
+        return Response.json({
+          uri: `at://${did}/app.bsky.feed.post/self`,
+          cid: cborCid.toString(),
+        })
+      })
+
+      const client = new Client({ fetchHandler, did })
+
+      const response = await client.putRecord(buildRecord(), 'self', {
+        maxRetries: 3,
+        minRetryTimeout: 0,
+      })
+
+      // Two failures were retried before the third attempt succeeded.
+      expect(fetchHandler).toHaveBeenCalledTimes(3)
+      expect(response.body.uri).toBe(`at://${did}/app.bsky.feed.post/self`)
+    })
+
+    it('allows callers to override the default retry predicate', async () => {
+      let calls = 0
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        calls++
+        if (calls < 2) {
+          return Response.json(
+            { error: 'InvalidSwap', message: 'Record was at a different CID' },
+            { status: 503 },
+          )
+        }
+        return Response.json({
+          uri: `at://${did}/app.bsky.feed.post/self`,
+          cid: cborCid.toString(),
+        })
+      })
+
+      const client = new Client({ fetchHandler, did })
+
+      const response = await client.putRecord(buildRecord(), 'self', {
+        maxRetries: 3,
+        minRetryTimeout: 0,
+        // Opt back into retrying every retryable failure, including InvalidSwap.
+        retry: (failure) => failure.shouldRetry(),
+      })
+
+      // The InvalidSwap failure was retried once because of the override.
+      expect(fetchHandler).toHaveBeenCalledTimes(2)
+      expect(response.body.uri).toBe(`at://${did}/app.bsky.feed.post/self`)
+    })
+  })
+
   describe('blobs', () => {
     const fetchHandler = vi.fn(
       async (url: string, init?: RequestInit): Promise<Response> => {
