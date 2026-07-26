@@ -109,6 +109,30 @@ describe(swallowStoreErrors, () => {
       await expect(wrapped.get('key')).resolves.toBeUndefined()
       expect(consoleError).toHaveBeenCalledOnce()
     })
+
+    it('propagates a get error (does not log it) when the caller signal aborted', async () => {
+      const controller = new AbortController()
+      const err = new Error('aborted')
+      const store: TestStore = {
+        get: async (_key, options) => {
+          options?.signal?.throwIfAborted()
+          throw err
+        },
+        set: async () => {},
+        del: async () => {},
+      }
+      const onError = vi.fn<StoreErrorHandler<string>>()
+
+      const wrapped = swallowStoreErrors(store, onError)
+      controller.abort()
+
+      // The cancellation propagates rather than degrading to a cache miss...
+      await expect(
+        wrapped.get('key', { signal: controller.signal }),
+      ).rejects.toThrow()
+      // ...and is not reported to the error handler as a store failure.
+      expect(onError).not.toHaveBeenCalled()
+    })
   })
 
   describe('clear', () => {

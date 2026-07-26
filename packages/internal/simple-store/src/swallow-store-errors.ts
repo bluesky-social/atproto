@@ -37,9 +37,14 @@ export function swallowStoreErrors<K extends Key, V extends Value>(
 ): SimpleStore<K, V> {
   const wrapped: SimpleStore<K, V> = {
     async get(key, options) {
+      options?.signal?.throwIfAborted()
       try {
         return await store.get(key, options)
       } catch (err) {
+        // A caller-initiated cancellation is control flow, not a store
+        // failure: propagate it instead of logging it and returning a
+        // (misleading) cache miss.
+        if (options?.signal?.aborted) throw err
         onError(err, 'get', key)
         return undefined
       }
