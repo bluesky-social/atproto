@@ -74,7 +74,10 @@ export function combineSignals(
  * Allows using {@link AbortController} with the `using` keyword, in order to
  * automatically abort them once the execution block ends.
  */
-class DisposableAbortController extends AbortController implements Disposable {
+export class DisposableAbortController
+  extends AbortController
+  implements Disposable
+{
   [Symbol.dispose]() {
     this.abort(new Error('AbortController was disposed'))
   }
