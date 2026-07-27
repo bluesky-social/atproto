@@ -66,6 +66,16 @@ Regressions found and fixed during the phase:
 Neither would have been caught by a passing type-check. The first needed a
 short viewport; the second only showed up in the `.po` diff.
 
+## After phase 4 — redesign complete (2026-07-27)
+
+Both suites at **7/7** and **13/13**. **No test file was modified at any point
+in the project**, and the message catalogs end where they started apart from two
+intentional changes (`Branding` retired with the palette demo route, `Navigation`
+added for the mobile nav).
+
+Final state: 344 messages, 3 untranslated French entries — all three pre-date
+this work.
+
 ## How to reproduce
 
 ```bash
