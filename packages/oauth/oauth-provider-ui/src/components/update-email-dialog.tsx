@@ -117,7 +117,7 @@ export function UpdateEmailDialog({
           emailCurrent={emailCurrent}
           requestPending={requestPending}
           confirmPending={confirmPending}
-          values={{ email }}
+          newEmailDefault={email}
           onLoadingChange={setSubmitting}
           onCancel={() => setOpen(false)}
           onResend={async () => {

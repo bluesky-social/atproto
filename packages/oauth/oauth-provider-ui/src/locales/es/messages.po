@@ -810,7 +810,7 @@ msgstr ""
 msgid "Navigation"
 msgstr ""
 
-#: src/components/update-email-form.tsx:54
+#: src/components/update-email-form.tsx:79
 #: src/components/update-email-dialog.tsx:181
 msgid "New email address"
 msgstr ""
@@ -912,7 +912,7 @@ msgstr ""
 msgid "Please check your verification code and try again."
 msgstr ""
 
-#: src/components/update-email-form.tsx:71
+#: src/components/update-email-form.tsx:91
 msgid "Please enter the security code that was sent to your email address."
 msgstr ""
 
@@ -1000,11 +1000,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr ""
 
-#: src/components/update-email-form.tsx:78
+#: src/components/update-email-form.tsx:100
 msgid "Security code"
 msgstr ""
 
-#: src/components/update-email-form.tsx:68
+#: src/components/update-email-form.tsx:88
 msgid "Security step required"
 msgstr ""
 
@@ -1313,7 +1313,7 @@ msgstr "Válido"
 msgid "Value"
 msgstr ""
 
-#: src/components/verify-email-confirm-form.tsx:27
+#: src/components/verify-email-confirm-form.tsx:49
 #: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr ""

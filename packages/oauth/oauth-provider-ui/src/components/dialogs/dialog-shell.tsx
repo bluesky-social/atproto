@@ -18,6 +18,11 @@ export type DialogShellProps = {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   className?: string
+  /**
+   * When false, the dialog refuses to close — used to stop the user dismissing
+   * it while a submit is in flight.
+   */
+  dismissable?: boolean
 }
 
 /**
@@ -36,11 +41,25 @@ export function DialogShell({
   open,
   onOpenChange,
   className,
+  dismissable = true,
 }: DialogShellProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      // @NOTE Base UI has no `dismissible` prop on Dialog.Root (Radix exposed
+      // onEscapeKeyDown / onPointerDownOutside on the content instead), so
+      // non-dismissable is expressed by rejecting close transitions. Opening is
+      // always allowed; only closing is gated.
+      onOpenChange={(next) => {
+        if (next || dismissable) onOpenChange?.(next)
+      }}
+    >
       <DialogTrigger render={trigger} />
-      <DialogContent role="dialog" className={cn('sm:max-w-md', className)}>
+      <DialogContent
+        role="dialog"
+        className={cn('sm:max-w-md', className)}
+        showCloseButton={dismissable}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && (

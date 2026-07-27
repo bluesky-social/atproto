@@ -820,7 +820,7 @@ msgstr "名前"
 msgid "Navigation"
 msgstr ""
 
-#: src/components/update-email-form.tsx:54
+#: src/components/update-email-form.tsx:79
 #: src/components/update-email-dialog.tsx:181
 msgid "New email address"
 msgstr "新しいメールアドレス"
@@ -922,7 +922,7 @@ msgstr "リセットコードを確認して、もう一度お試しください
 msgid "Please check your verification code and try again."
 msgstr "確認コードを確認して、もう一度お試しください。"
 
-#: src/components/update-email-form.tsx:71
+#: src/components/update-email-form.tsx:91
 msgid "Please enter the security code that was sent to your email address."
 msgstr "メールアドレスに送信されたセキュリティコードを入力してください。"
 
@@ -1010,11 +1010,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "アクセスを取り消す"
 
-#: src/components/update-email-form.tsx:78
+#: src/components/update-email-form.tsx:100
 msgid "Security code"
 msgstr "セキュリティコード"
 
-#: src/components/update-email-form.tsx:68
+#: src/components/update-email-form.tsx:88
 msgid "Security step required"
 msgstr "セキュリティステップが必要です"
 
@@ -1323,7 +1323,7 @@ msgstr "有効"
 msgid "Value"
 msgstr "値"
 
-#: src/components/verify-email-confirm-form.tsx:27
+#: src/components/verify-email-confirm-form.tsx:49
 #: src/components/update-email-dialog.tsx:86
 msgid "Verification code"
 msgstr "確認コード"

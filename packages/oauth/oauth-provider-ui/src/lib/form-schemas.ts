@@ -60,6 +60,21 @@ export const signInSchema = z.object({
 
 export type SignInValues = z.infer<typeof signInSchema>
 
+export const verifyEmailConfirmSchema = z.object({
+  code: otpCodeSchema,
+})
+
+export type VerifyEmailConfirmValues = z.infer<typeof verifyEmailConfirmSchema>
+
+export const updateEmailSchema = z.object({
+  // @NOTE `newEmail`, not `email` — the dialog's request step owns
+  // `input[name="email"]`, and this confirm step must not collide with it.
+  newEmail: z.string().min(1).email(),
+  code: otpCodeSchema,
+})
+
+export type UpdateEmailValues = z.infer<typeof updateEmailSchema>
+
 export const signUpHandleSchema = z.object({
   // Composed by HandleField out of a segment plus a domain; it only publishes
   // a value once the whole handle is valid, so a non-empty string is enough.
