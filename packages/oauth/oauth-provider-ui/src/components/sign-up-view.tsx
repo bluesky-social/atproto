@@ -2,8 +2,8 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { useState } from 'react'
 import { useCustomizationData } from '#/contexts/customization.tsx'
-import { WizardCard } from './forms/wizard-card.tsx'
-import { LayoutTitle } from './layouts/layout-title.tsx'
+import { SignUpWizard } from './forms/sign-up-wizard.tsx'
+import { AuthShell } from './layouts/auth-shell.tsx'
 import {
   type SignUpCredentialsData,
   SignUpCredentialsForm,
@@ -50,11 +50,11 @@ export function SignUpView({
   >({})
 
   return (
-    <LayoutTitle
+    <AuthShell
       title={msg({ message: 'Sign up' })}
       subtitle={<Trans>We're so excited to have you join us!</Trans>}
     >
-      <WizardCard
+      <SignUpWizard
         onBack={onBack}
         doneLabel={<Trans>Sign up</Trans>}
         onDone={([handle, credentials, hcaptcha]: [
@@ -131,6 +131,6 @@ export function SignUpView({
       />
 
       <HelpCard className="mt-4" links={links} />
-    </LayoutTitle>
+    </AuthShell>
   )
 }

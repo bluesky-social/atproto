@@ -1,9 +1,9 @@
 import { Trans } from '@lingui/react/macro'
-import { clsx } from 'clsx'
 import type { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
 import { LinkAnchor } from '#/components/utils/link-anchor.tsx'
 import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 
 export type SignUpDisclaimerProps = Override<
   Omit<JSX.IntrinsicElements['p'], 'children'>,
@@ -23,11 +23,11 @@ export function SignUpDisclaimer({
   const ppLink = links?.find((l) => l.rel === 'privacy-policy')
 
   return (
-    <p className={clsx('text-text-light text-sm', className)} {...attrs}>
+    <p className={cn('text-muted-foreground text-sm', className)} {...attrs}>
       <Trans>
         By creating an account you agree to the{' '}
         {tosLink ? (
-          <LinkAnchor className="text-primary underline" link={tosLink}>
+          <LinkAnchor className="text-foreground underline" link={tosLink}>
             <Trans>Terms of Service</Trans>
           </LinkAnchor>
         ) : (
@@ -35,7 +35,7 @@ export function SignUpDisclaimer({
         )}
         {' and the '}
         {ppLink ? (
-          <LinkAnchor className="text-primary underline" link={ppLink}>
+          <LinkAnchor className="text-foreground underline" link={ppLink}>
             <Trans>Privacy Policy</Trans>
           </LinkAnchor>
         ) : (

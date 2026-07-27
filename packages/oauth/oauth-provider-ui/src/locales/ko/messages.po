@@ -247,8 +247,8 @@ msgstr "Bluesky 대화 서비스"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-foreground underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-foreground underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "계정을 만들면 {0} 및 {1}에 동의하는 것입니다."
@@ -458,7 +458,7 @@ msgstr ""
 msgid "e.g. <0>alice{0}</0>"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:59
+#: src/components/sign-up-credentials-form.tsx:107
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "이메일"
@@ -530,7 +530,7 @@ msgstr "사용자 이름 및 비밀번호 입력"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:50
+#: src/components/sign-up-credentials-form.tsx:98
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
@@ -698,7 +698,7 @@ msgid "Interface language selector"
 msgstr "인터페이스 언어 선택기"
 
 #: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:278
+#: src/components/forms/fields/handle-field.tsx:281
 msgid "Invalid"
 msgstr "사용 불가"
 
@@ -706,8 +706,8 @@ msgstr "사용 불가"
 msgid "Invalid Handle"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:44
-#: src/components/sign-up-credentials-form.tsx:49
+#: src/components/sign-up-credentials-form.tsx:94
+#: src/components/sign-up-credentials-form.tsx:97
 msgid "Invite code"
 msgstr "초대 코드"
 
@@ -842,7 +842,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:71
+#: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -1314,7 +1314,7 @@ msgid "Username updated"
 msgstr ""
 
 #: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:276
+#: src/components/forms/fields/handle-field.tsx:279
 msgid "Valid"
 msgstr "사용 가능"
 
@@ -1335,7 +1335,7 @@ msgstr ""
 msgid "Verification method"
 msgstr ""
 
-#: src/components/sign-up-hcaptcha-form.tsx:46
+#: src/components/sign-up-hcaptcha-form.tsx:89
 msgid "Verification successful!"
 msgstr ""
 
@@ -1426,7 +1426,7 @@ msgstr "페이지 이동 중…"
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr ""
 
-#: src/components/sign-up-handle-form.tsx:44
+#: src/components/sign-up-handle-form.tsx:78
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 도메인 이름으로 변경할 수 있습니다."
 

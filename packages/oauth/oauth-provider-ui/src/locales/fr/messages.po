@@ -247,8 +247,8 @@ msgstr "Services de messagerie Bluesky"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-foreground underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-foreground underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
@@ -458,7 +458,7 @@ msgstr "ex. <0>alice.com</0>"
 msgid "e.g. <0>alice{0}</0>"
 msgstr "ex. <0>alice{0}</0>"
 
-#: src/components/sign-up-credentials-form.tsx:59
+#: src/components/sign-up-credentials-form.tsx:107
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "Email"
@@ -530,7 +530,7 @@ msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "Toutes les applications actuellement connectées à votre compte, ainsi que les « mots de passe d'application » que vous avez créés, seront révoqués. Vous devrez vous reconnecter lors de la réactivation."
 
-#: src/components/sign-up-credentials-form.tsx:50
+#: src/components/sign-up-credentials-form.tsx:98
 msgid "example-com-xxxxx-xxxxx"
 msgstr "exemple-com-xxxxx-xxxxx"
 
@@ -708,7 +708,7 @@ msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
 #: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:278
+#: src/components/forms/fields/handle-field.tsx:281
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -716,8 +716,8 @@ msgstr "Invalide"
 msgid "Invalid Handle"
 msgstr "Pseudo invalide"
 
-#: src/components/sign-up-credentials-form.tsx:44
-#: src/components/sign-up-credentials-form.tsx:49
+#: src/components/sign-up-credentials-form.tsx:94
+#: src/components/sign-up-credentials-form.tsx:97
 msgid "Invite code"
 msgstr "Code d'invitation"
 
@@ -852,7 +852,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:71
+#: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -1324,7 +1324,7 @@ msgid "Username updated"
 msgstr "Nom d'utilisateur modifié"
 
 #: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:276
+#: src/components/forms/fields/handle-field.tsx:279
 msgid "Valid"
 msgstr "Valide"
 
@@ -1345,7 +1345,7 @@ msgstr "Email de vérification envoyé"
 msgid "Verification method"
 msgstr "Méthode de vérification"
 
-#: src/components/sign-up-hcaptcha-form.tsx:46
+#: src/components/sign-up-hcaptcha-form.tsx:89
 msgid "Verification successful!"
 msgstr "Vérification réussie !"
 
@@ -1436,7 +1436,7 @@ msgstr "Redirection en cours..."
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Vous pouvez également désactiver temporairement votre compte. Votre profil, vos publications, vos feeds et vos listes ne seront plus visibles par les autres utilisateurs de Bluesky. Vous pouvez réactiver votre compte à tout moment en vous reconnectant."
 
-#: src/components/sign-up-handle-form.tsx:44
+#: src/components/sign-up-handle-form.tsx:78
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 

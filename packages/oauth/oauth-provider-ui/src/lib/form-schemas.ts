@@ -59,3 +59,28 @@ export const signInSchema = z.object({
 })
 
 export type SignInValues = z.infer<typeof signInSchema>
+
+export const signUpHandleSchema = z.object({
+  // Composed by HandleField out of a segment plus a domain; it only publishes
+  // a value once the whole handle is valid, so a non-empty string is enough.
+  handle: z.string().min(1),
+})
+
+export type SignUpHandleValues = z.infer<typeof signUpHandleSchema>
+
+/**
+ * @NOTE Built per-render because whether an invite code is required is
+ * deployment configuration (`inviteCodeRequired` from CustomizationData), not
+ * a static property of the form.
+ */
+export function buildSignUpCredentialsSchema(inviteCodeRequired: boolean) {
+  return z.object({
+    email: z.string().min(1).email(),
+    password: newPasswordSchema,
+    inviteCode: inviteCodeRequired ? z.string().min(1) : z.string().optional(),
+  })
+}
+
+export type SignUpCredentialsValues = z.infer<
+  ReturnType<typeof buildSignUpCredentialsSchema>
+>

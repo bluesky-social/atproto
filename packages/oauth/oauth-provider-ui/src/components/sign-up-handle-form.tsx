@@ -1,53 +1,87 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import type { HandleString } from '@atproto/syntax'
 import { Notice } from '#/components/feedback/notice.tsx'
-import { InputHandleDefault } from '#/components/forms/input-handle-default'
+import { HandleField } from '#/components/forms/fields/handle-field.tsx'
 import {
-  SmartForm,
-  type WrappedSmartFormProps,
-} from '#/components/forms/smart-form'
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
+import { useStableCallback } from '#/hooks/use-stable-callback.ts'
+import {
+  type SignUpHandleValues,
+  signUpHandleSchema,
+} from '#/lib/form-schemas.ts'
 
 export type SignUpHandleData = {
   handle: HandleString
 }
 
-export type SignUpHandleFormProps = WrappedSmartFormProps<SignUpHandleData> & {
+export type SignUpHandleFormProps = Omit<
+  FormShellProps<SignUpHandleValues>,
+  'form' | 'onSubmit'
+> & {
   domains: string[]
+  values?: Partial<SignUpHandleData>
+  onValues?: (values: Partial<SignUpHandleData>) => void
+  handler: (
+    data: SignUpHandleData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
 }
 
 export function SignUpHandleForm({
   domains,
-
-  // FormProp
+  values,
+  onValues,
+  handler,
+  children,
   ...props
 }: SignUpHandleFormProps) {
-  return (
-    <SmartForm
-      {...props}
-      validate={({ handle }) => {
-        if (handle) return { handle }
-      }}
-      fields={({ values, setterFor }) => (
-        <>
-          <InputHandleDefault
-            handle={values.handle}
-            onHandle={setterFor('handle')}
-            domains={domains}
-            name="handle"
-            required
-            autoFocus
-            enterKeyHint="done"
-            autoComplete="nickname"
-          />
+  const form = useForm<SignUpHandleValues>({
+    resolver: zodResolver(signUpHandleSchema),
+    reValidateMode: 'onChange',
+    defaultValues: { handle: values?.handle ?? '' },
+  })
 
-          <Notice role="note">
-            <Trans>
-              You can change this username to any domain name you control after
-              your account is set up.
-            </Trans>
-          </Notice>
-        </>
-      )}
-    />
+  // @NOTE Mirror every keystroke back to the wizard, not just the submitted
+  // values, so stepping Back and Forward again restores un-submitted input —
+  // the behaviour the previous SmartForm's onValues provided.
+  const report = useStableCallback((next: unknown) => {
+    onValues?.(next as Partial<SignUpHandleData>)
+  })
+  useEffect(() => {
+    const sub = form.watch((next) => report(next))
+    return () => sub.unsubscribe()
+  }, [form, report])
+
+  return (
+    <FormShell
+      {...props}
+      form={form}
+      onSubmit={(next, signal) => {
+        onValues?.({ handle: next.handle as HandleString })
+        return handler({ handle: next.handle as HandleString }, signal)
+      }}
+    >
+      <HandleField
+        control={form.control}
+        name="handle"
+        domains={domains}
+        required
+        autoFocus
+      />
+
+      <Notice role="note">
+        <Trans>
+          You can change this username to any domain name you control after your
+          account is set up.
+        </Trans>
+      </Notice>
+
+      {children}
+    </FormShell>
   )
 }

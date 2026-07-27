@@ -247,8 +247,8 @@ msgstr "Blueskyチャットサービス"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その<1>利用規約</1>と<2>プライバシーポリシー</2>に従って付与します。"
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-foreground underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-foreground underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
@@ -458,7 +458,7 @@ msgstr "例: <0>alice.com</0>"
 msgid "e.g. <0>alice{0}</0>"
 msgstr "例: <0>alice{0}</0>"
 
-#: src/components/sign-up-credentials-form.tsx:59
+#: src/components/sign-up-credentials-form.tsx:107
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "メールアドレス"
@@ -530,7 +530,7 @@ msgstr "ユーザー名とパスワードを入力してください"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "アカウントに接続しているすべてのアプリと、作成したすべての「アプリパスワード」が取り消されます。再有効化する際には、再度サインインする必要があります。"
 
-#: src/components/sign-up-credentials-form.tsx:50
+#: src/components/sign-up-credentials-form.tsx:98
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
@@ -708,7 +708,7 @@ msgid "Interface language selector"
 msgstr "言語選択"
 
 #: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:278
+#: src/components/forms/fields/handle-field.tsx:281
 msgid "Invalid"
 msgstr "無効"
 
@@ -716,8 +716,8 @@ msgstr "無効"
 msgid "Invalid Handle"
 msgstr "無効なハンドル"
 
-#: src/components/sign-up-credentials-form.tsx:44
-#: src/components/sign-up-credentials-form.tsx:49
+#: src/components/sign-up-credentials-form.tsx:94
+#: src/components/sign-up-credentials-form.tsx:97
 msgid "Invite code"
 msgstr "招待コード"
 
@@ -852,7 +852,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:71
+#: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -1324,7 +1324,7 @@ msgid "Username updated"
 msgstr "ユーザー名更新"
 
 #: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:276
+#: src/components/forms/fields/handle-field.tsx:279
 msgid "Valid"
 msgstr "有効"
 
@@ -1345,7 +1345,7 @@ msgstr "確認メールが送信されました"
 msgid "Verification method"
 msgstr "確認方法"
 
-#: src/components/sign-up-hcaptcha-form.tsx:46
+#: src/components/sign-up-hcaptcha-form.tsx:89
 msgid "Verification successful!"
 msgstr "確認成功！"
 
@@ -1436,7 +1436,7 @@ msgstr "リダイレクトしています…"
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "代わりに、一時的にアカウントを無効にすることもできます。 プロフィール、投稿、フィード、リストは他のBlueskyユーザーには表示されなくなります。 ログインするといつでもアカウントを再開できます。"
 
-#: src/components/sign-up-handle-form.tsx:44
+#: src/components/sign-up-handle-form.tsx:78
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "アカウントのセットアップ後にユーザー名をあなたが管理しているドメイン名に変更することができます。"
 

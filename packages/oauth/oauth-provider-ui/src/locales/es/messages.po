@@ -247,8 +247,8 @@ msgstr "Servicios de chat de Bluesky"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
+#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-foreground underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
+#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-foreground underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "Al crear una cuenta, aceptas los {0} y la {1} de este servicio."
@@ -458,7 +458,7 @@ msgstr ""
 msgid "e.g. <0>alice{0}</0>"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:59
+#: src/components/sign-up-credentials-form.tsx:107
 #: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "Correo electrónico"
@@ -530,7 +530,7 @@ msgstr "Ingresa tu nombre de usuario y contraseña"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:50
+#: src/components/sign-up-credentials-form.tsx:98
 msgid "example-com-xxxxx-xxxxx"
 msgstr "ejemplo-com-xxxxx-xxxxx"
 
@@ -698,7 +698,7 @@ msgid "Interface language selector"
 msgstr "Selector de idioma de la interfaz"
 
 #: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:278
+#: src/components/forms/fields/handle-field.tsx:281
 msgid "Invalid"
 msgstr "Inválido"
 
@@ -706,8 +706,8 @@ msgstr "Inválido"
 msgid "Invalid Handle"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:44
-#: src/components/sign-up-credentials-form.tsx:49
+#: src/components/sign-up-credentials-form.tsx:94
+#: src/components/sign-up-credentials-form.tsx:97
 msgid "Invite code"
 msgstr "Código de invitación"
 
@@ -842,7 +842,7 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "Solo letras, números y guiones"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
-#: src/components/sign-up-credentials-form.tsx:71
+#: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
@@ -1314,7 +1314,7 @@ msgid "Username updated"
 msgstr ""
 
 #: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:276
+#: src/components/forms/fields/handle-field.tsx:279
 msgid "Valid"
 msgstr "Válido"
 
@@ -1335,7 +1335,7 @@ msgstr ""
 msgid "Verification method"
 msgstr ""
 
-#: src/components/sign-up-hcaptcha-form.tsx:46
+#: src/components/sign-up-hcaptcha-form.tsx:89
 msgid "Verification successful!"
 msgstr ""
 
@@ -1426,7 +1426,7 @@ msgstr "Estás siendo redirigido..."
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr ""
 
-#: src/components/sign-up-handle-form.tsx:44
+#: src/components/sign-up-handle-form.tsx:78
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Puedes cambiar este nombre de usuario a cualquier nombre de dominio que controles después de configurar tu cuenta."
 
