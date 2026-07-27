@@ -734,18 +734,6 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
-#: src/authorization-page.tsx:166
-msgid "Login canceled"
-msgstr ""
-
-#: src/authorization-page.tsx:166
-msgid "Login complete"
-msgstr "로그인 완료"
-
-#: src/components/sign-in-picker.tsx:67
-msgid "Login to account that is not listed"
-msgstr "목록에 없는 계정으로 로그인"
-
 #: src/components/layouts/layout-app.tsx:28
 msgid "Logo"
 msgstr "로고"
@@ -1045,6 +1033,10 @@ msgstr "{0}(으)로 로그인"
 msgid "Sign in as..."
 msgstr "로그인"
 
+#: src/components/sign-in-picker.tsx:67
+msgid "Sign in to an account that is not listed"
+msgstr ""
+
 #: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Sign out"
@@ -1059,6 +1051,14 @@ msgstr "로그아웃"
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "가입"
+
+#: src/authorization-page.tsx:166
+msgid "Sign-in canceled"
+msgstr ""
+
+#: src/authorization-page.tsx:166
+msgid "Sign-in complete"
+msgstr ""
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"

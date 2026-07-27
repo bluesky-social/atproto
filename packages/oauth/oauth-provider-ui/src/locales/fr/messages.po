@@ -744,18 +744,6 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/authorization-page.tsx:166
-msgid "Login canceled"
-msgstr "Connexion annulée"
-
-#: src/authorization-page.tsx:166
-msgid "Login complete"
-msgstr "Connexion terminée"
-
-#: src/components/sign-in-picker.tsx:67
-msgid "Login to account that is not listed"
-msgstr "Se connecter à un compte qui n'est pas listé"
-
 #: src/components/layouts/layout-app.tsx:28
 msgid "Logo"
 msgstr "Logo"
@@ -1055,6 +1043,10 @@ msgstr "Se connecter en tant que {0}"
 msgid "Sign in as..."
 msgstr "Se connecter en tant que..."
 
+#: src/components/sign-in-picker.tsx:67
+msgid "Sign in to an account that is not listed"
+msgstr "Se connecter à un compte qui n'est pas listé"
+
 #: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Sign out"
@@ -1069,6 +1061,14 @@ msgstr "Se déconnecter"
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Inscription"
+
+#: src/authorization-page.tsx:166
+msgid "Sign-in canceled"
+msgstr "Connexion annulée"
+
+#: src/authorization-page.tsx:166
+msgid "Sign-in complete"
+msgstr "Connexion terminée"
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"

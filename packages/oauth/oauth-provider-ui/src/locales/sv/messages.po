@@ -744,18 +744,6 @@ msgstr "Senare"
 msgid "Let's get your password reset!"
 msgstr "Låt oss få ditt lösenord återställt!"
 
-#: src/authorization-page.tsx:166
-msgid "Login canceled"
-msgstr "Inloggning avbruten"
-
-#: src/authorization-page.tsx:166
-msgid "Login complete"
-msgstr "Inloggning klar"
-
-#: src/components/sign-in-picker.tsx:67
-msgid "Login to account that is not listed"
-msgstr "Logga in på ett olistat konto"
-
 #: src/components/layouts/layout-app.tsx:28
 msgid "Logo"
 msgstr "Logga"
@@ -1055,6 +1043,10 @@ msgstr "Logga in som {0}"
 msgid "Sign in as..."
 msgstr "Logga in som…"
 
+#: src/components/sign-in-picker.tsx:67
+msgid "Sign in to an account that is not listed"
+msgstr ""
+
 #: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Sign out"
@@ -1069,6 +1061,14 @@ msgstr "Logga ut"
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Registrera dig"
+
+#: src/authorization-page.tsx:166
+msgid "Sign-in canceled"
+msgstr ""
+
+#: src/authorization-page.tsx:166
+msgid "Sign-in complete"
+msgstr ""
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"
