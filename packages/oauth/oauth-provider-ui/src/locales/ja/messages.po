@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-07-02 00:00+0900\n"
+"PO-Revision-Date: 2026-07-27 21:20+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
@@ -1047,7 +1047,7 @@ msgstr "アカウントの選択"
 
 #: src/components/sign-in-picker.tsx:67
 msgid "Sign in to an account that is not listed"
-msgstr ""
+msgstr "リストにないアカウントにサインイン"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
@@ -1066,11 +1066,11 @@ msgstr "サインアップ"
 
 #: src/authorization-page.tsx:162
 msgid "Sign-in canceled"
-msgstr ""
+msgstr "サインインキャンセル"
 
 #: src/authorization-page.tsx:162
 msgid "Sign-in complete"
-msgstr ""
+msgstr "サインイン完了"
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"
@@ -1173,11 +1173,11 @@ msgstr "これらのアプリはあなたのアカウントにアクセスでき
 
 #: src/components/oauth-session-details-dialog.tsx:57
 msgid "This app can uniquely identify you through your account."
-msgstr ""
+msgstr "このアプリは、あなたのアカウントを通じてあなたを一意に識別できます。"
 
 #: src/components/oauth-session-details-dialog.tsx:64
 msgid "This app has access to your account with the following permissions:"
-msgstr ""
+msgstr "このアプリは、あなたのアカウントに次の権限でアクセスできます："
 
 #: src/components/consent-form.tsx:142
 msgid "This application is requesting the following permissions (scopes) to access your account:"
@@ -1351,7 +1351,7 @@ msgstr "あなたの <0/> アカウントにアクセスしようとしていま
 
 #: src/components/consent-form.tsx:124
 msgid "wants to uniquely identify you through your <0/> account"
-msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
+msgstr "あなたの <0/> アカウントを通じてあなたを一意に識別しようとしています"
 
 #: src/components/sign-in-form.tsx:221
 msgid "Warning"
