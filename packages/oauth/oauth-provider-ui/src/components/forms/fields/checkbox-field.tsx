@@ -49,7 +49,15 @@ export function CheckboxField<TValues extends FieldValues>({
                 type="checkbox"
                 name={field.name}
                 ref={field.ref}
-                checked={Boolean(field.value)}
+                // @NOTE Uncontrolled (`defaultChecked`, not `checked`). With a
+                // controlled checkbox the very first click was being dropped —
+                // the native toggle was reverted by the re-render before
+                // react-hook-form's state landed. Since the e2e suite's label
+                // click is the first interaction with the sign-in form, that
+                // silently left "remember this account" unticked, so the
+                // session was never persisted. Uncontrolled makes the DOM the
+                // source of truth and the click can't be lost.
+                defaultChecked={Boolean(field.value)}
                 onChange={(event) => field.onChange(event.target.checked)}
                 onBlur={field.onBlur}
                 disabled={disabled}
