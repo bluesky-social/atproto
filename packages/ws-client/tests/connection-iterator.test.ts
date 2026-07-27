@@ -224,6 +224,12 @@ describe('WebSocketConnectionEngine iterator', () => {
     await expect(p).rejects.toThrow('flush failed')
   })
 
+  it('throws at construction when the signal is already aborted', () => {
+    const ac = new AbortController()
+    ac.abort(new Error('pre-aborted'))
+    expect(() => makeEngine({ signal: ac.signal })).toThrow('pre-aborted')
+  })
+
   it('aborts via signal', async () => {
     const ac = new AbortController()
     const { engine, mock } = makeEngine({

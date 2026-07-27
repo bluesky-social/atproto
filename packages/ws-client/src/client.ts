@@ -123,15 +123,14 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     this.#url = url
     this.#options = options
     const { signal } = options
-    if (signal?.aborted) {
-      this.#stopController.abort(signal.reason)
-    } else {
-      signal?.addEventListener(
-        'abort',
-        () => this.#stopController.abort(signal.reason),
-        { once: true, signal: this.#stopController.signal },
-      )
-    }
+    // Constructing an already-stopped client is a programmer error: fail now
+    // rather than produce an instance that can never connect.
+    signal?.throwIfAborted()
+    signal?.addEventListener(
+      'abort',
+      () => this.#stopController.abort(signal.reason),
+      { once: true, signal: this.#stopController.signal },
+    )
   }
 
   get readyState(): ReadyState {

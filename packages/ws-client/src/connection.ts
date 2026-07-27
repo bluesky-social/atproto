@@ -141,23 +141,15 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     this.#idleTimeoutMs = options.idleTimeoutMs ?? null
 
     const { signal } = options
-    if (signal) {
-      if (signal.aborted) {
-        // Defer so the caller can attach consumers first.
-        queueMicrotask(() => this.#fail(signal.reason, true))
-      } else {
-        // Self-detaching: removed automatically when the connection settles
-        // its terminal (#doneController aborts in #fail/#finishDone).
-        signal.addEventListener(
-          'abort',
-          () => this.#fail(signal.reason, true),
-          {
-            once: true,
-            signal: this.#doneController.signal,
-          },
-        )
-      }
-    }
+    // Constructing an already-aborted connection is a programmer error: fail
+    // now rather than produce an instance that can never open. The listener
+    // below self-detaches when the connection settles its terminal
+    // (#doneController aborts in #fail/#finishDone).
+    signal?.throwIfAborted()
+    signal?.addEventListener('abort', () => this.#fail(signal.reason, true), {
+      once: true,
+      signal: this.#doneController.signal,
+    })
   }
 
   get capabilities(): TransportCapabilities {

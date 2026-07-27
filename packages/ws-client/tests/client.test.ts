@@ -277,6 +277,12 @@ describe('WebSocketClientBase', () => {
     expect(closes).toEqual([{ code: 1005, reason: '', wasClean: false }])
   })
 
+  it('throws at construction when the signal is already aborted', () => {
+    const ac = new AbortController()
+    ac.abort(new Error('pre-aborted'))
+    expect(() => makeClient({ signal: ac.signal })).toThrow('pre-aborted')
+  })
+
   it('signal abort ends the loop and fires one final onClose', async () => {
     const ac = new AbortController()
     const closes: CloseEventDetail[] = []
