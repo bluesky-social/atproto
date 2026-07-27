@@ -1,6 +1,7 @@
 'use client'
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
+import { Trans } from '@lingui/react/macro'
 import { XIcon } from 'lucide-react'
 import * as React from 'react'
 import { Button } from '#/components/ui/button.tsx'
@@ -70,7 +71,12 @@ function DialogContent({
             }
           >
             <XIcon />
-            <span className="sr-only">Close</span>
+            {/* @NOTE Deviation from upstream, which hardcodes "Close". This
+              package is fully localised, so a bare English screen-reader label
+              would surface untranslated in every non-English locale. */}
+            <span className="sr-only">
+              <Trans>Close</Trans>
+            </span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>
@@ -108,7 +114,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close render={<Button variant="outline" />}>
-          Close
+          <Trans>Close</Trans>
         </DialogPrimitive.Close>
       )}
     </div>

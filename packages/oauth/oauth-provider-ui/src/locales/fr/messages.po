@@ -328,16 +328,14 @@ msgstr "Cliquez ici si rien ne se passe"
 
 #: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/utils/dialog-simple.tsx:70
+#: src/components/ui/dialog.tsx:78
+#: src/components/ui/dialog.tsx:117
 msgid "Close"
 msgstr "Fermer"
 
 #: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "Fermer le sélecteur de compte"
-
-#: src/components/utils/description-card.tsx:83
-msgid "Close details"
-msgstr "Fermer les détails"
 
 #: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
@@ -431,7 +429,6 @@ msgid "Deny access"
 msgstr "Refuser l'accès"
 
 #: src/pages/account/(authenticated)/apps/page.tsx:138
-#: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Détails"
 
@@ -531,7 +528,7 @@ msgstr "Toutes les applications actuellement connectées à votre compte, ainsi 
 msgid "example-com-xxxxx-xxxxx"
 msgstr "exemple-com-xxxxx-xxxxx"
 
-#: src/components/utils/description-card.tsx:57
+#: src/components/utils/description-card.tsx:62
 msgid "Expand details"
 msgstr "Développer les détails"
 

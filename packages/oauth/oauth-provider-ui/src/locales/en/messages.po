@@ -328,16 +328,14 @@ msgstr "Click here if nothing happens"
 
 #: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/utils/dialog-simple.tsx:70
+#: src/components/ui/dialog.tsx:78
+#: src/components/ui/dialog.tsx:117
 msgid "Close"
 msgstr "Close"
 
 #: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "Close account selector"
-
-#: src/components/utils/description-card.tsx:83
-msgid "Close details"
-msgstr "Close details"
 
 #: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
@@ -431,7 +429,6 @@ msgid "Deny access"
 msgstr "Deny access"
 
 #: src/pages/account/(authenticated)/apps/page.tsx:138
-#: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Details"
 
@@ -531,7 +528,7 @@ msgstr "Every app currently connected to your account, as well as any \"app pass
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
-#: src/components/utils/description-card.tsx:57
+#: src/components/utils/description-card.tsx:62
 msgid "Expand details"
 msgstr "Expand details"
 

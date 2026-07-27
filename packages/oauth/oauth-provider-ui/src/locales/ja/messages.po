@@ -328,16 +328,14 @@ msgstr "何も起こらない場合はここをクリックしてください"
 
 #: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/utils/dialog-simple.tsx:70
+#: src/components/ui/dialog.tsx:78
+#: src/components/ui/dialog.tsx:117
 msgid "Close"
 msgstr "閉じる"
 
 #: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "アカウント選択を閉じる"
-
-#: src/components/utils/description-card.tsx:83
-msgid "Close details"
-msgstr "詳細を閉じる"
 
 #: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
@@ -431,7 +429,6 @@ msgid "Deny access"
 msgstr "アクセスを拒否"
 
 #: src/pages/account/(authenticated)/apps/page.tsx:138
-#: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "詳細"
 
@@ -531,7 +528,7 @@ msgstr "アカウントに接続しているすべてのアプリと、作成し
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
-#: src/components/utils/description-card.tsx:57
+#: src/components/utils/description-card.tsx:62
 msgid "Expand details"
 msgstr "詳細を開く"
 
