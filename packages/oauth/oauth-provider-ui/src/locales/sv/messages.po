@@ -207,7 +207,7 @@ msgid "Authenticate"
 msgstr "Autentisera"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:84
+#: src/components/consent-form.tsx:92
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
@@ -243,7 +243,7 @@ msgstr "Bluesky apptjänster"
 msgid "Bluesky Chat services"
 msgstr "Bluesky chattjänster"
 
-#: src/components/consent-form.tsx:164
+#: src/components/consent-form.tsx:177
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "Genom att klicka på <0>Auktorisera</0> ger du den här applikationen åtkomst till ditt konto i enlighet med dess <1>användarvillkor</1> och <2>integritetspolicy</2>."
 
@@ -323,7 +323,7 @@ msgstr "Välj en ny e-postadress för att koppla den till ditt konto."
 msgid "Choose a username"
 msgstr "Välj ett användarnamn"
 
-#: src/components/redirecting-view.tsx:92
+#: src/components/redirecting-view.tsx:95
 msgid "Click here if nothing happens"
 msgstr "Klicka här om ingenting händer"
 
@@ -426,7 +426,7 @@ msgstr "Radera kontot <0/>"
 msgid "Delete my account"
 msgstr "Radera mitt konto"
 
-#: src/components/consent-form.tsx:102
+#: src/components/consent-form.tsx:112
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
@@ -1126,7 +1126,7 @@ msgstr "Åtkomsten återkallades"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:137
+#: src/components/consent-form.tsx:146
 msgid "Technical details"
 msgstr "Tekniska detaljer"
 
@@ -1204,7 +1204,7 @@ msgstr ""
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
-#: src/components/consent-form.tsx:142
+#: src/components/consent-form.tsx:151
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Den här applikationen begär följande behörigheter (omfång) för att få åtkomst till ditt konto:"
 
@@ -1371,11 +1371,11 @@ msgstr "Verifiera att du är människa"
 msgid "Verify your email"
 msgstr "Verifiera din e-postadress"
 
-#: src/components/consent-form.tsx:130
+#: src/components/consent-form.tsx:139
 msgid "wants to access your <0/> account"
 msgstr "vill komma åt ditt konto <0/>"
 
-#: src/components/consent-form.tsx:124
+#: src/components/consent-form.tsx:133
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "vill entydigt identifiera dig via ditt konto <0/>"
 

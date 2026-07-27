@@ -207,7 +207,7 @@ msgid "Authenticate"
 msgstr "認証"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:84
+#: src/components/consent-form.tsx:92
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "承認"
@@ -243,7 +243,7 @@ msgstr "Blueskyアプリサービス"
 msgid "Bluesky Chat services"
 msgstr "Blueskyチャットサービス"
 
-#: src/components/consent-form.tsx:164
+#: src/components/consent-form.tsx:177
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その<1>利用規約</1>と<2>プライバシーポリシー</2>に従って付与します。"
 
@@ -323,7 +323,7 @@ msgstr "アカウントに関連付ける新しいメールアドレスを選択
 msgid "Choose a username"
 msgstr "ユーザー名を選んでください"
 
-#: src/components/redirecting-view.tsx:92
+#: src/components/redirecting-view.tsx:95
 msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
@@ -426,7 +426,7 @@ msgstr "アカウントを削除 <0/>"
 msgid "Delete my account"
 msgstr "アカウントを削除"
 
-#: src/components/consent-form.tsx:102
+#: src/components/consent-form.tsx:112
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
@@ -1126,7 +1126,7 @@ msgstr "アクセスが正常に取り消されました"
 msgid "Support"
 msgstr "サポート"
 
-#: src/components/consent-form.tsx:137
+#: src/components/consent-form.tsx:146
 msgid "Technical details"
 msgstr "技術的な詳細"
 
@@ -1204,7 +1204,7 @@ msgstr ""
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
-#: src/components/consent-form.tsx:142
+#: src/components/consent-form.tsx:151
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "このアプリケーションは、あなたのアカウントにアクセスするために次の権限（スコープ）を要求しています："
 
@@ -1371,11 +1371,11 @@ msgstr "あなたが人間であることを確認"
 msgid "Verify your email"
 msgstr "メールアドレスを確認"
 
-#: src/components/consent-form.tsx:130
+#: src/components/consent-form.tsx:139
 msgid "wants to access your <0/> account"
 msgstr "あなたの <0/> アカウントにアクセスしようとしています"
 
-#: src/components/consent-form.tsx:124
+#: src/components/consent-form.tsx:133
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
 

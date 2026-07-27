@@ -1,7 +1,7 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { AppShell } from '#/components/layouts/app-shell.tsx'
-import { Button } from './forms/button.tsx'
+import { Button } from '#/components/ui/button.tsx'
 
 export type AuthenticateWelcomeViewParams = {
   onSignIn?: () => void
@@ -32,7 +32,7 @@ export function AuthenticateWelcomeView({
           {onSignUp && (
             <Button
               className={'w-full'}
-              color={onSignIn ? 'primary' : 'darkGrey'}
+              variant={onSignIn ? 'default' : 'secondary'}
               onClick={onSignUp}
             >
               <Trans>Create a new account</Trans>
@@ -42,7 +42,7 @@ export function AuthenticateWelcomeView({
           {onSignIn && (
             <Button
               className={'w-full'}
-              color={onSignUp ? 'darkGrey' : 'primary'}
+              variant={onSignUp ? 'secondary' : 'default'}
               onClick={onSignIn}
             >
               <Trans context="verb">Sign in</Trans>
@@ -53,7 +53,7 @@ export function AuthenticateWelcomeView({
             <>
               <hr className="my-2 border-slate-200 dark:border-slate-700" />
 
-              <Button className="w-full" color="darkGrey" onClick={onCancel}>
+              <Button className="w-full" variant="secondary" onClick={onCancel}>
                 <Trans>Cancel</Trans>
               </Button>
             </>

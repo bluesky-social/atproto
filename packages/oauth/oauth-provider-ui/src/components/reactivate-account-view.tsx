@@ -1,10 +1,10 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
+import { ButtonAsync } from '#/components/forms/button-async.tsx'
 import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { AccountSummary } from '#/components/identity/account-summary.tsx'
-import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
-import { ButtonAsync } from './forms/button-async.tsx'
+import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 
 export type ReactivateAccountViewProps = {
   account: Account
@@ -18,7 +18,7 @@ export function ReactivateAccountView({
   onCancel,
 }: ReactivateAccountViewProps) {
   return (
-    <LayoutTitle
+    <AuthShell
       title={msg`Welcome back!`}
       subtitle={<Trans>Your account is currently deactivated.</Trans>}
     >
@@ -46,6 +46,6 @@ export function ReactivateAccountView({
           )}
         </div>
       </div>
-    </LayoutTitle>
+    </AuthShell>
   )
 }

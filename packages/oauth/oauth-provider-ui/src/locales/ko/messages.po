@@ -207,7 +207,7 @@ msgid "Authenticate"
 msgstr "인증"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:84
+#: src/components/consent-form.tsx:92
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "승인"
@@ -243,7 +243,7 @@ msgstr "Bluesky 앱 서비스"
 msgid "Bluesky Chat services"
 msgstr "Bluesky 대화 서비스"
 
-#: src/components/consent-form.tsx:164
+#: src/components/consent-form.tsx:177
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
@@ -323,7 +323,7 @@ msgstr ""
 msgid "Choose a username"
 msgstr "사용자 이름 선택"
 
-#: src/components/redirecting-view.tsx:92
+#: src/components/redirecting-view.tsx:95
 msgid "Click here if nothing happens"
 msgstr ""
 
@@ -426,7 +426,7 @@ msgstr ""
 msgid "Delete my account"
 msgstr ""
 
-#: src/components/consent-form.tsx:102
+#: src/components/consent-form.tsx:112
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "접근 거부"
@@ -1116,7 +1116,7 @@ msgstr "접근 권한을 취소했습니다"
 msgid "Support"
 msgstr "지원"
 
-#: src/components/consent-form.tsx:137
+#: src/components/consent-form.tsx:146
 msgid "Technical details"
 msgstr "기술 세부 정보"
 
@@ -1194,7 +1194,7 @@ msgstr ""
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
-#: src/components/consent-form.tsx:142
+#: src/components/consent-form.tsx:151
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음과 같은 권한(범위)을 요청합니다:"
 
@@ -1361,11 +1361,11 @@ msgstr "사람이 맞는지 확인"
 msgid "Verify your email"
 msgstr ""
 
-#: src/components/consent-form.tsx:130
+#: src/components/consent-form.tsx:139
 msgid "wants to access your <0/> account"
 msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
 
-#: src/components/consent-form.tsx:124
+#: src/components/consent-form.tsx:133
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
 

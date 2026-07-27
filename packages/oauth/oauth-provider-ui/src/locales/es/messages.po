@@ -207,7 +207,7 @@ msgid "Authenticate"
 msgstr ""
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:84
+#: src/components/consent-form.tsx:92
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr ""
@@ -243,7 +243,7 @@ msgstr "Servicios de la app Bluesky"
 msgid "Bluesky Chat services"
 msgstr "Servicios de chat de Bluesky"
 
-#: src/components/consent-form.tsx:164
+#: src/components/consent-form.tsx:177
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
 
@@ -323,7 +323,7 @@ msgstr ""
 msgid "Choose a username"
 msgstr "Elige un nombre de usuario"
 
-#: src/components/redirecting-view.tsx:92
+#: src/components/redirecting-view.tsx:95
 msgid "Click here if nothing happens"
 msgstr ""
 
@@ -426,7 +426,7 @@ msgstr ""
 msgid "Delete my account"
 msgstr ""
 
-#: src/components/consent-form.tsx:102
+#: src/components/consent-form.tsx:112
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr ""
@@ -1116,7 +1116,7 @@ msgstr ""
 msgid "Support"
 msgstr "Soporte"
 
-#: src/components/consent-form.tsx:137
+#: src/components/consent-form.tsx:146
 msgid "Technical details"
 msgstr "Detalles técnicos"
 
@@ -1194,7 +1194,7 @@ msgstr ""
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
-#: src/components/consent-form.tsx:142
+#: src/components/consent-form.tsx:151
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr ""
 
@@ -1361,11 +1361,11 @@ msgstr "Verifica que eres humano"
 msgid "Verify your email"
 msgstr ""
 
-#: src/components/consent-form.tsx:130
+#: src/components/consent-form.tsx:139
 msgid "wants to access your <0/> account"
 msgstr "quiere acceder a tu cuenta <0/>"
 
-#: src/components/consent-form.tsx:124
+#: src/components/consent-form.tsx:133
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "quiere identificarte de forma única a través de tu cuenta <0/>"
 
