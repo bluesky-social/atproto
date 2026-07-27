@@ -35,6 +35,23 @@ known-failing baseline of 5/6 in `oauth.test.ts` and 13/13 in
 exists — fork `main` was fast-forwarded to clean upstream on 2026-07-27. It does
 **not** apply to this work. The numbers above supersede it.
 
+## After phase 1 (2026-07-27, commit `00db5c1b9`)
+
+Both suites back to **7/7** and **13/13** — no deltas against the baseline, and
+no test files were modified.
+
+Two regressions were introduced and fixed during the phase; both are recorded
+because each cost a full e2e cycle to find:
+
+| Regression | Cause | Fix |
+|---|---|---|
+| oauth 4/7 after the feedback rebuild | shadcn `AlertTitle` renders a `<div>`; the old `AdmonitionTitle` rendered `<h3>`, which `ensureTextVisibility('Avertissement', 'h3')` requires | `Notice` renders a real `<h3>` |
+| account-manager 0/13 and oauth 6/7 after the shell rebuild | `AccountShell` rendered a page-level `<title>`; React hoists every `<title>` to `<head>` and the **last** wins, so `document.title` became `Accueil` instead of the app name | `AccountShell` renders no `<title>`; only `AppShell` does |
+
+The second is the one to remember: the old `LayoutPage` only avoided it by
+skipping the page heading entirely at the base route, which is what the
+`basePath` prop was for. Deleting `basePath` as "unused" removed that guard.
+
 ## How to reproduce
 
 ```bash
