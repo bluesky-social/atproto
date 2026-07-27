@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactNode, useEffect, useState } from 'react'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
 import { Button } from '#/components/forms/button.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import { DeleteAccountConfirmForm } from './delete-account-confirm-form.tsx'
@@ -203,14 +203,14 @@ export function DeleteAccountDialog({
           <Trans>Cancel</Trans>
         </Button>
 
-        <Admonition role="note" className="text-sm">
+        <Notice role="note" className="text-sm">
           <Trans>
             You can also temporarily deactivate your account instead. Your
             profile, posts, feeds, and lists will no longer be visible to other
             Bluesky users. You can reactivate your account at any time by
             logging in.
           </Trans>
-        </Admonition>
+        </Notice>
       </div>
     </DialogSimple>
   )

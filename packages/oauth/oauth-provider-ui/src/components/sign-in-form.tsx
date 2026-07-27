@@ -1,6 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon } from '@phosphor-icons/react'
 import { type Ref, useCallback, useRef, useState } from 'react'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { Button } from '#/components/forms/button.tsx'
 import { FormField } from '#/components/forms/form-field.tsx'
 import { InputCheckbox } from '#/components/forms/input-checkbox.tsx'
@@ -8,7 +9,6 @@ import { InputPassword } from '#/components/forms/input-password.tsx'
 import { InputText } from '#/components/forms/input-text.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
 import { type FormHandler, SmartForm } from '#/components/forms/smart-form.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
 import {
   InvalidCredentialsError,
@@ -218,12 +218,12 @@ export function SignInForm({
             />
           </FormField>
 
-          <Admonition role="note" title={<Trans>Warning</Trans>}>
+          <Notice role="note" title={<Trans>Warning</Trans>}>
             <Trans>
               Verify the website address before entering your password. Only
               sign in on sites you recognize and trust.
             </Trans>
-          </Admonition>
+          </Notice>
 
           {!disableRemember && (
             <InputCheckbox

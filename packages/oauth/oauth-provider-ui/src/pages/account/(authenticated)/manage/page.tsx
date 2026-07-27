@@ -13,12 +13,12 @@ import { clsx } from 'clsx'
 import type { ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { Button, type ButtonProps } from '#/components/forms/button.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
-import { Admonition } from '#/components/utils/admonition'
 import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -67,7 +67,7 @@ function EmailVerificationRow() {
   if (!email || emailVerified) return null
 
   return (
-    <Admonition
+    <Notice
       role="info"
       icon={ShieldWarningIcon}
       action={
@@ -89,7 +89,7 @@ function EmailVerificationRow() {
       }
     >
       <Trans>Your email address needs to be verified.</Trans>
-    </Admonition>
+    </Notice>
   )
 }
 
@@ -122,12 +122,12 @@ function EmailUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
       }}
       introMessage={
         data.show2FaWarningOnEmailUpdate && (
-          <Admonition role="warning" className="text-sm">
+          <Notice role="warning" className="text-sm">
             <Trans>
               If you update your email address, email 2FA (if enabled) will be
               disabled.
             </Trans>
-          </Admonition>
+          </Notice>
         )
       }
     >

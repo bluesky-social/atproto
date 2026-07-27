@@ -163,7 +163,7 @@ msgstr "エラーが発生しました"
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期しないエラーが発生しました。もう一度お試しください。"
 
-#: src/components/utils/error-card.tsx:90
+#: src/components/feedback/error-notice.tsx:86
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
@@ -340,7 +340,7 @@ msgstr "アカウント選択を閉じる"
 msgid "Close details"
 msgstr "詳細を閉じる"
 
-#: src/components/utils/error-details.tsx:43
+#: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
 msgid "Code"
 msgstr "コード"
@@ -790,7 +790,7 @@ msgstr "あなたのプロフィール、投稿、いいね、フォローを管
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理し、あなたのプライベートな設定を読み取る"
 
-#: src/components/utils/error-details.tsx:49
+#: src/components/feedback/error-details.tsx:49
 msgctxt "Error"
 msgid "Message"
 msgstr "メッセージ"
@@ -807,7 +807,7 @@ msgstr "中程度"
 msgid "My Atmosphere Account"
 msgstr "私のAtmosphereアカウント"
 
-#: src/components/utils/error-details.tsx:37
+#: src/components/feedback/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
 msgstr "名前"
@@ -871,7 +871,7 @@ msgstr "パスワードが更新されました！"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
 
-#: src/components/utils/error-details.tsx:55
+#: src/components/feedback/error-details.tsx:55
 msgctxt "Error"
 msgid "Payload"
 msgstr "ペイロード"
@@ -984,7 +984,7 @@ msgstr "パスワードをリセット"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:85
+#: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "再試行"
 
@@ -1072,7 +1072,7 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
-#: src/components/utils/error-details.tsx:63
+#: src/components/feedback/error-details.tsx:63
 msgctxt "Error"
 msgid "Stack"
 msgstr "スタック"

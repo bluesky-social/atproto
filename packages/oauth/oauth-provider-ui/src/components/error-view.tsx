@@ -1,9 +1,12 @@
 import { msg } from '@lingui/core/macro'
 import type { ReactNode } from 'react'
+import {
+  ErrorNotice,
+  type ErrorParser,
+} from '#/components/feedback/error-notice.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import type { Override } from '#/lib/util.ts'
 import { LayoutApp, type LayoutAppProps } from './layouts/layout-app.tsx'
-import { ErrorCard, type ErrorParser } from './utils/error-card.tsx'
 
 export type ErrorViewProps = Override<
   LayoutAppProps,
@@ -30,7 +33,7 @@ export function ErrorView({
   return (
     <LayoutApp title={title} {...props}>
       <div className="w-[500px] max-w-full">
-        <ErrorCard
+        <ErrorNotice
           className="mx-5"
           error={error}
           parser={parser}
@@ -38,7 +41,7 @@ export function ErrorView({
           retryLabel={retryLabel}
         >
           {children}
-        </ErrorCard>
+        </ErrorNotice>
       </div>
     </LayoutApp>
   )

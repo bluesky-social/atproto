@@ -7,7 +7,7 @@ import {
   type ReactNode,
   useMemo,
 } from 'react'
-import { errorCardRender } from '#/components/utils/error-card.tsx'
+import { errorNoticeRender } from '#/components/feedback/error-notice.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import type { ErrorParser } from '#/lib/error-parser.ts'
 import type { Override } from '#/lib/util.ts'
@@ -19,7 +19,7 @@ export type ErrorRenderer = (props: {
   parser: ErrorParser
 }) => ReactNode
 
-export { errorCardRender }
+export { errorNoticeRender }
 export type { ErrorParser }
 
 export type FormCardProps = Override<
@@ -66,7 +66,7 @@ export function FormCard({
   hideError = false,
   // @TODO decouple this component from "api" by injecting this as a prop where relevant.
   errorParser = apiErrorParser,
-  errorRender = errorCardRender,
+  errorRender = errorNoticeRender,
 
   // form
   inert,

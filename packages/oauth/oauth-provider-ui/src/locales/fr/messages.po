@@ -163,7 +163,7 @@ msgstr "Une erreur s'est produite"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
 
-#: src/components/utils/error-card.tsx:90
+#: src/components/feedback/error-notice.tsx:86
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
@@ -340,7 +340,7 @@ msgstr "Fermer le sélecteur de compte"
 msgid "Close details"
 msgstr "Fermer les détails"
 
-#: src/components/utils/error-details.tsx:43
+#: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
 msgid "Code"
 msgstr "Code"
@@ -790,7 +790,7 @@ msgstr "Gérer votre profil, vos posts, vos likes et vos follows"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Gérer votre profil, vos posts, vos likes et vos follows, ainsi que lire vos préférences privées"
 
-#: src/components/utils/error-details.tsx:49
+#: src/components/feedback/error-details.tsx:49
 msgctxt "Error"
 msgid "Message"
 msgstr "Message d'erreur"
@@ -807,7 +807,7 @@ msgstr "Modéré"
 msgid "My Atmosphere Account"
 msgstr "Mon compte Atmosphère"
 
-#: src/components/utils/error-details.tsx:37
+#: src/components/feedback/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
 msgstr "Nom"
@@ -871,7 +871,7 @@ msgstr "Mot de passe mis à jour !"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
-#: src/components/utils/error-details.tsx:55
+#: src/components/feedback/error-details.tsx:55
 msgctxt "Error"
 msgid "Payload"
 msgstr "Détails"
@@ -984,7 +984,7 @@ msgstr "Réinitialisez votre mot de passe"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:85
+#: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -1072,7 +1072,7 @@ msgstr "Connexion annulée"
 msgid "Sign-in complete"
 msgstr "Connexion terminée"
 
-#: src/components/utils/error-details.tsx:63
+#: src/components/feedback/error-details.tsx:63
 msgctxt "Error"
 msgid "Stack"
 msgstr "Trace"

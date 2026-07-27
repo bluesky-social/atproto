@@ -163,7 +163,7 @@ msgstr ""
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
-#: src/components/utils/error-card.tsx:90
+#: src/components/feedback/error-notice.tsx:86
 msgid "An unknown error occurred"
 msgstr "Ocurrió un error desconocido"
 
@@ -340,7 +340,7 @@ msgstr ""
 msgid "Close details"
 msgstr ""
 
-#: src/components/utils/error-details.tsx:43
+#: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
 msgid "Code"
 msgstr ""
@@ -780,7 +780,7 @@ msgstr "Administrar tu perfil, publicaciones, 'me gusta' y seguidos"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Administrar tu perfil, publicaciones, 'me gusta' y seguidos, así como leer tus preferencias privadas"
 
-#: src/components/utils/error-details.tsx:49
+#: src/components/feedback/error-details.tsx:49
 msgctxt "Error"
 msgid "Message"
 msgstr ""
@@ -797,7 +797,7 @@ msgstr "Moderada"
 msgid "My Atmosphere Account"
 msgstr ""
 
-#: src/components/utils/error-details.tsx:37
+#: src/components/feedback/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
 msgstr ""
@@ -861,7 +861,7 @@ msgstr "¡Contraseña actualizada!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Contraseña con al menos {MIN_PASSWORD_LENGTH} caracteres"
 
-#: src/components/utils/error-details.tsx:55
+#: src/components/feedback/error-details.tsx:55
 msgctxt "Error"
 msgid "Payload"
 msgstr ""
@@ -974,7 +974,7 @@ msgstr "Restablecer tu contraseña"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:85
+#: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr ""
 
@@ -1062,7 +1062,7 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
-#: src/components/utils/error-details.tsx:63
+#: src/components/feedback/error-details.tsx:63
 msgctxt "Error"
 msgid "Stack"
 msgstr ""

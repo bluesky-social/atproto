@@ -9,17 +9,13 @@ import {
   parseError,
 } from '#/lib/error-parser.ts'
 import type { Override } from '#/lib/util.ts'
-import {
-  Admonition,
-  AdmonitionAction,
-  type AdmonitionProps,
-} from './admonition.tsx'
 import { ErrorDetails } from './error-details.tsx'
+import { Notice, NoticeAction, type NoticeProps } from './notice.tsx'
 
 export type { ErrorParser, ParsedError }
 
-export type ErrorCardProps = Override<
-  Omit<AdmonitionProps, 'role' | 'append' | 'action'>,
+export type ErrorNoticeProps = Override<
+  Omit<NoticeProps, 'role' | 'append' | 'action'>,
   {
     error: unknown
     retry?: () => void
@@ -28,17 +24,17 @@ export type ErrorCardProps = Override<
   }
 >
 
-export function ErrorCard({
+export function ErrorNotice({
   error,
   retry,
   retryLabel,
   parser,
 
-  // Admonition
+  // Notice
   children,
   onClick,
   ...props
-}: ErrorCardProps) {
+}: ErrorNoticeProps) {
   const { _ } = useLingui()
   const [clickCount, setClickCount] = useState(0)
 
@@ -59,7 +55,7 @@ export function ErrorCard({
   }, [parsed])
 
   return (
-    <Admonition
+    <Notice
       {...props}
       role="alert"
       onClick={composeEventHandlers(onClick, () => {
@@ -81,17 +77,17 @@ export function ErrorCard({
       }
       action={
         retry != null && (
-          <AdmonitionAction onClick={() => retry()}>
+          <NoticeAction onClick={() => retry()}>
             {retryLabel || <Trans>Retry</Trans>}
-          </AdmonitionAction>
+          </NoticeAction>
         )
       }
     >
       {_(parsed.description ?? msg`An unknown error occurred`)}
-    </Admonition>
+    </Notice>
   )
 }
 
-export const errorCardRender = (props: ErrorCardProps) => (
-  <ErrorCard {...props} />
+export const errorNoticeRender = (props: ErrorNoticeProps) => (
+  <ErrorNotice {...props} />
 )

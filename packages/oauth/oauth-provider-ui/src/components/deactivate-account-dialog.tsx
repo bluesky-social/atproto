@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactNode, useState } from 'react'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { SmartForm } from '#/components/forms/smart-form.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 
 export type DeactivateAccountDialogProps = {
@@ -42,27 +42,27 @@ export function DeactivateAccountDialog({
         }}
         fields={() => (
           <>
-            <Admonition role="note" className="text-sm">
+            <Notice role="note" className="text-sm">
               <Trans>
                 There is no time limit for account deactivation, come back any
                 time.
               </Trans>
-            </Admonition>
+            </Notice>
 
-            <Admonition role="note" className="text-sm">
+            <Notice role="note" className="text-sm">
               <Trans>
                 Every app currently connected to your account, as well as any
                 "app passwords" you've created, will be revoked. You'll need to
                 sign back in when you reactivate.
               </Trans>
-            </Admonition>
+            </Notice>
 
-            <Admonition role="warning" className="text-sm">
+            <Notice role="warning" className="text-sm">
               <Trans>
                 If you're trying to change your handle or email, do so before
                 you deactivate.
               </Trans>
-            </Admonition>
+            </Notice>
           </>
         )}
       />

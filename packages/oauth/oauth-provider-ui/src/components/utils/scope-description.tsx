@@ -21,10 +21,10 @@ import {
   RpcPermission,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
+import { Notice } from '#/components/feedback/notice.tsx'
 import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import type { Override } from '#/lib/util'
 import { Checkbox } from '../forms/checkbox.tsx'
-import { Admonition } from './admonition.tsx'
 import { DescriptionCard } from './description-card.tsx'
 import { ButterflyIcon } from './icons.tsx'
 import { LangProp } from './lang-string.tsx'
@@ -186,14 +186,14 @@ function IdentityWarning({
 
   if (hasFullIdentityAccess) {
     return (
-      <Admonition role="status">
+      <Notice role="status">
         <Trans>
           The application is asking for full control over your network identity,
           meaning that it could <b>permanently break</b>, or even <b>steal</b>,
           your account. Only grant this permission to applications you really
           trust.
         </Trans>
-      </Admonition>
+      </Notice>
     )
   }
 

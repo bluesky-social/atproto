@@ -163,7 +163,7 @@ msgstr "An error occurred"
 msgid "An unexpected error occurred. Please try again."
 msgstr "An unexpected error occurred. Please try again."
 
-#: src/components/utils/error-card.tsx:90
+#: src/components/feedback/error-notice.tsx:86
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
@@ -340,7 +340,7 @@ msgstr "Close account selector"
 msgid "Close details"
 msgstr "Close details"
 
-#: src/components/utils/error-details.tsx:43
+#: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
 msgid "Code"
 msgstr "Code"
@@ -790,7 +790,7 @@ msgstr "Manage your profile, posts, likes and follows"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Manage your profile, posts, likes and follows as well as read your private preferences"
 
-#: src/components/utils/error-details.tsx:49
+#: src/components/feedback/error-details.tsx:49
 msgctxt "Error"
 msgid "Message"
 msgstr "Message"
@@ -807,7 +807,7 @@ msgstr "Moderate"
 msgid "My Atmosphere Account"
 msgstr "My Atmosphere Account"
 
-#: src/components/utils/error-details.tsx:37
+#: src/components/feedback/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
 msgstr "Name"
@@ -871,7 +871,7 @@ msgstr "Password updated!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 
-#: src/components/utils/error-details.tsx:55
+#: src/components/feedback/error-details.tsx:55
 msgctxt "Error"
 msgid "Payload"
 msgstr "Payload"
@@ -984,7 +984,7 @@ msgstr "Reset your password"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:85
+#: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "Retry"
 
@@ -1072,7 +1072,7 @@ msgstr "Sign-in canceled"
 msgid "Sign-in complete"
 msgstr "Sign-in complete"
 
-#: src/components/utils/error-details.tsx:63
+#: src/components/feedback/error-details.tsx:63
 msgctxt "Error"
 msgid "Stack"
 msgstr "Stack"

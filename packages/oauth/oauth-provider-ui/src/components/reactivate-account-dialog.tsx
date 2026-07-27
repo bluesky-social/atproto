@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactNode, useState } from 'react'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { SmartForm } from '#/components/forms/smart-form.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
 import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 
 export type ReactivateAccountDialogProps = {
@@ -42,11 +42,11 @@ export function ReactivateAccountDialog({
           setOpen(false)
         }}
         fields={() => (
-          <Admonition role="note" className="text-sm">
+          <Notice role="note" className="text-sm">
             <Trans>
               You can deactivate your account again at any time from this page.
             </Trans>
-          </Admonition>
+          </Notice>
         )}
       />
     </DialogSimple>

@@ -163,7 +163,7 @@ msgstr "오류가 발생했습니다"
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
-#: src/components/utils/error-card.tsx:90
+#: src/components/feedback/error-notice.tsx:86
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
 
@@ -340,7 +340,7 @@ msgstr "계정 선택기 닫기"
 msgid "Close details"
 msgstr "세부 정보 닫기"
 
-#: src/components/utils/error-details.tsx:43
+#: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
 msgid "Code"
 msgstr ""
@@ -780,7 +780,7 @@ msgstr "프로필, 게시물, 좋아요, 팔로우 관리"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "프로필, 게시물, 좋아요, 팔로우 관리 및 비공개 설정 읽기"
 
-#: src/components/utils/error-details.tsx:49
+#: src/components/feedback/error-details.tsx:49
 msgctxt "Error"
 msgid "Message"
 msgstr ""
@@ -797,7 +797,7 @@ msgstr "보통"
 msgid "My Atmosphere Account"
 msgstr ""
 
-#: src/components/utils/error-details.tsx:37
+#: src/components/feedback/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
 msgstr ""
@@ -861,7 +861,7 @@ msgstr "비밀번호를 변경했습니다!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다"
 
-#: src/components/utils/error-details.tsx:55
+#: src/components/feedback/error-details.tsx:55
 msgctxt "Error"
 msgid "Payload"
 msgstr ""
@@ -974,7 +974,7 @@ msgstr "비밀번호 재설정"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
 #: src/pages/account/(authenticated)/apps/page.tsx:31
-#: src/components/utils/error-card.tsx:85
+#: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "다시 시도"
 
@@ -1062,7 +1062,7 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
-#: src/components/utils/error-details.tsx:63
+#: src/components/feedback/error-details.tsx:63
 msgctxt "Error"
 msgid "Stack"
 msgstr ""

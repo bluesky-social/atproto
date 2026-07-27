@@ -1,11 +1,11 @@
 import { Trans } from '@lingui/react/macro'
 import type { HandleString } from '@atproto/syntax'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { InputHandleDefault } from '#/components/forms/input-handle-default'
 import {
   SmartForm,
   type WrappedSmartFormProps,
 } from '#/components/forms/smart-form'
-import { Admonition } from '#/components/utils/admonition.tsx'
 
 export type SignUpHandleData = {
   handle: HandleString
@@ -40,12 +40,12 @@ export function SignUpHandleForm({
             autoComplete="nickname"
           />
 
-          <Admonition role="note">
+          <Notice role="note">
             <Trans>
               You can change this username to any domain name you control after
               your account is set up.
             </Trans>
-          </Admonition>
+          </Notice>
         </>
       )}
     />

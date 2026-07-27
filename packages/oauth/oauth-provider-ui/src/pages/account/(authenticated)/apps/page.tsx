@@ -1,8 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
+import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
 import { Button } from '#/components/forms/button'
 import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
-import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -24,16 +24,16 @@ export function Page() {
     }
 
     return (
-      <Admonition
+      <Notice
         role="status"
         action={
-          <AdmonitionAction onClick={() => refetch()}>
+          <NoticeAction onClick={() => refetch()}>
             <Trans>Retry</Trans>
-          </AdmonitionAction>
+          </NoticeAction>
         }
       >
         <Trans>Failed to load connected apps</Trans>
-      </Admonition>
+      </Notice>
     )
   }
 

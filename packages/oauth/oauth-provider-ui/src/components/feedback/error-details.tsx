@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
-import { clsx } from 'clsx'
 import type { JSX, ReactNode } from 'react'
 import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 
 export type ErrorDetailsProps = Override<
   JSX.IntrinsicElements['dl'],
@@ -27,7 +27,7 @@ export function ErrorDetails({
 }: ErrorDetailsProps) {
   return (
     <dl
-      className={clsx(
+      className={cn(
         'mt-2 grid max-w-full grid-cols-[auto_1fr] gap-x-2 text-sm',
         className,
       )}
