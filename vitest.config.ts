@@ -17,6 +17,7 @@ export default defineConfig({
       'packages/lex/*',
       'packages/oauth/oauth-client',
       'packages/oauth/oauth-provider-ui',
+      'packages/oauth/oauth-provider',
       'packages/syntax',
       'packages/tap',
 

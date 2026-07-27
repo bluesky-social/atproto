@@ -23,19 +23,30 @@ export const ageAssuranceRuleIDs: Record<string, AgeAssuranceRuleID> = {
 }
 
 /**
- * Returns the first matched region configuration based on the provided geolocation.
+ * Returns the first matched region configuration based on the provided
+ * filters. Region configurations that declare `platforms` only match when the
+ * provided platform is included in that list. If no platform filter is
+ * provided, platform restrictions are ignored.
  */
 export function getAgeAssuranceRegionConfig(
   config: AppBskyAgeassuranceDefs.Config,
-  geolocation: {
+  filters: {
     countryCode: string
     regionCode?: string
+    platform?: string
   },
 ): AppBskyAgeassuranceDefs.ConfigRegion | undefined {
   const { regions } = config
-  return regions.find(({ countryCode, regionCode }) => {
-    if (countryCode === geolocation.countryCode) {
-      return !regionCode || regionCode === geolocation.regionCode
+  return regions.find(({ countryCode, regionCode, platforms }) => {
+    if (
+      filters.platform &&
+      platforms?.length &&
+      !platforms.includes(filters.platform)
+    ) {
+      return false
+    }
+    if (countryCode === filters.countryCode) {
+      return !regionCode || regionCode === filters.regionCode
     }
   })
 }

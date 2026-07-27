@@ -139,6 +139,13 @@ describe('internal actor views', () => {
     })
 
     describe('takedowns', () => {
+      // Seed a profile record so we can assert the takedown response carries
+      // the full profile (displayName), not just a bare actor stub.
+      beforeAll(async () => {
+        await seedClient.createProfile(dids.mix_sub_2, 'Taken Down', 'bio')
+        await network.processAll()
+      })
+
       afterEach(async () => {
         await network.bsky.ctx.dataplane.untakedownActor({
           did: dids.mix_sub_2,
@@ -165,7 +172,12 @@ describe('internal actor views', () => {
         })
         expect(status).toBe(200)
         expect(body.profiles).toHaveLength(3)
-        expect(body.profiles.map((p) => p.did)).toContain(dids.mix_sub_2)
+        const takendown = body.profiles.find((p) => p.did === dids.mix_sub_2)
+        expect(takendown).toBeDefined()
+        // The taken-down profile is fully hydrated, not a stub: real handle
+        // and the profile record's displayName both come back.
+        expect(takendown?.handle).not.toBe('handle.invalid')
+        expect(takendown?.displayName).toBe('Taken Down')
       })
     })
   })

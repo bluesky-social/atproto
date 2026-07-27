@@ -34,6 +34,7 @@ import {
   type DeviceAccount,
   asAccountStore,
 } from './account/account-store.js'
+import { resolveLoginHint } from './account/login-hint.js'
 import type { ClientAuth, ClientAuthLegacy } from './client/client-auth.js'
 import type { ClientId } from './client/client-id.js'
 import {
@@ -730,6 +731,10 @@ export class OAuthProvider extends OAuthVerifier {
           parameters.prompt === 'consent'
             ? sessions.find(matchesHint, parameters)?.account.did
             : undefined,
+        loginHint: await resolveLoginHint(
+          parameters.login_hint,
+          this.accountManager,
+        ),
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
           .catch((cause) => {
