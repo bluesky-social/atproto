@@ -268,7 +268,7 @@ msgstr "Llamar"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:108
+#: src/pages/account/(authenticated)/devices/page.tsx:107
 msgid "Cannot remove current device"
 msgstr ""
 
@@ -1057,7 +1057,7 @@ msgstr "Iniciar sesión como..."
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:110
 msgctxt "device list"
 msgid "Sign out"
 msgstr ""

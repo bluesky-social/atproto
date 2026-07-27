@@ -268,7 +268,7 @@ msgstr "호출"
 msgid "Cancel"
 msgstr "취소"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:108
+#: src/pages/account/(authenticated)/devices/page.tsx:107
 msgid "Cannot remove current device"
 msgstr "현재 기기를 제거할 수 없습니다"
 
@@ -1057,7 +1057,7 @@ msgstr "로그인"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:110
 msgctxt "device list"
 msgid "Sign out"
 msgstr "로그아웃"

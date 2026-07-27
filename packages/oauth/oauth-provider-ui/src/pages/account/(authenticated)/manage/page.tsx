@@ -1,21 +1,20 @@
 import { Trans } from '@lingui/react/macro'
 import {
-  AtIcon,
-  CaretRightIcon,
-  EnvelopeIcon,
-  type Icon,
+  AtSignIcon,
+  ChevronRightIcon,
   LockIcon,
-  ShieldWarningIcon,
+  type LucideIcon,
+  MailIcon,
+  ShieldAlertIcon,
   SnowflakeIcon,
   TrashIcon,
-} from '@phosphor-icons/react'
-import { clsx } from 'clsx'
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
-import { Button, type ButtonProps } from '#/components/forms/button.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
@@ -41,6 +40,7 @@ import {
   useResetPasswordRequest,
 } from '#/data/password.ts'
 import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 
 export function Page() {
   return (
@@ -69,7 +69,7 @@ function EmailVerificationRow() {
   return (
     <Notice
       role="info"
-      icon={ShieldWarningIcon}
+      icon={ShieldAlertIcon}
       action={
         <VerifyEmailDialog
           email={email}
@@ -82,7 +82,7 @@ function EmailVerificationRow() {
             await verifyConfirm.mutateAsync({ did, token, email })
           }}
         >
-          <Button size="sm" color="info">
+          <Button size="sm" variant="secondary">
             <Trans context="verify email">Verify now</Trans>
           </Button>
         </VerifyEmailDialog>
@@ -131,7 +131,7 @@ function EmailUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
         )
       }
     >
-      <Row {...props} icon={EnvelopeIcon} value={email}>
+      <Row {...props} icon={MailIcon} value={email}>
         <Trans>Email address</Trans>
       </Row>
     </UpdateEmailDialog>
@@ -182,7 +182,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
           await reactivate.mutateAsync({ did: account.did })
         }}
       >
-        <Row {...props} icon={SnowflakeIcon} color="primary">
+        <Row {...props} icon={SnowflakeIcon} variant="default">
           <Trans>Reactivate account</Trans>
         </Row>
       </ReactivateAccountDialog>
@@ -195,7 +195,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deactivate.mutateAsync({ did: account.did })
       }}
     >
-      <Row {...props} icon={SnowflakeIcon} color="error">
+      <Row {...props} icon={SnowflakeIcon} variant="destructive">
         <Trans>Deactivate account</Trans>
       </Row>
     </DeactivateAccountDialog>
@@ -222,7 +222,7 @@ function AccountDeletionRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deleteConfirm.mutateAsync({ did, token, password })
       }}
     >
-      <Row {...props} icon={TrashIcon} color="error">
+      <Row {...props} icon={TrashIcon} variant="destructive">
         <Trans>Delete account</Trans>
       </Row>
     </DeleteAccountDialog>
@@ -245,7 +245,7 @@ function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await updateHandle.mutateAsync({ did, handle })
       }}
     >
-      <Row {...props} icon={AtIcon} value={<Handle handle={handle} />}>
+      <Row {...props} icon={AtSignIcon} value={<Handle handle={handle} />}>
         <Trans>Username</Trans>
       </Row>
     </UpdateHandleDialog>
@@ -253,38 +253,46 @@ function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 }
 
 type RowProps = Override<
-  ButtonProps,
+  React.ComponentProps<typeof Button>,
   {
-    icon: Icon
+    icon: LucideIcon
     value?: ReactNode
   }
 >
 
+/**
+ * A tappable settings row.
+ *
+ * @NOTE Stays a real <button> with its label in a <span>: the pds e2e suite
+ * selects rows via clickOnText('Réactiver le compte', 'span').
+ */
 function Row({
   icon: Icon,
   value,
 
-  // ButtonProps
+  // Button
   children,
   className,
-  transparent = true,
+  variant = 'ghost',
   ...props
 }: RowProps) {
   return (
     <Button
-      shape="padded"
       {...props}
-      transparent={transparent}
-      className={clsx('gap-2', className)}
+      variant={variant}
+      className={cn(
+        'h-auto w-full justify-start gap-3 px-3 py-2.5 font-normal',
+        className,
+      )}
     >
       <Icon aria-hidden className="size-5 shrink-0 grow-0" />
-      <span className="grow-1 truncate text-left font-medium">{children}</span>
+      <span className="grow truncate text-left font-medium">{children}</span>
       {value != null && (
-        <span className="hidden min-w-0 flex-1 truncate text-right text-sm sm:inline">
+        <span className="text-muted-foreground hidden min-w-0 flex-1 truncate text-right text-sm sm:inline">
           {value}
         </span>
       )}
-      <CaretRightIcon aria-hidden className="size-4 shrink-0" />
+      <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
     </Button>
   )
 }

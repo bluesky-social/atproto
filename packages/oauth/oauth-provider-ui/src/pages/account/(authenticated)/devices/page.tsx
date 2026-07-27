@@ -5,7 +5,7 @@ import type {
   DidString,
 } from '@atproto/oauth-provider-api'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
-import { Button } from '#/components/forms/button'
+import { Button } from '#/components/ui/button.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
@@ -97,8 +97,7 @@ function AccountSessionCard({
       <Button
         size="sm"
         className="min-w-max shrink-0 grow-0"
-        disabled={session.isCurrentDevice}
-        loading={isPending}
+        disabled={session.isCurrentDevice || isPending}
         onClick={(_event) => {
           void mutateAsync({ did, deviceId: session.deviceId }).catch((err) => {
             console.warn('Failed to revoke account session', err)

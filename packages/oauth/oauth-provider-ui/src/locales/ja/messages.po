@@ -268,7 +268,7 @@ msgstr "呼び出し"
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:108
+#: src/pages/account/(authenticated)/devices/page.tsx:107
 msgid "Cannot remove current device"
 msgstr "現在のデバイスを削除できません"
 
@@ -1067,7 +1067,7 @@ msgstr "アカウントの選択"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:110
 msgctxt "device list"
 msgid "Sign out"
 msgstr "サインアウト"
