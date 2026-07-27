@@ -37,14 +37,17 @@ const SHADCN_TOKENS = [
   'sidebar-ring',
 ] as const
 
-// Legacy tokens that phases 1-3 still depend on. Removed in phase 4 only.
-const LEGACY_TOKENS = [
+// Tokens from the pre-redesign branding scale. Phase 4 removed them; these
+// assert they stay gone, so the scale cannot creep back in.
+const REMOVED_LEGACY_TOKENS = [
   '--color-text-default',
   '--color-text-light',
   '--color-contrast-0',
   '--color-contrast-25',
   '--color-primary-500',
   '--color-error-500',
+  '--branding-color-primary',
+  '--hue-primary',
 ] as const
 
 function blockFor(marker: string): string {
@@ -85,7 +88,7 @@ describe('style.css theme tokens', () => {
     )
   })
 
-  it.each(LEGACY_TOKENS)('still declares the legacy token %s', (token) => {
-    expect(css).toContain(token)
+  it.each(REMOVED_LEGACY_TOKENS)('no longer declares %s', (token) => {
+    expect(css).not.toContain(token)
   })
 })
