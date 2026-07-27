@@ -66,7 +66,7 @@ msgstr "1時間前"
 msgid "1 minute ago"
 msgstr "1分前"
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:222
 msgid "2FA Confirmation"
 msgstr "2要素認証の確認"
 
@@ -220,12 +220,14 @@ msgstr "{0} に承認されました"
 
 #: src/components/sign-in-picker.tsx:96
 #: src/components/forms/wizard-card.tsx:116
+#: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "戻る"
 
 #: src/components/forms/input-handle-default.tsx:109
+#: src/components/forms/fields/handle-field.tsx:155
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
@@ -287,7 +289,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "確認コードが記載されたメール <0>{email}</0> を確認し、ここに入力してください。"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:230
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
@@ -343,7 +345,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "コード"
 
-#: src/components/sign-in-form.tsx:87
+#: src/components/sign-in-form.tsx:94
 msgctxt "verb"
 msgid "Confirm"
 msgstr "確認"
@@ -352,7 +354,7 @@ msgstr "確認"
 msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:223
 #: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "確認コード"
@@ -462,8 +464,8 @@ msgid "Email"
 msgstr "メールアドレス"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:49
-#: src/components/reset-password-request-form.tsx:51
+#: src/components/reset-password-request-form.tsx:56
+#: src/components/reset-password-request-form.tsx:58
 #: src/components/forms/input-email-address.tsx:34
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
@@ -506,7 +508,7 @@ msgstr "使用したいドメインを入力してください"
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "アカウントの作成に使用したメールアドレスを入力します。新しいパスワードを設定できるように、「リセットコード」をお送りします。"
 
-#: src/components/reset-password-request-form.tsx:50
+#: src/components/reset-password-request-form.tsx:57
 msgid "Enter your email address"
 msgstr "メールアドレスを入力してください"
 
@@ -614,7 +616,7 @@ msgstr "セキュリティ上の理由から、あなたのメールアドレス
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
-#: src/components/sign-in-form.tsx:189
+#: src/components/sign-in-form.tsx:196
 msgid "Forgot?"
 msgstr "忘れた？"
 
@@ -673,7 +675,7 @@ msgstr "ホスト"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:137
+#: src/components/sign-in-form.tsx:144
 msgid "Identifier"
 msgstr "識別子"
 
@@ -706,6 +708,7 @@ msgid "Interface language selector"
 msgstr "言語選択"
 
 #: src/components/forms/input-handle-default.tsx:254
+#: src/components/forms/fields/handle-field.tsx:278
 msgid "Invalid"
 msgstr "無効"
 
@@ -828,13 +831,14 @@ msgstr ""
 msgid "New email address"
 msgstr "新しいメールアドレス"
 
-#: src/components/reset-password-confirm-form.tsx:81
+#: src/components/reset-password-confirm-form.tsx:88
 msgid "New password"
 msgstr "新しいパスワード"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
 #: src/components/forms/wizard-card.tsx:119
+#: src/components/forms/sign-up-wizard.tsx:121
 msgid "Next"
 msgstr "次へ"
 
@@ -843,12 +847,13 @@ msgid "Okay"
 msgstr "OK"
 
 #: src/components/forms/input-handle-default.tsx:114
+#: src/components/forms/fields/handle-field.tsx:160
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:71
-#: src/components/sign-in-form.tsx:171
+#: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 #: src/components/forms/fields/password-field.tsx:31
@@ -976,7 +981,7 @@ msgstr "あなたのアカウントのメールアドレスを読み取る"
 msgid "Read your private preferences"
 msgstr "あなたのプライベート設定を読み取る"
 
-#: src/components/sign-in-form.tsx:206
+#: src/components/sign-in-form.tsx:213
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
@@ -985,7 +990,7 @@ msgstr "このアカウントをこのデバイスに記憶する"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/reset-password-confirm-form.tsx:71
+#: src/components/reset-password-confirm-form.tsx:78
 msgid "Reset code"
 msgstr "リセットコード"
 
@@ -993,7 +998,7 @@ msgstr "リセットコード"
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
-#: src/components/sign-in-form.tsx:187
+#: src/components/sign-in-form.tsx:194
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
@@ -1047,7 +1052,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "サインイン"
 
-#: src/components/sign-in-form.tsx:89
+#: src/components/sign-in-form.tsx:96
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
@@ -1095,6 +1100,7 @@ msgid "Stack"
 msgstr "スタック"
 
 #: src/components/forms/wizard-card.tsx:152
+#: src/components/forms/sign-up-wizard.tsx:155
 msgid "Step {currentPosition} of {count}"
 msgstr "ステップ {currentPosition} / {count}"
 
@@ -1309,7 +1315,7 @@ msgstr "自分が所有するドメイン名を使用"
 msgid "Username"
 msgstr "ユーザー名"
 
-#: src/components/sign-in-form.tsx:140
+#: src/components/sign-in-form.tsx:147
 msgid "Username or email address"
 msgstr "ユーザー名またはメールアドレス"
 
@@ -1318,6 +1324,7 @@ msgid "Username updated"
 msgstr "ユーザー名更新"
 
 #: src/components/forms/input-handle-default.tsx:249
+#: src/components/forms/fields/handle-field.tsx:276
 msgid "Valid"
 msgstr "有効"
 
@@ -1352,7 +1359,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
 
-#: src/components/sign-in-form.tsx:196
+#: src/components/sign-in-form.tsx:203
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "パスワードを入力する前に、ウェブサイトのアドレスを確認してください。信頼できるサイトでのみサインインしてください。"
 
@@ -1372,7 +1379,7 @@ msgstr "あなたの <0/> アカウントにアクセスしようとしていま
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:202
 msgid "Warning"
 msgstr "警告"
 
@@ -1503,7 +1510,9 @@ msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #: src/components/forms/input-handle-default.tsx:184
+#: src/components/forms/fields/handle-field.tsx:231
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 

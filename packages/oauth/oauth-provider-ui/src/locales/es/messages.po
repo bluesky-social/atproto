@@ -66,7 +66,7 @@ msgstr ""
 msgid "1 minute ago"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:222
 msgid "2FA Confirmation"
 msgstr "Confirmación de doble factor"
 
@@ -220,12 +220,14 @@ msgstr ""
 
 #: src/components/sign-in-picker.tsx:96
 #: src/components/forms/wizard-card.tsx:116
+#: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "Volver"
 
 #: src/components/forms/input-handle-default.tsx:109
+#: src/components/forms/fields/handle-field.tsx:155
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} y {maxLength} caracteres"
 
@@ -287,7 +289,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr ""
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:230
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Revisa tu correo electrónico {0} para encontrar un código de inicio de sesión e ingrésalo aquí."
 
@@ -343,7 +345,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:87
+#: src/components/sign-in-form.tsx:94
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirmar"
@@ -352,7 +354,7 @@ msgstr "Confirmar"
 msgid "Confirm your password to continue"
 msgstr "Confirma tu contraseña para continuar"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:223
 #: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "Código de confirmación"
@@ -462,8 +464,8 @@ msgid "Email"
 msgstr "Correo electrónico"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:49
-#: src/components/reset-password-request-form.tsx:51
+#: src/components/reset-password-request-form.tsx:56
+#: src/components/reset-password-request-form.tsx:58
 #: src/components/forms/input-email-address.tsx:34
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
@@ -506,7 +508,7 @@ msgstr ""
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Ingresa el correo electrónico que usaste para crear tu cuenta. Te enviaremos un \"código de restablecimiento\" para que puedas establecer una nueva contraseña."
 
-#: src/components/reset-password-request-form.tsx:50
+#: src/components/reset-password-request-form.tsx:57
 msgid "Enter your email address"
 msgstr "Ingresa tu dirección de correo electrónico"
 
@@ -614,7 +616,7 @@ msgstr ""
 msgid "Forgot Password"
 msgstr "Contraseña olvidada"
 
-#: src/components/sign-in-form.tsx:189
+#: src/components/sign-in-form.tsx:196
 msgid "Forgot?"
 msgstr "¿Olvidaste?"
 
@@ -663,7 +665,7 @@ msgstr ""
 msgid "HTTP"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:137
+#: src/components/sign-in-form.tsx:144
 msgid "Identifier"
 msgstr "Identificador"
 
@@ -696,6 +698,7 @@ msgid "Interface language selector"
 msgstr "Selector de idioma de la interfaz"
 
 #: src/components/forms/input-handle-default.tsx:254
+#: src/components/forms/fields/handle-field.tsx:278
 msgid "Invalid"
 msgstr "Inválido"
 
@@ -818,13 +821,14 @@ msgstr ""
 msgid "New email address"
 msgstr ""
 
-#: src/components/reset-password-confirm-form.tsx:81
+#: src/components/reset-password-confirm-form.tsx:88
 msgid "New password"
 msgstr "Nueva contraseña"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
 #: src/components/forms/wizard-card.tsx:119
+#: src/components/forms/sign-up-wizard.tsx:121
 msgid "Next"
 msgstr "Siguiente"
 
@@ -833,12 +837,13 @@ msgid "Okay"
 msgstr "Aceptar"
 
 #: src/components/forms/input-handle-default.tsx:114
+#: src/components/forms/fields/handle-field.tsx:160
 msgid "Only letters, numbers, and hyphens"
 msgstr "Solo letras, números y guiones"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:71
-#: src/components/sign-in-form.tsx:171
+#: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 #: src/components/forms/fields/password-field.tsx:31
@@ -966,7 +971,7 @@ msgstr "Leer la dirección de correo electrónico de tu cuenta"
 msgid "Read your private preferences"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:206
+#: src/components/sign-in-form.tsx:213
 msgid "Remember this account on this device"
 msgstr "Recordar esta cuenta en este dispositivo"
 
@@ -975,7 +980,7 @@ msgstr "Recordar esta cuenta en este dispositivo"
 msgid "Repository"
 msgstr "Repositorio"
 
-#: src/components/reset-password-confirm-form.tsx:71
+#: src/components/reset-password-confirm-form.tsx:78
 msgid "Reset code"
 msgstr "Código de restablecimiento"
 
@@ -983,7 +988,7 @@ msgstr "Código de restablecimiento"
 msgid "Reset Password"
 msgstr "Restablecer contraseña"
 
-#: src/components/sign-in-form.tsx:187
+#: src/components/sign-in-form.tsx:194
 msgid "Reset your password"
 msgstr "Restablecer tu contraseña"
 
@@ -1037,7 +1042,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:89
+#: src/components/sign-in-form.tsx:96
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
@@ -1085,6 +1090,7 @@ msgid "Stack"
 msgstr ""
 
 #: src/components/forms/wizard-card.tsx:152
+#: src/components/forms/sign-up-wizard.tsx:155
 msgid "Step {currentPosition} of {count}"
 msgstr "Paso {currentPosition} de {count}"
 
@@ -1299,7 +1305,7 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:140
+#: src/components/sign-in-form.tsx:147
 msgid "Username or email address"
 msgstr "Nombre de usuario o dirección de correo electrónico"
 
@@ -1308,6 +1314,7 @@ msgid "Username updated"
 msgstr ""
 
 #: src/components/forms/input-handle-default.tsx:249
+#: src/components/forms/fields/handle-field.tsx:276
 msgid "Valid"
 msgstr "Válido"
 
@@ -1342,7 +1349,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:196
+#: src/components/sign-in-form.tsx:203
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr ""
 
@@ -1362,7 +1369,7 @@ msgstr "quiere acceder a tu cuenta <0/>"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "quiere identificarte de forma única a través de tu cuenta <0/>"
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:202
 msgid "Warning"
 msgstr "Advertencia"
 
@@ -1493,7 +1500,9 @@ msgid "Your email address needs to be verified."
 msgstr ""
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #: src/components/forms/input-handle-default.tsx:184
+#: src/components/forms/fields/handle-field.tsx:231
 msgid "Your full username will be: {0}"
 msgstr "Tu nombre de usuario completo será: {0}"
 

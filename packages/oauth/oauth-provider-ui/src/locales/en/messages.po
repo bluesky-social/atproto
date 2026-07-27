@@ -66,7 +66,7 @@ msgstr "1 hour ago"
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:222
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -220,12 +220,14 @@ msgstr "Authorized on {0}"
 
 #: src/components/sign-in-picker.tsx:96
 #: src/components/forms/wizard-card.tsx:116
+#: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "Back"
 
 #: src/components/forms/input-handle-default.tsx:109
+#: src/components/forms/fields/handle-field.tsx:155
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
@@ -287,7 +289,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:230
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -343,7 +345,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "Code"
 
-#: src/components/sign-in-form.tsx:87
+#: src/components/sign-in-form.tsx:94
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirm"
@@ -352,7 +354,7 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:223
 #: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "Confirmation code"
@@ -462,8 +464,8 @@ msgid "Email"
 msgstr "Email"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:49
-#: src/components/reset-password-request-form.tsx:51
+#: src/components/reset-password-request-form.tsx:56
+#: src/components/reset-password-request-form.tsx:58
 #: src/components/forms/input-email-address.tsx:34
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
@@ -506,7 +508,7 @@ msgstr "Enter the domain you want to use"
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 
-#: src/components/reset-password-request-form.tsx:50
+#: src/components/reset-password-request-form.tsx:57
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
@@ -614,7 +616,7 @@ msgstr "For security reasons, we'll need to send a confirmation code to your ema
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/sign-in-form.tsx:189
+#: src/components/sign-in-form.tsx:196
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -673,7 +675,7 @@ msgstr "Host"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:137
+#: src/components/sign-in-form.tsx:144
 msgid "Identifier"
 msgstr "Identifier"
 
@@ -706,6 +708,7 @@ msgid "Interface language selector"
 msgstr "Interface language selector"
 
 #: src/components/forms/input-handle-default.tsx:254
+#: src/components/forms/fields/handle-field.tsx:278
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -828,13 +831,14 @@ msgstr "Navigation"
 msgid "New email address"
 msgstr "New email address"
 
-#: src/components/reset-password-confirm-form.tsx:81
+#: src/components/reset-password-confirm-form.tsx:88
 msgid "New password"
 msgstr "New password"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
 #: src/components/forms/wizard-card.tsx:119
+#: src/components/forms/sign-up-wizard.tsx:121
 msgid "Next"
 msgstr "Next"
 
@@ -843,12 +847,13 @@ msgid "Okay"
 msgstr "Okay"
 
 #: src/components/forms/input-handle-default.tsx:114
+#: src/components/forms/fields/handle-field.tsx:160
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:71
-#: src/components/sign-in-form.tsx:171
+#: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 #: src/components/forms/fields/password-field.tsx:31
@@ -976,7 +981,7 @@ msgstr "Read your account's email address"
 msgid "Read your private preferences"
 msgstr "Read your private preferences"
 
-#: src/components/sign-in-form.tsx:206
+#: src/components/sign-in-form.tsx:213
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -985,7 +990,7 @@ msgstr "Remember this account on this device"
 msgid "Repository"
 msgstr "Repository"
 
-#: src/components/reset-password-confirm-form.tsx:71
+#: src/components/reset-password-confirm-form.tsx:78
 msgid "Reset code"
 msgstr "Reset code"
 
@@ -993,7 +998,7 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/components/sign-in-form.tsx:187
+#: src/components/sign-in-form.tsx:194
 msgid "Reset your password"
 msgstr "Reset your password"
 
@@ -1047,7 +1052,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/components/sign-in-form.tsx:89
+#: src/components/sign-in-form.tsx:96
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
@@ -1095,6 +1100,7 @@ msgid "Stack"
 msgstr "Stack"
 
 #: src/components/forms/wizard-card.tsx:152
+#: src/components/forms/sign-up-wizard.tsx:155
 msgid "Step {currentPosition} of {count}"
 msgstr "Step {currentPosition} of {count}"
 
@@ -1309,7 +1315,7 @@ msgstr "Use a domain name I own"
 msgid "Username"
 msgstr "Username"
 
-#: src/components/sign-in-form.tsx:140
+#: src/components/sign-in-form.tsx:147
 msgid "Username or email address"
 msgstr "Username or email address"
 
@@ -1318,6 +1324,7 @@ msgid "Username updated"
 msgstr "Username updated"
 
 #: src/components/forms/input-handle-default.tsx:249
+#: src/components/forms/fields/handle-field.tsx:276
 msgid "Valid"
 msgstr "Valid"
 
@@ -1352,7 +1359,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"
 
-#: src/components/sign-in-form.tsx:196
+#: src/components/sign-in-form.tsx:203
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 
@@ -1372,7 +1379,7 @@ msgstr "wants to access your <0/> account"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:202
 msgid "Warning"
 msgstr "Warning"
 
@@ -1503,7 +1510,9 @@ msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #: src/components/forms/input-handle-default.tsx:184
+#: src/components/forms/fields/handle-field.tsx:231
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
