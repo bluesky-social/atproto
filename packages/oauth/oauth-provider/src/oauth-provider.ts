@@ -1014,14 +1014,10 @@ export class OAuthProvider extends OAuthVerifier {
 
     try {
       const { data } = tokenInfo
-      await this.compareClientAuth(client, clientAuth, dpopProof, data)
-
       const now = new Date()
 
-      const result = this.validateRefreshGrant(client, data, now)
-      if (!result.valid) {
-        throw new InvalidGrantError(result.reason)
-      }
+      this.validateRefreshGrant(client, data, now)
+      await this.compareClientAuth(client, clientAuth, dpopProof, data)
 
       return await this.tokenManager.rotateToken(
         client,
@@ -1037,23 +1033,25 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  validateRefreshGrant(
+  protected validateRefreshGrant(
     client: Client,
     data: TokenData,
     now = new Date(),
-  ): { valid: true } | { valid: false; reason: string } {
+  ): void {
+    if (!client.metadata.grant_types.includes('refresh_token')) {
+      throw new InvalidGrantError(`Refresh token grant not allowed`)
+    }
+
     const sessionAge = now.getTime() - data.createdAt.getTime()
 
     if (sessionAge > client.sessionLifetime) {
-      return { valid: false, reason: `Session expired` }
+      throw new InvalidGrantError(`Session expired`)
     }
 
     const refreshAge = now.getTime() - data.updatedAt.getTime()
     if (refreshAge > client.refreshLifetime) {
-      return { valid: false, reason: `Refresh token expired` }
+      throw new InvalidGrantError(`Refresh token expired`)
     }
-
-    return { valid: true }
   }
 
   /**

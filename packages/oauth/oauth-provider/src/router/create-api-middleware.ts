@@ -519,9 +519,19 @@ export function createApiMiddleware<
             // clientMetadata in ActiveOAuthSession).
             if (!client) return true
 
-            // Use the logic from OAuthProvider#validateRefreshGrant to
-            // determine if the session is still valid (can be refreshed)
-            return server.validateRefreshGrant(client, data).valid
+            const sessionAge = Date.now() - data.createdAt.getTime()
+            if (sessionAge > client.sessionLifetime) return false
+
+            const refreshAge = Date.now() - data.updatedAt.getTime()
+            if (refreshAge > client.refreshLifetime) return false
+
+            // If the client cannot refresh, then the session is only valid if
+            // it has not yet expired.
+            if (!client.metadata.grant_types.includes('refresh_token')) {
+              return data.expiresAt.getTime() > Date.now()
+            }
+
+            return true
           })
           .map(({ id, data }): ActiveOAuthSession => {
             return {
