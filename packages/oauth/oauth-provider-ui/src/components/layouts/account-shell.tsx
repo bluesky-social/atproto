@@ -135,12 +135,14 @@ export function AccountShell({
               </SheetContent>
             </Sheet>
 
+            {/* @NOTE Deliberately does NOT render a <title> element. React
+              hoists every <title> into <head> and the last one rendered wins,
+              so a page-level title here would override the app title that
+              AppShell sets — and `assertTitle` expects the app title on every
+              account route. The previous layout only avoided this by skipping
+              the heading entirely at the base route. */}
             {pageTitleStr && (
               <h2 className="text-2xl font-light">
-                {/* @NOTE Preserved from the previous layout: the app-level
-                  <title> in AppShell renders first and wins for
-                  document.title, which `assertTitle` reads. */}
-                <title>{pageTitleStr}</title>
                 <b>{pageTitleStr}</b>
               </h2>
             )}
