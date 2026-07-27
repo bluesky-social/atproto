@@ -94,6 +94,22 @@ The rebuild must therefore preserve:
 - `aria-label`s and the `<title>` renders currently in `LayoutApp` / `LayoutPage`.
 - Toast text reachable in the DOM after the Sonner swap.
 
+**Complete inventory of tag-specific assertions** (enumerated 2026-07-27 after an
+`h3` regression slipped through — treat this as the checklist, not the prose above):
+
+| Tag | Asserted text | Rendered by | Status |
+|---|---|---|---|
+| `h3` | `Avertissement` | `Notice` title (was `AdmonitionTitle`) | Phase 1 — fixed, renders `<h3>` |
+| `h2` | `Mot de passe mis à jour !` | reset-password view title (`LayoutTitle`) | Phase 2 — must stay `<h2>` |
+| `h2` | `Êtes-vous vraiment, vraiment sûr ?` | delete-account dialog title | Phase 3 — must stay `<h2>` |
+| `span` | handles, account names, `Réactiver le compte`, `Désactiver le compte` | `AccountIdentifier` / `Handle` / buttons | Phase 1 — intact |
+| `code` | `_atproto.<votre-domaine>`, `TXT` | `input-handle-custom-instructions` | Phase 2 — must stay `<code>` |
+| `p` | body copy throughout | `Notice` / descriptions | Phase 1 — intact via explicit `<p>` |
+
+`ensureTextVisibility` defaults to `'p'`, so every unqualified assertion also
+requires a `<p>`. Two `h2` assertions (`Token info`, `Login with the Atmosphere`)
+target the **demo OAuth client app**, not this package — ignore them.
+
 **Baseline first.** Before any code changes, run both suites on the current tree and
 record the result. Any later failure is then attributable. Changes to these test files
 are permitted but each one must be justified as an intentional UX change, not absorbed
