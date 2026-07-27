@@ -130,7 +130,16 @@ function getInstrumentations(): Instrumentation[] {
     new AwsInstrumentation(),
     new IORedisInstrumentation(),
     new BetterSqlite3Instrumentation(),
-    new PinoInstrumentation(),
+    // @NOTE We only enable "log correlation" (injecting trace_id/span_id into
+    // pino records so our stdout/stderr logs can be tied to traces) and disable
+    // "log sending". We do NOT want to blindly ship every pino log line to the
+    // OpenTelemetry Logs SDK: that feature re-parses (JSON.parse) every record
+    // on the main thread, and would forward all subsystems indiscriminately.
+    // Instead, the specific events we want in the OTEL stack are emitted
+    // explicitly through the OTEL Logs API (see ./event-logger.ts), which lets
+    // us control exactly what gets shipped. All pino logs keep going to
+    // stdout/stderr as before.
+    new PinoInstrumentation({ disableLogSending: true }),
   ]
 }
 

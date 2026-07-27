@@ -28,12 +28,6 @@ export const oauthLogger = createLogger('pds:oauth', {
     req: reqSerializer,
   },
 })
-export const sessionLogger = createLogger('pds:session', {
-  serializers: {
-    account: accountSerializer,
-    req: reqSerializer,
-  },
-})
 export const lexiconResolverLogger = createLogger('pds:lexicon-resolver')
 
 export const loggerMiddleware = pinoHttp({

@@ -38,13 +38,15 @@ import type { ServerConfig, ServerSecrets } from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
-import { ImageUrlBuilder } from './image/image-url-builder.js'
 import {
-  fetchLogger,
-  lexiconResolverLogger,
-  oauthLogger,
-  sessionLogger,
-} from './logger.js'
+  logAccountCreated,
+  logOauthAuthorized,
+  logSessionCreated,
+  logSessionRefreshed,
+  logSignedIn,
+} from './event-logger.js'
+import { ImageUrlBuilder } from './image/image-url-builder.js'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
 import {
@@ -427,6 +429,13 @@ export class AppContext implements AsyncDisposable {
               source: 'oauth',
               deactivated: false,
             })
+            logAccountCreated({
+              source: 'oauth',
+              did: account.did,
+              invited: data.inviteCode != null,
+              deactivated: false,
+              clientId,
+            })
           },
           onSignedIn({ account, clientId }) {
             oauthLogger.info(
@@ -436,6 +445,10 @@ export class AppContext implements AsyncDisposable {
               },
               'sign in',
             )
+            logSignedIn({
+              did: account.did,
+              clientId,
+            })
           },
           onAuthorized({ account, client }) {
             oauthAuthorizationCounter.add(1, {
@@ -450,6 +463,10 @@ export class AppContext implements AsyncDisposable {
               },
               'authorized',
             )
+            logOauthAuthorized({
+              did: account.did,
+              clientId: client.id,
+            })
           },
           onTokenCreated({ account, client }) {
             oauthTokenIssuedCounter.add(1, {
@@ -457,24 +474,18 @@ export class AppContext implements AsyncDisposable {
               clientTrusted: client.isTrusted,
               clientConfidential: client.isConfidential,
             })
-            sessionLogger.info(
-              {
-                source: 'oauth',
-                account,
-                clientId: client.id,
-              },
-              'token created',
-            )
+            logSessionCreated({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
           },
           onTokenRefreshed({ account, client }) {
-            sessionLogger.info(
-              {
-                source: 'oauth',
-                account,
-                clientId: client.id,
-              },
-              'token refreshed',
-            )
+            logSessionRefreshed({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
           },
         })
       : undefined

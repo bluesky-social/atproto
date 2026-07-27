@@ -3,7 +3,7 @@ import { ValueType, metrics } from '@opentelemetry/api'
 const meter = metrics.getMeter('@atproto/pds')
 
 export const accountCreatedCounter = meter.createCounter<{
-  source: 'xrpc' | 'oauth'
+  source: 'com.atproto.server.createAccount' | 'oauth'
   deactivated: boolean
 }>('account.created', {
   description: 'Number of accounts created on this PDS',
@@ -11,7 +11,9 @@ export const accountCreatedCounter = meter.createCounter<{
 })
 
 export const sessionCreatedCounter = meter.createCounter<{
-  source: 'xrpc'
+  source:
+    | 'com.atproto.server.createAccount'
+    | 'com.atproto.server.createSession'
 }>('session.created', {
   description: 'Number of sessions created on this PDS',
   valueType: ValueType.INT,

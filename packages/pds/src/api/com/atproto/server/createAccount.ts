@@ -16,9 +16,12 @@ import {
 } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import type { AppContext } from '../../../../context.js'
+import {
+  logAccountCreated,
+  logSessionCreated,
+} from '../../../../event-logger.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
-import { accountLogger, sessionLogger } from '../../../../logger.js'
 import {
   accountCreatedCounter,
   sessionCreatedCounter,
@@ -104,24 +107,23 @@ export default function (server: Server, ctx: AppContext) {
                   )
                 })
 
-              accountCreatedCounter.add(1, { source: 'xrpc', deactivated })
-              accountLogger.info(
-                {
-                  source: 'xrpc',
-                  account: { did },
-                  invited: !!inviteCode,
-                  deactivated,
-                },
-                'sign up',
-              )
-              sessionCreatedCounter.add(1, { source: 'xrpc' })
-              sessionLogger.info(
-                {
-                  source: com.atproto.server.createAccount.$lxm,
-                  account: { did },
-                },
-                'token created',
-              )
+              accountCreatedCounter.add(1, {
+                source: com.atproto.server.createAccount.$lxm,
+                deactivated,
+              })
+              logAccountCreated({
+                source: com.atproto.server.createAccount.$lxm,
+                did,
+                invited: !!inviteCode,
+                deactivated,
+              })
+              sessionCreatedCounter.add(1, {
+                source: com.atproto.server.createAccount.$lxm,
+              })
+              logSessionCreated({
+                source: com.atproto.server.createAccount.$lxm,
+                did,
+              })
 
               return {
                 encoding: 'application/json' as const,

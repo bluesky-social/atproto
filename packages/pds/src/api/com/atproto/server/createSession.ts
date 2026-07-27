@@ -12,8 +12,8 @@ import {
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import type { AppContext } from '../../../../context.js'
+import { logSessionCreated } from '../../../../event-logger.js'
 import { com } from '../../../../lexicons/index.js'
-import { sessionLogger } from '../../../../logger.js'
 import { sessionCreatedCounter } from '../../../../meter.js'
 import { didDocForSession } from './util.js'
 
@@ -81,14 +81,13 @@ export default function (server: Server, ctx: AppContext) {
 
         const { status, active } = formatAccountStatus(user)
 
-        sessionCreatedCounter.add(1, { source: 'xrpc' })
-        sessionLogger.info(
-          {
-            source: com.atproto.server.createSession.$lxm,
-            account: user,
-          },
-          'token created',
-        )
+        sessionCreatedCounter.add(1, {
+          source: 'com.atproto.server.createSession',
+        })
+        logSessionCreated({
+          source: com.atproto.server.createSession.$lxm,
+          did: user.did,
+        })
 
         return {
           encoding: 'application/json',
