@@ -1,45 +1,57 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { FormField } from '#/components/forms/form-field'
-import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
+import { useForm } from 'react-hook-form'
+import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import {
-  SmartForm,
-  type WrappedSmartFormProps,
-} from '#/components/forms/smart-form'
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
+import {
+  type ResetPasswordRequestValues,
+  resetPasswordRequestSchema,
+} from '#/lib/form-schemas.ts'
 
 export type ResetPasswordRequestData = { email: string }
 
-export type ResetPasswordRequestFormProps =
-  WrappedSmartFormProps<ResetPasswordRequestData> & {
-    emailDefault?: string
-  }
+export type ResetPasswordRequestFormProps = Omit<
+  FormShellProps<ResetPasswordRequestValues>,
+  'form' | 'onSubmit'
+> & {
+  emailDefault?: string
+  handler: (
+    data: ResetPasswordRequestData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
 
 export function ResetPasswordRequestForm({
   emailDefault,
-
-  // SmartFormProps
+  handler,
   ...props
 }: ResetPasswordRequestFormProps) {
   const { t } = useLingui()
 
+  const form = useForm<ResetPasswordRequestValues>({
+    resolver: zodResolver(resetPasswordRequestSchema),
+    mode: 'onBlur',
+    defaultValues: { email: emailDefault ?? '' },
+  })
+
   return (
-    <SmartForm
+    <FormShell
       {...props}
-      validate={({ email }) => {
-        if (email) return { email }
-      }}
-      fields={({ values, setterFor }) => (
-        <FormField label={<Trans>Email address</Trans>}>
-          <InputEmailAddress
-            name="email"
-            placeholder={t`Enter your email address`}
-            title={t`Email address`}
-            required
-            autoFocus={true}
-            defaultValue={values.email}
-            onEmail={setterFor('email')}
-          />
-        </FormField>
-      )}
-    />
+      form={form}
+      onSubmit={(values, signal) => handler({ email: values.email }, signal)}
+    >
+      <EmailField
+        control={form.control}
+        name="email"
+        label={<Trans>Email address</Trans>}
+        placeholder={t`Enter your email address`}
+        title={t`Email address`}
+        required
+        autoFocus
+      />
+    </FormShell>
   )
 }

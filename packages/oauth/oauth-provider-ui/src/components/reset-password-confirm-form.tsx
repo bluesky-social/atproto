@@ -1,82 +1,87 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
-import { useRef } from 'react'
-import { FormField } from '#/components/forms/form-field'
-import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
-import { InputToken } from '#/components/forms/input-token.tsx'
+import { useForm } from 'react-hook-form'
+import { NewPasswordField } from '#/components/forms/fields/new-password-field.tsx'
+import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
-  SmartForm,
-  type WrappedSmartFormProps,
-} from '#/components/forms/smart-form'
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
+import {
+  type ResetPasswordConfirmValues,
+  resetPasswordConfirmSchema,
+} from '#/lib/form-schemas.ts'
 
 export type ResetPasswordConfirmData = {
   token: string
   password: string
 }
 
-export type ResetPasswordConfirmFormProps =
-  WrappedSmartFormProps<ResetPasswordConfirmData> & {
-    email?: string
-    onResend?: () => void | PromiseLike<void>
-  }
+export type ResetPasswordConfirmFormProps = Omit<
+  FormShellProps<ResetPasswordConfirmValues>,
+  'form' | 'onSubmit'
+> & {
+  email?: string
+  onResend?: () => void | PromiseLike<void>
+  handler: (
+    data: ResetPasswordConfirmData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
 
 export function ResetPasswordConfirmForm({
   email,
   onResend,
+  handler,
   ...props
 }: ResetPasswordConfirmFormProps) {
-  const passwordRef = useRef<HTMLInputElement>(null)
+  const form = useForm<ResetPasswordConfirmValues>({
+    resolver: zodResolver(resetPasswordConfirmSchema),
+    mode: 'onBlur',
+    defaultValues: { code: '', password: '' },
+  })
+
   return (
-    <SmartForm
+    <FormShell
       {...props}
-      validate={({ token, password }) => {
-        if (token && password) return { token, password }
-      }}
-      fields={({ values, set, setterFor }) => {
-        return (
-          <>
-            {email && (
-              // For better password managers integration, we include a hidden
-              // username field with the email pre-filled. This allows password
-              // managers to associate the reset token and new password with the
-              // correct account.
-              <input
-                type="text"
-                autoComplete="username"
-                defaultValue={email}
-                readOnly
-                hidden
-              />
-            )}
+      form={form}
+      onSubmit={(values, signal) =>
+        // @NOTE The API field is `token`; the form field is `code` so the
+        // rendered input keeps the name the pds e2e suite selects on.
+        handler({ token: values.code, password: values.password }, signal)
+      }
+    >
+      {email && (
+        // For better password managers integration, we include a hidden
+        // username field with the email pre-filled. This allows password
+        // managers to associate the reset token and new password with the
+        // correct account.
+        <input
+          type="text"
+          autoComplete="username"
+          defaultValue={email}
+          readOnly
+          hidden
+        />
+      )}
 
-            <FormField label={<Trans>Reset code</Trans>}>
-              <InputToken
-                name="code"
-                enterKeyHint="next"
-                required
-                autoFocus={true}
-                defaultValue={values.token}
-                onResend={onResend}
-                onToken={(value) => {
-                  set('token', value ?? undefined)
-                  // Auto-focus next field when token is complete
-                  if (value) passwordRef.current?.focus()
-                }}
-              />
-            </FormField>
+      <TokenField
+        control={form.control}
+        name="code"
+        label={<Trans>Reset code</Trans>}
+        enterKeyHint="next"
+        required
+        autoFocus
+        onResend={onResend}
+      />
 
-            <FormField label={<Trans>New password</Trans>}>
-              <InputNewPassword
-                ref={passwordRef}
-                name="password"
-                enterKeyHint="done"
-                required
-                defaultValue={values.password}
-                onPassword={setterFor('password')}
-              />
-            </FormField>
-          </>
-        )
-      }}
-    />
+      <NewPasswordField
+        control={form.control}
+        name="password"
+        label={<Trans>New password</Trans>}
+        enterKeyHint="done"
+        required
+      />
+    </FormShell>
   )
 }

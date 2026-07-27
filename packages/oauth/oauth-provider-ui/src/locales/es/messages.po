@@ -146,7 +146,7 @@ msgstr ""
 
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
-#: src/components/reset-password-view.tsx:81
+#: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "¿Ya tienes un código?"
 
@@ -462,10 +462,10 @@ msgid "Email"
 msgstr "Correo electrónico"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:31
-#: src/components/reset-password-request-form.tsx:35
+#: src/components/reset-password-request-form.tsx:49
+#: src/components/reset-password-request-form.tsx:51
 #: src/components/forms/input-email-address.tsx:34
-#: src/components/forms/fields/email-field.tsx:19
+#: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
 msgstr "Dirección de correo electrónico"
 
@@ -494,7 +494,7 @@ msgstr ""
 msgid "Enter a password"
 msgstr "Ingresa una contraseña"
 
-#: src/components/reset-password-view.tsx:93
+#: src/components/reset-password-view.tsx:96
 msgid "Enter the code you received to reset your password."
 msgstr "Ingresa el código que recibiste para restablecer tu contraseña."
 
@@ -502,11 +502,11 @@ msgstr "Ingresa el código que recibiste para restablecer tu contraseña."
 msgid "Enter the domain you want to use"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:62
+#: src/components/reset-password-view.tsx:63
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Ingresa el correo electrónico que usaste para crear tu cuenta. Te enviaremos un \"código de restablecimiento\" para que puedas establecer una nueva contraseña."
 
-#: src/components/reset-password-request-form.tsx:34
+#: src/components/reset-password-request-form.tsx:50
 msgid "Enter your email address"
 msgstr "Ingresa tu dirección de correo electrónico"
 
@@ -610,7 +610,7 @@ msgstr ""
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr ""
 
-#: src/components/reset-password-view.tsx:58
+#: src/components/reset-password-view.tsx:59
 msgid "Forgot Password"
 msgstr "Contraseña olvidada"
 
@@ -736,7 +736,7 @@ msgctxt "verify email"
 msgid "Later"
 msgstr ""
 
-#: src/components/reset-password-view.tsx:59
+#: src/components/reset-password-view.tsx:60
 msgid "Let's get your password reset!"
 msgstr "¡Vamos a restablecer tu contraseña!"
 
@@ -818,17 +818,17 @@ msgstr ""
 msgid "New email address"
 msgstr ""
 
-#: src/components/reset-password-confirm-form.tsx:67
+#: src/components/reset-password-confirm-form.tsx:81
 msgid "New password"
 msgstr "Nueva contraseña"
 
-#: src/components/reset-password-view.tsx:70
-#: src/components/reset-password-view.tsx:105
+#: src/components/reset-password-view.tsx:71
+#: src/components/reset-password-view.tsx:108
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "Siguiente"
 
-#: src/components/reset-password-view.tsx:131
+#: src/components/reset-password-view.tsx:136
 msgid "Okay"
 msgstr "Aceptar"
 
@@ -863,11 +863,11 @@ msgstr "Fortaleza de la contraseña"
 msgid "Password strength indicator"
 msgstr "Indicador de fortaleza de la contraseña"
 
-#: src/components/reset-password-view.tsx:119
+#: src/components/reset-password-view.tsx:122
 msgid "Password Updated"
 msgstr "Contraseña actualizada"
 
-#: src/components/reset-password-view.tsx:124
+#: src/components/reset-password-view.tsx:129
 msgid "Password updated!"
 msgstr "¡Contraseña actualizada!"
 
@@ -976,11 +976,11 @@ msgstr "Recordar esta cuenta en este dispositivo"
 msgid "Repository"
 msgstr "Repositorio"
 
-#: src/components/reset-password-confirm-form.tsx:51
+#: src/components/reset-password-confirm-form.tsx:71
 msgid "Reset code"
 msgstr "Código de restablecimiento"
 
-#: src/components/reset-password-view.tsx:91
+#: src/components/reset-password-view.tsx:94
 msgid "Reset Password"
 msgstr "Restablecer contraseña"
 
@@ -1433,7 +1433,7 @@ msgid "You can now sign in with your new email."
 msgstr ""
 
 #: src/data/password.ts:45
-#: src/components/reset-password-view.tsx:127
+#: src/components/reset-password-view.tsx:132
 msgid "You can now sign in with your new password."
 msgstr "Ahora puedes iniciar sesión con tu nueva contraseña."
 
@@ -1441,7 +1441,7 @@ msgstr "Ahora puedes iniciar sesión con tu nueva contraseña."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr ""
 
-#: src/components/reset-password-view.tsx:97
+#: src/components/reset-password-view.tsx:100
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Recibirás un correo electrónico con un \"código de restablecimiento\". Ingresa ese código aquí y luego ingresa tu nueva contraseña."
 
@@ -1498,7 +1498,7 @@ msgstr ""
 msgid "Your full username will be: {0}"
 msgstr "Tu nombre de usuario completo será: {0}"
 
-#: src/components/reset-password-view.tsx:120
+#: src/components/reset-password-view.tsx:123
 msgid "Your password has been updated!"
 msgstr "¡Tu contraseña ha sido actualizada!"
 

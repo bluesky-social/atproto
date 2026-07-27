@@ -146,7 +146,7 @@ msgstr "alice.com"
 
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
-#: src/components/reset-password-view.tsx:81
+#: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
@@ -462,10 +462,10 @@ msgid "Email"
 msgstr "メールアドレス"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
-#: src/components/reset-password-request-form.tsx:31
-#: src/components/reset-password-request-form.tsx:35
+#: src/components/reset-password-request-form.tsx:49
+#: src/components/reset-password-request-form.tsx:51
 #: src/components/forms/input-email-address.tsx:34
-#: src/components/forms/fields/email-field.tsx:19
+#: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
 msgstr "メールアドレス"
 
@@ -494,7 +494,7 @@ msgstr "メールアドレスが確認されました"
 msgid "Enter a password"
 msgstr "パスワードを入力"
 
-#: src/components/reset-password-view.tsx:93
+#: src/components/reset-password-view.tsx:96
 msgid "Enter the code you received to reset your password."
 msgstr "パスワードをリセットするために受け取ったコードを入力してください。"
 
@@ -502,11 +502,11 @@ msgstr "パスワードをリセットするために受け取ったコードを
 msgid "Enter the domain you want to use"
 msgstr "使用したいドメインを入力してください"
 
-#: src/components/reset-password-view.tsx:62
+#: src/components/reset-password-view.tsx:63
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "アカウントの作成に使用したメールアドレスを入力します。新しいパスワードを設定できるように、「リセットコード」をお送りします。"
 
-#: src/components/reset-password-request-form.tsx:34
+#: src/components/reset-password-request-form.tsx:50
 msgid "Enter your email address"
 msgstr "メールアドレスを入力してください"
 
@@ -610,7 +610,7 @@ msgstr "セキュリティ上の理由から、あなたのメールアドレス
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "セキュリティ上の理由から、あなたのメールアドレスに確認コードを送信する必要があります。"
 
-#: src/components/reset-password-view.tsx:58
+#: src/components/reset-password-view.tsx:59
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
@@ -746,7 +746,7 @@ msgctxt "verify email"
 msgid "Later"
 msgstr "後で"
 
-#: src/components/reset-password-view.tsx:59
+#: src/components/reset-password-view.tsx:60
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
@@ -828,17 +828,17 @@ msgstr ""
 msgid "New email address"
 msgstr "新しいメールアドレス"
 
-#: src/components/reset-password-confirm-form.tsx:67
+#: src/components/reset-password-confirm-form.tsx:81
 msgid "New password"
 msgstr "新しいパスワード"
 
-#: src/components/reset-password-view.tsx:70
-#: src/components/reset-password-view.tsx:105
+#: src/components/reset-password-view.tsx:71
+#: src/components/reset-password-view.tsx:108
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "次へ"
 
-#: src/components/reset-password-view.tsx:131
+#: src/components/reset-password-view.tsx:136
 msgid "Okay"
 msgstr "OK"
 
@@ -873,11 +873,11 @@ msgstr "パスワード強度"
 msgid "Password strength indicator"
 msgstr "パスワード強度表示"
 
-#: src/components/reset-password-view.tsx:119
+#: src/components/reset-password-view.tsx:122
 msgid "Password Updated"
 msgstr "パスワード更新"
 
-#: src/components/reset-password-view.tsx:124
+#: src/components/reset-password-view.tsx:129
 msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
@@ -986,11 +986,11 @@ msgstr "このアカウントをこのデバイスに記憶する"
 msgid "Repository"
 msgstr "リポジトリ"
 
-#: src/components/reset-password-confirm-form.tsx:51
+#: src/components/reset-password-confirm-form.tsx:71
 msgid "Reset code"
 msgstr "リセットコード"
 
-#: src/components/reset-password-view.tsx:91
+#: src/components/reset-password-view.tsx:94
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
@@ -1443,7 +1443,7 @@ msgid "You can now sign in with your new email."
 msgstr "新しいメールアドレスでサインインできるようになりました。"
 
 #: src/data/password.ts:45
-#: src/components/reset-password-view.tsx:127
+#: src/components/reset-password-view.tsx:132
 msgid "You can now sign in with your new password."
 msgstr "新しいパスワードでサインインできるようになりました。"
 
@@ -1451,7 +1451,7 @@ msgstr "新しいパスワードでサインインできるようになりまし
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "以前に <0/> を無効化しました。アカウントを再有効化してログインを続行できます。あなたのコンテンツ（プロフィール、投稿、フィード、リストなど）は、他のユーザーに再び表示されるようになります。"
 
-#: src/components/reset-password-view.tsx:97
+#: src/components/reset-password-view.tsx:100
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "「リセットコード」が記載されたメールが届きます。ここにコードを入力し、新しいパスワードを入力します。"
 
@@ -1508,7 +1508,7 @@ msgstr "メールアドレスを確認する必要があります。"
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
-#: src/components/reset-password-view.tsx:120
+#: src/components/reset-password-view.tsx:123
 msgid "Your password has been updated!"
 msgstr "パスワードが更新されました！"
 

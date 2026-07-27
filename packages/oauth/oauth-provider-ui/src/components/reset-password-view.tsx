@@ -1,8 +1,9 @@
 import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
-import { Button } from '#/components/forms/button.tsx'
-import { LayoutTitle } from '#/components/layouts/layout-title.tsx'
+import { AuthShell } from '#/components/layouts/auth-shell.tsx'
+import { Button } from '#/components/ui/button.tsx'
+import { Separator } from '#/components/ui/separator.tsx'
 import { ResetPasswordConfirmForm } from './reset-password-confirm-form.tsx'
 import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
 
@@ -54,7 +55,7 @@ export function ResetPasswordView({
 
   if (view === View.RequestReset) {
     return (
-      <LayoutTitle
+      <AuthShell
         title={t`Forgot Password`}
         subtitle={<Trans>Let's get your password reset!</Trans>}
       >
@@ -75,19 +76,21 @@ export function ResetPasswordView({
           }}
           onBack={onBack}
         />
-        <hr className="my-5 border-gray-300 dark:border-gray-700" />
-        <center>
-          <Button transparent onClick={() => setView(View.ConfirmReset)}>
+
+        <Separator className="my-5" />
+
+        <div className="text-center">
+          <Button variant="ghost" onClick={() => setView(View.ConfirmReset)}>
             <Trans>Already have a code?</Trans>
           </Button>
-        </center>
-      </LayoutTitle>
+        </div>
+      </AuthShell>
     )
   }
 
   if (view === View.ConfirmReset) {
     return (
-      <LayoutTitle
+      <AuthShell
         title={msg`Reset Password`}
         subtitle={
           <Trans>Enter the code you received to reset your password.</Trans>
@@ -109,17 +112,19 @@ export function ResetPasswordView({
           }}
           onBack={() => setView(View.RequestReset)}
         />
-      </LayoutTitle>
+      </AuthShell>
     )
   }
 
   if (view === View.PasswordUpdated) {
     return (
-      <LayoutTitle
+      <AuthShell
         title={msg`Password Updated`}
         subtitle={<Trans>Your password has been updated!</Trans>}
       >
-        <center>
+        <div className="text-center">
+          {/* @NOTE Must stay an <h2>: the pds e2e suite asserts
+            ensureTextVisibility('Mot de passe mis à jour !', 'h2'). */}
           <h2 className="pb-2 text-xl font-bold">
             <Trans>Password updated!</Trans>
           </h2>
@@ -127,12 +132,12 @@ export function ResetPasswordView({
             <Trans>You can now sign in with your new password.</Trans>
           </p>
           {onBack && (
-            <Button color="primary" onClick={() => onBack()}>
+            <Button onClick={() => onBack()}>
               <Trans>Okay</Trans>
             </Button>
           )}
-        </center>
-      </LayoutTitle>
+        </div>
+      </AuthShell>
     )
   }
 
