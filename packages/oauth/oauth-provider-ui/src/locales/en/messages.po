@@ -439,6 +439,7 @@ msgid "Devices"
 msgstr "Devices"
 
 #: src/components/forms/input-token.tsx:88
+#: src/components/forms/fields/token-field.tsx:54
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Didn't receive a code? <0>Click here to resend.</0>"
 
@@ -464,6 +465,7 @@ msgstr "Email"
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
+#: src/components/forms/fields/email-field.tsx:19
 msgid "Email address"
 msgstr "Email address"
 
@@ -488,6 +490,7 @@ msgid "Email verified"
 msgstr "Email verified"
 
 #: src/components/forms/input-new-password.tsx:39
+#: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter a password"
 msgstr "Enter a password"
 
@@ -508,6 +511,7 @@ msgid "Enter your email address"
 msgstr "Enter your email address"
 
 #: src/components/forms/input-new-password.tsx:40
+#: src/components/forms/fields/new-password-field.tsx:31
 msgid "Enter your new password"
 msgstr "Enter your new password"
 
@@ -533,6 +537,7 @@ msgid "Expand details"
 msgstr "Expand details"
 
 #: src/components/utils/password-strength-label.tsx:25
+#: src/components/feedback/password-strength.tsx:66
 msgid "Extra"
 msgstr "Extra"
 
@@ -651,6 +656,7 @@ msgid "Help"
 msgstr "Help"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
+#: src/components/forms/fields/password-field.tsx:49
 msgid "Hide"
 msgstr "Hide"
 
@@ -761,6 +767,7 @@ msgid "Make a text file with the contents below available at the following URL."
 msgstr "Make a text file with the contents below available at the following URL."
 
 #: src/components/forms/button-toggle-visibility.tsx:34
+#: src/components/forms/fields/password-field.tsx:49
 msgid "Make visible"
 msgstr "Make visible"
 
@@ -794,10 +801,12 @@ msgid "Message"
 msgstr "Message"
 
 #: src/components/utils/password-strength-label.tsx:33
+#: src/components/feedback/password-strength.tsx:74
 msgid "Missing"
 msgstr "Missing"
 
 #: src/components/utils/password-strength-label.tsx:29
+#: src/components/feedback/password-strength.tsx:70
 msgid "Moderate"
 msgstr "Moderate"
 
@@ -842,6 +851,7 @@ msgstr "Only letters, numbers, and hyphens"
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
+#: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
 msgstr "Password"
 
@@ -854,10 +864,12 @@ msgid "Password reset successful"
 msgstr "Password reset successful"
 
 #: src/components/utils/password-strength-label.tsx:23
+#: src/components/feedback/password-strength.tsx:63
 msgid "Password strength"
 msgstr "Password strength"
 
 #: src/components/utils/password-strength-meter.tsx:45
+#: src/components/feedback/password-strength.tsx:45
 msgid "Password strength indicator"
 msgstr "Password strength indicator"
 
@@ -870,6 +882,7 @@ msgid "Password updated!"
 msgstr "Password updated!"
 
 #: src/components/forms/input-new-password.tsx:41
+#: src/components/forms/fields/new-password-field.tsx:32
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH} characters"
 
@@ -923,6 +936,7 @@ msgstr "Please enter the security code that was sent to your email address."
 msgid "Please try again in a moment."
 msgstr "Please try again in a moment."
 
+#: src/components/forms/request-code-button.tsx:76
 #: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Please wait {remainingSeconds} seconds before trying again."
@@ -990,6 +1004,7 @@ msgstr "Reset your password"
 msgid "Retry"
 msgstr "Retry"
 
+#: src/components/forms/request-code-button.tsx:73
 #: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
@@ -1023,6 +1038,7 @@ msgstr "Select from an existing account"
 msgid "Send email"
 msgstr "Send email"
 
+#: src/components/forms/request-code-button.tsx:40
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
 msgstr "Send verification code"
@@ -1084,6 +1100,7 @@ msgid "Step {currentPosition} of {count}"
 msgstr "Step {currentPosition} of {count}"
 
 #: src/components/utils/password-strength-label.tsx:27
+#: src/components/feedback/password-strength.tsx:68
 msgid "Strong"
 msgstr "Strong"
 
@@ -1365,6 +1382,7 @@ msgid "We're so excited to have you join us!"
 msgstr "We're so excited to have you join us!"
 
 #: src/components/utils/password-strength-label.tsx:31
+#: src/components/feedback/password-strength.tsx:72
 msgid "Weak"
 msgstr "Weak"
 

@@ -110,6 +110,22 @@ The rebuild must therefore preserve:
 requires a `<p>`. Two `h2` assertions (`Token info`, `Login with the Atmosphere`)
 target the **demo OAuth client app**, not this package — ignore them.
 
+**Click-target tags** (`clickOnText` / `clickOn`, same failure mode):
+
+| Tag | Text | Rendered by |
+|---|---|---|
+| `a` | `Compte utilisateur` | account-shell nav `Link` |
+| `span` | `alice.test` | `Handle` |
+| `span` | `HTTP` | radio-group option label (custom-handle verification method) |
+| `label` | `Se souvenir de ce compte sur cet appareil` | remember checkbox — shadcn `FormLabel` renders `<label>` |
+| `button` | everything else in the label list | real `<button>` required |
+| selector | `[role="dialog"] button[type="submit"]` | Radix dialog + a submit button |
+
+**Input `name` attributes owned by this package:** `username`, `password`,
+`remember`, `code`, `email`, `handle`, `domain`, `inviteCode`. (`identifier` in
+`oauth.test.ts` is the demo client's, not ours.) With react-hook-form the `name`
+comes from the field key, so those keys are contract, not implementation detail.
+
 **Baseline first.** Before any code changes, run both suites on the current tree and
 record the result. Any later failure is then attributable. Changes to these test files
 are permitted but each one must be justified as an intentional UX change, not absorbed

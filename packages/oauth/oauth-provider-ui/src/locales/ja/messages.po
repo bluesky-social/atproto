@@ -439,6 +439,7 @@ msgid "Devices"
 msgstr "デバイス"
 
 #: src/components/forms/input-token.tsx:88
+#: src/components/forms/fields/token-field.tsx:54
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "コードが届いていませんか？<0>ここをクリックすれば再送信します。</0>"
 
@@ -464,6 +465,7 @@ msgstr "メールアドレス"
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
+#: src/components/forms/fields/email-field.tsx:19
 msgid "Email address"
 msgstr "メールアドレス"
 
@@ -488,6 +490,7 @@ msgid "Email verified"
 msgstr "メールアドレスが確認されました"
 
 #: src/components/forms/input-new-password.tsx:39
+#: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter a password"
 msgstr "パスワードを入力"
 
@@ -508,6 +511,7 @@ msgid "Enter your email address"
 msgstr "メールアドレスを入力してください"
 
 #: src/components/forms/input-new-password.tsx:40
+#: src/components/forms/fields/new-password-field.tsx:31
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
 
@@ -533,6 +537,7 @@ msgid "Expand details"
 msgstr "詳細を開く"
 
 #: src/components/utils/password-strength-label.tsx:25
+#: src/components/feedback/password-strength.tsx:66
 msgid "Extra"
 msgstr "最強"
 
@@ -651,6 +656,7 @@ msgid "Help"
 msgstr "ヘルプ"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
+#: src/components/forms/fields/password-field.tsx:49
 msgid "Hide"
 msgstr "隠す"
 
@@ -761,6 +767,7 @@ msgid "Make a text file with the contents below available at the following URL."
 msgstr "次のURLで以下の内容のテキストファイルを利用できるようにしてください。"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
+#: src/components/forms/fields/password-field.tsx:49
 msgid "Make visible"
 msgstr "表示する"
 
@@ -794,10 +801,12 @@ msgid "Message"
 msgstr "メッセージ"
 
 #: src/components/utils/password-strength-label.tsx:33
+#: src/components/feedback/password-strength.tsx:74
 msgid "Missing"
 msgstr "無し"
 
 #: src/components/utils/password-strength-label.tsx:29
+#: src/components/feedback/password-strength.tsx:70
 msgid "Moderate"
 msgstr "中程度"
 
@@ -842,6 +851,7 @@ msgstr "英数字とハイフンのみ"
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
+#: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
 msgstr "パスワード"
 
@@ -854,10 +864,12 @@ msgid "Password reset successful"
 msgstr "パスワードのリセットに成功しました"
 
 #: src/components/utils/password-strength-label.tsx:23
+#: src/components/feedback/password-strength.tsx:63
 msgid "Password strength"
 msgstr "パスワード強度"
 
 #: src/components/utils/password-strength-meter.tsx:45
+#: src/components/feedback/password-strength.tsx:45
 msgid "Password strength indicator"
 msgstr "パスワード強度表示"
 
@@ -870,6 +882,7 @@ msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
 #: src/components/forms/input-new-password.tsx:41
+#: src/components/forms/fields/new-password-field.tsx:32
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
 
@@ -923,6 +936,7 @@ msgstr "メールアドレスに送信されたセキュリティコードを入
 msgid "Please try again in a moment."
 msgstr "しばらくしてからもう一度お試しください。"
 
+#: src/components/forms/request-code-button.tsx:76
 #: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "{remainingSeconds} 秒待ってからもう一度やり直してください。"
@@ -990,6 +1004,7 @@ msgstr "パスワードをリセット"
 msgid "Retry"
 msgstr "再試行"
 
+#: src/components/forms/request-code-button.tsx:73
 #: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}秒後に再試行"
@@ -1023,6 +1038,7 @@ msgstr "既存のアカウントから選択"
 msgid "Send email"
 msgstr "メールを送信"
 
+#: src/components/forms/request-code-button.tsx:40
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
 msgstr "確認コードを送信"
@@ -1084,6 +1100,7 @@ msgid "Step {currentPosition} of {count}"
 msgstr "ステップ {currentPosition} / {count}"
 
 #: src/components/utils/password-strength-label.tsx:27
+#: src/components/feedback/password-strength.tsx:68
 msgid "Strong"
 msgstr "強い"
 
@@ -1365,6 +1382,7 @@ msgid "We're so excited to have you join us!"
 msgstr "私たちはあなたが参加してくれることをとても楽しみにしています！"
 
 #: src/components/utils/password-strength-label.tsx:31
+#: src/components/feedback/password-strength.tsx:72
 msgid "Weak"
 msgstr "弱い"
 

@@ -439,6 +439,7 @@ msgid "Devices"
 msgstr "기기"
 
 #: src/components/forms/input-token.tsx:88
+#: src/components/forms/fields/token-field.tsx:54
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
@@ -464,6 +465,7 @@ msgstr "이메일"
 #: src/components/reset-password-request-form.tsx:31
 #: src/components/reset-password-request-form.tsx:35
 #: src/components/forms/input-email-address.tsx:34
+#: src/components/forms/fields/email-field.tsx:19
 msgid "Email address"
 msgstr "이메일 주소"
 
@@ -488,6 +490,7 @@ msgid "Email verified"
 msgstr ""
 
 #: src/components/forms/input-new-password.tsx:39
+#: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter a password"
 msgstr "비밀번호 입력"
 
@@ -508,6 +511,7 @@ msgid "Enter your email address"
 msgstr "이메일 주소 입력"
 
 #: src/components/forms/input-new-password.tsx:40
+#: src/components/forms/fields/new-password-field.tsx:31
 msgid "Enter your new password"
 msgstr "새 비밀번호 입력"
 
@@ -533,6 +537,7 @@ msgid "Expand details"
 msgstr "세부 정보 펼치기"
 
 #: src/components/utils/password-strength-label.tsx:25
+#: src/components/feedback/password-strength.tsx:66
 msgid "Extra"
 msgstr "매우 강력"
 
@@ -641,6 +646,7 @@ msgid "Help"
 msgstr ""
 
 #: src/components/forms/button-toggle-visibility.tsx:34
+#: src/components/forms/fields/password-field.tsx:49
 msgid "Hide"
 msgstr "숨기기"
 
@@ -751,6 +757,7 @@ msgid "Make a text file with the contents below available at the following URL."
 msgstr ""
 
 #: src/components/forms/button-toggle-visibility.tsx:34
+#: src/components/forms/fields/password-field.tsx:49
 msgid "Make visible"
 msgstr "표시"
 
@@ -784,10 +791,12 @@ msgid "Message"
 msgstr ""
 
 #: src/components/utils/password-strength-label.tsx:33
+#: src/components/feedback/password-strength.tsx:74
 msgid "Missing"
 msgstr "미입력"
 
 #: src/components/utils/password-strength-label.tsx:29
+#: src/components/feedback/password-strength.tsx:70
 msgid "Moderate"
 msgstr "보통"
 
@@ -832,6 +841,7 @@ msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 #: src/components/sign-in-form.tsx:190
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
+#: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
 msgstr "비밀번호"
 
@@ -844,10 +854,12 @@ msgid "Password reset successful"
 msgstr "비밀번호를 재설정했습니다"
 
 #: src/components/utils/password-strength-label.tsx:23
+#: src/components/feedback/password-strength.tsx:63
 msgid "Password strength"
 msgstr "비밀번호 강도"
 
 #: src/components/utils/password-strength-meter.tsx:45
+#: src/components/feedback/password-strength.tsx:45
 msgid "Password strength indicator"
 msgstr "비밀번호 강도 표시자"
 
@@ -860,6 +872,7 @@ msgid "Password updated!"
 msgstr "비밀번호를 변경했습니다!"
 
 #: src/components/forms/input-new-password.tsx:41
+#: src/components/forms/fields/new-password-field.tsx:32
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다"
 
@@ -913,6 +926,7 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
+#: src/components/forms/request-code-button.tsx:76
 #: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
@@ -980,6 +994,7 @@ msgstr "비밀번호 재설정"
 msgid "Retry"
 msgstr "다시 시도"
 
+#: src/components/forms/request-code-button.tsx:73
 #: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후에 다시 시도"
@@ -1013,6 +1028,7 @@ msgstr "기존 계정에서 선택하기"
 msgid "Send email"
 msgstr ""
 
+#: src/components/forms/request-code-button.tsx:40
 #: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
 msgstr ""
@@ -1074,6 +1090,7 @@ msgid "Step {currentPosition} of {count}"
 msgstr "{count}단계 중 {currentPosition}단계"
 
 #: src/components/utils/password-strength-label.tsx:27
+#: src/components/feedback/password-strength.tsx:68
 msgid "Strong"
 msgstr "강력"
 
@@ -1355,6 +1372,7 @@ msgid "We're so excited to have you join us!"
 msgstr "함께하게 되어 정말 기뻐요!"
 
 #: src/components/utils/password-strength-label.tsx:31
+#: src/components/feedback/password-strength.tsx:72
 msgid "Weak"
 msgstr "취약"
 

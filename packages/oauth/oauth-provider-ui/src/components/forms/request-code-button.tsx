@@ -1,0 +1,95 @@
+import { Trans, useLingui } from '@lingui/react/macro'
+import { SendIcon } from 'lucide-react'
+import { type Ref, useImperativeHandle } from 'react'
+import { Button } from '#/components/ui/button.tsx'
+import { CircularProgress } from '#/components/utils/circular-progress.tsx'
+import {
+  type RateLimitedActionOptions,
+  type RateLimitedHandler,
+  useRateLimitedAction,
+} from '#/hooks/use-rate-limited-action.ts'
+import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
+
+export type RequestCodeButtonHandler = RateLimitedHandler
+
+export type RequestCodeButtonProps = Override<
+  React.ComponentProps<typeof Button>,
+  RateLimitedActionOptions & {
+    ref?: Ref<RequestCodeButtonHandler>
+    /** Show the countdown ring even when idle. */
+    showProgressWhenIdle?: boolean
+  }
+>
+
+/**
+ * Replaces `ButtonCooldown` + `ButtonRequestCode`. The rate-limiting behaviour
+ * (cooldown, remaining-seconds labelling, optional initial cooldown) is
+ * unchanged — it still comes from `useRateLimitedAction`.
+ */
+export function RequestCodeButton({
+  ref,
+  showProgressWhenIdle = true,
+
+  // RateLimitedActionOptions
+  action,
+  cooldown,
+  startWithCooldown,
+
+  // Button
+  children = <Trans>Send verification code</Trans>,
+  onClick,
+  disabled = false,
+  className,
+  variant = 'secondary',
+  size = 'sm',
+  'aria-label': ariaLabel,
+  'aria-live': ariaLive,
+  title,
+  ...props
+}: RequestCodeButtonProps) {
+  const { t } = useLingui()
+
+  const handler = useRateLimitedAction({ action, cooldown, startWithCooldown })
+  const remainingSeconds = Math.ceil(handler.remaining)
+
+  const showRateLimit = !disabled && handler.isRateLimited
+  const percent = ((handler.total - handler.remaining) / handler.total) * 100
+
+  useImperativeHandle(ref, () => handler, [handler])
+
+  return (
+    <Button
+      {...props}
+      type="button"
+      variant={variant}
+      size={size}
+      onClick={(event) => {
+        onClick?.(event)
+        if (!event.defaultPrevented) void handler.trigger()
+      }}
+      disabled={disabled || handler.isRateLimited || handler.isPending}
+      className={cn('relative', className)}
+      title={showRateLimit ? t`Retry in ${remainingSeconds}s` : title}
+      aria-label={
+        showRateLimit
+          ? t`Please wait ${remainingSeconds} seconds before trying again.`
+          : ariaLabel
+      }
+      aria-live={showRateLimit ? 'polite' : ariaLive}
+      aria-atomic="true"
+    >
+      {showRateLimit || showProgressWhenIdle ? (
+        <CircularProgress
+          aria-hidden
+          size={16}
+          value={percent}
+          startAngle={-90}
+        />
+      ) : (
+        <SendIcon aria-hidden />
+      )}
+      <span className="truncate">{children}</span>
+    </Button>
+  )
+}
