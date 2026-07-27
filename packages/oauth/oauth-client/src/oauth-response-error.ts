@@ -9,9 +9,8 @@ export class OAuthResponseError extends Error {
     public readonly response: Response,
     public readonly payload: Json,
   ) {
-    const objPayload = typeof payload === 'object' ? payload : undefined
-    const error = ifString(objPayload?.['error'])
-    const errorDescription = ifString(objPayload?.['error_description'])
+    const error = ifString((payload as any)?.['error'])
+    const errorDescription = ifString((payload as any)?.['error_description'])
 
     const messageError = error ? `"${error}"` : 'unknown'
     const messageDesc = errorDescription ? `: ${errorDescription}` : ''
