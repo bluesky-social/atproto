@@ -29,7 +29,7 @@ export type RequestCodeButtonProps = Override<
  */
 export function RequestCodeButton({
   ref,
-  showProgressWhenIdle = true,
+  showProgressWhenIdle = false,
 
   // RateLimitedActionOptions
   action,

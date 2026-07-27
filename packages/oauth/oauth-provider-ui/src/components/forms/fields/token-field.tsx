@@ -53,12 +53,17 @@ export function TokenField<TValues extends FieldValues>({
               are part of the message id. */}
             <Trans>
               Didn't receive a code?{' '}
+              {/* @NOTE Sits inside a sentence, so the button is stripped of its
+                block height and padding and rendered as inline link text — the
+                previous inline resend used size="xs" shape="padded" transparent
+                for the same reason. */}
               <RequestCodeButton
                 action={async () => {
                   await onResend()
                 }}
                 variant="link"
                 size="sm"
+                className="h-auto gap-1 px-1 py-0 text-xs"
                 startWithCooldown
               >
                 Click here to resend.
