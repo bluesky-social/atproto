@@ -173,7 +173,7 @@ export class CachedGetter<
             throw err
           })
           .then(async (value) => {
-            // The value is stored even is the signal was aborted.
+            // The value is stored even if the signal was aborted.
             await this.setStored(key, value)
             return { isFresh: true, value }
           })
