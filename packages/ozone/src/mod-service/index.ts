@@ -57,6 +57,7 @@ import {
 } from './status.js'
 import type { StrikeService, StrikeServiceCreator } from './strike.js'
 import {
+  CHAT_CONVO_COLLECTION,
   type ModSubject,
   type RecordSubject,
   type RepoSubject,
@@ -243,7 +244,7 @@ export class ModerationService {
 
       // subjectUri or subjectConvoId
       if (!includeAllUserRecords) {
-        if (subjectAtUri?.collection === 'chat.bsky.convo') {
+        if (subjectAtUri?.collection === CHAT_CONVO_COLLECTION) {
           builder = builder.where('subjectConvoId', '=', subjectAtUri.rkey)
         } else if (subjectUri) {
           builder = builder.where('subjectUri', '=', subjectUri)

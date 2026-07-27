@@ -1,5 +1,29 @@
 # @atproto/lex-installer
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.2.2
+
+## 0.1.8
+
+### Patch Changes
+
+- [#5235](https://github.com/bluesky-social/atproto/pull/5235) [`ee20f01`](https://github.com/bluesky-social/atproto/commit/ee20f01d4582cd6afff1b42dde50aec95212a38b) Thanks [@ryanda9910](https://github.com/ryanda9910)! - `writeJsonFile` (used by `lex install` to save `lexicons.json` and the installed lexicon documents) now ends the file with a trailing newline, so it no longer thrashes against formatters and linters that enforce a final newline.
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55), [`1570e44`](https://github.com/bluesky-social/atproto/commit/1570e4471bffb1f3e5e6907f031d025db9ef3198)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/lex-schema@0.2.2
+  - @atproto/lex-resolver@0.2.1
+  - @atproto/lex-builder@0.1.8
+  - @atproto/lex-document@0.1.6
+
 ## 0.1.6
 
 ### Patch Changes

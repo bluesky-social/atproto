@@ -1,10 +1,4 @@
-import {
-  type PropsWithChildren,
-  type ReactNode,
-  createContext,
-  use,
-  useContext,
-} from 'react'
+import { type PropsWithChildren, createContext, use, useContext } from 'react'
 import { type Agent, Client } from '@atproto/lex'
 import { type OAuthSession, asDid } from '@atproto/oauth-client-browser'
 import { BSKY_API_DID, BSKY_API_URL } from '../constants.ts'
@@ -18,15 +12,11 @@ const unauthenticatedClient = new Client(BSKY_API_URL)
 const BskyClientContext = createContext(unauthenticatedClient)
 BskyClientContext.displayName = 'BskyClientContext'
 
-export type BskyClientProviderProps = PropsWithChildren<{
-  fallback?: ReactNode
-}>
-
-export function BskyClientProvider({ children }: BskyClientProviderProps) {
-  // @NOTE We prefer using an AuthenticationContext "PDS client" instead of the
-  // OAuthProvider "session" as agent to ensure that any configuration (e.g.
-  // labelers, etc.) on the PDS client is preserved and applied to the
-  // BskyClient context value as well.
+export function BskyClientProvider({ children }: PropsWithChildren) {
+  // @NOTE The OAuthProvider "session" is used as agent for the Bsky client.
+  // The client's own configuration (service, labelers, headers) is scoped to
+  // this client instance and does not affect other clients built from the
+  // same session (e.g. the PdsClientProvider's client).
   const { session } = useOAuthContext(BskyClientProvider.name)
   const client = useConfiguredClient(session)
 

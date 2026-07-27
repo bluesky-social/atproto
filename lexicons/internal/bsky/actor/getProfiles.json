@@ -24,6 +24,11 @@
             "description": "DIDs to hydrate social proof (known followers) for. DIDs not also present in `dids` are ignored.",
             "items": { "type": "string", "format": "did" },
             "maxLength": 200
+          },
+          "includeTakedowns": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include taken-down accounts in the response rather than omitting them. For service-to-service moderation use only."
           }
         }
       },

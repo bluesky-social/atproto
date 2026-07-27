@@ -12,6 +12,7 @@ import {
   REVIEWNONE,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { CHAT_CONVO_COLLECTION } from './subject.js'
 import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
@@ -533,7 +534,7 @@ export const getStatusIdentifierFromSubject = (
   const uri = isSubjectString ? new AtUri(subject) : subject
 
   // Handle conversation URIs
-  if (uri.collection === 'chat.bsky.convo') {
+  if (uri.collection === CHAT_CONVO_COLLECTION) {
     return {
       did: uri.host,
       recordPath: '',

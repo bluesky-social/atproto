@@ -1,56 +1,51 @@
-import { EventEmitter, once } from 'node:events'
-import type { SendMailOptions } from 'nodemailer'
+import { jest } from '@jest/globals'
 import {
   type AtpAgent,
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
 } from '@atproto/api'
-import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import type { ServerMailer } from '../src/mailer/index.js'
+import {
+  type Account,
+  type SeedClient,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
+import type { AppContext } from '../src/index.js'
 import userSeed from './seeds/users.js'
 
 describe('email confirmation', () => {
   let network: TestNetworkNoAppView
+  let ctx: AppContext
   let agent: AtpAgent
   let sc: SeedClient
 
-  let mailer: ServerMailer
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
-
-  let alice
+  let alice: Account
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'email_confirmation',
     })
-    mailer = network.pds.ctx.mailer
+    ctx = network.pds.ctx
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+    sendMailMock = jest
+      .spyOn(ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(async () => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
-    mailer.transporter.sendMail = _origSendMail
     await network?.close()
   })
-
-  const getMailFrom = async (promise): Promise<SendMailOptions> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: SendMailOptions) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   it('starts a user out unverified', async () => {
     const session = await agent.api.com.atproto.server.getSession(
@@ -79,20 +74,31 @@ describe('email confirmation', () => {
     )
     expect(session.data.email).toEqual('new-alice@example.com')
     expect(session.data.emailConfirmed).toEqual(false)
-    alice.email = session.data.email
+    alice.email = session.data.email!
   })
 
-  let confirmToken
+  let confirmToken: string
 
   it('requests email confirmation', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestEmailConfirmation(undefined, {
-        headers: sc.getHeaders(alice.did),
-      }),
-    )
+    using sendConfirmEmailMock = jest.spyOn(ctx.mailer, 'sendConfirmEmail')
+
+    await agent.api.com.atproto.server.requestEmailConfirmation(undefined, {
+      headers: sc.getHeaders(alice.did),
+    })
+
+    expect(sendConfirmEmailMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendConfirmEmailMock.mock.lastCall!
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
     expect(mail.to).toEqual(alice.email)
+    expect(mail.subject).toBe('Email Confirmation')
     expect(mail.html).toContain('Confirm your email')
-    confirmToken = getTokenFromMail(mail)
+    confirmToken = params.token
+
     expect(confirmToken).toBeDefined()
   })
 
@@ -149,22 +155,31 @@ describe('email confirmation', () => {
     )
   })
 
-  let updateToken
+  let updateToken: string
 
   it('requests email update', async () => {
-    const reqUpdate = async () => {
-      const res = await agent.api.com.atproto.server.requestEmailUpdate(
-        undefined,
-        {
-          headers: sc.getHeaders(alice.did),
-        },
-      )
-      expect(res.data.tokenRequired).toBe(true)
-    }
-    const mail = await getMailFrom(reqUpdate())
+    using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
+
+    const res = await agent.api.com.atproto.server.requestEmailUpdate(
+      undefined,
+      {
+        headers: sc.getHeaders(alice.did),
+      },
+    )
+    expect(res.data.tokenRequired).toBe(true)
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendUpdateEmailMock.mock.lastCall!
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+    const [mail] = sendMailMock.mock.lastCall!
     expect(mail.to).toEqual(alice.email)
+    expect(mail.subject).toBe('Email Update Requested')
     expect(mail.html).toContain('Update your email')
-    updateToken = getTokenFromMail(mail)
+
+    updateToken = params.token
+
     expect(updateToken).toBeDefined()
   })
 

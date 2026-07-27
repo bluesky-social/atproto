@@ -1,4 +1,9 @@
-import type { DidString, LexValue, UnknownString } from '@atproto/lex-schema'
+import {
+  type DidString,
+  type LexValue,
+  type UnknownString,
+  isDidString,
+} from '@atproto/lex-schema'
 
 export type { DidString, LexValue, UnknownString }
 
@@ -21,6 +26,15 @@ export type DidServiceIdentifier = 'atproto_labeler' | UnknownString
  * ```
  */
 export type Service = `${DidString}#${DidServiceIdentifier}`
+
+export const isService = (value: string): value is Service => {
+  const hashIndex = value.indexOf('#')
+  if (hashIndex < 7) return false // "did:a:b#" / no "#" in value
+  if (hashIndex > value.length - 3) return false // "#x"
+  if (value.includes('#', hashIndex + 1)) return false
+  const did = value.slice(0, hashIndex)
+  return isDidString(did)
+}
 
 /**
  * Valid input types for binary request bodies.

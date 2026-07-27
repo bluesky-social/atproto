@@ -1,9 +1,12 @@
-import { EventEmitter, once } from 'node:events'
+import { jest } from '@jest/globals'
 import type { Selectable } from 'kysely'
-import type Mail from 'nodemailer/lib/mailer'
 import type { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
-import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  type Account as SeedAccount,
+  type SeedClient,
+  TestNetworkNoAppView,
+} from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import type {
   Account,
@@ -13,7 +16,6 @@ import type {
   RepoRoot,
 } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/index.js'
-import type { ServerMailer } from '../src/mailer/index.js'
 import type { RepoSeq } from '../src/sequencer/db/index.js'
 import basicSeed from './seeds/basic.js'
 
@@ -23,66 +25,63 @@ describe('account deletion', () => {
   let sc: SeedClient
 
   let ctx: AppContext
-  let mailer: ServerMailer
   let initialDbContents: DbContents
   let updatedDbContents: DbContents
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
 
   // chose carol because she has blobs
-  let carol
+  let carol: SeedAccount
+  let token: string
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
     ctx = network.pds.ctx
-    mailer = ctx.mailer
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
-
     initialDbContents = await getDbContents(ctx)
+
+    sendMailMock = jest
+      .spyOn(ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(() => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
-    mailer.transporter.sendMail = _origSendMail
     await network?.close()
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
-
-  let token
-
   it('requests account deletion', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestAccountDelete(undefined, {
-        headers: sc.getHeaders(carol.did),
-      }),
-    )
+    using sendAccountDeleteMock = jest.spyOn(ctx.mailer, 'sendAccountDelete')
 
+    await agent.api.com.atproto.server.requestAccountDelete(undefined, {
+      headers: sc.getHeaders(carol.did),
+    })
+
+    expect(sendAccountDeleteMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendAccountDeleteMock.mock.lastCall!
+    expect(params).toEqual({
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
     expect(mail.to).toEqual(carol.email)
+    expect(mail.subject).toBe('Account Deletion Requested')
     expect(mail.html).toContain('To permanently delete your account')
 
-    token = getTokenFromMail(mail)
-    if (!token) {
-      return expect(token).toBeDefined()
-    }
+    token = params.token
   })
 
   it('fails account deletion with a bad token', async () => {
@@ -95,6 +94,7 @@ describe('account deletion', () => {
   })
 
   it('fails account deletion with a bad password', async () => {
+    expect(token).toBeDefined()
     const attempt = agent.api.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
@@ -104,6 +104,7 @@ describe('account deletion', () => {
   })
 
   it('deletes account with a valid token & password', async () => {
+    expect(token).toBeDefined()
     // Perform account deletion, including when the account is already "taken down"
     await agent.api.com.atproto.admin.updateSubjectStatus(
       {
@@ -198,24 +199,23 @@ describe('account deletion', () => {
   })
 
   it('can delete an empty user', async () => {
+    using sendAccountDeleteMock = jest.spyOn(ctx.mailer, 'sendAccountDelete')
+
     const eve = await sc.createAccount('eve', {
       handle: 'eve.test',
       email: 'eve@test.com',
       password: 'eve-test',
     })
 
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestAccountDelete(undefined, {
-        headers: sc.getHeaders(eve.did),
-      }),
-    )
+    await agent.api.com.atproto.server.requestAccountDelete(undefined, {
+      headers: sc.getHeaders(eve.did),
+    })
 
-    const token = getTokenFromMail(mail)
-    if (!token) {
-      return expect(token).toBeDefined()
-    }
+    expect(sendAccountDeleteMock).toHaveBeenCalledTimes(1)
+    const [params] = sendAccountDeleteMock.mock.lastCall!
+
     await agent.api.com.atproto.server.deleteAccount({
-      token,
+      token: params.token,
       did: eve.did,
       password: eve.password,
     })

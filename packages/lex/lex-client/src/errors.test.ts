@@ -175,6 +175,35 @@ describe(XrpcResponseError, () => {
     })
   })
 
+  // Regression: a 404 that carries a valid XRPC error payload must surface the server's own
+  // error code, not the XRPCNotSupported status fallback. A 404 is ambiguous in atproto — it
+  // can mean "this server doesn't implement the endpoint" OR a domain error like a missing
+  // actor — so callers rely on the body to tell the two apart (bluesky-social/atproto#5058).
+  describe('404 with an XRPC error payload', () => {
+    it('surfaces the server error code instead of XRPCNotSupported', () => {
+      const err = createResponseError(
+        404,
+        'ProfileNotFound',
+        'Profile not found',
+      )
+      expect(err.error).toBe('ProfileNotFound')
+      expect(err.error).not.toBe('XRPCNotSupported')
+    })
+
+    it('surfaces the server error code for other domain errors', () => {
+      const err = createResponseError(404, 'ActorNotFound')
+      expect(err.error).toBe('ActorNotFound')
+    })
+
+    it('still falls back to XRPCNotSupported when there is no payload', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 404 }),
+      )
+      expect(err.error).toBe('XRPCNotSupported')
+    })
+  })
+
   it('exposes the response object', () => {
     const response = new Response(null, {
       status: 400,

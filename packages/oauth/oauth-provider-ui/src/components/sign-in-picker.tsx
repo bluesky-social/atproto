@@ -64,7 +64,7 @@ export function SignInPicker({
         <InputContainer
           key="other"
           onAction={onOther}
-          aria-label={t`Login to account that is not listed`}
+          aria-label={t`Sign in to an account that is not listed`}
           append={<CaretRightIcon aria-hidden className="h-4" />}
           icon={<AtIcon aria-hidden weight="bold" className="h-4 w-6" />}
         >

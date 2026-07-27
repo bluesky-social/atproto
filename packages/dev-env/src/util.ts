@@ -14,7 +14,12 @@ export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
   }
 }
 
-export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
+export const mockResolvers = (
+  idResolver: IdResolver,
+  pds: TestPds,
+  // handles resolve against the pds by default, but may point elsewhere e.g. an entryway
+  handleResolveUrl: string = pds.url,
+) => {
   // Map pds public url to its local url when resolving from plc
   const origResolveDid = idResolver.did.resolveNoCache
   idResolver.did.resolveNoCache = async (did: string) => {
@@ -41,7 +46,7 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
       return origResolveHandleDns.call(idResolver.handle, handle)
     }
 
-    const url = new URL(`/.well-known/atproto-did`, pds.url)
+    const url = new URL(`/.well-known/atproto-did`, handleResolveUrl)
     try {
       const res = await request(url, { headers: { host: handle } })
       if (res.statusCode !== 200) {

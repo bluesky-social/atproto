@@ -1,5 +1,26 @@
 # @atproto/aws
 
+## 0.3.8
+
+### Patch Changes
+
+- [#5247](https://github.com/bluesky-social/atproto/pull/5247) [`0af78cf`](https://github.com/bluesky-social/atproto/commit/0af78cf2b15a2b541f0f1889178ae64086d982f3) Thanks [@jcalabro](https://github.com/jcalabro)! - Pin `@smithy/core` to `>=3.29.5` to fix an outbound S3/R2 socket leak. Earlier versions did not destroy the underlying stream's socket when a `getObject` download was aborted mid-transfer (`ChecksumStream` swallowed the premature close), so `S3BlobStore` blob downloads that clients cancelled leaked sockets and file descriptors until the host exhausted TCP memory. `@smithy/core` 3.29.5 (smithy-typescript#2152) destroys the source and removes its listeners on premature closure.
+
+## 0.3.7
+
+### Patch Changes
+
+- [#5233](https://github.com/bluesky-social/atproto/pull/5233) [`692ec0b`](https://github.com/bluesky-social/atproto/commit/692ec0bf7202227f26298ebe98ff25e46b1bd4bc) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade `@aws-sdk/*` dependencies (^3.879.0 to ^3.1073.0). `S3BlobStore` now passes its stall detection timeout (`requestTimeoutMs`) to the request handler's `socketTimeout` option: the upgraded SDK redefined `requestTimeout` from a socket idle timeout to a warn-only total request timer, so stalled S3 connections continue to be reaped and retried as intended.
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.6
+  - @atproto/repo@0.10.6
+  - @atproto/common@0.7.2
+
 ## 0.3.5
 
 ### Patch Changes
