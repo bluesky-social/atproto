@@ -144,7 +144,7 @@ msgstr "Lägg till följande post i din domäns DNS-konfiguration."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/verify-email-dialog.tsx:74
+#: src/components/verify-email-dialog.tsx:73
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
@@ -313,8 +313,8 @@ msgstr "Titta i din inkorg."
 msgid "Choose a new default username."
 msgstr "Välj ett nytt användarnamn med standarddomän"
 
-#: src/components/update-email-dialog.tsx:111
-#: src/components/update-email-dialog.tsx:147
+#: src/components/update-email-dialog.tsx:98
+#: src/components/update-email-dialog.tsx:134
 msgid "Choose a new email address to associate with your account."
 msgstr "Välj en ny e-postadress för att koppla den till ditt konto."
 
@@ -467,7 +467,7 @@ msgstr "E-post"
 msgid "Email address"
 msgstr "E-postadress"
 
-#: src/components/update-email-dialog.tsx:62
+#: src/components/update-email-dialog.tsx:64
 msgid "Email address successfully updated"
 msgstr "E-postadressen har uppdaterats"
 
@@ -738,7 +738,7 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Sågs senast {lastUsedAgo}"
 
-#: src/components/update-email-dialog.tsx:75
+#: src/components/update-email-dialog.tsx:228
 msgctxt "verify email"
 msgid "Later"
 msgstr "Senare"
@@ -821,7 +821,7 @@ msgid "Navigation"
 msgstr ""
 
 #: src/components/update-email-form.tsx:79
-#: src/components/update-email-dialog.tsx:181
+#: src/components/update-email-dialog.tsx:195
 msgid "New email address"
 msgstr "Ny e-postadress"
 
@@ -1271,8 +1271,8 @@ msgstr "Okänd användaragent"
 msgid "Update"
 msgstr "Ändra"
 
-#: src/components/update-email-dialog.tsx:109
-#: src/components/update-email-dialog.tsx:145
+#: src/components/update-email-dialog.tsx:96
+#: src/components/update-email-dialog.tsx:132
 msgid "Update your email"
 msgstr "Uppdatera din e-postadress"
 
@@ -1324,7 +1324,7 @@ msgid "Value"
 msgstr "Värde"
 
 #: src/components/verify-email-confirm-form.tsx:49
-#: src/components/update-email-dialog.tsx:86
+#: src/components/update-email-dialog.tsx:237
 msgid "Verification code"
 msgstr "Verifieringskod"
 
@@ -1345,7 +1345,7 @@ msgid "Verify and Save"
 msgstr "Verifiera och spara"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:86
-#: src/components/update-email-dialog.tsx:76
+#: src/components/update-email-dialog.tsx:229
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verifiera nu"
@@ -1488,7 +1488,7 @@ msgstr "Ditt Atmosphere-konto ligger hos <0/>."
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
 msgstr "Ditt innehåll (profil, inlägg, flöden, listor m.m.) kommer inte längre att synas i Bluesky-appen eller någon annanstans i Atmosphere-nätverket."
 
-#: src/components/update-email-dialog.tsx:66
+#: src/components/update-email-dialog.tsx:68
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifieringskoden som skickades till <0>{email}</0>."
 

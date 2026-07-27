@@ -1,8 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { type ReactNode, useEffect, useState } from 'react'
-import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
-import { Button } from '#/components/forms/button.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { VerifyEmailConfirmForm } from '#/components/verify-email-confirm-form.tsx'
 
 export type VerifyEmailDialogProps = {
@@ -41,8 +41,8 @@ export function VerifyEmailDialog({
   const dismissable = !requestPending && !confirmSubmitting
 
   return (
-    <DialogSimple
-      trigger={children}
+    <DialogShell
+      trigger={children as ReactElement}
       title={t`Verify your email`}
       description={
         <Trans>
@@ -56,18 +56,17 @@ export function VerifyEmailDialog({
     >
       {state === VerifyEmailDialogState.Request ? (
         <div className="align-stretch flex flex-col gap-4">
-          <ButtonRequestCode
+          <RequestCodeButton
             action={async () => {
               await onRequest()
               setState(VerifyEmailDialogState.Confirm)
             }}
-            loading={requestPending}
-            disabled={confirmPending}
-            color="primary"
+            disabled={requestPending || confirmPending}
             className="w-full"
           />
 
           <Button
+            variant="secondary"
             onClick={() => setState(VerifyEmailDialogState.Confirm)}
             className="w-full"
           >
@@ -85,6 +84,6 @@ export function VerifyEmailDialog({
           onResend={onRequest}
         />
       )}
-    </DialogSimple>
+    </DialogShell>
   )
 }

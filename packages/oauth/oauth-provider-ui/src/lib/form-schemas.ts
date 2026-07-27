@@ -60,6 +60,12 @@ export const signInSchema = z.object({
 
 export type SignInValues = z.infer<typeof signInSchema>
 
+export const emailOnlySchema = z.object({
+  email: z.string().min(1).email(),
+})
+
+export type EmailOnlyValues = z.infer<typeof emailOnlySchema>
+
 export const verifyEmailConfirmSchema = z.object({
   code: otpCodeSchema,
 })
