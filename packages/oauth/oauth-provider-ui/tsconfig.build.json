@@ -4,6 +4,7 @@
     "../../../tsconfig/bundler.tsconfig.json",
   ],
   "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["**/*.test.ts"],
   "references": [
     { "path": "../../syntax/tsconfig.build.json" },
     { "path": "../oauth-provider-api/tsconfig.build.json" },
