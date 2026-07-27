@@ -75,14 +75,7 @@ import {
   type CustomMetadata,
   buildMetadata,
 } from './metadata/build-metadata.js'
-import {
-  AUTHENTICATION_MAX_AGE,
-  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  PUBLIC_CLIENT_REFRESH_LIFETIME,
-  PUBLIC_CLIENT_SESSION_LIFETIME,
-  TOKEN_MAX_AGE,
-} from './oauth-constants.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './oauth-constants.js'
 import type { OAuthHooks } from './oauth-hooks.js'
 import {
   type DpopProof,
@@ -1021,14 +1014,17 @@ export class OAuthProvider extends OAuthVerifier {
 
     try {
       const { data } = tokenInfo
+      const now = new Date()
+
       await this.compareClientAuth(client, clientAuth, dpopProof, data)
-      await this.validateRefreshGrant(client, clientAuth, data)
+      await this.validateRefreshGrant(client, data, now)
 
       return await this.tokenManager.rotateToken(
         client,
         clientAuth,
         clientMetadata,
         tokenInfo,
+        now,
       )
     } catch (err) {
       await this.tokenManager.deleteToken(tokenInfo.id)
@@ -1039,24 +1035,21 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected async validateRefreshGrant(
     client: Client,
-    clientAuth: ClientAuth,
     data: TokenData,
+    now = new Date(),
   ): Promise<void> {
-    const [sessionLifetime, refreshLifetime] =
-      clientAuth.method !== 'none' || client.info.isFirstParty
-        ? [
-            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-          ]
-        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
+    if (!client.metadata.grant_types.includes('refresh_token')) {
+      throw new InvalidGrantError(`Refresh token grant not allowed`)
+    }
 
-    const sessionAge = Date.now() - data.createdAt.getTime()
-    if (sessionAge > sessionLifetime) {
+    const sessionAge = now.getTime() - data.createdAt.getTime()
+
+    if (sessionAge > client.sessionLifetime) {
       throw new InvalidGrantError(`Session expired`)
     }
 
-    const refreshAge = Date.now() - data.updatedAt.getTime()
-    if (refreshAge > refreshLifetime) {
+    const refreshAge = now.getTime() - data.updatedAt.getTime()
+    if (refreshAge > client.refreshLifetime) {
       throw new InvalidGrantError(`Refresh token expired`)
     }
   }
