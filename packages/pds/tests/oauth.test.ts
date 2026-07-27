@@ -134,7 +134,7 @@ describe('oauth', () => {
   })
 
   it('allows resetting the password', async () => {
-    const sendTemplateMock = jest
+    using sendTemplateMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
       .mockImplementation(async () => {
         // noop
@@ -182,8 +182,6 @@ describe('oauth', () => {
     await page.assertTitle('Mot de passe mis à jour')
 
     await page.ensureTextVisibility('Mot de passe mis à jour !', 'h2')
-
-    sendTemplateMock.mockRestore()
   })
 
   it('restores the reset-password step after a page refresh', async () => {
