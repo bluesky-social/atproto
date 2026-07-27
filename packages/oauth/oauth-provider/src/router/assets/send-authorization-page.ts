@@ -30,7 +30,7 @@ export function sendAuthorizePageFactory(
 
           scope: data.parameters.scope,
           uiLocales: data.parameters.ui_locales,
-          loginHint: data.parameters.login_hint,
+          loginHint: data.loginHint,
           promptMode: data.parameters.prompt,
           permissionSets: Object.fromEntries(data.permissionSets),
           selectedDid: data.selectedDid,
