@@ -1,15 +1,15 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import {
   AtomIcon,
+  BadgeCheckIcon,
   BookOpenIcon,
-  CertificateIcon,
-  ChatCircleDotsIcon,
   CheckIcon,
-  EnvelopeIcon,
   HandIcon,
-  IdentificationBadgeIcon,
+  IdCardIcon,
+  MailIcon,
+  MessageCircleMoreIcon,
   UserIcon,
-} from '@phosphor-icons/react'
+} from 'lucide-react'
 import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
 import {
   type AudParam,
@@ -137,7 +137,7 @@ function IncludeScopePermissions({
         isBskyAppNsid(nsid) ? (
           <ButterflyIcon className="size-6" />
         ) : isBskyChatNsid(nsid) ? (
-          <ChatCircleDotsIcon className="size-6" />
+          <MessageCircleMoreIcon className="size-6" />
         ) : nsid.startsWith('com.atproto.moderation.') ? (
           <HandIcon className="size-6" />
         ) : (
@@ -221,7 +221,7 @@ function EmailPermissions({
       <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
         <DescriptionCard
           role="listitem"
-          image={<EnvelopeIcon className="size-6" />}
+          image={<MailIcon className="size-6" />}
           title={t`Email`}
           description={
             allowedAction === 'manage' ? (
@@ -438,7 +438,7 @@ function BlueskyChatPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<ChatCircleDotsIcon className="size-6" />}
+        image={<MessageCircleMoreIcon className="size-6" />}
         title={t`Chat`}
         description={t`Read and send messages`}
       />
@@ -471,7 +471,7 @@ function IdentityPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<IdentificationBadgeIcon className="size-6" />}
+        image={<IdCardIcon className="size-6" />}
         title={t`Identity`}
         description={
           attr === '*' ? (
@@ -502,7 +502,7 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<CertificateIcon className="size-6" />}
+        image={<BadgeCheckIcon className="size-6" />}
         title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={
           <Trans>
@@ -518,7 +518,7 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<CertificateIcon className="size-6" />}
+        image={<BadgeCheckIcon className="size-6" />}
         title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={t`Perform actions on your behalf`}
         extra={<RpcMethodsTable className="mt-2" permissions={permissions} />}

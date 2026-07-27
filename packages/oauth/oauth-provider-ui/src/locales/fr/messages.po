@@ -256,7 +256,7 @@ msgid "Call"
 msgstr "Appeler"
 
 #: src/contexts/authentication.tsx:263
-#: src/components/reactivate-account-view.tsx:44
+#: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:119
 #: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57
@@ -1012,7 +1012,7 @@ msgstr "Sélectionner un autre compte"
 
 #: src/components/forms/fields/handle-field.tsx:214
 msgid "Select domain"
-msgstr ""
+msgstr "Sélectionner le domaine"
 
 #: src/components/sign-in-view.tsx:126
 msgid "Select from an existing account"
@@ -1238,7 +1238,7 @@ msgstr "Saisissez votre nom de domaine"
 
 #: src/components/forms/fields/handle-field.tsx:176
 msgid "Type your username"
-msgstr ""
+msgstr "Saisissez votre nom d'utilisateur"
 
 #: src/contexts/session.tsx:148
 msgid "Unauthorized"

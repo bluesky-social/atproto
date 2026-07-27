@@ -256,7 +256,7 @@ msgid "Call"
 msgstr "호출"
 
 #: src/contexts/authentication.tsx:263
-#: src/components/reactivate-account-view.tsx:44
+#: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:119
 #: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57

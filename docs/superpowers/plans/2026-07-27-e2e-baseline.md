@@ -52,6 +52,20 @@ The second is the one to remember: the old `LayoutPage` only avoided it by
 skipping the page heading entirely at the base route, which is what the
 `basePath` prop was for. Deleting `basePath` as "unused" removed that guard.
 
+## After phase 3 (2026-07-27)
+
+Both suites back to **7/7** and **13/13**, no test files modified.
+
+Regressions found and fixed during the phase:
+
+| Regression | Cause | Fix |
+|---|---|---|
+| account-manager 12/13, `rejects custom domain when not configured` | Base UI's `DialogContent` is `fixed` and vertically centred with **no height cap**. A tall dialog overflows both edges of the 800×600 e2e viewport, and a fixed element cannot be scrolled into view — so `Retour` was unreachable. The old `DialogSimple` capped content at `85vh`. | `DialogShell` gets `max-h-[85vh] overflow-y-auto` |
+| Two msgids silently vanished (`Select domain`, `Type your username`) | `HandleField` passed `t` down as a **prop**; the Lingui macro only transforms `` t`...` `` in a scope that imports the hook, so those templates were never compiled and would have rendered untranslated | call `useLingui()` in the scope that uses it |
+
+Neither would have been caught by a passing type-check. The first needed a
+short viewport; the second only showed up in the `.po` diff.
+
 ## How to reproduce
 
 ```bash
