@@ -1016,8 +1016,8 @@ export class OAuthProvider extends OAuthVerifier {
       const { data } = tokenInfo
       const now = new Date()
 
-      this.validateRefreshGrant(client, data, now)
       await this.compareClientAuth(client, clientAuth, dpopProof, data)
+      await this.validateRefreshGrant(client, data, now)
 
       return await this.tokenManager.rotateToken(
         client,
@@ -1033,11 +1033,11 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected validateRefreshGrant(
+  protected async validateRefreshGrant(
     client: Client,
     data: TokenData,
     now = new Date(),
-  ): void {
+  ): Promise<void> {
     if (!client.metadata.grant_types.includes('refresh_token')) {
       throw new InvalidGrantError(`Refresh token grant not allowed`)
     }
