@@ -45,7 +45,7 @@ export function Page() {
           Your account is signed in on the devices listed below. If your account
           was compromised, sign out all devices, change your password, and check
           your connected{' '}
-          <Link to="/account/apps" className="text-blue-600 hover:underline">
+          <Link to="/account/apps" className="text-foreground hover:underline">
             apps
           </Link>
           .
@@ -82,7 +82,7 @@ function AccountSessionCard({
   const lastUsedAgo = useDateAgo(lastSeenAt)
 
   return (
-    <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
+    <div className="border-border dark:border-border flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
       <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
         <p className="truncate font-semibold">
           {browserName || (
@@ -90,7 +90,7 @@ function AccountSessionCard({
           )}
         </p>
         <p className="font-mono text-xs">{ipAddress}</p>
-        <p className="text-text-light truncate text-xs">
+        <p className="text-muted-foreground truncate text-xs">
           <Trans context="device list">Last seen {lastUsedAgo}</Trans>
         </p>
       </div>

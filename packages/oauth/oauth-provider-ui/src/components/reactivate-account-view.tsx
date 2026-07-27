@@ -25,7 +25,7 @@ export function ReactivateAccountView({
       <div className="flex w-full max-w-md flex-col items-stretch gap-6">
         <AccountSummary account={account} />
 
-        <p className="text-text-light text-center">
+        <p className="text-muted-foreground text-center">
           <Trans>
             You previously deactivated <AccountIdentifier account={account} />.
             You can reactivate your account to continue logging in. Your content

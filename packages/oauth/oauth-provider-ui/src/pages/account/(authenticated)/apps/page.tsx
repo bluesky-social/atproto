@@ -55,7 +55,7 @@ export function Page() {
         />
       ))}
 
-      <p className="text-text-light mt-4 text-sm">
+      <p className="text-muted-foreground mt-4 text-sm">
         <Trans>
           Apps may access your account in the background (to check
           notifications, sync data, etc.) even when you're not actively using
@@ -107,11 +107,11 @@ function ApplicationSessionCard({
   // @TODO Show if there is an active oauth access token ("active").
 
   return (
-    <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
+    <div className="border-border dark:border-border flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
       <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
         <p className="truncate font-semibold">{clientName}</p>
         <p className="font-mono text-xs">{friendlyClientId}</p>
-        <p className="text-text-light truncate text-xs">
+        <p className="text-muted-foreground truncate text-xs">
           <Trans context="OAuthApp">
             Authorized on{' '}
             {i18n.date(createdAt, {

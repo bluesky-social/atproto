@@ -139,20 +139,20 @@ Thank you.`
       <p className="my-2 flex flex-row flex-wrap gap-3">
         <LinkExternal
           href={tutorialHref}
-          className="text-blue-600 hover:underline"
+          className="text-foreground hover:underline"
         >
           <Trans>Help</Trans>
         </LinkExternal>
         <LinkExternal
           href={troubleshootHref}
-          className="text-blue-600 hover:underline"
+          className="text-foreground hover:underline"
         >
           <Trans>Troubleshoot</Trans>
         </LinkExternal>
         <LinkExternal
           href={mailtoHref}
           noUtm
-          className="text-blue-600 hover:underline"
+          className="text-foreground hover:underline"
         >
           <Trans>Email these instructions</Trans>
         </LinkExternal>

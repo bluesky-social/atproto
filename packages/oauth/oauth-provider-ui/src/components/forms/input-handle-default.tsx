@@ -166,7 +166,7 @@ export function InputHandleDefault({
                 'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
                 // Color
                 'accent-primary',
-                'text-text-light',
+                'text-muted-foreground',
                 'hover:bg-gray-300 dark:hover:bg-gray-600',
                 'bg-gray-200 dark:bg-gray-700',
               )}
@@ -184,7 +184,7 @@ export function InputHandleDefault({
           <Trans>
             Your full username will be:{' '}
             {handle ? (
-              <Handle className="text-text-default" handle={handle} />
+              <Handle className="text-foreground" handle={handle} />
             ) : (
               <span
                 aria-hidden
@@ -245,19 +245,19 @@ function ValidationMessage({
         <>
           {valid ? (
             <CheckIcon
-              className="text-success inline-block h-4 w-4"
+              className="inline-block h-4 w-4 text-emerald-600 dark:text-emerald-400"
               aria-label={t`Valid`}
             />
           ) : (
             <XIcon
-              className="text-error inline-block h-4 w-4"
+              className="text-destructive inline-block h-4 w-4"
               aria-label={t`Invalid`}
             />
           )}
         </>
       ) : (
         <div aria-hidden className="flex h-4 w-4 items-center justify-center">
-          <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
+          <div className="h-2 w-2 rounded-full bg-gray-300" />
         </div>
       )}
       <div className="text-sm">{children}</div>

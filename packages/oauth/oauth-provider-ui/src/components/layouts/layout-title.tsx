@@ -49,7 +49,7 @@ export function LayoutTitle({
           'md:px-4 md:py-2',
           'md:text-right',
           'md:dark:border-r md:dark:border-slate-700',
-          'md:bg-contrast-25',
+          'md:bg-muted',
         )}
       >
         <div className="grid grow content-center md:justify-items-end">
@@ -66,7 +66,7 @@ export function LayoutTitle({
           {subtitle && (
             <p
               key="subtitle"
-              className="text-text-light hidden max-w-xs md:block"
+              className="text-muted-foreground hidden max-w-xs md:block"
             >
               {subtitle}
             </p>

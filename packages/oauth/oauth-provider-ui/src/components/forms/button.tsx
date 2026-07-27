@@ -72,8 +72,8 @@ const COLORING: Record<
   },
   gray: {
     bordered:
-      'text-text-light border-2 border-gray-100 bg-gray-100/10 hover:bg-gray-100/20',
-    transparent: 'text-text-light bg-transparent hover:bg-gray-500/10',
+      'text-muted-foreground border-2 border-gray-100 bg-gray-100/10 hover:bg-gray-100/20',
+    transparent: 'text-muted-foreground bg-transparent hover:bg-gray-500/10',
     default:
       'bg-gray-100 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-600',
   },
@@ -85,30 +85,34 @@ const COLORING: Record<
       'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600',
   },
   error: {
-    bordered: 'border-error text-error bg-error/10 hover:bg-error/20 border-2',
-    transparent: 'text-error hover:bg-error/10 bg-transparent',
+    bordered:
+      'border-error text-destructive bg-error/10 hover:bg-error/20 border-2',
+    transparent: 'text-destructive hover:bg-error/10 bg-transparent',
     default:
-      'bg-error-500 dark:bg-error-700 text-error-contrast hover:bg-error-600 dark:hover:bg-error-400',
+      'bg-error-500 dark:bg-error-700 text-destructive-contrast hover:bg-error-600 dark:hover:bg-error-400',
   },
   success: {
     bordered:
-      'border-success text-success bg-success/10 hover:bg-success/20 border-2',
-    transparent: 'text-success hover:bg-success/10 bg-transparent',
+      'border-success text-emerald-600 dark:text-emerald-400 bg-success/10 hover:bg-success/20 border-2',
+    transparent:
+      'text-emerald-600 dark:text-emerald-400 hover:bg-success/10 bg-transparent',
     default:
-      'bg-success-500 dark:bg-success-700 text-success-contrast hover:bg-success-600 dark:hover:bg-success-400',
+      'bg-success-500 dark:bg-success-700 text-emerald-600 dark:text-emerald-400-contrast hover:bg-success-600 dark:hover:bg-success-400',
   },
   warning: {
     bordered:
-      'border-warning text-warning bg-warning/10 hover:bg-warning/20 border-2',
-    transparent: 'text-warning hover:bg-warning/10 bg-transparent',
+      'border-warning text-amber-600 dark:text-amber-500 bg-warning/10 hover:bg-warning/20 border-2',
+    transparent:
+      'text-amber-600 dark:text-amber-500 hover:bg-warning/10 bg-transparent',
     default:
-      'bg-warning-500 dark:bg-warning-700 text-warning-contrast hover:bg-warning-600 dark:hover:bg-warning-400',
+      'bg-warning-500 dark:bg-warning-700 text-amber-600 dark:text-amber-500-contrast hover:bg-warning-600 dark:hover:bg-warning-400',
   },
   info: {
-    bordered: 'border-info text-info bg-info/10 hover:bg-info/20 border-2',
-    transparent: 'text-info hover:bg-info/10 bg-transparent',
+    bordered:
+      'border-info text-muted-foreground bg-info/10 hover:bg-info/20 border-2',
+    transparent: 'text-muted-foreground hover:bg-info/10 bg-transparent',
     default:
-      'bg-info-500 dark:bg-info-700 text-info-contrast hover:bg-info-600 dark:hover:bg-info-400',
+      'bg-info-500 dark:bg-info-700 text-muted-foreground-contrast hover:bg-info-600 dark:hover:bg-info-400',
   },
 }
 

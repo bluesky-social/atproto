@@ -111,7 +111,7 @@ export function UpdateHandleDialog({
           lets you self-verify your identity.{' '}
           <LinkExternal
             href="https://bsky.social/about/blog/4-28-2023-domain-handle-tutorial"
-            className="text-blue-600 hover:underline"
+            className="text-foreground hover:underline"
           >
             Learn more here
           </LinkExternal>
@@ -160,7 +160,9 @@ function ButtonContent({ label, example }: ButtonContentProps) {
   return (
     <span className="flex w-full flex-col gap-0.5 text-left">
       <span>{label}</span>
-      <span className="text-text-light text-sm leading-snug">{example}</span>
+      <span className="text-muted-foreground text-sm leading-snug">
+        {example}
+      </span>
     </span>
   )
 }

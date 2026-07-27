@@ -370,10 +370,12 @@ msgstr "続行"
 msgid "Cookie Error"
 msgstr "Cookie エラー"
 
+#: src/components/forms/copy-button.tsx:56
 #: src/components/forms/button-copy.tsx:96
 msgid "Copied"
 msgstr "コピーされました"
 
+#: src/components/forms/copy-button.tsx:41
 #: src/components/forms/button-copy.tsx:30
 msgid "Copy to clipboard"
 msgstr "クリップボードにコピー"
@@ -1503,7 +1505,7 @@ msgstr "メールアドレスが確認されました。"
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
-#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #: src/components/forms/input-handle-default.tsx:184
 #: src/components/forms/fields/handle-field.tsx:231

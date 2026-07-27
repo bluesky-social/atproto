@@ -370,10 +370,12 @@ msgstr "Continuer"
 msgid "Cookie Error"
 msgstr "Erreur de cookies"
 
+#: src/components/forms/copy-button.tsx:56
 #: src/components/forms/button-copy.tsx:96
 msgid "Copied"
 msgstr "Copié"
 
+#: src/components/forms/copy-button.tsx:41
 #: src/components/forms/button-copy.tsx:30
 msgid "Copy to clipboard"
 msgstr "Copier dans le presse-papiers"
@@ -1503,7 +1505,7 @@ msgstr "Votre adresse email a été vérifiée."
 msgid "Your email address needs to be verified."
 msgstr "Votre adresse email doit être vérifiée."
 
-#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #: src/components/forms/input-handle-default.tsx:184
 #: src/components/forms/fields/handle-field.tsx:231

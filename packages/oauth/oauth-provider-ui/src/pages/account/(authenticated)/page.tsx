@@ -13,7 +13,7 @@ export function Page(): ReactNode {
     <div className="flex min-h-full flex-col items-center gap-4">
       <div className="flex flex-1 flex-col items-center justify-center">
         <AccountSummary account={account}>
-          <HostedByParagraph className="text-text-light text-center text-sm" />
+          <HostedByParagraph className="text-muted-foreground text-center text-sm" />
         </AccountSummary>
       </div>
     </div>
@@ -28,7 +28,7 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
       </Trans>{' '}
       <Link
         to="/account/about"
-        className="text-sm text-blue-600 hover:underline"
+        className="text-foreground text-sm hover:underline"
       >
         <Trans>What does this mean?</Trans>
       </Link>

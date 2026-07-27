@@ -120,7 +120,7 @@ export function InputContainer({
           bellow ? 'rounded-bl-none rounded-br-none' : undefined,
 
           // Font
-          'text-text-default',
+          'text-foreground',
         )}
       >
         {icon && (
@@ -128,7 +128,7 @@ export function InputContainer({
             className={clsx(
               'flex shrink-0 grow-0 items-center justify-center',
               'mx-2 size-5',
-              hasFocus ? 'text-primary' : 'text-text-light',
+              hasFocus ? 'text-primary' : 'text-muted-foreground',
             )}
           >
             {icon}
@@ -148,9 +148,9 @@ export function InputContainer({
             // Border
             'rounded-br-2 rounded-bl-2',
             // Background
-            'bg-gray-200 dark:bg-slate-700',
+            'bg-gray-200',
             // Font
-            'text-text-light',
+            'text-muted-foreground',
             'text-sm italic',
           )}
         >

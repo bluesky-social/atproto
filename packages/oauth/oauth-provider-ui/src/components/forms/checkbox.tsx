@@ -29,7 +29,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           'outline-none',
           'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
           invalid && 'accent-error focus:border-error',
-          disabled && 'bg-contrast-50 text-contrast-500 cursor-not-allowed',
+          disabled && 'bg-muted text-muted-foreground cursor-not-allowed',
           className,
         ])}
       />

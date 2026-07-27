@@ -92,7 +92,7 @@ export function ButtonCopy({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content side="bottom" align="center" role="status">
-          <div className="rounded border border-slate-300 bg-white px-2 py-1.5 text-xs shadow-sm dark:border-slate-600 dark:bg-slate-800">
+          <div className="rounded border border-slate-300 bg-white px-2 py-1.5 text-xs shadow-sm dark:border-slate-600">
             <Trans>Copied</Trans>
           </div>
         </Popover.Content>

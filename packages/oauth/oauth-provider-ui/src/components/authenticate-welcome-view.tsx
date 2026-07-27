@@ -18,12 +18,12 @@ export function AuthenticateWelcomeView({
     <AppShell
       title={msg({ message: 'Authenticate', context: 'AuthenticationPage' })}
     >
-      <div className="md:bg-contrast-0 flex w-full max-w-md flex-col items-center px-6 pb-8 pt-12 md:rounded-lg md:border md:border-slate-200 md:px-8 md:shadow-md md:dark:border-slate-700 md:dark:shadow-xl">
+      <div className="md:bg-background flex w-full max-w-md flex-col items-center px-6 pb-8 pt-12 md:rounded-lg md:border md:border-slate-200 md:px-8 md:shadow-md md:dark:border-slate-700 md:dark:shadow-xl">
         <div className="mb-8 text-center">
-          <h2 className="text-text-default mb-3 text-2xl font-light dark:text-white">
+          <h2 className="text-foreground mb-3 text-2xl font-light dark:text-white">
             <Trans>Welcome</Trans>
           </h2>
-          <p className="text-text-light">
+          <p className="text-muted-foreground">
             <Trans>Please authenticate to continue</Trans>
           </p>
         </div>
