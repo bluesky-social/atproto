@@ -9,8 +9,8 @@ import {
 } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import type { FunctionComponent, ReactNode } from 'react'
+import { AccountMenu } from '#/components/identity/account-menu.tsx'
 import { LayoutApp } from '#/components/layouts/layout-app.tsx'
-import { AccountSelector } from '#/components/utils/account-selector.tsx'
 
 export type LayoutPageLink = {
   to: ToPathOption<RegisteredRouter, '/', undefined>
@@ -47,7 +47,7 @@ export function LayoutPage({
   return (
     <LayoutApp
       title={title}
-      header={<AccountSelector className="shrink-0" size="lg" />}
+      header={<AccountMenu className="shrink-0" size="lg" />}
     >
       {prepend}
 

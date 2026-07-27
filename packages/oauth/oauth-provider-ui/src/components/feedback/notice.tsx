@@ -13,7 +13,7 @@ import {
   useContext,
   useMemo,
 } from 'react'
-import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert.tsx'
+import { Alert, AlertDescription } from '#/components/ui/alert.tsx'
 import { Button, type buttonVariants } from '#/components/ui/button.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -101,7 +101,18 @@ export function Notice({
       >
         <Icon className={iconStyles[variant]} aria-hidden />
 
-        {title && <AlertTitle className="text-base">{title}</AlertTitle>}
+        {/* @NOTE AlertTitle is a <div> upstream, but the previous Admonition
+          rendered its title in an <h3> and the pds e2e suite asserts
+          `ensureTextVisibility('Avertissement', 'h3')`. Keeping a real heading
+          is also the correct semantics for a titled alert. */}
+        {title && (
+          <h3
+            data-slot="alert-title"
+            className="col-start-2 min-h-4 text-base font-semibold leading-snug tracking-tight"
+          >
+            {title}
+          </h3>
+        )}
 
         {/* @NOTE AlertDescription is a <div> upstream. The body copy is wrapped
           in an explicit <p> because the pds e2e helper
