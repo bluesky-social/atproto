@@ -55,7 +55,7 @@ interface WHATWGWebSocket {
 
 export class BrowserTransport implements Transport {
   readonly capabilities = { heartbeat: false, pauseResume: false } as const
-  handlers!: TransportHandlers
+  readonly handlers: TransportHandlers
 
   #ws?: WHATWGWebSocket
   readonly #url: string | URL
@@ -64,6 +64,7 @@ export class BrowserTransport implements Transport {
 
   constructor(
     url: string | URL,
+    handlers: TransportHandlers,
     options?: TransportOptions,
     // Injectable for tests; defaults to the browser global.
     WebSocketImpl: WebSocketCtor = (globalThis as { WebSocket: WebSocketCtor })
@@ -86,6 +87,7 @@ export class BrowserTransport implements Transport {
       throw new TypeError('WebSocket is not available in this environment')
     }
     this.#url = url
+    this.handlers = handlers
     this.#options = options
     this.#WebSocketImpl = WebSocketImpl
   }
@@ -149,8 +151,8 @@ export class BrowserTransport implements Transport {
   }
 }
 
-export const createTransport: TransportFactory = (url, options) =>
-  new BrowserTransport(url, options)
+export const createTransport: TransportFactory = (url, handlers, options) =>
+  new BrowserTransport(url, handlers, options)
 
 function hasHeaders(headers?: HeadersInit): boolean {
   if (!headers) return false

@@ -127,16 +127,15 @@ describe('NodeTransport via WebSocketConnection', () => {
     const { url, terminate } = await startServer((ws) => ws.close(1000))
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
     const { NodeTransport } = await import('../src/transport/node-transport.js')
-    const transport = new NodeTransport(url)
     // Wire minimal handlers so open() has something to call.
     let opened = false
-    transport.handlers = {
+    const transport = new NodeTransport(url, {
       onOpen: () => (opened = true),
       onMessage: () => {},
       onPong: () => {},
       onClose: () => {},
       onError: () => {},
-    }
+    })
     // Before open(): no connection attempt, so no open callback can fire.
     await new Promise((r) => setTimeout(r, 20))
     expect(opened).toBe(false)

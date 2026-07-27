@@ -1,6 +1,7 @@
 import type {
   Transport,
   TransportCapabilities,
+  TransportFactory,
   TransportHandlers,
 } from '../../src/transport/transport.js'
 
@@ -15,7 +16,16 @@ const noopHandlers: TransportHandlers = {
 export class MockTransport implements Transport {
   readonly capabilities: TransportCapabilities
   protocol: string | null
+  // Captured when the engine constructs this transport via `factory`; noop
+  // until then so pre-wire emits are safe.
   handlers: TransportHandlers = noopHandlers
+
+  // Engine-compatible factory that hands this mock to the engine while
+  // capturing the engine's handlers for the emit* drivers below.
+  readonly factory: TransportFactory = (_url, handlers) => {
+    this.handlers = handlers
+    return this
+  }
 
   sent: Array<{
     data: string | Uint8Array

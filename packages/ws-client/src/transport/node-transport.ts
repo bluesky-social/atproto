@@ -10,14 +10,19 @@ import type {
 
 export class NodeTransport implements Transport {
   readonly capabilities = { heartbeat: true, pauseResume: true } as const
-  handlers!: TransportHandlers
+  readonly handlers: TransportHandlers
 
   #ws?: WebSocket
   readonly #url: string | URL
   readonly #options?: TransportOptions
 
-  constructor(url: string | URL, options?: TransportOptions) {
+  constructor(
+    url: string | URL,
+    handlers: TransportHandlers,
+    options?: TransportOptions,
+  ) {
     this.#url = url
+    this.handlers = handlers
     this.#options = options
   }
 
@@ -92,8 +97,8 @@ export class NodeTransport implements Transport {
   }
 }
 
-export const createTransport: TransportFactory = (url, options) =>
-  new NodeTransport(url, options)
+export const createTransport: TransportFactory = (url, handlers, options) =>
+  new NodeTransport(url, handlers, options)
 
 function toHeaderRecord(
   headers?: HeadersInit,

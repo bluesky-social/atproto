@@ -9,7 +9,10 @@ import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import { WebSocketConnectionEngine } from '../src/connection.ts'
 import { BrowserTransport } from '../src/transport/browser-transport.ts'
-import type { TransportOptions } from '../src/transport/transport.ts'
+import type {
+  TransportFactory,
+  TransportHandlers,
+} from '../src/transport/transport.ts'
 
 async function startServer(onConnection: (ws: WebSocket) => void) {
   const server = createServer()
@@ -22,8 +25,8 @@ async function startServer(onConnection: (ws: WebSocket) => void) {
 }
 
 // Factory that binds the undici WebSocket as the browser-global stand-in.
-const factory = (url: string | URL, options?: TransportOptions) =>
-  new BrowserTransport(url, options, UndiciWebSocket as never)
+const factory: TransportFactory = (url, handlers, options) =>
+  new BrowserTransport(url, handlers, options, UndiciWebSocket as never)
 
 describe('BrowserTransport via engine', () => {
   it('reports heartbeat:false, pauseResume:false', async () => {
@@ -95,10 +98,18 @@ describe('BrowserTransport via engine', () => {
     expect(seen).toEqual(['yo'])
   })
 
+  const noopHandlers: TransportHandlers = {
+    onOpen() {},
+    onMessage() {},
+    onPong() {},
+    onClose() {},
+    onError() {},
+  }
+
   it('throws on construction when headers are provided (record form)', () => {
     expect(
       () =>
-        new BrowserTransport('ws://x', {
+        new BrowserTransport('ws://x', noopHandlers, {
           headers: { Authorization: 'Bearer t0ken' },
         }),
     ).toThrow(TypeError)
@@ -107,17 +118,22 @@ describe('BrowserTransport via engine', () => {
   it('throws on construction when headers are provided (Headers form)', () => {
     expect(
       () =>
-        new BrowserTransport('ws://x', {
+        new BrowserTransport('ws://x', noopHandlers, {
           headers: new Headers({ Authorization: 'Bearer t0ken' }),
         }),
     ).toThrow(TypeError)
   })
 
   it('does not throw for absent or empty headers', () => {
-    expect(() => new BrowserTransport('ws://x')).not.toThrow()
-    expect(() => new BrowserTransport('ws://x', { headers: {} })).not.toThrow()
+    expect(() => new BrowserTransport('ws://x', noopHandlers)).not.toThrow()
     expect(
-      () => new BrowserTransport('ws://x', { headers: new Headers() }),
+      () => new BrowserTransport('ws://x', noopHandlers, { headers: {} }),
+    ).not.toThrow()
+    expect(
+      () =>
+        new BrowserTransport('ws://x', noopHandlers, {
+          headers: new Headers(),
+        }),
     ).not.toThrow()
   })
 })

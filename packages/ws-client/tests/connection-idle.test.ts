@@ -12,7 +12,7 @@ describe('WebSocketConnectionEngine idle timeout', () => {
     // heartbeat: false isolates this test to idle-timeout behavior only —
     // MockTransport defaults capabilities.heartbeat to true, so without this
     // the default 10s heartbeat would terminate the connection on its own.
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: false,
     })
     const it = engine[Symbol.asyncIterator]()
@@ -24,7 +24,7 @@ describe('WebSocketConnectionEngine idle timeout', () => {
 
   it('terminates when no message arrives within 2x window', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       idleTimeoutMs: 1000,
       heartbeat: false,
     })
@@ -39,7 +39,7 @@ describe('WebSocketConnectionEngine idle timeout', () => {
 
   it('a steady message stream keeps it alive', () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       idleTimeoutMs: 1000,
       heartbeat: false,
     })
@@ -55,7 +55,7 @@ describe('WebSocketConnectionEngine idle timeout', () => {
 
   it('does not time out while paused for backpressure (messages cannot arrive)', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       idleTimeoutMs: 1000,
       heartbeat: false,
       highWaterMark: 15, // 2 frames (20 bytes) crosses it
@@ -88,7 +88,7 @@ describe('WebSocketConnectionEngine idle timeout', () => {
 
   it('pongs do NOT reset the idle timer', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       idleTimeoutMs: 1000,
       heartbeat: false,
     })

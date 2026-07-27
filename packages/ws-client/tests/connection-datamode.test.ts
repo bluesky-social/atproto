@@ -6,7 +6,7 @@ import { MockTransport } from './_util/mock-transport.js'
 describe('WebSocketConnectionEngine dataMode', () => {
   it('auto yields both text and binary', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       dataMode: 'auto',
     })
     mock.emitOpen()
@@ -20,7 +20,7 @@ describe('WebSocketConnectionEngine dataMode', () => {
 
   it('text mode rejects a binary frame with DataModeError', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       dataMode: 'text',
     })
     mock.emitOpen()
@@ -38,7 +38,7 @@ describe('WebSocketConnectionEngine dataMode', () => {
 
   it('binary mode rejects a text frame with DataModeError', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       dataMode: 'binary',
     })
     mock.emitOpen()
@@ -54,7 +54,7 @@ describe('WebSocketConnectionEngine dataMode', () => {
 
   it('enforces even while the consumer is behind (fail-fast at intake)', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       dataMode: 'text',
     })
     // Acquire the iterator before driving terminal events (a never-iterated

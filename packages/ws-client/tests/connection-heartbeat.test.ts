@@ -9,7 +9,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
 
   it('pings after each interval when alive', () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: { intervalMs: 1000 },
     })
     // Lazy open: begin iterating so the transport opens.
@@ -25,7 +25,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
 
   it('a busy but pongless connection survives (message = liveness)', () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: { intervalMs: 1000 },
     })
     // Lazy open: begin iterating so the transport opens.
@@ -42,7 +42,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
 
   it('detects a dead connection within 2x interval', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: { intervalMs: 1000 },
     })
     const it = engine[Symbol.asyncIterator]()
@@ -56,7 +56,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
 
   it('does not time out while paused for backpressure (pongs cannot arrive)', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: { intervalMs: 1000 },
       highWaterMark: 15, // 2 frames (20 bytes) crosses it
     })
@@ -91,7 +91,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
     const mock = new MockTransport({
       capabilities: { heartbeat: false, pauseResume: true },
     })
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: { intervalMs: 1000 },
     })
     const it = engine[Symbol.asyncIterator]()
@@ -104,7 +104,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
 
   it('is disabled by heartbeat: false', () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       heartbeat: false,
     })
     const it = engine[Symbol.asyncIterator]()

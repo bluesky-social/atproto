@@ -9,7 +9,7 @@ const frame = () => new Uint8Array(10)
 describe('WebSocketConnectionEngine backpressure', () => {
   it('pauses when buffered bytes exceed highWaterMark', () => {
     const mock = new MockTransport()
-    new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       highWaterMark: 25, // 3 frames (30 bytes) crosses it
     })
     mock.emitOpen()
@@ -22,7 +22,7 @@ describe('WebSocketConnectionEngine backpressure', () => {
 
   it('resumes when buffer drains below highWaterMark / 2 (hysteresis)', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       highWaterMark: 25, // low-water = 12.5
     })
     mock.emitOpen()
@@ -40,7 +40,7 @@ describe('WebSocketConnectionEngine backpressure', () => {
 
   it('terminates with BufferOverflowError past maxBufferedBytes', async () => {
     const mock = new MockTransport()
-    const engine = new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    const engine = new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       maxBufferedBytes: 25,
     })
     // Acquire the iterator before driving terminal events (a never-iterated
@@ -62,7 +62,7 @@ describe('WebSocketConnectionEngine backpressure', () => {
     const mock = new MockTransport({
       capabilities: { heartbeat: false, pauseResume: false },
     })
-    new WebSocketConnectionEngine(() => mock, 'ws://x', {
+    new WebSocketConnectionEngine(mock.factory, 'ws://x', {
       highWaterMark: 5,
     })
     mock.emitOpen()

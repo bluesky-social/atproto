@@ -134,11 +134,10 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     this.#highWaterMark = options.highWaterMark ?? 1_048_576
     this.#maxBufferedBytes = options.maxBufferedBytes ?? Infinity
 
-    this.#transport = createTransport(url, {
+    this.#transport = createTransport(url, this.#buildHandlers(), {
       protocols: options.protocols,
       headers: options.headers,
     })
-    this.#transport.handlers = this.#buildHandlers()
 
     const hb = options.heartbeat
     if (hb !== false && this.#transport.capabilities.heartbeat) {

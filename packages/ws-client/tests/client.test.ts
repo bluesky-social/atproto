@@ -25,7 +25,7 @@ function makeClient<M extends 'auto' | 'text' | 'binary' = 'auto'>(
   ) => {
     const mock = new MockTransport()
     mocks.push(mock)
-    return new WebSocketConnectionEngine<F>(() => mock, u, connectionOptions)
+    return new WebSocketConnectionEngine<F>(mock.factory, u, connectionOptions)
   }
   const ws = new WebSocketClientBase<M>(factory, url, options)
   return { ws, mocks }

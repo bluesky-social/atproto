@@ -16,7 +16,11 @@ function makeEngine<M extends 'auto' | 'text' | 'binary' = 'auto'>(
   },
 ) {
   const mock = options?.mock ?? new MockTransport()
-  const engine = new WebSocketConnectionEngine<M>(() => mock, 'ws://x', options)
+  const engine = new WebSocketConnectionEngine<M>(
+    mock.factory,
+    'ws://x',
+    options,
+  )
   return { engine, mock }
 }
 
