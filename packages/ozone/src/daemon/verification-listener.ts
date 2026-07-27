@@ -5,6 +5,15 @@ import { type CommitCreateEvent, Jetstream } from '../jetstream/service.js'
 import { verificationLogger } from '../logger.js'
 import { VerificationService } from '../verification/service.js'
 
+/**
+ * Hack to parse HTTP status code from `ws` library.
+ */
+const getHttpStatus = (err: unknown): number | null => {
+  if (!(err instanceof Error)) return null
+  const match = err.message.match(/^Unexpected server response: (\d{3})$/)
+  return match ? parseInt(match[1], 10) : null
+}
+
 type VerificationRecord = {
   subject: string
   handle: string
@@ -117,43 +126,61 @@ export class VerificationListener {
         : undefined,
     })
 
-    await this.jetstream.start({
-      onCreate: {
-        [this.collection]: async (e: CommitCreateEvent<VerificationRecord>) => {
-          const recordValidity = lexicons.validate(
-            this.collection,
-            e.commit.record,
-          )
-
-          if (!recordValidity.success) {
-            verificationLogger.error(
-              recordValidity.error,
-              'Invalid verification record in the firehose',
+    try {
+      await this.jetstream.start({
+        onCreate: {
+          [this.collection]: async (
+            e: CommitCreateEvent<VerificationRecord>,
+          ) => {
+            const recordValidity = lexicons.validate(
+              this.collection,
+              e.commit.record,
             )
-            return
-          }
 
-          const hasCapacity = await this.ensureCoolDown()
-          if (hasCapacity) {
-            const issuer = e.did
-            const { record, rkey, collection, cid } = e.commit
-            const uri = `at://${issuer}/${collection}/${rkey}`
-            this.handleNewVerification(issuer, uri, cid, record, e.time_us)
-          }
+            if (!recordValidity.success) {
+              verificationLogger.error(
+                recordValidity.error,
+                'Invalid verification record in the firehose',
+              )
+              return
+            }
+
+            const hasCapacity = await this.ensureCoolDown()
+            if (hasCapacity) {
+              const issuer = e.did
+              const { record, rkey, collection, cid } = e.commit
+              const uri = `at://${issuer}/${collection}/${rkey}`
+              this.handleNewVerification(issuer, uri, cid, record, e.time_us)
+            }
+          },
         },
-      },
-      onDelete: {
-        [this.collection]: async (e) => {
-          const hasCapacity = await this.ensureCoolDown()
-          if (hasCapacity) {
-            this.handleDeletedVerification(
-              `at://${e.did}/${e.commit.collection}/${e.commit.rkey}`,
-              e.time_us,
-            )
-          }
+        onDelete: {
+          [this.collection]: async (e) => {
+            const hasCapacity = await this.ensureCoolDown()
+            if (hasCapacity) {
+              this.handleDeletedVerification(
+                `at://${e.did}/${e.commit.collection}/${e.commit.rkey}`,
+                e.time_us,
+              )
+            }
+          },
         },
-      },
-    })
+      })
+    } catch (err) {
+      const status = getHttpStatus(err)
+
+      // Handle recoverable handshake errors and prevent rethrows
+      if (status === 429 || status === 503) {
+        verificationLogger.error(
+          { err, status },
+          'Jetstream websocket handshake rejected',
+        )
+        return
+      }
+
+      verificationLogger.error(err, 'Irrecoverable error in jetstream')
+      throw err
+    }
   }
 
   async stop() {

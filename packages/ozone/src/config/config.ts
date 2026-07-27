@@ -26,6 +26,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
     materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
+    materializedViewRefreshTimeoutMs: env.dbMaterializedViewRefreshTimeoutMs,
     teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
@@ -162,6 +163,7 @@ export type DatabaseConfig = {
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
   materializedViewRefreshIntervalMs?: number
+  materializedViewRefreshTimeoutMs?: number
   teamProfileRefreshIntervalMs?: number
 }
 
