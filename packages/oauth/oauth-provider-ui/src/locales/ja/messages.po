@@ -219,7 +219,6 @@ msgid "Authorized on {0}"
 msgstr "{0} に承認されました"
 
 #: src/components/sign-in-picker.tsx:96
-#: src/components/forms/wizard-card.tsx:116
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
@@ -491,7 +490,6 @@ msgstr "これらの手順をメールで送信"
 msgid "Email verified"
 msgstr "メールアドレスが確認されました"
 
-#: src/components/forms/input-new-password.tsx:39
 #: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter a password"
 msgstr "パスワードを入力"
@@ -512,7 +510,6 @@ msgstr "アカウントの作成に使用したメールアドレスを入力し
 msgid "Enter your email address"
 msgstr "メールアドレスを入力してください"
 
-#: src/components/forms/input-new-password.tsx:40
 #: src/components/forms/fields/new-password-field.tsx:31
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
@@ -837,7 +834,6 @@ msgstr "新しいパスワード"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
-#: src/components/forms/wizard-card.tsx:119
 #: src/components/forms/sign-up-wizard.tsx:121
 msgid "Next"
 msgstr "次へ"
@@ -886,7 +882,6 @@ msgstr "パスワード更新"
 msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
-#: src/components/forms/input-new-password.tsx:41
 #: src/components/forms/fields/new-password-field.tsx:32
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
@@ -1099,7 +1094,6 @@ msgctxt "Error"
 msgid "Stack"
 msgstr "スタック"
 
-#: src/components/forms/wizard-card.tsx:152
 #: src/components/forms/sign-up-wizard.tsx:155
 msgid "Step {currentPosition} of {count}"
 msgstr "ステップ {currentPosition} / {count}"

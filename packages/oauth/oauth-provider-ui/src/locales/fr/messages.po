@@ -219,7 +219,6 @@ msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
 
 #: src/components/sign-in-picker.tsx:96
-#: src/components/forms/wizard-card.tsx:116
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
@@ -491,7 +490,6 @@ msgstr "Envoyer ces instructions par email"
 msgid "Email verified"
 msgstr "Adresse email vérifiée"
 
-#: src/components/forms/input-new-password.tsx:39
 #: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
@@ -512,7 +510,6 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
-#: src/components/forms/input-new-password.tsx:40
 #: src/components/forms/fields/new-password-field.tsx:31
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
@@ -837,7 +834,6 @@ msgstr "Nouveau mot de passe"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
-#: src/components/forms/wizard-card.tsx:119
 #: src/components/forms/sign-up-wizard.tsx:121
 msgid "Next"
 msgstr "Suivant"
@@ -886,7 +882,6 @@ msgstr "Mot de passe mis à jour"
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
-#: src/components/forms/input-new-password.tsx:41
 #: src/components/forms/fields/new-password-field.tsx:32
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
@@ -1099,7 +1094,6 @@ msgctxt "Error"
 msgid "Stack"
 msgstr "Trace"
 
-#: src/components/forms/wizard-card.tsx:152
 #: src/components/forms/sign-up-wizard.tsx:155
 msgid "Step {currentPosition} of {count}"
 msgstr "Étape {currentPosition} sur {count}"

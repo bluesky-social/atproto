@@ -219,7 +219,6 @@ msgid "Authorized on {0}"
 msgstr "Auktoriserades {0}"
 
 #: src/components/sign-in-picker.tsx:96
-#: src/components/forms/wizard-card.tsx:116
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
@@ -491,7 +490,6 @@ msgstr "Skicka dessa instruktioner via e-post"
 msgid "Email verified"
 msgstr "E-postadressen har verifierats"
 
-#: src/components/forms/input-new-password.tsx:39
 #: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter a password"
 msgstr "Ange ett lösenord"
@@ -512,7 +510,6 @@ msgstr "Ange den e-postadress som du använde för att skapa ditt konto. Vi skic
 msgid "Enter your email address"
 msgstr "Ange din e-postadress"
 
-#: src/components/forms/input-new-password.tsx:40
 #: src/components/forms/fields/new-password-field.tsx:31
 msgid "Enter your new password"
 msgstr "Ange ditt nya lösenord"
@@ -837,7 +834,6 @@ msgstr "Nytt lösenord"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
-#: src/components/forms/wizard-card.tsx:119
 #: src/components/forms/sign-up-wizard.tsx:121
 msgid "Next"
 msgstr "Nästa"
@@ -886,7 +882,6 @@ msgstr "Lösenordet har uppdaterats"
 msgid "Password updated!"
 msgstr "Lösenordet har uppdaterats!"
 
-#: src/components/forms/input-new-password.tsx:41
 #: src/components/forms/fields/new-password-field.tsx:32
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Lösenord med minst {MIN_PASSWORD_LENGTH} tecken"
@@ -1099,7 +1094,6 @@ msgctxt "Error"
 msgid "Stack"
 msgstr "Stack"
 
-#: src/components/forms/wizard-card.tsx:152
 #: src/components/forms/sign-up-wizard.tsx:155
 msgid "Step {currentPosition} of {count}"
 msgstr "Steg {currentPosition} av {count}"

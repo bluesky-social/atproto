@@ -115,11 +115,24 @@ with value retention, and the conditional hcaptcha step. Keeps `name="handle"`,
 
 ### Task 8: Phase 2 close-out
 
-Dead-code sweep of `forms/input-*.tsx`, `form-card.tsx`, `smart-form.tsx`,
-`form-context.tsx`, `form-field.tsx`, `fieldset-context.tsx`, `button*.tsx`,
-`use-stepper.ts`, `use-merged-refs.ts`, `use-async-action` if unused.
-Then `pnpm i18n` + French fill, both e2e suites vs baseline, and screenshots via the
-mock dev server.
+**Scope corrected during execution.** The planned sweep of the legacy forms
+layer cannot happen in Phase 2. Counting real importers by path (not filename
+substring) shows only three files are actually dead:
+`forms/input-checkbox.tsx`, `forms/input-new-password.tsx`,
+`forms/wizard-card.tsx`.
+
+Everything else — `smart-form.tsx`, `form-card.tsx`, `form-field.tsx`,
+`fieldset-context.tsx`, `input-text/-token/-email-address/-password/-container`,
+`button*.tsx`, `use-stepper.ts`, `use-merged-refs.ts` — is still imported by the
+**account-manager** dialogs and forms (`update-email-*`, `update-handle-*`,
+`delete-account-confirm-form`, `verify-email-confirm-form`,
+`deactivate-/reactivate-account-dialog`, `oauth-session-details-dialog`) and by
+the `pages/account/**` routes. Those are Phase 3.
+
+So the legacy forms layer is removed in **Phase 3's** close-out, not here. This
+phase deletes the three dead files, runs `pnpm i18n` (no French fill needed —
+zero new messages; the 3 untranslated `fr` entries pre-date this work), and
+verifies both e2e suites against the baseline.
 
 ---
 
