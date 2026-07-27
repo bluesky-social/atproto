@@ -194,7 +194,17 @@ Retained: `clsx` (used by `cn`), `zod` (v3, works with `@hookform/resolvers`),
 
 ### Tokens and theming
 
-`src/style.css` goes from 277 lines to the standard shadcn block: `@import 'tailwindcss'`,
+**The legacy scale is additive-then-removed, not replaced up front.** Every existing
+component styles itself with `text-text-default`, `text-text-light`, `bg-contrast-0`,
+`border-contrast-25`, `bg-primary-500`, `border-error-200`, etc. Deleting those tokens in
+Phase 0 would break the entire UI for the three phases it takes to migrate off them. So
+Phase 0 *adds* the shadcn token block alongside the existing `--branding-color-*` scale;
+the legacy block, the `@source inline(...)` directives, and the `<body>` class change all
+land together in Phase 4's dead-code sweep, once nothing consumes them. The two token
+systems coexist for phases 1–3, which costs a few KB of unused CSS during the migration
+and nothing after.
+
+At close-out `src/style.css` is the standard shadcn block: `@import 'tailwindcss'`,
 `@import 'tw-animate-css'`, `@theme inline` mapping shadcn's semantic names, and
 `:root` / dark overrides on the `neutral` base — `background`, `foreground`, `card`,
 `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`,
@@ -213,9 +223,10 @@ build, in five places:
 - `packages/oauth/oauth-provider-ui/{authorization,account,error,cookie-error}-page.html`
   (dev templates)
 
-Phase 0 changes all five to `text-foreground bg-background` and updates the two
-`@source inline(...)` directives to match. This is the one deliberate edit to the
-`oauth-provider` package; it is a single line and does not touch
+**Phase 4** changes all five to `text-foreground bg-background` and updates the two
+`@source inline(...)` directives to match — deferred to close-out because the legacy
+tokens must keep working while phases 1–3 migrate off them. This is the one deliberate
+edit to the `oauth-provider` package; it is a single line and does not touch
 `build-customization-css.ts` or the branding contract.
 
 ---
@@ -337,8 +348,9 @@ Each phase leaves the app bootable and type-clean. Old components are deleted as
 last consumer migrates, so no parallel tree and no feature flag.
 
 **Phase 0 — Foundation.** Dependencies, `components.json`, `src/lib/utils.ts`, the
-`style.css` token rewrite, dark-mode variant, `components/ui/*` generation, `<body>`
-class reconciliation with the provider. App still renders on old components.
+shadcn token block *added alongside* the legacy scale, dark-mode variant,
+`components/ui/*` authored. Purely additive — the app still renders on old components,
+unchanged.
 
 **Phase 1 — Shell.** `app-shell`, `account-shell` (Sidebar), Sonner swap, locale
 selector, account/client identity components, the Alert/Card vocabulary. Phosphor →
@@ -350,9 +362,11 @@ phase: most i18n surface, most e2e coverage.
 
 **Phase 3 — Account manager.** Index, manage, devices, apps, about, and all 8 dialogs.
 
-**Phase 4 — Close-out.** Error and cookie-error pages, dead-code sweep, final
-`pnpm i18n` + French fill, e2e reconciliation against the Phase-0 baseline, and a
-rewritten `packages/oauth/oauth-provider-ui/CLAUDE.md` — the current one documents
+**Phase 4 — Close-out.** Error and cookie-error pages; dead-code sweep including the
+legacy token block, the `@source inline(...)` directives, and the `<body>` class change
+in `assets.ts` + the 4 dev HTML templates; final `pnpm i18n` + French fill; e2e
+reconciliation against the Phase-0 baseline; and a rewritten
+`packages/oauth/oauth-provider-ui/CLAUDE.md` — the current one documents
 `SmartForm`/`FormCard`/`input-*` conventions that will no longer exist.
 
 ---
