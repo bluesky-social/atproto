@@ -1,6 +1,6 @@
 import type { JSX } from 'react'
 
-export type PlaceholderProps = JSX.IntrinsicElements['div']
+export type PlaceholderProps = JSX.IntrinsicElements['span']
 export function Placeholder({ className = '', ...props }: PlaceholderProps) {
   return (
     <span
