@@ -32,7 +32,14 @@ import { InvalidScopeError } from '../errors/invalid-scope-error.js'
 import { asArray } from '../lib/util/cast.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import type { Awaitable } from '../lib/util/type.js'
-import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../oauth-constants.js'
+import {
+  CLIENT_ASSERTION_MAX_AGE,
+  JAR_MAX_AGE,
+  REFRESH_LIFETIME,
+  REFRESH_LIFETIME_EXTENDED,
+  SESSION_LIFETIME,
+  SESSION_LIFETIME_EXTENDED,
+} from '../oauth-constants.js'
 import type { ClientAuth } from './client-auth.js'
 import type { ClientId } from './client-id.js'
 import type { ClientInfo } from './client-info.js'
@@ -62,16 +69,39 @@ export class Client {
         : createRemoteJWKSet(new URL(metadata.jwks_uri), {})
   }
 
-  get isFirstParty(): boolean {
-    return this.info.isFirstParty
-  }
-
   get isTrusted(): boolean {
     return this.info.isTrusted
   }
 
+  get isFirstParty(): boolean {
+    return this.info.isFirstParty
+  }
+
   get isConfidential(): boolean {
     return this.metadata.token_endpoint_auth_method !== 'none'
+  }
+
+  /**
+   * Total lifetime of a refresh token for this client. This is the maximum
+   * amount of time a refresh token can be valid for, regardless of activity.
+   *
+   * If a session is not refreshed within this time, the refresh token will be
+   * invalidated and the user will need to re-authenticate.
+   */
+  get refreshLifetime() {
+    return this.isConfidential || (this.isFirstParty && this.isTrusted)
+      ? REFRESH_LIFETIME_EXTENDED
+      : REFRESH_LIFETIME
+  }
+
+  /**
+   * Total lifetime of a session for this client. This is the maximum amount of
+   * time a session can be valid for, regardless of activity.
+   */
+  get sessionLifetime() {
+    return this.isConfidential || (this.isFirstParty && this.isTrusted)
+      ? SESSION_LIFETIME_EXTENDED
+      : SESSION_LIFETIME
   }
 
   /**

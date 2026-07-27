@@ -14,6 +14,10 @@ export class PageHelper implements AsyncDisposable {
     await this.page.goto(url.toString())
   }
 
+  async reload() {
+    await this.page.reload()
+  }
+
   isClosed() {
     return this.page.isClosed()
   }

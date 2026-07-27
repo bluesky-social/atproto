@@ -1,5 +1,9 @@
 import type { AtprotoIdentityDidMethods } from '@atproto/did'
-import { type DidCache, DidResolverCached } from './did-cache.js'
+import {
+  type DidCache,
+  type DidCacheErrorHandler,
+  DidResolverCached,
+} from './did-cache.js'
 import {
   DidResolverCommon,
   type DidResolverCommonOptions,
@@ -11,12 +15,13 @@ export type { AtprotoIdentityDidMethods }
 export type CreateDidResolverOptions = {
   didResolver?: DidResolver<AtprotoIdentityDidMethods>
   didCache?: DidCache
+  onDidCacheError?: DidCacheErrorHandler
 } & Partial<DidResolverCommonOptions>
 
 export function createDidResolver(
   options: CreateDidResolverOptions,
 ): DidResolver<AtprotoIdentityDidMethods> {
-  const { didResolver, didCache } = options
+  const { didResolver, didCache, onDidCacheError } = options
 
   if (didResolver instanceof DidResolverCached && !didCache) {
     return didResolver
@@ -25,5 +30,6 @@ export function createDidResolver(
   return new DidResolverCached(
     didResolver ?? new DidResolverCommon(options),
     didCache,
+    onDidCacheError,
   )
 }

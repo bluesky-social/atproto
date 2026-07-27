@@ -26,7 +26,11 @@ import type { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
 import type { Follow, Verification } from '../hydration/graph.js'
 import type { HydrationState } from '../hydration/hydrator.js'
 import type { Label } from '../hydration/label.js'
-import { type RecordInfo, parseString } from '../hydration/util.js'
+import {
+  type RecordInfo,
+  getStarterPackUriFromFollow,
+  parseString,
+} from '../hydration/util.js'
 import type { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
 import { viewsLogger } from '../logger.js'
@@ -2690,6 +2694,7 @@ export class Views {
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
       | undefined
       | null
+    let starterPackUri: AtUriString | undefined
 
     if (uri.collection === app.bsky.feed.post.$type) {
       recordInfo = state.posts?.get(notif.uri as AtUriString)
@@ -2699,6 +2704,9 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri as AtUriString)
     } else if (uri.collection === app.bsky.graph.follow.$type) {
       recordInfo = state.follows?.get(notif.uri as AtUriString)
+      if (recordInfo) {
+        starterPackUri = getStarterPackUriFromFollow(recordInfo.record)
+      }
     } else if (uri.collection === app.bsky.graph.verification.$type) {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.
@@ -2735,6 +2743,9 @@ export class Views {
       reason: notif.reason,
       reasonSubject: parseString<AtUriString>(notif.reasonSubject),
       record: recordInfo.record,
+      starterPack: starterPackUri
+        ? this.starterPackBasic(starterPackUri, state)
+        : undefined,
       // @NOTE works with a hack in listNotifications so that when there's no last-seen time,
       // the user's first notification is marked unread, and all previous read. in this case,
       // the last seen time will be equal to the first notification's indexed time.

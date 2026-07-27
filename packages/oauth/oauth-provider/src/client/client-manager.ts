@@ -22,6 +22,7 @@ import {
   CachedGetter,
   type GetCachedOptions,
   type SimpleStore,
+  swallowStoreErrors,
 } from '@atproto-labs/simple-store'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
@@ -72,7 +73,7 @@ export class ClientManager {
       )
 
       return jwks
-    }, clientJwksCache)
+    }, swallowStoreErrors(clientJwksCache))
 
     this.metadataGetter = new CachedGetter(async (uri, options) => {
       const metadata = await fetch(buildJsonGetRequest(uri, options)).then(
@@ -81,7 +82,7 @@ export class ClientManager {
 
       // Validate within the getter to avoid caching invalid metadata
       return this.validateClientMetadata(uri, metadata)
-    }, clientMetadataCache)
+    }, swallowStoreErrors(clientMetadataCache))
   }
 
   /**
@@ -146,11 +147,7 @@ export class ClientManager {
     )
 
     // Return a map for easy lookups
-    return new Map(
-      clients
-        .filter((c) => c != null && c instanceof Client)
-        .map((c) => [c.id, c]),
-    )
+    return new Map(clients.filter((c) => c != null).map((c) => [c.id, c]))
   }
 
   protected async getClientMetadata(
