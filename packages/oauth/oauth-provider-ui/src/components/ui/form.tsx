@@ -1,8 +1,12 @@
-'use client'
-
-import type { Label as LabelPrimitive } from 'radix-ui'
-import { Slot } from 'radix-ui'
-import * as React from 'react'
+import {
+  type ComponentProps,
+  type ReactElement,
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  useId,
+} from 'react'
 import {
   Controller,
   type ControllerProps,
@@ -12,38 +16,54 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form'
-import { Label } from '#/components/ui/label.tsx'
-import { cn } from '#/lib/utils.ts'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '#/components/ui/field.tsx'
+
+/**
+ * react-hook-form adapter over shadcn's Base UI `field` primitives.
+ *
+ * @NOTE The Base UI styles do not ship a `form` component — shadcn dropped the
+ * react-hook-form adapter when Base UI became the default, and `field.tsx` is
+ * purely presentational. This file keeps the familiar `Form*` API so the field
+ * wrappers under `components/forms/fields/` do not have to care which primitive
+ * library sits underneath.
+ */
 
 const Form = FormProvider
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = {
-  name: TName
-}
+> = { name: TName }
 
-const FormFieldContext = React.createContext<FormFieldContextValue>(
+const FormFieldContext = createContext<FormFieldContextValue>(
   {} as FormFieldContextValue,
 )
 
-const FormField = <
+function FormField<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({
-  ...props
-}: ControllerProps<TFieldValues, TName>) => {
+>({ ...props }: ControllerProps<TFieldValues, TName>) {
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext value={{ name: props.name }}>
       <Controller {...props} />
-    </FormFieldContext.Provider>
+    </FormFieldContext>
   )
 }
 
-const useFormField = () => {
-  const fieldContext = React.useContext(FormFieldContext)
-  const itemContext = React.useContext(FormItemContext)
+type FormItemContextValue = { id: string }
+
+const FormItemContext = createContext<FormItemContextValue>(
+  {} as FormItemContextValue,
+)
+
+function useFormField() {
+  const fieldContext = useContext(FormFieldContext)
+  const itemContext = useContext(FormItemContext)
   const { getFieldState } = useFormContext()
   const formState = useFormState({ name: fieldContext.name })
   const fieldState = getFieldState(fieldContext.name, formState)
@@ -64,93 +84,79 @@ const useFormField = () => {
   }
 }
 
-type FormItemContextValue = {
-  id: string
-}
-
-const FormItemContext = React.createContext<FormItemContextValue>(
-  {} as FormItemContextValue,
-)
-
-function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
-  const id = React.useId()
+function FormItem({ className, ...props }: ComponentProps<'div'>) {
+  const id = useId()
 
   return (
-    <FormItemContext.Provider value={{ id }}>
-      <div
-        data-slot="form-item"
-        className={cn('grid gap-2', className)}
-        {...props}
-      />
-    </FormItemContext.Provider>
+    <FormItemContext value={{ id }}>
+      <Field data-slot="form-item" className={className} {...props} />
+    </FormItemContext>
   )
 }
 
-function FormLabel({
-  className,
-  ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+function FormLabel({ className, ...props }: ComponentProps<typeof FieldLabel>) {
   const { error, formItemId } = useFormField()
 
   return (
-    <Label
+    <FieldLabel
       data-slot="form-label"
       data-error={!!error}
-      className={cn('data-[error=true]:text-destructive', className)}
+      className={className}
       htmlFor={formItemId}
       {...props}
     />
   )
 }
 
-function FormControl({ ...props }: React.ComponentProps<typeof Slot.Root>) {
+/**
+ * Wires the accessibility attributes onto whatever control it wraps.
+ *
+ * @NOTE Uses `cloneElement` rather than a Slot primitive. Base UI's equivalent
+ * is `useRender`, which expects to own the rendered element, whereas here the
+ * child is already a fully-formed input.
+ */
+function FormControl({ children }: { children: ReactElement }) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
-  return (
-    <Slot.Root
-      data-slot="form-control"
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
-  )
+  if (!isValidElement(children)) return children
+
+  return cloneElement(children as ReactElement<Record<string, unknown>>, {
+    id: formItemId,
+    'aria-describedby': error
+      ? `${formDescriptionId} ${formMessageId}`
+      : `${formDescriptionId}`,
+    'aria-invalid': !!error,
+  })
 }
 
-function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
+function FormDescription({ className, ...props }: ComponentProps<'p'>) {
   const { formDescriptionId } = useFormField()
 
   return (
-    <p
+    <FieldDescription
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn('text-muted-foreground text-sm', className)}
+      className={className}
       {...props}
     />
   )
 }
 
-function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
+function FormMessage({ className, ...props }: ComponentProps<'div'>) {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message ?? '') : props.children
 
-  if (!body) {
-    return null
-  }
+  if (!body) return null
 
   return (
-    <p
+    <FieldError
       data-slot="form-message"
       id={formMessageId}
-      className={cn('text-destructive text-sm', className)}
+      className={className}
       {...props}
     >
       {body}
-    </p>
+    </FieldError>
   )
 }
 

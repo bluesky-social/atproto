@@ -119,7 +119,7 @@ msgstr "アカウント識別子"
 msgid "Account name"
 msgstr "アカウント名"
 
-#: src/components/identity/account-menu.tsx:48
+#: src/components/identity/account-menu.tsx:50
 msgid "Account overview"
 msgstr "アカウントの概要"
 
@@ -128,7 +128,7 @@ msgstr "アカウントの概要"
 msgid "Account reactivated"
 msgstr "アカウント再有効化"
 
-#: src/components/identity/account-menu.tsx:35
+#: src/components/identity/account-menu.tsx:36
 msgid "Account selector"
 msgstr "アカウント選択"
 
@@ -330,7 +330,7 @@ msgstr "何も起こらない場合はここをクリックしてください"
 msgid "Close"
 msgstr "閉じる"
 
-#: src/components/identity/account-menu.tsx:78
+#: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "アカウント選択を閉じる"
 
@@ -1021,7 +1021,7 @@ msgstr "セキュリティコード"
 msgid "Security step required"
 msgstr "セキュリティステップが必要です"
 
-#: src/components/identity/account-menu.tsx:67
+#: src/components/identity/account-menu.tsx:69
 msgid "Select another account"
 msgstr "別のアカウントを選択"
 
@@ -1071,7 +1071,7 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "サインアウト"
 
-#: src/components/identity/account-menu.tsx:58
+#: src/components/identity/account-menu.tsx:60
 msgid "Sign out"
 msgstr "サインアウト"
 

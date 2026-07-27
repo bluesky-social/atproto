@@ -119,7 +119,7 @@ msgstr "계정 아이디"
 msgid "Account name"
 msgstr "계정 이름"
 
-#: src/components/identity/account-menu.tsx:48
+#: src/components/identity/account-menu.tsx:50
 msgid "Account overview"
 msgstr "계정 개요"
 
@@ -128,7 +128,7 @@ msgstr "계정 개요"
 msgid "Account reactivated"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:35
+#: src/components/identity/account-menu.tsx:36
 msgid "Account selector"
 msgstr "계정 선택기"
 
@@ -330,7 +330,7 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:78
+#: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "계정 선택기 닫기"
 
@@ -1011,7 +1011,7 @@ msgstr ""
 msgid "Security step required"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:67
+#: src/components/identity/account-menu.tsx:69
 msgid "Select another account"
 msgstr "다른 계정 선택"
 
@@ -1061,7 +1061,7 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "로그아웃"
 
-#: src/components/identity/account-menu.tsx:58
+#: src/components/identity/account-menu.tsx:60
 msgid "Sign out"
 msgstr "로그아웃"
 

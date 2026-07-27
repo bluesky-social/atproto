@@ -119,7 +119,7 @@ msgstr "Kontoidentifierare"
 msgid "Account name"
 msgstr "Kontonamn"
 
-#: src/components/identity/account-menu.tsx:48
+#: src/components/identity/account-menu.tsx:50
 msgid "Account overview"
 msgstr "Kontoöversikt"
 
@@ -128,7 +128,7 @@ msgstr "Kontoöversikt"
 msgid "Account reactivated"
 msgstr "Konto återaktiverat"
 
-#: src/components/identity/account-menu.tsx:35
+#: src/components/identity/account-menu.tsx:36
 msgid "Account selector"
 msgstr "Kontoväljare"
 
@@ -330,7 +330,7 @@ msgstr "Klicka här om ingenting händer"
 msgid "Close"
 msgstr "Stäng"
 
-#: src/components/identity/account-menu.tsx:78
+#: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "Stäng kontoväljaren"
 
@@ -1021,7 +1021,7 @@ msgstr "Säkerhetskod"
 msgid "Security step required"
 msgstr "Säkerhetskontroll"
 
-#: src/components/identity/account-menu.tsx:67
+#: src/components/identity/account-menu.tsx:69
 msgid "Select another account"
 msgstr "Välj ett annat konto"
 
@@ -1071,7 +1071,7 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/components/identity/account-menu.tsx:58
+#: src/components/identity/account-menu.tsx:60
 msgid "Sign out"
 msgstr "Logga ut"
 

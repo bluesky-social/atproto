@@ -119,7 +119,7 @@ msgstr "Account identifier"
 msgid "Account name"
 msgstr "Account name"
 
-#: src/components/identity/account-menu.tsx:48
+#: src/components/identity/account-menu.tsx:50
 msgid "Account overview"
 msgstr "Account overview"
 
@@ -128,7 +128,7 @@ msgstr "Account overview"
 msgid "Account reactivated"
 msgstr "Account reactivated"
 
-#: src/components/identity/account-menu.tsx:35
+#: src/components/identity/account-menu.tsx:36
 msgid "Account selector"
 msgstr "Account selector"
 
@@ -330,7 +330,7 @@ msgstr "Click here if nothing happens"
 msgid "Close"
 msgstr "Close"
 
-#: src/components/identity/account-menu.tsx:78
+#: src/components/identity/account-menu.tsx:83
 msgid "Close account selector"
 msgstr "Close account selector"
 
@@ -1021,7 +1021,7 @@ msgstr "Security code"
 msgid "Security step required"
 msgstr "Security step required"
 
-#: src/components/identity/account-menu.tsx:67
+#: src/components/identity/account-menu.tsx:69
 msgid "Select another account"
 msgstr "Select another account"
 
@@ -1071,7 +1071,7 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
 
-#: src/components/identity/account-menu.tsx:58
+#: src/components/identity/account-menu.tsx:60
 msgid "Sign out"
 msgstr "Sign out"
 

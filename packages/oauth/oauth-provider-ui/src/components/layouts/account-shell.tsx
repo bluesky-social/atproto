@@ -114,19 +114,21 @@ export function AccountShell({
           role="main"
         >
           <div className="mb-4 flex flex-none items-center gap-2">
-            {/* @NOTE Radix only mounts SheetContent while open, so the nav
+            {/* @NOTE SheetContent is only mounted while open, so the nav
               links exist exactly once in the DOM on desktop. */}
             <Sheet open={navOpen} onOpenChange={setNavOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden"
-                  aria-label={_(navigationLabel)}
-                >
-                  <MenuIcon className="size-5" />
-                </Button>
-              </SheetTrigger>
+              <SheetTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden"
+                    aria-label={_(navigationLabel)}
+                  >
+                    <MenuIcon className="size-5" />
+                  </Button>
+                }
+              />
               <SheetContent side="left" className="w-72 p-4">
                 <SheetHeader className="p-0">
                   <SheetTitle>{_(navigationLabel)}</SheetTitle>

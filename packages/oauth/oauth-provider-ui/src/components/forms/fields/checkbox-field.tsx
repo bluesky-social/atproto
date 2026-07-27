@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import type { Control, FieldPath, FieldValues } from 'react-hook-form'
-import { Checkbox } from '#/components/ui/checkbox.tsx'
 import {
   FormControl,
   FormDescription,
@@ -9,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form.tsx'
+import { cn } from '#/lib/utils.ts'
 
 export type CheckboxFieldProps<TValues extends FieldValues> = {
   control: Control<TValues>
@@ -19,6 +19,16 @@ export type CheckboxFieldProps<TValues extends FieldValues> = {
   className?: string
 }
 
+/**
+ * @NOTE Deliberately a native `<input type="checkbox">` rather than
+ * `ui/checkbox` (Radix). Radix renders `<button role="checkbox">`, and browsers
+ * only forward `<label for>` activation to native form controls — not to
+ * buttons. That silently broke `clickOnText('Se souvenir…', 'label')` in the
+ * pds e2e suite: the box never ticked, so the session was not remembered and
+ * every later test started signed out.
+ *
+ * The native control is styled to match the shadcn checkbox.
+ */
 export function CheckboxField<TValues extends FieldValues>({
   control,
   name,
@@ -35,15 +45,19 @@ export function CheckboxField<TValues extends FieldValues>({
         <FormItem className={className}>
           <div className="flex items-start gap-3">
             <FormControl>
-              <Checkbox
-                // @NOTE `name` is forwarded so the rendered input keeps the key
-                // the pds e2e suite selects on (e.g. `remember`).
+              <input
+                type="checkbox"
                 name={field.name}
-                checked={Boolean(field.value)}
-                onCheckedChange={field.onChange}
-                onBlur={field.onBlur}
                 ref={field.ref}
+                checked={Boolean(field.value)}
+                onChange={(event) => field.onChange(event.target.checked)}
+                onBlur={field.onBlur}
                 disabled={disabled}
+                className={cn(
+                  'border-input accent-primary size-4 shrink-0 rounded-[4px] border',
+                  'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
+                  'disabled:cursor-not-allowed disabled:opacity-50',
+                )}
               />
             </FormControl>
             <div className="grid gap-1 leading-none">
