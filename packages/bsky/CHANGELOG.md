@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.267
+
+### Patch Changes
+
+- [#5263](https://github.com/bluesky-social/atproto/pull/5263) [`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate starter pack details on follow notifications created via a starter pack
+
+- [#5264](https://github.com/bluesky-social/atproto/pull/5264) [`5c5df26`](https://github.com/bluesky-social/atproto/commit/5c5df26bdeed22a06aa08e0463b76ad19be59ed8) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add a test
+
+- Updated dependencies [[`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7)]:
+  - @atproto/api@0.20.34
+
 ## 0.0.266
 
 ### Patch Changes

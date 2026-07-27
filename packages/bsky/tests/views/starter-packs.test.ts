@@ -161,6 +161,56 @@ describe('starter packs', () => {
     expect(forSnapshot(notifications)).toMatchSnapshot()
   })
 
+  it('hydrates starter packs in follow notifications', async () => {
+    const followViaStarterPack = await sc.follow(
+      sc.dids.newskie1,
+      sc.dids.bob,
+      { via: sp1.raw },
+    )
+    const followWithoutVia = await sc.follow(sc.dids.newskie2, sc.dids.bob)
+    const followViaOtherRecord = await sc.follow(
+      sc.dids.newskie3,
+      sc.dids.bob,
+      { via: feedgen.raw },
+    )
+    await network.processAll()
+
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
+      { reasons: ['follow'] },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+
+    const viaStarterPackNotif = notifications.find(
+      (notif) => notif.uri === followViaStarterPack.uriStr,
+    )
+    const withoutViaNotif = notifications.find(
+      (notif) => notif.uri === followWithoutVia.uriStr,
+    )
+    const viaOtherRecordNotif = notifications.find(
+      (notif) => notif.uri === followViaOtherRecord.uriStr,
+    )
+    assert(viaStarterPackNotif)
+    assert(withoutViaNotif)
+    assert(viaOtherRecordNotif)
+
+    expect(viaStarterPackNotif.record).toMatchObject({ via: sp1.raw })
+    expect(viaStarterPackNotif.starterPack).toMatchObject({
+      uri: sp1.uriStr,
+      cid: sp1.cidStr,
+      record: expect.objectContaining({ name: "alice's starter pack" }),
+      creator: expect.objectContaining({ did: sc.dids.alice }),
+    })
+    expect(withoutViaNotif.starterPack).toBeUndefined()
+    expect(viaOtherRecordNotif.starterPack).toBeUndefined()
+  })
+
   it('does not include users with creator block relationship in list sample for non-creator, in-list viewers', async () => {
     const view = await agent.api.app.bsky.graph.getStarterPack(
       {
