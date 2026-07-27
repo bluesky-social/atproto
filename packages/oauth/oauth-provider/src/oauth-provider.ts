@@ -1015,13 +1015,20 @@ export class OAuthProvider extends OAuthVerifier {
     try {
       const { data } = tokenInfo
       await this.compareClientAuth(client, clientAuth, dpopProof, data)
-      await this.validateRefreshGrant(client, clientAuth, data)
+
+      const now = new Date()
+
+      const result = this.validateRefreshGrant(client, data, now)
+      if (!result.valid) {
+        throw new InvalidGrantError(result.reason)
+      }
 
       return await this.tokenManager.rotateToken(
         client,
         clientAuth,
         clientMetadata,
         tokenInfo,
+        now,
       )
     } catch (err) {
       await this.tokenManager.deleteToken(tokenInfo.id)
@@ -1030,22 +1037,23 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected async validateRefreshGrant(
+  validateRefreshGrant(
     client: Client,
-    clientAuth: ClientAuth,
     data: TokenData,
-  ): Promise<void> {
-    const { sessionLifetime, refreshLifetime } = client
+    now = new Date(),
+  ): { valid: true } | { valid: false; reason: string } {
+    const sessionAge = now.getTime() - data.createdAt.getTime()
 
-    const sessionAge = Date.now() - data.createdAt.getTime()
-    if (sessionAge > sessionLifetime) {
-      throw new InvalidGrantError(`Session expired`)
+    if (sessionAge > client.sessionLifetime) {
+      return { valid: false, reason: `Session expired` }
     }
 
-    const refreshAge = Date.now() - data.updatedAt.getTime()
-    if (refreshAge > refreshLifetime) {
-      throw new InvalidGrantError(`Refresh token expired`)
+    const refreshAge = now.getTime() - data.updatedAt.getTime()
+    if (refreshAge > client.refreshLifetime) {
+      return { valid: false, reason: `Refresh token expired` }
     }
+
+    return { valid: true }
   }
 
   /**

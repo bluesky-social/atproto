@@ -505,23 +505,38 @@ export function createApiMiddleware<
           },
         })
 
-        // @TODO: We should ideally filter sessions that are expired (or even
-        // expose the expiration date). This requires a change to the way
-        // TokenInfo are stored (see TokenManager#isTokenExpired and
-        // TokenManager#isTokenInactive).
-        const json = tokenInfos.map(({ id, data }): ActiveOAuthSession => {
-          return {
-            tokenId: id,
+        const json = tokenInfos
+          .filter(({ data }) => {
+            // Remove sessions that are expired, based on the maximum possible
+            // lifetime of a session. The client metadata is needed to determine
+            // the actual session and refresh lifetimes.
 
-            createdAt: data.createdAt.toISOString() as ISODateString,
-            updatedAt: data.updatedAt.toISOString() as ISODateString,
+            const client = clients.get(data.clientId)
 
-            clientId: data.clientId,
-            clientMetadata: clients.get(data.clientId)?.metadata,
+            // We were not able to load the client (see onError callback above).
+            // In this case, we will keep the session in the list, and let the
+            // UI show them as "broken" sessions (based on the absence of the
+            // clientMetadata in ActiveOAuthSession).
+            if (!client) return true
 
-            scope: data.parameters.scope,
-          }
-        })
+            // Use the logic from OAuthProvider#validateRefreshGrant to
+            // determine if the session is still valid (can be refreshed)
+            return server.validateRefreshGrant(client, data).valid
+          })
+          .map(({ id, data }): ActiveOAuthSession => {
+            return {
+              tokenId: id,
+
+              createdAt: data.createdAt.toISOString() as ISODateString,
+              updatedAt: data.updatedAt.toISOString() as ISODateString,
+
+              clientId: data.clientId,
+              clientMetadata: clients.get(data.clientId)?.metadata,
+
+              active: data.expiresAt.getTime() > Date.now(),
+              scope: data.parameters.scope,
+            }
+          })
 
         return { json }
       },
