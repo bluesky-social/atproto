@@ -83,9 +83,14 @@ The rebuild must therefore preserve:
 - Real `<button>` elements for actions (not `<a>`, not `<div role="button">`).
   shadcn's `Button` with `asChild` renders whatever child it is given — keep it a
   `<button>` for anything the tests click.
-- Body copy inside `<p>`. shadcn's `CardDescription` and `AlertDescription` render
-  `<p>`, so this falls out naturally; `CardTitle` renders a `<div>` and must not be
-  the only home for asserted copy.
+- Body copy inside `<p>`. **Corrected 2026-07-27, verified against the live shadcn
+  registry:** upstream `CardDescription` and `AlertDescription` render a `<div>`, not
+  a `<p>` — the earlier claim here was wrong. Do **not** patch the `ui/*` files to
+  change this. Instead place asserted body copy in an explicit `<p>` child:
+  `<AlertDescription><p>…</p></AlertDescription>`. That is the intended upstream
+  pattern — `AlertDescription` ships `[&_p]:leading-relaxed` precisely for it — and
+  keeping `ui/*` byte-faithful to upstream keeps future `shadcn add` mergeable.
+  `CardTitle` is also a `<div>` and must not be the only home for asserted copy.
 - `aria-label`s and the `<title>` renders currently in `LayoutApp` / `LayoutPage`.
 - Toast text reachable in the DOM after the Sonner swap.
 
