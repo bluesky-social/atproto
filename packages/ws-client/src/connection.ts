@@ -8,6 +8,7 @@ import {
   SocketError,
   WebSocketConnectionError,
 } from './lib/errors.js'
+import { invokeHook } from './lib/invoke-hook.js'
 import type {
   HeadersInit,
   Transport,
@@ -38,7 +39,12 @@ export interface WebSocketConnectionOptions<M extends DataMode = 'auto'> {
   highWaterMark?: number
   maxBufferedBytes?: number
   signal?: AbortSignal
-  /** Called once when the socket opens. */
+  /**
+   * Called once when the socket opens.
+   *
+   * Hooks are called with `this` pinned to `null` and must not throw — a
+   * thrown error is re-thrown as an uncaught exception on a microtask.
+   */
   onOpen?: () => void
   /** Called once when the connection ends with an error, before onClose. */
   onError?: (error: unknown) => void
@@ -176,7 +182,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
       onOpen: () => {
         if (this.#terminal || this.#state !== 'connecting') return
         this.#state = 'open'
-        this.#onOpenHook?.()
+        invokeHook(this.#onOpenHook)
         this.#onOpen()
       },
       onMessage: (data) => {
@@ -328,7 +334,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   #dispatchClose(detail: CloseEventDetail): void {
     this.#resolveClosed(detail)
-    this.#onCloseHook?.(detail)
+    invokeHook(this.#onCloseHook, detail)
   }
 
   #finishDone(info: CloseEventDetail): void {
@@ -357,7 +363,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     while ((waiter = this.#waiters.shift())) {
       waiter.reject(error)
     }
-    this.#onErrorHook?.(error)
+    invokeHook(this.#onErrorHook, error)
     this.#dispatchClose(closeDetailForError(error))
   }
 

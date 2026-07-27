@@ -8,6 +8,7 @@ import type {
 } from './connection.js'
 import { CloseCode } from './lib/close-codes.js'
 import { CloseError, WebSocketClientError } from './lib/errors.js'
+import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import type { HeadersInit } from './transport/transport.js'
 
@@ -58,7 +59,12 @@ export interface WebSocketClientOptions<M extends DataMode = 'auto'> {
    * => boolean` fully replaces the default classification.
    */
   shouldReconnect?: boolean | ((error: unknown, attempt: number) => boolean)
-  /** Called when the first connection succeeds. */
+  /**
+   * Called when the first connection succeeds.
+   *
+   * Hooks are called with `this` pinned to `null` and must not throw — a
+   * thrown error is re-thrown as an uncaught exception on a microtask.
+   */
   onOpen?: () => void
   /** Called when a later connection succeeds (every reconnect). */
   onReconnect?: () => void
@@ -183,7 +189,8 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
   #dispatchClose(): void {
     if (this.#closeDispatched) return
     this.#closeDispatched = true
-    this.#options.onClose?.(
+    invokeHook(
+      this.#options.onClose,
       this.#lastCloseDetail ?? {
         code: CloseCode.NoStatus,
         reason: '',
@@ -290,9 +297,9 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
             retries = 0 // stable open: backoff starts over
             if (firstOpen) {
               firstOpen = false
-              this.#options.onOpen?.()
+              invokeHook(this.#options.onOpen)
             } else {
-              this.#options.onReconnect?.()
+              invokeHook(this.#options.onReconnect)
             }
           },
           onClose: (detail) => {
@@ -332,7 +339,8 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
             // (the user observes the stop via close() resolving).
             if (checkStop()) break
             const willReconnect = shouldReconnect(error, retries)
-            this.#options.onError?.(
+            invokeHook(
+              this.#options.onError,
               error,
               willReconnect ? { attempt: retries } : undefined,
             )

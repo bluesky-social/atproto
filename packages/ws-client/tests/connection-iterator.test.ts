@@ -224,6 +224,37 @@ describe('WebSocketConnectionEngine iterator', () => {
     await expect(p).rejects.toThrow('flush failed')
   })
 
+  it('a throwing hook does not corrupt the connection state machine', async () => {
+    const uncaught: unknown[] = []
+    const onUncaught = (err: unknown) => uncaught.push(err)
+    process.on('uncaughtException', onUncaught)
+    try {
+      const { engine, mock } = makeEngine({
+        onOpen: () => {
+          throw new Error('bad hook')
+        },
+      })
+      const received: unknown[] = []
+      const done = (async () => {
+        for await (const msg of engine) received.push(msg)
+      })()
+      await Promise.resolve() // let iteration start (lazy open)
+      mock.emitOpen()
+      // The transition completed despite the hook throwing.
+      expect(engine.readyState).toBe('open')
+      mock.emitMessage('still works')
+      mock.emitClose(1000, '', true)
+      await done
+      expect(received).toEqual(['still works'])
+      // The hook error surfaced as an uncaught exception, not swallowed.
+      await new Promise((resolve) => setImmediate(resolve))
+      expect(uncaught).toHaveLength(1)
+      expect((uncaught[0] as Error).message).toBe('bad hook')
+    } finally {
+      process.removeListener('uncaughtException', onUncaught)
+    }
+  })
+
   it('throws at construction when the signal is already aborted', () => {
     const ac = new AbortController()
     ac.abort(new Error('pre-aborted'))
