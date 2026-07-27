@@ -187,7 +187,7 @@ msgstr "すべてのサービス"
 msgid "Apps"
 msgstr "アプリ"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:58
+#: src/pages/account/(authenticated)/apps/page.tsx:59
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "アプリは、あなたが積極的に使用していないときでも、バックグラウンドであなたのアカウントにアクセスすることがあります（通知の確認、データの同期など）。これは正常な動作であり、上記に表示されている「最終アクセス」時間が更新されます。"
 
@@ -327,6 +327,7 @@ msgstr "ユーザー名を選んでください"
 msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
+#: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/utils/dialog-simple.tsx:70
 msgid "Close"
 msgstr "閉じる"
@@ -430,6 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
 
+#: src/pages/account/(authenticated)/apps/page.tsx:131
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "詳細"
@@ -549,7 +551,7 @@ msgid "Failed to delete account"
 msgstr "アカウントの削除に失敗しました"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr "接続されたアプリの読み込みに失敗しました"
 
@@ -712,7 +714,7 @@ msgstr "無効なハンドル"
 msgid "Invite code"
 msgstr "招待コード"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:68
+#: src/pages/account/(authenticated)/apps/page.tsx:69
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "このアカウントをアプリにサインインするためにまだ使用していないようです。"
 
@@ -981,7 +983,7 @@ msgid "Reset your password"
 msgstr "パスワードをリセット"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:31
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "再試行"
@@ -990,7 +992,7 @@ msgstr "再試行"
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}秒後に再試行"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/components/oauth-session-details-dialog.tsx:38
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "アクセスを取り消す"
@@ -1165,9 +1167,17 @@ msgstr "ユーザー名が無効です"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "アカウントの無効化に期限はありません。いつでも戻ってこられます。"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:42
+#: src/pages/account/(authenticated)/apps/page.tsx:43
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "これらのアプリはあなたのアカウントにアクセスできます。異なるデバイスで使用している場合、アプリが複数回表示されることがあります。アクセスを取り消すと、再度サインインするまでアプリがログアウトされます。"
+
+#: src/components/oauth-session-details-dialog.tsx:57
+msgid "This app can uniquely identify you through your account."
+msgstr ""
+
+#: src/components/oauth-session-details-dialog.tsx:64
+msgid "This app has access to your account with the following permissions:"
+msgstr ""
 
 #: src/components/consent-form.tsx:142
 msgid "This application is requesting the following permissions (scopes) to access your account:"

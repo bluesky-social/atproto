@@ -1,6 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
+import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
 import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
 import { DateAgo } from '#/components/utils/date-ago'
@@ -80,7 +81,7 @@ function ApplicationSessionCard({
     tokenId,
     createdAt,
     updatedAt,
-    scope: _scope = clientMetadata?.scope, // @TODO Display scopes using <ScopeDescription />
+    scope = clientMetadata?.scope,
   },
   did,
 }: {
@@ -88,8 +89,7 @@ function ApplicationSessionCard({
   did: DidString
 }) {
   const { i18n } = useLingui()
-  const { mutateAsync: revokeSessions, isPending } =
-    useRevokeOAuthSessionMutation()
+  const { mutateAsync: revokeSession } = useRevokeOAuthSessionMutation()
 
   const friendlyClientId = useOAuthClientIdentifier({
     clientId,
@@ -119,18 +119,18 @@ function ApplicationSessionCard({
           </Trans>
         </p>
       </div>
-      <Button
-        size="sm"
-        className="min-w-max shrink-0 grow-0"
-        loading={isPending}
-        onClick={(_event) => {
-          void revokeSessions({ did, tokenId }).catch((err) => {
-            console.warn('Failed to revoke OAuth session', err)
-          })
+      <OAuthSessionDetailsDialog
+        clientName={clientName}
+        clientIdentifier={friendlyClientId}
+        scope={scope}
+        onRevoke={async () => {
+          await revokeSession({ did, tokenId })
         }}
       >
-        <Trans context="OAuthApp">Revoke access</Trans>
-      </Button>
+        <Button size="sm" className="min-w-max shrink-0 grow-0">
+          <Trans>Details</Trans>
+        </Button>
+      </OAuthSessionDetailsDialog>
     </div>
   )
 }

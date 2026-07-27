@@ -187,7 +187,7 @@ msgstr "Cualquier servicio"
 msgid "Apps"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:58
+#: src/pages/account/(authenticated)/apps/page.tsx:59
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr ""
 
@@ -327,6 +327,7 @@ msgstr "Elige un nombre de usuario"
 msgid "Click here if nothing happens"
 msgstr ""
 
+#: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/utils/dialog-simple.tsx:70
 msgid "Close"
 msgstr ""
@@ -430,6 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr ""
 
+#: src/pages/account/(authenticated)/apps/page.tsx:131
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr ""
@@ -549,7 +551,7 @@ msgid "Failed to delete account"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:35
 msgid "Failed to load connected apps"
 msgstr "Error al cargar las aplicaciones conectadas"
 
@@ -702,7 +704,7 @@ msgstr ""
 msgid "Invite code"
 msgstr "Código de invitación"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:68
+#: src/pages/account/(authenticated)/apps/page.tsx:69
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Parece que aún no has usado esta cuenta para iniciar sesión en ninguna aplicación."
 
@@ -971,7 +973,7 @@ msgid "Reset your password"
 msgstr "Restablecer tu contraseña"
 
 #: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:31
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr ""
@@ -980,7 +982,7 @@ msgstr ""
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/components/oauth-session-details-dialog.tsx:38
 msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr ""
@@ -1155,8 +1157,16 @@ msgstr ""
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:42
+#: src/pages/account/(authenticated)/apps/page.tsx:43
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
+msgstr ""
+
+#: src/components/oauth-session-details-dialog.tsx:57
+msgid "This app can uniquely identify you through your account."
+msgstr ""
+
+#: src/components/oauth-session-details-dialog.tsx:64
+msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
 #: src/components/consent-form.tsx:142
