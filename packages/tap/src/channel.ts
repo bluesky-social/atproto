@@ -21,11 +21,16 @@ function shouldReconnect(error: unknown): boolean {
   if (error instanceof CloseError) {
     return error.code === CloseCode.Abnormal
   }
-  return (
+  if (
     error instanceof SocketError ||
     error instanceof HeartbeatTimeoutError ||
     error instanceof IdleTimeoutError
-  )
+  ) {
+    // Defer to each error's own classification so this policy can't drift
+    // from the taxonomy if it evolves.
+    return error.shouldRetry()
+  }
+  return false
 }
 
 export interface HandlerOpts {

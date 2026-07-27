@@ -148,11 +148,9 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
    * otherwise the connection answers for itself — rejecting with a
    * {@link WebSocketConnectionError} if it can't send (e.g. mid-reconnect).
    */
-  send(data: MessageOf<M>): Promise<void> {
+  async send(data: MessageOf<M>): Promise<void> {
     if (!this.#connection) {
-      return Promise.reject(
-        new WebSocketClientError('WebSocketClient is not connected'),
-      )
+      throw new WebSocketClientError('WebSocketClient is not connected')
     }
     return this.#connection.send(data)
   }
@@ -229,7 +227,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     return this.#iterate()
   }
 
-  async *#iterate(): AsyncGenerator<MessageOf<M>> {
+  async *#iterate(): AsyncGenerator<MessageOf<M>, void, unknown> {
     const maxMs = 1000 * (this.#options.maxReconnectSeconds ?? 64)
     const shouldReconnectOpt = this.#options.shouldReconnect ?? true
     const shouldReconnect =

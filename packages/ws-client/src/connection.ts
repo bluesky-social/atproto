@@ -85,8 +85,6 @@ const CLEAN_CLOSE_CODES = new Set([CloseCode.Normal, CloseCode.GoingAway])
 export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
   implements AsyncIterable<MessageOf<M>>
 {
-  readonly capabilities: TransportCapabilities
-
   readonly #transport: Transport
   readonly #dataMode: DataMode
   readonly #onOpenHook?: () => void
@@ -99,7 +97,6 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   #state: ReadyState = 'initialized'
   #openTriggered = false
-  #negotiatedProtocol: string | null = null
 
   readonly #buffer: QueueItem<MessageOf<M>>[] = []
   readonly #waiters: Waiter<MessageOf<M>>[] = []
@@ -135,7 +132,6 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
       protocols: options.protocols,
       headers: options.headers,
     })
-    this.capabilities = this.#transport.capabilities
     this.#transport.handlers = this.#buildHandlers()
 
     const hb = options.heartbeat
@@ -164,6 +160,10 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     }
   }
 
+  get capabilities(): TransportCapabilities {
+    return this.#transport.capabilities
+  }
+
   get readyState(): ReadyState {
     return this.#state
   }
@@ -174,7 +174,7 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   /** Negotiated subprotocol; `null` until open (and if none negotiated). */
   get protocol(): string | null {
-    return this.#negotiatedProtocol
+    return this.#transport.protocol
   }
 
   // ---- transport handlers ----
@@ -184,14 +184,13 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
       onOpen: () => {
         if (this.#terminal || this.#state !== 'connecting') return
         this.#state = 'open'
-        this.#negotiatedProtocol = this.#transport.protocol
         this.#onOpenHook?.()
         this.#onOpen()
       },
-      onMessage: (data, isBinary) => {
+      onMessage: (data) => {
         if (this.#terminal) return // post-failure discard
         this.#recordLiveness()
-        this.#onMessage(data, isBinary)
+        this.#onMessage(data)
       },
       onPong: () => {
         if (this.#terminal) return
@@ -289,18 +288,14 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   // ---- message intake: dataMode enforcement, then buffering/watermarks ----
 
-  #onMessage(data: string | Uint8Array, isBinary: boolean): void {
-    const received = isBinary ? 'binary' : 'text'
-    if (this.#dataMode === 'text' && isBinary) {
-      this.#rejectDataMode('text', received)
-      return
-    }
-    if (this.#dataMode === 'binary' && !isBinary) {
-      this.#rejectDataMode('binary', received)
+  #onMessage(data: string | Uint8Array): void {
+    const received = typeof data === 'string' ? 'text' : 'binary'
+    if (this.#dataMode !== 'auto' && this.#dataMode !== received) {
+      this.#rejectDataMode(this.#dataMode, received)
       return
     }
     const value = data as MessageOf<M>
-    const bytes = messageBytes(data, isBinary)
+    const bytes = messageBytes(data)
     const waiter = this.#waiters.shift()
     if (waiter) {
       waiter.resolve({ value, done: false })
@@ -511,8 +506,6 @@ function closeDetailForError(error: unknown): CloseEventDetail {
 
 // Byte accounting: binary counts byteLength; strings approximate via UTF-16
 // code units (length * 2) — cheap, deterministic, good enough for watermarks.
-function messageBytes(data: string | Uint8Array, isBinary: boolean): number {
-  return isBinary
-    ? (data as Uint8Array).byteLength
-    : (data as string).length * 2
+function messageBytes(data: string | Uint8Array): number {
+  return typeof data === 'string' ? data.length * 2 : data.byteLength
 }

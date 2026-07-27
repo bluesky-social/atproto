@@ -42,10 +42,9 @@ export class NodeTransport implements Transport {
         // Yield the Buffer's Uint8Array view without copying.
         this.handlers.onMessage(
           new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
-          true,
         )
       } else {
-        this.handlers.onMessage(data.toString('utf8'), false)
+        this.handlers.onMessage(data.toString('utf8'))
       }
     })
     ws.on('pong', () => this.handlers.onPong())
@@ -101,9 +100,5 @@ function toHeaderRecord(
 ): Record<string, string> | undefined {
   if (!headers) return undefined
   // Headers normalizes every HeadersInit form (record, entry pairs, Headers).
-  const record: Record<string, string> = {}
-  new Headers(headers).forEach((value, key) => {
-    record[key] = value
-  })
-  return record
+  return Object.fromEntries(new Headers(headers))
 }

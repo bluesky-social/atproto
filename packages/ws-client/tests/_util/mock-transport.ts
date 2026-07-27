@@ -80,8 +80,8 @@ export class MockTransport implements Transport {
   emitOpen(): void {
     this.handlers.onOpen()
   }
-  emitMessage(data: string | Uint8Array, isBinary: boolean): void {
-    this.handlers.onMessage(data, isBinary)
+  emitMessage(data: string | Uint8Array): void {
+    this.handlers.onMessage(data)
   }
   emitPong(): void {
     this.handlers.onPong()

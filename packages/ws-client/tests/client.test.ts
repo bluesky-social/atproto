@@ -58,12 +58,12 @@ describe('WebSocketClientBase', () => {
 
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitMessage('a', false)
+    mocks[0].emitMessage('a')
     mocks[0].emitClose(1001, 'going away', true) // reconnect
     await vi.advanceTimersByTimeAsync(2000) // backoff
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('b', false)
+    mocks[1].emitMessage('b')
     await consume
 
     expect(received).toEqual(['a', 'b'])
@@ -78,7 +78,7 @@ describe('WebSocketClientBase', () => {
     })()
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitMessage('x', false)
+    mocks[0].emitMessage('x')
     mocks[0].emitClose(1000, '', true) // fatal-clean → stop
     await consume
     expect(received).toEqual(['x'])
@@ -107,7 +107,7 @@ describe('WebSocketClientBase', () => {
     await vi.advanceTimersByTimeAsync(2000)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('ok', false)
+    mocks[1].emitMessage('ok')
     await consume
     expect(errs[0]).toMatchObject({
       willReconnect: true,
@@ -150,8 +150,8 @@ describe('WebSocketClientBase', () => {
     mocks[0].emitOpen()
     // First frame is delivered to the parked consumer; while the generator is
     // suspended at `yield`, the second frame buffers (10 > 5) → overflow.
-    mocks[0].emitMessage(new Uint8Array(10), true)
-    mocks[0].emitMessage(new Uint8Array(10), true) // 10 > 5 → BufferOverflowError
+    mocks[0].emitMessage(new Uint8Array(10))
+    mocks[0].emitMessage(new Uint8Array(10)) // 10 > 5 → BufferOverflowError
     await expect(consume).rejects.toBeInstanceOf(BufferOverflowError)
     expect(mocks).toHaveLength(1)
   })
@@ -172,7 +172,7 @@ describe('WebSocketClientBase', () => {
     await vi.advanceTimersByTimeAsync(1500)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('done', false)
+    mocks[1].emitMessage('done')
     await consume
     expect(received).toEqual(['done'])
     expect(mocks.length).toBeGreaterThanOrEqual(2)
@@ -197,7 +197,7 @@ describe('WebSocketClientBase', () => {
     await vi.advanceTimersByTimeAsync(2000)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('recovered', false)
+    mocks[1].emitMessage('recovered')
     await consume
     expect(received).toEqual(['recovered'])
   })
@@ -220,12 +220,12 @@ describe('WebSocketClientBase', () => {
     })()
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitMessage('a', false)
+    mocks[0].emitMessage('a')
     mocks[0].emitClose(1000, 'batch done', true) // server-sent clean close
     await vi.advanceTimersByTimeAsync(2000)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('b', false)
+    mocks[1].emitMessage('b')
     await consume
     expect(received).toEqual(['a', 'b'])
     expect(mocks).toHaveLength(2)
@@ -244,7 +244,7 @@ describe('WebSocketClientBase', () => {
     })()
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitMessage('one', false)
+    mocks[0].emitMessage('one')
     const closing = ws.close(1000)
     // core sees close → emits its close echo:
     mocks[0].emitClose(1000, '', true)
@@ -355,7 +355,7 @@ describe('WebSocketClientBase', () => {
     await vi.advanceTimersByTimeAsync(1500)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('x', false)
+    mocks[1].emitMessage('x')
     await consume
     expect(urls).toEqual(['ws://host/0', 'ws://host/1'])
   })
@@ -410,7 +410,7 @@ describe('WebSocketClientBase', () => {
     })()
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitMessage('one', false)
+    mocks[0].emitMessage('one')
     mocks[0].emitClose(1006, '', false) // reconnectable → loop parks in backoff sleep
     await tick() // let the rejection propagate through catch/continue into sleep()
 
@@ -439,7 +439,7 @@ describe('WebSocketClientBase', () => {
     // MockTransport records the send; flush it
     mocks[0].sent[0].onFlush()
     await expect(p).resolves.toBeUndefined()
-    mocks[0].emitMessage('x', false)
+    mocks[0].emitMessage('x')
     await consume
   })
 
@@ -490,7 +490,7 @@ describe('shouldReconnect boolean', () => {
     await vi.advanceTimersByTimeAsync(2000)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('ok', false)
+    mocks[1].emitMessage('ok')
     await consume
     expect(received).toEqual(['ok'])
   })
@@ -515,12 +515,12 @@ describe('WebSocketClient hooks', () => {
     })()
     await tick()
     mocks[0].emitOpen()
-    mocks[0].emitMessage('a', false)
+    mocks[0].emitMessage('a')
     mocks[0].emitClose(1001, 'going away', true) // clean 1001 → reconnect
     await vi.advanceTimersByTimeAsync(2000)
     await tick()
     mocks[1].emitOpen()
-    mocks[1].emitMessage('b', false)
+    mocks[1].emitMessage('b')
     await consume
     expect(events).toEqual(['open', 'reconnect'])
   })

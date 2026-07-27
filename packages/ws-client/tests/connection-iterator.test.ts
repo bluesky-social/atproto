@@ -51,8 +51,8 @@ describe('WebSocketConnectionEngine iterator', () => {
     const done = (async () => {
       for await (const msg of engine) received.push(msg)
     })()
-    mock.emitMessage('a', false)
-    mock.emitMessage('b', false)
+    mock.emitMessage('a')
+    mock.emitMessage('b')
     mock.emitClose(1000, '', true)
     await done
     expect(received).toEqual(['a', 'b'])
@@ -82,9 +82,9 @@ describe('WebSocketConnectionEngine iterator', () => {
     const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     // Buffer three messages with no consumer pulling yet.
-    mock.emitMessage('x', false)
-    mock.emitMessage('y', false)
-    mock.emitMessage('z', false)
+    mock.emitMessage('x')
+    mock.emitMessage('y')
+    mock.emitMessage('z')
     mock.emitClose(1000, '', true)
     const received: (string | Uint8Array)[] = []
     let result = await it.next()
@@ -140,7 +140,7 @@ describe('WebSocketConnectionEngine iterator', () => {
     const { engine, mock } = makeEngine()
     const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
-    mock.emitMessage('buffered', false) // buffered, no consumer
+    mock.emitMessage('buffered') // buffered, no consumer
     mock.emitError(new Error('boom')) // failure discards buffer
     await expect(it.next()).rejects.toBeInstanceOf(SocketError)
   })
@@ -152,7 +152,7 @@ describe('WebSocketConnectionEngine iterator', () => {
     })
     const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
-    mock.emitMessage('buffered', false) // buffered, no consumer parked
+    mock.emitMessage('buffered') // buffered, no consumer parked
     engine.terminate()
     expect(mock.terminated).toBe(true)
 
@@ -188,7 +188,7 @@ describe('WebSocketConnectionEngine iterator', () => {
   it('closes with 1000 when the consumer breaks early', async () => {
     const { engine, mock } = makeEngine({ mock: new MockTransport() })
     mock.emitOpen()
-    mock.emitMessage('m', false) // consumer must receive one value before it can break
+    mock.emitMessage('m') // consumer must receive one value before it can break
     for await (const _msg of engine) {
       break
     }
@@ -254,7 +254,7 @@ describe('WebSocketConnectionEngine iterator', () => {
         }
       })()
       mock.emitOpen()
-      mock.emitMessage('one', false)
+      mock.emitMessage('one')
       await pump
       // The graceful close never completes cleanly; the connection fails.
       mock.emitError(new Error('dropped during close'))

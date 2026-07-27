@@ -13,10 +13,10 @@ describe('WebSocketConnectionEngine backpressure', () => {
       highWaterMark: 25, // 3 frames (30 bytes) crosses it
     })
     mock.emitOpen()
-    mock.emitMessage(frame(), true) // 10
-    mock.emitMessage(frame(), true) // 20
+    mock.emitMessage(frame()) // 10
+    mock.emitMessage(frame()) // 20
     expect(mock.paused).toBe(false)
-    mock.emitMessage(frame(), true) // 30 > 25
+    mock.emitMessage(frame()) // 30 > 25
     expect(mock.paused).toBe(true)
   })
 
@@ -26,9 +26,9 @@ describe('WebSocketConnectionEngine backpressure', () => {
       highWaterMark: 25, // low-water = 12.5
     })
     mock.emitOpen()
-    mock.emitMessage(frame(), true) // 10
-    mock.emitMessage(frame(), true) // 20
-    mock.emitMessage(frame(), true) // 30 -> pause
+    mock.emitMessage(frame()) // 10
+    mock.emitMessage(frame()) // 20
+    mock.emitMessage(frame()) // 30 -> pause
     expect(mock.paused).toBe(true)
 
     const it = engine[Symbol.asyncIterator]()
@@ -47,9 +47,9 @@ describe('WebSocketConnectionEngine backpressure', () => {
     // engine that is already terminal throws on iteration, by design).
     const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
-    mock.emitMessage(frame(), true) // 10
-    mock.emitMessage(frame(), true) // 20
-    mock.emitMessage(frame(), true) // 30 > 25 -> overflow
+    mock.emitMessage(frame()) // 10
+    mock.emitMessage(frame()) // 20
+    mock.emitMessage(frame()) // 30 > 25 -> overflow
     expect(mock.terminated).toBe(true)
     await expect(it.next()).rejects.toSatisfy((err) => {
       expect(err).toBeInstanceOf(BufferOverflowError)
@@ -66,9 +66,9 @@ describe('WebSocketConnectionEngine backpressure', () => {
       highWaterMark: 5,
     })
     mock.emitOpen()
-    mock.emitMessage(frame(), true) // 10 > 5 but pauseResume false
+    mock.emitMessage(frame()) // 10 > 5 but pauseResume false
     // pause() is still called on the transport; the transport no-ops it.
     // The engine must not crash and buffering continues.
-    expect(() => mock.emitMessage(frame(), true)).not.toThrow()
+    expect(() => mock.emitMessage(frame())).not.toThrow()
   })
 })

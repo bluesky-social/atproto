@@ -47,7 +47,7 @@ describe('WebSocketConnectionEngine idle timeout', () => {
     void it.next()
     mock.emitOpen()
     for (let i = 0; i < 5; i++) {
-      mock.emitMessage('data', false)
+      mock.emitMessage('data')
       vi.advanceTimersByTime(1000)
     }
     expect(mock.terminated).toBe(false)
@@ -64,9 +64,9 @@ describe('WebSocketConnectionEngine idle timeout', () => {
     void it.next()
     mock.emitOpen()
     // The first frame feeds the parked it.next(); the next two buffer.
-    mock.emitMessage(new Uint8Array(10), true)
-    mock.emitMessage(new Uint8Array(10), true) // buffered: 10
-    mock.emitMessage(new Uint8Array(10), true) // buffered: 20 > 15 -> pause
+    mock.emitMessage(new Uint8Array(10))
+    mock.emitMessage(new Uint8Array(10)) // buffered: 10
+    mock.emitMessage(new Uint8Array(10)) // buffered: 20 > 15 -> pause
     expect(mock.paused).toBe(true)
 
     // Well past 2x the window with no message: a paused socket delivers no

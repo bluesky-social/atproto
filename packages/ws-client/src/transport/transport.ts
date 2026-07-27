@@ -12,7 +12,8 @@ export interface TransportCapabilities {
 
 export interface TransportHandlers {
   onOpen(): void
-  onMessage(data: string | Uint8Array, isBinary: boolean): void
+  /** Binary vs text frame is carried by the data type: Uint8Array vs string. */
+  onMessage(data: string | Uint8Array): void
   onPong(): void
   onClose(code: number, reason: string, wasClean: boolean): void
   onError(err: Error): void

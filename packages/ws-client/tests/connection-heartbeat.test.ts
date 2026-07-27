@@ -34,7 +34,7 @@ describe('WebSocketConnectionEngine heartbeat', () => {
     mock.emitOpen()
     // Never send a pong; only data frames.
     for (let i = 0; i < 5; i++) {
-      mock.emitMessage('busy', false)
+      mock.emitMessage('busy')
       vi.advanceTimersByTime(1000)
     }
     expect(mock.terminated).toBe(false)
@@ -64,9 +64,9 @@ describe('WebSocketConnectionEngine heartbeat', () => {
     void it.next()
     mock.emitOpen()
     // The first frame feeds the parked it.next(); the next two buffer.
-    mock.emitMessage(new Uint8Array(10), true)
-    mock.emitMessage(new Uint8Array(10), true) // buffered: 10
-    mock.emitMessage(new Uint8Array(10), true) // buffered: 20 > 15 -> pause
+    mock.emitMessage(new Uint8Array(10))
+    mock.emitMessage(new Uint8Array(10)) // buffered: 10
+    mock.emitMessage(new Uint8Array(10)) // buffered: 20 > 15 -> pause
     expect(mock.paused).toBe(true)
 
     // Well past 2x the interval with no pong: a paused socket delivers no

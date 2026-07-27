@@ -11,10 +11,10 @@ describe('WebSocketConnectionEngine dataMode', () => {
     })
     mock.emitOpen()
     const it = engine[Symbol.asyncIterator]()
-    mock.emitMessage('t', false)
+    mock.emitMessage('t')
     expect((await it.next()).value).toBe('t')
     const bin = new Uint8Array([1])
-    mock.emitMessage(bin, true)
+    mock.emitMessage(bin)
     expect((await it.next()).value).toBe(bin)
   })
 
@@ -25,7 +25,7 @@ describe('WebSocketConnectionEngine dataMode', () => {
     })
     mock.emitOpen()
     const it = engine[Symbol.asyncIterator]()
-    mock.emitMessage(new Uint8Array([1]), true) // binary -> violation
+    mock.emitMessage(new Uint8Array([1])) // binary -> violation
     expect(mock.closedWith).toEqual({ code: 1003, reason: undefined })
     expect(mock.terminated).toBe(true)
     await expect(it.next()).rejects.toSatisfy((err) => {
@@ -43,7 +43,7 @@ describe('WebSocketConnectionEngine dataMode', () => {
     })
     mock.emitOpen()
     const it = engine[Symbol.asyncIterator]()
-    mock.emitMessage('oops', false) // text -> violation
+    mock.emitMessage('oops') // text -> violation
     await expect(it.next()).rejects.toSatisfy((err) => {
       assert(err instanceof DataModeError)
       expect(err.expected).toBe('binary')
@@ -62,8 +62,8 @@ describe('WebSocketConnectionEngine dataMode', () => {
     const it = engine[Symbol.asyncIterator]()
     mock.emitOpen()
     // Buffer valid text with no consumer, then a binary violation arrives.
-    mock.emitMessage('a', false)
-    mock.emitMessage(new Uint8Array([1]), true) // violation while behind
+    mock.emitMessage('a')
+    mock.emitMessage(new Uint8Array([1])) // violation while behind
     // Buffered valid message is discarded by the failure transition.
     await expect(it.next()).rejects.toBeInstanceOf(DataModeError)
   })
