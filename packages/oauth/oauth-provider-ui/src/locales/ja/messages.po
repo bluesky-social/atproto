@@ -155,7 +155,7 @@ msgid "An application on your device"
 msgstr "デバイス上のアプリ"
 
 #: src/lib/notification-message.ts:30
-#: src/components/error-view.tsx:28
+#: src/components/error-view.tsx:31
 msgid "An error occurred"
 msgstr "エラーが発生しました"
 
@@ -220,6 +220,7 @@ msgstr "{0} に承認されました"
 
 #: src/components/sign-in-picker.tsx:90
 #: src/components/forms/wizard-card.tsx:116
+#: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "戻る"
@@ -260,6 +261,7 @@ msgstr "呼び出し"
 #: src/components/delete-account-dialog.tsx:120
 #: src/components/delete-account-dialog.tsx:203
 #: src/components/authenticate-welcome-view.tsx:57
+#: src/components/forms/form-shell.tsx:70
 #: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "キャンセル"
@@ -799,7 +801,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/pages/account/(authenticated)/route.tsx:147
+#: src/pages/account/(authenticated)/route.tsx:146
 msgid "My Atmosphere Account"
 msgstr "私のAtmosphereアカウント"
 
@@ -808,7 +810,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr "名前"
 
-#: src/components/layouts/account-shell.tsx:41
+#: src/components/layouts/account-shell.tsx:40
 msgid "Navigation"
 msgstr ""
 
@@ -1085,6 +1087,7 @@ msgstr "ステップ {currentPosition} / {count}"
 msgid "Strong"
 msgstr "強い"
 
+#: src/components/forms/form-shell.tsx:65
 #: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "送信"
