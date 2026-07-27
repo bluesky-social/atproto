@@ -39,6 +39,8 @@ The lifecycle is observable via hooks passed as options:
 - `onError(error, reconnect?)` — a connection ended with an error. `reconnect` is present (with the attempt count) when the client will retry, absent when it's giving up.
 - `onClose(detail)` — the client stopped, terminally. Fires exactly once for every started client, whether it stopped on its own (a fatal error, right after its `onError`; or a non-reconnectable clean close) or was stopped by you (`close()`, an aborted `signal`). `detail` is `{ code, reason, wasClean }` — the real close code when a close frame provided one, or `1005` (no status) when the stop happened without one, e.g. between reconnect attempts.
 
+Hooks must not throw. A thrown error will surface as an uncaught exception.
+
 ### Reconnects
 
 Failures reconnect with exponential backoff (capped by `options.maxReconnectSeconds`, default 64), and the backoff resets after each successful connection. When the `url` is given as a function, it's re-invoked on every attempt — use that to refresh a cursor or token, e.g. resuming a firehose from the last-seen event.
