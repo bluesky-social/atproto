@@ -1,7 +1,7 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
+import { AppShell } from '#/components/layouts/app-shell.tsx'
 import { Button } from './forms/button.tsx'
-import { LayoutApp } from './layouts/layout-app.tsx'
 
 export type AuthenticateWelcomeViewParams = {
   onSignIn?: () => void
@@ -15,7 +15,7 @@ export function AuthenticateWelcomeView({
   onCancel,
 }: AuthenticateWelcomeViewParams) {
   return (
-    <LayoutApp
+    <AppShell
       title={msg({ message: 'Authenticate', context: 'AuthenticationPage' })}
     >
       <div className="md:bg-contrast-0 flex w-full max-w-md flex-col items-center px-6 pb-8 pt-12 md:rounded-lg md:border md:border-slate-200 md:px-8 md:shadow-md md:dark:border-slate-700 md:dark:shadow-xl">
@@ -60,6 +60,6 @@ export function AuthenticateWelcomeView({
           )}
         </div>
       </div>
-    </LayoutApp>
+    </AppShell>
   )
 }

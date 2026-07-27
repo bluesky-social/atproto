@@ -240,10 +240,6 @@ msgstr "Blueskyアプリサービス"
 msgid "Bluesky Chat services"
 msgstr "Blueskyチャットサービス"
 
-#: src/pages/router.tsx:20
-msgid "Branding"
-msgstr "ブランディング"
-
 #: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その<1>利用規約</1>と<2>プライバシーポリシー</2>に従って付与します。"
@@ -746,7 +742,7 @@ msgstr "後で"
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/components/layouts/layout-app.tsx:28
+#: src/components/layouts/app-shell.tsx:31
 msgid "Logo"
 msgstr "ロゴ"
 
@@ -811,6 +807,10 @@ msgstr "私のAtmosphereアカウント"
 msgctxt "Error"
 msgid "Name"
 msgstr "名前"
+
+#: src/components/layouts/account-shell.tsx:41
+msgid "Navigation"
+msgstr ""
 
 #: src/components/update-email-form.tsx:54
 #: src/components/update-email-dialog.tsx:181

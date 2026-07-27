@@ -240,10 +240,6 @@ msgstr "Servicios de la app Bluesky"
 msgid "Bluesky Chat services"
 msgstr "Servicios de chat de Bluesky"
 
-#: src/pages/router.tsx:20
-msgid "Branding"
-msgstr "Marca"
-
 #: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
@@ -736,7 +732,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "¡Vamos a restablecer tu contraseña!"
 
-#: src/components/layouts/layout-app.tsx:28
+#: src/components/layouts/app-shell.tsx:31
 msgid "Logo"
 msgstr "Logo"
 
@@ -800,6 +796,10 @@ msgstr ""
 #: src/components/feedback/error-details.tsx:37
 msgctxt "Error"
 msgid "Name"
+msgstr ""
+
+#: src/components/layouts/account-shell.tsx:41
+msgid "Navigation"
 msgstr ""
 
 #: src/components/update-email-form.tsx:54

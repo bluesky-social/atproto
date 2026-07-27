@@ -240,10 +240,6 @@ msgstr "Services de l'application Bluesky"
 msgid "Bluesky Chat services"
 msgstr "Services de messagerie Bluesky"
 
-#: src/pages/router.tsx:20
-msgid "Branding"
-msgstr "Personnalisation"
-
 #: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
@@ -746,7 +742,7 @@ msgstr "Plus tard"
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/components/layouts/layout-app.tsx:28
+#: src/components/layouts/app-shell.tsx:31
 msgid "Logo"
 msgstr "Logo"
 
@@ -811,6 +807,10 @@ msgstr "Mon compte Atmosphère"
 msgctxt "Error"
 msgid "Name"
 msgstr "Nom"
+
+#: src/components/layouts/account-shell.tsx:41
+msgid "Navigation"
+msgstr "Navigation"
 
 #: src/components/update-email-form.tsx:54
 #: src/components/update-email-dialog.tsx:181

@@ -6,10 +6,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { Button } from '#/components/forms/button.tsx'
+import { AppShell } from '#/components/layouts/app-shell.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
-import { LayoutApp } from './components/layouts/layout-app.js'
 
 const {
   //
@@ -33,7 +33,7 @@ function CookieErrorView() {
   const url = new URL(continueUrl)
 
   return (
-    <LayoutApp title={msg`Cookie Error`}>
+    <AppShell title={msg`Cookie Error`}>
       <form
         action={url.origin}
         method="GET"
@@ -62,6 +62,6 @@ function CookieErrorView() {
           </Button>
         </div>
       </form>
-    </LayoutApp>
+    </AppShell>
   )
 }
