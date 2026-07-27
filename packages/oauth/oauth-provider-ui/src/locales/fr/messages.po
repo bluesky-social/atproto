@@ -99,7 +99,7 @@ msgstr "Accéder à certaines parties de votre compte Bluesky et lire vos préf�
 msgid "Account"
 msgstr "Compte utilisateur"
 
-#: src/components/utils/account-image.tsx:60
+#: src/components/identity/account-avatar.tsx:58
 msgid "Account avatar"
 msgstr "Avatar du compte"
 
@@ -111,11 +111,11 @@ msgstr "Compte désactivé"
 msgid "Account deleted"
 msgstr "Compte supprimé"
 
-#: src/components/utils/account-identifier.tsx:29
+#: src/components/identity/account-identifier.tsx:29
 msgid "Account identifier"
 msgstr "Identifiant du compte"
 
-#: src/components/utils/account-name.tsx:25
+#: src/components/identity/account-name.tsx:25
 msgid "Account name"
 msgstr "Nom du compte"
 
@@ -150,7 +150,7 @@ msgstr "alice.com"
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
-#: src/components/utils/client-name.tsx:46
+#: src/components/identity/client-name.tsx:46
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
 
@@ -405,7 +405,7 @@ msgstr "Données"
 msgid "Deactivate account"
 msgstr "Désactiver le compte"
 
-#: src/components/utils/account-image.tsx:82
+#: src/components/identity/account-avatar.tsx:72
 msgid "Deactivated account"
 msgstr "Compte désactivé"
 

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { CustomizationName } from '#/components/customization-name.tsx'
-import { AccountIdentifier } from '#/components/utils/account-identifier'
+import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { LinkExternal } from '#/components/utils/link-external'
 import { useAuthenticatedSession } from '#/contexts/authentication'
 

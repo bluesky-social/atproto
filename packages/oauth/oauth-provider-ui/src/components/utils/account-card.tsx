@@ -3,10 +3,10 @@ import {
   InputContainer,
   type InputContainerProps,
 } from '#/components/forms/input-container.tsx'
+import { AccountAvatar } from '#/components/identity/account-avatar.tsx'
+import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
+import { AccountName } from '#/components/identity/account-name.tsx'
 import type { Override } from '#/lib/util.ts'
-import { AccountIdentifier } from './account-identifier.tsx'
-import { AccountImage } from './account-image.tsx'
-import { AccountName } from './account-name.tsx'
 
 export type AccountCardProps = Override<
   InputContainerProps,
@@ -18,7 +18,7 @@ export type AccountCardProps = Override<
 
 export function AccountCard({ account, ...props }: AccountCardProps) {
   return (
-    <InputContainer icon={<AccountImage account={account} />} {...props}>
+    <InputContainer icon={<AccountAvatar account={account} />} {...props}>
       <div className="min-w-0 flex-1">
         {account.name && (
           <AccountName

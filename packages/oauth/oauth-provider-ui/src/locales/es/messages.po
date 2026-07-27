@@ -99,7 +99,7 @@ msgstr ""
 msgid "Account"
 msgstr "Cuenta"
 
-#: src/components/utils/account-image.tsx:60
+#: src/components/identity/account-avatar.tsx:58
 msgid "Account avatar"
 msgstr ""
 
@@ -111,11 +111,11 @@ msgstr ""
 msgid "Account deleted"
 msgstr ""
 
-#: src/components/utils/account-identifier.tsx:29
+#: src/components/identity/account-identifier.tsx:29
 msgid "Account identifier"
 msgstr ""
 
-#: src/components/utils/account-name.tsx:25
+#: src/components/identity/account-name.tsx:25
 msgid "Account name"
 msgstr ""
 
@@ -150,7 +150,7 @@ msgstr ""
 msgid "Already have a code?"
 msgstr "¿Ya tienes un código?"
 
-#: src/components/utils/client-name.tsx:46
+#: src/components/identity/client-name.tsx:46
 msgid "An application on your device"
 msgstr "Una aplicación en tu dispositivo"
 
@@ -405,7 +405,7 @@ msgstr ""
 msgid "Deactivate account"
 msgstr ""
 
-#: src/components/utils/account-image.tsx:82
+#: src/components/identity/account-avatar.tsx:72
 msgid "Deactivated account"
 msgstr ""
 

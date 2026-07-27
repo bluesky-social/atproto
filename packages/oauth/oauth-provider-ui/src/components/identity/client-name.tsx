@@ -1,11 +1,11 @@
 import { Trans } from '@lingui/react/macro'
 import { type JSX, useMemo } from 'react'
+import { UrlViewer } from '#/components/utils/url-viewer.tsx'
 import {
   type OAuthClientMetadata,
   isConventionalOAuthClientId,
 } from '#/lib/oauth-client.ts'
 import type { Override } from '#/lib/util.ts'
-import { UrlViewer } from './url-viewer.tsx'
 
 export type ClientNameProps = Override<
   Omit<JSX.IntrinsicElements['span'], 'children'>,

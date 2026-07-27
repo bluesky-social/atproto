@@ -3,10 +3,10 @@ import { XIcon } from '@phosphor-icons/react'
 import * as Popover from '@radix-ui/react-popover'
 import type { ReactNode } from 'react'
 import { Button, type ButtonProps } from '#/components/forms/button.tsx'
+import { AccountAvatar } from '#/components/identity/account-avatar.tsx'
+import { AccountSummary } from '#/components/identity/account-summary.tsx'
 import { useAuthenticationContext } from '#/contexts/authentication.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
-import { AccountImage } from './account-image.tsx'
-import { AccountOverview } from './account-overview.tsx'
 
 export type AccountSelectorProps = Omit<
   ButtonProps,
@@ -28,7 +28,7 @@ export function AccountSelector(props: AccountSelectorProps): ReactNode {
           color="gray"
           {...props}
         >
-          <AccountImage account={session.account} size={props.size} />
+          <AccountAvatar account={session.account} size={props.size} />
         </Button>
       </Popover.Trigger>
       <Popover.Portal>
@@ -40,7 +40,7 @@ export function AccountSelector(props: AccountSelectorProps): ReactNode {
           style={{ width: 320 }}
         >
           <div className="relative flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-            <AccountOverview
+            <AccountSummary
               account={session.account}
               aria-label={t`Account overview`}
               className="mt-4"

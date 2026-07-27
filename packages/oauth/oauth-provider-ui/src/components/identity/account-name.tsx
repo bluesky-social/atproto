@@ -2,32 +2,33 @@ import { useLingui } from '@lingui/react/macro'
 import type { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import type { Override } from '#/lib/util.ts'
-import { Handle } from './handle.tsx'
+import { AccountIdentifier } from './account-identifier.tsx'
 
-export type AccountIdentifierProps = Override<
+export type AccountNameProps = Override<
   Omit<JSX.IntrinsicElements['span'], 'children'>,
   {
     account: Account
   }
 >
 
-export function AccountIdentifier({
+export function AccountName({
   account,
 
   // span
   'aria-label': ariaLabel,
   ...props
-}: AccountIdentifierProps) {
+}: AccountNameProps) {
   const { t } = useLingui()
 
-  const handle = account.handle
-  if (handle) {
-    return <Handle handle={handle} aria-label={ariaLabel} {...props} />
+  if (account.name) {
+    return (
+      <span {...props} aria-label={ariaLabel ?? t`Account name`}>
+        {account.name}
+      </span>
+    )
   }
 
   return (
-    <span {...props} aria-label={ariaLabel ?? t`Account identifier`}>
-      {account.did}
-    </span>
+    <AccountIdentifier {...props} account={account} aria-label={ariaLabel} />
   )
 }

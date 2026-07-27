@@ -3,13 +3,13 @@ import { type ReactNode, useRef } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
+import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
+import { ClientName } from '#/components/identity/client-name.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
 import { Button } from './forms/button.tsx'
 import { type FormHandler, SmartForm } from './forms/smart-form.tsx'
-import { AccountIdentifier } from './utils/account-identifier.tsx'
-import { ClientImage } from './utils/client-image.tsx'
-import { ClientName } from './utils/client-name.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
 
@@ -106,7 +106,7 @@ export function ConsentForm({
         <>
           <DescriptionCard
             image={
-              <ClientImage
+              <ClientAvatar
                 clientId={clientId}
                 clientMetadata={clientMetadata}
                 clientTrusted={clientTrusted}

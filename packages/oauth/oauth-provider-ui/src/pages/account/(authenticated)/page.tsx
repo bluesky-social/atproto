@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import type { JSX } from 'react/jsx-runtime'
 import { CustomizationName } from '#/components/customization-name.tsx'
-import { AccountOverview } from '#/components/utils/account-overview.tsx'
+import { AccountSummary } from '#/components/identity/account-summary.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 
 export function Page(): ReactNode {
@@ -12,9 +12,9 @@ export function Page(): ReactNode {
   return (
     <div className="flex min-h-full flex-col items-center gap-4">
       <div className="flex flex-1 flex-col items-center justify-center">
-        <AccountOverview account={account}>
+        <AccountSummary account={account}>
           <HostedByParagraph className="text-text-light text-center text-sm" />
-        </AccountOverview>
+        </AccountSummary>
       </div>
     </div>
   )
