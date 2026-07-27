@@ -1,36 +1,17 @@
-import { once } from 'node:events'
-import { type IncomingMessage, createServer } from 'node:http'
-import type { AddressInfo } from 'node:net'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
 import { describe, expect, it, vi } from 'vitest'
-import type { WebSocket } from 'ws'
-import { WebSocketServer } from 'ws'
 import { WebSocketConnection } from '../src/index.ts'
-
-async function startServer(
-  onConnection: (ws: WebSocket, req: IncomingMessage) => void,
-) {
-  const server = createServer()
-  const { terminate } = httpTerminator.createHttpTerminator({ server })
-  const wss = new WebSocketServer({ server })
-  wss.on('connection', (ws, req) => onConnection(ws, req))
-  await once(server.listen(0), 'listening')
-  const port = (server.address() as AddressInfo).port
-  return { url: `ws://localhost:${port}`, terminate }
-}
+import { startServer } from './_util/server.js'
 
 describe('NodeTransport via WebSocketConnection', () => {
   it('yields text messages then ends on clean close', async () => {
-    const { url, terminate } = await startServer((ws) => {
+    await using server = await startServer((ws) => {
       ws.send('hello')
       ws.send('world')
       ws.close(1000)
     })
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
     let closeDetail: { code: number } | undefined
-    const ws = new WebSocketConnection(url, {
+    const ws = new WebSocketConnection(server.url, {
       dataMode: 'text',
       onClose: (detail) => (closeDetail = detail),
     })
@@ -41,13 +22,12 @@ describe('NodeTransport via WebSocketConnection', () => {
   })
 
   it('yields binary frames as Uint8Array in binary mode', async () => {
-    const { url, terminate } = await startServer((ws) => {
+    await using server = await startServer((ws) => {
       ws.send(Buffer.from([1, 2, 3]))
       ws.close(1000)
     })
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketConnection(url, { dataMode: 'binary' })
+    const ws = new WebSocketConnection(server.url, { dataMode: 'binary' })
     const received: Uint8Array[] = []
     for await (const msg of ws) received.push(msg)
     expect(received).toHaveLength(1)
@@ -56,17 +36,16 @@ describe('NodeTransport via WebSocketConnection', () => {
 
   it('send() delivers to the server and resolves on flush', async () => {
     const seen: string[] = []
-    const { url, terminate } = await startServer((ws) => {
+    await using server = await startServer((ws) => {
       ws.on('message', (data) => {
         seen.push(data.toString())
         ws.close(1000)
       })
     })
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
     let onOpen!: () => void
     const opened = new Promise<void>((resolve) => (onOpen = resolve))
-    const ws = new WebSocketConnection(url, { dataMode: 'text', onOpen })
+    const ws = new WebSocketConnection(server.url, { dataMode: 'text', onOpen })
     // Lazy open: begin draining so the transport opens, then send once open.
     const drained = (async () => {
       for await (const _msg of ws) {
@@ -80,9 +59,8 @@ describe('NodeTransport via WebSocketConnection', () => {
   })
 
   it('reports pauseResume + heartbeat capabilities', async () => {
-    const { url, terminate } = await startServer((ws) => ws.close(1000))
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
-    const ws = new WebSocketConnection(url)
+    await using server = await startServer((ws) => ws.close(1000))
+    const ws = new WebSocketConnection(server.url)
     expect(ws.capabilities).toEqual({ heartbeat: true, pauseResume: true })
     for await (const _msg of ws) {
       /* drain */
@@ -91,13 +69,12 @@ describe('NodeTransport via WebSocketConnection', () => {
 
   it('sends custom headers on the upgrade request (record form)', async () => {
     let seenAuth: string | undefined
-    const { url, terminate } = await startServer((ws, req) => {
+    await using server = await startServer((ws, req) => {
       seenAuth = req.headers['authorization']
       ws.close(1000)
     })
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const wsc = new WebSocketConnection(url, {
+    const wsc = new WebSocketConnection(server.url, {
       headers: { Authorization: 'Bearer t0ken' },
     })
     for await (const _msg of wsc) {
@@ -108,13 +85,12 @@ describe('NodeTransport via WebSocketConnection', () => {
 
   it('sends custom headers from a WHATWG Headers instance', async () => {
     let seenAuth: string | undefined
-    const { url, terminate } = await startServer((ws, req) => {
+    await using server = await startServer((ws, req) => {
       seenAuth = req.headers['authorization']
       ws.close(1000)
     })
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const wsc = new WebSocketConnection(url, {
+    const wsc = new WebSocketConnection(server.url, {
       headers: new Headers({ Authorization: 'Bearer hdr' }),
     })
     for await (const _msg of wsc) {
@@ -124,12 +100,11 @@ describe('NodeTransport via WebSocketConnection', () => {
   })
 
   it('does not open the socket until open() is called', async () => {
-    const { url, terminate } = await startServer((ws) => ws.close(1000))
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
+    await using server = await startServer((ws) => ws.close(1000))
     const { NodeTransport } = await import('../src/transport/node-transport.js')
     // Wire minimal handlers so open() has something to call.
     let opened = false
-    const transport = new NodeTransport(url, {
+    const transport = new NodeTransport(server.url, {
       onOpen: () => (opened = true),
       onMessage: () => {},
       onPong: () => {},

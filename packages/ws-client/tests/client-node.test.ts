@@ -1,33 +1,11 @@
-import { once } from 'node:events'
-import { createServer } from 'node:http'
-import type { IncomingMessage } from 'node:http'
-import type { AddressInfo } from 'node:net'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
 import { describe, expect, it, vi } from 'vitest'
-import { type WebSocket as WsSocket, WebSocketServer } from 'ws'
 import { WebSocketClient } from '../src/index.ts'
-
-function startServer(
-  onConnection: (ws: WsSocket, req: IncomingMessage) => void,
-) {
-  const server = createServer()
-  const { terminate } = httpTerminator.createHttpTerminator({ server })
-  const wss = new WebSocketServer({ server })
-  wss.on('connection', onConnection)
-  return {
-    ready: (async () => {
-      await once(server.listen(0), 'listening')
-      return `ws://localhost:${(server.address() as AddressInfo).port}`
-    })(),
-    terminate,
-  }
-}
+import { startServer } from './_util/server.js'
 
 describe('WebSocketClient (node integration)', () => {
   it('reconnects after the server drops the connection', async () => {
     let connections = 0
-    const { ready, terminate } = startServer((ws) => {
+    await using server = await startServer((ws) => {
       connections++
       if (connections === 1) {
         // `ws.close(1006)` throws in the real `ws` lib — 1006 is a
@@ -41,10 +19,8 @@ describe('WebSocketClient (node integration)', () => {
         ws.close(1000)
       }
     })
-    const url = await ready
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketClient(url, { dataMode: 'text' })
+    const ws = new WebSocketClient(server.url, { dataMode: 'text' })
     const received: string[] = []
     for await (const msg of ws) {
       received.push(msg)
@@ -57,7 +33,7 @@ describe('WebSocketClient (node integration)', () => {
   it('applies headers on each (re)connect', async () => {
     const auths: (string | undefined)[] = []
     let n = 0
-    const { ready, terminate } = startServer((ws, req) => {
+    await using server = await startServer((ws, req) => {
       auths.push(req.headers['authorization'])
       const isFirst = n++ === 0
       ws.send(`msg${n - 1}`, () => {
@@ -67,10 +43,8 @@ describe('WebSocketClient (node integration)', () => {
         else ws.close(1000)
       })
     })
-    const url = await ready
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketClient(url, {
+    const ws = new WebSocketClient(server.url, {
       dataMode: 'text',
       headers: { Authorization: 'Bearer tok' },
     })
@@ -87,7 +61,7 @@ describe('WebSocketClient (node integration)', () => {
     // must not exit mid-backoff — the backoff timer must stay ref'd. Capture
     // the timer created during backoff and assert it holds the event loop.
     let connections = 0
-    const { ready, terminate } = startServer((ws) => {
+    await using server = await startServer((ws) => {
       connections++
       if (connections === 1) {
         // Abnormal drop (see note in the first test): client should back off
@@ -98,8 +72,6 @@ describe('WebSocketClient (node integration)', () => {
         ws.close(1000)
       }
     })
-    const url = await ready
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
     // Sample each timer's ref state one microtask after creation: the sleep
     // helper calls unref() synchronously right after setTimeout returns, so
@@ -115,7 +87,7 @@ describe('WebSocketClient (node integration)', () => {
       return timer
     }) as typeof setTimeout)
     try {
-      const ws = new WebSocketClient(url, { dataMode: 'text' })
+      const ws = new WebSocketClient(server.url, { dataMode: 'text' })
       const received: string[] = []
       for await (const msg of ws) {
         received.push(msg)
@@ -134,16 +106,14 @@ describe('WebSocketClient (node integration)', () => {
 
   it('send() delivers to the server when connected', async () => {
     const seen: string[] = []
-    const { ready, terminate } = startServer((ws) => {
+    await using server = await startServer((ws) => {
       ws.on('message', (d) => {
         seen.push(d.toString())
         ws.close(1000)
       })
     })
-    const url = await ready
-    await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
-    const ws = new WebSocketClient(url, { dataMode: 'text' })
+    const ws = new WebSocketClient(server.url, { dataMode: 'text' })
     // Kick off iteration so a connection is established.
     const done = (async () => {
       for await (const _msg of ws) {
