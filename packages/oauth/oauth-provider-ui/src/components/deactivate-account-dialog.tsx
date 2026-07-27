@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useState } from 'react'
+import { type ReactElement, type ReactNode, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { SmartForm } from '#/components/forms/smart-form.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 
 export type DeactivateAccountDialogProps = {
   onConfirm: () => void | PromiseLike<void>
@@ -17,8 +17,8 @@ export function DeactivateAccountDialog({
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <DialogSimple
-      trigger={children}
+    <DialogShell
+      trigger={children as ReactElement}
       title={<Trans>Deactivate account</Trans>}
       description={
         <Trans>
@@ -66,6 +66,6 @@ export function DeactivateAccountDialog({
           </>
         )}
       />
-    </DialogSimple>
+    </DialogShell>
   )
 }

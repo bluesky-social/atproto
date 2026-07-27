@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useState } from 'react'
-import { Button } from '#/components/forms/button.tsx'
+import { type ReactElement, type ReactNode, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { SmartForm } from '#/components/forms/smart-form.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 
 export type OAuthSessionDetailsDialogProps = {
@@ -25,8 +25,8 @@ export function OAuthSessionDetailsDialog({
   const hasIdentityOnlyAccess = !scope || scope === 'atproto'
 
   return (
-    <DialogSimple
-      trigger={children}
+    <DialogShell
+      trigger={children as ReactElement}
       title={clientName}
       description={clientIdentifier}
       open={open}
@@ -71,6 +71,6 @@ export function OAuthSessionDetailsDialog({
           )
         }
       />
-    </DialogSimple>
+    </DialogShell>
   )
 }

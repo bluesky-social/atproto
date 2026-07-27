@@ -55,9 +55,15 @@ export function DialogShell({
       }}
     >
       <DialogTrigger render={trigger} />
+      {/* @NOTE `max-h` + `overflow-y-auto` are deliberate additions. Base UI's
+        DialogContent is `fixed` and vertically centred with no height cap, so a
+        tall dialog (the DNS instructions, the delete-account flow) overflows
+        both edges of a short viewport with no way to reach its buttons — a
+        fixed element cannot be scrolled into view. The previous DialogSimple
+        capped it at 85vh for the same reason. */}
       <DialogContent
         role="dialog"
-        className={cn('sm:max-w-md', className)}
+        className={cn('max-h-[85vh] overflow-y-auto sm:max-w-md', className)}
         showCloseButton={dismissable}
       >
         <DialogHeader>

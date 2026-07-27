@@ -1,9 +1,9 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
-import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
-import { Button } from '#/components/forms/button.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import { DeleteAccountConfirmForm } from './delete-account-confirm-form.tsx'
 import { Handle } from './utils/handle.tsx'
@@ -78,8 +78,8 @@ export function DeleteAccountDialog({
 
   if (step === Step.FinalConfirm) {
     return (
-      <DialogSimple
-        trigger={children}
+      <DialogShell
+        trigger={children as ReactElement}
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
@@ -103,8 +103,7 @@ export function DeleteAccountDialog({
       >
         <div className="align-stretch flex flex-col gap-4">
           <Button
-            color="error"
-            loading={finalConfirm.loading || confirmPending}
+            variant="destructive"
             disabled={finalConfirm.loading || confirmPending}
             onClick={() => void finalConfirm.run()}
             className="w-full"
@@ -120,14 +119,14 @@ export function DeleteAccountDialog({
             <Trans>Cancel</Trans>
           </Button>
         </div>
-      </DialogSimple>
+      </DialogShell>
     )
   }
 
   if (step === Step.Confirm) {
     return (
-      <DialogSimple
-        trigger={children}
+      <DialogShell
+        trigger={children as ReactElement}
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
@@ -148,7 +147,6 @@ export function DeleteAccountDialog({
         <DeleteAccountConfirmForm
           email={email}
           // Disables the form while a code is being requested
-          loading={requestPending}
           onResend={onRequest}
           onCancel={() => setOpen(false)}
           handler={async (data) => {
@@ -156,13 +154,13 @@ export function DeleteAccountDialog({
             setStep(Step.FinalConfirm)
           }}
         />
-      </DialogSimple>
+      </DialogShell>
     )
   }
 
   return (
-    <DialogSimple
-      trigger={children}
+    <DialogShell
+      trigger={children as ReactElement}
       open={open}
       onOpenChange={setOpen}
       dismissable={dismissable}
@@ -182,18 +180,17 @@ export function DeleteAccountDialog({
       }
     >
       <div className="align-stretch flex flex-col gap-4">
-        <ButtonRequestCode
+        <RequestCodeButton
           action={async () => {
             await onRequest()
             setStep(Step.Confirm)
           }}
-          loading={requestPending}
           disabled={confirmPending}
-          color="primary"
+          variant="default"
           className="w-full"
         >
           <Trans>Send email</Trans>
-        </ButtonRequestCode>
+        </RequestCodeButton>
 
         <Button
           onClick={() => setOpen(false)}
@@ -212,6 +209,6 @@ export function DeleteAccountDialog({
           </Trans>
         </Notice>
       </div>
-    </DialogSimple>
+    </DialogShell>
   )
 }

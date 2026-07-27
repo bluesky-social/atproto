@@ -146,7 +146,7 @@ msgid "alice.com"
 msgstr ""
 
 #: src/components/verify-email-dialog.tsx:73
-#: src/components/update-password-dialog.tsx:77
+#: src/components/update-password-dialog.tsx:76
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "¿Ya tienes un código?"
@@ -260,8 +260,8 @@ msgstr "Llamar"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:44
-#: src/components/delete-account-dialog.tsx:120
-#: src/components/delete-account-dialog.tsx:203
+#: src/components/delete-account-dialog.tsx:119
+#: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-shell.tsx:70
 #: src/components/forms/form-card.tsx:60
@@ -284,7 +284,7 @@ msgstr ""
 msgid "Chat"
 msgstr "Chat"
 
-#: src/components/delete-account-dialog.tsx:137
+#: src/components/delete-account-dialog.tsx:136
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr ""
 
@@ -293,7 +293,7 @@ msgstr ""
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Revisa tu correo electrónico {0} para encontrar un código de inicio de sesión e ingrésalo aquí."
 
-#: src/components/delete-account-dialog.tsx:142
+#: src/components/delete-account-dialog.tsx:141
 msgid "Check your email for the confirmation code to enter below:"
 msgstr ""
 
@@ -601,11 +601,11 @@ msgstr ""
 msgid "File contents"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:172
+#: src/components/delete-account-dialog.tsx:170
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:177
+#: src/components/delete-account-dialog.tsx:175
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr ""
 
@@ -1024,7 +1024,7 @@ msgstr "Seleccionar dominio"
 msgid "Select from an existing account"
 msgstr "Seleccionar desde una cuenta existente"
 
-#: src/components/delete-account-dialog.tsx:195
+#: src/components/delete-account-dialog.tsx:192
 msgid "Send email"
 msgstr ""
 
@@ -1402,7 +1402,7 @@ msgstr "Identificador o contraseña incorrectos"
 msgid "Yes, Deactivate"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:112
+#: src/components/delete-account-dialog.tsx:111
 msgid "Yes, delete my account"
 msgstr ""
 
@@ -1418,7 +1418,7 @@ msgstr ""
 msgid "You are being redirected..."
 msgstr "Estás siendo redirigido..."
 
-#: src/components/delete-account-dialog.tsx:207
+#: src/components/delete-account-dialog.tsx:204
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr ""
 

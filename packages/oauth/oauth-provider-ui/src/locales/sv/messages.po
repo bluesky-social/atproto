@@ -146,7 +146,7 @@ msgid "alice.com"
 msgstr "alice.com"
 
 #: src/components/verify-email-dialog.tsx:73
-#: src/components/update-password-dialog.tsx:77
+#: src/components/update-password-dialog.tsx:76
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "Har du redan en kod?"
@@ -260,8 +260,8 @@ msgstr "Anrop"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:44
-#: src/components/delete-account-dialog.tsx:120
-#: src/components/delete-account-dialog.tsx:203
+#: src/components/delete-account-dialog.tsx:119
+#: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-shell.tsx:70
 #: src/components/forms/form-card.tsx:60
@@ -284,7 +284,7 @@ msgstr "Ändra ditt lösenord"
 msgid "Chat"
 msgstr "Chatt"
 
-#: src/components/delete-account-dialog.tsx:137
+#: src/components/delete-account-dialog.tsx:136
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange den nedan:"
 
@@ -293,7 +293,7 @@ msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange de
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Titta i inkorgen för {0} efter en inloggningskod och ange den här."
 
-#: src/components/delete-account-dialog.tsx:142
+#: src/components/delete-account-dialog.tsx:141
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Titta i din inkorg efter bekräftelsekoden och ange den nedan:"
 
@@ -601,11 +601,11 @@ msgstr "Det gick inte att verifiera e-postadressen"
 msgid "File contents"
 msgstr "Filens innehåll"
 
-#: src/components/delete-account-dialog.tsx:172
+#: src/components/delete-account-dialog.tsx:170
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-postadress <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:177
+#: src/components/delete-account-dialog.tsx:175
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-postadress."
 
@@ -1034,7 +1034,7 @@ msgstr "Välj domän"
 msgid "Select from an existing account"
 msgstr "Välj ett befintligt konto"
 
-#: src/components/delete-account-dialog.tsx:195
+#: src/components/delete-account-dialog.tsx:192
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
 
@@ -1412,7 +1412,7 @@ msgstr "Fel identifierare eller lösenord"
 msgid "Yes, Deactivate"
 msgstr "Ja, inaktivera"
 
-#: src/components/delete-account-dialog.tsx:112
+#: src/components/delete-account-dialog.tsx:111
 msgid "Yes, delete my account"
 msgstr "Ja, radera mitt konto"
 
@@ -1428,7 +1428,7 @@ msgstr "igår"
 msgid "You are being redirected..."
 msgstr "Du omdirigeras…"
 
-#: src/components/delete-account-dialog.tsx:207
+#: src/components/delete-account-dialog.tsx:204
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Om du vill kan du <0>tillfälligt inaktivera</0> ditt konto istället. Det gör att din profil samt dina inlägg, flöden och listor slutar att synas för andra Bluesky-användare. Du kan återaktivera ditt konto när som helst genom att logga in."
 
