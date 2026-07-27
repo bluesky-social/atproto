@@ -28,6 +28,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsgo --build tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.16"
   }
 }
