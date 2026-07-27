@@ -66,7 +66,9 @@ permessage-deflate compression is offered by default, identically on Node.js and
 
 ### Sending
 
-`send(data)` resolves when the data is handed off, and rejects with `WebSocketClientError` if the client isn't currently connected, so there's no message queueing across reconnects. Check `connected` first, or catch and retry after the next `onReconnect`.
+`send(data)` resolves when the data is handed off (flushed to the OS socket on Node.js, accepted by the WebSocket in the browser), and rejects with `WebSocketClientError` if the client isn't currently connected, so there's no message queueing across reconnects. Check `connected` first, or catch and retry after the next `onReconnect`.
+
+Hand-off does not guarantee delivery. A resolved `send` can still be lost if the connection drops before the peer processes it. Consumers that need delivery guarantees should layer application-level acknowledgements on the message stream.
 
 ### Node.js-only `headers`
 

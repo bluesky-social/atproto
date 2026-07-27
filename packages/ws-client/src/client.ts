@@ -152,6 +152,11 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
    * (never iterated, or stopped), rejects with a {@link WebSocketClientError};
    * otherwise the connection answers for itself — rejecting with a
    * {@link WebSocketConnectionError} if it can't send (e.g. mid-reconnect).
+   *
+   * Resolution means hand-off (flushed to the OS socket on Node.js, accepted
+   * by the WebSocket in the browser), not delivery — at-most-once, like a
+   * bare WebSocket. Nothing is queued or replayed across reconnects; layer
+   * application-level acknowledgements for delivery guarantees.
    */
   async send(data: MessageOf<M>): Promise<void> {
     if (!this.#connection) {

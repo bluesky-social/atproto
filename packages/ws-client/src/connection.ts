@@ -368,6 +368,15 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   // ---- public methods ----
 
+  /**
+   * Sends a message; rejects with a {@link WebSocketConnectionError} when the
+   * connection is not open.
+   *
+   * Resolution means hand-off (flushed to the OS socket on Node.js, accepted
+   * by the WebSocket in the browser), not delivery — at-most-once, like a
+   * bare WebSocket. Layer application-level acknowledgements for delivery
+   * guarantees.
+   */
   async send(data: MessageOf<M>): Promise<void> {
     if (this.#state !== 'open') {
       throw new WebSocketConnectionError('WebSocketConnection is not open')
