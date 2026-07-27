@@ -79,17 +79,29 @@ export function RequestCodeButton({
       aria-live={showRateLimit ? 'polite' : ariaLive}
       aria-atomic="true"
     >
-      {showRateLimit || showProgressWhenIdle ? (
+      {showProgressWhenIdle && (
         <CircularProgress
           aria-hidden
           size={16}
           value={percent}
           startAngle={-90}
         />
-      ) : (
-        <SendIcon aria-hidden />
       )}
+      {!showProgressWhenIdle && !showRateLimit && <SendIcon aria-hidden />}
+
       <span className="truncate">{children}</span>
+
+      {/* @NOTE The cooldown is shown as text rather than as a progress ring.
+        At the start of a cooldown the ring is nearly empty and reads as a
+        broken spinner beside greyed-out text. This reuses the existing
+        "Retry in {remainingSeconds}s" message, so no new msgid. These children
+        live inside the component, not inside the caller's <Trans>, so they do
+        not affect the message's placeholder indices. */}
+      {showRateLimit && !showProgressWhenIdle && (
+        <span className="text-muted-foreground tabular-nums">
+          {t`Retry in ${remainingSeconds}s`}
+        </span>
+      )}
     </Button>
   )
 }

@@ -1,55 +1,101 @@
-import { Trans } from '@lingui/react/macro'
-import { type HandleString, isValidHandle } from '@atproto/syntax'
-import { InputHandleCustom } from '#/components/forms/input-handle-custom.tsx'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Trans, useLingui } from '@lingui/react/macro'
+import { AtSignIcon } from 'lucide-react'
+import { useForm, useWatch } from 'react-hook-form'
 import {
-  SmartForm,
-  type WrappedSmartFormProps,
-} from '#/components/forms/smart-form.tsx'
-import { FormField } from './forms/form-field.tsx'
+  type HandleString,
+  isValidHandle,
+  isValidTld,
+  normalizeHandle,
+} from '@atproto/syntax'
+import { TextField } from '#/components/forms/fields/text-field.tsx'
+import {
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
+import {
+  type UpdateHandleCustomValues,
+  updateHandleCustomSchema,
+} from '#/lib/form-schemas.ts'
 import { InputHandleCustomInstructions } from './forms/input-handle-custom-instructions.tsx'
 
 export type UpdateHandleCustomData = {
   handle: HandleString
 }
 
-export type UpdateHandleCustomFormProps =
-  WrappedSmartFormProps<UpdateHandleCustomData> & {
-    did: string
+export type UpdateHandleCustomFormProps = Omit<
+  FormShellProps<UpdateHandleCustomValues>,
+  'form' | 'onSubmit'
+> & {
+  did: string
+  /** Seeds the field when re-opening the dialog. */
+  domainDefault?: string
+  handler: (
+    data: UpdateHandleCustomData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
+
+/** Normalises typed input into a handle, or undefined when it is not yet one. */
+function parseHandle(value: string): HandleString | undefined {
+  const trimmed = normalizeHandle(value.trim())
+  if (trimmed.length && isValidHandle(trimmed) && isValidTld(trimmed)) {
+    return trimmed as HandleString
   }
+  return undefined
+}
 
 export function UpdateHandleCustomForm({
   did,
-
-  // FormProps
+  domainDefault,
+  handler,
   ...props
 }: UpdateHandleCustomFormProps) {
-  return (
-    <SmartForm
-      {...props}
-      validate={({ handle }) => {
-        if (handle && isValidHandle(handle)) return { handle }
-      }}
-      fields={({ values, setterFor }) => (
-        <>
-          <FormField label={<Trans>Enter the domain you want to use</Trans>}>
-            <InputHandleCustom
-              defaultValue={values.handle}
-              onHandle={setterFor('handle')}
-              did={did}
-              name="domain"
-              required
-              autoFocus
-              enterKeyHint="done"
-            />
-          </FormField>
+  const { t } = useLingui()
 
-          <InputHandleCustomInstructions
-            className="text-sm"
-            handle={values.handle}
-            did={did}
-          />
-        </>
-      )}
-    />
+  const form = useForm<UpdateHandleCustomValues>({
+    resolver: zodResolver(updateHandleCustomSchema),
+    reValidateMode: 'onChange',
+    defaultValues: { domain: domainDefault ?? '' },
+  })
+
+  // The DNS/HTTP instructions update live as the user types.
+  const domain = useWatch({ control: form.control, name: 'domain' })
+  const handle = parseHandle(domain ?? '')
+
+  return (
+    <FormShell
+      {...props}
+      form={form}
+      submittable={handle != null}
+      onSubmit={(values, signal) => {
+        const parsed = parseHandle(values.domain)
+        if (!parsed) return
+        return handler({ handle: parsed }, signal)
+      }}
+    >
+      <TextField
+        control={form.control}
+        name="domain"
+        label={<Trans>Enter the domain you want to use</Trans>}
+        icon={<AtSignIcon className="size-5" />}
+        type="text"
+        title={t`Type your domain`}
+        placeholder={t`alice.com`}
+        autoCapitalize="none"
+        autoComplete="off"
+        autoCorrect="off"
+        dir="auto"
+        required
+        autoFocus
+        enterKeyHint="done"
+      />
+
+      <InputHandleCustomInstructions
+        className="text-sm"
+        handle={handle}
+        did={did}
+      />
+    </FormShell>
   )
 }

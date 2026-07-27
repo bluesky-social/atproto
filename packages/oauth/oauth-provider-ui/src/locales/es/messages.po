@@ -140,6 +140,7 @@ msgstr ""
 msgid "Add the following record to your domain's DNS configuration."
 msgstr ""
 
+#: src/components/update-handle-custom-form.tsx:84
 #: src/components/forms/input-handle-custom.tsx:45
 msgid "alice.com"
 msgstr ""
@@ -313,8 +314,8 @@ msgstr ""
 msgid "Choose a new default username."
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:98
-#: src/components/update-email-dialog.tsx:134
+#: src/components/update-email-dialog.tsx:101
+#: src/components/update-email-dialog.tsx:137
 msgid "Choose a new email address to associate with your account."
 msgstr ""
 
@@ -467,7 +468,7 @@ msgstr "Correo electrónico"
 msgid "Email address"
 msgstr "Dirección de correo electrónico"
 
-#: src/components/update-email-dialog.tsx:64
+#: src/components/update-email-dialog.tsx:67
 msgid "Email address successfully updated"
 msgstr ""
 
@@ -495,7 +496,7 @@ msgstr "Ingresa una contraseña"
 msgid "Enter the code you received to reset your password."
 msgstr "Ingresa el código que recibiste para restablecer tu contraseña."
 
-#: src/components/update-handle-custom-form.tsx:34
+#: src/components/update-handle-custom-form.tsx:80
 msgid "Enter the domain you want to use"
 msgstr ""
 
@@ -728,7 +729,7 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:228
+#: src/components/update-email-dialog.tsx:231
 msgctxt "verify email"
 msgid "Later"
 msgstr ""
@@ -811,7 +812,7 @@ msgid "Navigation"
 msgstr ""
 
 #: src/components/update-email-form.tsx:79
-#: src/components/update-email-dialog.tsx:195
+#: src/components/update-email-dialog.tsx:198
 msgid "New email address"
 msgstr ""
 
@@ -991,6 +992,7 @@ msgid "Retry"
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx:73
+#: src/components/forms/request-code-button.tsx:102
 #: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
@@ -1236,6 +1238,7 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
+#: src/components/update-handle-custom-form.tsx:83
 #: src/components/forms/input-handle-custom.tsx:44
 msgid "Type your domain"
 msgstr ""
@@ -1261,8 +1264,8 @@ msgstr ""
 msgid "Update"
 msgstr "Actualizar"
 
-#: src/components/update-email-dialog.tsx:96
-#: src/components/update-email-dialog.tsx:132
+#: src/components/update-email-dialog.tsx:99
+#: src/components/update-email-dialog.tsx:135
 msgid "Update your email"
 msgstr ""
 
@@ -1314,7 +1317,7 @@ msgid "Value"
 msgstr ""
 
 #: src/components/verify-email-confirm-form.tsx:49
-#: src/components/update-email-dialog.tsx:237
+#: src/components/update-email-dialog.tsx:240
 msgid "Verification code"
 msgstr ""
 
@@ -1335,7 +1338,7 @@ msgid "Verify and Save"
 msgstr ""
 
 #: src/pages/account/(authenticated)/manage/page.tsx:86
-#: src/components/update-email-dialog.tsx:229
+#: src/components/update-email-dialog.tsx:232
 msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
@@ -1478,7 +1481,7 @@ msgstr ""
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
 msgstr ""
 
-#: src/components/update-email-dialog.tsx:68
+#: src/components/update-email-dialog.tsx:71
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr ""
 

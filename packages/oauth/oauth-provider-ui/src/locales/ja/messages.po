@@ -140,6 +140,7 @@ msgstr "アカウントユーザー名"
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "あなたのドメインのDNS設定に次のレコードを追加してください。"
 
+#: src/components/update-handle-custom-form.tsx:84
 #: src/components/forms/input-handle-custom.tsx:45
 msgid "alice.com"
 msgstr "alice.com"
@@ -313,8 +314,8 @@ msgstr "受信トレイを確認してください。"
 msgid "Choose a new default username."
 msgstr "新しいデフォルトのユーザー名を選択してください。"
 
-#: src/components/update-email-dialog.tsx:98
-#: src/components/update-email-dialog.tsx:134
+#: src/components/update-email-dialog.tsx:101
+#: src/components/update-email-dialog.tsx:137
 msgid "Choose a new email address to associate with your account."
 msgstr "アカウントに関連付ける新しいメールアドレスを選択してください。"
 
@@ -467,7 +468,7 @@ msgstr "メールアドレス"
 msgid "Email address"
 msgstr "メールアドレス"
 
-#: src/components/update-email-dialog.tsx:64
+#: src/components/update-email-dialog.tsx:67
 msgid "Email address successfully updated"
 msgstr "メールアドレスが正常に更新されました"
 
@@ -495,7 +496,7 @@ msgstr "パスワードを入力"
 msgid "Enter the code you received to reset your password."
 msgstr "パスワードをリセットするために受け取ったコードを入力してください。"
 
-#: src/components/update-handle-custom-form.tsx:34
+#: src/components/update-handle-custom-form.tsx:80
 msgid "Enter the domain you want to use"
 msgstr "使用したいドメインを入力してください"
 
@@ -738,7 +739,7 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "最終閲覧 {lastUsedAgo}"
 
-#: src/components/update-email-dialog.tsx:228
+#: src/components/update-email-dialog.tsx:231
 msgctxt "verify email"
 msgid "Later"
 msgstr "後で"
@@ -821,7 +822,7 @@ msgid "Navigation"
 msgstr ""
 
 #: src/components/update-email-form.tsx:79
-#: src/components/update-email-dialog.tsx:195
+#: src/components/update-email-dialog.tsx:198
 msgid "New email address"
 msgstr "新しいメールアドレス"
 
@@ -1001,6 +1002,7 @@ msgid "Retry"
 msgstr "再試行"
 
 #: src/components/forms/request-code-button.tsx:73
+#: src/components/forms/request-code-button.tsx:102
 #: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}秒後に再試行"
@@ -1246,6 +1248,7 @@ msgstr "トラブルシュート"
 msgid "Type"
 msgstr "タイプ"
 
+#: src/components/update-handle-custom-form.tsx:83
 #: src/components/forms/input-handle-custom.tsx:44
 msgid "Type your domain"
 msgstr "ドメイン名を入力"
@@ -1271,8 +1274,8 @@ msgstr "不明なユーザーエージェント"
 msgid "Update"
 msgstr "更新"
 
-#: src/components/update-email-dialog.tsx:96
-#: src/components/update-email-dialog.tsx:132
+#: src/components/update-email-dialog.tsx:99
+#: src/components/update-email-dialog.tsx:135
 msgid "Update your email"
 msgstr "メールアドレスを更新"
 
@@ -1324,7 +1327,7 @@ msgid "Value"
 msgstr "値"
 
 #: src/components/verify-email-confirm-form.tsx:49
-#: src/components/update-email-dialog.tsx:237
+#: src/components/update-email-dialog.tsx:240
 msgid "Verification code"
 msgstr "確認コード"
 
@@ -1345,7 +1348,7 @@ msgid "Verify and Save"
 msgstr "確認して保存"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:86
-#: src/components/update-email-dialog.tsx:229
+#: src/components/update-email-dialog.tsx:232
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
@@ -1488,7 +1491,7 @@ msgstr "あなたのAtmosphereアカウントは <0/> にホストされてい�
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
 msgstr "あなたのコンテンツ（プロフィール、投稿、フィード、リストなど）は、BlueskyアプリおよびAtmosphereネットワーク全体から非表示になります。"
 
-#: src/components/update-email-dialog.tsx:68
+#: src/components/update-email-dialog.tsx:71
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "メールアドレスは正常に更新され、確認が必要です。<0>{email}</0> に送信された確認コードを入力してください。"
 

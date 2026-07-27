@@ -81,6 +81,20 @@ export const updateEmailSchema = z.object({
 
 export type UpdateEmailValues = z.infer<typeof updateEmailSchema>
 
+export const updateHandleSchema = z.object({
+  handle: z.string().min(1),
+})
+
+export type UpdateHandleValues = z.infer<typeof updateHandleSchema>
+
+export const updateHandleCustomSchema = z.object({
+  // @NOTE Field key is `domain` — the pds e2e suite types into
+  // input[name="domain"] — even though the value is a full handle.
+  domain: z.string().min(1),
+})
+
+export type UpdateHandleCustomValues = z.infer<typeof updateHandleCustomSchema>
+
 export const signUpHandleSchema = z.object({
   // Composed by HandleField out of a segment plus a domain; it only publishes
   // a value once the whole handle is valid, so a non-empty string is enough.

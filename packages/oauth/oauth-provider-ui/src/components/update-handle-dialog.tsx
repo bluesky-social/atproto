@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
 import type { HandleString } from '@atproto/syntax'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Button } from '#/components/forms/button.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
 import { LinkExternal } from '#/components/utils/link-external.tsx'
 import { UpdateHandleCustomForm } from './update-handle-custom-form.tsx'
 import { UpdateHandleDefaultForm } from './update-handle-default-form.tsx'
@@ -49,35 +49,35 @@ export function UpdateHandleDialog({
 
   if (view === HandleType.Default && domains.length) {
     return (
-      <DialogSimple
+      <DialogShell
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
-        trigger={children}
+        trigger={children as ReactElement}
         title={<Trans>Update your username</Trans>}
         description={<Trans>Choose a new default username.</Trans>}
       >
         <UpdateHandleDefaultForm
           domains={domains}
           onBack={() => setView(null)}
-          values={{ handle: defaultHandle }}
+          handleDefault={defaultHandle}
           onLoadingChange={setSubmitting}
           handler={async (data, signal) => {
             await handler(data, signal)
             setOpen(false)
           }}
         />
-      </DialogSimple>
+      </DialogShell>
     )
   }
 
   if (view === HandleType.Custom) {
     return (
-      <DialogSimple
+      <DialogShell
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
-        trigger={children}
+        trigger={children as ReactElement}
         title={<Trans>Update your username</Trans>}
         description={
           <Trans>
@@ -90,20 +90,20 @@ export function UpdateHandleDialog({
           did={did}
           onBack={() => setView(null)}
           submitLabel={<Trans>Verify and Save</Trans>}
-          values={{ handle: customHandle }}
+          domainDefault={customHandle}
           onLoadingChange={setSubmitting}
           handler={async (data, signal) => {
             await handler(data, signal)
             setOpen(false)
           }}
         />
-      </DialogSimple>
+      </DialogShell>
     )
   }
 
   return (
-    <DialogSimple
-      trigger={children}
+    <DialogShell
+      trigger={children as ReactElement}
       title={<Trans>Update your username</Trans>}
       description={
         <Trans>
@@ -147,7 +147,7 @@ export function UpdateHandleDialog({
           />
         </Button>
       </div>
-    </DialogSimple>
+    </DialogShell>
   )
 }
 
