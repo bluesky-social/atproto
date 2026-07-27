@@ -34,3 +34,28 @@ export const resetPasswordConfirmSchema = z.object({
 export type ResetPasswordConfirmValues = z.infer<
   typeof resetPasswordConfirmSchema
 >
+
+/**
+ * Email, handle (with at least one dot), or DID.
+ *
+ * @NOTE Identical to the `pattern` attribute the sign-in input has always
+ * carried — kept as a regex here so react-hook-form reports it the same way it
+ * reports every other field error.
+ */
+export const SIGN_IN_IDENTIFIER_PATTERN =
+  /^([^@]+@[^@]+|[^.@]+(\.[^.@]+)+)|did:[a-z0-9]+:.+$/
+
+export const signInSchema = z.object({
+  // @NOTE `username` (not `identifier`) — the pds e2e suite selects
+  // `input[name="username"]`, and with react-hook-form the field key is the
+  // rendered name.
+  username: z.string().min(1).regex(SIGN_IN_IDENTIFIER_PATTERN),
+  password: z.string().min(1),
+  remember: z.boolean().optional(),
+  // Only required once the server has demanded a second factor; that condition
+  // lives in component state, so it gates the submit button rather than the
+  // schema.
+  otp: otpCodeSchema.or(z.literal('')).optional(),
+})
+
+export type SignInValues = z.infer<typeof signInSchema>

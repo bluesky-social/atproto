@@ -66,7 +66,7 @@ msgstr "1시간 전"
 msgid "1 minute ago"
 msgstr "1분 전"
 
-#: src/components/sign-in-form.tsx:244
+#: src/components/sign-in-form.tsx:215
 msgid "2FA Confirmation"
 msgstr "2단계 인증"
 
@@ -167,7 +167,7 @@ msgstr ""
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
 
-#: src/components/sign-in-picker.tsx:72
+#: src/components/sign-in-picker.tsx:76
 msgid "Another account"
 msgstr "다른 계정"
 
@@ -218,7 +218,7 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "{0}에 승인됨"
 
-#: src/components/sign-in-picker.tsx:90
+#: src/components/sign-in-picker.tsx:96
 #: src/components/forms/wizard-card.tsx:116
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
@@ -287,7 +287,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr ""
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:223
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "{0} 이메일에서 로그인 코드를 확인한 후 여기에 입력하세요."
 
@@ -343,7 +343,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:86
+#: src/components/sign-in-form.tsx:87
 msgctxt "verb"
 msgid "Confirm"
 msgstr "확인"
@@ -352,7 +352,7 @@ msgstr "확인"
 msgid "Confirm your password to continue"
 msgstr "계속하려면 비밀번호를 다시 한번 입력하세요"
 
-#: src/components/sign-in-form.tsx:248
+#: src/components/sign-in-form.tsx:216
 #: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "인증 코드"
@@ -614,7 +614,7 @@ msgstr ""
 msgid "Forgot Password"
 msgstr "비밀번호 분실"
 
-#: src/components/sign-in-form.tsx:210
+#: src/components/sign-in-form.tsx:189
 msgid "Forgot?"
 msgstr "분실"
 
@@ -663,7 +663,7 @@ msgstr ""
 msgid "HTTP"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:151
+#: src/components/sign-in-form.tsx:137
 msgid "Identifier"
 msgstr "아이디"
 
@@ -838,7 +838,7 @@ msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:71
-#: src/components/sign-in-form.tsx:190
+#: src/components/sign-in-form.tsx:171
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 #: src/components/forms/fields/password-field.tsx:31
@@ -966,8 +966,7 @@ msgstr "내 계정의 이메일 주소 읽기"
 msgid "Read your private preferences"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:231
-#: src/components/sign-in-form.tsx:236
+#: src/components/sign-in-form.tsx:206
 msgid "Remember this account on this device"
 msgstr "이 기기에서 이 계정 기억하기"
 
@@ -984,7 +983,7 @@ msgstr "재설정 코드"
 msgid "Reset Password"
 msgstr "비밀번호 재설정"
 
-#: src/components/sign-in-form.tsx:208
+#: src/components/sign-in-form.tsx:187
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
@@ -1038,14 +1037,14 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "로그인"
 
-#: src/components/sign-in-form.tsx:88
+#: src/components/sign-in-form.tsx:89
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
 msgstr "로그인"
 
 #. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
-#: src/components/sign-in-picker.tsx:59
+#: src/components/sign-in-picker.tsx:58
 msgid "Sign in as {0}"
 msgstr "{0}(으)로 로그인"
 
@@ -1068,7 +1067,7 @@ msgstr "로그아웃"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:85
+#: src/components/sign-in-picker.tsx:90
 msgid "Sign up"
 msgstr "가입"
 
@@ -1300,7 +1299,7 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:156
+#: src/components/sign-in-form.tsx:140
 msgid "Username or email address"
 msgstr "사용자 이름 또는 이메일 주소"
 
@@ -1343,7 +1342,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:222
+#: src/components/sign-in-form.tsx:196
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
 
@@ -1363,7 +1362,7 @@ msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
 
-#: src/components/sign-in-form.tsx:221
+#: src/components/sign-in-form.tsx:195
 msgid "Warning"
 msgstr "경고"
 

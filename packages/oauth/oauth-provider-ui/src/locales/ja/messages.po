@@ -66,7 +66,7 @@ msgstr "1時間前"
 msgid "1 minute ago"
 msgstr "1分前"
 
-#: src/components/sign-in-form.tsx:244
+#: src/components/sign-in-form.tsx:215
 msgid "2FA Confirmation"
 msgstr "2要素認証の確認"
 
@@ -167,7 +167,7 @@ msgstr "予期しないエラーが発生しました。もう一度お試しく
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
-#: src/components/sign-in-picker.tsx:72
+#: src/components/sign-in-picker.tsx:76
 msgid "Another account"
 msgstr "他のアカウント"
 
@@ -218,7 +218,7 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "{0} に承認されました"
 
-#: src/components/sign-in-picker.tsx:90
+#: src/components/sign-in-picker.tsx:96
 #: src/components/forms/wizard-card.tsx:116
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
@@ -287,7 +287,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "確認コードが記載されたメール <0>{email}</0> を確認し、ここに入力してください。"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:223
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
@@ -343,7 +343,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "コード"
 
-#: src/components/sign-in-form.tsx:86
+#: src/components/sign-in-form.tsx:87
 msgctxt "verb"
 msgid "Confirm"
 msgstr "確認"
@@ -352,7 +352,7 @@ msgstr "確認"
 msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
-#: src/components/sign-in-form.tsx:248
+#: src/components/sign-in-form.tsx:216
 #: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "確認コード"
@@ -614,7 +614,7 @@ msgstr "セキュリティ上の理由から、あなたのメールアドレス
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
-#: src/components/sign-in-form.tsx:210
+#: src/components/sign-in-form.tsx:189
 msgid "Forgot?"
 msgstr "忘れた？"
 
@@ -673,7 +673,7 @@ msgstr "ホスト"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:151
+#: src/components/sign-in-form.tsx:137
 msgid "Identifier"
 msgstr "識別子"
 
@@ -848,7 +848,7 @@ msgstr "英数字とハイフンのみ"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:71
-#: src/components/sign-in-form.tsx:190
+#: src/components/sign-in-form.tsx:171
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 #: src/components/forms/fields/password-field.tsx:31
@@ -976,8 +976,7 @@ msgstr "あなたのアカウントのメールアドレスを読み取る"
 msgid "Read your private preferences"
 msgstr "あなたのプライベート設定を読み取る"
 
-#: src/components/sign-in-form.tsx:231
-#: src/components/sign-in-form.tsx:236
+#: src/components/sign-in-form.tsx:206
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
@@ -994,7 +993,7 @@ msgstr "リセットコード"
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
-#: src/components/sign-in-form.tsx:208
+#: src/components/sign-in-form.tsx:187
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
@@ -1048,14 +1047,14 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "サインイン"
 
-#: src/components/sign-in-form.tsx:88
+#: src/components/sign-in-form.tsx:89
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
 msgstr "サインイン"
 
 #. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
-#: src/components/sign-in-picker.tsx:59
+#: src/components/sign-in-picker.tsx:58
 msgid "Sign in as {0}"
 msgstr "{0} でサインイン"
 
@@ -1078,7 +1077,7 @@ msgstr "サインアウト"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:85
+#: src/components/sign-in-picker.tsx:90
 msgid "Sign up"
 msgstr "サインアップ"
 
@@ -1310,7 +1309,7 @@ msgstr "自分が所有するドメイン名を使用"
 msgid "Username"
 msgstr "ユーザー名"
 
-#: src/components/sign-in-form.tsx:156
+#: src/components/sign-in-form.tsx:140
 msgid "Username or email address"
 msgstr "ユーザー名またはメールアドレス"
 
@@ -1353,7 +1352,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
 
-#: src/components/sign-in-form.tsx:222
+#: src/components/sign-in-form.tsx:196
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "パスワードを入力する前に、ウェブサイトのアドレスを確認してください。信頼できるサイトでのみサインインしてください。"
 
@@ -1373,7 +1372,7 @@ msgstr "あなたの <0/> アカウントにアクセスしようとしていま
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
 
-#: src/components/sign-in-form.tsx:221
+#: src/components/sign-in-form.tsx:195
 msgid "Warning"
 msgstr "警告"
 

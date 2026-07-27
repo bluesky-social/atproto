@@ -66,7 +66,7 @@ msgstr "1 timme sedan"
 msgid "1 minute ago"
 msgstr "1 minut sedan"
 
-#: src/components/sign-in-form.tsx:244
+#: src/components/sign-in-form.tsx:215
 msgid "2FA Confirmation"
 msgstr "2FA-bekräftelse"
 
@@ -167,7 +167,7 @@ msgstr "Ett oväntat fel uppstod. Försök igen."
 msgid "An unknown error occurred"
 msgstr "Ett okänt fel uppstod"
 
-#: src/components/sign-in-picker.tsx:72
+#: src/components/sign-in-picker.tsx:76
 msgid "Another account"
 msgstr "Annat konto"
 
@@ -218,7 +218,7 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Auktoriserades {0}"
 
-#: src/components/sign-in-picker.tsx:90
+#: src/components/sign-in-picker.tsx:96
 #: src/components/forms/wizard-card.tsx:116
 #: src/components/forms/form-shell.tsx:73
 #: src/components/forms/form-card.tsx:63
@@ -287,7 +287,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange den nedan:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:257
+#: src/components/sign-in-form.tsx:223
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Titta i inkorgen för {0} efter en inloggningskod och ange den här."
 
@@ -343,7 +343,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "Kod"
 
-#: src/components/sign-in-form.tsx:86
+#: src/components/sign-in-form.tsx:87
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Bekräfta"
@@ -352,7 +352,7 @@ msgstr "Bekräfta"
 msgid "Confirm your password to continue"
 msgstr "Ange ditt lösenord för att fortsätta"
 
-#: src/components/sign-in-form.tsx:248
+#: src/components/sign-in-form.tsx:216
 #: src/components/delete-account-confirm-form.tsx:51
 msgid "Confirmation code"
 msgstr "Bekräftelsekod"
@@ -614,7 +614,7 @@ msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-po
 msgid "Forgot Password"
 msgstr "Glömt lösenord"
 
-#: src/components/sign-in-form.tsx:210
+#: src/components/sign-in-form.tsx:189
 msgid "Forgot?"
 msgstr "Glömt?"
 
@@ -673,7 +673,7 @@ msgstr "Värd"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:151
+#: src/components/sign-in-form.tsx:137
 msgid "Identifier"
 msgstr "Identifierare"
 
@@ -848,7 +848,7 @@ msgstr "Endast bokstäver, siffror och bindestreck"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:71
-#: src/components/sign-in-form.tsx:190
+#: src/components/sign-in-form.tsx:171
 #: src/components/delete-account-confirm-form.tsx:66
 #: src/components/forms/input-password.tsx:46
 #: src/components/forms/fields/password-field.tsx:31
@@ -976,8 +976,7 @@ msgstr "Läsa ditt kontos e-postadress"
 msgid "Read your private preferences"
 msgstr "Läsa dina privata inställningar"
 
-#: src/components/sign-in-form.tsx:231
-#: src/components/sign-in-form.tsx:236
+#: src/components/sign-in-form.tsx:206
 msgid "Remember this account on this device"
 msgstr "Kom ihåg det här kontot på den här enheten"
 
@@ -994,7 +993,7 @@ msgstr "Återställningskod"
 msgid "Reset Password"
 msgstr "Återställ lösenord"
 
-#: src/components/sign-in-form.tsx:208
+#: src/components/sign-in-form.tsx:187
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
@@ -1048,14 +1047,14 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Logga in"
 
-#: src/components/sign-in-form.tsx:88
+#: src/components/sign-in-form.tsx:89
 #: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Logga in"
 
 #. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
-#: src/components/sign-in-picker.tsx:59
+#: src/components/sign-in-picker.tsx:58
 msgid "Sign in as {0}"
 msgstr "Logga in som {0}"
 
@@ -1078,7 +1077,7 @@ msgstr "Logga ut"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:85
+#: src/components/sign-in-picker.tsx:90
 msgid "Sign up"
 msgstr "Registrera dig"
 
@@ -1310,7 +1309,7 @@ msgstr "Använd ett domännamn jag äger"
 msgid "Username"
 msgstr "Användarnamn"
 
-#: src/components/sign-in-form.tsx:156
+#: src/components/sign-in-form.tsx:140
 msgid "Username or email address"
 msgstr "Användarnamn eller e-postadress"
 
@@ -1353,7 +1352,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verifiera nu"
 
-#: src/components/sign-in-form.tsx:222
+#: src/components/sign-in-form.tsx:196
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Kontrollera webbadressen innan du anger ditt lösenord. Logga bara in på webbplatser som du känner igen och litar på."
 
@@ -1373,7 +1372,7 @@ msgstr "vill komma åt ditt konto <0/>"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "vill entydigt identifiera dig via ditt konto <0/>"
 
-#: src/components/sign-in-form.tsx:221
+#: src/components/sign-in-form.tsx:195
 msgid "Warning"
 msgstr "Varning"
 

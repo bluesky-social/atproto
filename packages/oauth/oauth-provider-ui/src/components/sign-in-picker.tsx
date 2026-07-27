@@ -1,11 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { AtIcon, CaretRightIcon } from '@phosphor-icons/react'
-import { clsx } from 'clsx'
+import { AtSignIcon, ChevronRightIcon } from 'lucide-react'
 import type { JSX, ReactNode } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
+import { Button } from '#/components/ui/button.tsx'
 import type { Override } from '#/lib/util.ts'
-import { Button } from './forms/button.tsx'
-import { InputContainer } from './forms/input-container.tsx'
+import { cn } from '#/lib/utils.ts'
 import { AccountCard } from './utils/account-card.tsx'
 import { stringifyHandle } from './utils/handle.tsx'
 
@@ -39,9 +38,10 @@ export function SignInPicker({
   ...props
 }: SignInPickerProps) {
   const { t } = useLingui()
+
   return (
-    <div {...props} className={clsx('flex flex-col gap-4', className)}>
-      <p className="text-text-light text-sm font-medium">
+    <div {...props} className={cn('flex flex-col gap-4', className)}>
+      <p className="text-muted-foreground text-sm font-medium">
         <Trans>Sign in as...</Trans>
       </p>
 
@@ -49,8 +49,7 @@ export function SignInPicker({
         <AccountCard
           key={session.account.did}
           account={session.account}
-          append={<CaretRightIcon aria-hidden className="h-4" />}
-          onAction={(event) => {
+          onClick={(event) => {
             event.preventDefault()
             event.stopPropagation()
 
@@ -61,17 +60,23 @@ export function SignInPicker({
       ))}
 
       {onOther && (
-        <InputContainer
+        <button
           key="other"
-          onAction={onOther}
+          type="button"
+          onClick={onOther}
           aria-label={t`Sign in to an account that is not listed`}
-          append={<CaretRightIcon aria-hidden className="h-4" />}
-          icon={<AtIcon aria-hidden weight="bold" className="h-4 w-6" />}
+          className={cn(
+            'border-input bg-background flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left',
+            'hover:bg-accent hover:text-accent-foreground transition-colors',
+            'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
+          )}
         >
-          <span className="text-text-light flex-1 truncate">
+          <AtSignIcon aria-hidden className="size-5 shrink-0" />
+          <span className="text-muted-foreground flex-1 truncate">
             <Trans>Another account</Trans>
           </span>
-        </InputContainer>
+          <ChevronRightIcon aria-hidden className="size-4 shrink-0" />
+        </button>
       )}
 
       {children}
@@ -81,13 +86,15 @@ export function SignInPicker({
         className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
       >
         {onSignUp && (
-          <Button onClick={onSignUp} color="primary" transparent>
+          <Button variant="ghost" onClick={onSignUp}>
             <Trans>Sign up</Trans>
           </Button>
         )}
         <div className="flex-auto" />
         {onBack && (
-          <Button onClick={onBack}>{backLabel || <Trans>Back</Trans>}</Button>
+          <Button variant="secondary" onClick={onBack}>
+            {backLabel || <Trans>Back</Trans>}
+          </Button>
         )}
       </div>
     </div>
