@@ -75,14 +75,7 @@ import {
   type CustomMetadata,
   buildMetadata,
 } from './metadata/build-metadata.js'
-import {
-  AUTHENTICATION_MAX_AGE,
-  CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-  CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-  PUBLIC_CLIENT_REFRESH_LIFETIME,
-  PUBLIC_CLIENT_SESSION_LIFETIME,
-  TOKEN_MAX_AGE,
-} from './oauth-constants.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './oauth-constants.js'
 import type { OAuthHooks } from './oauth-hooks.js'
 import {
   type DpopProof,
@@ -1042,13 +1035,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     data: TokenData,
   ): Promise<void> {
-    const [sessionLifetime, refreshLifetime] =
-      clientAuth.method !== 'none' || client.info.isFirstParty
-        ? [
-            CONFIDENTIAL_CLIENT_SESSION_LIFETIME,
-            CONFIDENTIAL_CLIENT_REFRESH_LIFETIME,
-          ]
-        : [PUBLIC_CLIENT_SESSION_LIFETIME, PUBLIC_CLIENT_REFRESH_LIFETIME]
+    const { sessionLifetime, refreshLifetime } = client
 
     const sessionAge = Date.now() - data.createdAt.getTime()
     if (sessionAge > sessionLifetime) {
