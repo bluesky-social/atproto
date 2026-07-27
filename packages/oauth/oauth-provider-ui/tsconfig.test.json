@@ -1,7 +1,21 @@
 {
-  "extends": ["../../../tsconfig/vitest.tsconfig.json"],
+  // @NOTE `bundler.tsconfig.json` is listed second so its Bundler module
+  // resolution wins over the Node16 resolution that `vitest.tsconfig.json`
+  // inherits from `node.tsconfig.json`. The sources under test are written for
+  // a bundler (extensionless relative imports, the `#/` alias), so the test
+  // project must resolve them the same way `tsconfig.build.json` does.
+  "extends": [
+    "../../../tsconfig/vitest.tsconfig.json",
+    "../../../tsconfig/bundler.tsconfig.json",
+  ],
   "include": ["./src/**/*.test.ts"],
   "compilerOptions": {
     "rootDir": "./",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    // Tests pull in modules that import via the `#/` subpath alias.
+    "paths": {
+      "#/*": ["./src/*"],
+    },
   },
 }

@@ -1,5 +1,4 @@
 import type { MessageDescriptor } from '@lingui/core'
-import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { XIcon } from '@phosphor-icons/react'
 import * as ToastBase from '@radix-ui/react-toast'
@@ -12,8 +11,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { apiErrorParser } from '#/lib/api-error-parser.ts'
-import { parseError } from '#/lib/error-parser.ts'
+import { errorToNotification } from '#/lib/notification-message.ts'
 
 type Variant = 'success' | 'warning' | 'error' | 'info'
 
@@ -116,13 +114,7 @@ export function NotificationsProvider({
 
   const notifyError = useCallback(
     (err: unknown, options?: ErrorNotificationOptions): NotificationHandler => {
-      const { description, message } = apiErrorParser(err) ?? parseError(err)
-      return notify({
-        ...options,
-        variant: options?.variant ?? 'error',
-        title: options?.title ?? msg`An error occurred`,
-        description: description ?? options?.description ?? message,
-      })
+      return notify({ ...options, ...errorToNotification(err, options) })
     },
     [notify],
   )

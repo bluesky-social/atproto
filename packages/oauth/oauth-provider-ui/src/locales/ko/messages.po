@@ -154,7 +154,7 @@ msgstr "이미 코드가 있나요?"
 msgid "An application on your device"
 msgstr "기기에 설치된 애플리케이션"
 
-#: src/contexts/notifications.tsx:123
+#: src/lib/notification-message.ts:30
 #: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"

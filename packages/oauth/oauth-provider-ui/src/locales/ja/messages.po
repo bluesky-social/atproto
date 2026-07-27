@@ -154,7 +154,7 @@ msgstr "コードをすでに持っていますか？"
 msgid "An application on your device"
 msgstr "デバイス上のアプリ"
 
-#: src/contexts/notifications.tsx:123
+#: src/lib/notification-message.ts:30
 #: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "エラーが発生しました"
