@@ -213,7 +213,7 @@ msgid "Authorize"
 msgstr "Auktorisera"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:108
+#: src/pages/account/(authenticated)/apps/page.tsx:115
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Auktoriserades {0}"
@@ -431,7 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Detaljer"
@@ -727,7 +727,7 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 msgid "just now"
 msgstr "nyss"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:117
+#: src/pages/account/(authenticated)/apps/page.tsx:124
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Senaste aktivitet: <0/>"

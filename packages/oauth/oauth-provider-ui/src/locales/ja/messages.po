@@ -213,7 +213,7 @@ msgid "Authorize"
 msgstr "承認"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:108
+#: src/pages/account/(authenticated)/apps/page.tsx:115
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "{0} に承認されました"
@@ -431,7 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "詳細"
@@ -727,7 +727,7 @@ msgstr "あなたのブラウザがクッキーを受け入れていないよう
 msgid "just now"
 msgstr "たった今"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:117
+#: src/pages/account/(authenticated)/apps/page.tsx:124
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "最終アクセス <0/>"

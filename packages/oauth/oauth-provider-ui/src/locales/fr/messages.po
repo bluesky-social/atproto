@@ -213,7 +213,7 @@ msgid "Authorize"
 msgstr "Autoriser"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:108
+#: src/pages/account/(authenticated)/apps/page.tsx:115
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
@@ -431,7 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Détails"
@@ -727,7 +727,7 @@ msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"
 msgid "just now"
 msgstr "à l'instant"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:117
+#: src/pages/account/(authenticated)/apps/page.tsx:124
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Dernier accès <0/>"
