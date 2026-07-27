@@ -159,7 +159,7 @@ function App() {
   if (redirectUrl) {
     return (
       <RedirectingView
-        title={rejected ? msg`Login canceled` : msg`Login complete`}
+        title={rejected ? msg`Sign-in canceled` : msg`Sign-in complete`}
         redirectUrl={redirectUrl}
         // We don't want the user to be able to click the back button and go
         // back to the consent screen after consenting/rejecting, so we replace
