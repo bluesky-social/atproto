@@ -55,7 +55,6 @@ export function HandleField<TValues extends FieldValues>({
   autoFocus,
   required,
 }: HandleFieldProps<TValues>) {
-  const { t } = useLingui()
   const domains = availableDomains.filter(isValidDomain)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -74,7 +73,6 @@ export function HandleField<TValues extends FieldValues>({
           onHandle={(handle) => field.onChange(handle ?? '')}
           onBlur={field.onBlur}
           fieldName={field.name}
-          t={t}
         />
       )}
     />
@@ -91,7 +89,6 @@ function HandleFieldInner({
   onHandle,
   onBlur,
   fieldName,
-  t,
 }: {
   domains: ValidDomain[]
   label?: ReactNode
@@ -102,8 +99,12 @@ function HandleFieldInner({
   onHandle: (handle: HandleString | undefined) => void
   onBlur: () => void
   fieldName: string
-  t: (strings: TemplateStringsArray, ...values: unknown[]) => string
 }) {
+  // @NOTE useLingui() must be called here rather than receiving `t` as a prop:
+  // the Lingui macro only transforms t in a scope that imports the hook,
+  // so passing t down silently left the strings untranslated and dropped them
+  // from the catalogs.
+  const { t } = useLingui()
   const [domainIdx, setDomainIdx] = useState(() => {
     if (!initialHandle) return 0
     const idx = domains.findIndex((d) => initialHandle.endsWith(d))

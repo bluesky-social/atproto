@@ -24,7 +24,6 @@ import {
 import { Notice } from '#/components/feedback/notice.tsx'
 import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import type { Override } from '#/lib/util'
-import { Checkbox } from '../forms/checkbox.tsx'
 import { DescriptionCard } from './description-card.tsx'
 import { ButterflyIcon } from './icons.tsx'
 import { LangProp } from './lang-string.tsx'
@@ -233,10 +232,13 @@ function EmailPermissions({
           }
           append={
             onAllowEmail && (
-              <Checkbox
-                className="m-2"
+              <input
+                type="checkbox"
+                className="border-input accent-primary m-2 size-4 shrink-0 rounded-[4px] border"
                 checked={allowEmail}
-                onChange={(e) => onAllowEmail(e.target.checked)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onAllowEmail(e.target.checked)
+                }
               />
             )
           }

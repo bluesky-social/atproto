@@ -3,7 +3,6 @@ import { type JSX, useMemo, useState } from 'react'
 import type { Override } from '#/lib/util.ts'
 import { CodeSnippet } from '../utils/code-snippet.tsx'
 import { LinkExternal } from '../utils/link-external.tsx'
-import { FormField } from './form-field.tsx'
 import { InputRadioGroup } from './input-radio-group.tsx'
 
 enum VerificationMethod {
@@ -113,7 +112,10 @@ Thank you.`
 
   return (
     <div {...props}>
-      <FormField label={t`Verification method`}>
+      <fieldset>
+        <legend className="text-muted-foreground mb-1.5 text-sm font-medium">
+          {t`Verification method`}
+        </legend>
         <InputRadioGroup
           maxColumns={1}
           value={currentInstructions.method}
@@ -126,7 +128,7 @@ Thank you.`
             }),
           )}
         />
-      </FormField>
+      </fieldset>
 
       <p className="my-2">{currentInstructions.message}</p>
 

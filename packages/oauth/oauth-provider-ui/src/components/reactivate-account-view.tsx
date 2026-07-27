@@ -1,7 +1,7 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
-import { ButtonAsync } from '#/components/forms/button-async.tsx'
+import { AsyncButton } from '#/components/forms/async-button.tsx'
 import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { AccountSummary } from '#/components/identity/account-summary.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
@@ -35,14 +35,18 @@ export function ReactivateAccountView({
         </p>
 
         <div className="flex flex-col gap-3">
-          <ButtonAsync color="primary" className="w-full" action={onReactivate}>
+          <AsyncButton className="w-full" action={onReactivate}>
             <Trans>Yes, reactivate my account</Trans>
-          </ButtonAsync>
+          </AsyncButton>
 
           {onCancel && (
-            <ButtonAsync color="darkGrey" className="w-full" action={onCancel}>
+            <AsyncButton
+              variant="secondary"
+              className="w-full"
+              action={onCancel}
+            >
               <Trans>Cancel</Trans>
-            </ButtonAsync>
+            </AsyncButton>
           )}
         </div>
       </div>

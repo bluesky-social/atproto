@@ -53,8 +53,8 @@ msgstr "<0>Atmosphere 계정이란?</0><1><2>Atmosphere 계정</2>은 Atmosphere
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특정 앱에 갇히지 않는다는 것입니다. 데이터가 플랫폼에 속하는 기존 소셜 미디어 계정과 달리 Atmosphere 계정을 사용하면 사용자의 신원과 데이터를 진정으로 소유할 수 있습니다.</1><2><3><4>신원을 소유한다</4>: 사용자 이름(핸들)과 영구 ID는 사용자의 소유입니다.</3><5><6>데이터 이동이 가능하다</6>: 게시물, 팔로우, 콘텐츠는 앱 데이터베이스에 갇히지 않고 개인 데이터 저장소에 저장됩니다.</5><7><8>자유롭게 이동할 수 있다</8>: 팔로워, 게시물, 연결을 잃지 않고 호스팅 제공자를 변경할 수 있습니다. 데이터 저장 위치가 중요한 경우 해당 국가의 제공자를 선택할 수도 있습니다.</7><9><10>여러 앱에서 하나의 신원 사용</10>: 동일한 네트워크 기반의 여러 앱에서 동일한 계정을 사용할 수 있습니다.</9></2>"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:54
-#: src/components/forms/input-handle-custom-instructions.tsx:69
+#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:68
 msgid "<your-domain>"
 msgstr ""
 
@@ -78,7 +78,7 @@ msgstr "로컬 앱"
 msgid "A second authentication factor is required ({hint})"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:863
+#: src/components/utils/scope-description.tsx:865
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0>(이)가 관리하는 서비스"
 
@@ -86,16 +86,16 @@ msgstr "<0>{domain}</0>(이)가 관리하는 서비스"
 msgid "About"
 msgstr "정보"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:396
 msgid "Access specific parts of your Bluesky account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:389
+#: src/components/utils/scope-description.tsx:391
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr ""
 
 #: src/pages/account/(authenticated)/route.tsx:62
-#: src/components/utils/scope-description.tsx:266
+#: src/components/utils/scope-description.tsx:268
 msgid "Account"
 msgstr "계정"
 
@@ -136,12 +136,11 @@ msgstr "계정 선택기"
 msgid "Account username"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:50
+#: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "Add the following record to your domain's DNS configuration."
 msgstr ""
 
 #: src/components/update-handle-custom-form.tsx:84
-#: src/components/forms/input-handle-custom.tsx:45
 msgid "alice.com"
 msgstr ""
 
@@ -172,15 +171,15 @@ msgstr "알 수 없는 오류가 발생했습니다"
 msgid "Another account"
 msgstr "다른 계정"
 
-#: src/components/utils/scope-description.tsx:891
+#: src/components/utils/scope-description.tsx:893
 msgid "Any collection"
 msgstr "모든 콜렉션"
 
-#: src/components/utils/scope-description.tsx:833
+#: src/components/utils/scope-description.tsx:835
 msgid "Any method"
 msgstr "모든 메서드"
 
-#: src/components/utils/scope-description.tsx:872
+#: src/components/utils/scope-description.tsx:874
 msgid "Any service"
 msgstr "모든 서비스"
 
@@ -201,8 +200,8 @@ msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "인증"
 
-#: src/components/utils/scope-description.tsx:504
-#: src/components/utils/scope-description.tsx:520
+#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:522
 msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "인증"
@@ -222,24 +221,22 @@ msgstr "{0}에 승인됨"
 #: src/components/sign-in-picker.tsx:96
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
-#: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "뒤로"
 
-#: src/components/forms/input-handle-default.tsx:109
-#: src/components/forms/fields/handle-field.tsx:155
+#: src/components/forms/fields/handle-field.tsx:156
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength}~{maxLength}자 사이"
 
-#: src/components/utils/scope-description.tsx:757
+#: src/components/utils/scope-description.tsx:759
 msgid "Blob storage"
 msgstr "Blob 스토리지"
 
-#: src/components/utils/scope-description.tsx:848
+#: src/components/utils/scope-description.tsx:850
 msgid "Bluesky App services"
 msgstr "Bluesky 앱 서비스"
 
-#: src/components/utils/scope-description.tsx:855
+#: src/components/utils/scope-description.tsx:857
 msgid "Bluesky Chat services"
 msgstr "Bluesky 대화 서비스"
 
@@ -253,7 +250,7 @@ msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개�
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "계정을 만들면 {0} 및 {1}에 동의하는 것입니다."
 
-#: src/components/utils/scope-description.tsx:583
+#: src/components/utils/scope-description.tsx:585
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "호출"
@@ -264,7 +261,6 @@ msgstr "호출"
 #: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-shell.tsx:70
-#: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "취소"
 
@@ -272,7 +268,7 @@ msgstr "취소"
 msgid "Cannot remove current device"
 msgstr "현재 기기를 제거할 수 없습니다"
 
-#: src/components/utils/scope-description.tsx:480
+#: src/components/utils/scope-description.tsx:482
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@핸들</0> 변경"
 
@@ -280,7 +276,7 @@ msgstr "<0>@핸들</0> 변경"
 msgid "Change your password"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:440
+#: src/components/utils/scope-description.tsx:442
 msgid "Chat"
 msgstr "대화"
 
@@ -328,7 +324,6 @@ msgid "Click here if nothing happens"
 msgstr ""
 
 #: src/components/oauth-session-details-dialog.tsx:45
-#: src/components/utils/dialog-simple.tsx:70
 #: src/components/ui/dialog.tsx:78
 #: src/components/ui/dialog.tsx:117
 msgid "Close"
@@ -353,7 +348,7 @@ msgid "Confirm your password to continue"
 msgstr "계속하려면 비밀번호를 다시 한번 입력하세요"
 
 #: src/components/sign-in-form.tsx:223
-#: src/components/delete-account-confirm-form.tsx:51
+#: src/components/delete-account-confirm-form.tsx:75
 msgid "Confirmation code"
 msgstr "인증 코드"
 
@@ -371,16 +366,14 @@ msgid "Cookie Error"
 msgstr "쿠키 오류"
 
 #: src/components/forms/copy-button.tsx:56
-#: src/components/forms/button-copy.tsx:96
 msgid "Copied"
 msgstr ""
 
 #: src/components/forms/copy-button.tsx:41
-#: src/components/forms/button-copy.tsx:30
 msgid "Copy to clipboard"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:726
+#: src/components/utils/scope-description.tsx:728
 msgid "Create"
 msgstr "생성"
 
@@ -388,7 +381,7 @@ msgstr "생성"
 msgid "Create a new account"
 msgstr "새 계정 만들기"
 
-#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:632
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "계정에 연결된 공개 데이터를 생성, 갱신, 삭제할 수 있습니다"
 
@@ -396,7 +389,7 @@ msgstr "계정에 연결된 공개 데이터를 생성, 갱신, 삭제할 수 �
 msgid "Custom domains are not supported"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:725
+#: src/components/utils/scope-description.tsx:727
 msgid "Data"
 msgstr "데이터"
 
@@ -409,7 +402,7 @@ msgstr ""
 msgid "Deactivated account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:728
+#: src/components/utils/scope-description.tsx:730
 msgid "Delete"
 msgstr "삭제"
 
@@ -422,7 +415,7 @@ msgstr ""
 msgid "Delete account <0/>"
 msgstr ""
 
-#: src/components/delete-account-confirm-form.tsx:33
+#: src/components/delete-account-confirm-form.tsx:55
 msgid "Delete my account"
 msgstr ""
 
@@ -439,12 +432,11 @@ msgstr "세부 정보"
 msgid "Devices"
 msgstr "기기"
 
-#: src/components/forms/input-token.tsx:88
 #: src/components/forms/fields/token-field.tsx:54
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:48
+#: src/components/forms/input-handle-custom-instructions.tsx:47
 msgid "DNS"
 msgstr ""
 
@@ -458,14 +450,13 @@ msgid "e.g. <0>alice{0}</0>"
 msgstr ""
 
 #: src/components/sign-up-credentials-form.tsx:107
-#: src/components/utils/scope-description.tsx:226
+#: src/components/utils/scope-description.tsx:225
 msgid "Email"
 msgstr "이메일"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
 #: src/components/reset-password-request-form.tsx:56
 #: src/components/reset-password-request-form.tsx:58
-#: src/components/forms/input-email-address.tsx:34
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
 msgstr "이메일 주소"
@@ -482,7 +473,7 @@ msgstr ""
 msgid "Email change successful"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:157
+#: src/components/forms/input-handle-custom-instructions.tsx:159
 msgid "Email these instructions"
 msgstr ""
 
@@ -523,7 +514,7 @@ msgstr "비밀번호 입력"
 msgid "Enter your username and password"
 msgstr "사용자 이름 및 비밀번호 입력"
 
-#: src/components/deactivate-account-dialog.tsx:53
+#: src/components/deactivate-account-dialog.tsx:52
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr ""
 
@@ -597,7 +588,7 @@ msgstr ""
 msgid "Failed to verify email"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:72
+#: src/components/forms/input-handle-custom-instructions.tsx:71
 msgid "File contents"
 msgstr ""
 
@@ -626,7 +617,7 @@ msgid "Having trouble? <0>Contact support</0>"
 msgstr "문제가 있나요? <0>지원팀에 연락하기</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
-#: src/components/forms/input-handle-custom-instructions.tsx:96
+#: src/components/forms/input-handle-custom-instructions.tsx:95
 msgid ""
 "Hello,\n"
 "\n"
@@ -640,11 +631,10 @@ msgid ""
 "Thank you."
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:144
+#: src/components/forms/input-handle-custom-instructions.tsx:146
 msgid "Help"
 msgstr ""
 
-#: src/components/forms/button-toggle-visibility.tsx:34
 #: src/components/forms/fields/password-field.tsx:49
 msgid "Hide"
 msgstr "숨기기"
@@ -654,11 +644,11 @@ msgstr "숨기기"
 msgid "Home"
 msgstr "홈"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:52
 msgid "Host"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:63
+#: src/components/forms/input-handle-custom-instructions.tsx:62
 msgid "HTTP"
 msgstr ""
 
@@ -666,15 +656,15 @@ msgstr ""
 msgid "Identifier"
 msgstr "아이디"
 
-#: src/components/utils/scope-description.tsx:473
+#: src/components/utils/scope-description.tsx:475
 msgid "Identity"
 msgstr "신원"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:49
+#: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:64
+#: src/components/forms/input-handle-custom-instructions.tsx:63
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr ""
 
@@ -686,7 +676,7 @@ msgstr ""
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr ""
 
-#: src/components/deactivate-account-dialog.tsx:61
+#: src/components/deactivate-account-dialog.tsx:60
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr ""
 
@@ -694,8 +684,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr "인터페이스 언어 선택기"
 
-#: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:281
+#: src/components/forms/fields/handle-field.tsx:282
 msgid "Invalid"
 msgstr "사용 불가"
 
@@ -752,11 +741,10 @@ msgstr "다른 기기에는 로그인되어 있지 않은 것 같습니다."
 msgid "loopback"
 msgstr "루프백"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:65
+#: src/components/forms/input-handle-custom-instructions.tsx:64
 msgid "Make a text file with the contents below available at the following URL."
 msgstr ""
 
-#: src/components/forms/button-toggle-visibility.tsx:34
 #: src/components/forms/fields/password-field.tsx:49
 msgid "Make visible"
 msgstr "표시"
@@ -765,7 +753,7 @@ msgstr "표시"
 msgid "Manage applications that have access to your account"
 msgstr "내 계정에 접근 권한이 있는 애플리케이션을 관리합니다"
 
-#: src/components/utils/scope-description.tsx:476
+#: src/components/utils/scope-description.tsx:478
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "<1>@핸들</1>을 포함한 내 <0>전체 신원</0> 관리"
 
@@ -777,11 +765,11 @@ msgstr ""
 msgid "Manage your active sessions"
 msgstr "내 활성 세션을 관리합니다"
 
-#: src/components/utils/scope-description.tsx:387
+#: src/components/utils/scope-description.tsx:389
 msgid "Manage your profile, posts, likes and follows"
 msgstr "프로필, 게시물, 좋아요, 팔로우 관리"
 
-#: src/components/utils/scope-description.tsx:382
+#: src/components/utils/scope-description.tsx:384
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "프로필, 게시물, 좋아요, 팔로우 관리 및 비공개 설정 읽기"
 
@@ -832,16 +820,14 @@ msgstr "다음"
 msgid "Okay"
 msgstr "확인"
 
-#: src/components/forms/input-handle-default.tsx:114
-#: src/components/forms/fields/handle-field.tsx:160
+#: src/components/forms/fields/handle-field.tsx:161
 msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
-#: src/components/delete-account-confirm-form.tsx:66
-#: src/components/forms/input-password.tsx:46
+#: src/components/delete-account-confirm-form.tsx:85
 #: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
 msgstr "비밀번호"
@@ -881,11 +867,11 @@ msgctxt "Error"
 msgid "Payload"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:521
+#: src/components/utils/scope-description.tsx:523
 msgid "Perform actions on your behalf"
 msgstr "나를 대신하여 작업 수행"
 
-#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:508
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "귀하를 대신하여 <0>모든 서비스</0>에 대해 인증된 작업을 수행합니다"
 
@@ -927,7 +913,6 @@ msgid "Please try again in a moment."
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx:76
-#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
 
@@ -937,7 +922,7 @@ msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
 msgid "Privacy Policy"
 msgstr "개인정보 처리방침"
 
-#: src/components/utils/scope-description.tsx:644
+#: src/components/utils/scope-description.tsx:646
 msgid "Publish changes"
 msgstr "변경 사항 게시"
 
@@ -950,19 +935,19 @@ msgstr ""
 msgid "Reactivate account"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:441
+#: src/components/utils/scope-description.tsx:443
 msgid "Read and send messages"
 msgstr "메시지 읽기 및 보내기"
 
-#: src/components/utils/scope-description.tsx:229
+#: src/components/utils/scope-description.tsx:228
 msgid "Read and update your account's email address"
 msgstr "내 계정의 이메일 주소 읽기 및 변경"
 
-#: src/components/utils/scope-description.tsx:231
+#: src/components/utils/scope-description.tsx:230
 msgid "Read your account's email address"
 msgstr "내 계정의 이메일 주소 읽기"
 
-#: src/components/utils/scope-description.tsx:396
+#: src/components/utils/scope-description.tsx:398
 msgid "Read your private preferences"
 msgstr ""
 
@@ -970,8 +955,8 @@ msgstr ""
 msgid "Remember this account on this device"
 msgstr "이 기기에서 이 계정 기억하기"
 
-#: src/components/utils/scope-description.tsx:628
-#: src/components/utils/scope-description.tsx:643
+#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:645
 msgid "Repository"
 msgstr "저장소"
 
@@ -995,7 +980,6 @@ msgstr "다시 시도"
 
 #: src/components/forms/request-code-button.tsx:73
 #: src/components/forms/request-code-button.tsx:102
-#: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후에 다시 시도"
 
@@ -1016,9 +1000,9 @@ msgstr ""
 msgid "Select another account"
 msgstr "다른 계정 선택"
 
-#: src/components/forms/input-handle-default.tsx:150
+#: src/components/forms/fields/handle-field.tsx:214
 msgid "Select domain"
-msgstr "도메인 선택"
+msgstr ""
 
 #: src/components/sign-in-view.tsx:126
 msgid "Select from an existing account"
@@ -1029,7 +1013,6 @@ msgid "Send email"
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx:40
-#: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
 msgstr ""
 
@@ -1095,7 +1078,6 @@ msgid "Strong"
 msgstr "강력"
 
 #: src/components/forms/form-shell.tsx:65
-#: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "제출"
 
@@ -1115,7 +1097,7 @@ msgstr "지원"
 msgid "Technical details"
 msgstr "기술 세부 정보"
 
-#: src/components/utils/scope-description.tsx:267
+#: src/components/utils/scope-description.tsx:269
 msgid "Temporarily activate or deactivate your account"
 msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
 
@@ -1125,19 +1107,19 @@ msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
 msgid "Terms of Service"
 msgstr "서비스 이용약관"
 
-#: src/components/utils/scope-description.tsx:190
+#: src/components/utils/scope-description.tsx:189
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "애플리케이션이 귀하의 네트워크 신원에 대한 전체 제어 권한을 요청하고 있습니다. 이는 계정을 <0>영구적으로 손상</0>시키거나 심지어 <1>탈취</1>할 수도 있음을 의미합니다. 반드시 진심으로 신뢰하는 애플리케이션에만 이 권한을 허용하세요."
 
-#: src/components/utils/scope-description.tsx:170
+#: src/components/utils/scope-description.tsx:169
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "애플리케이션이 귀하를 대신하여 다음 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
-#: src/components/utils/scope-description.tsx:409
+#: src/components/utils/scope-description.tsx:411
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:524
+#: src/components/utils/scope-description.tsx:526
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "AT 프로토콜 네트워크는 외부 서비스와 통신할 때 사용자를 고유하게 식별할 수 있는 인증 메커니즘을 사용합니다. 이는 일반적으로 대화 메시지, 피드 또는 관리자 콘텐츠와 같이 계정과 연결된 데이터를 검색하거나 변경하는 데 사용됩니다. 애플리케이션은 사용자를 대신하여 다음과 같은 인증된 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
@@ -1173,7 +1155,7 @@ msgstr ""
 msgid "The username is invalid"
 msgstr ""
 
-#: src/components/deactivate-account-dialog.tsx:46
+#: src/components/deactivate-account-dialog.tsx:45
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
@@ -1181,11 +1163,11 @@ msgstr ""
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다. 여러 기기에서 동일한 앱을 사용하는 경우 동일한 앱이 여러 번 나타날 수 있습니다. 접근 권한을 취소하면 다시 로그인할 때까지 앱에서 로그아웃됩니다."
 
-#: src/components/oauth-session-details-dialog.tsx:57
+#: src/components/oauth-session-details-dialog.tsx:56
 msgid "This app can uniquely identify you through your account."
 msgstr ""
 
-#: src/components/oauth-session-details-dialog.tsx:64
+#: src/components/oauth-session-details-dialog.tsx:63
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
@@ -1227,25 +1209,24 @@ msgstr ""
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:586
+#: src/components/utils/scope-description.tsx:588
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "대상"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:150
+#: src/components/forms/input-handle-custom-instructions.tsx:152
 msgid "Troubleshoot"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:57
+#: src/components/forms/input-handle-custom-instructions.tsx:56
 msgid "Type"
 msgstr ""
 
 #: src/components/update-handle-custom-form.tsx:83
-#: src/components/forms/input-handle-custom.tsx:44
 msgid "Type your domain"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:121
+#: src/components/forms/fields/handle-field.tsx:176
 msgid "Type your username"
 msgstr ""
 
@@ -1262,7 +1243,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "알 수 없는 사용자 에이전트"
 
-#: src/components/utils/scope-description.tsx:727
+#: src/components/utils/scope-description.tsx:729
 msgid "Update"
 msgstr "갱신"
 
@@ -1281,11 +1262,11 @@ msgstr ""
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:760
+#: src/components/utils/scope-description.tsx:762
 msgid "Upload files"
 msgstr "파일 업로드"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:68
+#: src/components/forms/input-handle-custom-instructions.tsx:67
 msgid "URL"
 msgstr ""
 
@@ -1309,12 +1290,11 @@ msgstr "사용자 이름 또는 이메일 주소"
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:279
+#: src/components/forms/fields/handle-field.tsx:280
 msgid "Valid"
 msgstr "사용 가능"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:58
+#: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Value"
 msgstr ""
 
@@ -1327,7 +1307,7 @@ msgstr ""
 msgid "Verification email sent"
 msgstr ""
 
-#: src/components/forms/input-handle-custom-instructions.tsx:116
+#: src/components/forms/input-handle-custom-instructions.tsx:117
 msgid "Verification method"
 msgstr ""
 
@@ -1426,7 +1406,7 @@ msgstr ""
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 도메인 이름으로 변경할 수 있습니다."
 
-#: src/components/reactivate-account-dialog.tsx:46
+#: src/components/reactivate-account-dialog.tsx:45
 msgid "You can deactivate your account again at any time from this page."
 msgstr ""
 
@@ -1495,10 +1475,8 @@ msgstr ""
 msgid "Your email address needs to be verified."
 msgstr ""
 
-#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx:184
-#: src/components/forms/fields/handle-field.tsx:231
+#: src/components/forms/fields/handle-field.tsx:232
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
 
@@ -1510,7 +1488,7 @@ msgstr "비밀번호를 변경했습니다!"
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
 msgstr ""
 
-#: src/components/utils/scope-description.tsx:647
+#: src/components/utils/scope-description.tsx:649
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "내 저장소에는 Bluesky 게시물, 좋아요, 팔로우 등 AT 프로토콜 네트워크에서 공개적으로 사용 가능한 모든 데이터가 포함되어 있습니다. 또한 이 계정으로 로그인한 다른 앱을 통해 생성된 데이터도 포함됩니다. 애플리케이션은 저장소에 다음 변경 사항을 게시하는 데 필요한 권한을 요청합니다."
 

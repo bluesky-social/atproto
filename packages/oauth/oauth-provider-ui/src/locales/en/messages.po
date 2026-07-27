@@ -53,8 +53,8 @@ msgstr "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is 
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:54
-#: src/components/forms/input-handle-custom-instructions.tsx:69
+#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:68
 msgid "<your-domain>"
 msgstr "<your-domain>"
 
@@ -78,7 +78,7 @@ msgstr "A local app"
 msgid "A second authentication factor is required ({hint})"
 msgstr "A second authentication factor is required ({hint})"
 
-#: src/components/utils/scope-description.tsx:863
+#: src/components/utils/scope-description.tsx:865
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "A service controlled by <0>{domain}</0>"
 
@@ -86,16 +86,16 @@ msgstr "A service controlled by <0>{domain}</0>"
 msgid "About"
 msgstr "About"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:396
 msgid "Access specific parts of your Bluesky account"
 msgstr "Access specific parts of your Bluesky account"
 
-#: src/components/utils/scope-description.tsx:389
+#: src/components/utils/scope-description.tsx:391
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr "Access specific parts of your Bluesky account and read your private preferences"
 
 #: src/pages/account/(authenticated)/route.tsx:62
-#: src/components/utils/scope-description.tsx:266
+#: src/components/utils/scope-description.tsx:268
 msgid "Account"
 msgstr "Account"
 
@@ -136,12 +136,11 @@ msgstr "Account selector"
 msgid "Account username"
 msgstr "Account username"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:50
+#: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "Add the following record to your domain's DNS configuration."
 
 #: src/components/update-handle-custom-form.tsx:84
-#: src/components/forms/input-handle-custom.tsx:45
 msgid "alice.com"
 msgstr "alice.com"
 
@@ -172,15 +171,15 @@ msgstr "An unknown error occurred"
 msgid "Another account"
 msgstr "Another account"
 
-#: src/components/utils/scope-description.tsx:891
+#: src/components/utils/scope-description.tsx:893
 msgid "Any collection"
 msgstr "Any collection"
 
-#: src/components/utils/scope-description.tsx:833
+#: src/components/utils/scope-description.tsx:835
 msgid "Any method"
 msgstr "Any method"
 
-#: src/components/utils/scope-description.tsx:872
+#: src/components/utils/scope-description.tsx:874
 msgid "Any service"
 msgstr "Any service"
 
@@ -201,8 +200,8 @@ msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "Authenticate"
 
-#: src/components/utils/scope-description.tsx:504
-#: src/components/utils/scope-description.tsx:520
+#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:522
 msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Authenticate"
@@ -222,24 +221,22 @@ msgstr "Authorized on {0}"
 #: src/components/sign-in-picker.tsx:96
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
-#: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "Back"
 
-#: src/components/forms/input-handle-default.tsx:109
-#: src/components/forms/fields/handle-field.tsx:155
+#: src/components/forms/fields/handle-field.tsx:156
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Between {minLength} and {maxLength} characters"
 
-#: src/components/utils/scope-description.tsx:757
+#: src/components/utils/scope-description.tsx:759
 msgid "Blob storage"
 msgstr "Blob storage"
 
-#: src/components/utils/scope-description.tsx:848
+#: src/components/utils/scope-description.tsx:850
 msgid "Bluesky App services"
 msgstr "Bluesky App services"
 
-#: src/components/utils/scope-description.tsx:855
+#: src/components/utils/scope-description.tsx:857
 msgid "Bluesky Chat services"
 msgstr "Bluesky Chat services"
 
@@ -253,7 +250,7 @@ msgstr "By clicking <0>Authorize</0>, you will grant this application access to 
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "By creating an account you agree to the {0} and the {1} of this service."
 
-#: src/components/utils/scope-description.tsx:583
+#: src/components/utils/scope-description.tsx:585
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
@@ -264,7 +261,6 @@ msgstr "Call"
 #: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-shell.tsx:70
-#: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -272,7 +268,7 @@ msgstr "Cancel"
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
-#: src/components/utils/scope-description.tsx:480
+#: src/components/utils/scope-description.tsx:482
 msgid "Change your <0>@handle</0>"
 msgstr "Change your <0>@handle</0>"
 
@@ -280,7 +276,7 @@ msgstr "Change your <0>@handle</0>"
 msgid "Change your password"
 msgstr "Change your password"
 
-#: src/components/utils/scope-description.tsx:440
+#: src/components/utils/scope-description.tsx:442
 msgid "Chat"
 msgstr "Chat"
 
@@ -328,7 +324,6 @@ msgid "Click here if nothing happens"
 msgstr "Click here if nothing happens"
 
 #: src/components/oauth-session-details-dialog.tsx:45
-#: src/components/utils/dialog-simple.tsx:70
 #: src/components/ui/dialog.tsx:78
 #: src/components/ui/dialog.tsx:117
 msgid "Close"
@@ -353,7 +348,7 @@ msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
 #: src/components/sign-in-form.tsx:223
-#: src/components/delete-account-confirm-form.tsx:51
+#: src/components/delete-account-confirm-form.tsx:75
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
@@ -371,16 +366,14 @@ msgid "Cookie Error"
 msgstr "Cookie Error"
 
 #: src/components/forms/copy-button.tsx:56
-#: src/components/forms/button-copy.tsx:96
 msgid "Copied"
 msgstr "Copied"
 
 #: src/components/forms/copy-button.tsx:41
-#: src/components/forms/button-copy.tsx:30
 msgid "Copy to clipboard"
 msgstr "Copy to clipboard"
 
-#: src/components/utils/scope-description.tsx:726
+#: src/components/utils/scope-description.tsx:728
 msgid "Create"
 msgstr "Create"
 
@@ -388,7 +381,7 @@ msgstr "Create"
 msgid "Create a new account"
 msgstr "Create a new account"
 
-#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:632
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Create, update, and delete any public data linked to your account"
 
@@ -396,7 +389,7 @@ msgstr "Create, update, and delete any public data linked to your account"
 msgid "Custom domains are not supported"
 msgstr "Custom domains are not supported"
 
-#: src/components/utils/scope-description.tsx:725
+#: src/components/utils/scope-description.tsx:727
 msgid "Data"
 msgstr "Data"
 
@@ -409,7 +402,7 @@ msgstr "Deactivate account"
 msgid "Deactivated account"
 msgstr "Deactivated account"
 
-#: src/components/utils/scope-description.tsx:728
+#: src/components/utils/scope-description.tsx:730
 msgid "Delete"
 msgstr "Delete"
 
@@ -422,7 +415,7 @@ msgstr "Delete account"
 msgid "Delete account <0/>"
 msgstr "Delete account <0/>"
 
-#: src/components/delete-account-confirm-form.tsx:33
+#: src/components/delete-account-confirm-form.tsx:55
 msgid "Delete my account"
 msgstr "Delete my account"
 
@@ -439,12 +432,11 @@ msgstr "Details"
 msgid "Devices"
 msgstr "Devices"
 
-#: src/components/forms/input-token.tsx:88
 #: src/components/forms/fields/token-field.tsx:54
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Didn't receive a code? <0>Click here to resend.</0>"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:48
+#: src/components/forms/input-handle-custom-instructions.tsx:47
 msgid "DNS"
 msgstr "DNS"
 
@@ -458,14 +450,13 @@ msgid "e.g. <0>alice{0}</0>"
 msgstr "e.g. <0>alice{0}</0>"
 
 #: src/components/sign-up-credentials-form.tsx:107
-#: src/components/utils/scope-description.tsx:226
+#: src/components/utils/scope-description.tsx:225
 msgid "Email"
 msgstr "Email"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
 #: src/components/reset-password-request-form.tsx:56
 #: src/components/reset-password-request-form.tsx:58
-#: src/components/forms/input-email-address.tsx:34
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
 msgstr "Email address"
@@ -482,7 +473,7 @@ msgstr "Email change request sent"
 msgid "Email change successful"
 msgstr "Email change successful"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:157
+#: src/components/forms/input-handle-custom-instructions.tsx:159
 msgid "Email these instructions"
 msgstr "Email these instructions"
 
@@ -523,7 +514,7 @@ msgstr "Enter your password"
 msgid "Enter your username and password"
 msgstr "Enter your username and password"
 
-#: src/components/deactivate-account-dialog.tsx:53
+#: src/components/deactivate-account-dialog.tsx:52
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 
@@ -597,7 +588,7 @@ msgstr "Failed to update username"
 msgid "Failed to verify email"
 msgstr "Failed to verify email"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:72
+#: src/components/forms/input-handle-custom-instructions.tsx:71
 msgid "File contents"
 msgstr "File contents"
 
@@ -626,7 +617,7 @@ msgid "Having trouble? <0>Contact support</0>"
 msgstr "Having trouble? <0>Contact support</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
-#: src/components/forms/input-handle-custom-instructions.tsx:96
+#: src/components/forms/input-handle-custom-instructions.tsx:95
 msgid ""
 "Hello,\n"
 "\n"
@@ -650,11 +641,10 @@ msgstr ""
 "\n"
 "Thank you."
 
-#: src/components/forms/input-handle-custom-instructions.tsx:144
+#: src/components/forms/input-handle-custom-instructions.tsx:146
 msgid "Help"
 msgstr "Help"
 
-#: src/components/forms/button-toggle-visibility.tsx:34
 #: src/components/forms/fields/password-field.tsx:49
 msgid "Hide"
 msgstr "Hide"
@@ -664,11 +654,11 @@ msgstr "Hide"
 msgid "Home"
 msgstr "Home"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:52
 msgid "Host"
 msgstr "Host"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:63
+#: src/components/forms/input-handle-custom-instructions.tsx:62
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -676,15 +666,15 @@ msgstr "HTTP"
 msgid "Identifier"
 msgstr "Identifier"
 
-#: src/components/utils/scope-description.tsx:473
+#: src/components/utils/scope-description.tsx:475
 msgid "Identity"
 msgstr "Identity"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:49
+#: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:64
+#: src/components/forms/input-handle-custom-instructions.tsx:63
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 
@@ -696,7 +686,7 @@ msgstr "If you have your own domain, you can use that as your handle. This lets 
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "If you update your email address, email 2FA (if enabled) will be disabled."
 
-#: src/components/deactivate-account-dialog.tsx:61
+#: src/components/deactivate-account-dialog.tsx:60
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "If you're trying to change your handle or email, do so before you deactivate."
 
@@ -704,8 +694,7 @@ msgstr "If you're trying to change your handle or email, do so before you deacti
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:281
+#: src/components/forms/fields/handle-field.tsx:282
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -762,11 +751,10 @@ msgstr "Looks like you aren't logged in on any other devices."
 msgid "loopback"
 msgstr "loopback"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:65
+#: src/components/forms/input-handle-custom-instructions.tsx:64
 msgid "Make a text file with the contents below available at the following URL."
 msgstr "Make a text file with the contents below available at the following URL."
 
-#: src/components/forms/button-toggle-visibility.tsx:34
 #: src/components/forms/fields/password-field.tsx:49
 msgid "Make visible"
 msgstr "Make visible"
@@ -775,7 +763,7 @@ msgstr "Make visible"
 msgid "Manage applications that have access to your account"
 msgstr "Manage applications that have access to your account"
 
-#: src/components/utils/scope-description.tsx:476
+#: src/components/utils/scope-description.tsx:478
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Manage your <0>full identity</0> including your <1>@handle</1>"
 
@@ -787,11 +775,11 @@ msgstr "Manage your account"
 msgid "Manage your active sessions"
 msgstr "Manage your active sessions"
 
-#: src/components/utils/scope-description.tsx:387
+#: src/components/utils/scope-description.tsx:389
 msgid "Manage your profile, posts, likes and follows"
 msgstr "Manage your profile, posts, likes and follows"
 
-#: src/components/utils/scope-description.tsx:382
+#: src/components/utils/scope-description.tsx:384
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Manage your profile, posts, likes and follows as well as read your private preferences"
 
@@ -842,16 +830,14 @@ msgstr "Next"
 msgid "Okay"
 msgstr "Okay"
 
-#: src/components/forms/input-handle-default.tsx:114
-#: src/components/forms/fields/handle-field.tsx:160
+#: src/components/forms/fields/handle-field.tsx:161
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
-#: src/components/delete-account-confirm-form.tsx:66
-#: src/components/forms/input-password.tsx:46
+#: src/components/delete-account-confirm-form.tsx:85
 #: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
 msgstr "Password"
@@ -891,11 +877,11 @@ msgctxt "Error"
 msgid "Payload"
 msgstr "Payload"
 
-#: src/components/utils/scope-description.tsx:521
+#: src/components/utils/scope-description.tsx:523
 msgid "Perform actions on your behalf"
 msgstr "Perform actions on your behalf"
 
-#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:508
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Perform authenticated actions towards <0>any service</0> on your behalf"
 
@@ -937,7 +923,6 @@ msgid "Please try again in a moment."
 msgstr "Please try again in a moment."
 
 #: src/components/forms/request-code-button.tsx:76
-#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Please wait {remainingSeconds} seconds before trying again."
 
@@ -947,7 +932,7 @@ msgstr "Please wait {remainingSeconds} seconds before trying again."
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
-#: src/components/utils/scope-description.tsx:644
+#: src/components/utils/scope-description.tsx:646
 msgid "Publish changes"
 msgstr "Publish changes"
 
@@ -960,19 +945,19 @@ msgstr "Reactivate"
 msgid "Reactivate account"
 msgstr "Reactivate account"
 
-#: src/components/utils/scope-description.tsx:441
+#: src/components/utils/scope-description.tsx:443
 msgid "Read and send messages"
 msgstr "Read and send messages"
 
-#: src/components/utils/scope-description.tsx:229
+#: src/components/utils/scope-description.tsx:228
 msgid "Read and update your account's email address"
 msgstr "Read and update your account's email address"
 
-#: src/components/utils/scope-description.tsx:231
+#: src/components/utils/scope-description.tsx:230
 msgid "Read your account's email address"
 msgstr "Read your account's email address"
 
-#: src/components/utils/scope-description.tsx:396
+#: src/components/utils/scope-description.tsx:398
 msgid "Read your private preferences"
 msgstr "Read your private preferences"
 
@@ -980,8 +965,8 @@ msgstr "Read your private preferences"
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
-#: src/components/utils/scope-description.tsx:628
-#: src/components/utils/scope-description.tsx:643
+#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:645
 msgid "Repository"
 msgstr "Repository"
 
@@ -1005,7 +990,6 @@ msgstr "Retry"
 
 #: src/components/forms/request-code-button.tsx:73
 #: src/components/forms/request-code-button.tsx:102
-#: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
 
@@ -1026,7 +1010,7 @@ msgstr "Security step required"
 msgid "Select another account"
 msgstr "Select another account"
 
-#: src/components/forms/input-handle-default.tsx:150
+#: src/components/forms/fields/handle-field.tsx:214
 msgid "Select domain"
 msgstr "Select domain"
 
@@ -1039,7 +1023,6 @@ msgid "Send email"
 msgstr "Send email"
 
 #: src/components/forms/request-code-button.tsx:40
-#: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
 msgstr "Send verification code"
 
@@ -1105,7 +1088,6 @@ msgid "Strong"
 msgstr "Strong"
 
 #: src/components/forms/form-shell.tsx:65
-#: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "Submit"
 
@@ -1125,7 +1107,7 @@ msgstr "Support"
 msgid "Technical details"
 msgstr "Technical details"
 
-#: src/components/utils/scope-description.tsx:267
+#: src/components/utils/scope-description.tsx:269
 msgid "Temporarily activate or deactivate your account"
 msgstr "Temporarily activate or deactivate your account"
 
@@ -1135,19 +1117,19 @@ msgstr "Temporarily activate or deactivate your account"
 msgid "Terms of Service"
 msgstr "Terms of Service"
 
-#: src/components/utils/scope-description.tsx:190
+#: src/components/utils/scope-description.tsx:189
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 
-#: src/components/utils/scope-description.tsx:170
+#: src/components/utils/scope-description.tsx:169
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "The application requests the permissions necessary to perform the following actions on your behalf:"
 
-#: src/components/utils/scope-description.tsx:409
+#: src/components/utils/scope-description.tsx:411
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
 msgstr "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
 
-#: src/components/utils/scope-description.tsx:524
+#: src/components/utils/scope-description.tsx:526
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 
@@ -1183,7 +1165,7 @@ msgstr "The username is already in use"
 msgid "The username is invalid"
 msgstr "The username is invalid"
 
-#: src/components/deactivate-account-dialog.tsx:46
+#: src/components/deactivate-account-dialog.tsx:45
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "There is no time limit for account deactivation, come back any time."
 
@@ -1191,11 +1173,11 @@ msgstr "There is no time limit for account deactivation, come back any time."
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
-#: src/components/oauth-session-details-dialog.tsx:57
+#: src/components/oauth-session-details-dialog.tsx:56
 msgid "This app can uniquely identify you through your account."
 msgstr "This app can uniquely identify you through your account."
 
-#: src/components/oauth-session-details-dialog.tsx:64
+#: src/components/oauth-session-details-dialog.tsx:63
 msgid "This app has access to your account with the following permissions:"
 msgstr "This app has access to your account with the following permissions:"
 
@@ -1237,25 +1219,24 @@ msgstr "To change your password, you'll need to enter a security code sent to yo
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 
-#: src/components/utils/scope-description.tsx:586
+#: src/components/utils/scope-description.tsx:588
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Towards"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:150
+#: src/components/forms/input-handle-custom-instructions.tsx:152
 msgid "Troubleshoot"
 msgstr "Troubleshoot"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:57
+#: src/components/forms/input-handle-custom-instructions.tsx:56
 msgid "Type"
 msgstr "Type"
 
 #: src/components/update-handle-custom-form.tsx:83
-#: src/components/forms/input-handle-custom.tsx:44
 msgid "Type your domain"
 msgstr "Type your domain"
 
-#: src/components/forms/input-handle-default.tsx:121
+#: src/components/forms/fields/handle-field.tsx:176
 msgid "Type your username"
 msgstr "Type your username"
 
@@ -1272,7 +1253,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
 
-#: src/components/utils/scope-description.tsx:727
+#: src/components/utils/scope-description.tsx:729
 msgid "Update"
 msgstr "Update"
 
@@ -1291,11 +1272,11 @@ msgstr "Update your username"
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr "Update your username to a domain name you own to self-verify your identity."
 
-#: src/components/utils/scope-description.tsx:760
+#: src/components/utils/scope-description.tsx:762
 msgid "Upload files"
 msgstr "Upload files"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:68
+#: src/components/forms/input-handle-custom-instructions.tsx:67
 msgid "URL"
 msgstr "URL"
 
@@ -1319,12 +1300,11 @@ msgstr "Username or email address"
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:279
+#: src/components/forms/fields/handle-field.tsx:280
 msgid "Valid"
 msgstr "Valid"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:58
+#: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Value"
 msgstr "Value"
 
@@ -1337,7 +1317,7 @@ msgstr "Verification code"
 msgid "Verification email sent"
 msgstr "Verification email sent"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:116
+#: src/components/forms/input-handle-custom-instructions.tsx:117
 msgid "Verification method"
 msgstr "Verification method"
 
@@ -1436,7 +1416,7 @@ msgstr "You can also temporarily deactivate your account instead. Your profile, 
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
-#: src/components/reactivate-account-dialog.tsx:46
+#: src/components/reactivate-account-dialog.tsx:45
 msgid "You can deactivate your account again at any time from this page."
 msgstr "You can deactivate your account again at any time from this page."
 
@@ -1505,10 +1485,8 @@ msgstr "Your email address has been verified."
 msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
-#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx:184
-#: src/components/forms/fields/handle-field.tsx:231
+#: src/components/forms/fields/handle-field.tsx:232
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
@@ -1520,7 +1498,7 @@ msgstr "Your password has been updated!"
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
 msgstr "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
 
-#: src/components/utils/scope-description.tsx:647
+#: src/components/utils/scope-description.tsx:649
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 

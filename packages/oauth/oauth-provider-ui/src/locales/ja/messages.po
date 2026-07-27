@@ -53,8 +53,8 @@ msgstr "<0>Atmosphereアカウントとは？</0><1><2>Atmosphereアカウント
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>何が特別なのか</0><1>主な違い：あなたのデータはどのアプリにも閉じ込められません。従来のソーシャルメディアアカウントとは異なり、Atmosphereアカウントでは、あなたは自分の識別情報とデータを真に所有しています：</1><2><3><4>あなたは自分の識別情報を所有しています</4>：あなたのユーザー名（ハンドル）と永続的なIDはあなたのものです</3><5><6>あなたのデータはポータブルです</6>：投稿、フォロー、コンテンツはアプリのデータベースに閉じ込められることなく、あなたの個人データストレージに保存されます</5><7><8>自由に移動できます</8>：ホスティングプロバイダーを切り替えても、フォロワー、投稿、接続を失うことはありません。これにより、データが保存される場所が重要な場合は、自国のプロバイダーを選択できます。</7><9><10>複数のアプリ、一つの識別情報</10>：同じネットワーク上に構築された異なるアプリで同じアカウントを使用します</9></2>"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:54
-#: src/components/forms/input-handle-custom-instructions.tsx:69
+#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:68
 msgid "<your-domain>"
 msgstr "<あなたのドメイン>"
 
@@ -78,7 +78,7 @@ msgstr "ローカルアプリ"
 msgid "A second authentication factor is required ({hint})"
 msgstr "2番目の認証要素が必要です ({hint})"
 
-#: src/components/utils/scope-description.tsx:863
+#: src/components/utils/scope-description.tsx:865
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0> によって管理されているサービス"
 
@@ -86,16 +86,16 @@ msgstr "<0>{domain}</0> によって管理されているサービス"
 msgid "About"
 msgstr "アカウントについて"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:396
 msgid "Access specific parts of your Bluesky account"
 msgstr "Blueskyアカウントの特定の部分にアクセス"
 
-#: src/components/utils/scope-description.tsx:389
+#: src/components/utils/scope-description.tsx:391
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr "Blueskyアカウントの特定の部分にアクセスし、プライベート設定を読み取ります"
 
 #: src/pages/account/(authenticated)/route.tsx:62
-#: src/components/utils/scope-description.tsx:266
+#: src/components/utils/scope-description.tsx:268
 msgid "Account"
 msgstr "アカウント"
 
@@ -136,12 +136,11 @@ msgstr "アカウント選択"
 msgid "Account username"
 msgstr "アカウントユーザー名"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:50
+#: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "あなたのドメインのDNS設定に次のレコードを追加してください。"
 
 #: src/components/update-handle-custom-form.tsx:84
-#: src/components/forms/input-handle-custom.tsx:45
 msgid "alice.com"
 msgstr "alice.com"
 
@@ -172,15 +171,15 @@ msgstr "何らかのエラーが発生しました"
 msgid "Another account"
 msgstr "他のアカウント"
 
-#: src/components/utils/scope-description.tsx:891
+#: src/components/utils/scope-description.tsx:893
 msgid "Any collection"
 msgstr "すべてのコレクション"
 
-#: src/components/utils/scope-description.tsx:833
+#: src/components/utils/scope-description.tsx:835
 msgid "Any method"
 msgstr "すべてのメソッド"
 
-#: src/components/utils/scope-description.tsx:872
+#: src/components/utils/scope-description.tsx:874
 msgid "Any service"
 msgstr "すべてのサービス"
 
@@ -201,8 +200,8 @@ msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "認証"
 
-#: src/components/utils/scope-description.tsx:504
-#: src/components/utils/scope-description.tsx:520
+#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:522
 msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "認証"
@@ -222,24 +221,22 @@ msgstr "{0} に承認されました"
 #: src/components/sign-in-picker.tsx:96
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
-#: src/components/forms/form-card.tsx:63
 msgid "Back"
 msgstr "戻る"
 
-#: src/components/forms/input-handle-default.tsx:109
-#: src/components/forms/fields/handle-field.tsx:155
+#: src/components/forms/fields/handle-field.tsx:156
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
-#: src/components/utils/scope-description.tsx:757
+#: src/components/utils/scope-description.tsx:759
 msgid "Blob storage"
 msgstr "Blobストレージ"
 
-#: src/components/utils/scope-description.tsx:848
+#: src/components/utils/scope-description.tsx:850
 msgid "Bluesky App services"
 msgstr "Blueskyアプリサービス"
 
-#: src/components/utils/scope-description.tsx:855
+#: src/components/utils/scope-description.tsx:857
 msgid "Bluesky Chat services"
 msgstr "Blueskyチャットサービス"
 
@@ -253,7 +250,7 @@ msgstr "<0>承認</0>をクリックすると、このアプリケーション�
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
 
-#: src/components/utils/scope-description.tsx:583
+#: src/components/utils/scope-description.tsx:585
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
@@ -264,7 +261,6 @@ msgstr "呼び出し"
 #: src/components/delete-account-dialog.tsx:200
 #: src/components/authenticate-welcome-view.tsx:57
 #: src/components/forms/form-shell.tsx:70
-#: src/components/forms/form-card.tsx:60
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -272,7 +268,7 @@ msgstr "キャンセル"
 msgid "Cannot remove current device"
 msgstr "現在のデバイスを削除できません"
 
-#: src/components/utils/scope-description.tsx:480
+#: src/components/utils/scope-description.tsx:482
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@handle</0> を変更"
 
@@ -280,7 +276,7 @@ msgstr "<0>@handle</0> を変更"
 msgid "Change your password"
 msgstr "パスワードを変更"
 
-#: src/components/utils/scope-description.tsx:440
+#: src/components/utils/scope-description.tsx:442
 msgid "Chat"
 msgstr "チャット"
 
@@ -328,7 +324,6 @@ msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
 #: src/components/oauth-session-details-dialog.tsx:45
-#: src/components/utils/dialog-simple.tsx:70
 #: src/components/ui/dialog.tsx:78
 #: src/components/ui/dialog.tsx:117
 msgid "Close"
@@ -353,7 +348,7 @@ msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
 #: src/components/sign-in-form.tsx:223
-#: src/components/delete-account-confirm-form.tsx:51
+#: src/components/delete-account-confirm-form.tsx:75
 msgid "Confirmation code"
 msgstr "確認コード"
 
@@ -371,16 +366,14 @@ msgid "Cookie Error"
 msgstr "Cookie エラー"
 
 #: src/components/forms/copy-button.tsx:56
-#: src/components/forms/button-copy.tsx:96
 msgid "Copied"
 msgstr "コピーされました"
 
 #: src/components/forms/copy-button.tsx:41
-#: src/components/forms/button-copy.tsx:30
 msgid "Copy to clipboard"
 msgstr "クリップボードにコピー"
 
-#: src/components/utils/scope-description.tsx:726
+#: src/components/utils/scope-description.tsx:728
 msgid "Create"
 msgstr "作成"
 
@@ -388,7 +381,7 @@ msgstr "作成"
 msgid "Create a new account"
 msgstr "新規アカウントの作成"
 
-#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:632
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "あなたのアカウントにリンクされたすべての公開データを作成、更新、および削除"
 
@@ -396,7 +389,7 @@ msgstr "あなたのアカウントにリンクされたすべての公開デー
 msgid "Custom domains are not supported"
 msgstr "カスタムドメインはサポートされていません"
 
-#: src/components/utils/scope-description.tsx:725
+#: src/components/utils/scope-description.tsx:727
 msgid "Data"
 msgstr "データ"
 
@@ -409,7 +402,7 @@ msgstr "アカウントを無効化"
 msgid "Deactivated account"
 msgstr "無効化されたアカウント"
 
-#: src/components/utils/scope-description.tsx:728
+#: src/components/utils/scope-description.tsx:730
 msgid "Delete"
 msgstr "削除"
 
@@ -422,7 +415,7 @@ msgstr "アカウントを削除"
 msgid "Delete account <0/>"
 msgstr "アカウントを削除 <0/>"
 
-#: src/components/delete-account-confirm-form.tsx:33
+#: src/components/delete-account-confirm-form.tsx:55
 msgid "Delete my account"
 msgstr "アカウントを削除"
 
@@ -439,12 +432,11 @@ msgstr "詳細"
 msgid "Devices"
 msgstr "デバイス"
 
-#: src/components/forms/input-token.tsx:88
 #: src/components/forms/fields/token-field.tsx:54
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "コードが届いていませんか？<0>ここをクリックすれば再送信します。</0>"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:48
+#: src/components/forms/input-handle-custom-instructions.tsx:47
 msgid "DNS"
 msgstr "DNS"
 
@@ -458,14 +450,13 @@ msgid "e.g. <0>alice{0}</0>"
 msgstr "例: <0>alice{0}</0>"
 
 #: src/components/sign-up-credentials-form.tsx:107
-#: src/components/utils/scope-description.tsx:226
+#: src/components/utils/scope-description.tsx:225
 msgid "Email"
 msgstr "メールアドレス"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:135
 #: src/components/reset-password-request-form.tsx:56
 #: src/components/reset-password-request-form.tsx:58
-#: src/components/forms/input-email-address.tsx:34
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
 msgstr "メールアドレス"
@@ -482,7 +473,7 @@ msgstr "メールアドレス変更リクエストが送信されました"
 msgid "Email change successful"
 msgstr "メールアドレスの変更に成功しました"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:157
+#: src/components/forms/input-handle-custom-instructions.tsx:159
 msgid "Email these instructions"
 msgstr "これらの手順をメールで送信"
 
@@ -523,7 +514,7 @@ msgstr "パスワードを入力"
 msgid "Enter your username and password"
 msgstr "ユーザー名とパスワードを入力してください"
 
-#: src/components/deactivate-account-dialog.tsx:53
+#: src/components/deactivate-account-dialog.tsx:52
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "アカウントに接続しているすべてのアプリと、作成したすべての「アプリパスワード」が取り消されます。再有効化する際には、再度サインインする必要があります。"
 
@@ -597,7 +588,7 @@ msgstr "ユーザー名の更新に失敗しました"
 msgid "Failed to verify email"
 msgstr "メールアドレスの確認に失敗しました"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:72
+#: src/components/forms/input-handle-custom-instructions.tsx:71
 msgid "File contents"
 msgstr "ファイルの内容"
 
@@ -626,7 +617,7 @@ msgid "Having trouble? <0>Contact support</0>"
 msgstr "なにか問題が発生しましたか？ <0>サポートに連絡</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
-#: src/components/forms/input-handle-custom-instructions.tsx:96
+#: src/components/forms/input-handle-custom-instructions.tsx:95
 msgid ""
 "Hello,\n"
 "\n"
@@ -650,11 +641,10 @@ msgstr ""
 "\n"
 "ありがとうございます。"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:144
+#: src/components/forms/input-handle-custom-instructions.tsx:146
 msgid "Help"
 msgstr "ヘルプ"
 
-#: src/components/forms/button-toggle-visibility.tsx:34
 #: src/components/forms/fields/password-field.tsx:49
 msgid "Hide"
 msgstr "隠す"
@@ -664,11 +654,11 @@ msgstr "隠す"
 msgid "Home"
 msgstr "ホーム"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:53
+#: src/components/forms/input-handle-custom-instructions.tsx:52
 msgid "Host"
 msgstr "ホスト"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:63
+#: src/components/forms/input-handle-custom-instructions.tsx:62
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -676,15 +666,15 @@ msgstr "HTTP"
 msgid "Identifier"
 msgstr "識別子"
 
-#: src/components/utils/scope-description.tsx:473
+#: src/components/utils/scope-description.tsx:475
 msgid "Identity"
 msgstr "識別情報"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:49
+#: src/components/forms/input-handle-custom-instructions.tsx:48
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr "あなたのドメインのDNS設定パネルにアクセスできる場合（例：ドメインレジストラ経由）"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:64
+#: src/components/forms/input-handle-custom-instructions.tsx:63
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr "あなたのドメインのウェブホスティング設定にアクセスできる場合（例：FTP経由）"
 
@@ -696,7 +686,7 @@ msgstr "自分のドメインを持っていれば、ハンドルとして利用
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "メールアドレスを更新すると、メールでの2要素認証(有効にしていた場合)は無効になります。"
 
-#: src/components/deactivate-account-dialog.tsx:61
+#: src/components/deactivate-account-dialog.tsx:60
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "ハンドルやメールアドレスを変えるのであれば、無効化の前に変更してください。"
 
@@ -704,8 +694,7 @@ msgstr "ハンドルやメールアドレスを変えるのであれば、無効
 msgid "Interface language selector"
 msgstr "言語選択"
 
-#: src/components/forms/input-handle-default.tsx:254
-#: src/components/forms/fields/handle-field.tsx:281
+#: src/components/forms/fields/handle-field.tsx:282
 msgid "Invalid"
 msgstr "無効"
 
@@ -762,11 +751,10 @@ msgstr "他のデバイスでログインしていないようです。"
 msgid "loopback"
 msgstr "ループバック"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:65
+#: src/components/forms/input-handle-custom-instructions.tsx:64
 msgid "Make a text file with the contents below available at the following URL."
 msgstr "次のURLで以下の内容のテキストファイルを利用できるようにしてください。"
 
-#: src/components/forms/button-toggle-visibility.tsx:34
 #: src/components/forms/fields/password-field.tsx:49
 msgid "Make visible"
 msgstr "表示する"
@@ -775,7 +763,7 @@ msgstr "表示する"
 msgid "Manage applications that have access to your account"
 msgstr "あなたのアカウントにアクセスできるアプリケーションを管理する"
 
-#: src/components/utils/scope-description.tsx:476
+#: src/components/utils/scope-description.tsx:478
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "あなたの <1>@handle</1> を含む <0>すべての識別情報</0> を管理する"
 
@@ -787,11 +775,11 @@ msgstr "アカウントを管理"
 msgid "Manage your active sessions"
 msgstr "アクティブなセッションを管理"
 
-#: src/components/utils/scope-description.tsx:387
+#: src/components/utils/scope-description.tsx:389
 msgid "Manage your profile, posts, likes and follows"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理"
 
-#: src/components/utils/scope-description.tsx:382
+#: src/components/utils/scope-description.tsx:384
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理し、あなたのプライベートな設定を読み取る"
 
@@ -842,16 +830,14 @@ msgstr "次へ"
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/input-handle-default.tsx:114
-#: src/components/forms/fields/handle-field.tsx:160
+#: src/components/forms/fields/handle-field.tsx:161
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:167
 #: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
-#: src/components/delete-account-confirm-form.tsx:66
-#: src/components/forms/input-password.tsx:46
+#: src/components/delete-account-confirm-form.tsx:85
 #: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
 msgstr "パスワード"
@@ -891,11 +877,11 @@ msgctxt "Error"
 msgid "Payload"
 msgstr "ペイロード"
 
-#: src/components/utils/scope-description.tsx:521
+#: src/components/utils/scope-description.tsx:523
 msgid "Perform actions on your behalf"
 msgstr "あなたに代わってアクションを実行する"
 
-#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:508
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "あなたに代わって認証されたアクションを <0>任意のサービス</0> が実行する"
 
@@ -937,7 +923,6 @@ msgid "Please try again in a moment."
 msgstr "しばらくしてからもう一度お試しください。"
 
 #: src/components/forms/request-code-button.tsx:76
-#: src/components/forms/button-cooldown.tsx:76
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "{remainingSeconds} 秒待ってからもう一度やり直してください。"
 
@@ -947,7 +932,7 @@ msgstr "{remainingSeconds} 秒待ってからもう一度やり直してくだ�
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
 
-#: src/components/utils/scope-description.tsx:644
+#: src/components/utils/scope-description.tsx:646
 msgid "Publish changes"
 msgstr "公開された変更"
 
@@ -960,19 +945,19 @@ msgstr "再有効化"
 msgid "Reactivate account"
 msgstr "アカウントを再有効化"
 
-#: src/components/utils/scope-description.tsx:441
+#: src/components/utils/scope-description.tsx:443
 msgid "Read and send messages"
 msgstr "メッセージの読み取りと送信"
 
-#: src/components/utils/scope-description.tsx:229
+#: src/components/utils/scope-description.tsx:228
 msgid "Read and update your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取り、更新する"
 
-#: src/components/utils/scope-description.tsx:231
+#: src/components/utils/scope-description.tsx:230
 msgid "Read your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取る"
 
-#: src/components/utils/scope-description.tsx:396
+#: src/components/utils/scope-description.tsx:398
 msgid "Read your private preferences"
 msgstr "あなたのプライベート設定を読み取る"
 
@@ -980,8 +965,8 @@ msgstr "あなたのプライベート設定を読み取る"
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
-#: src/components/utils/scope-description.tsx:628
-#: src/components/utils/scope-description.tsx:643
+#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:645
 msgid "Repository"
 msgstr "リポジトリ"
 
@@ -1005,7 +990,6 @@ msgstr "再試行"
 
 #: src/components/forms/request-code-button.tsx:73
 #: src/components/forms/request-code-button.tsx:102
-#: src/components/forms/button-cooldown.tsx:73
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}秒後に再試行"
 
@@ -1026,9 +1010,9 @@ msgstr "セキュリティステップが必要です"
 msgid "Select another account"
 msgstr "別のアカウントを選択"
 
-#: src/components/forms/input-handle-default.tsx:150
+#: src/components/forms/fields/handle-field.tsx:214
 msgid "Select domain"
-msgstr "ドメインを選択"
+msgstr ""
 
 #: src/components/sign-in-view.tsx:126
 msgid "Select from an existing account"
@@ -1039,7 +1023,6 @@ msgid "Send email"
 msgstr "メールを送信"
 
 #: src/components/forms/request-code-button.tsx:40
-#: src/components/forms/button-request-code.tsx:11
 msgid "Send verification code"
 msgstr "確認コードを送信"
 
@@ -1105,7 +1088,6 @@ msgid "Strong"
 msgstr "強い"
 
 #: src/components/forms/form-shell.tsx:65
-#: src/components/forms/form-card.tsx:55
 msgid "Submit"
 msgstr "送信"
 
@@ -1125,7 +1107,7 @@ msgstr "サポート"
 msgid "Technical details"
 msgstr "技術的な詳細"
 
-#: src/components/utils/scope-description.tsx:267
+#: src/components/utils/scope-description.tsx:269
 msgid "Temporarily activate or deactivate your account"
 msgstr "一時的にアカウントを有効化または無効化する"
 
@@ -1135,19 +1117,19 @@ msgstr "一時的にアカウントを有効化または無効化する"
 msgid "Terms of Service"
 msgstr "利用規約"
 
-#: src/components/utils/scope-description.tsx:190
+#: src/components/utils/scope-description.tsx:189
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "アプリは、あなたのネットワーク識別情報を完全に制御することを求めています。つまり、アカウントを <0>永久に壊す</0> ことや、<1>乗っ取る</1> ことさえ可能です。この権限は、本当に信頼できるアプリにのみ付与してください。"
 
-#: src/components/utils/scope-description.tsx:170
+#: src/components/utils/scope-description.tsx:169
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "アプリは、あなたに代わって次のアクションを実行するために必要な権限を要求しています："
 
-#: src/components/utils/scope-description.tsx:409
+#: src/components/utils/scope-description.tsx:411
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
 msgstr "アプリは、あなたのBlueskyアカウントに対して次のアクションを実行するために必要な権限を要求しています："
 
-#: src/components/utils/scope-description.tsx:524
+#: src/components/utils/scope-description.tsx:526
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "ATプロトコルネットワークは、外部サービスと通信する際にユーザーを一意に識別できる認証メカニズムを使用しています。これは通常、チャットメッセージ、フィード、モデレーションコンテンツなどのアカウントにリンクされたデータを取得または更新するために使用されます。アプリは、あなたに代わって次の認証されたアクションを実行するために必要な権限を要求しています："
 
@@ -1183,7 +1165,7 @@ msgstr "そのユーザー名は既に使用されています"
 msgid "The username is invalid"
 msgstr "ユーザー名が無効です"
 
-#: src/components/deactivate-account-dialog.tsx:46
+#: src/components/deactivate-account-dialog.tsx:45
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "アカウントの無効化に期限はありません。いつでも戻ってこられます。"
 
@@ -1191,11 +1173,11 @@ msgstr "アカウントの無効化に期限はありません。いつでも戻
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "これらのアプリはあなたのアカウントにアクセスできます。異なるデバイスで使用している場合、アプリが複数回表示されることがあります。アクセスを取り消すと、再度サインインするまでアプリがログアウトされます。"
 
-#: src/components/oauth-session-details-dialog.tsx:57
+#: src/components/oauth-session-details-dialog.tsx:56
 msgid "This app can uniquely identify you through your account."
 msgstr ""
 
-#: src/components/oauth-session-details-dialog.tsx:64
+#: src/components/oauth-session-details-dialog.tsx:63
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
@@ -1237,27 +1219,26 @@ msgstr "パスワードを変更するには、メールに送信されたセキ
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "メールアドレスを確認するには、<0>{email}</0> に送信されたセキュリティコードを入力する必要があります。"
 
-#: src/components/utils/scope-description.tsx:586
+#: src/components/utils/scope-description.tsx:588
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "対象"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:150
+#: src/components/forms/input-handle-custom-instructions.tsx:152
 msgid "Troubleshoot"
 msgstr "トラブルシュート"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:57
+#: src/components/forms/input-handle-custom-instructions.tsx:56
 msgid "Type"
 msgstr "タイプ"
 
 #: src/components/update-handle-custom-form.tsx:83
-#: src/components/forms/input-handle-custom.tsx:44
 msgid "Type your domain"
 msgstr "ドメイン名を入力"
 
-#: src/components/forms/input-handle-default.tsx:121
+#: src/components/forms/fields/handle-field.tsx:176
 msgid "Type your username"
-msgstr "ユーザー名を入力"
+msgstr ""
 
 #: src/contexts/session.tsx:148
 msgid "Unauthorized"
@@ -1272,7 +1253,7 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "不明なユーザーエージェント"
 
-#: src/components/utils/scope-description.tsx:727
+#: src/components/utils/scope-description.tsx:729
 msgid "Update"
 msgstr "更新"
 
@@ -1291,11 +1272,11 @@ msgstr "ユーザー名を更新"
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr "ユーザー名をあなたが所有するドメイン名に更新して、あなたのアイデンティティを自己証明します。"
 
-#: src/components/utils/scope-description.tsx:760
+#: src/components/utils/scope-description.tsx:762
 msgid "Upload files"
 msgstr "ファイルのアップロード"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:68
+#: src/components/forms/input-handle-custom-instructions.tsx:67
 msgid "URL"
 msgstr "URL"
 
@@ -1319,12 +1300,11 @@ msgstr "ユーザー名またはメールアドレス"
 msgid "Username updated"
 msgstr "ユーザー名更新"
 
-#: src/components/forms/input-handle-default.tsx:249
-#: src/components/forms/fields/handle-field.tsx:279
+#: src/components/forms/fields/handle-field.tsx:280
 msgid "Valid"
 msgstr "有効"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:58
+#: src/components/forms/input-handle-custom-instructions.tsx:57
 msgid "Value"
 msgstr "値"
 
@@ -1337,7 +1317,7 @@ msgstr "確認コード"
 msgid "Verification email sent"
 msgstr "確認メールが送信されました"
 
-#: src/components/forms/input-handle-custom-instructions.tsx:116
+#: src/components/forms/input-handle-custom-instructions.tsx:117
 msgid "Verification method"
 msgstr "確認方法"
 
@@ -1436,7 +1416,7 @@ msgstr "代わりに、一時的にアカウントを無効にすることもで
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "アカウントのセットアップ後にユーザー名をあなたが管理しているドメイン名に変更することができます。"
 
-#: src/components/reactivate-account-dialog.tsx:46
+#: src/components/reactivate-account-dialog.tsx:45
 msgid "You can deactivate your account again at any time from this page."
 msgstr "このページからいつでもアカウントを再度無効化できます。"
 
@@ -1505,10 +1485,8 @@ msgstr "メールアドレスが確認されました。"
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
-#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx:184
-#: src/components/forms/fields/handle-field.tsx:231
+#: src/components/forms/fields/handle-field.tsx:232
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 
@@ -1520,7 +1498,7 @@ msgstr "パスワードが更新されました！"
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
 msgstr "あなたのプロフィール、投稿、フィード、リストは、Atmosphereネットワーク全体 — Blueskyアプリやこのアカウントを使用する他のAtmosphereアプリ — で再び表示されるようになります。"
 
-#: src/components/utils/scope-description.tsx:647
+#: src/components/utils/scope-description.tsx:649
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "あなたのリポジトリには、Blueskyの投稿、いいね、フォローなど、ATプロトコルネットワークで公開されているすべてのデータが含まれています。また、このアカウントを使用してサインインした他のアプリを通じて作成されたデータも含まれています。アプリは、あなたのリポジトリに次の変更を公開するために必要な権限を要求しています："
 

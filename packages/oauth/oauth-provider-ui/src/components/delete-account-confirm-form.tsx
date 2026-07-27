@@ -1,81 +1,92 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
-import { useRef } from 'react'
-import { FormField } from '#/components/forms/form-field.tsx'
-import { InputPassword } from '#/components/forms/input-password.tsx'
-import { InputToken } from '#/components/forms/input-token.tsx'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { PasswordField } from '#/components/forms/fields/password-field.tsx'
+import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
-  SmartForm,
-  type WrappedSmartFormProps,
-} from '#/components/forms/smart-form.tsx'
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
+import { otpCodeSchema } from '#/lib/form-schemas.ts'
+
+const schema = z.object({
+  // Field keys are the rendered `name` attributes the e2e suite selects on.
+  code: otpCodeSchema,
+  password: z.string().min(1),
+})
+
+type Values = z.infer<typeof schema>
 
 export type DeleteAccountConfirmData = {
   token: string
   password: string
 }
 
-export type DeleteAccountConfirmFormProps =
-  WrappedSmartFormProps<DeleteAccountConfirmData> & {
-    email?: string
-    onResend: () => void | PromiseLike<void>
-  }
+export type DeleteAccountConfirmFormProps = Omit<
+  FormShellProps<Values>,
+  'form' | 'onSubmit'
+> & {
+  email?: string
+  onResend: () => void | PromiseLike<void>
+  handler: (
+    data: DeleteAccountConfirmData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
 
 export function DeleteAccountConfirmForm({
   email,
   onResend,
+  handler,
   ...props
 }: DeleteAccountConfirmFormProps) {
-  const pwdRef = useRef<HTMLInputElement>(null)
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    reValidateMode: 'onChange',
+    defaultValues: { code: '', password: '' },
+  })
+
   return (
-    <SmartForm
+    <FormShell
       {...props}
-      submitColor="error"
-      loading={props.loading}
+      form={form}
+      submitVariant="destructive"
       submitLabel={<Trans>Delete my account</Trans>}
-      validate={({ token, password }) => {
-        if (token && password) return { token, password }
-      }}
-      fields={({ values, set, setterFor }) => (
-        <>
-          {email && (
-            // For better password managers integration, we include a hidden
-            // username field with the email pre-filled.
-            <input
-              type="text"
-              autoComplete="username"
-              defaultValue={email}
-              readOnly
-              hidden
-            />
-          )}
-
-          <FormField label={<Trans>Confirmation code</Trans>}>
-            <InputToken
-              name="code"
-              enterKeyHint="next"
-              required
-              autoFocus
-              defaultValue={values.token}
-              onToken={(value) => {
-                set('token', value ?? undefined)
-                if (value) pwdRef.current?.focus()
-              }}
-              onResend={onResend}
-            />
-          </FormField>
-
-          <FormField label={<Trans>Password</Trans>}>
-            <InputPassword
-              ref={pwdRef}
-              name="password"
-              autoComplete="current-password"
-              enterKeyHint="done"
-              required
-              defaultValue={values.password}
-              onPassword={setterFor('password')}
-            />
-          </FormField>
-        </>
+      onSubmit={(values, signal) =>
+        handler({ token: values.code, password: values.password }, signal)
+      }
+    >
+      {email && (
+        // For better password managers integration, we include a hidden
+        // username field with the email pre-filled.
+        <input
+          type="text"
+          autoComplete="username"
+          defaultValue={email}
+          readOnly
+          hidden
+        />
       )}
-    />
+
+      <TokenField
+        control={form.control}
+        name="code"
+        label={<Trans>Confirmation code</Trans>}
+        enterKeyHint="next"
+        required
+        autoFocus
+        onResend={onResend}
+      />
+
+      <PasswordField
+        control={form.control}
+        name="password"
+        label={<Trans>Password</Trans>}
+        autoComplete="current-password"
+        enterKeyHint="done"
+        required
+      />
+    </FormShell>
   )
 }

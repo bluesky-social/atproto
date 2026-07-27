@@ -5,8 +5,8 @@ import { Trans } from '@lingui/react/macro'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Notice } from '#/components/feedback/notice.tsx'
-import { Button } from '#/components/forms/button.tsx'
 import { AppShell } from '#/components/layouts/app-shell.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
@@ -57,7 +57,7 @@ function CookieErrorView() {
         </Notice>
 
         <div className="flex flex-wrap items-center justify-end">
-          <Button type="submit" color="primary">
+          <Button type="submit">
             <Trans>Continue</Trans>
           </Button>
         </div>

@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, type ReactNode, useState } from 'react'
+import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
-import { SmartForm } from '#/components/forms/smart-form.tsx'
 
 export type ReactivateAccountDialogProps = {
   onConfirm: () => void | PromiseLike<void>
@@ -31,24 +31,22 @@ export function ReactivateAccountDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <SmartForm
-        submitColor="primary"
+      <ConfirmForm
+        submitVariant="default"
         submitLabel={<Trans>Reactivate</Trans>}
         onCancel={() => setOpen(false)}
         onLoadingChange={setSubmitting}
-        validate={() => ({})}
         handler={async () => {
           await onConfirm()
           setOpen(false)
         }}
-        fields={() => (
-          <Notice role="note" className="text-sm">
-            <Trans>
-              You can deactivate your account again at any time from this page.
-            </Trans>
-          </Notice>
-        )}
-      />
+      >
+        <Notice role="note" className="text-sm">
+          <Trans>
+            You can deactivate your account again at any time from this page.
+          </Trans>
+        </Notice>
+      </ConfirmForm>
     </DialogShell>
   )
 }

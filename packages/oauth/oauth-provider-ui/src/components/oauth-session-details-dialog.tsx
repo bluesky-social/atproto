@@ -1,7 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, type ReactNode, useState } from 'react'
+import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
-import { SmartForm } from '#/components/forms/smart-form.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 
@@ -33,8 +33,8 @@ export function OAuthSessionDetailsDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <SmartForm
-        submitColor="error"
+      <ConfirmForm
+        submitVariant="destructive"
         submitLabel={<Trans context="OAuthApp">Revoke access</Trans>}
         actions={
           <Button
@@ -46,31 +46,29 @@ export function OAuthSessionDetailsDialog({
           </Button>
         }
         onLoadingChange={setSubmitting}
-        validate={() => ({})}
         handler={async () => {
           await onRevoke()
           setOpen(false)
         }}
-        fields={() =>
-          hasIdentityOnlyAccess ? (
+      >
+        {hasIdentityOnlyAccess ? (
+          <p>
+            <Trans>
+              This app can uniquely identify you through your account.
+            </Trans>
+          </p>
+        ) : (
+          <>
             <p>
               <Trans>
-                This app can uniquely identify you through your account.
+                This app has access to your account with the following
+                permissions:
               </Trans>
             </p>
-          ) : (
-            <>
-              <p>
-                <Trans>
-                  This app has access to your account with the following
-                  permissions:
-                </Trans>
-              </p>
-              <ScopeDescription scope={scope} />
-            </>
-          )
-        }
-      />
+            <ScopeDescription scope={scope} />
+          </>
+        )}
+      </ConfirmForm>
     </DialogShell>
   )
 }
