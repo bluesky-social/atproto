@@ -136,19 +136,7 @@ describe(swallowStoreErrors, () => {
   })
 
   describe('clear', () => {
-    it('is absent on the wrapper when the source store has no clear', () => {
-      const store: TestStore = {
-        get: async () => undefined,
-        set: async () => {},
-        del: async () => {},
-      }
-
-      const wrapped = swallowStoreErrors(store)
-
-      expect(wrapped.clear).toBeUndefined()
-    })
-
-    it('is wrapped when present, swallowing errors with "clear"', async () => {
+    it('swallows errors with "clear"', async () => {
       const err = new Error('clear boom')
       const store: TestStore = {
         get: async () => undefined,

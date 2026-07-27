@@ -130,8 +130,7 @@ export class CachedGetter<
 
     const currentExecutionFlow: PendingItem<V> = Promise.resolve()
       .then(async () => {
-        // @NOTE that the signal should not be aborted at this point, because
-        // the loop above would have thrown an error if it was.
+        signal?.throwIfAborted()
 
         const storedValue = await this.getStored(key, { signal })
 

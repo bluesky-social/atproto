@@ -34,8 +34,8 @@ export const logStoreError: StoreErrorHandler = (err, operation) => {
 export function swallowStoreErrors<K extends Key, V extends Value>(
   store: SimpleStore<K, V>,
   onError: StoreErrorHandler<K> = logStoreError,
-): SimpleStore<K, V> {
-  const wrapped: SimpleStore<K, V> = {
+): Required<SimpleStore<K, V>> {
+  return {
     async get(key, options) {
       options?.signal?.throwIfAborted()
       try {
@@ -63,19 +63,12 @@ export function swallowStoreErrors<K extends Key, V extends Value>(
         onError(err, 'del', key)
       }
     },
-  }
-
-  // Only expose `clear` if the wrapped store implements it.
-  const { clear } = store
-  if (clear) {
-    wrapped.clear = async () => {
+    async clear() {
       try {
-        await clear.call(store)
+        await store.clear?.()
       } catch (err) {
         onError(err, 'clear')
       }
-    }
+    },
   }
-
-  return wrapped
 }

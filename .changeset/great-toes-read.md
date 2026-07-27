@@ -1,5 +1,5 @@
 ---
-'@atproto-labs/simple-store': minor
+'@atproto-labs/simple-store': patch
 ---
 
-**BREAKING:** Make `CachedGetter` properties actually private
+Make `CachedGetter` properties actually private

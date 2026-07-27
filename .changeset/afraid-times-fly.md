@@ -1,5 +1,5 @@
 ---
-'@atproto/oauth-client': minor
+'@atproto/oauth-client': patch
 ---
 
-**BREAKING:** `SessionGetter`'s private properties are now really private.
+`SessionGetter`'s private properties are now really private.

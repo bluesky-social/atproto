@@ -44,7 +44,7 @@ function timeoutError(ms: number): unknown {
 
 export function combineSignals(
   signals: readonly (AbortSignal | undefined)[],
-): DisposableAbortController {
+): AbortController & Disposable {
   const controller = new DisposableAbortController()
 
   const onAbort = function (this: AbortSignal, _event: Event) {
@@ -74,10 +74,7 @@ export function combineSignals(
  * Allows using {@link AbortController} with the `using` keyword, in order to
  * automatically abort them once the execution block ends.
  */
-export class DisposableAbortController
-  extends AbortController
-  implements Disposable
-{
+class DisposableAbortController extends AbortController implements Disposable {
   [Symbol.dispose]() {
     this.abort(new Error('AbortController was disposed'))
   }
