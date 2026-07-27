@@ -9,6 +9,7 @@ import {
   type QueryResult,
   type RootOperationNode,
   type UnknownRow,
+  sql,
 } from 'kysely'
 import { Migrator } from 'kysely/migration'
 // eslint-disable-next-line import/default
@@ -134,6 +135,12 @@ export class Database {
     if (this.destroyed) return
     await this.db.destroy()
     this.destroyed = true
+  }
+
+  // Lightweight connectivity check for readiness probes. Throws if the database
+  // is unreachable.
+  async ping(): Promise<void> {
+    await sql`select 1`.execute(this.db)
   }
 
   async migrateToOrThrow(migration: string) {
