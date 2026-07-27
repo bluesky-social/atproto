@@ -213,7 +213,7 @@ msgid "Authorize"
 msgstr "승인"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:108
+#: src/pages/account/(authenticated)/apps/page.tsx:115
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "{0}에 승인됨"
@@ -431,7 +431,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "접근 거부"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:131
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "세부 정보"
@@ -717,7 +717,7 @@ msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다�
 msgid "just now"
 msgstr "방금 전"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:117
+#: src/pages/account/(authenticated)/apps/page.tsx:124
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "<0/>에 마지막으로 접근함"
