@@ -46,6 +46,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
   #iterated = false
   #destroyed = false
   #disposed: Promise<void> | undefined
+  readonly #disposeController = new AbortController()
 
   constructor(
     websocketFn: WebSocketFn,
@@ -113,10 +114,18 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       )
     }
     this.#iterated = true
+    const disposal = this.#disposeController.signal
 
     const { onOpen, onReconnect, onError, onClose } = this.#options
     const iterator = this.#websocketFn(this.#url, {
       ...this.#options,
+      // Disposal needs a way to *interrupt* a pull, not merely ask the
+      // generator to return: `return()` on a generator suspended inside a
+      // `yield*` queues behind the pending promise rather than cancelling it,
+      // so a stream parked waiting for a message would never settle. Aborting
+      // this signal makes the transport reject that pull, which unwinds the
+      // loop. Composed with any caller-supplied signal so both work.
+      signal: this.#disposeSignal(this.#options.signal),
       onOpen: (sender) => {
         this.#onConnect(sender)
         invokeHook(onOpen, sender)
@@ -140,23 +149,57 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       },
     })
     this.#iterator = iterator
-    return iterator
+    // Disposal ends the stream by aborting, which the generator surfaces as a
+    // rejection. But disposal is the *consumer's own* deliberate stop, not a
+    // failure it should have to catch — so translate that one rejection into a
+    // clean completion. Any other abort reason (a caller-supplied signal, a
+    // real failure) passes through untouched.
+    this.#iterator = {
+      next: async () => {
+        try {
+          return await iterator.next()
+        } catch (error) {
+          if (disposal.aborted && error === disposal.reason) {
+            return { value: undefined, done: true }
+          }
+          throw error
+        }
+      },
+      return: () => iterator.return(),
+    }
+    return this.#iterator
   }
 
   /**
-   * Idempotent: drives the stored iterator's `return()` so the generator's
-   * `finally` runs (and, in turn, `onClose` and this class's own teardown),
-   * resolving once that completes. A client that was never iterated has
-   * nothing to tear down — an inert no-op.
+   * Idempotent: ends the stream and resolves once it has fully unwound (so
+   * `onClose` and this class's own teardown have run). A client that was never
+   * iterated has nothing to tear down — an inert no-op.
+   *
+   * Aborts rather than only calling `return()`, because a `return()` on a
+   * generator suspended inside a `yield*` cannot interrupt the pull it is
+   * waiting on — a stream parked for the next message would hang forever. The
+   * abort makes the transport reject that pull; `return()` then settles the
+   * generator for the ordinary case where nothing was pending.
    */
   [Symbol.asyncDispose](): Promise<void> {
-    if (!this.#disposed) {
-      const iterator = this.#iterator
-      this.#disposed = iterator
-        ? Promise.resolve(iterator.return?.()).then(() => undefined)
-        : Promise.resolve()
-    }
+    this.#disposed ??= this.#dispose()
     return this.#disposed
+  }
+
+  async #dispose(): Promise<void> {
+    this.#disposeController.abort(new WebSocketClientError('Client disposed'))
+    const iterator = this.#iterator
+    if (!iterator) return
+    // The abort has unwound the loop; swallow the resulting rejection —
+    // disposal is a deliberate stop, not a failure the caller asked about.
+    await Promise.resolve(iterator.return?.()).catch(() => {})
+  }
+
+  // The disposal signal, composed with any caller-supplied one so aborting
+  // either ends the stream.
+  #disposeSignal(callerSignal: AbortSignal | undefined): AbortSignal {
+    const own = this.#disposeController.signal
+    return callerSignal ? AbortSignal.any([callerSignal, own]) : own
   }
 
   // Called on the generator's onOpen (first connection) and onReconnect

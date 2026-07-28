@@ -25,7 +25,18 @@ function harness() {
           const value = queue.shift()
           if (value !== undefined) return { value, done: false }
           if (ended) return { value: undefined, done: true }
-          await new Promise<void>((resolve) => (notify = resolve))
+          // Faithful to the real generator on the point that matters for
+          // disposal: an aborted signal rejects a parked pull. Without this a
+          // `return()`-only disposal would appear to work here while hanging
+          // against a real socket.
+          await new Promise<void>((resolve, reject) => {
+            notify = resolve
+            opts.signal?.addEventListener(
+              'abort',
+              () => reject(opts.signal?.reason),
+              { once: true },
+            )
+          })
         }
       },
       async return(): Promise<IteratorResult<string, void>> {
@@ -246,6 +257,26 @@ describe(WebSocketClientBase, () => {
       await expect(client.send('after')).rejects.toBeInstanceOf(
         WebSocketClientError,
       )
+    })
+
+    it('ends a stream parked on a pull', async () => {
+      // NB: this asserts the outcome, not the mechanism. The harness is a plain
+      // object rather than a real generator, so it cannot reproduce the reason
+      // disposal must abort — a `return()` on a generator suspended inside a
+      // `yield*` queues behind the pending pull instead of cancelling it. See
+      // "asyncDispose ends a stream parked on a pull" in integration.test.ts
+      // for the test that actually pins that down over a real socket.
+      const h = harness()
+      const client = new WebSocketClientBase(h.websocketFn, 'ws://x')
+      const pump = (async () => {
+        for await (const _ of client) {
+          // Parks: the harness never pushes.
+        }
+        return 'ended'
+      })()
+      h.open()
+      await client[Symbol.asyncDispose]()
+      await expect(pump).resolves.toBe('ended')
     })
 
     it('is a no-op on a never-iterated client', async () => {

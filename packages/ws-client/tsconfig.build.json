@@ -7,7 +7,6 @@
     { "path": "./tsconfig.build-core.json" },
     { "path": "./tsconfig.build-node.json" },
     { "path": "./tsconfig.build-browser.json" },
-    { "path": "../common/tsconfig.build.json" }, // remove in Task 7
   ],
   "compilerOptions": {
     "rootDir": "./src",
