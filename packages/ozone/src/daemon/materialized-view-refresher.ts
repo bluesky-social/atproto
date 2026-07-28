@@ -1,7 +1,7 @@
 import { MINUTE } from '@atproto/common'
 import { type BackgroundQueue, PeriodicBackgroundTask } from '../background.js'
-import { dbLogger } from '../logger.js'
 import { MATERIALIZED_VIEW_REFRESH_LOCK_ID } from '../db/index.js'
+import { dbLogger } from '../logger.js'
 
 const LOCK_TIMEOUT_MS = 1 * MINUTE
 

@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals'
 import { TestNetwork } from '@atproto/dev-env'
+import { MATERIALIZED_VIEW_REFRESH_LOCK_ID } from '../src/db/index.js'
 import type { Database } from '../src/index.js'
 import { dbLogger } from '../src/logger.js'
-import { MATERIALIZED_VIEW_REFRESH_LOCK_ID } from '../src/db/index.js'
 
 describe('materialized view refresher', () => {
   let network: TestNetwork

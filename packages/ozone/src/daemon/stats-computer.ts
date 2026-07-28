@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { STATS_COMPUTER_LOCK_ID, type Database } from '../db/index.js'
+import { type Database, STATS_COMPUTER_LOCK_ID } from '../db/index.js'
 import { dbLogger } from '../logger.js'
 import type { ReportStatsServiceCreator } from '../report/stats.js'
 
