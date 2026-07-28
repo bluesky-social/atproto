@@ -23,6 +23,23 @@
 
 @custom-variant dark (@media (prefers-color-scheme: dark));
 
+/* ---------------------------------------------------------------------------
+ * Base UI orientation bridge.
+ *
+ * The shadcn primitives written for Base UI use `data-horizontal:` /
+ * `data-vertical:` variants, but Base UI emits a single
+ * `data-orientation="horizontal|vertical"` attribute. Tailwind's shorthand
+ * resolves `data-horizontal:` to `[data-horizontal]`, which never matches, so
+ * without these bridges every `Separator` renders at zero width/height — it is
+ * `h-px`/`w-px` that gives it its line. `Field` relies on the same variants.
+ *
+ * These belong in the style sheet rather than in the components: keeping them
+ * here lets `components/ui/*` stay byte-faithful to the upstream registry.
+ * ------------------------------------------------------------------------- */
+
+@custom-variant data-horizontal (&[data-orientation='horizontal']);
+@custom-variant data-vertical (&[data-orientation='vertical']);
+
 /* shadcn tokens: light */
 :root {
   --radius: 0.625rem;
