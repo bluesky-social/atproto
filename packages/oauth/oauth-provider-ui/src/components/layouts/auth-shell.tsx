@@ -1,7 +1,7 @@
 import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import type { JSX, ReactNode } from 'react'
-import { AppShell } from '#/components/layouts/app-shell.tsx'
 import {
   Card,
   CardContent,
@@ -9,27 +9,39 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card.tsx'
+import { LinkAnchor } from '#/components/utils/link-anchor.tsx'
+import { useCustomizationData } from '#/contexts/customization.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
+import { LocaleSelector } from '#/locales/locale-selector.tsx'
 
 export type AuthShellProps = Override<
   JSX.IntrinsicElements['div'],
   {
     title?: string | MessageDescriptor
     subtitle?: ReactNode
+    /**
+     * Overrides the `<title>` when the document title differs from the card
+     * heading. Defaults to `title`, which is what nearly every screen wants.
+     */
+    documentTitle?: string | MessageDescriptor
   }
 >
 
 /**
- * The authorize-flow surface, replacing the previous split-panel `LayoutTitle`.
+ * The authorize-flow surface, structured after shadcn's `login-03` block:
+ * a muted full-height page, a centred `max-w-sm` column, the brand mark above
+ * a `Card`.
  *
- * A single centred card inside `AppShell`, so the sign-in, sign-up, consent and
- * reset-password steps all share one frame instead of each screen owning its
- * own two-column layout.
+ * @NOTE This owns the whole page frame, so it renders the `<title>` itself —
+ * which `assertTitle` depends on — and carries the locale selector and footer
+ * links. Never nest it inside another shell: both render a `<title>`, React
+ * hoists them all into the head, and the last one wins.
  */
 export function AuthShell({
   title,
   subtitle,
+  documentTitle = title,
 
   // div
   className,
@@ -37,23 +49,44 @@ export function AuthShell({
   ...props
 }: AuthShellProps) {
   const { _ } = useLingui()
+  const { logo, name, links } = useCustomizationData()
 
   const titleString =
     typeof title === 'string' ? title : title ? _(title) : undefined
 
+  const documentTitleString =
+    typeof documentTitle === 'string'
+      ? documentTitle
+      : documentTitle
+        ? _(documentTitle)
+        : undefined
+
   return (
-    <AppShell title={title}>
+    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+      {documentTitleString && <title>{documentTitleString}</title>}
+
       <div
         {...props}
-        className={cn('w-full max-w-lg px-4 py-6 md:py-10', className)}
+        className={cn('flex w-full max-w-sm flex-col gap-6', className)}
       >
+        {(logo || name) && (
+          <div className="flex items-center justify-center gap-2 self-center font-medium">
+            {logo && (
+              <img
+                src={logo}
+                alt={name || _(msg`Logo`)}
+                className="size-6 object-contain"
+              />
+            )}
+            {name}
+          </div>
+        )}
+
         <Card>
           {(titleString || subtitle) && (
-            <CardHeader>
+            <CardHeader className="text-center">
               {titleString && (
-                <CardTitle className="text-2xl font-semibold">
-                  {titleString}
-                </CardTitle>
+                <CardTitle className="text-xl">{titleString}</CardTitle>
               )}
               {/* @NOTE CardDescription is a <div> upstream; the subtitle is
                 wrapped in a <p> so unqualified `ensureTextVisibility` calls
@@ -68,7 +101,18 @@ export function AuthShell({
 
           <CardContent>{children}</CardContent>
         </Card>
+
+        <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-4 text-xs">
+          <LocaleSelector />
+          {links?.map((link) => (
+            <LinkAnchor
+              key={link.href}
+              link={link}
+              className="hover:text-foreground rounded-sm transition-colors hover:underline"
+            />
+          ))}
+        </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
