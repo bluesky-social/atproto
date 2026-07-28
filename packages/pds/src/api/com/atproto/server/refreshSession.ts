@@ -11,7 +11,7 @@ import {
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
 import type { AppContext } from '../../../../context.js'
 import { softDeleted } from '../../../../db/util.js'
-import { logSessionRefreshed } from '../../../../event-logger.js'
+import { events } from '../../../../events.js'
 import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util.js'
 
@@ -56,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const { status, active } = formatAccountStatus(user)
 
-      logSessionRefreshed({
+      events.sessionRefreshed({
         source: com.atproto.server.refreshSession.$lxm,
         did: user.did,
       })

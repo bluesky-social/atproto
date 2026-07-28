@@ -38,22 +38,11 @@ import type { ServerConfig, ServerSecrets } from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
-import {
-  logAccountCreated,
-  logOauthAuthorized,
-  logSessionCreated,
-  logSessionRefreshed,
-  logSignedIn,
-} from './event-logger.js'
+import { events } from './events.js'
 import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
-import {
-  accountCreatedCounter,
-  oauthAuthorizationCounter,
-  oauthTokenIssuedCounter,
-} from './meter.js'
 import { buildProxyAgent } from './pipethrough.js'
 import {
   LocalViewer,
@@ -416,72 +405,40 @@ export class AppContext implements AsyncDisposable {
             }
           },
           onSignedUp({ account, data, clientId }) {
-            oauthLogger.info(
-              {
-                account,
-                clientId, // if present, the user is signing up as part of an OAuth flow
-                invited: data.inviteCode != null,
-                deactivated: false,
-              },
-              'sign up',
-            )
-            accountCreatedCounter.add(1, {
-              source: 'oauth',
-              deactivated: false,
-            })
-            logAccountCreated({
+            events.accountCreated({
               source: 'oauth',
               did: account.did,
+              // if present, the user is signing up as part of an OAuth flow
+              clientId,
               invited: data.inviteCode != null,
               deactivated: false,
-              clientId,
             })
           },
           onSignedIn({ account, clientId }) {
-            oauthLogger.info(
-              {
-                account,
-                clientId, // if present, the user is signing in as part of an OAuth flow
-              },
-              'sign in',
-            )
-            logSignedIn({
+            events.signedIn({
               did: account.did,
+              // if present, the user is signing in as part of an OAuth flow
               clientId,
             })
           },
           onAuthorized({ account, client }) {
-            oauthAuthorizationCounter.add(1, {
+            events.oauthAuthorized({
+              did: account.did,
+              clientId: client.id,
               clientFirstParty: client.isFirstParty,
               clientTrusted: client.isTrusted,
               clientConfidential: client.isConfidential,
-            })
-            oauthLogger.info(
-              {
-                account,
-                clientId: client.id,
-              },
-              'authorized',
-            )
-            logOauthAuthorized({
-              did: account.did,
-              clientId: client.id,
             })
           },
           onTokenCreated({ account, client }) {
-            oauthTokenIssuedCounter.add(1, {
-              clientFirstParty: client.isFirstParty,
-              clientTrusted: client.isTrusted,
-              clientConfidential: client.isConfidential,
-            })
-            logSessionCreated({
+            events.sessionCreated({
               source: 'oauth',
               did: account.did,
               clientId: client.id,
             })
           },
           onTokenRefreshed({ account, client }) {
-            logSessionRefreshed({
+            events.sessionRefreshed({
               source: 'oauth',
               did: account.did,
               clientId: client.id,
