@@ -76,6 +76,63 @@ added for the mobile nav).
 Final state: 344 messages, 3 untranslated French entries — all three pre-date
 this work.
 
+## After phase 5 — shadcn blocks consistency pass (2026-07-27)
+
+Both suites at **7/7** and **13/13**, no test files modified. Catalogs at 343
+messages, 3 untranslated French entries; the only msgid change against phase 4
+is `Close account selector`, retired when the sidebar's account switcher became
+a `DropdownMenu`.
+
+One latent bug surfaced, unrelated to the blocks work but found by it:
+
+| Bug | Cause | Fix |
+|---|---|---|
+| Every `Separator` in the app rendered invisible | the base-nova primitives use `data-horizontal:` / `data-vertical:` variants, which Tailwind resolves to `[data-horizontal]`. Base UI 1.6.0 emits a single `data-orientation="horizontal\|vertical"`, so the variants never matched and the separators kept their default zero width/height | added `@custom-variant data-horizontal` / `data-vertical` to `src/style.css` |
+
+A second silent Radix→Base UI difference surfaced in the same pass:
+
+| Bug | Cause | Fix |
+|---|---|---|
+| The domain picker displayed `0`, and the locale picker displayed `en` | Base UI's `Select.Value` renders the **raw value** and takes a function to map it to a label; Radix's echoed the selected item's own children. The domain select's values are array indices, so `<SelectValue />` printed the index | pass a formatter: `<SelectValue>{(v) => domains[Number(v)]}</SelectValue>` |
+
+Both bugs share a shape worth remembering: the Base UI port compiles, type-checks
+and renders *something plausible*, so the defect reads as a design choice rather
+than a bug. The locale selector had been showing `en` in every screenshot of this
+project and was never questioned.
+
+The lesson generalises past this one bug: `components/ui/*` copied from the
+registry depend on `@custom-variant` declarations that live in the style's
+`globals.css`. Copying the components alone leaves those rules silently
+unmatched, and Tailwind reports nothing.
+
+Fixing it also *revealed* a second defect that the invisible separator had been
+hiding — the header's vertical rule inherited `data-vertical:self-stretch` from
+the primitive, which with a definite `h-4` pins the line to the top of the
+header instead of centring it. Overridden with `data-vertical:self-center` at
+the call site.
+
+### Surfaces reworked in this pass
+
+Beyond the shell and auth screens, the pass swept every list and dialog onto the
+`item` primitive, which is what shadcn provides for choice lists and settings
+rows — the manage rows, the username dialog's two options, the connected-apps
+and devices lists, and the account home page. Dialog action pairs gained a
+primary/alternate hierarchy (`default` + `ghost`, or `secondary` for cancel,
+matching what `FormShell` and `ResetPasswordView` already did), and the two
+lists replaced a centred spinner with a shared `ListSkeleton`.
+
+The home page additionally gained a directory of the shell's sections. Each
+sub-page had always declared a translated `description` next to its title in the
+route's `DEFAULT_PAGES`, and nothing rendered them; the landing page now does,
+so no new messages were needed.
+
+That introduced the one selector risk of the pass: the home page now contains a
+second anchor reading `Compte utilisateur`, and `account-manager.test.ts`
+navigates with `clickOnText('Compte utilisateur', 'a')` from that page.
+`clickOnText` resolves to the **first** match in DOM order, and the sidebar
+renders before `<main>`, so it still selects the sidebar link. Verified green,
+but a future reordering of the shell would break it.
+
 ## How to reproduce
 
 ```bash

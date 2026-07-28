@@ -43,6 +43,10 @@ hashes, so navigate by clicking sidebar links rather than setting
   files byte-faithful to upstream so future `shadcn add` stays mergeable — put
   deviations in wrapper components instead. Base UI uses `render={<El/>}` where
   Radix used `asChild`.
+  The registry's components assume `@custom-variant` bridges that ship in the
+  style's `globals.css`, so copying `components/ui/*` alone is not enough — see
+  the orientation bridge in `src/style.css`. `Separator` silently rendered at
+  zero width/height until it was added.
 - `components/forms/*` — `FormShell` (the form frame: action row, submit/cancel/
   back, root error), `fields/*` (one wrapper per input type), plus
   `AsyncButton`, `CopyButton`, `RequestCodeButton`, `SignUpWizard`.
