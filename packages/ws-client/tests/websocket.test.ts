@@ -309,21 +309,29 @@ describe(createWebSocket, () => {
       expect(onClose).not.toHaveBeenCalled()
     })
 
-    it('surfaces a throwing hook without failing the stream', async () => {
+    it('surfaces a throwing hook as an uncaught exception without failing the stream', async () => {
       const { createTransport } = scripted([{ messages: ['a'], end: 'clean' }])
       const websocket = createWebSocket(createTransport)
-      // invokeHook rethrows on a microtask, so a bad hook crashes visibly
-      // rather than unwinding through the loop.
-      expect(
-        await drain(
-          websocket('ws://x', {
-            ...noBackoff,
-            onOpen: () => {
-              throw new Error('bad hook')
-            },
-          }),
-        ),
-      ).toEqual(['a'])
+      const thrown = new Error('bad hook')
+      // invokeHook rethrows on a microtask: a bad hook crashes visibly rather
+      // than unwinding through the loop's state. Intercept the process-level
+      // exception so this deliberate crash is *asserted* rather than merely
+      // escaping into the runner (which would fail the suite).
+      const uncaught = new Promise<unknown>((resolve) => {
+        process.once('uncaughtException', resolve)
+      })
+      const messages = await drain(
+        websocket('ws://x', {
+          ...noBackoff,
+          onOpen: () => {
+            throw thrown
+          },
+        }),
+      )
+      // The stream is unaffected by the hook's failure...
+      expect(messages).toEqual(['a'])
+      // ...and the error still reached the process, rather than being swallowed.
+      await expect(uncaught).resolves.toBe(thrown)
     })
   })
 
