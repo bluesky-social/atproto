@@ -1,6 +1,11 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
-import { type LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index.js'
+import {
+  type LexiconDoc,
+  Lexicons,
+  lexiconDoc,
+  parseLexiconDoc,
+} from '../src/index.js'
 import LexiconDocs from './_scaffolds/lexicons.js'
 
 describe('Lexicons collection', () => {
@@ -116,6 +121,34 @@ describe('General validation', () => {
     expect(() => {
       parseLexiconDoc(schema)
     }).not.toThrow()
+  })
+  it('safeParse returns validation errors for invalid user types', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'blog.pckt.block.horizontalRule',
+      description:
+        'Horizontal line that visually separates sections of content.',
+      defs: {
+        main: {
+          type: 'object',
+        },
+      },
+    }
+
+    expect(() => lexiconDoc.safeParse(schema)).not.toThrow()
+
+    const result = lexiconDoc.safeParse(schema)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: ['defs', 'main', 'properties'],
+            message: 'Required',
+          }),
+        ]),
+      )
+    }
   })
   it('fails lexicon parsing when uri is invalid', () => {
     const schema: LexiconDoc = {
