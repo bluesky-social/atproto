@@ -1,7 +1,6 @@
 import { WebSocket } from 'ws'
 import { CloseCode } from '../lib/close-codes.js'
 import {
-  CloseError,
   HeartbeatTimeoutError,
   SocketError,
   WebSocketConnectionError,
@@ -10,8 +9,8 @@ import {
   ABNORMAL_CLOSE_DETAIL,
   type CloseEventDetail,
   type DataMode,
-  type MessageOf,
   createMessageChannel,
+  toTransportIterable,
 } from '../message-channel.js'
 import type {
   Sender,
@@ -200,33 +199,11 @@ function createTransportImpl<M extends DataMode>(
     { once: true },
   )
 
-  // The channel's own iterable reports a clean `finish()` as a normal
-  // `done: true` completion — that's the right internal representation
-  // (see createMessageChannel), but a transport's every termination must
-  // reach its consumer as an error, even a clean one. A later layer's
-  // reconnect policy is what decides clean-vs-fatal, and it needs the close
-  // code to do that, which only an error can carry. A consumer-initiated
-  // stop (`for await...break`, calling the iterator's `return()`) is exempt:
-  // that's forwarded straight through as a plain completion, since it was
-  // never the connection ending on its own.
-  const iterable: AsyncIterable<MessageOf<M>, void, undefined> = {
-    [Symbol.asyncIterator]() {
-      const inner = channel.iterable[Symbol.asyncIterator]()
-      return {
-        async next() {
-          const result = await inner.next()
-          if (result.done) {
-            const detail = channel.closeDetail
-            throw detail
-              ? new CloseError(detail.code, detail.reason, detail.wasClean)
-              : new SocketError(new Error('WebSocket closed with no detail'))
-          }
-          return result
-        },
-        return: inner.return && (() => inner.return!()),
-      }
-    },
-  }
+  // Every way the *connection* ends reaches the consumer as an error, even a
+  // clean close, so the reconnect policy above can classify by close code; a
+  // consumer-initiated stop completes normally instead. Shared with the
+  // browser transport — see toTransportIterable.
+  const iterable = toTransportIterable(channel)
 
   return {
     send: sender.send,

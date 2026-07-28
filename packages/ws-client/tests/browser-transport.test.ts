@@ -416,4 +416,35 @@ describe(createTransport, () => {
     assert(error instanceof IdleTimeoutError)
     expect(error.shouldRetry()).toBe(true)
   })
+
+  it('completes rather than erroring on a pull after the consumer stops', async () => {
+    await using server = await startServer((ws) => {
+      ws.send('one')
+      ws.send('two')
+    })
+    const ac = new AbortController()
+    const transport = createTransport({
+      url: server.url,
+      dataMode: 'text',
+      signal: ac.signal,
+      onOpen: () => {},
+      onClose: () => {},
+    })
+    const iterator = transport[Symbol.asyncIterator]()
+    expect(await iterator.next()).toEqual({ value: 'one', done: false })
+    // A consumer stop is not the connection ending: neither the return() nor
+    // any later pull may surface an error. A pull after the stop used to
+    // synthesize a *retryable* error, which would make a deliberate stop look
+    // like transient trouble to the reconnect policy above — `yield*` in that
+    // layer can pull again after a downstream return() propagates.
+    await expect(iterator.return!()).resolves.toEqual({
+      value: undefined,
+      done: true,
+    })
+    await expect(iterator.next()).resolves.toEqual({
+      value: undefined,
+      done: true,
+    })
+    ac.abort(new Error('test cleanup'))
+  })
 })
