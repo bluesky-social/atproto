@@ -1,5 +1,16 @@
 name: deploy-oauth-ui-demo
 on:
+  # @NOTE The push trigger is what makes this usable. `workflow_dispatch` only
+  # registers a workflow if the file exists on the *default* branch, and this
+  # one deliberately lives on the redesign branch only — dispatching it against
+  # the branch 404s. A push event runs the workflow from the pushed ref itself,
+  # so no commit on `main` is needed.
+  push:
+    branches:
+      - oauth-provider-redesign
+    paths:
+      - 'packages/oauth/oauth-provider-ui/**'
+      - '.github/workflows/deploy-oauth-ui-demo.yaml'
   workflow_dispatch:
 
 # Scratch tooling for the fork: publishes the oauth-provider-ui mock harness —
