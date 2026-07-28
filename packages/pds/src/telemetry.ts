@@ -136,7 +136,7 @@ function getInstrumentations(): Instrumentation[] {
     // OpenTelemetry Logs SDK: that feature re-parses (JSON.parse) every record
     // on the main thread, and would forward all subsystems indiscriminately.
     // Instead, the specific events we want in the OTEL stack are emitted
-    // explicitly through the OTEL Logs API (see ./event-logger.ts), which lets
+    // explicitly through the OTEL Logs API (see ./events.ts), which lets
     // us control exactly what gets shipped. All pino logs keep going to
     // stdout/stderr as before.
     new PinoInstrumentation({ disableLogSending: true }),
