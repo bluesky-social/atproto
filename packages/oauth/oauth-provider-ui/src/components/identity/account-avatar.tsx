@@ -56,7 +56,10 @@ export function AccountAvatar({
     <div className={cn('relative flex-none', className)} {...props}>
       <Avatar className={sizeMap[size]}>
         <AvatarImage src={account?.picture} alt={t`Account avatar`} />
-        <AvatarFallback className="bg-primary text-primary-foreground">
+        {/* @NOTE Left at the shadcn default (bg-muted), matching how the
+          dashboard block styles AvatarFallback. The previous design filled it
+          with the primary colour. */}
+        <AvatarFallback>
           <UserIcon className="m-[10%] size-[80%]" />
         </AvatarFallback>
       </Avatar>

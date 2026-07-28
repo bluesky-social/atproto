@@ -7,20 +7,28 @@ import {
   type ToPathOption,
   useRouterState,
 } from '@tanstack/react-router'
-import { MenuIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, createContext, useContext } from 'react'
 import { AccountMenu } from '#/components/identity/account-menu.tsx'
-import { AppShell } from '#/components/layouts/app-shell.tsx'
-import { Button } from '#/components/ui/button.tsx'
+import { Separator } from '#/components/ui/separator.tsx'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '#/components/ui/sheet.tsx'
-import { cn } from '#/lib/utils.ts'
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from '#/components/ui/sidebar.tsx'
+import { LinkExternal } from '#/components/utils/link-external.tsx'
+import { LinkTitle } from '#/components/utils/link-title.tsx'
+import { useCustomizationData } from '#/contexts/customization.tsx'
+import { LocaleSelector } from '#/locales/locale-selector.tsx'
 
 export type AccountShellLink = {
   to: ToPathOption<RegisteredRouter, '/', undefined>
@@ -39,6 +47,32 @@ export type AccountShellProps = {
 
 const navigationLabel = msg`Navigation`
 
+const AccountShellLinksContext = createContext<readonly AccountShellLink[]>([])
+
+/**
+ * The shell's navigation entries, for pages that want to present them as
+ * content rather than chrome — the account home page lists them as a directory.
+ *
+ * Exposed through context rather than threaded as props: the pages are mounted
+ * by TanStack Router as `component: () => <Page />`, so there is no prop path
+ * from the route that builds the links down to the page that renders them.
+ */
+export function useAccountShellLinks(): readonly AccountShellLink[] {
+  return useContext(AccountShellLinksContext)
+}
+
+/**
+ * Account-manager frame, composed the way shadcn's dashboard block does:
+ * `SidebarProvider` + `Sidebar` + `SidebarInset`, with `SidebarTrigger` in the
+ * inset header. That brings the collapsible rail, the mobile sheet, the
+ * keyboard shortcut and the persisted open/closed state for free — all of which
+ * the previous hand-rolled `<aside>` + `Sheet` had to approximate.
+ *
+ * @NOTE This owns the whole page frame, including its own `<title>`.
+ * `assertTitle` in the pds e2e suite needs a title element, and the app title
+ * (not the page title) must win — React hoists every `<title>` into the head
+ * and the last one rendered takes effect.
+ */
 export function AccountShell({
   children,
   title,
@@ -47,7 +81,9 @@ export function AccountShell({
 }: AccountShellProps) {
   const { _ } = useLingui()
   const { pathname } = useRouterState().location
-  const [navOpen, setNavOpen] = useState(false)
+  const { logo, name, links: footerLinks } = useCustomizationData()
+
+  const titleString = typeof title === 'object' ? _(title) : title ?? name
 
   const currentLink = links.find((link) => link.to === pathname)
   const pageTitle = currentLink?.title
@@ -57,102 +93,134 @@ export function AccountShell({
     ({ hidden, to }) => !hidden || pathname === to,
   )
 
-  const nav = (
-    <nav className="flex flex-col gap-1" onClick={() => setNavOpen(false)}>
-      {visibleLinks.map(({ to, title, description, icon: Icon }) => (
-        <Link
-          key={to}
-          to={to}
-          className={cn(
-            'flex items-center justify-start gap-3',
-            'min-h-11 rounded-md px-3 py-2',
-            'text-sidebar-foreground/80 text-sm font-medium',
-            'transition-colors',
-            'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-            'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
-            '[&.active]:bg-sidebar-accent [&.active]:text-sidebar-accent-foreground',
-          )}
-          activeOptions={{ exact: true, includeSearch: false }}
-          activeProps={{
-            className: 'active',
-            'aria-current': 'page' as const,
-          }}
-        >
-          {Icon && (
-            <Icon className="size-4 shrink-0 opacity-70" aria-hidden="true" />
-          )}
-          <span className="min-w-0 flex-1">
-            <span className="block truncate">
-              {typeof title === 'object' ? _(title) : title}
-            </span>
-            {description && (
-              <span className="text-muted-foreground block truncate text-xs">
-                {typeof description === 'object' ? _(description) : description}
-              </span>
-            )}
-          </span>
-        </Link>
-      ))}
-    </nav>
-  )
-
   return (
-    <AppShell title={title} header={<AccountMenu className="shrink-0" />}>
-      {prepend}
+    <AccountShellLinksContext value={links}>
+      <SidebarProvider>
+        {titleString && <title>{titleString}</title>}
 
-      <div className="flex w-full flex-1 flex-col md:flex-row">
-        {/* Desktop rail. Hidden below `md`, where the Sheet takes over. */}
-        <aside
-          className="bg-sidebar hidden w-64 shrink-0 border-r p-4 md:block"
-          role="navigation"
-        >
-          {nav}
-        </aside>
+        <Sidebar collapsible="offcanvas">
+          <SidebarHeader>
+            {/* @NOTE The brand row is a SidebarMenuButton rather than a bare div
+            so it shares the nav items' geometry — as a plain flex row it sat on
+            different padding and the header read as cramped against the list
+            below. `render={<div/>}` keeps it non-interactive; the block links
+            it, but there is nowhere to navigate to here. */}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="data-[slot=sidebar-menu-button]:p-1.5!"
+                  render={<div />}
+                >
+                  {logo && (
+                    <img
+                      src={logo}
+                      alt={name || _(msg`Logo`)}
+                      className="size-5! shrink-0 object-contain"
+                    />
+                  )}
+                  <span className="text-base font-semibold">
+                    {titleString ?? name}
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarHeader>
 
-        <main
-          className="mx-auto flex w-full min-w-0 max-w-4xl flex-col px-4 py-2 md:px-8"
-          role="main"
-        >
-          <div className="mb-4 flex flex-none items-center gap-2">
-            {/* @NOTE SheetContent is only mounted while open, so the nav
-              links exist exactly once in the DOM on desktop. */}
-            <Sheet open={navOpen} onOpenChange={setNavOpen}>
-              <SheetTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden"
-                    aria-label={_(navigationLabel)}
-                  >
-                    <MenuIcon className="size-5" />
-                  </Button>
-                }
-              />
-              <SheetContent side="left" className="w-72 p-4">
-                <SheetHeader className="p-0">
-                  <SheetTitle>{_(navigationLabel)}</SheetTitle>
-                </SheetHeader>
-                {nav}
-              </SheetContent>
-            </Sheet>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent className="flex flex-col gap-2">
+                {/* @NOTE gap-1 is a deliberate deviation. base-nova's SidebarMenu
+                is gap-0, so an active row and a hovered row directly above or
+                below it merge into a single block. Spacing them keeps each
+                highlight legible as its own target. */}
+                <SidebarMenu className="gap-1">
+                  {visibleLinks.map(({ to, title, icon: Icon }) => (
+                    <SidebarMenuItem key={to}>
+                      <SidebarMenuButton
+                        isActive={pathname === to}
+                        // @NOTE base-nova bolds the active row, but `dashboard-01`
+                        // never passes `isActive`, so the block never shows it —
+                        // the background alone marks the current page.
+                        className="data-active:font-normal"
+                        tooltip={typeof title === 'object' ? _(title) : title}
+                        render={
+                          <Link
+                            to={to}
+                            aria-current={pathname === to ? 'page' : undefined}
+                          >
+                            {Icon && <Icon aria-hidden />}
+                            <span>
+                              {typeof title === 'object' ? _(title) : title}
+                            </span>
+                          </Link>
+                        }
+                      />
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-            {/* @NOTE Deliberately does NOT render a <title> element. React
-              hoists every <title> into <head> and the last one rendered wins,
-              so a page-level title here would override the app title that
-              AppShell sets — and `assertTitle` expects the app title on every
-              account route. The previous layout only avoided this by skipping
-              the heading entirely at the base route. */}
-            {pageTitleStr && (
-              <h2 className="text-2xl font-light">
-                <b>{pageTitleStr}</b>
-              </h2>
+            {/* @NOTE Mirrors the block's `nav-secondary`: a second group pinned
+            with `mt-auto` so the deployment's links sit at the bottom of the
+            sidebar, directly above the user nav. */}
+            {footerLinks && footerLinks.length > 0 && (
+              <SidebarGroup className="mt-auto">
+                <SidebarGroupContent>
+                  <SidebarMenu className="gap-1">
+                    {footerLinks.map((link) => (
+                      <SidebarMenuItem key={link.href}>
+                        <SidebarMenuButton
+                          size="sm"
+                          render={
+                            <LinkExternal href={link.href} rel={link.rel} />
+                          }
+                        >
+                          <span>
+                            <LinkTitle link={link} />
+                          </span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
             )}
-          </div>
+          </SidebarContent>
 
-          <div className="flex-auto">{children}</div>
-        </main>
-      </div>
-    </AppShell>
+          <SidebarFooter>
+            <LocaleSelector className="w-full" />
+            <AccountMenu />
+          </SidebarFooter>
+        </Sidebar>
+
+        <SidebarInset>
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+            {/* @NOTE aria-label overrides SidebarTrigger's hardcoded English
+            "Toggle Sidebar" sr-only text, without forking ui/sidebar.tsx. */}
+            <SidebarTrigger aria-label={_(navigationLabel)} />
+            {/* @NOTE self-center overrides the primitive's `self-stretch`. With a
+            definite `h-4`, `align-self: stretch` has nothing to stretch and the
+            rule instead pins the line to the top of the header. */}
+            <Separator
+              orientation="vertical"
+              className="data-vertical:h-4 data-vertical:self-center mr-2"
+            />
+            {pageTitleStr && (
+              <h2 className="text-base font-medium">{pageTitleStr}</h2>
+            )}
+          </header>
+
+          {prepend}
+
+          <main
+            className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-4 p-4 md:p-6"
+            role="main"
+          >
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </AccountShellLinksContext>
   )
 }
