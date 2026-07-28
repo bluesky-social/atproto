@@ -1,4 +1,4 @@
-import { type Meter, ValueType, metrics } from '@opentelemetry/api'
+import { type Meter, ValueType, diag, metrics } from '@opentelemetry/api'
 import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
 import type { Logger as PinoLogger } from 'pino'
 import type { com } from './lexicons.js'
@@ -61,6 +61,8 @@ class EventReporter {
   /**
    * Fans a single event out to both the pino logger (stdout/stderr) and the
    * OTEL Logs SDK (structured record).
+   *
+   * @note this method should never throw
    */
   #log(
     pino: PinoLogger,
@@ -68,13 +70,21 @@ class EventReporter {
     body: string,
     attributes: Record<string, string | number | boolean | undefined>,
   ) {
-    pino.info(attributes, body)
-    logger.emit({
-      eventName,
-      severityNumber: SeverityNumber.INFO,
-      body,
-      attributes,
-    })
+    try {
+      pino.info(attributes, body)
+      logger.emit({
+        eventName,
+        severityNumber: SeverityNumber.INFO,
+        body,
+        attributes,
+      })
+    } catch (err) {
+      try {
+        diag.error(`Failed to log event ${eventName}:`, err)
+      } catch {
+        // ignore
+      }
+    }
   }
 
   /**
@@ -89,11 +99,11 @@ class EventReporter {
     // if present, the user is signing up as part of an OAuth flow
     clientId?: string
   }) {
+    this.#log(accountLogger, 'account.created', 'sign up', attributes)
     this.#accountCreatedCounter.add(1, {
       source: attributes.source,
       deactivated: attributes.deactivated,
     })
-    this.#log(accountLogger, 'account.created', 'sign up', attributes)
   }
 
   /**
@@ -119,8 +129,8 @@ class EventReporter {
     did: string
     clientId?: string
   }) {
-    this.#sessionCreatedCounter.add(1, { source: attributes.source })
     this.#log(sessionLogger, 'session.created', 'token created', attributes)
+    this.#sessionCreatedCounter.add(1, { source: attributes.source })
   }
 
   /**
@@ -144,12 +154,12 @@ class EventReporter {
     clientFirstParty: boolean
     clientConfidential: boolean
   }) {
+    this.#log(oauthLogger, 'oauth.authorized', 'authorized', attributes)
     this.#oauthAuthorizationCounter.add(1, {
       clientTrusted: attributes.clientTrusted,
       clientFirstParty: attributes.clientFirstParty,
       clientConfidential: attributes.clientConfidential,
     })
-    this.#log(oauthLogger, 'oauth.authorized', 'authorized', attributes)
   }
 }
 
