@@ -1,7 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
-import { type JSX, useDeferredValue, useEffect, useState } from 'react'
+import { type JSX, useEffect, useState } from 'react'
 import { type HandleString, isHandleString } from '@atproto/lex'
 import { com } from '../lexicons.ts'
+import { useDebounced } from '../lib/use-debounced.ts'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 import { useLexQuery } from '../queries/use-lex-query.ts'
 import { Button } from './Button.tsx'
@@ -43,7 +44,7 @@ export function AtmosphereSignInForm({
     !value.includes(':') && value.includes('.') && value.length > 3
       ? ifHandleString(value.replace('@', '').toLowerCase())
       : undefined
-  const handle = useDeferredValue(handleInput)
+  const handle = useDebounced(handleInput, 750)
   const handleDebouncing = handle != null && handle !== handleInput
 
   const resolveMutation = useLexQuery(
