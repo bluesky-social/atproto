@@ -1,9 +1,37 @@
-import type { ClientOptions } from 'ws'
 import { type Deferrable, createDeferrable } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import {
+  CloseCode,
+  CloseError,
+  type HeadersInit,
+  HeartbeatTimeoutError,
+  IdleTimeoutError,
+  SocketError,
+  WebSocketClient,
+  WebSocketClientError,
+} from '@atproto/ws-client'
 import { type TapEvent, parseTapEvent } from './types.js'
 import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
+
+// Matches the reconnect classification the legacy errno-matching client had:
+// reconnect only on a genuine transport failure or an abnormal close (1006).
+// Any other close code — including the synthetic 1005 a bare socket.close()
+// produces — ends the session, as before.
+function shouldReconnect(error: unknown): boolean {
+  if (error instanceof CloseError) {
+    return error.code === CloseCode.Abnormal
+  }
+  if (
+    error instanceof SocketError ||
+    error instanceof HeartbeatTimeoutError ||
+    error instanceof IdleTimeoutError
+  ) {
+    // Defer to each error's own classification so this can't drift from the
+    // taxonomy as it evolves.
+    return error.shouldRetry()
+  }
+  return false
+}
 
 export interface HandlerOpts {
   signal: AbortSignal
@@ -15,26 +43,21 @@ export interface TapHandler {
   onError: (err: Error) => void
 }
 
-export type TapWebsocketOptions = ClientOptions & {
+export type TapWebsocketOptions = {
   adminPassword?: string
   maxReconnectSeconds?: number
   heartbeatIntervalMs?: number
+  /** Applied to the connection's upgrade request (Node.js only). */
+  headers?: HeadersInit
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
 }
 
-type BufferedAck = {
-  id: number
-  defer: Deferrable
-}
-
 export class TapChannel implements AsyncDisposable {
-  private ws: WebSocketKeepAlive
+  private ws: WebSocketClient<'text'>
   private handler: TapHandler
 
   private readonly abortController: AbortController = new AbortController()
   private readonly destroyDefer: Deferrable = createDeferrable()
-
-  private bufferedAcks: BufferedAck[] = []
 
   constructor(
     url: string,
@@ -42,66 +65,55 @@ export class TapChannel implements AsyncDisposable {
     wsOpts: TapWebsocketOptions = {},
   ) {
     this.handler = handler
-    const { adminPassword, ...rest } = wsOpts
-    let headers = rest.headers
+    const { adminPassword, onReconnectError } = wsOpts
+    const headers = new Headers(wsOpts.headers)
     if (adminPassword) {
-      headers ??= {}
-      headers['Authorization'] = formatAdminAuthHeader(adminPassword)
+      headers.set('Authorization', formatAdminAuthHeader(adminPassword))
     }
-    this.ws = new WebSocketKeepAlive({
-      getUrl: async () => url,
-      onReconnect: () => {
-        this.flushBufferedAcks()
-      },
-      signal: this.abortController.signal,
-      ...rest,
+    this.ws = new WebSocketClient(url, {
+      dataMode: 'text',
       headers,
-    })
-  }
-
-  async ackEvent(id: number): Promise<void> {
-    if (this.ws.isConnected()) {
-      try {
-        await this.sendAck(id)
-      } catch {
-        await this.bufferAndSendAck(id)
-      }
-    } else {
-      await this.bufferAndSendAck(id)
-    }
-  }
-
-  private async sendAck(id: number): Promise<void> {
-    await this.ws.send(JSON.stringify({ type: 'ack', id }))
-  }
-
-  // resolves after the ack has been actually sent
-  private async bufferAndSendAck(id: number): Promise<void> {
-    const defer = createDeferrable()
-    this.bufferedAcks.push({
-      id,
-      defer,
-    })
-    await defer.complete
-  }
-
-  private async flushBufferedAcks(): Promise<void> {
-    while (this.bufferedAcks.length > 0) {
-      try {
-        const ack = this.bufferedAcks.at(0)
-        if (!ack) {
-          return
+      maxReconnectSeconds: wsOpts.maxReconnectSeconds,
+      heartbeat: wsOpts.heartbeatIntervalMs
+        ? { intervalMs: wsOpts.heartbeatIntervalMs }
+        : undefined,
+      signal: this.abortController.signal,
+      shouldReconnect,
+      onError: (error, reconnect) => {
+        if (reconnect) {
+          onReconnectError?.(error, reconnect.attempt, reconnect.attempt === 0)
         }
-        await this.sendAck(ack.id)
-        ack.defer.resolve()
-        this.bufferedAcks = this.bufferedAcks.slice(1)
+      },
+    })
+  }
+
+  /**
+   * Resolves once the ack has actually been sent, retrying across reconnects.
+   *
+   * The client's own queue holds an ack issued while disconnected and flushes
+   * it on the next connection, but at-most-once: a flush that fails rejects.
+   * Re-calling `send()` re-queues, which is what turns that into the
+   * retry-until-sent guarantee the caller expects.
+   *
+   * Retries re-queue at the tail and so are not strictly FIFO, and a send that
+   * fails mid-hand-off may be delivered twice. Both are safe: Tap acks are
+   * per-event, idempotent (a repeat ack for an already-acked id is a no-op)
+   * and order-insensitive.
+   */
+  async ackEvent(id: number): Promise<void> {
+    const message = JSON.stringify({ type: 'ack', id })
+    for (;;) {
+      if (this.abortController.signal.aborted) return
+      try {
+        return await this.ws.send(message)
       } catch (cause) {
-        const error = new Error(
-          `failed to send ack for event ${this.bufferedAcks[0]}`,
-          { cause },
+        if (this.abortController.signal.aborted) return
+        // A destroyed client or a full queue will never accept this ack, so
+        // retrying would spin forever — surface it instead.
+        if (cause instanceof WebSocketClientError) throw cause
+        this.handler.onError(
+          new Error(`failed to send ack for event ${id}`, { cause }),
         )
-        this.handler.onError(error)
-        return
       }
     }
   }
@@ -113,7 +125,14 @@ export class TapChannel implements AsyncDisposable {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      if (!isCausedBySignal(err, this.abortController.signal)) {
+      // A CloseError only reaches here once `shouldReconnect` has already
+      // declined to retry — i.e. the peer ended the session with an ordinary
+      // close frame. That is an expected end, matching the previous client's
+      // behavior of ending silently on any non-abnormal close.
+      if (
+        !isCausedBySignal(err, this.abortController.signal) &&
+        !(err instanceof CloseError)
+      ) {
         throw err
       }
     } finally {
@@ -121,10 +140,10 @@ export class TapChannel implements AsyncDisposable {
     }
   }
 
-  private async processWsEvent(chunk: Uint8Array) {
+  private async processWsEvent(chunk: string) {
     let evt: TapEvent
     try {
-      const data = lexParse(chunk.toString(), {
+      const data = lexParse(chunk, {
         // Reject invalid CIDs and blobs
         strict: true,
       })

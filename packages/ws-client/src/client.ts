@@ -116,7 +116,8 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     this.#iterated = true
     const disposal = this.#disposeController.signal
 
-    const { onOpen, onReconnect, onError, onClose } = this.#options
+    const { onOpen, onReconnect, onDisconnect, onError, onClose } =
+      this.#options
     const iterator = this.#websocketFn(this.#url, {
       ...this.#options,
       // Disposal needs a way to *interrupt* a pull, not merely ask the
@@ -134,13 +135,17 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         this.#onConnect(sender)
         invokeHook(onReconnect, sender)
       },
-      onError: (error, reconnect) => {
-        // A connection ended. Drop the sender: it belonged to that connection
-        // and can only reject now, so holding it would make `send()` fail
-        // through the whole reconnect gap — exactly when the queue should be
-        // absorbing writes — and make `connected` lie. A reconnect hands over
-        // a fresh one.
+      onDisconnect: () => {
+        // The reliable per-connection edge. Drop the sender: it belonged to
+        // that connection and can only reject now, so holding it would make
+        // `send()` fail through the reconnect gap — exactly when the queue
+        // should be absorbing writes — and make `connected` lie. Using this
+        // rather than `onError` matters because the loop only advances when the
+        // consumer pulls, so `onError` can arrive well after the socket died.
         this.#sender = undefined
+        invokeHook(onDisconnect)
+      },
+      onError: (error, reconnect) => {
         invokeHook(onError, error, reconnect)
       },
       onClose: (detail) => {

@@ -1,5 +1,5 @@
 import { CloseCode } from './lib/close-codes.js'
-import { CloseError } from './lib/errors.js'
+import { CloseError, WebSocketConnectionError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import type {
@@ -50,6 +50,18 @@ export interface WebSocketOptions<M extends DataMode = 'auto'>
   onOpen?: (sender: Sender<M>) => void
   /** A later connection succeeded; fires per reconnect with the fresh sender. */
   onReconnect?: (sender: Sender<M>) => void
+  /**
+   * The current connection ended, so the sender last handed out is now dead.
+   * Fires once per connection that opened, before any `onError`/`onReconnect`
+   * for the same event, and independently of whether a retry follows.
+   *
+   * Distinct from `onClose`, which fires once for the whole stream: this is
+   * the per-connection edge, and it is the reliable point at which to stop
+   * using a sender. Waiting for `onError` is not equivalent — the loop only
+   * advances when the consumer pulls, so a hook could otherwise hand data to
+   * a socket that has already gone away.
+   */
+  onDisconnect?: () => void
   /**
    * A connection ended with an error. `reconnect` is present (with the
    * attempt count) when a retry is coming, absent when giving up.
@@ -137,6 +149,14 @@ export function createWebSocket(
         // means every exit path tears this connection down exactly once.
         const connection = new AbortController()
         const unlink = link(signal, connection)
+        // Hooks receive a sender scoped to this connection rather than the
+        // transport itself, so it can be revoked the moment the connection
+        // ends — see the onClose wiring below.
+        let live = true
+        let opened = false
+        const invalidateSender = () => {
+          live = false
+        }
         try {
           const transport = createTransport<M>({
             ...connectionOptions(options),
@@ -144,15 +164,36 @@ export function createWebSocket(
             signal: connection.signal,
             onOpen: (sender) => {
               retries = 0 // a stable open: the backoff starts over
+              opened = true
+              const scoped: Sender<M> = {
+                send: (data) =>
+                  live
+                    ? sender.send(data)
+                    : Promise.reject(
+                        new WebSocketConnectionError(
+                          'WebSocket is not open: this connection has ended',
+                        ),
+                      ),
+              }
               if (firstOpen) {
                 firstOpen = false
-                invokeHook(options.onOpen, sender)
+                invokeHook(options.onOpen, scoped)
               } else {
-                invokeHook(options.onReconnect, sender)
+                invokeHook(options.onReconnect, scoped)
               }
             },
             onClose: (detail) => {
               lastDetail = detail
+              // This connection is over, so the sender handed to onOpen /
+              // onReconnect must stop accepting writes *now*. Waiting for the
+              // loop to notice would leave a window — the loop only advances
+              // when the consumer pulls — in which a hook holding the sender
+              // could hand data to a dead socket and see it silently dropped.
+              const wasLive = live
+              invalidateSender()
+              // Only report the edge for a connection that actually opened,
+              // and only once.
+              if (wasLive && opened) invokeHook(options.onDisconnect)
             },
           })
 
