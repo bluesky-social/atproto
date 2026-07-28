@@ -86,6 +86,7 @@ class EventReporter {
     did: string
     invited: boolean
     deactivated: boolean
+    // if present, the user is signing up as part of an OAuth flow
     clientId?: string
   }) {
     this.#accountCreatedCounter.add(1, {
@@ -99,7 +100,11 @@ class EventReporter {
    * A user signed in through the OAuth flow (without necessarily creating an
    * account).
    */
-  signedIn(attributes: { did: string; clientId?: string }) {
+  signedIn(attributes: {
+    did: string
+    // if present, the user is signing in as part of an OAuth flow
+    clientId?: string
+  }) {
     this.#log(oauthLogger, 'account.signed-in', 'sign in', attributes)
   }
 

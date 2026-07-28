@@ -136,7 +136,7 @@ export class AppContext implements AsyncDisposable {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    // @TODO Use disposable stack when it becomes available (Node24+)
+    // @TODO Implement using an AsyncDisposableStack
 
     const blobstore =
       cfg.blobstore.provider === 's3'
@@ -408,7 +408,6 @@ export class AppContext implements AsyncDisposable {
             events.accountCreated({
               source: 'oauth',
               did: account.did,
-              // if present, the user is signing up as part of an OAuth flow
               clientId,
               invited: data.inviteCode != null,
               deactivated: false,
@@ -417,7 +416,6 @@ export class AppContext implements AsyncDisposable {
           onSignedIn({ account, clientId }) {
             events.signedIn({
               did: account.did,
-              // if present, the user is signing in as part of an OAuth flow
               clientId,
             })
           },
