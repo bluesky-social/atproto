@@ -22,12 +22,12 @@ preserved — this is a clean rebuild of the view layer, not a restyling.
 
 ## Scope
 
-| | |
-|---|---|
-| Component source rebuilt | ~8,700 lines across ~90 files |
-| Entry pages | 4 (`authorization-page`, `account-page`, `error-page`, `cookie-error-page`) |
-| Routes | 10 |
-| Messages × locales | 346 × 6 (en, es, fr, ja, ko, sv) |
+|                          |                                                                             |
+| ------------------------ | --------------------------------------------------------------------------- |
+| Component source rebuilt | ~8,700 lines across ~90 files                                               |
+| Entry pages              | 4 (`authorization-page`, `account-page`, `error-page`, `cookie-error-page`) |
+| Routes                   | 10                                                                          |
+| Messages × locales       | 346 × 6 (en, es, fr, ja, ko, sv)                                            |
 
 ---
 
@@ -51,7 +51,7 @@ Therefore:
    of the catalog key (e.g. `msg({ message: 'Sign in', context: 'AuthenticationPage' })`,
    `<Trans context="verify email">`).
 
-Recompose *around* `<Trans>` blocks. When a `<Trans>` block needs different visual
+Recompose _around_ `<Trans>` blocks. When a `<Trans>` block needs different visual
 treatment, style the element the macro already wraps rather than introducing a new one
 inside it.
 
@@ -67,15 +67,15 @@ added/removed `msgid`s beyond those deliberately introduced.
 this UI through `PageHelper` (`packages/pds/tests/_puppeteer.ts`). Its selectors are
 text-and-tag based:
 
-| Helper | Depends on |
-|---|---|
-| `clickOnText(text, tag = 'button')` | Action is a real `<button>` containing that exact text |
-| `clickOnAriaLabel(label, tag = 'button')` | `aria-label` on a `<button>` |
-| `typeInInput(name, text)` | `input[name="…"]` |
-| `ensureTextVisibility(text, tag = 'p')` | Body copy rendered inside a `<p>` |
-| `ensureNotification(text)` | Toast text present in the DOM |
-| `assertTitle(expected)` | `document.title` |
-| `navigationClick(text, tag = 'button')` | Click causes a navigation |
+| Helper                                    | Depends on                                             |
+| ----------------------------------------- | ------------------------------------------------------ |
+| `clickOnText(text, tag = 'button')`       | Action is a real `<button>` containing that exact text |
+| `clickOnAriaLabel(label, tag = 'button')` | `aria-label` on a `<button>`                           |
+| `typeInInput(name, text)`                 | `input[name="…"]`                                      |
+| `ensureTextVisibility(text, tag = 'p')`   | Body copy rendered inside a `<p>`                      |
+| `ensureNotification(text)`                | Toast text present in the DOM                          |
+| `assertTitle(expected)`                   | `document.title`                                       |
+| `navigationClick(text, tag = 'button')`   | Click causes a navigation                              |
 
 The rebuild must therefore preserve:
 
@@ -97,14 +97,14 @@ The rebuild must therefore preserve:
 **Complete inventory of tag-specific assertions** (enumerated 2026-07-27 after an
 `h3` regression slipped through — treat this as the checklist, not the prose above):
 
-| Tag | Asserted text | Rendered by | Status |
-|---|---|---|---|
-| `h3` | `Avertissement` | `Notice` title (was `AdmonitionTitle`) | Phase 1 — fixed, renders `<h3>` |
-| `h2` | `Mot de passe mis à jour !` | reset-password view title (`LayoutTitle`) | Phase 2 — must stay `<h2>` |
-| `h2` | `Êtes-vous vraiment, vraiment sûr ?` | delete-account dialog title | Phase 3 — must stay `<h2>` |
-| `span` | handles, account names, `Réactiver le compte`, `Désactiver le compte` | `AccountIdentifier` / `Handle` / buttons | Phase 1 — intact |
-| `code` | `_atproto.<votre-domaine>`, `TXT` | `input-handle-custom-instructions` | Phase 2 — must stay `<code>` |
-| `p` | body copy throughout | `Notice` / descriptions | Phase 1 — intact via explicit `<p>` |
+| Tag    | Asserted text                                                         | Rendered by                               | Status                              |
+| ------ | --------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------- |
+| `h3`   | `Avertissement`                                                       | `Notice` title (was `AdmonitionTitle`)    | Phase 1 — fixed, renders `<h3>`     |
+| `h2`   | `Mot de passe mis à jour !`                                           | reset-password view title (`LayoutTitle`) | Phase 2 — must stay `<h2>`          |
+| `h2`   | `Êtes-vous vraiment, vraiment sûr ?`                                  | delete-account dialog title               | Phase 3 — must stay `<h2>`          |
+| `span` | handles, account names, `Réactiver le compte`, `Désactiver le compte` | `AccountIdentifier` / `Handle` / buttons  | Phase 1 — intact                    |
+| `code` | `_atproto.<votre-domaine>`, `TXT`                                     | `input-handle-custom-instructions`        | Phase 2 — must stay `<code>`        |
+| `p`    | body copy throughout                                                  | `Notice` / descriptions                   | Phase 1 — intact via explicit `<p>` |
 
 `ensureTextVisibility` defaults to `'p'`, so every unqualified assertion also
 requires a `<p>`. Two `h2` assertions (`Token info`, `Login with the Atmosphere`)
@@ -112,14 +112,14 @@ target the **demo OAuth client app**, not this package — ignore them.
 
 **Click-target tags** (`clickOnText` / `clickOn`, same failure mode):
 
-| Tag | Text | Rendered by |
-|---|---|---|
-| `a` | `Compte utilisateur` | account-shell nav `Link` |
-| `span` | `alice.test` | `Handle` |
-| `span` | `HTTP` | radio-group option label (custom-handle verification method) |
-| `label` | `Se souvenir de ce compte sur cet appareil` | remember checkbox — shadcn `FormLabel` renders `<label>` |
-| `button` | everything else in the label list | real `<button>` required |
-| selector | `[role="dialog"] button[type="submit"]` | Radix dialog + a submit button |
+| Tag      | Text                                        | Rendered by                                                  |
+| -------- | ------------------------------------------- | ------------------------------------------------------------ |
+| `a`      | `Compte utilisateur`                        | account-shell nav `Link`                                     |
+| `span`   | `alice.test`                                | `Handle`                                                     |
+| `span`   | `HTTP`                                      | radio-group option label (custom-handle verification method) |
+| `label`  | `Se souvenir de ce compte sur cet appareil` | remember checkbox — shadcn `FormLabel` renders `<label>`     |
+| `button` | everything else in the label list           | real `<button>` required                                     |
+| selector | `[role="dialog"] button[type="submit"]`     | Radix dialog + a submit button                               |
 
 **Input `name` attributes owned by this package:** `username`, `password`,
 `remember`, `code`, `email`, `handle`, `domain`, `inviteCode`. (`identifier` in
@@ -143,7 +143,7 @@ Per decision, the customization contract is unchanged:
   **not modified**. The server keeps injecting `--branding-color-*`; the new theme
   simply does not consume those variables yet.
 
-Only the *color derivation* goes: `src/style.css` drops the
+Only the _color derivation_ goes: `src/style.css` drops the
 `--branding-color-* → --color-primary-{25..975} / --color-contrast-{0..1000}` scale
 machinery in favor of shadcn's fixed neutral token set. Layering branding back in later
 is then a change confined to that one file.
@@ -189,15 +189,15 @@ Non-view layers are untouched:
 The old `SmartForm` / `FormCard` / `Button*` stack carries behavior, not just shape.
 Reimplement each of these idiomatically rather than dropping them:
 
-| Behavior | Currently in | New home |
-|---|---|---|
-| Typed OAuth error → user-facing message | `FormCard` `errorParser` + `lib/api-error-parser.ts` | Shared `useFormErrorHandler` mapping caught errors onto `form.setError('root')` |
-| Request-code cooldown / rate-limit backoff | `button-cooldown.tsx`, `button-request-code.tsx`, `use-rate-limited-action` | Dedicated `RequestCodeButton` on shadcn `Button` + existing hooks |
-| Multi-step wizard back/forward with value retention | `wizard-card.tsx`, `use-stepper.ts` | `SignUpWizard` — retained (no shadcn equivalent), rebuilt on `Card` + a step indicator |
-| Authorize-flow step ↔ URL fragment sync | `lib/location-step.ts` | Unchanged |
-| Redirect double-submit guard + fallback link | `authorization-page.tsx`, `redirecting-view.tsx` | Unchanged logic, new presentation |
-| Password strength scoring | `lib/password.ts` + meter/label components | `lib/password.ts` unchanged; meter rebuilt on shadcn `Progress` |
-| Async submit pending state | `use-async-action` | react-hook-form `formState.isSubmitting`. `use-async-action` is retained for non-form async actions (dialog confirmations, standalone buttons) |
+| Behavior                                            | Currently in                                                                | New home                                                                                                                                       |
+| --------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Typed OAuth error → user-facing message             | `FormCard` `errorParser` + `lib/api-error-parser.ts`                        | Shared `useFormErrorHandler` mapping caught errors onto `form.setError('root')`                                                                |
+| Request-code cooldown / rate-limit backoff          | `button-cooldown.tsx`, `button-request-code.tsx`, `use-rate-limited-action` | Dedicated `RequestCodeButton` on shadcn `Button` + existing hooks                                                                              |
+| Multi-step wizard back/forward with value retention | `wizard-card.tsx`, `use-stepper.ts`                                         | `SignUpWizard` — retained (no shadcn equivalent), rebuilt on `Card` + a step indicator                                                         |
+| Authorize-flow step ↔ URL fragment sync            | `lib/location-step.ts`                                                      | Unchanged                                                                                                                                      |
+| Redirect double-submit guard + fallback link        | `authorization-page.tsx`, `redirecting-view.tsx`                            | Unchanged logic, new presentation                                                                                                              |
+| Password strength scoring                           | `lib/password.ts` + meter/label components                                  | `lib/password.ts` unchanged; meter rebuilt on shadcn `Progress`                                                                                |
+| Async submit pending state                          | `use-async-action`                                                          | react-hook-form `formState.isSubmitting`. `use-async-action` is retained for non-form async actions (dialog confirmations, standalone buttons) |
 
 ---
 
@@ -235,7 +235,7 @@ Retained: `clsx` (used by `cn`), `zod` (v3, works with `@hookform/resolvers`),
 component styles itself with `text-text-default`, `text-text-light`, `bg-contrast-0`,
 `border-contrast-25`, `bg-primary-500`, `border-error-200`, etc. Deleting those tokens in
 Phase 0 would break the entire UI for the three phases it takes to migrate off them. So
-Phase 0 *adds* the shadcn token block alongside the existing `--branding-color-*` scale;
+Phase 0 _adds_ the shadcn token block alongside the existing `--branding-color-*` scale;
 the legacy block, the `@source inline(...)` directives, and the `<body>` class change all
 land together in Phase 4's dead-code sweep, once nothing consumes them. The two token
 systems coexist for phases 1–3, which costs a few KB of unused CSS during the migration
@@ -278,42 +278,42 @@ edit to the `oauth-provider` package; it is a single line and does not touch
 
 ### Old → new
 
-| Old | New |
-|---|---|
-| `forms/button.tsx`, `button-async.tsx` | `ui/button` + rhf `isSubmitting` |
-| `forms/button-cooldown.tsx`, `button-request-code.tsx` | `request-code-button.tsx` on `ui/button` |
-| `forms/button-copy.tsx` | `copy-button.tsx` on `ui/button` |
-| `forms/button-toggle-visibility.tsx` | Inline adornment in `password-field.tsx` |
-| `forms/form-card.tsx`, `smart-form.tsx`, `form-context.tsx`, `form-field.tsx`, `fieldset-context.tsx` | `ui/form` (react-hook-form) + per-form zod schemas |
-| `forms/input-container.tsx`, `input-text.tsx` | `ui/input` + `ui/form` field wiring |
-| `forms/input-email-address.tsx` | `email-field.tsx` |
-| `forms/input-password.tsx`, `input-new-password.tsx` | `password-field.tsx`, `new-password-field.tsx` |
-| `forms/input-token.tsx` | `token-field.tsx` |
-| `forms/input-handle-default.tsx` | `handle-field.tsx` — `ui/input` + `ui/select` for the domain |
-| `forms/input-handle-custom.tsx`, `input-handle-custom-instructions.tsx` | `custom-handle-field.tsx`, `custom-handle-instructions.tsx` |
-| `forms/input-checkbox.tsx`, `checkbox.tsx` | `ui/checkbox` + `ui/form` |
-| `forms/input-radio-group.tsx` | `ui/radio-group` |
-| `forms/wizard-card.tsx` + `use-stepper.ts` | `sign-up-wizard.tsx` on `ui/card` + step indicator |
-| `utils/admonition.tsx` (204 lines) | `ui/alert` variants |
-| `utils/error-card.tsx`, `error-details.tsx` | `ui/alert` destructive + `error-details.tsx` |
-| `utils/description-card.tsx`, `help-card.tsx`, `account-card.tsx` | `ui/card` compositions |
-| `utils/dialog-simple.tsx` | `ui/dialog` |
-| `utils/account-selector.tsx` | `ui/dropdown-menu` |
-| `utils/account-image.tsx`, `client-image.tsx` | `ui/avatar` |
-| `utils/password-strength-meter.tsx`, `password-strength-label.tsx` | `ui/progress` + label |
-| `utils/circular-progress.tsx` | Retained (cooldown indicator; no shadcn equivalent) |
-| `utils/code-snippet.tsx`, `url-viewer.tsx`, `handle.tsx`, `date-ago.tsx`, `lang-string.tsx`, `link-*.tsx`, `account-name.tsx`, `account-identifier.tsx`, `account-overview.tsx`, `client-name.tsx`, `icons.tsx` | Rebuilt, mostly presentational; `icons.tsx` re-sourced from Lucide |
-| `utils/scope-description.tsx` (942 lines) | Rebuilt on `ui/card`/`ui/alert`. **Trans blocks copied verbatim** — this file is the largest i18n risk in the package |
-| `layouts/layout-app.tsx` | `layouts/app-shell.tsx` — header (logo/name), content, footer (locale selector + links) |
-| `layouts/layout-page.tsx` | `layouts/account-shell.tsx` — shadcn Sidebar block |
-| `layouts/layout-title.tsx` | Folded into the auth `Card` header |
-| `contexts/notifications.tsx` (Radix Toast) | Same API, Sonner `toast()` underneath |
-| `locales/locale-selector.tsx` | `ui/select` |
+| Old                                                                                                                                                                                                             | New                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `forms/button.tsx`, `button-async.tsx`                                                                                                                                                                          | `ui/button` + rhf `isSubmitting`                                                                                      |
+| `forms/button-cooldown.tsx`, `button-request-code.tsx`                                                                                                                                                          | `request-code-button.tsx` on `ui/button`                                                                              |
+| `forms/button-copy.tsx`                                                                                                                                                                                         | `copy-button.tsx` on `ui/button`                                                                                      |
+| `forms/button-toggle-visibility.tsx`                                                                                                                                                                            | Inline adornment in `password-field.tsx`                                                                              |
+| `forms/form-card.tsx`, `smart-form.tsx`, `form-context.tsx`, `form-field.tsx`, `fieldset-context.tsx`                                                                                                           | `ui/form` (react-hook-form) + per-form zod schemas                                                                    |
+| `forms/input-container.tsx`, `input-text.tsx`                                                                                                                                                                   | `ui/input` + `ui/form` field wiring                                                                                   |
+| `forms/input-email-address.tsx`                                                                                                                                                                                 | `email-field.tsx`                                                                                                     |
+| `forms/input-password.tsx`, `input-new-password.tsx`                                                                                                                                                            | `password-field.tsx`, `new-password-field.tsx`                                                                        |
+| `forms/input-token.tsx`                                                                                                                                                                                         | `token-field.tsx`                                                                                                     |
+| `forms/input-handle-default.tsx`                                                                                                                                                                                | `handle-field.tsx` — `ui/input` + `ui/select` for the domain                                                          |
+| `forms/input-handle-custom.tsx`, `input-handle-custom-instructions.tsx`                                                                                                                                         | `custom-handle-field.tsx`, `custom-handle-instructions.tsx`                                                           |
+| `forms/input-checkbox.tsx`, `checkbox.tsx`                                                                                                                                                                      | `ui/checkbox` + `ui/form`                                                                                             |
+| `forms/input-radio-group.tsx`                                                                                                                                                                                   | `ui/radio-group`                                                                                                      |
+| `forms/wizard-card.tsx` + `use-stepper.ts`                                                                                                                                                                      | `sign-up-wizard.tsx` on `ui/card` + step indicator                                                                    |
+| `utils/admonition.tsx` (204 lines)                                                                                                                                                                              | `ui/alert` variants                                                                                                   |
+| `utils/error-card.tsx`, `error-details.tsx`                                                                                                                                                                     | `ui/alert` destructive + `error-details.tsx`                                                                          |
+| `utils/description-card.tsx`, `help-card.tsx`, `account-card.tsx`                                                                                                                                               | `ui/card` compositions                                                                                                |
+| `utils/dialog-simple.tsx`                                                                                                                                                                                       | `ui/dialog`                                                                                                           |
+| `utils/account-selector.tsx`                                                                                                                                                                                    | `ui/dropdown-menu`                                                                                                    |
+| `utils/account-image.tsx`, `client-image.tsx`                                                                                                                                                                   | `ui/avatar`                                                                                                           |
+| `utils/password-strength-meter.tsx`, `password-strength-label.tsx`                                                                                                                                              | `ui/progress` + label                                                                                                 |
+| `utils/circular-progress.tsx`                                                                                                                                                                                   | Retained (cooldown indicator; no shadcn equivalent)                                                                   |
+| `utils/code-snippet.tsx`, `url-viewer.tsx`, `handle.tsx`, `date-ago.tsx`, `lang-string.tsx`, `link-*.tsx`, `account-name.tsx`, `account-identifier.tsx`, `account-overview.tsx`, `client-name.tsx`, `icons.tsx` | Rebuilt, mostly presentational; `icons.tsx` re-sourced from Lucide                                                    |
+| `utils/scope-description.tsx` (942 lines)                                                                                                                                                                       | Rebuilt on `ui/card`/`ui/alert`. **Trans blocks copied verbatim** — this file is the largest i18n risk in the package |
+| `layouts/layout-app.tsx`                                                                                                                                                                                        | `layouts/app-shell.tsx` — header (logo/name), content, footer (locale selector + links)                               |
+| `layouts/layout-page.tsx`                                                                                                                                                                                       | `layouts/account-shell.tsx` — shadcn Sidebar block                                                                    |
+| `layouts/layout-title.tsx`                                                                                                                                                                                      | Folded into the auth `Card` header                                                                                    |
+| `contexts/notifications.tsx` (Radix Toast)                                                                                                                                                                      | Same API, Sonner `toast()` underneath                                                                                 |
+| `locales/locale-selector.tsx`                                                                                                                                                                                   | `ui/select`                                                                                                           |
 
 ### Sidebar change
 
 `LayoutPage` currently implements a bespoke mobile pattern: at the base route the nav
-link list *is* the page; on a sub-route the content replaces it with a back arrow. The
+link list _is_ the page; on a sub-route the content replaces it with a back arrow. The
 rebuild uses shadcn's Sidebar block — persistent rail on desktop, Sheet on mobile.
 
 This is the single largest UX change in the redesign. Flows and destinations are
@@ -385,7 +385,7 @@ Each phase leaves the app bootable and type-clean. Old components are deleted as
 last consumer migrates, so no parallel tree and no feature flag.
 
 **Phase 0 — Foundation.** Dependencies, `components.json`, `src/lib/utils.ts`, the
-shadcn token block *added alongside* the legacy scale, dark-mode variant,
+shadcn token block _added alongside_ the legacy scale, dark-mode variant,
 `components/ui/*` authored. Purely additive — the app still renders on old components,
 unchanged.
 
@@ -435,11 +435,11 @@ stack first.
 
 ## Risks
 
-| Risk | Mitigation |
-|---|---|
-| Silent translation loss from restructured `<Trans>` bodies | Treat `<Trans>` blocks as opaque; assert on the `.po` diff every phase |
-| `scope-description.tsx` (942 lines, dense i18n) regressing the consent screen | Copy Trans blocks verbatim; restyle only the wrappers |
-| e2e drift attributed to the wrong change | Capture a green baseline before Phase 0 |
-| Sidebar change breaking mobile navigation assertions | Expected; update those specific assertions with justification |
-| `<body>` classes set server-side by the provider referencing removed tokens | Reconciled explicitly in Phase 0 |
-| shadcn CLI emitting `@/` imports against this package's `#/` alias | Adjust on generation; `components.json` aliases set up front |
+| Risk                                                                          | Mitigation                                                             |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Silent translation loss from restructured `<Trans>` bodies                    | Treat `<Trans>` blocks as opaque; assert on the `.po` diff every phase |
+| `scope-description.tsx` (942 lines, dense i18n) regressing the consent screen | Copy Trans blocks verbatim; restyle only the wrappers                  |
+| e2e drift attributed to the wrong change                                      | Capture a green baseline before Phase 0                                |
+| Sidebar change breaking mobile navigation assertions                          | Expected; update those specific assertions with justification          |
+| `<body>` classes set server-side by the provider referencing removed tokens   | Reconciled explicitly in Phase 0                                       |
+| shadcn CLI emitting `@/` imports against this package's `#/` alias            | Adjust on generation; `components.json` aliases set up front           |

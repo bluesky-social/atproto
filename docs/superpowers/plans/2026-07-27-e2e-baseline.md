@@ -43,9 +43,9 @@ no test files were modified.
 Two regressions were introduced and fixed during the phase; both are recorded
 because each cost a full e2e cycle to find:
 
-| Regression | Cause | Fix |
-|---|---|---|
-| oauth 4/7 after the feedback rebuild | shadcn `AlertTitle` renders a `<div>`; the old `AdmonitionTitle` rendered `<h3>`, which `ensureTextVisibility('Avertissement', 'h3')` requires | `Notice` renders a real `<h3>` |
+| Regression                                                 | Cause                                                                                                                                                                        | Fix                                                       |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| oauth 4/7 after the feedback rebuild                       | shadcn `AlertTitle` renders a `<div>`; the old `AdmonitionTitle` rendered `<h3>`, which `ensureTextVisibility('Avertissement', 'h3')` requires                               | `Notice` renders a real `<h3>`                            |
 | account-manager 0/13 and oauth 6/7 after the shell rebuild | `AccountShell` rendered a page-level `<title>`; React hoists every `<title>` to `<head>` and the **last** wins, so `document.title` became `Accueil` instead of the app name | `AccountShell` renders no `<title>`; only `AppShell` does |
 
 The second is the one to remember: the old `LayoutPage` only avoided it by
@@ -58,10 +58,10 @@ Both suites back to **7/7** and **13/13**, no test files modified.
 
 Regressions found and fixed during the phase:
 
-| Regression | Cause | Fix |
-|---|---|---|
-| account-manager 12/13, `rejects custom domain when not configured` | Base UI's `DialogContent` is `fixed` and vertically centred with **no height cap**. A tall dialog overflows both edges of the 800×600 e2e viewport, and a fixed element cannot be scrolled into view — so `Retour` was unreachable. The old `DialogSimple` capped content at `85vh`. | `DialogShell` gets `max-h-[85vh] overflow-y-auto` |
-| Two msgids silently vanished (`Select domain`, `Type your username`) | `HandleField` passed `t` down as a **prop**; the Lingui macro only transforms `` t`...` `` in a scope that imports the hook, so those templates were never compiled and would have rendered untranslated | call `useLingui()` in the scope that uses it |
+| Regression                                                           | Cause                                                                                                                                                                                                                                                                                | Fix                                               |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| account-manager 12/13, `rejects custom domain when not configured`   | Base UI's `DialogContent` is `fixed` and vertically centred with **no height cap**. A tall dialog overflows both edges of the 800×600 e2e viewport, and a fixed element cannot be scrolled into view — so `Retour` was unreachable. The old `DialogSimple` capped content at `85vh`. | `DialogShell` gets `max-h-[85vh] overflow-y-auto` |
+| Two msgids silently vanished (`Select domain`, `Type your username`) | `HandleField` passed `t` down as a **prop**; the Lingui macro only transforms `` t`...` `` in a scope that imports the hook, so those templates were never compiled and would have rendered untranslated                                                                             | call `useLingui()` in the scope that uses it      |
 
 Neither would have been caught by a passing type-check. The first needed a
 short viewport; the second only showed up in the `.po` diff.
@@ -85,18 +85,18 @@ a `DropdownMenu`.
 
 One latent bug surfaced, unrelated to the blocks work but found by it:
 
-| Bug | Cause | Fix |
-|---|---|---|
+| Bug                                             | Cause                                                                                                                                                                                                                                                                                      | Fix                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
 | Every `Separator` in the app rendered invisible | the base-nova primitives use `data-horizontal:` / `data-vertical:` variants, which Tailwind resolves to `[data-horizontal]`. Base UI 1.6.0 emits a single `data-orientation="horizontal\|vertical"`, so the variants never matched and the separators kept their default zero width/height | added `@custom-variant data-horizontal` / `data-vertical` to `src/style.css` |
 
 A second silent Radix→Base UI difference surfaced in the same pass:
 
-| Bug | Cause | Fix |
-|---|---|---|
+| Bug                                                                   | Cause                                                                                                                                                                                                                               | Fix                                                                        |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | The domain picker displayed `0`, and the locale picker displayed `en` | Base UI's `Select.Value` renders the **raw value** and takes a function to map it to a label; Radix's echoed the selected item's own children. The domain select's values are array indices, so `<SelectValue />` printed the index | pass a formatter: `<SelectValue>{(v) => domains[Number(v)]}</SelectValue>` |
 
 Both bugs share a shape worth remembering: the Base UI port compiles, type-checks
-and renders *something plausible*, so the defect reads as a design choice rather
+and renders _something plausible_, so the defect reads as a design choice rather
 than a bug. The locale selector had been showing `en` in every screenshot of this
 project and was never questioned.
 
@@ -105,7 +105,7 @@ registry depend on `@custom-variant` declarations that live in the style's
 `globals.css`. Copying the components alone leaves those rules silently
 unmatched, and Tailwind reports nothing.
 
-Fixing it also *revealed* a second defect that the invisible separator had been
+Fixing it also _revealed_ a second defect that the invisible separator had been
 hiding — the header's vertical rule inherited `data-vertical:self-stretch` from
 the primitive, which with a definite `h-4` pins the line to the top of the
 header instead of centring it. Overridden with `data-vertical:self-center` at

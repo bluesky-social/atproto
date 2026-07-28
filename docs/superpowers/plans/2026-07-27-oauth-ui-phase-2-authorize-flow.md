@@ -46,6 +46,7 @@ Everything in the Phase 0–1 plan's Global Constraints still applies. Re-read i
 **Files:** create `src/components/forms/form-shell.tsx`, `src/components/forms/use-form-submit.ts`, `src/components/forms/use-form-submit.test.ts`
 
 **Produces:**
+
 - `FormShell` props: `{ form, onSubmit, submitLabel?, submitVariant?, onCancel?, cancelLabel?, onBack?, backLabel?, loading?, actions?, children }`. Renders shadcn `<Form>` + `<form>`, the action row of real `<button>`s, and root-error rendering via `ErrorNotice`.
 - `useFormSubmit(form, handler)` — wraps a handler so thrown errors land on
   `form.setError('root', …)` through `errorToNotification`'s parser chain, and exposes

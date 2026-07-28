@@ -16,7 +16,7 @@ Everything from the Phase 0–1 and Phase 2 Global Constraints still applies. Th
 ones this phase actually trips over:
 
 - **Input `name` attributes** used here: `code`, `email`, `password`, `handle`,
-  `domain`. With react-hook-form the field key *is* the rendered name.
+  `domain`. With react-hook-form the field key _is_ the rendered name.
 - **Tag-specific assertions owned by this phase:**
   - `h2` — `Êtes-vous vraiment, vraiment sûr ?` (delete-account dialog)
   - `code` — `_atproto.<votre-domaine>` and `TXT` (custom-handle DNS instructions)

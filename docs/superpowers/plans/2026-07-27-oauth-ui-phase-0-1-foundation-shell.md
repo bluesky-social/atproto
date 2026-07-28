@@ -36,49 +36,49 @@ These apply to **every task**. Re-read before starting any task.
 
 ### Phase 0 — created
 
-| File | Responsibility |
-|---|---|
-| `components.json` | shadcn CLI config; records style/base/aliases so future `shadcn add` output lands correctly |
-| `src/lib/utils.ts` | `cn()` — `twMerge(clsx(...))`. Nothing else. |
-| `src/lib/utils.test.ts` | Unit tests for `cn()` conflict resolution |
-| `src/lib/theme.test.ts` | Guards that `style.css` declares every shadcn token in both schemes and retains the legacy scale |
-| `src/components/ui/*.tsx` | shadcn primitives, one component family per file |
+| File                      | Responsibility                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `components.json`         | shadcn CLI config; records style/base/aliases so future `shadcn add` output lands correctly      |
+| `src/lib/utils.ts`        | `cn()` — `twMerge(clsx(...))`. Nothing else.                                                     |
+| `src/lib/utils.test.ts`   | Unit tests for `cn()` conflict resolution                                                        |
+| `src/lib/theme.test.ts`   | Guards that `style.css` declares every shadcn token in both schemes and retains the legacy scale |
+| `src/components/ui/*.tsx` | shadcn primitives, one component family per file                                                 |
 
 ### Phase 0 — modified
 
-| File | Change |
-|---|---|
-| `package.json` | New `devDependencies` |
+| File            | Change                                                                        |
+| --------------- | ----------------------------------------------------------------------------- |
+| `package.json`  | New `devDependencies`                                                         |
 | `src/style.css` | shadcn `@theme inline` + `:root` token block appended; legacy scale untouched |
 
 ### Phase 1 — created
 
-| File | Responsibility |
-|---|---|
-| `src/components/layouts/app-shell.tsx` | Outer chrome: header (logo/name), content slot, footer (locale selector + links) |
-| `src/components/layouts/account-shell.tsx` | Account-manager frame: sidebar nav + content region |
-| `src/components/identity/account-avatar.tsx` | Account image on `ui/avatar` |
-| `src/components/identity/account-name.tsx` | Display-name / handle / DID resolution for an account |
-| `src/components/identity/account-identifier.tsx` | Handle-or-DID identifier line |
-| `src/components/identity/account-summary.tsx` | Avatar + name + identifier row |
-| `src/components/identity/account-menu.tsx` | Account switcher on `ui/dropdown-menu` |
-| `src/components/identity/client-avatar.tsx` | OAuth client image on `ui/avatar` |
-| `src/components/identity/client-name.tsx` | OAuth client display name |
-| `src/components/feedback/notice.tsx` | Replaces `utils/admonition.tsx`; `ui/alert` variants |
-| `src/components/feedback/error-notice.tsx` | Replaces `utils/error-card.tsx`; destructive `ui/alert` |
-| `src/components/feedback/error-details.tsx` | Collapsible technical error detail |
-| `src/lib/notification-message.ts` | Pure: `unknown` error → `{ title, description }` for toasts |
-| `src/lib/notification-message.test.ts` | Unit tests for the above |
+| File                                             | Responsibility                                                                   |
+| ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `src/components/layouts/app-shell.tsx`           | Outer chrome: header (logo/name), content slot, footer (locale selector + links) |
+| `src/components/layouts/account-shell.tsx`       | Account-manager frame: sidebar nav + content region                              |
+| `src/components/identity/account-avatar.tsx`     | Account image on `ui/avatar`                                                     |
+| `src/components/identity/account-name.tsx`       | Display-name / handle / DID resolution for an account                            |
+| `src/components/identity/account-identifier.tsx` | Handle-or-DID identifier line                                                    |
+| `src/components/identity/account-summary.tsx`    | Avatar + name + identifier row                                                   |
+| `src/components/identity/account-menu.tsx`       | Account switcher on `ui/dropdown-menu`                                           |
+| `src/components/identity/client-avatar.tsx`      | OAuth client image on `ui/avatar`                                                |
+| `src/components/identity/client-name.tsx`        | OAuth client display name                                                        |
+| `src/components/feedback/notice.tsx`             | Replaces `utils/admonition.tsx`; `ui/alert` variants                             |
+| `src/components/feedback/error-notice.tsx`       | Replaces `utils/error-card.tsx`; destructive `ui/alert`                          |
+| `src/components/feedback/error-details.tsx`      | Collapsible technical error detail                                               |
+| `src/lib/notification-message.ts`                | Pure: `unknown` error → `{ title, description }` for toasts                      |
+| `src/lib/notification-message.test.ts`           | Unit tests for the above                                                         |
 
 ### Phase 1 — modified
 
-| File | Change |
-|---|---|
-| `src/contexts/notifications.tsx` | Same exported API, Sonner underneath |
-| `src/locales/locale-selector.tsx` | Rebuilt on `ui/select` |
-| `src/pages/account/(authenticated)/route.tsx` | Renders `AccountShell` instead of `LayoutPage` |
-| `src/pages/router.tsx` | Drops the `/branding` palette demo route |
-| `src/{authorization,account,error,cookie-error}-page.tsx` | Mount `<Toaster />`; use `AppShell` |
+| File                                                      | Change                                         |
+| --------------------------------------------------------- | ---------------------------------------------- |
+| `src/contexts/notifications.tsx`                          | Same exported API, Sonner underneath           |
+| `src/locales/locale-selector.tsx`                         | Rebuilt on `ui/select`                         |
+| `src/pages/account/(authenticated)/route.tsx`             | Renders `AccountShell` instead of `LayoutPage` |
+| `src/pages/router.tsx`                                    | Drops the `/branding` palette demo route       |
+| `src/{authorization,account,error,cookie-error}-page.tsx` | Mount `<Toaster />`; use `AppShell`            |
 
 ### Phase 1 — deleted
 
@@ -93,6 +93,7 @@ These apply to **every task**. Re-read before starting any task.
 Nothing in this plan is safe to attribute without this. Do it first, commit the record.
 
 **Files:**
+
 - Create: `docs/superpowers/plans/2026-07-27-e2e-baseline.md`
 
 - [ ] **Step 1: Free the dev-env ports**
@@ -129,14 +130,16 @@ Captured on branch `oauth-provider-redesign` at commit <SHA>.
 <paste the summary line: "Tests: N passed, M failed, X total">
 
 Failing before any redesign work:
-- <test name>  (or "none")
+
+- <test name> (or "none")
 
 ## packages/pds/tests/account-manager.test.ts
 
 <paste the summary line>
 
 Failing before any redesign work:
-- <test name>  (or "none")
+
+- <test name> (or "none")
 ```
 
 Replace `<SHA>` with `git rev-parse --short HEAD`. Paste real output — do not summarize from memory.
@@ -153,10 +156,12 @@ git commit -m "docs: record e2e baseline before oauth-provider-ui redesign"
 ### Task 1: Add dependencies and shadcn config
 
 **Files:**
+
 - Modify: `packages/oauth/oauth-provider-ui/package.json`
 - Create: `packages/oauth/oauth-provider-ui/components.json`
 
 **Interfaces:**
+
 - Produces: the dependency set every later task imports from.
 
 - [ ] **Step 1: Add the devDependencies**
@@ -228,10 +233,12 @@ git commit -m "build(oauth-provider-ui): add shadcn/ui dependencies and config"
 ### Task 2: Add `cn()`
 
 **Files:**
+
 - Create: `packages/oauth/oauth-provider-ui/src/lib/utils.ts`
 - Test: `packages/oauth/oauth-provider-ui/src/lib/utils.test.ts`
 
 **Interfaces:**
+
 - Produces: `cn(...inputs: ClassValue[]): string` — every `components/ui/*` file imports this.
 
 Note: `src/lib/util.ts` (singular, existing) is a different file holding `Override`, `sleep`, etc. Do not merge them; `utils.ts` (plural) is the shadcn convention and `components.json` points at it.
@@ -317,10 +324,12 @@ git commit -m "feat(oauth-provider-ui): add cn() class-merge helper"
 ### Task 3: Add the shadcn token block to `style.css`
 
 **Files:**
+
 - Modify: `packages/oauth/oauth-provider-ui/src/style.css`
 - Test: `packages/oauth/oauth-provider-ui/src/lib/theme.test.ts`
 
 **Interfaces:**
+
 - Produces: the CSS custom properties `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--popover-foreground`, `--primary`, `--primary-foreground`, `--secondary`, `--secondary-foreground`, `--muted`, `--muted-foreground`, `--accent`, `--accent-foreground`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, and the sidebar set `--sidebar`, `--sidebar-foreground`, `--sidebar-primary`, `--sidebar-primary-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border`, `--sidebar-ring`. Every `components/ui/*` file styles against these.
 
 - [ ] **Step 1: Write the failing test**
@@ -553,7 +562,7 @@ Add `@import 'tw-animate-css';` directly under the existing `@import 'tailwindcs
 }
 ```
 
-**Conflict warning:** the legacy block already defines `--color-primary` (as `rgb(var(--branding-color-primary))`) in `:root`. The new `--color-primary: var(--primary)` lives inside `@theme inline`, which is where Tailwind reads utility definitions from — the later `@theme inline` declaration wins for class generation. After this step, `bg-primary` resolves to the neutral shadcn value, not the branding purple. That is intended and is why Phase 1 migrates the shell first. If any *legacy* component looks wrong because of this specifically, note it and move on; it is resolved as that component migrates.
+**Conflict warning:** the legacy block already defines `--color-primary` (as `rgb(var(--branding-color-primary))`) in `:root`. The new `--color-primary: var(--primary)` lives inside `@theme inline`, which is where Tailwind reads utility definitions from — the later `@theme inline` declaration wins for class generation. After this step, `bg-primary` resolves to the neutral shadcn value, not the branding purple. That is intended and is why Phase 1 migrates the shell first. If any _legacy_ component looks wrong because of this specifically, note it and move on; it is resolved as that component migrates.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -592,10 +601,13 @@ git commit -m "feat(oauth-provider-ui): add shadcn design tokens alongside legac
 shadcn's CLI cannot be used here — it assumes an `@/` alias and a `tailwind.config.js`, and this package has neither. Author the files directly, adapting the published new-york sources: swap `@/lib/utils` → `#/lib/utils.ts` and add explicit file extensions to relative imports.
 
 **Files:**
+
 - Create: `src/components/ui/button.tsx`, `input.tsx`, `label.tsx`, `card.tsx`, `alert.tsx`, `separator.tsx`, `skeleton.tsx`, `badge.tsx`
 
 **Interfaces:**
+
 - Produces:
+
   - `Button` — props `Override<JSX.IntrinsicElements['button'], { variant?: 'default'|'destructive'|'outline'|'secondary'|'ghost'|'link'; size?: 'default'|'sm'|'lg'|'icon'; asChild?: boolean }>`; also exports `buttonVariants`.
   - `Input` — `JSX.IntrinsicElements['input']`, forwards every prop including `name`, `value`, `defaultValue`.
   - `Label` — Radix `Label` wrapper.
@@ -679,7 +691,7 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
       type={type}
       data-slot="input"
       className={cn(
-        'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+        'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input shadow-xs flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base outline-none transition-[color,box-shadow] file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
         'aria-invalid:ring-destructive/20 aria-invalid:border-destructive',
         className,
@@ -707,7 +719,7 @@ function Label({
     <LabelPrimitive.Root
       data-slot="label"
       className={cn(
-        'flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+        'flex select-none items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50',
         className,
       )}
       {...props}
@@ -744,7 +756,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-header"
       className={cn(
-        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
+        '@container/card-header has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6',
         className,
       )}
       {...props}
@@ -756,7 +768,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-title"
-      className={cn('leading-none font-semibold', className)}
+      className={cn('font-semibold leading-none', className)}
       {...props}
     />
   )
@@ -787,7 +799,11 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
 
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div data-slot="card-content" className={cn('px-6', className)} {...props} />
+    <div
+      data-slot="card-content"
+      className={cn('px-6', className)}
+      {...props}
+    />
   )
 }
 
@@ -795,7 +811,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-footer"
-      className={cn('flex items-center px-6 [.border-t]:pt-6', className)}
+      className={cn('[.border-t]:pt-6 flex items-center px-6', className)}
       {...props}
     />
   )
@@ -901,7 +917,7 @@ function Separator({
       decorative={decorative}
       orientation={orientation}
       className={cn(
-        'bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px',
+        'bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-px',
         className,
       )}
       {...props}
@@ -1000,10 +1016,13 @@ git commit -m "feat(oauth-provider-ui): add core shadcn ui primitives"
 ### Task 5: Author the interactive `ui/*` primitives
 
 **Files:**
+
 - Create: `src/components/ui/dialog.tsx`, `dropdown-menu.tsx`, `select.tsx`, `checkbox.tsx`, `radio-group.tsx`, `progress.tsx`, `avatar.tsx`, `tooltip.tsx`, `popover.tsx`, `sheet.tsx`
 
 **Interfaces:**
+
 - Produces the standard shadcn exports, used from Phase 1 onward:
+
   - `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose`, `DialogPortal`, `DialogOverlay`
   - `Sheet`, `SheetTrigger`, `SheetContent`, `SheetHeader`, `SheetFooter`, `SheetTitle`, `SheetDescription`, `SheetClose` — required by `account-shell.tsx` for mobile navigation
   - `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator`, `DropdownMenuLabel`, `DropdownMenuGroup`
@@ -1065,9 +1084,11 @@ git commit -m "feat(oauth-provider-ui): add interactive shadcn ui primitives"
 Split from Task 5 because these two carry behavior, not just markup, and a reviewer may reasonably accept the primitives while rejecting the form wiring.
 
 **Files:**
+
 - Create: `src/components/ui/form.tsx`, `src/components/ui/sonner.tsx`
 
 **Interfaces:**
+
 - Produces: `Form` (re-export of `FormProvider`), `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage`, `useFormField`. Phase 2 builds every form on these.
 - Produces: `Toaster` — mounted once per entry page in Task 9.
 
@@ -1146,7 +1167,7 @@ pnpm i18n
 git diff --stat src/locales/
 ```
 
-Expected: **no changes at all.** Phase 0 added no `<Trans>` and no `t\`\`` strings. If any `.po` file shows an added or removed `msgid`, stop and find out why before continuing.
+Expected: **no changes at all.** Phase 0 added no `<Trans>` and no `t\`\``strings. If any`.po`file shows an added or removed`msgid`, stop and find out why before continuing.
 
 - [ ] **Step 3: Visually confirm nothing regressed**
 
@@ -1169,10 +1190,12 @@ Expected: clean. If prettier reordered classes, commit that with `style: apply p
 Extract the pure part of the notification logic first so the Sonner swap in Task 9 is a presentation change only.
 
 **Files:**
+
 - Create: `src/lib/notification-message.ts`
 - Test: `src/lib/notification-message.test.ts`
 
 **Interfaces:**
+
 - Consumes: `parseError` from `#/lib/error-parser.ts`, `apiErrorParser` from `#/lib/api-error-parser.ts` (both existing, unchanged).
 - Produces: `errorToNotification(err: unknown, overrides?: { title?: string | MessageDescriptor; description?: string | MessageDescriptor }): { title: string | MessageDescriptor; description?: string | MessageDescriptor }`
 
@@ -1268,11 +1291,13 @@ git commit -m "refactor(oauth-provider-ui): extract error-to-notification mappin
 ### Task 9: Swap notifications to Sonner
 
 **Files:**
+
 - Modify: `src/contexts/notifications.tsx`
 - Modify: `src/authorization-page.tsx`, `src/account-page.tsx`, `src/error-page.tsx`, `src/cookie-error-page.tsx`
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: `Toaster` from `#/components/ui/sonner.tsx`; `errorToNotification` from `#/lib/notification-message.ts`.
 - Produces: unchanged public API — `useNotificationsContext()` still returns `{ notify(options): NotificationHandler; notifyError(err, options?): NotificationHandler }`, and `NotificationOptions` keeps `{ variant?, title, description?, duration? }`.
 
@@ -1329,13 +1354,16 @@ git commit -m "feat(oauth-provider-ui): replace radix toast with sonner"
 ### Task 10: Identity components
 
 **Files:**
+
 - Create: `src/components/identity/account-avatar.tsx`, `account-name.tsx`, `account-identifier.tsx`, `account-summary.tsx`, `client-avatar.tsx`, `client-name.tsx`
 - Delete: `src/components/utils/account-image.tsx`, `account-name.tsx`, `account-identifier.tsx`, `account-overview.tsx`, `client-image.tsx`, `client-name.tsx`
 - Modify: every importer of the deleted files
 
 **Interfaces:**
+
 - Consumes: `Avatar`, `AvatarImage`, `AvatarFallback` from `#/components/ui/avatar.tsx`; `Account` and `OAuthClientMetadata` types from `@atproto/oauth-provider-api`; the existing `useOAuthClientName` / `useOAuthClientIdentifier` hooks.
 - Produces:
+
   - `AccountAvatar({ account, className })`
   - `AccountName({ account })` — display name, falling back to handle, falling back to DID
   - `AccountIdentifier({ account })` — handle or DID
@@ -1395,13 +1423,16 @@ git commit -m "feat(oauth-provider-ui): rebuild identity components on shadcn av
 ### Task 11: Feedback components
 
 **Files:**
+
 - Create: `src/components/feedback/notice.tsx`, `error-notice.tsx`, `error-details.tsx`
 - Delete: `src/components/utils/admonition.tsx`, `error-card.tsx`, `error-details.tsx`
 - Modify: every importer
 
 **Interfaces:**
+
 - Consumes: `Alert`, `AlertTitle`, `AlertDescription` from `#/components/ui/alert.tsx`.
 - Produces:
+
   - `Notice({ variant?: 'default' | 'info' | 'success' | 'warning' | 'error', title?, children, className })` — replaces `Admonition`
   - `ErrorNotice({ error, className })` — replaces `ErrorCard`
   - `ErrorDetails({ error })` — replaces the old `error-details.tsx`
@@ -1453,12 +1484,14 @@ git commit -m "feat(oauth-provider-ui): rebuild alert and error components on sh
 ### Task 12: Locale selector and account menu
 
 **Files:**
+
 - Modify: `src/locales/locale-selector.tsx`
 - Create: `src/components/identity/account-menu.tsx`
 - Delete: `src/components/utils/account-selector.tsx`
 - Delete: `src/hooks/use-click-outside.ts`, `src/hooks/use-escape-key.ts`, `src/hooks/use-merged-refs.ts`
 
 **Interfaces:**
+
 - Consumes: `Select*` from `#/components/ui/select.tsx`; `DropdownMenu*` from `#/components/ui/dropdown-menu.tsx`; `AccountSummary` from Task 10.
 - Produces: `AccountMenu({ className, size? })` — the account switcher previously called `AccountSelector`.
 
@@ -1510,11 +1543,13 @@ git commit -m "feat(oauth-provider-ui): rebuild locale selector and account menu
 ### Task 13: App shell
 
 **Files:**
+
 - Create: `src/components/layouts/app-shell.tsx`
 - Delete: `src/components/layouts/layout-app.tsx`
 - Modify: every importer of `LayoutApp`
 
 **Interfaces:**
+
 - Consumes: `useCustomizationData()` (unchanged), `LocaleSelector`, `LinkAnchor`.
 - Produces: `AppShell({ children, header, title })` — same prop shape as the old `LayoutApp`, so importers change only the component name and import path.
 
@@ -1525,7 +1560,7 @@ cat src/components/layouts/layout-app.tsx
 grep -rn "LayoutApp" src/ --include='*.tsx'
 ```
 
-Preserve exactly: the `<title>{titleString}</title>` render (the e2e `assertTitle` helper depends on it), the `alt={name || _(msg\`Logo\`)}` on the logo image (the `msg\`Logo\`` descriptor is in the catalogs), and the footer link rendering.
+Preserve exactly: the `<title>{titleString}</title>` render (the e2e `assertTitle` helper depends on it), the `alt={name || _(msg\`Logo\`)}`on the logo image (the`msg\`Logo\`` descriptor is in the catalogs), and the footer link rendering.
 
 - [ ] **Step 2: Write `app-shell.tsx`**
 
@@ -1566,11 +1601,13 @@ git commit -m "feat(oauth-provider-ui): rebuild app shell on shadcn"
 The single largest UX change in the redesign. Flows and destinations are identical; navigation model changes from the bespoke mobile list/detail swap to a persistent rail with a mobile Sheet.
 
 **Files:**
+
 - Create: `src/components/layouts/account-shell.tsx`
 - Delete: `src/components/layouts/layout-page.tsx`, `src/components/layouts/layout-title.tsx`
 - Modify: `src/pages/account/(authenticated)/route.tsx`, `src/pages/router.tsx`
 
 **Interfaces:**
+
 - Consumes: `Sheet*` from `#/components/ui/sheet.tsx`; `Button`, `Separator`; `AppShell` from Task 13; `AccountMenu` from Task 12; TanStack Router's `Link` and `useRouterState`.
 - Produces: `AccountShell({ basePath, title, links, children, prepend })` and `type AccountShellLink = { to; title; hidden?; description?; icon? }` — same shape as the old `LayoutPageProps` / `LayoutPageLink`, so `route.tsx` changes minimally.
 
@@ -1590,7 +1627,7 @@ The `icon` on each link is currently a Phosphor `FunctionComponent<IconProps>`; 
 
 - [ ] **Step 3: Rewire the routes**
 
-In `src/pages/account/(authenticated)/route.tsx`: swap `LayoutPage` → `AccountShell`, and replace the Phosphor icons in `DEFAULT_PAGES` with Lucide equivalents — `HouseSimpleIcon` → `HouseIcon`, `UserIcon` → `UserIcon`, `DevicesIcon` → `MonitorSmartphoneIcon`, `GlobeIcon` → `GlobeIcon`, `QuestionIcon` → `CircleQuestionMarkIcon`. Keep every `title` and `description` `msg\`…\`` descriptor byte-identical, and keep the `position` values (0/10/20/30/50) so nav order is unchanged.
+In `src/pages/account/(authenticated)/route.tsx`: swap `LayoutPage` → `AccountShell`, and replace the Phosphor icons in `DEFAULT_PAGES` with Lucide equivalents — `HouseSimpleIcon` → `HouseIcon`, `UserIcon` → `UserIcon`, `DevicesIcon` → `MonitorSmartphoneIcon`, `GlobeIcon` → `GlobeIcon`, `QuestionIcon` → `CircleQuestionMarkIcon`. Keep every `title` and `description` `msg\`…\``descriptor byte-identical, and keep the`position` values (0/10/20/30/50) so nav order is unchanged.
 
 In `src/pages/router.tsx`: remove the `/branding` route and the `Palette` import, then `git rm src/components/utils/palette.tsx`. Leave the `customPages` mechanism and its explanatory comment intact — only the example page goes.
 
@@ -1630,6 +1667,7 @@ git commit -m "feat(oauth-provider-ui): rebuild account manager shell on shadcn 
 ### Task 15: Phase 1 checkpoint
 
 **Files:**
+
 - Modify: `docs/superpowers/plans/2026-07-27-e2e-baseline.md`
 
 - [ ] **Step 1: Full verification**

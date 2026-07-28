@@ -17,11 +17,11 @@ All previous Global Constraints still apply. Specific to this phase:
   `oauth-provider-ui` the whole project touches, and it must not touch
   `build-customization-css.ts` or the `CustomizationData` contract.
 - **The server keeps injecting `--branding-color-*`.** Removing the CSS that
-  *consumes* those variables does not remove the injection, and must not: the
+  _consumes_ those variables does not remove the injection, and must not: the
   branding contract is preserved so colour can be layered back in later
   (spec, "Constraint: branding").
 - **Verify by absence.** After removing a token, `grep` for it across `src`
-  *and* the built `dist/*.css` — a class that no longer resolves fails silently
+  _and_ the built `dist/*.css` — a class that no longer resolves fails silently
   rather than at build time.
 
 ---

@@ -56,8 +56,9 @@ hashes, so navigate by clicking sidebar links rather than setting
   `PasswordStrength`.
 - `components/identity/*` — account/client avatars, names, identifiers, the
   account menu.
-- `components/layouts/*` — `AppShell` (chrome), `AuthShell` (centred auth card),
-  `AccountShell` (sidebar + content).
+- `components/layouts/*` — `AuthShell` (centred auth card, after `login-03`) and
+  `AccountShell` (sidebar + content, after `dashboard-01`). These two own the
+  whole page frame, including the `<title>`, so they must never nest.
 - Pages under `src/pages/` and the four `*-page.tsx` entry points own contexts,
   TanStack Query and routing.
 
@@ -69,7 +70,7 @@ belongs, not in components.
 
 ```tsx
 const form = useForm<Values>({
-  resolver: zodResolver(schema),
+  resolver: schemaResolver(schema),
   reValidateMode: 'onChange',
   defaultValues: { … },
 })
@@ -80,6 +81,12 @@ return (
   </FormShell>
 )
 ```
+
+**Use `schemaResolver` (`#/lib/form-resolver.ts`), never `zodResolver` directly.**
+Calling `zodResolver` at a call site makes the compiler instantiate its
+conditional types against that schema; a dozen forms doing so crossed tsgo's
+instantiation limit and every `useForm` failed with `TS2589`. It crossed only on
+the linux-x64 binary, so CI caught what a local `tsgo --build` could not.
 
 **Never set `mode: 'onBlur'`.** It validates on first blur, which renders error
 messages under empty required fields and shifts the layout between mousedown and
@@ -114,13 +121,13 @@ form field is `code` but the API takes `token`.
 - msgids are the English source strings, so changing a string orphans five
   locales. `<Trans>` placeholders are positional (`<0>`, `<1>`) and derive from
   JSX nesting — adding or reordering an element inside a `<Trans>` renumbers them
-  and changes the msgid. Recompose *around* `<Trans>` blocks.
+  and changes the msgid. Recompose _around_ `<Trans>` blocks.
 - **Never pass `t` as a prop.** The macro only transforms `` t`…` `` in a scope
   that imports `useLingui` from `@lingui/react/macro`; passing `t` down leaves
   the template uncompiled and the string untranslated, and it silently vanishes
   from the catalogs.
 - A msgid that disappears and returns loses its translation. After extraction,
-  check the *count* of untranslated entries, not just the msgid diff.
+  check the _count_ of untranslated entries, not just the msgid diff.
 - Fill in French only; other locales are translated externally.
 
 ## The pds e2e contract
