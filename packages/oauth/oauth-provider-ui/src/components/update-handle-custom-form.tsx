@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -13,6 +12,7 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type UpdateHandleCustomValues,
   updateHandleCustomSchema,
@@ -54,7 +54,7 @@ export function UpdateHandleCustomForm({
   const { t } = useLingui()
 
   const form = useForm<UpdateHandleCustomValues>({
-    resolver: zodResolver(updateHandleCustomSchema),
+    resolver: schemaResolver(updateHandleCustomSchema),
     reValidateMode: 'onChange',
     defaultValues: { domain: domainDefault ?? '' },
   })

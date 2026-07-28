@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { useForm } from 'react-hook-form'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
@@ -8,6 +7,7 @@ import {
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type UpdateEmailValues,
   updateEmailSchema,
@@ -44,7 +44,7 @@ export function UpdateEmailForm({
   ...props
 }: UpdateEmailFormProps) {
   const form = useForm<UpdateEmailValues>({
-    resolver: zodResolver(updateEmailSchema),
+    resolver: schemaResolver(updateEmailSchema),
     reValidateMode: 'onChange',
     defaultValues: { newEmail: newEmailDefault ?? '', code: '' },
   })

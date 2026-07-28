@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
@@ -17,6 +16,7 @@ import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import { type SignInValues, signInSchema } from '#/lib/form-schemas.ts'
 import { isValidDomain } from '#/lib/handle.ts'
 
@@ -60,7 +60,7 @@ export function SignInForm({
     useState<null | SecondAuthenticationFactorRequiredError>(null)
 
   const form = useForm<SignInValues>({
-    resolver: zodResolver(signInSchema),
+    resolver: schemaResolver(signInSchema),
     // @NOTE Deliberately the react-hook-form default (validate on submit,
     // re-validate on change) rather than 'onBlur'. Validating on blur made
     // error messages appear under empty required fields at the first

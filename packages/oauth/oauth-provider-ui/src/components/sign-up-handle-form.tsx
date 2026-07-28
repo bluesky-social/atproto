@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -10,6 +9,7 @@ import {
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { useStableCallback } from '#/hooks/use-stable-callback.ts'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type SignUpHandleValues,
   signUpHandleSchema,
@@ -41,7 +41,7 @@ export function SignUpHandleForm({
   ...props
 }: SignUpHandleFormProps) {
   const form = useForm<SignUpHandleValues>({
-    resolver: zodResolver(signUpHandleSchema),
+    resolver: schemaResolver(signUpHandleSchema),
     reValidateMode: 'onChange',
     defaultValues: { handle: values?.handle ?? '' },
   })

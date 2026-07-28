@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { HashIcon } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
@@ -11,6 +10,7 @@ import {
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { useStableCallback } from '#/hooks/use-stable-callback.ts'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type SignUpCredentialsValues,
   buildSignUpCredentialsSchema,
@@ -51,7 +51,7 @@ export function SignUpCredentialsForm({
   )
 
   const form = useForm<SignUpCredentialsValues>({
-    resolver: zodResolver(schema),
+    resolver: schemaResolver(schema),
     reValidateMode: 'onChange',
     defaultValues: {
       email: values?.email ?? '',

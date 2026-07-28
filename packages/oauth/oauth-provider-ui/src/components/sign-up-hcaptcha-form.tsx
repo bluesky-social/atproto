@@ -1,5 +1,4 @@
 import HCaptcha from '@hcaptcha/react-hcaptcha'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -11,6 +10,7 @@ import {
 } from '#/components/forms/form-shell.tsx'
 import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
 import { useStableCallback } from '#/hooks/use-stable-callback.ts'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
 export type VerifyData = {
@@ -56,7 +56,7 @@ export function SignUpHcaptchaForm({
   const [verifiedOnMount] = useState(values?.verify != null)
 
   const form = useForm<HcaptchaValues>({
-    resolver: zodResolver(hcaptchaSchema),
+    resolver: schemaResolver(hcaptchaSchema),
     reValidateMode: 'onChange',
     defaultValues: {
       verify: values?.verify ?? { token: '', ekey: '' },

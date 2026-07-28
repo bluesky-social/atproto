@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import type { HandleString } from '@atproto/syntax'
 import { HandleField } from '#/components/forms/fields/handle-field.tsx'
@@ -6,6 +5,7 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type UpdateHandleValues,
   updateHandleSchema,
@@ -35,7 +35,7 @@ export function UpdateHandleDefaultForm({
   ...props
 }: UpdateHandleDefaultFormProps) {
   const form = useForm<UpdateHandleValues>({
-    resolver: zodResolver(updateHandleSchema),
+    resolver: schemaResolver(updateHandleSchema),
     reValidateMode: 'onChange',
     defaultValues: { handle: handleDefault ?? '' },
   })

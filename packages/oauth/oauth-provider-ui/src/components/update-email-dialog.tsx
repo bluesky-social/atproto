@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from 'lucide-react'
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
@@ -7,6 +6,7 @@ import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import { FormShell } from '#/components/forms/form-shell.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   emailOnlySchema,
   verifyEmailConfirmSchema,
@@ -183,7 +183,7 @@ function EmailRequestForm({
   handler: (data: { email: string }, signal: AbortSignal) => Promise<void>
 }) {
   const form = useForm({
-    resolver: zodResolver(emailOnlySchema),
+    resolver: schemaResolver(emailOnlySchema),
     reValidateMode: 'onChange',
     defaultValues: { email: emailDefault ?? '' },
   })
@@ -219,7 +219,7 @@ function VerifyStepForm({
   ) => Promise<void>
 }) {
   const form = useForm({
-    resolver: zodResolver(verifyEmailConfirmSchema),
+    resolver: schemaResolver(verifyEmailConfirmSchema),
     reValidateMode: 'onChange',
     defaultValues: { code: '' },
   })

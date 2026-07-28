@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { useForm } from 'react-hook-form'
 import { NewPasswordField } from '#/components/forms/fields/new-password-field.tsx'
@@ -7,6 +6,7 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type ResetPasswordConfirmValues,
   resetPasswordConfirmSchema,
@@ -36,7 +36,7 @@ export function ResetPasswordConfirmForm({
   ...props
 }: ResetPasswordConfirmFormProps) {
   const form = useForm<ResetPasswordConfirmValues>({
-    resolver: zodResolver(resetPasswordConfirmSchema),
+    resolver: schemaResolver(resetPasswordConfirmSchema),
     // @NOTE Deliberately the react-hook-form default (validate on submit,
     // re-validate on change) rather than 'onBlur'. Validating on blur made
     // error messages appear under empty required fields at the first

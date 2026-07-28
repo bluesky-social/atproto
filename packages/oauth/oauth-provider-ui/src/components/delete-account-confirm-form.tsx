@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -8,6 +7,7 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import { otpCodeSchema } from '#/lib/form-schemas.ts'
 
 const schema = z.object({
@@ -42,7 +42,7 @@ export function DeleteAccountConfirmForm({
   ...props
 }: DeleteAccountConfirmFormProps) {
   const form = useForm<Values>({
-    resolver: zodResolver(schema),
+    resolver: schemaResolver(schema),
     reValidateMode: 'onChange',
     defaultValues: { code: '', password: '' },
   })

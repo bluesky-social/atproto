@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Trans } from '@lingui/react/macro'
 import { useForm } from 'react-hook-form'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
@@ -6,6 +5,7 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
+import { schemaResolver } from '#/lib/form-resolver.ts'
 import {
   type VerifyEmailConfirmValues,
   verifyEmailConfirmSchema,
@@ -30,7 +30,7 @@ export function VerifyEmailConfirmForm({
   ...props
 }: VerifyEmailConfirmFormProps) {
   const form = useForm<VerifyEmailConfirmValues>({
-    resolver: zodResolver(verifyEmailConfirmSchema),
+    resolver: schemaResolver(verifyEmailConfirmSchema),
     reValidateMode: 'onChange',
     defaultValues: { code: '' },
   })
