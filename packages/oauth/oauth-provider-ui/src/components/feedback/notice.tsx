@@ -13,7 +13,7 @@ import {
   useContext,
   useMemo,
 } from 'react'
-import { Alert, AlertDescription } from '#/components/ui/alert.tsx'
+import { Alert, AlertAction, AlertDescription } from '#/components/ui/alert.tsx'
 import { Button, type buttonVariants } from '#/components/ui/button.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -41,16 +41,24 @@ const icons: Record<NoticeVariant, LucideIcon> = {
   error: CircleAlertIcon,
 }
 
-// @NOTE The neutral shadcn palette has no success/warning tokens, only
-// `destructive`. Rather than inventing tokens (which would have to be
-// re-derived when branding is layered back in), the non-error variants tint
-// the border and icon from Tailwind's built-in palette and leave the alert
-// surface neutral.
+// @NOTE The shadcn palette has no success/warning tokens, only `destructive`.
+// Rather than inventing tokens (which would have to be re-derived when branding
+// is layered back in), these two tint the border, surface and icon from
+// Tailwind's built-in palette — matching the weight of the warning alert in
+// shadcn's own examples, which carries its colour as a background fill and not
+// just an outline.
+//
+// `error` takes the same treatment from the `destructive` token. Upstream's
+// `destructive` variant tints only the text and icon, leaving `bg-card` and the
+// default border — a deliberate deviation, so that all three coloured variants
+// read at the same weight instead of the error alone looking uncoloured.
 const variantStyles: Record<NoticeVariant, string> = {
   info: 'border-border',
-  success: 'border-emerald-500/40 dark:border-emerald-400/30',
-  warning: 'border-amber-500/50 dark:border-amber-400/30',
-  error: '',
+  success:
+    'border-emerald-500/40 bg-emerald-500/10 dark:border-emerald-400/30 dark:bg-emerald-400/10',
+  warning:
+    'border-amber-500/50 bg-amber-500/10 dark:border-amber-400/30 dark:bg-amber-400/10',
+  error: 'border-destructive/50 bg-destructive/10 dark:border-destructive/40',
 }
 
 const iconStyles: Record<NoticeVariant, string> = {
@@ -125,8 +133,18 @@ export function Notice({
           </AlertDescription>
         )}
 
+        {/* @NOTE AlertAction pins the button to `top-2`, which is right for the
+          shadcn example — a title above a description, with the button aligned
+          to the title line. A titleless notice is a single 20px row, and a
+          28px button pinned 8px from the top of a 40px box overhangs the
+          bottom padding (9px above, 3px below). Centre it in that case.
+          `right-2.5` matches the alert's own `px-2.5`. */}
         {action && (
-          <div className="col-start-2 mt-2 flex justify-end">{action}</div>
+          <AlertAction
+            className={cn('right-2.5', !title && 'top-1/2 -translate-y-1/2')}
+          >
+            {action}
+          </AlertAction>
         )}
       </Alert>
     </NoticeContext>
