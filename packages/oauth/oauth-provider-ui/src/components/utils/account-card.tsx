@@ -1,14 +1,22 @@
 import { ChevronRightIcon } from 'lucide-react'
-import type { JSX, ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountAvatar } from '#/components/identity/account-avatar.tsx'
 import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { AccountName } from '#/components/identity/account-name.tsx'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
 export type AccountCardProps = Override<
-  JSX.IntrinsicElements['button'],
+  Omit<ComponentProps<typeof Item>, 'render' | 'variant'>,
   {
     account: Account
     append?: ReactNode
@@ -16,11 +24,20 @@ export type AccountCardProps = Override<
 >
 
 /**
- * A selectable account row.
+ * A selectable account row, built on `Item` — the shadcn primitive for a
+ * choice list. It previously hand-rolled the border, padding, hover and
+ * focus-ring utilities, which had already drifted from the near-identical
+ * "Another account" row beside it.
  *
- * @NOTE Rendered as a real `<button>` wrapping the name and identifier spans:
- * the pds e2e suite clicks the handle via `clickOnText('alice.test', 'span')`,
- * which requires the text to sit in a `<span>` inside something clickable.
+ * @NOTE Two markup details are load-bearing for the pds e2e suite, not
+ * cosmetic:
+ *
+ * - `render={<button/>}` keeps this a real `<button>`. `Item` is a `<div>` by
+ *   default, and the tests click these rows.
+ * - the identifier stays inside a `<span>` (`AccountIdentifier` renders one),
+ *   because the suite selects the handle with
+ *   `clickOnText('alice.test', 'span')`. `ItemDescription` is a `<p>`, so the
+ *   span must survive nested inside it.
  */
 export function AccountCard({
   account,
@@ -29,32 +46,31 @@ export function AccountCard({
   ...props
 }: AccountCardProps) {
   return (
-    <button
-      type="button"
+    <Item
       {...props}
+      variant="outline"
+      render={<button type="button" />}
       className={cn(
-        'border-input bg-background flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left',
-        'hover:bg-accent hover:text-accent-foreground transition-colors',
-        'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
+        'hover:bg-accent hover:text-accent-foreground w-full text-left',
         className,
       )}
     >
-      <AccountAvatar account={account} />
+      <ItemMedia>
+        <AccountAvatar account={account} />
+      </ItemMedia>
 
-      <span className="min-w-0 flex-1">
+      <ItemContent className="min-w-0">
         {account.name && (
-          <AccountName
-            account={account}
-            className="block truncate font-medium"
-          />
+          <ItemTitle>
+            <AccountName account={account} className="truncate font-medium" />
+          </ItemTitle>
         )}
-        <AccountIdentifier
-          account={account}
-          className="text-muted-foreground block truncate text-sm"
-        />
-      </span>
+        <ItemDescription>
+          <AccountIdentifier account={account} className="block truncate" />
+        </ItemDescription>
+      </ItemContent>
 
-      {append}
-    </button>
+      <ItemActions>{append}</ItemActions>
+    </Item>
   )
 }

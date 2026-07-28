@@ -15,6 +15,15 @@ import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemGroup,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
@@ -44,15 +53,22 @@ import { cn } from '#/lib/utils.ts'
 
 export function Page() {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <EmailVerificationRow />
-      <EmailUpdateRow />
-      <hr className="border-none" aria-hidden />
-      <HandleUpdateRow />
-      <PasswordUpdateRow />
-      <hr className="border-none" aria-hidden />
-      <AccountStatusRow />
-      <AccountDeletionRow />
+
+      {/* @NOTE ItemGroup gives the rows role="list" and a consistent gap, and
+        ItemSeparator marks the section breaks. Both were previously faked with
+        a flex wrapper and invisible <hr className="border-none"> spacers, which
+        left the gaps looking arbitrary. */}
+      <ItemGroup>
+        <EmailUpdateRow />
+        <ItemSeparator />
+        <HandleUpdateRow />
+        <PasswordUpdateRow />
+        <ItemSeparator />
+        <AccountStatusRow />
+        <AccountDeletionRow />
+      </ItemGroup>
     </div>
   )
 }
@@ -253,46 +269,66 @@ function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 }
 
 type RowProps = Override<
-  React.ComponentProps<typeof Button>,
+  Omit<React.ComponentProps<typeof Item>, 'render'>,
   {
     icon: LucideIcon
     value?: ReactNode
+    /** Destructive rows keep the danger signal without a full red fill. */
+    variant?: 'default' | 'destructive'
   }
 >
 
 /**
- * A tappable settings row.
+ * A tappable settings row, built on the shadcn `item` primitive — the
+ * canonical pattern for this kind of list.
  *
- * @NOTE Stays a real <button> with its label in a <span>: the pds e2e suite
- * selects rows via clickOnText('Réactiver le compte', 'span').
+ * @NOTE Two deliberate details:
+ * - `render={<button/>}` keeps it a real button; the pds e2e suite clicks these
+ *   rows, and `Item` defaults to a div.
+ * - the label is wrapped in a `<span>` because `ItemTitle` renders a div, and
+ *   the suite asserts `ensureTextVisibility('Réactiver le compte', 'span')`.
+ *
+ * `itemVariants` has no destructive variant (default/outline/muted only), so
+ * destructive rows tint the icon and label rather than filling the row.
  */
 function Row({
   icon: Icon,
   value,
-
-  // Button
+  variant = 'default',
   children,
   className,
-  variant = 'ghost',
   ...props
 }: RowProps) {
+  const destructive = variant === 'destructive'
+
   return (
-    <Button
+    <Item
       {...props}
-      variant={variant}
+      render={<button type="button" />}
       className={cn(
-        'h-auto w-full justify-start gap-3 px-3 py-2.5 font-normal',
+        'hover:bg-muted w-full text-left',
+        destructive && 'text-destructive hover:bg-destructive/10',
         className,
       )}
     >
-      <Icon aria-hidden className="size-5 shrink-0 grow-0" />
-      <span className="grow truncate text-left font-medium">{children}</span>
-      {value != null && (
-        <span className="text-muted-foreground hidden min-w-0 flex-1 truncate text-right text-sm sm:inline">
-          {value}
-        </span>
-      )}
-      <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
-    </Button>
+      <ItemMedia variant="icon">
+        <Icon aria-hidden className={cn(destructive && 'text-destructive')} />
+      </ItemMedia>
+
+      <ItemContent>
+        <ItemTitle>
+          <span>{children}</span>
+        </ItemTitle>
+      </ItemContent>
+
+      <ItemActions>
+        {value != null && (
+          <span className="text-muted-foreground hidden max-w-[16rem] truncate text-sm sm:inline">
+            {value}
+          </span>
+        )}
+        <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
+      </ItemActions>
+    </Item>
   )
 }

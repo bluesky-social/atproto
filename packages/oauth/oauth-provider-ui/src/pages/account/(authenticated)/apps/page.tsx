@@ -1,9 +1,19 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { Fragment } from 'react'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
+import { ListSkeleton } from '#/components/feedback/list-skeleton.tsx'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
 import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
-import { CircularProgress } from '#/components/utils/circular-progress'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemSeparator,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
@@ -20,7 +30,7 @@ export function Page() {
 
   if (!data) {
     if (isLoading) {
-      return <CircularProgress className="text-primary" size={28} />
+      return <ListSkeleton />
     }
 
     return (
@@ -38,7 +48,7 @@ export function Page() {
   }
 
   return data.length > 0 ? (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-4">
       <p>
         <Trans>
           These apps have access to your account. An app may appear multiple
@@ -47,15 +57,24 @@ export function Page() {
         </Trans>
       </p>
 
-      {data.map((session) => (
-        <ApplicationSessionCard
-          key={session.tokenId}
-          did={did}
-          session={session}
-        />
-      ))}
+      {/* @NOTE `ItemGroup` supplies role="list" and the row spacing, and
+        `ItemSeparator` draws the dividers. Each row previously carried its own
+        `border-t`, which also drew a line above the first row — reading as a
+        rule under the paragraph above rather than as a list divider.
 
-      <p className="text-muted-foreground mt-4 text-sm">
+        gap-0 because a divider sits between every row here: the group gap and
+        the separator's own margin would otherwise stack to 32px and the list
+        would read as separate blocks rather than one list. */}
+      <ItemGroup className="gap-0">
+        {data.map((session, index) => (
+          <Fragment key={session.tokenId}>
+            {index > 0 && <ItemSeparator />}
+            <ApplicationSessionCard did={did} session={session} />
+          </Fragment>
+        ))}
+      </ItemGroup>
+
+      <p className="text-muted-foreground text-sm">
         <Trans>
           Apps may access your account in the background (to check
           notifications, sync data, etc.) even when you're not actively using
@@ -107,11 +126,15 @@ function ApplicationSessionCard({
   // @TODO Show if there is an active oauth access token ("active").
 
   return (
-    <div className="border-border dark:border-border flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
-        <p className="truncate font-semibold">{clientName}</p>
-        <p className="font-mono text-xs">{friendlyClientId}</p>
-        <p className="text-muted-foreground truncate text-xs">
+    <Item>
+      <ItemContent className="min-w-36">
+        <ItemTitle>
+          <span className="truncate">{clientName}</span>
+        </ItemTitle>
+        <ItemDescription className="text-foreground font-mono text-xs">
+          {friendlyClientId}
+        </ItemDescription>
+        <ItemDescription className="text-xs">
           <Trans context="OAuthApp">
             Authorized on{' '}
             {i18n.date(createdAt, {
@@ -124,20 +147,22 @@ function ApplicationSessionCard({
           <Trans context="OAuthApp">
             Last accessed <DateAgo date={updatedAt} />
           </Trans>
-        </p>
-      </div>
-      <OAuthSessionDetailsDialog
-        clientName={clientName}
-        clientIdentifier={friendlyClientId}
-        scope={scope}
-        onRevoke={async () => {
-          await revokeSession({ did, tokenId })
-        }}
-      >
-        <Button size="sm" className="min-w-max shrink-0 grow-0">
-          <Trans>Details</Trans>
-        </Button>
-      </OAuthSessionDetailsDialog>
-    </div>
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <OAuthSessionDetailsDialog
+          clientName={clientName}
+          clientIdentifier={friendlyClientId}
+          scope={scope}
+          onRevoke={async () => {
+            await revokeSession({ did, tokenId })
+          }}
+        >
+          <Button variant="secondary" size="sm" className="shrink-0">
+            <Trans>Details</Trans>
+          </Button>
+        </OAuthSessionDetailsDialog>
+      </ItemActions>
+    </Item>
   )
 }

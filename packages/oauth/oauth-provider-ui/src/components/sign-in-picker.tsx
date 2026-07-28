@@ -3,6 +3,13 @@ import { AtSignIcon, ChevronRightIcon } from 'lucide-react'
 import type { JSX, ReactNode } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/ui/button.tsx'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 import { AccountCard } from './utils/account-card.tsx'
@@ -59,42 +66,63 @@ export function SignInPicker({
         />
       ))}
 
+      {/* @NOTE Built on the same `Item` primitive as `AccountCard` above. The
+        two rows sit side by side and previously repeated the same border,
+        padding, hover and focus utilities by hand, which had already drifted
+        apart between them. */}
       {onOther && (
-        <button
+        <Item
           key="other"
-          type="button"
+          variant="outline"
+          render={<button type="button" />}
           onClick={onOther}
           aria-label={t`Sign in to an account that is not listed`}
-          className={cn(
-            'border-input bg-background flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left',
-            'hover:bg-accent hover:text-accent-foreground transition-colors',
-            'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
-          )}
+          className="hover:bg-accent hover:text-accent-foreground w-full text-left"
         >
-          <AtSignIcon aria-hidden className="size-5 shrink-0" />
-          <span className="text-muted-foreground flex-1 truncate">
-            <Trans>Another account</Trans>
-          </span>
-          <ChevronRightIcon aria-hidden className="size-4 shrink-0" />
-        </button>
+          <ItemMedia variant="icon">
+            <AtSignIcon aria-hidden className="size-5" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>
+              <span className="text-muted-foreground truncate">
+                <Trans>Another account</Trans>
+              </span>
+            </ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <ChevronRightIcon aria-hidden className="size-4 shrink-0" />
+          </ItemActions>
+        </Item>
       )}
 
       {children}
 
-      <div
-        key="actions"
-        className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
-      >
-        {onSignUp && (
-          <Button variant="ghost" onClick={onSignUp}>
-            <Trans>Sign up</Trans>
-          </Button>
-        )}
-        <div className="flex-auto" />
+      {/* @NOTE Laid out the way the login blocks do it: the navigation action
+        spans the width, and the alternate path sits centred beneath it as an
+        underlined link. "Sign up" was a right-floated `ghost` button, achieved
+        with `flex-row-reverse` and a `flex-auto` spacer — it rendered as plain
+        bold text with no affordance that it was interactive at all.
+
+        It stays a `<button>` rather than becoming an anchor: the pds e2e suite
+        clicks it with `clickOnText('Inscription')`, which defaults to a
+        `button` tag. */}
+      <div key="actions" className="flex flex-col gap-4">
         {onBack && (
-          <Button variant="secondary" onClick={onBack}>
+          <Button variant="secondary" className="w-full" onClick={onBack}>
             {backLabel || <Trans>Back</Trans>}
           </Button>
+        )}
+
+        {onSignUp && (
+          <div className="text-center text-sm">
+            <Button
+              variant="link"
+              className="h-auto p-0 underline underline-offset-4"
+              onClick={onSignUp}
+            >
+              <Trans>Sign up</Trans>
+            </Button>
+          </div>
         )}
       </div>
     </div>

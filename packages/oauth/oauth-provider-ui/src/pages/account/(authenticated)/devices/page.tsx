@@ -1,12 +1,22 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
+import { Fragment } from 'react'
 import type {
   ActiveAccountSession,
   DidString,
 } from '@atproto/oauth-provider-api'
+import { ListSkeleton } from '#/components/feedback/list-skeleton.tsx'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
 import { Button } from '#/components/ui/button.tsx'
-import { CircularProgress } from '#/components/utils/circular-progress'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemSeparator,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
   useAccountSessionsQuery,
@@ -21,7 +31,7 @@ export function Page() {
 
   if (!data) {
     if (isLoading) {
-      return <CircularProgress className="text-primary" size={28} />
+      return <ListSkeleton />
     }
 
     return (
@@ -39,7 +49,7 @@ export function Page() {
   }
 
   return data.length > 0 ? (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-4">
       <p>
         <Trans>
           Your account is signed in on the devices listed below. If your account
@@ -52,13 +62,22 @@ export function Page() {
         </Trans>
       </p>
 
-      {data.map((session) => (
-        <AccountSessionCard
-          key={`${account.did}@${session.deviceId}`}
-          did={account.did}
-          session={session}
-        />
-      ))}
+      {/* @NOTE `ItemGroup` supplies role="list" and the row spacing, and
+        `ItemSeparator` draws the dividers. Each row previously carried its own
+        `border-t`, which also drew a line above the first row — reading as a
+        rule under the paragraph above rather than as a list divider.
+
+        gap-0 because a divider sits between every row here: the group gap and
+        the separator's own margin would otherwise stack to 32px and the list
+        would read as separate blocks rather than one list. */}
+      <ItemGroup className="gap-0">
+        {data.map((session, index) => (
+          <Fragment key={`${account.did}@${session.deviceId}`}>
+            {index > 0 && <ItemSeparator />}
+            <AccountSessionCard did={account.did} session={session} />
+          </Fragment>
+        ))}
+      </ItemGroup>
     </div>
   ) : (
     <p>
@@ -82,33 +101,44 @@ function AccountSessionCard({
   const lastUsedAgo = useDateAgo(lastSeenAt)
 
   return (
-    <div className="border-border dark:border-border flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
-        <p className="truncate font-semibold">
-          {browserName || (
-            <Trans context="device list">Unknown user agent</Trans>
-          )}
-        </p>
-        <p className="font-mono text-xs">{ipAddress}</p>
-        <p className="text-muted-foreground truncate text-xs">
+    <Item>
+      <ItemContent className="min-w-36">
+        <ItemTitle>
+          <span className="truncate">
+            {browserName || (
+              <Trans context="device list">Unknown user agent</Trans>
+            )}
+          </span>
+        </ItemTitle>
+        <ItemDescription className="text-foreground font-mono text-xs">
+          {ipAddress}
+        </ItemDescription>
+        <ItemDescription className="text-xs">
           <Trans context="device list">Last seen {lastUsedAgo}</Trans>
-        </p>
-      </div>
-      <Button
-        size="sm"
-        className="min-w-max shrink-0 grow-0"
-        disabled={session.isCurrentDevice || isPending}
-        onClick={(_event) => {
-          void mutateAsync({ did, deviceId: session.deviceId }).catch((err) => {
-            console.warn('Failed to revoke account session', err)
-          })
-        }}
-        title={
-          session.isCurrentDevice ? t`Cannot remove current device` : undefined
-        }
-      >
-        <Trans context="device list">Sign out</Trans>
-      </Button>
-    </div>
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="shrink-0"
+          disabled={session.isCurrentDevice || isPending}
+          onClick={(_event) => {
+            void mutateAsync({ did, deviceId: session.deviceId }).catch(
+              (err) => {
+                console.warn('Failed to revoke account session', err)
+              },
+            )
+          }}
+          title={
+            session.isCurrentDevice
+              ? t`Cannot remove current device`
+              : undefined
+          }
+        >
+          <Trans context="device list">Sign out</Trans>
+        </Button>
+      </ItemActions>
+    </Item>
   )
 }
