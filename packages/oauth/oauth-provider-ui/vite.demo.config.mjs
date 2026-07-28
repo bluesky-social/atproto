@@ -15,6 +15,7 @@ const redirects = [
   '',
 ].join('\n')
 
+/** @returns {import('vite').Plugin} */
 const emitRedirects = () => ({
   name: 'emit-redirects',
   generateBundle() {
