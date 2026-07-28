@@ -18,13 +18,18 @@ import type { ZodType, ZodTypeDef } from 'zod'
  * threshold and the forms sat right on it. So a local `tsgo --build` passing
  * proves nothing here.
  *
- * Widening the parameter to `ZodType` means `zodResolver`'s generics are
- * instantiated once, here, instead of once per call site — which is what
- * removes the cost. The schema's output type still has to match `Values`, so a
- * schema that disagrees with the form's value type is still an error.
+ * Instantiating those generics even *once* is too expensive, so this erases
+ * `zodResolver`'s signature before calling it rather than calling it
+ * generically. The schema's output type still has to match `Values` through
+ * this function's own parameter, so a schema that disagrees with the form's
+ * value type is still an error.
  */
+const applyZodResolver = zodResolver as unknown as (
+  schema: unknown,
+) => Resolver<FieldValues>
+
 export function schemaResolver<Values extends FieldValues>(
   schema: ZodType<Values, ZodTypeDef, unknown>,
 ): Resolver<Values> {
-  return zodResolver(schema as ZodType) as unknown as Resolver<Values>
+  return applyZodResolver(schema) as unknown as Resolver<Values>
 }
