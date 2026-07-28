@@ -60,6 +60,16 @@ function messageBytes(data: string | Uint8Array): number {
   return typeof data === 'string' ? data.length * 2 : data.byteLength
 }
 
+// The synthetic detail for an abnormal end with no close frame (socket
+// error, heartbeat/idle timeout, signal abort) — the WHATWG convention of
+// 1006. Exported so the platform transports can report the same shape for
+// their own frame-less failures instead of each duplicating this literal.
+export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
+  code: CloseCode.Abnormal,
+  reason: '',
+  wasClean: false,
+}
+
 // A codeless failure (overflow / dataMode / idle timeout / any foreign
 // error) synthesizes an abnormal close, matching WHATWG's 1006 for a
 // frame-less end. A `CloseError` (a real close frame the transport
@@ -68,7 +78,7 @@ function closeDetailForError(error: unknown): CloseEventDetail {
   if (error instanceof CloseError) {
     return { code: error.code, reason: error.reason, wasClean: error.wasClean }
   }
-  return { code: CloseCode.Abnormal, reason: '', wasClean: false }
+  return ABNORMAL_CLOSE_DETAIL
 }
 
 /**

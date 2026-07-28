@@ -7,6 +7,7 @@ import {
   WebSocketConnectionError,
 } from '../lib/errors.js'
 import {
+  ABNORMAL_CLOSE_DETAIL,
   type CloseEventDetail,
   type DataMode,
   type MessageOf,
@@ -18,16 +19,6 @@ import type {
   TransportFactory,
   TransportOptions,
 } from './transport.js'
-
-// Mirrors `message-channel.ts`'s own synthesis of an abnormal close for a
-// frame-less failure (socket error, heartbeat timeout, signal abort): no
-// close frame was ever seen, so there's no code/reason to report beyond the
-// WHATWG convention of 1006.
-const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
-  code: CloseCode.Abnormal,
-  reason: '',
-  wasClean: false,
-}
 
 /**
  * Node transport, built on `ws`. Created already connecting; torn down by
