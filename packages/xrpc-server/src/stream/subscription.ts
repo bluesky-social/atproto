@@ -1,8 +1,8 @@
 import { isPlainObject } from '@atproto/lex-data'
 import { type HeadersInit, WebSocketClient } from '@atproto/ws-client'
+import { ensureChunkIsMessage } from './stream.js'
 
 export type { HeadersInit } from '@atproto/ws-client'
-import { ensureChunkIsMessage } from './stream.js'
 
 export class Subscription<T = unknown> {
   constructor(
