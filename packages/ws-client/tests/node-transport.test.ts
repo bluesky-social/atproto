@@ -375,4 +375,26 @@ describe(createTransport, () => {
     })
     ac.abort(new Error('test cleanup'))
   })
+
+  it('rejects a parked pull with the abort reason', async () => {
+    // The reconnect loop depends on this: a `yield*` parked on a pull cannot
+    // observe an abort by itself, so the transport must reject the pull rather
+    // than leave it hanging.
+    await using server = await startServer(() => {
+      // Never sends, so the consumer's pull parks.
+    })
+    const ac = new AbortController()
+    const transport = createTransport({
+      url: server.url,
+      dataMode: 'text',
+      signal: ac.signal,
+      onOpen: () => {},
+      onClose: () => {},
+    })
+    const iterator = transport[Symbol.asyncIterator]()
+    const pull = iterator.next()
+    const reason = new Error('stopped')
+    ac.abort(reason)
+    await expect(pull).rejects.toBe(reason)
+  })
 })
