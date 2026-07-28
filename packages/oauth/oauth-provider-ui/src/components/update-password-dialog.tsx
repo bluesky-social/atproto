@@ -57,8 +57,16 @@ export function UpdatePasswordDialog({
       onOpenChange={setOpen}
       dismissable={dismissable}
     >
+      {/* @NOTE Sending the code is the main path; "Already have a code?" is the
+        escape hatch for someone returning with one. Both rendered in the
+        primary fill, so they read as equally weighted. `ghost` matches how
+        `ResetPasswordView` already treats this same string.
+
+        `RequestCodeButton` defaults to `size="sm"` for the inline resend in
+        `TokenField`, so it needs the size stated here to match the button below
+        it. */}
       {state === UpdatePasswordDialogState.Request ? (
-        <div className="align-stretch flex flex-col gap-4">
+        <div className="align-stretch flex flex-col gap-2">
           <RequestCodeButton
             action={async () => {
               await onRequest()
@@ -66,10 +74,12 @@ export function UpdatePasswordDialog({
             }}
             disabled={confirmPending}
             variant="default"
+            size="default"
             className="w-full"
           />
 
           <Button
+            variant="ghost"
             onClick={() => setState(UpdatePasswordDialogState.Confirm)}
             className="w-full"
           >

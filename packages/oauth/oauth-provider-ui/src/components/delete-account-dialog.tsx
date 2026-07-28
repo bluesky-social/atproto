@@ -180,25 +180,36 @@ export function DeleteAccountDialog({
       }
     >
       <div className="align-stretch flex flex-col gap-4">
-        <RequestCodeButton
-          action={async () => {
-            await onRequest()
-            setStep(Step.Confirm)
-          }}
-          disabled={confirmPending}
-          variant="default"
-          className="w-full"
-        >
-          <Trans>Send email</Trans>
-        </RequestCodeButton>
+        {/* @NOTE The two buttons are one action group, so they sit closer to
+          each other than to the Notice below. Cancel was rendering in the
+          primary fill, at the same weight as the action it backs out of;
+          `secondary` matches how `FormShell` treats cancel and back.
 
-        <Button
-          onClick={() => setOpen(false)}
-          disabled={requestPending}
-          className="w-full"
-        >
-          <Trans>Cancel</Trans>
-        </Button>
+          `RequestCodeButton` defaults to `size="sm"` for the inline resend in
+          `TokenField`, so it needs the size stated here to match Cancel. */}
+        <div className="flex flex-col gap-2">
+          <RequestCodeButton
+            action={async () => {
+              await onRequest()
+              setStep(Step.Confirm)
+            }}
+            disabled={confirmPending}
+            variant="default"
+            size="default"
+            className="w-full"
+          >
+            <Trans>Send email</Trans>
+          </RequestCodeButton>
+
+          <Button
+            variant="secondary"
+            onClick={() => setOpen(false)}
+            disabled={requestPending}
+            className="w-full"
+          >
+            <Trans>Cancel</Trans>
+          </Button>
+        </div>
 
         <Notice role="note" className="text-sm">
           <Trans>
