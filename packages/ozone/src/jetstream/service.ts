@@ -1,4 +1,4 @@
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import { websocket } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>
 type OnCreateCallback<T extends JetstreamRecord> = (
@@ -51,9 +51,14 @@ export interface CommitDeleteEvent extends EventBase {
   } & CommitBase
 }
 
+// The sentinel `close()` aborts with, so `start()` can tell its own
+// shutdown from a genuine failure: an aborted signal rejects the iterator
+// with whatever reason it was given.
+const STOPPED = Symbol('Jetstream stopped')
+
 export class Jetstream {
-  public ws?: WebSocketKeepAlive
   public url: URL
+  readonly #abort = new AbortController()
   /** The current cursor. */
   public cursor?: number
 
@@ -72,37 +77,39 @@ export class Jetstream {
     onCreate?: Record<string, OnCreateCallback<any>>
     onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
   }) {
-    this.ws = new WebSocketKeepAlive({
-      getUrl: async () => {
+    const ws = websocket(
+      () => {
         if (this.cursor)
           this.url.searchParams.set('cursor', this.cursor.toString())
         return this.url.toString()
       },
-    })
+      { dataMode: 'text', signal: this.#abort.signal },
+    )
 
-    for await (const message of this.ws) {
-      const parsedMessage = JSON.parse(message.toString())
-      if (parsedMessage.kind === 'commit') {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
-        const { collection, operation, record } = parsedMessage.commit || {}
+    try {
+      for await (const message of ws) {
+        const parsedMessage = JSON.parse(message)
+        if (parsedMessage.kind === 'commit') {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
+          const { collection, operation, record } = parsedMessage.commit || {}
 
-        if (operation === 'create') {
-          options.onCreate?.[collection]?.(
-            parsedMessage as CommitCreateEvent<typeof record>,
-          )
-        } else if (operation === 'delete') {
-          options.onDelete?.[collection]?.(parsedMessage as CommitDeleteEvent)
+          if (operation === 'create') {
+            options.onCreate?.[collection]?.(
+              parsedMessage as CommitCreateEvent<typeof record>,
+            )
+          } else if (operation === 'delete') {
+            options.onDelete?.[collection]?.(parsedMessage as CommitDeleteEvent)
+          }
         }
       }
+    } catch (err) {
+      // Our own close() is not a failure; anything else is.
+      if (err !== STOPPED) throw err
     }
   }
 
-  /**
-   * Closes the WebSocket connection.
-   */
+  /** Ends the stream and closes the connection. */
   async close() {
-    // @TODO This should return a promise that fulfills when the connection is
-    // fully closed.
-    this.ws?.ws?.close()
+    this.#abort.abort(STOPPED)
   }
 }

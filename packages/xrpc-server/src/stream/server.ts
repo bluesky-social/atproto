@@ -1,8 +1,23 @@
 import type { IncomingMessage } from 'node:http'
 import { type ServerOptions, type WebSocket, WebSocketServer } from 'ws'
-import { CloseCode, DisconnectError } from '@atproto/ws-client'
+import { CloseCode } from '@atproto/ws-client'
 import { ErrorFrame, type Frame } from './frames.js'
 import { logger } from './logger.js'
+
+/**
+ * Thrown by a subscription handler to end the stream with a specific close
+ * code. A server-side concept — it describes how *this* server chooses to
+ * close a connection it is serving — so it lives here rather than in the
+ * client package, which previously owned it by accident.
+ */
+export class DisconnectError extends Error {
+  constructor(
+    public wsCode: CloseCode = CloseCode.Policy,
+    public xrpcCode?: string,
+  ) {
+    super()
+  }
+}
 
 export class XrpcStreamServer {
   wss: WebSocketServer
