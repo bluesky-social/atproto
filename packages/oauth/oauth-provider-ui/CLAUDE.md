@@ -83,10 +83,10 @@ return (
 ```
 
 **Use `schemaResolver` (`#/lib/form-resolver.ts`), never `zodResolver` directly.**
-Calling `zodResolver` at a call site makes the compiler instantiate its
-conditional types against that schema; a dozen forms doing so crossed tsgo's
-instantiation limit and every `useForm` failed with `TS2589`. It crossed only on
-the linux-x64 binary, so CI caught what a local `tsgo --build` could not.
+Calling `zodResolver` at a call site made every `useForm` fail with `TS2589` and
+the resolver degenerate to `never`. It reproduces only on the linux-x64 tsgo
+binary, so CI caught what a local `tsgo --build --force` could not — when a type
+error appears only in CI, suspect the platform binary before the code.
 
 **Never set `mode: 'onBlur'`.** It validates on first blur, which renders error
 messages under empty required fields and shifts the layout between mousedown and
