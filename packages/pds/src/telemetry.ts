@@ -44,13 +44,26 @@ const ATTR_XRPC_METHOD = 'xrpc.method'
 // in. OTEL_SDK_DISABLED=true still acts as a kill switch, per the OpenTelemetry
 // spec.
 const otelDisabled = getBooleanFromEnv('OTEL_SDK_DISABLED')
-const otelConfigured =
-  isSignalConfigured('TRACES') ||
-  isSignalConfigured('METRICS') ||
-  isSignalConfigured('LOGS')
+const tracesConfigured = isSignalConfigured('TRACES')
+const metricsConfigured = isSignalConfigured('METRICS')
+const logsConfigured = isSignalConfigured('LOGS')
+const otelConfigured = tracesConfigured || metricsConfigured || logsConfigured
 const otelEnabled = !otelDisabled && otelConfigured
 
 if (otelEnabled) {
+  // @NOTE The gate above enables the SDK as a whole as soon as *any* signal is
+  // configured, but NodeSDK then auto-configures every signal it wasn't
+  // explicitly told about, defaulting each unspecified OTEL_{SIGNAL}_EXPORTER
+  // to "otlp" (targeting the default http://localhost:4318 endpoint). That
+  // would ship signals the operator never opted into — e.g. configuring only a
+  // traces endpoint would still start the metrics and logs (see ./events.ts)
+  // pipelines. Explicitly disable the signals that weren't opted in so that
+  // "setting an exporter endpoint is what opts you in" actually holds. This
+  // must run before `new NodeSDK()` reads these variables.
+  if (!tracesConfigured) process.env.OTEL_TRACES_EXPORTER = 'none'
+  if (!metricsConfigured) process.env.OTEL_METRICS_EXPORTER = 'none'
+  if (!logsConfigured) process.env.OTEL_LOGS_EXPORTER = 'none'
+
   register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
   const { shutdown } = startNodeSDKClass({
