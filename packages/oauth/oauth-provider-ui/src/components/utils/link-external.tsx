@@ -41,11 +41,7 @@ export function LinkExternal({
       target={target}
       rel={rel}
       role={role}
-      className={clsx(
-        'after:text-[1em] after:content-[" ↗"]',
-        !href && 'cursor-not-allowed opacity-50',
-        className,
-      )}
+      className={clsx(!href && 'cursor-not-allowed opacity-50', className)}
       aria-disabled={ariaDisabled}
       {...props}
     >

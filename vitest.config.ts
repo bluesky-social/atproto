@@ -13,8 +13,9 @@ export default defineConfig({
     },
     projects: [
       'packages/aws',
+      'packages/internal/*',
       'packages/lex/*',
-      'packages/oauth/oauth-client',
+      'packages/oauth/*',
       'packages/syntax',
       'packages/tap',
 

@@ -68,6 +68,7 @@ export interface ServerConfigValues {
   suggestionsApiKey?: string
   topicsUrl?: string
   topicsApiKey?: string
+  irisUrl?: string
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -171,6 +172,7 @@ export class ServerConfig {
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
+    const irisUrl = process.env.BSKY_IRIS_URL || undefined
     const dataplaneUrls =
       overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
     const dataplaneUrlsEtcdKeyPrefix =
@@ -363,6 +365,7 @@ export class ServerConfig {
       suggestionsApiKey,
       topicsUrl,
       topicsApiKey,
+      irisUrl,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -547,6 +550,10 @@ export class ServerConfig {
 
   get topicsApiKey() {
     return this.cfg.topicsApiKey
+  }
+
+  get irisUrl() {
+    return this.cfg.irisUrl
   }
 
   get cdnUrl() {

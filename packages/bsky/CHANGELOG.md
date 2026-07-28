@@ -1,5 +1,121 @@
 # @atproto/bsky
 
+## 0.0.267
+
+### Patch Changes
+
+- [#5263](https://github.com/bluesky-social/atproto/pull/5263) [`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate starter pack details on follow notifications created via a starter pack
+
+- [#5264](https://github.com/bluesky-social/atproto/pull/5264) [`5c5df26`](https://github.com/bluesky-social/atproto/commit/5c5df26bdeed22a06aa08e0463b76ad19be59ed8) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add a test
+
+- Updated dependencies [[`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7)]:
+  - @atproto/api@0.20.34
+
+## 0.0.266
+
+### Patch Changes
+
+- [#5261](https://github.com/bluesky-social/atproto/pull/5261) [`5d6dae2`](https://github.com/bluesky-social/atproto/commit/5d6dae261032033eb4c818944208b9342c1d49d4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support platform-specific Age Assurance config
+
+- Updated dependencies [[`5d6dae2`](https://github.com/bluesky-social/atproto/commit/5d6dae261032033eb4c818944208b9342c1d49d4)]:
+  - @atproto/api@0.20.33
+
+## 0.0.265
+
+### Patch Changes
+
+- [#5257](https://github.com/bluesky-social/atproto/pull/5257) [`e133a65`](https://github.com/bluesky-social/atproto/commit/e133a65cba992e6429d4526dc3e7cfe8bf87426f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add sort parameter to getFollows and getFollowers
+
+- Updated dependencies [[`e133a65`](https://github.com/bluesky-social/atproto/commit/e133a65cba992e6429d4526dc3e7cfe8bf87426f)]:
+  - @atproto/api@0.20.32
+
+## 0.0.264
+
+### Patch Changes
+
+- [#5254](https://github.com/bluesky-social/atproto/pull/5254) [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add description to trending topics
+
+- Updated dependencies [[`3358df6`](https://github.com/bluesky-social/atproto/commit/3358df61caab20c4258ea7673121a03236993d7b), [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa)]:
+  - @atproto/xrpc-server@0.11.11
+  - @atproto/api@0.20.31
+  - @atproto-labs/xrpc-utils@0.1.10
+  - @atproto/sync@0.3.13
+
+## 0.0.263
+
+### Patch Changes
+
+- [#5251](https://github.com/bluesky-social/atproto/pull/5251) [`ac691c7`](https://github.com/bluesky-social/atproto/commit/ac691c7df9555df939076ed7b506329129ce2841) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Return 0 for hitsTotal when there are no results
+
+- [#5250](https://github.com/bluesky-social/atproto/pull/5250) [`5baa874`](https://github.com/bluesky-social/atproto/commit/5baa87496f4d68cba980c2e1011c67ec19c94190) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add recIdStr field to getTrends endpoint
+
+## 0.0.262
+
+### Patch Changes
+
+- [#5244](https://github.com/bluesky-social/atproto/pull/5244) [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new searchStarterPacksV2 endpoint
+
+- Updated dependencies [[`f8267c3`](https://github.com/bluesky-social/atproto/commit/f8267c3ada1645a2472c81c1ba95157466108b6e), [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f)]:
+  - @atproto/lex@0.3.0
+  - @atproto/api@0.20.30
+  - @atproto/xrpc-server@0.11.10
+  - @atproto/sync@0.3.12
+  - @atproto-labs/xrpc-utils@0.1.9
+
+## 0.0.261
+
+### Patch Changes
+
+- Updated dependencies [[`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f)]:
+  - @atproto/api@0.20.29
+
+## 0.0.260
+
+### Patch Changes
+
+- [#5234](https://github.com/bluesky-social/atproto/pull/5234) [`29adc81`](https://github.com/bluesky-social/atproto/commit/29adc81fc7925dbb0ce68c638e8092e9c4601a99) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add includeTakedowns param to internal.bsky.actor.getProfiles
+
+- [#5219](https://github.com/bluesky-social/atproto/pull/5219) [`cdc0faa`](https://github.com/bluesky-social/atproto/commit/cdc0faa5b57fe965b8ebb73a92462a01b464e7ef) Thanks [@cuducos](https://github.com/cuducos)! - Gate the new trending topics experiment
+
+- Updated dependencies []:
+  - @atproto/lex@0.2.3
+  - @atproto/sync@0.3.11
+
+## 0.0.259
+
+### Patch Changes
+
+- [#5218](https://github.com/bluesky-social/atproto/pull/5218) [`7505dd4`](https://github.com/bluesky-social/atproto/commit/7505dd4acb0d3940620025a0b75a69221e62e6fe) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Enable age assurance in Texas
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/api@0.20.28
+  - @atproto/repo@0.10.6
+  - @atproto/sync@0.3.10
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto-labs/xrpc-utils@0.1.8
+
+## 0.0.258
+
+### Patch Changes
+
+- [#5213](https://github.com/bluesky-social/atproto/pull/5213) [`bd2b7b6`](https://github.com/bluesky-social/atproto/commit/bd2b7b6b5b56585b763a8dc505ba6d27369454c3) Thanks [@treethought](https://github.com/treethought)! - return 400 for dataplane InvalidArgument in search
+
+## 0.0.257
+
+### Patch Changes
+
+- [#5211](https://github.com/bluesky-social/atproto/pull/5211) [`68ed54d`](https://github.com/bluesky-social/atproto/commit/68ed54d875e10d0f1db52b8a4e5b191a5650d25b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Sanitize cursors in v1 searchPosts, throwing more specific error for downstream consumers
+
+## 0.0.256
+
+### Patch Changes
+
+- [#5208](https://github.com/bluesky-social/atproto/pull/5208) [`af43bdb`](https://github.com/bluesky-social/atproto/commit/af43bdb6f13e8191bd1f4b47957c023851aa2415) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Lift auth requirement for searchPostsV2, maintain v1-v2 parity for results and auth handling.
+
 ## 0.0.255
 
 ### Patch Changes

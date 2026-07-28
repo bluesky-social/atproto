@@ -49,6 +49,9 @@ describe('get profiles through ozone', () => {
       subject: repoSubject(sc.dids.bob),
     })
 
+    // ensure the takedown has been pushed out to the appview
+    await network.processAll()
+
     const profilesAfterFromOzone = await getProfiles([
       sc.dids.bob,
       sc.dids.carol,

@@ -17,7 +17,7 @@ import * as util from './util.js'
  * The key insight of an MST is that each key is hashed and starting 0s are counted
  * to determine which layer it falls on (5 zeros for ~32 fanout).
  * This is a merkle tree, so each subtree is referred to by it's hash (Cid).
- * When a leaf is changed, ever tree on the path to that leaf is changed as well,
+ * When a leaf is changed, every tree on the path to that leaf is changed as well,
  * thereby updating the root hash.
  *
  * For atproto, we use SHA-256 as the key hashing algorithm, and ~4 fanout

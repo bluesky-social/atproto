@@ -1,6 +1,5 @@
 import assert from 'node:assert'
-import { EventEmitter, once } from 'node:events'
-import type Mail from 'nodemailer/lib/mailer'
+import { jest } from '@jest/globals'
 import { type AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
@@ -8,7 +7,6 @@ import type { IdResolver } from '@atproto/identity'
 import { isDidString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
-import type { ServerMailer } from '../src/mailer/index.js'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -20,10 +18,7 @@ describe('account', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
-  let mailer: ServerMailer
   let idResolver: IdResolver
-  const mailCatcher = new EventEmitter()
-  let _origSendMail
 
   const tryHandle = async (handle: string) => {
     await agent.api.com.atproto.server.createAccount({
@@ -32,6 +27,10 @@ describe('account', () => {
       password: 'test123',
     })
   }
+
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -42,22 +41,21 @@ describe('account', () => {
         privacyPolicyUrl: 'https://example.com/privacy-policy',
       },
     })
-    mailer = network.pds.ctx.mailer
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getAgent()
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts)
-      mailCatcher.emit('mail', opts)
-      return result
-    }
+    sendMailMock = jest
+      .spyOn(ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(async () => {
+    // Catch-all: never actually send, but keep recording calls for assertions.
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
-    mailer.transporter.sendMail = _origSendMail
     await network?.close()
   })
 
@@ -409,31 +407,27 @@ describe('account', () => {
     expect(res.data.email).toBe(email)
   })
 
-  const getMailFrom = async (promise): Promise<Mail.Options> => {
-    const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    return result[0][0]
-  }
-
-  const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
-
   it('can reset account password', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
-    )
+    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
+    await agent.api.com.atproto.server.requestPasswordReset({ email })
 
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+    expect(sendMailMock).toHaveBeenCalledTimes(1)
+
+    const [params] = sendResetPasswordMock.mock.lastCall!
+    expect(params).toEqual({
+      handle: 'alice.test',
+      token: expect.any(String),
+    })
+
+    const [mail] = sendMailMock.mock.lastCall!
     expect(mail.to).toEqual(email)
+    expect(mail.subject).toBe('Password Reset Requested')
     expect(mail.html).toContain('Reset password')
     expect(mail.html).toContain('alice.test')
 
-    const token = getTokenFromMail(mail)
-
-    if (token === undefined) {
-      return expect(token).toBeDefined()
-    }
-
     await agent.api.com.atproto.server.resetPassword({
-      token,
+      token: params.token,
       password: passwordAlt,
     })
 
@@ -454,22 +448,25 @@ describe('account', () => {
   })
 
   it('allows only single-use of password reset token', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
-    )
+    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
 
-    const token = getTokenFromMail(mail)
-
-    if (token === undefined) {
-      return expect(token).toBeDefined()
-    }
+    await agent.api.com.atproto.server.requestPasswordReset({ email })
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+    const [params] = sendResetPasswordMock.mock.lastCall!
+    expect(params.token).toBeDefined()
 
     // Reset back from passwordAlt to password
-    await agent.api.com.atproto.server.resetPassword({ token, password })
+    await agent.api.com.atproto.server.resetPassword({
+      token: params.token,
+      password,
+    })
 
     // Reuse of token fails
     await expect(
-      agent.api.com.atproto.server.resetPassword({ token, password }),
+      agent.api.com.atproto.server.resetPassword({
+        token: params.token,
+        password,
+      }),
     ).rejects.toThrow(ComAtprotoServerResetPassword.InvalidTokenError)
 
     // Logs in with new password and not previous password
@@ -489,19 +486,13 @@ describe('account', () => {
   })
 
   it('changing password invalidates past refresh tokens', async () => {
-    const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
-    )
+    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
 
-    expect(mail.to).toEqual(email)
-    expect(mail.html).toContain('Reset password')
-    expect(mail.html).toContain('alice.test')
+    await agent.api.com.atproto.server.requestPasswordReset({ email })
 
-    const token = getTokenFromMail(mail)
-
-    if (token === undefined) {
-      return expect(token).toBeDefined()
-    }
+    expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
+    const [params] = sendResetPasswordMock.mock.lastCall!
+    expect(params.token).toBeDefined()
 
     const session = await agent.api.com.atproto.server.createSession({
       identifier: handle,
@@ -509,7 +500,7 @@ describe('account', () => {
     })
 
     await agent.api.com.atproto.server.resetPassword({
-      token: token.toLowerCase(), // Reset should work case-insensitively
+      token: params.token.toLowerCase(), // Reset should work case-insensitively
       password,
     })
 

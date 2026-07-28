@@ -1,5 +1,29 @@
 # @atproto/tap
 
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies [[`f8267c3`](https://github.com/bluesky-social/atproto/commit/f8267c3ada1645a2472c81c1ba95157466108b6e)]:
+  - @atproto/lex@0.3.0
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.2.3
+
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/lex@0.2.2
+  - @atproto/common@0.7.2
+  - @atproto/ws-client@0.1.7
+
 ## 0.3.7
 
 ### Patch Changes

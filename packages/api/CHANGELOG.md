@@ -1,5 +1,51 @@
 # @atproto/api
 
+## 0.20.34
+
+### Patch Changes
+
+- [#5263](https://github.com/bluesky-social/atproto/pull/5263) [`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Hydrate starter pack details on follow notifications created via a starter pack
+
+## 0.20.33
+
+### Patch Changes
+
+- [#5261](https://github.com/bluesky-social/atproto/pull/5261) [`5d6dae2`](https://github.com/bluesky-social/atproto/commit/5d6dae261032033eb4c818944208b9342c1d49d4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support platform-specific Age Assurance config
+
+## 0.20.32
+
+### Patch Changes
+
+- [#5257](https://github.com/bluesky-social/atproto/pull/5257) [`e133a65`](https://github.com/bluesky-social/atproto/commit/e133a65cba992e6429d4526dc3e7cfe8bf87426f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add sort parameter to getFollows and getFollowers
+
+## 0.20.31
+
+### Patch Changes
+
+- [#5254](https://github.com/bluesky-social/atproto/pull/5254) [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add description to trending topics
+
+## 0.20.30
+
+### Patch Changes
+
+- [#5244](https://github.com/bluesky-social/atproto/pull/5244) [`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new searchStarterPacksV2 endpoint
+
+## 0.20.29
+
+### Patch Changes
+
+- [#5239](https://github.com/bluesky-social/atproto/pull/5239) [`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f) Thanks [@gcwill70](https://github.com/gcwill70)! - Update `tools.ozone.report` to include `isAutomated` field. Update `tools.ozone.queue` to mark `subjectTypes` and `reportTypes` as optional.
+
+## 0.20.28
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/common-web@0.5.6
+  - @atproto/lexicon@0.7.7
+  - @atproto/xrpc@0.8.6
+
 ## 0.20.27
 
 ### Patch Changes

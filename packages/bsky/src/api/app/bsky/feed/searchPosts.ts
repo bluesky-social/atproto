@@ -1,10 +1,13 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import type { AtUriString, Client } from '@atproto/lex'
-import type { Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
-import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
 import {
   type PostSearchQuery,
   parsePostSearchQuery,
@@ -121,31 +124,36 @@ const skeletonV2 = async (
   const parsedQuery = parsePostSearchQuery(params.q, {
     author: params.author,
   })
-  const res = await ctx.dataplane.searchPostsV2({
-    params: {
-      query: params.q,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      limit: params.limit,
-      cursor: params.cursor,
-    },
-    sort: postSortToV2(params.sort),
-    filters: {
-      authors: params.author ? [params.author] : [],
-      mentions: params.mentions ? [params.mentions] : [],
-      domains: params.domain ? [params.domain] : [],
-      urls: params.url ? [params.url] : [],
-      hashtags: params.tag ?? [],
-      languages: params.lang ? [params.lang] : [],
-    },
-    since: parseTimestamp(params.since),
-    until: parseTimestamp(params.until),
-  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchPostsV2({
+      allTime: true, // match v1 behavior, v2 defaults to false
+      params: {
+        query: params.q,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: sanitizeCursor(params.cursor),
+      },
+      sort: postSortToV2(params.sort),
+      filters: {
+        authors: params.author ? [params.author] : [],
+        mentions: params.mentions ? [params.mentions] : [],
+        domains: params.domain ? [params.domain] : [],
+        urls: params.url ? [params.url] : [],
+        hashtags: params.tag ?? [],
+        languages: params.lang ? [params.lang] : [],
+      },
+      since: parseTimestamp(params.since),
+      until: parseTimestamp(params.until),
+    })
+    .catch(asInvalidRequest())
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),
-    hitsTotal: res.pageInfo?.hitsTotal
-      ? Number(res.pageInfo.hitsTotal)
-      : undefined,
+    hitsTotal:
+      res.pageInfo?.hitsTotal != null
+        ? Number(res.pageInfo.hitsTotal)
+        : undefined,
     parsedQuery,
   }
 }
@@ -278,4 +286,18 @@ const parseTimestamp = (value: string | undefined): Timestamp | undefined => {
   const date = new Date(value)
   if (isNaN(date.getTime())) return undefined
   return Timestamp.fromDate(date)
+}
+
+const sanitizeCursor = (cursor: string | undefined): string | undefined => {
+  if (!cursor) return undefined
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf-8')
+    const parsed = JSON.parse(decoded)
+    if (typeof parsed === 'object' && parsed !== null) {
+      return cursor
+    }
+  } catch {
+    // fall through to throw below
+  }
+  throw new InvalidRequestError('Invalid cursor format')
 }

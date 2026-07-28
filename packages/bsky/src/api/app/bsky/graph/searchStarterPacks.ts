@@ -2,7 +2,10 @@ import { mapDefined } from '@atproto/common'
 import type { AtUriString, Client } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
-import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
 import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
@@ -99,14 +102,17 @@ const skeletonV2 = async (
   const { ctx, params } = inputs
   const { q } = params
 
-  const res = await ctx.dataplane.searchStarterPacksV2({
-    params: {
-      query: q,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      limit: params.limit,
-      cursor: params.cursor,
-    },
-  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchStarterPacksV2({
+      params: {
+        query: q,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: params.cursor,
+      },
+    })
+    .catch(asInvalidRequest())
   return {
     uris: res.starterPacks.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),

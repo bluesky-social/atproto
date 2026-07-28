@@ -1,5 +1,12 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.7.6
+
 ## 0.8.6
 
 ### Patch Changes

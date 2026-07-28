@@ -1,15 +1,13 @@
 import { type ReactNode, createContext, useContext, useMemo } from 'react'
 import { Client, type DidString } from '@atproto/lex'
-import { useOAuthSession } from './OAuthProvider.tsx'
+import { useAuthenticationContext } from './AuthenticationProvider.tsx'
 
-export type AuthenticatedClient = Client & { did: DidString }
-export type PdsClientContextType = AuthenticatedClient
-
-export const PdsClientContext = createContext<PdsClientContextType | null>(null)
+export type PdsClientType = Client & { did: DidString }
+export const PdsClientContext = createContext<PdsClientType | null>(null)
 PdsClientContext.displayName = 'PdsClientContext'
 
 export function PdsClientProvider({ children }: { children?: ReactNode }) {
-  const session = useOAuthSession(PdsClientProvider.name)
+  const { session } = useAuthenticationContext(PdsClientProvider.name)
 
   const client = useMemo(() => {
     const client: Client = new Client(session)
@@ -24,9 +22,7 @@ export function PdsClientProvider({ children }: { children?: ReactNode }) {
   )
 }
 
-export function usePdsClient(
-  hookName = usePdsClient.name,
-): AuthenticatedClient {
+export function usePdsClient(hookName = usePdsClient.name): PdsClientType {
   const client = useContext(PdsClientContext)
   if (client) return client
 

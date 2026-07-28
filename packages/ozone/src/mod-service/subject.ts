@@ -13,6 +13,12 @@ import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
+// Chat subjects are not records, but are addressed by synthetic at-uris so
+// they can round-trip through string-subject APIs (queryEvents, queryReports,
+// subject statuses). The rkey is the convoId / messageId respectively.
+export const CHAT_CONVO_COLLECTION = 'chat.bsky.convo'
+export const CHAT_MESSAGE_COLLECTION = 'chat.bsky.convo.message'
+
 type StrongRef = ComAtprotoRepoStrongRef.Main
 const isStrongRef = asPredicate(ComAtprotoRepoStrongRef.validateMain)
 

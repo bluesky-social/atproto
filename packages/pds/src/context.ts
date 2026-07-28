@@ -237,14 +237,16 @@ export class AppContext {
     const entrywayAdminClient =
       cfg.entryway && secrets.entrywayAdminToken
         ? new Client(
-            { service: cfg.entryway.url },
             {
+              service: cfg.entryway.url,
               headers: {
                 authorization: basicAuthHeader(
                   'admin',
                   secrets.entrywayAdminToken,
                 ),
               },
+            },
+            {
               // Trust internal services to send us well-formed responses
               strictResponseProcessing: false,
               validateResponse: cfg.service.devMode,

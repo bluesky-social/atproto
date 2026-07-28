@@ -2,6 +2,7 @@ import { mapDefined } from '@atproto/common'
 import type { AtUriString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
+import { asInvalidRequest } from '../../../../data-plane/index.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
@@ -47,20 +48,25 @@ export default function (server: Server, ctx: AppContext) {
       if (query) {
         const useV2 =
           features.checkGate(features.Gate.SearchV2Enable) || isV2Override
+        // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
         if (useV2) {
-          const res = await ctx.dataplane.searchFeedGeneratorsV2({
-            params: {
-              query,
-              viewer: viewer ?? undefined,
-              limit: params.limit,
-            },
-          })
+          const res = await ctx.dataplane
+            .searchFeedGeneratorsV2({
+              params: {
+                query,
+                viewer: viewer ?? undefined,
+                limit: params.limit,
+              },
+            })
+            .catch(asInvalidRequest())
           uris = res.feedGenerators.map(({ uri }) => uri) as AtUriString[]
         } else {
-          const res = await ctx.dataplane.searchFeedGenerators({
-            query,
-            limit: params.limit,
-          })
+          const res = await ctx.dataplane
+            .searchFeedGenerators({
+              query,
+              limit: params.limit,
+            })
+            .catch(asInvalidRequest())
           uris = res.uris as AtUriString[]
         }
       } else {

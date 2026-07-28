@@ -51,13 +51,13 @@ export const oauthClient = new BrowserOAuthClient({
   // Since the client is static, let's forward the hooks using a shared event
   // target (oauthEvents) so that they can be consumed by other parts of the
   // app.
-  onDelete: (sub, cause) => {
+  onSessionDeleted: (sub, cause) => {
     console.debug('OAuth session deleted:', sub, cause)
     oauthEvents.dispatchEvent(
       new CustomEvent('deleted', { detail: { sub, cause } }),
     )
   },
-  onUpdate: (sub, session) => {
+  onSessionUpdated: (sub, session) => {
     console.debug('OAuth session refreshed:', sub)
     oauthEvents.dispatchEvent(
       new CustomEvent('updated', { detail: { sub, session } }),

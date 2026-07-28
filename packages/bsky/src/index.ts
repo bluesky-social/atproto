@@ -145,6 +145,19 @@ export class BskyAppView {
         )
       : undefined
 
+    const irisClient = config.irisUrl
+      ? new Client(
+          {
+            service: config.irisUrl,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
+      : undefined
+
     const etcd = config.etcdHosts.length
       ? new Etcd3({ hosts: config.etcdHosts })
       : undefined
@@ -236,6 +249,7 @@ export class BskyAppView {
       searchClient,
       suggestionsClient,
       topicsClient,
+      irisClient,
       hydrator,
       views,
       signingKey,
