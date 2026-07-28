@@ -53,6 +53,12 @@ describe(isValidLanguage, () => {
     expect(isValidLanguage('x')).toEqual(false)
     expect(isValidLanguage('de-CH-')).toEqual(false)
     expect(isValidLanguage('i-bad-grandfathered')).toEqual(false)
+    // isValidLanguage checks well-formed syntax (§2.1) only and stays
+    // permissive of legacy forms — an uppercase primary subtag (`JA`) and a
+    // bare four-letter run (`jaja`) are still considered well-formed here.
+    // Strict rejection of these is done by parseLanguageString.
+    expect(isValidLanguage('JA')).toEqual(true)
+    expect(isValidLanguage('jaja')).toEqual(true)
   })
 })
 
@@ -131,6 +137,10 @@ describe(parseLanguageString, () => {
     expect(parseLanguageString('x')).toEqual(null)
     expect(parseLanguageString('de-CH-')).toEqual(null)
     expect(parseLanguageString('i-bad-grandfathered')).toEqual(null)
+    // the primary language subtag must be lowercase (RFC 5646 §2.1.1)
+    expect(parseLanguageString('JA')).toEqual(null)
+    // a bare 4-letter run is not a well-formed language tag
+    expect(parseLanguageString('jaja')).toEqual(null)
     // duplicate variant / extension singleton subtags (RFC 5646 §4.1)
     expect(parseLanguageString('de-DE-1901-1901')).toEqual(null)
     expect(parseLanguageString('en-rozaj-ROZAJ')).toEqual(null)

@@ -2,7 +2,10 @@ import { mapDefined } from '@atproto/common'
 import type { Client, DidString } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
-import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
 import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
@@ -94,13 +97,16 @@ const skeletonV2 = async (
   const { ctx, params } = inputs
   const term = params.q ?? params.term ?? ''
 
-  const res = await ctx.dataplane.searchActorsTypeahead({
-    params: {
-      query: term,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      limit: params.limit,
-    },
-  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchActorsTypeahead({
+      params: {
+        query: term,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+      },
+    })
+    .catch(asInvalidRequest())
   return {
     dids: res.actors.map(({ did }) => did as DidString),
   }

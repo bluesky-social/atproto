@@ -19,7 +19,7 @@ export default defineConfig({
     react({
       plugins: [['@lingui/swc-plugin', {}]],
     }),
-    lingui(),
+    lingui({ cwd: __dirname }),
     tailwindcss(),
   ],
   build: {

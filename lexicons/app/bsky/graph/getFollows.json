@@ -16,7 +16,11 @@
             "maximum": 100,
             "default": 50
           },
-          "cursor": { "type": "string" }
+          "cursor": { "type": "string" },
+          "sort": {
+            "type": "string",
+            "knownValues": ["latest", "top"]
+          }
         }
       },
       "output": {

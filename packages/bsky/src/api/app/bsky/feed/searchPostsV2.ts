@@ -1,9 +1,16 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
 import type { AtUriString } from '@atproto/lex'
-import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
-import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
 import {
   type PostSearchQuery,
   parsePostSearchQuery,
@@ -34,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.searchPostsV2, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
@@ -57,6 +64,15 @@ export default function (server: Server, ctx: AppContext) {
         ) || resolveSearchV2Override(req, ctx.cfg)
       if (!isV2Enabled) {
         throw new InvalidRequestError('Search v2 is not enabled')
+      }
+
+      /*
+       * Matches v1 handling: allow one page of results for unauthenticated
+       * users, but block further pages. This is a temporary measure until
+       * we finalize moderation rules for search v2.
+       */
+      if (!viewer && params.cursor) {
+        throw new ForbiddenError('Request forbidden by administrative rules.')
       }
 
       const results = await searchPostsV2(
@@ -88,50 +104,54 @@ const skeleton = async (
     author: params.authors?.[0],
   })
 
-  const res = await ctx.dataplane.searchPostsV2({
-    params: {
-      query,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      limit: params.limit,
-      cursor: params.cursor,
-    },
-    sort: postSortToV2(params.sort),
-    filters: {
-      authors: params.authors ?? [],
-      mentions: params.mentions ?? [],
-      domains: params.domains ?? [],
-      urls: params.urls ?? [],
-      embeddedAtUris: params.embeddedAtUris ?? [],
-      hashtags: params.hashtags ?? [],
-      languages: params.languages ?? [],
-    },
-    exclude: {
-      authors: params.excludeAuthors ?? [],
-      mentions: params.excludeMentions ?? [],
-      domains: params.excludeDomains ?? [],
-      urls: params.excludeUrls ?? [],
-      embeddedAtUris: params.excludeEmbeddedAtUris ?? [],
-      hashtags: params.excludeHashtags ?? [],
-      languages: params.excludeLanguages ?? [],
-    },
-    since: parseTimestamp(params.since),
-    until: parseTimestamp(params.until),
-    allTime: params.allTime,
-    hasMedia: params.hasMedia,
-    hasVideo: params.hasVideo,
-    replyParentUri: params.replyParentUri,
-    threadRootUri: params.threadRootUri,
-    excludeReplies: params.excludeReplies,
-    repliesOnly: params.repliesOnly,
-    following: params.following,
-    queryLanguage: queryLanguageToV2(params.queryLanguage),
-  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchPostsV2({
+      params: {
+        query,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: params.cursor,
+      },
+      sort: postSortToV2(params.sort),
+      filters: {
+        authors: params.authors ?? [],
+        mentions: params.mentions ?? [],
+        domains: params.domains ?? [],
+        urls: params.urls ?? [],
+        embeddedAtUris: params.embeddedAtUris ?? [],
+        hashtags: params.hashtags ?? [],
+        languages: params.languages ?? [],
+      },
+      exclude: {
+        authors: params.excludeAuthors ?? [],
+        mentions: params.excludeMentions ?? [],
+        domains: params.excludeDomains ?? [],
+        urls: params.excludeUrls ?? [],
+        embeddedAtUris: params.excludeEmbeddedAtUris ?? [],
+        hashtags: params.excludeHashtags ?? [],
+        languages: params.excludeLanguages ?? [],
+      },
+      since: parseTimestamp(params.since),
+      until: parseTimestamp(params.until),
+      allTime: params.allTime,
+      hasMedia: params.hasMedia,
+      hasVideo: params.hasVideo,
+      replyParentUri: params.replyParentUri,
+      threadRootUri: params.threadRootUri,
+      excludeReplies: params.excludeReplies,
+      repliesOnly: params.repliesOnly,
+      following: params.following,
+      queryLanguage: queryLanguageToV2(params.queryLanguage),
+    })
+    .catch(asInvalidRequest())
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),
-    hitsTotal: res.pageInfo?.hitsTotal
-      ? Number(res.pageInfo.hitsTotal)
-      : undefined,
+    hitsTotal:
+      res.pageInfo?.hitsTotal != null
+        ? Number(res.pageInfo.hitsTotal)
+        : undefined,
     detectedQueryLanguages: res.detectedQueryLanguages,
     parsedQuery,
   }

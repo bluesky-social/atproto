@@ -1,4 +1,5 @@
 import type { DidString } from '@atproto/lex-schema'
+import { mergeHeaders } from './util.js'
 
 /**
  * A function that performs HTTP requests towards a service endpoint.
@@ -94,6 +95,11 @@ export type AgentConfig = {
    * function.
    */
   fetch?: typeof globalThis.fetch
+
+  // Because this type get unioned with `Agent`, we need to prevent TypeScript
+  // from accepting `headers` when `fetchHandler` is provided, since `headers`
+  // would not be used (while the user might expect it to be).
+  fetchHandler?: never
 }
 
 /**
@@ -127,21 +133,51 @@ export type AgentOptions = AgentConfig | FetchHandler | string | URL
  *   headers: { 'Authorization': 'Bearer ...' }
  * })
  * ```
+ *
+ * @example // From existing Agent
+ * ```typescript
+ * const existingAgent: Agent = { ... }
+ * const agent = buildAgent(existingAgent)
+ * ```
+ *
+ * @example // From agent like object with fetchHandler
+ * ```typescript
+ * const agent = buildAgent({
+ *   did: 'did:plc:example',
+ *   fetchHandler: async (path, init) => { ... }
+ *   // @NOTE "headers" and "service" are not allowed when providing a fetchHandler, because the input will returned "as is" if it matched the "Agent" interface.
+ * })
+ * ```
  */
 export function buildAgent<O extends Agent | AgentOptions>(
   options: O,
 ): O extends Agent ? O : Agent
 export function buildAgent(options: Agent | AgentOptions): Agent {
+  if (typeof options === 'function') {
+    return { did: undefined, fetchHandler: options }
+  }
+
   const config: Agent | AgentConfig =
-    typeof options === 'function'
-      ? { did: undefined, fetchHandler: options }
-      : typeof options === 'string' || options instanceof URL
-        ? { did: undefined, service: options }
-        : options
+    typeof options === 'string' || options instanceof URL
+      ? { did: undefined, service: options }
+      : options
 
-  if (isAgent(config)) return config
+  // Prevent mismatch between `fetchHandler` and `headers` in the config, since
+  // `headers` would be ignored if `fetchHandler` is provided.
+  if ('fetchHandler' in config) {
+    if (isAgent(config)) return config
 
-  const { service, fetch = globalThis.fetch } = config
+    throw new TypeError(
+      'fetchHandler must not be provided when using AgentConfig',
+    )
+  }
+
+  const {
+    did,
+    service,
+    fetch = globalThis.fetch,
+    headers: defaultHeaders,
+  } = config
 
   if (typeof fetch !== 'function') {
     throw new TypeError('fetch() is not available in this environment')
@@ -149,14 +185,14 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
 
   return {
     get did() {
-      return config.did
+      return did
     },
 
     async fetchHandler(path, init) {
       const headers =
-        config.headers != null && init.headers != null
-          ? mergeHeaders(config.headers, init.headers)
-          : config.headers || init.headers
+        defaultHeaders != null && init.headers != null
+          ? mergeHeaders(defaultHeaders, init.headers)
+          : defaultHeaders || init.headers
 
       return fetch(
         new URL(path, service),
@@ -164,23 +200,4 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
       )
     },
   }
-}
-
-function mergeHeaders(
-  defaultHeaders: HeadersInit,
-  requestHeaders: HeadersInit,
-): Headers {
-  // We don't want to alter the original Headers objects, so we create a new one
-  const result = new Headers(defaultHeaders)
-
-  const overrides =
-    requestHeaders instanceof Headers
-      ? requestHeaders
-      : new Headers(requestHeaders)
-
-  for (const [key, value] of overrides.entries()) {
-    result.set(key, value)
-  }
-
-  return result
 }

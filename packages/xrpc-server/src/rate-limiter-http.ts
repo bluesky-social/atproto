@@ -50,6 +50,7 @@ export class HttpRateLimiter<
           'Retry-After',
           Math.ceil(err.status.msBeforeNext / 1e3),
         )
+        ctx.res?.appendHeader('Access-Control-Expose-Headers', 'Retry-After')
       }
 
       throw err
@@ -84,4 +85,10 @@ function setStatusHeaders<
   ctx.res?.setHeader('RateLimit-Reset', resetAt)
   ctx.res?.setHeader('RateLimit-Remaining', status.remainingPoints)
   ctx.res?.setHeader('RateLimit-Policy', `${status.limit};w=${status.duration}`)
+
+  // Expose the rate limit headers to browser clients (CORS)
+  ctx.res?.appendHeader(
+    'Access-Control-Expose-Headers',
+    'RateLimit-Limit, RateLimit-Reset, RateLimit-Remaining, RateLimit-Policy',
+  )
 }

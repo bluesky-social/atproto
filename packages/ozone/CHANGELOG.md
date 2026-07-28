@@ -1,5 +1,73 @@
 # @atproto/ozone
 
+## 0.2.21
+
+### Patch Changes
+
+- Updated dependencies [[`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7)]:
+  - @atproto/api@0.20.34
+
+## 0.2.20
+
+### Patch Changes
+
+- Updated dependencies [[`5d6dae2`](https://github.com/bluesky-social/atproto/commit/5d6dae261032033eb4c818944208b9342c1d49d4)]:
+  - @atproto/api@0.20.33
+
+## 0.2.19
+
+### Patch Changes
+
+- Updated dependencies [[`e133a65`](https://github.com/bluesky-social/atproto/commit/e133a65cba992e6429d4526dc3e7cfe8bf87426f)]:
+  - @atproto/api@0.20.32
+
+## 0.2.18
+
+### Patch Changes
+
+- Updated dependencies [[`3358df6`](https://github.com/bluesky-social/atproto/commit/3358df61caab20c4258ea7673121a03236993d7b), [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa)]:
+  - @atproto/xrpc-server@0.11.11
+  - @atproto/api@0.20.31
+
+## 0.2.17
+
+### Patch Changes
+
+- Updated dependencies [[`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f)]:
+  - @atproto/api@0.20.30
+  - @atproto/xrpc-server@0.11.10
+
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [[`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f)]:
+  - @atproto/api@0.20.29
+
+## 0.2.15
+
+### Patch Changes
+
+- [#5076](https://github.com/bluesky-social/atproto/pull/5076) [`652016a`](https://github.com/bluesky-social/atproto/commit/652016ad57dca26f43b7f79167ecbfcabd5cbd4d) Thanks [@gcwill70](https://github.com/gcwill70)! - Support routing conversation reports to queues: allow the 'conversation' subject type on queue create/list, fix conversation subject typing in report re-routing, and add 'message'/'conversation' subjectType filters to tools.ozone.report.queryReports
+
+- [#5083](https://github.com/bluesky-social/atproto/pull/5083) [`e408d11`](https://github.com/bluesky-social/atproto/commit/e408d11e723e3d232bcbfdb7247301273138cec6) Thanks [@gcwill70](https://github.com/gcwill70)! - add custom queues through moderation_event.modTool.meta.queueId
+
+- [#5237](https://github.com/bluesky-social/atproto/pull/5237) [`349693e`](https://github.com/bluesky-social/atproto/commit/349693e63865a5ba88e56a2b760d9e4ad39fe730) Thanks [@devinivy](https://github.com/devinivy)! - Apply subject status tags in deterministic tagger order
+
+## 0.2.14
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/api@0.20.28
+  - @atproto/lexicon@0.7.7
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto/xrpc@0.8.6
+  - @atproto/ws-client@0.1.7
+
 ## 0.2.13
 
 ### Patch Changes

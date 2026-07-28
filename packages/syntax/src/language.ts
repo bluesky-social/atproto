@@ -1,6 +1,23 @@
 const BCP47_REGEXP =
   /^((?<grandfathered>(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang))|((?<language>([A-Za-z]{2,3}(-(?<extlang>[A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4}|[A-Za-z]{5,8})(-(?<script>[A-Za-z]{4}))?(-(?<region>[A-Za-z]{2}|[0-9]{3}))?(-(?<variant>[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-(?<extension>[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(?<privateUseA>[xX](-[A-Za-z0-9]{1,8})+))?)|(?<privateUseB>[xX](-[A-Za-z0-9]{1,8})+))$/
 
+/**
+ * The primary language subtag must be a lowercase two- or three-letter code
+ * (RFC 5646 §2.1.1 recommends lowercase; the atproto interop suite treats
+ * uppercase primary subtags such as `JA`, and bare four-letter runs such as
+ * `jaja`, as invalid).
+ *
+ * This is enforced only in the strict {@link parseLanguageString} path.
+ * {@link isValidLanguage} intentionally stays permissive of these legacy forms
+ * so that existing records are not retroactively invalidated.
+ */
+function hasStrictPrimarySubtag(groups: { language?: string }): boolean {
+  const language = groups.language
+  if (!language) return true // grandfathered / private-use only: nothing to check
+  const primary = language.split('-')[0]
+  return /^[a-z]{2,3}$/.test(primary)
+}
+
 export type LanguageTag = {
   grandfathered?: string
   language?: string
@@ -89,6 +106,7 @@ export function parseLanguageString(input: string): LanguageTag | null {
   if (!parsed?.groups) return null
 
   const { groups } = parsed
+  if (!hasStrictPrimarySubtag(groups)) return null
   return {
     grandfathered: groups.grandfathered,
     language: groups.language,

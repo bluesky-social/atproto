@@ -33,6 +33,7 @@ export class AppContext {
       searchClient: Client | undefined
       suggestionsClient: Client | undefined
       topicsClient: Client | undefined
+      irisClient: Client | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -74,6 +75,10 @@ export class AppContext {
 
   get topicsClient(): Client | undefined {
     return this.opts.topicsClient
+  }
+
+  get irisClient(): Client | undefined {
+    return this.opts.irisClient
   }
 
   get hydrator(): Hydrator {

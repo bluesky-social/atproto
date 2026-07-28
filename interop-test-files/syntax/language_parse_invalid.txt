@@ -12,3 +12,9 @@ en-a-foo-a-bar
 
 # duplicate extension singleton subtag, case-insensitive match
 en-u-co-phonebk-U-ca-buddhist
+
+# well-formed, but the primary language subtag must be a lowercase 2-3 letter
+# code (RFC 5646 §2.1.1) — an uppercase primary subtag or a bare 4-letter run
+# is rejected by strict parsing while staying well-formed for isValidLanguage
+JA
+jaja

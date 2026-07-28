@@ -347,6 +347,11 @@
         "isMuted": {
           "type": "boolean",
           "description": "Whether this report is muted. A report is muted if the reporter was muted or the subject was muted at the time the report was created."
+        },
+        "isAutomated": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this report was emitted by automated tooling."
         }
       }
     },

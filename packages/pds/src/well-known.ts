@@ -7,9 +7,11 @@ export const createRouter = (ctx: AppContext): Router => {
 
   router.get('/.well-known/atproto-did', async function (req, res) {
     const handle = req.hostname as HandleString
-    const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
-      (host) => handle.endsWith(host) || handle === host.slice(1),
-    )
+    const supportedHandle =
+      !ctx.cfg.entryway &&
+      ctx.cfg.identity.serviceHandleDomains.some(
+        (host) => handle.endsWith(host) || handle === host.slice(1),
+      )
     if (!supportedHandle) {
       return res.status(404).send('User not found')
     }
