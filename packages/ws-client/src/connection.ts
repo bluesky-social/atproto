@@ -48,7 +48,12 @@ export interface WebSocketConnectionOptions<M extends DataMode = 'auto'> {
   onOpen?: () => void
   /** Called once when the connection ends with an error, before onClose. */
   onError?: (error: unknown) => void
-  /** Called once when the connection ends, whichever way. */
+  /**
+   * Called once when the connection ends, whichever way. Reports the
+   * socket-level close: on a *server*-initiated clean close with undrained
+   * buffered messages, the iterator still yields those after this fires (a
+   * user close() or an error close discards them).
+   */
   onClose?: (detail: CloseEventDetail) => void
   /**
    * Node.js only. Applied to the underlying `ws` upgrade request. Accepts any
@@ -185,7 +190,9 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
         this.#onOpen()
       },
       onMessage: (data) => {
-        if (this.#terminal) return // post-failure discard
+        // Discard after a terminal, and while closing: once the user asked to
+        // close, the stream has ended — drop rather than deliver.
+        if (this.#terminal || this.#state === 'closing') return
         this.#recordLiveness()
         this.#onMessage(data)
       },
@@ -384,6 +391,12 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     return this.#transport.send(data)
   }
 
+  /**
+   * Closes the connection with a close handshake; resolves when the close
+   * completes. Ends the stream immediately: buffered, undelivered messages
+   * are dropped — let the *server* close cleanly instead if the full stream
+   * matters.
+   */
   close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
     if (this.#state === 'initialized') {
       // Never opened: clean no-op teardown, no events, resolve immediately.
@@ -399,6 +412,12 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
     const done = this.#closed.then(() => undefined)
     if (this.#state === 'connecting' || this.#state === 'open') {
       this.#state = 'closing'
+      // Drop-on-close: a user close() ends the stream now — discard buffered,
+      // undelivered messages (and the onMessage handler drops any that arrive
+      // during the handshake). The clean-close drain in #next() is only for a
+      // *server*-initiated close.
+      this.#buffer.length = 0
+      this.#bufferedBytes = 0
       this.#transport.close(code, reason)
     }
     return done
@@ -471,7 +490,9 @@ export class WebSocketConnectionEngine<M extends DataMode = 'auto'>
 
   #next(): Promise<IteratorResult<MessageOf<M>>> {
     this.#triggerOpen()
-    // 1. Drain buffered messages first (even after a clean-close terminal).
+    // 1. Drain buffered messages first (even after a clean-close terminal —
+    //    a server-initiated clean close never drops received data; a user
+    //    close() empties the buffer before this can see it).
     const item = this.#buffer.shift()
     if (item) {
       this.#bufferedBytes -= item.bytes

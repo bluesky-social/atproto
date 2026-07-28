@@ -80,6 +80,10 @@ export interface WebSocketClientOptions<M extends DataMode = 'auto'> {
    * clean close) or was stopped (close(), an aborted `signal`). `detail`
    * carries the real close code when a close frame provided one, or 1005
    * (no status) when none did (e.g. a stop mid-backoff).
+   *
+   * Fires only once the stream has fully ended — unlike `WebSocketConnection`'s
+   * onClose, which reports the socket-level close (a clean-close drain may
+   * still yield afterward).
    */
   onClose?: (detail: CloseEventDetail) => void
 }
@@ -91,10 +95,11 @@ export type BrowserWebSocketClientOptions<M extends DataMode = 'auto'> = Omit<
   'headers'
 >
 
-// Sentinel abort reason distinguishing a clean, user-intended close() from an
-// external signal abort on the shared stop signal: close() resolves the
-// iterator; an external abort rejects it with the signal's reason.
-const STOPPED_BY_CLOSE = Symbol('WebSocketClient stopped by close()')
+// Sentinel abort reason for a clean stop — close(), or the loop ending on a
+// non-reconnectable clean close: the iterator resolves. Any other reason (an
+// external signal abort, or a fatal error recorded by the loop) rejects the
+// iterator with that reason.
+const STOPPED_CLEANLY = Symbol('WebSocketClient stopped cleanly')
 
 export class WebSocketClientBase<M extends DataMode = 'auto'>
   implements AsyncIterable<MessageOf<M>>
@@ -102,19 +107,59 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
   #connection: WebSocketConnectionEngine<M> | null = null
   #state: ReadyState = 'initialized'
   #iterated = false
-  // The most recent child connection's close detail, and whether this
-  // client's own final onClose hook has fired. Together these let every
-  // started lifecycle end with exactly one onClose — carrying the real close
-  // code when a close frame provided one, or the WHATWG-conventional 1005
-  // (no status) when none did (e.g. a stop mid-backoff).
+  // The handed-out generator, kept so a stop can drive it to its terminal
+  // even when the consumer has abandoned it (parked at yield, no one
+  // pulling): iterator.return() resumes it with a return completion — the
+  // same mechanism a consumer break uses — running the terminal `finally`.
+  #iterator?: AsyncGenerator<MessageOf<M>, void, unknown>
+  // Whether the generator body actually ran (first next() called). This is
+  // the definition of a "started" lifecycle: the terminal `finally` is coming
+  // iff this is true. An iterator obtained but never pulled never starts —
+  // return() on it resolves without running the body.
+  #loopStarted = false
+  // The most recent child connection's close detail: the final onClose hook
+  // carries the real close code when a close frame provided one, or the
+  // WHATWG-conventional 1005 (no status) when none did (e.g. a stop
+  // mid-backoff).
   #lastCloseDetail?: CloseEventDetail
-  #closeDispatched = false
   // The single internal stop signal. Aborts exactly once, with the stop cause
-  // as its reason: STOPPED_BY_CLOSE for close() (a clean stop — the iterator
-  // resolves), or the external signal's abort reason (the iterator rejects
-  // with it). The external signal is bound into it at construction; a parked
-  // backoff `sleep` also wakes on it. First cause wins.
+  // as its reason: STOPPED_CLEANLY for close() and clean loop exits (the
+  // iterator resolves), the external signal's abort reason (the iterator
+  // rejects with it), or a fatal error recorded by the loop's terminal. The
+  // external signal is bound into it at construction; a parked backoff
+  // `sleep` also wakes on it. First cause wins.
+  //
+  // State ownership: `#state = 'closed'` has exactly two writers, split by
+  // whether the lifecycle (the generator body) started. Started: the loop's
+  // `finally` is the single terminal transition — it settles state and fires
+  // onClose. Never started: no `finally` is coming, so the stop cause itself
+  // settles state (#stop, mirroring the connection's initialized → closed
+  // edge) and no onClose fires. One deliberate exception: an external abort
+  // on a started client also settles state synchronously, mirroring
+  // WebSocketConnection#fail's settle-at-the-moment behavior; the loop's
+  // later idempotent write re-affirms it.
   readonly #stopController = new AbortController()
+
+  // Record a stop cause from outside the loop (close(), or signal abort).
+  #stop(reason: unknown): void {
+    this.#stopController.abort(reason)
+    if (!this.#loopStarted || reason !== STOPPED_CLEANLY) {
+      // Never-started (no terminal transition coming), or an abort on a
+      // started client (mirror #fail's synchronous settle). A started clean
+      // close instead shows 'closing' until the loop's terminal.
+      if (this.#state !== 'closing') this.#state = 'closed'
+    }
+    // Drive the generator to its terminal: return() lands a return completion
+    // at the suspended yield, running the terminal `finally`. This serves two
+    // purposes: an abandoned iterator (parked at yield, no consumer pulling)
+    // reaches its terminal at all, and an active consumer's stream ends
+    // promptly (at most one in-flight pull settles first) rather than
+    // draining — a stop is a loss of interest; drop, don't deliver. For a
+    // never-pulled iterator this resolves without running the body —
+    // correctly no terminal, there was no lifecycle. Fire-and-forget:
+    // completion is observed via #done, not this promise.
+    void this.#iterator?.return(undefined).catch(() => {})
+  }
 
   readonly #createConnection: ConnectionFactory
   readonly #url: string | URL | (() => Awaitable<string | URL>)
@@ -132,11 +177,10 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     // Constructing an already-stopped client is a programmer error: fail now
     // rather than produce an instance that can never connect.
     signal?.throwIfAborted()
-    signal?.addEventListener(
-      'abort',
-      () => this.#stopController.abort(signal.reason),
-      { once: true, signal: this.#stopController.signal },
-    )
+    signal?.addEventListener('abort', () => this.#stop(signal.reason), {
+      once: true,
+      signal: this.#stopController.signal,
+    })
   }
 
   get readyState(): ReadyState {
@@ -165,35 +209,78 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     return this.#connection.send(data)
   }
 
-  // Idempotent, matching WHATWG WebSocket and `ws` close() behavior.
-  async close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
-    this.#stopController.abort(STOPPED_BY_CLOSE)
+  #closing?: Promise<void>
+  // Resolves at the lifecycle's terminal transition (the loop's `finally`),
+  // after the final onClose hook has fired — what close() awaits on a
+  // started client.
+  #resolveDone!: () => void
+  readonly #done = new Promise<void>((resolve) => {
+    this.#resolveDone = resolve
+  })
+
+  /**
+   * Stops the client, terminally; resolves once the client has fully closed
+   * (after the final onClose hook, on a started client). Ends the stream
+   * immediately: buffered, undelivered messages are dropped. Idempotent,
+   * matching WHATWG WebSocket and `ws` close() behavior: repeat and
+   * concurrent calls share the first call's completion (later `code`/`reason`
+   * args are ignored), and a close() after the client already stopped (a
+   * signal abort, or a terminal failure) is an inert no-op.
+   */
+  close(code: number = CloseCode.Normal, reason?: string): Promise<void> {
+    // Already stopped: state settled at the stop cause (and the loop, if
+    // started, fires onClose) — nothing to close.
+    return (this.#closing ??= this.#stopController.signal.aborted
+      ? Promise.resolve()
+      : this.#close(code, reason))
+  }
+
+  // Runs at most once, as the first stop cause — close() memoizes and routes
+  // an already-stopped client away from here. NB: on a started client this
+  // method does NOT settle state or fire onClose itself: it causes the stop
+  // and awaits the loop's terminal transition (see #iterate's finally), which
+  // owns both. A never-started client has no loop, so #stop settles state
+  // directly and no onClose fires ("exactly once per *started* client").
+  async #close(code: number, reason?: string): Promise<void> {
+    // Assert the at-most-once invariant rather than tolerate a violation.
+    this.#stopController.signal.throwIfAborted()
+    if (!this.#loopStarted) {
+      // Never started (never pulled): straight to 'closed' (via #stop) with
+      // no 'closing' — mirroring the connection's initialized → closed edge.
+      this.#stop(STOPPED_CLEANLY)
+      return
+    }
+    // Started: signal shutdown-in-progress, then stop (#stop also nudges an
+    // abandoned iterator to its terminal). With a live connection run the
+    // close handshake (its onClose hook supplies the real close detail);
+    // without one (mid-backoff, or parked in resolveUrl) there is no
+    // handshake and the terminal synthesizes 1005 (no status).
     this.#state = 'closing'
+    this.#stop(STOPPED_CLEANLY)
     if (this.#connection && this.#connection.readyState !== 'closed') {
-      // A live connection: run the close handshake. Its onClose hook supplies
-      // the real close detail for this client's own final onClose hook.
       // close() signals user-intended shutdown and must resolve cleanly even
       // if the connection fails mid-handshake.
       await this.#connection.close(code, reason).catch(() => {})
     } else {
-      // No live connection to hand-shake with (never opened, or stopped
-      // mid-backoff after a failure): no status code from the server applies
-      // to this stop, so drop any stale detail — the final onClose hook
-      // synthesizes 1005 (no status) per the WHATWG convention.
+      // No status code from a server applies to this stop: drop any stale
+      // detail (e.g. the failed connection's 1006 that preceded the backoff)
+      // so the terminal synthesizes 1005.
       this.#lastCloseDetail = undefined
     }
-    this.#state = 'closed'
+    // Resolve at the true terminal: after the loop's finally has settled
+    // state and fired the final onClose. The loop always gets there — active
+    // consumers drive it, abandoned iterators are driven by #stop, and
+    // internal parks are stop-aware. The one exception: a user-supplied url
+    // function that never resolves parks the loop (and this close()) with it.
+    await this.#done
   }
 
-  // Fire this client's single, final onClose hook. Guarded so every started
-  // lifecycle ends with exactly one onClose no matter which terminal path
-  // fires it (fatal error, clean stop, user close(), or abort). Uses the
-  // child connection's real close detail when a close frame provided one;
-  // otherwise synthesizes 1005 (no status received), matching the WHATWG
-  // convention for an end with no status code from the server.
+  // Fire this client's single, final onClose hook — called exactly once, from
+  // the loop's terminal transition. Uses the child connection's real close
+  // detail when a close frame provided one; otherwise synthesizes 1005 (no
+  // status received), matching the WHATWG convention for an end with no
+  // status code from the server.
   #dispatchClose(): void {
-    if (this.#closeDispatched) return
-    this.#closeDispatched = true
     invokeHook(
       this.#options.onClose,
       this.#lastCloseDetail ?? {
@@ -229,16 +316,38 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     // generator's body doesn't run until the first `.next()` call — a bare
     // `async *` method wouldn't throw synchronously on a second call to
     // `[Symbol.asyncIterator]()` itself, only once consumption starts.
+    //
+    // Starting iteration on a client that has already stopped (close(),
+    // abort, or a terminal failure) is a programmer error — surface it rather
+    // than yield an empty stream, mirroring WebSocketConnection's terminal
+    // iteration guard. An abort or failure rethrows its cause (the more
+    // useful diagnosis); a clean stop throws a descriptive error. Checked
+    // before the already-iterated guard for the same reason as on the
+    // connection.
+    const stopSignal = this.#stopController.signal
+    if (stopSignal.aborted) {
+      if (stopSignal.reason !== STOPPED_CLEANLY) {
+        throw stopSignal.reason
+      }
+      throw new WebSocketClientError(
+        'Cannot iterate a WebSocketClient that has already closed',
+      )
+    }
     if (this.#iterated) {
       throw new WebSocketClientError(
         'WebSocketClient is already being iterated',
       )
     }
     this.#iterated = true
-    return this.#iterate()
+    return (this.#iterator = this.#iterate())
   }
 
   async *#iterate(): AsyncGenerator<MessageOf<M>, void, unknown> {
+    // The lifecycle starts here: the body ran, so the terminal `finally` below
+    // is now guaranteed to run — see the state-ownership note on
+    // #stopController.
+    this.#loopStarted = true
+
     const maxMs = 1000 * (this.#options.maxReconnectSeconds ?? 64)
     const shouldReconnectOpt = this.#options.shouldReconnect ?? true
     const shouldReconnect =
@@ -262,7 +371,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     // the consumer as an iterator rejection.
     const checkStop = (): boolean => {
       if (!stopSignal.aborted) return false
-      if (stopSignal.reason !== STOPPED_BY_CLOSE) throw stopSignal.reason
+      if (stopSignal.reason !== STOPPED_CLEANLY) throw stopSignal.reason
       return true
     }
 
@@ -323,7 +432,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         stopSignal.addEventListener(
           'abort',
           () => {
-            if (stopSignal.reason !== STOPPED_BY_CLOSE) connection.terminate()
+            if (stopSignal.reason !== STOPPED_CLEANLY) connection.terminate()
           },
           { once: true, signal: connectionDone.signal },
         )
@@ -350,9 +459,11 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
               willReconnect ? { attempt: retries } : undefined,
             )
             if (!willReconnect) {
-              // Fatal: the enclosing finally settles state and fires the final
-              // onClose as this throw unwinds, so onError (above) precedes
-              // onClose.
+              // Fatal: record the failure as the stop cause (so a later
+              // close() is inert and re-iteration rethrows it), then unwind —
+              // the enclosing finally settles state and fires the final
+              // onClose, so onError (above) precedes onClose.
+              this.#stopController.abort(error)
               throw error
             }
             this.#state = 'connecting'
@@ -381,12 +492,18 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
         this.#state = 'connecting'
       }
     } finally {
-      // Every started lifecycle ends with exactly one onClose, whichever way
-      // the loop exits: fatal error, clean stop, user close(), or abort. A
-      // client that never attempted a connection (e.g. close() before any
-      // iteration) dispatches nothing — there was no lifecycle to close.
+      // The generator body is the lifecycle: entering it started this client,
+      // and this finally is its single terminal transition — whichever way
+      // the loop exits (fatal error, non-reconnectable clean close, close(),
+      // abort, or a consumer break/return). Record the stop cause if none
+      // was recorded (clean exits — server-sent fatal close, or consumer
+      // break — never abort the stop signal themselves), settle state, fire
+      // the one onClose, and release close() waiters. A never-iterated
+      // client never runs this: no lifecycle, no onClose.
+      if (!stopSignal.aborted) this.#stopController.abort(STOPPED_CLEANLY)
       this.#state = 'closed'
-      if (this.#connection) this.#dispatchClose()
+      this.#dispatchClose()
+      this.#resolveDone()
     }
   }
 }

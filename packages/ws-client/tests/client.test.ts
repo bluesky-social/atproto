@@ -277,6 +277,299 @@ describe('WebSocketClientBase', () => {
     expect(closes).toEqual([{ code: 1005, reason: '', wasClean: false }])
   })
 
+  it('close() after close() is inert: no state wobble, same completion', async () => {
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeClient({
+      onClose: (detail) => closes.push(detail),
+    })
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    const closing = ws.close(1000)
+    mocks[0].emitClose(1000, '', true)
+    await closing
+    await consume
+    expect(ws.readyState).toBe('closed')
+    // A repeat close() (with a different code, which is ignored: first call
+    // wins) resolves without walking state back through 'closing'.
+    const again = ws.close(1011, 'ignored')
+    expect(ws.readyState).toBe('closed')
+    await again
+    expect(ws.readyState).toBe('closed')
+    // Still exactly one onClose, carrying the original handshake detail.
+    expect(closes).toEqual([{ code: 1000, reason: '', wasClean: true }])
+  })
+
+  it('concurrent close() calls share the first call/s completion', async () => {
+    const { ws, mocks } = makeClient()
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    // Two close() calls while the handshake is still in flight.
+    let first = false
+    let second = false
+    const closing1 = ws.close(1000).then(() => (first = true))
+    const closing2 = ws.close(1000).then(() => (second = true))
+    await tick()
+    // Neither resolves before the close handshake completes.
+    expect(first).toBe(false)
+    expect(second).toBe(false)
+    mocks[0].emitClose(1000, '', true)
+    await Promise.all([closing1, closing2])
+    await consume
+    expect(first).toBe(true)
+    expect(second).toBe(true)
+    expect(ws.readyState).toBe('closed')
+  })
+
+  it('close() resolves only after the final onClose hook has fired', async () => {
+    const order: string[] = []
+    const { ws, mocks } = makeClient({
+      onClose: () => order.push('onClose'),
+    })
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    const closing = ws.close(1000).then(() => order.push('close resolved'))
+    mocks[0].emitClose(1000, '', true)
+    await closing
+    await consume
+    expect(order).toEqual(['onClose', 'close resolved'])
+  })
+
+  it('a stop during resolveUrl (before any connection) still fires onClose', async () => {
+    const closes: CloseEventDetail[] = []
+    let resolveUrl!: (url: string) => void
+    const { ws, mocks } = makeClient(
+      { onClose: (detail) => closes.push(detail) },
+      // A url function that parks until the test releases it.
+      () => new Promise<string>((resolve) => (resolveUrl = resolve)),
+    )
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    // The loop is parked in resolveUrl: no connection exists yet.
+    expect(mocks).toHaveLength(0)
+    const closing = ws.close()
+    resolveUrl('ws://x') // release the gap; the loop observes the stop
+    await closing
+    await consume
+    expect(mocks).toHaveLength(0) // stop won: no connection was created
+    // The lifecycle started (iteration began), so onClose fires: 1005.
+    expect(closes).toEqual([{ code: 1005, reason: '', wasClean: false }])
+  })
+
+  it('a fatal error stops the client terminally: close() is inert, re-iteration throws the cause', async () => {
+    const { ws, mocks } = makeClient()
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitClose(1002, 'protocol error', false) // fatal
+    await expect(consume).rejects.toBeInstanceOf(CloseError)
+    expect(ws.readyState).toBe('closed')
+    // The stop signal recorded the failure: close() is an inert no-op...
+    await ws.close()
+    expect(ws.readyState).toBe('closed')
+    // ...and iterating again rethrows the terminal cause (the more useful
+    // diagnosis), mirroring the connection's terminal iteration guard.
+    expect(() => ws[Symbol.asyncIterator]()).toThrow(CloseError)
+  })
+
+  it('no message is delivered after onClose, whichever way the client stops', async () => {
+    // The client's onClose is stream-end: once it fires, the iterator is
+    // finished. Exercise a stop mid-stream with buffered backlog and confirm
+    // every delivered message precedes onClose in the timeline.
+    const timeline: string[] = []
+    const { ws, mocks } = makeClient({
+      onClose: () => timeline.push('onClose'),
+    })
+    const consume = (async () => {
+      for await (const msg of ws) {
+        timeline.push(`message:${msg}`)
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one')
+    mocks[0].emitMessage('two')
+    await tick()
+    const closing = ws.close(1000)
+    mocks[0].emitMessage('late') // dropped: arrives after the stop
+    mocks[0].emitClose(1000, '', true)
+    await closing
+    await consume
+    const closeAt = timeline.indexOf('onClose')
+    expect(closeAt).toBeGreaterThan(0) // fired, after at least one message
+    expect(closeAt).toBe(timeline.length - 1) // and nothing delivered after it
+  })
+
+  it('close() drops undelivered messages for an active consumer (drop-on-close)', async () => {
+    const { ws, mocks } = makeClient()
+    const received: unknown[] = []
+    let closing: Promise<void> | undefined
+    const consume = (async () => {
+      for await (const msg of ws) {
+        received.push(msg)
+        // Stop after the first message, with more already buffered: the
+        // stream must end without delivering them.
+        closing ??= ws.close(1000)
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one')
+    mocks[0].emitMessage('buffered-1')
+    mocks[0].emitMessage('buffered-2')
+    await tick()
+    mocks[0].emitClose(1000, '', true)
+    await closing
+    await consume
+    expect(received).toEqual(['one'])
+  })
+
+  it('close() drives an abandoned iterator to its terminal', async () => {
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeClient({
+      onClose: (detail) => closes.push(detail),
+    })
+    // Consume one message via the raw iterator, then abandon it: no break,
+    // no return — the generator stays parked at its yield.
+    const it = ws[Symbol.asyncIterator]()
+    const first = it.next()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one')
+    expect((await first).value).toBe('one')
+    // close() must not hang on the parked generator: it drives the iterator's
+    // return() (the same mechanism a consumer break uses), running the
+    // terminal — onClose fires and close() resolves after it.
+    const closing = ws.close(1000)
+    mocks[0].emitClose(1000, '', true)
+    await closing
+    expect(ws.readyState).toBe('closed')
+    expect(closes).toEqual([{ code: 1000, reason: '', wasClean: true }])
+  })
+
+  it('signal abort drives an abandoned iterator to its terminal', async () => {
+    const ac = new AbortController()
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeClient({
+      signal: ac.signal,
+      onClose: (detail) => closes.push(detail),
+    })
+    const it = ws[Symbol.asyncIterator]()
+    const first = it.next()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one')
+    expect((await first).value).toBe('one')
+    // Abandoned: the generator is parked at yield. The abort pushes it to its
+    // terminal so onClose still fires.
+    ac.abort(new Error('user stop'))
+    expect(ws.readyState).toBe('closed')
+    await vi.waitFor(() => expect(closes).toHaveLength(1))
+  })
+
+  it('close() on an obtained-but-never-pulled iterator resolves with no onClose', async () => {
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeClient({
+      onClose: (detail) => closes.push(detail),
+    })
+    // Obtain the iterator but never call next(): the generator body never
+    // runs, so there is no lifecycle — close() must not await a terminal
+    // that is never coming.
+    ws[Symbol.asyncIterator]()
+    await ws.close()
+    expect(ws.readyState).toBe('closed')
+    expect(closes).toEqual([]) // never started: no lifecycle, no onClose
+    expect(mocks).toHaveLength(0) // no connection was ever created
+  })
+
+  it('signal abort settles readyState closed synchronously', async () => {
+    const ac = new AbortController()
+    const { ws, mocks } = makeClient({ signal: ac.signal })
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })().catch(() => {})
+    await tick()
+    mocks[0].emitOpen()
+    expect(ws.readyState).toBe('open')
+    ac.abort(new Error('user stop'))
+    // Mirrors WebSocketConnection#fail: terminal state at the moment of the
+    // abort, not after the loop unwinds.
+    expect(ws.readyState).toBe('closed')
+    await consume
+    expect(ws.readyState).toBe('closed')
+  })
+
+  it('close() on a never-iterated client goes straight to closed; iteration then throws', async () => {
+    const closes: CloseEventDetail[] = []
+    const { ws } = makeClient({ onClose: (detail) => closes.push(detail) })
+    const closing = ws.close()
+    // Mirrors the connection's initialized → closed edge: no 'closing' state.
+    expect(ws.readyState).toBe('closed')
+    await closing
+    expect(ws.readyState).toBe('closed')
+    // Never started: no lifecycle to close, so no onClose.
+    expect(closes).toEqual([])
+    // Iterating a stopped client is a programmer error, as on the connection.
+    expect(() => ws[Symbol.asyncIterator]()).toThrow(WebSocketClientError)
+  })
+
+  it('abort on a never-iterated client settles closed; iteration rethrows the reason', async () => {
+    const ac = new AbortController()
+    const { ws } = makeClient({ signal: ac.signal })
+    ac.abort(new Error('pre-iteration stop'))
+    expect(ws.readyState).toBe('closed')
+    // Mirrors the connection's error-terminal iteration guard: the stop cause
+    // is the more useful diagnosis.
+    expect(() => ws[Symbol.asyncIterator]()).toThrow('pre-iteration stop')
+  })
+
+  it('close() after a signal abort is an inert no-op', async () => {
+    const ac = new AbortController()
+    const closes: CloseEventDetail[] = []
+    const { ws, mocks } = makeClient({
+      signal: ac.signal,
+      onClose: (detail) => closes.push(detail),
+    })
+    const consume = (async () => {
+      for await (const _msg of ws) {
+        /* noop */
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    ac.abort(new Error('user stop'))
+    await expect(consume).rejects.toThrow('user stop')
+    expect(ws.readyState).toBe('closed')
+    await ws.close()
+    expect(ws.readyState).toBe('closed')
+    // onClose fired exactly once, from the abort — close() added nothing.
+    expect(closes).toHaveLength(1)
+  })
+
   it('throws at construction when the signal is already aborted', () => {
     const ac = new AbortController()
     ac.abort(new Error('pre-aborted'))

@@ -30,7 +30,7 @@ Messages are typed by `options.dataMode` (`'auto' | 'text' | 'binary'`, default 
 
 ### Lifecycle
 
-Constructing a client initializes it into `readyState: 'initialized'` with no open connection. Iterating the client causes a connection to open. Stop the client with `close()`, an aborted `options.signal`, or by `break`-ing out of the loop.
+Constructing a client initializes it into `readyState: 'initialized'` with no open connection. Iterating the client causes a connection to open. Stop the client with `close()`, an aborted `options.signal`, or by `break`-ing out of the loop. Stopping ends the stream immediately — received-but-undelivered messages are dropped.
 
 The lifecycle is observable via hooks passed as options:
 
@@ -140,7 +140,7 @@ for await (const message of ws) {
 It shares `WebSocketClient`'s lifecycle and options: construct (no I/O) → iterate (opens lazily) → stop via `close()` / `signal` / `break`. Same `dataMode` typing and enforcement, same heartbeat/idle-timeout and backpressure options, same Node.js-only `headers`, same `send()` behavior. Differences:
 
 - The stream ends when the connection ends. A clean close (`1000`/`1001`) ends the loop normally; anything else rejects the iterator with a typed error (below).
-- Hooks: `onOpen()` and `onClose(detail)` fire once each; `onError(error)` fires on failure, always followed by `onClose`. The `onClose` detail carries the real close code when there was one, or `1006` when the connection ended without a close frame.
+- Hooks: `onOpen()` and `onClose(detail)` fire once each; `onError(error)` fires on failure, always followed by `onClose`. The `onClose` detail carries the real close code when there was one, or `1006` when the connection ended without a close frame. `onClose` reports the socket-level close: on a _server_-initiated clean close the iterator still drains any buffered messages after it fires (a user `close()` or an error close discards them) — unlike `WebSocketClient`'s `onClose`, which fires only once the stream has fully ended.
 - `terminate()` tears the connection down immediately, without a close handshake.
 - `capabilities` reports what the platform supports: `{ heartbeat, pauseResume }` — both `true` on Node.js, both `false` in the browser. This is the one observable difference between platforms; the API is otherwise identical.
 

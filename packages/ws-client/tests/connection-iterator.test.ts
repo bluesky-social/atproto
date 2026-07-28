@@ -189,6 +189,99 @@ describe('WebSocketConnectionEngine iterator', () => {
     expect(() => engine[Symbol.asyncIterator]()).toThrow()
   })
 
+  it('onClose fires at the socket close, before the server-clean-close drain delivers', async () => {
+    // The connection's onClose is socket-level: on a server-initiated clean
+    // close with a backlog, the hook fires when the close frame is processed
+    // and the iterator still drains the buffered messages afterward.
+    const timeline: string[] = []
+    const { engine, mock } = makeEngine({
+      onClose: () => timeline.push('onClose'),
+    })
+    const it = engine[Symbol.asyncIterator]()
+    mock.emitOpen()
+    mock.emitMessage('x') // buffered, no consumer pulling
+    mock.emitMessage('y')
+    mock.emitClose(1000, '', true) // server clean close: onClose fires now
+    let result = await it.next()
+    while (!result.done) {
+      timeline.push(`message:${result.value}`)
+      result = await it.next()
+    }
+    expect(timeline).toEqual(['onClose', 'message:x', 'message:y'])
+  })
+
+  it('no message is delivered after onClose on a user close()', async () => {
+    const timeline: string[] = []
+    const { engine, mock } = makeEngine({
+      onClose: () => timeline.push('onClose'),
+    })
+    const it = engine[Symbol.asyncIterator]()
+    const first = it.next()
+    mock.emitOpen()
+    mock.emitMessage('delivered')
+    timeline.push(`message:${(await first).value}`)
+    mock.emitMessage('buffered') // parked in the buffer
+    const closing = engine.close(1000)
+    mock.emitMessage('in-flight') // arrives while closing
+    mock.emitClose(1000, '', true)
+    await closing
+    await expect(it.next()).resolves.toEqual({ value: undefined, done: true })
+    expect(timeline).toEqual(['message:delivered', 'onClose'])
+  })
+
+  it('no message is delivered after onClose on an error close', async () => {
+    const timeline: string[] = []
+    const { engine, mock } = makeEngine({
+      onClose: () => timeline.push('onClose'),
+    })
+    const it = engine[Symbol.asyncIterator]()
+    const first = it.next()
+    mock.emitOpen()
+    mock.emitMessage('delivered')
+    timeline.push(`message:${(await first).value}`)
+    mock.emitMessage('buffered') // discarded by the failure below
+    mock.emitError(new Error('boom'))
+    await expect(it.next()).rejects.toBeInstanceOf(SocketError)
+    expect(timeline).toEqual(['message:delivered', 'onClose'])
+  })
+
+  it('close() drops buffered messages (drop-on-close)', async () => {
+    let closeDetail: CloseEventDetail | undefined
+    const { engine, mock } = makeEngine({
+      onClose: (detail) => (closeDetail = detail),
+    })
+    const it = engine[Symbol.asyncIterator]()
+    const first = it.next()
+    mock.emitOpen()
+    mock.emitMessage('delivered') // consumed by the pending pull
+    expect((await first).value).toBe('delivered')
+    mock.emitMessage('buffered-1') // parked in the buffer, no consumer waiting
+    mock.emitMessage('buffered-2')
+    // User-initiated close: undelivered buffered messages are dropped — the
+    // stream ends now, not after a drain.
+    const closing = engine.close(1000)
+    mock.emitClose(1000, '', true)
+    await closing
+    await expect(it.next()).resolves.toEqual({ value: undefined, done: true })
+    expect(closeDetail).toEqual({ code: 1000, reason: '', wasClean: true })
+  })
+
+  it('messages arriving while closing are dropped', async () => {
+    const { engine, mock } = makeEngine()
+    const it = engine[Symbol.asyncIterator]()
+    const first = it.next()
+    mock.emitOpen()
+    mock.emitMessage('delivered')
+    expect((await first).value).toBe('delivered')
+    const closing = engine.close(1000)
+    // In-flight message lands after close() but before the close echo: the
+    // stream has ended, so it is dropped.
+    mock.emitMessage('late')
+    mock.emitClose(1000, '', true)
+    await closing
+    await expect(it.next()).resolves.toEqual({ value: undefined, done: true })
+  })
+
   it('closes with 1000 when the consumer breaks early', async () => {
     const { engine, mock } = makeEngine({ mock: new MockTransport() })
     mock.emitOpen()
