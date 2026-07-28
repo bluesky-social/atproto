@@ -52,6 +52,10 @@ function harness() {
     },
     open: () => options.onOpen?.(sender),
     reconnect: () => options.onReconnect?.(sender),
+    // A connection ended but a retry is coming — what the generator reports
+    // between a failure and the next open.
+    connectionLost: () =>
+      options.onError?.(new Error('connection lost'), { attempt: 0 }),
     close: () => {
       ended = true
       notify?.()
@@ -142,6 +146,25 @@ describe(WebSocketClientBase, () => {
       h.reconnect()
       await pending
       expect(h.sent).toEqual(['queued'])
+    })
+
+    it('queues instead of delegating once a connection is lost', async () => {
+      const h = harness()
+      const client = new WebSocketClientBase(h.websocketFn, 'ws://x')
+      client[Symbol.asyncIterator]()
+      h.open()
+      expect(client.connected).toBe(true)
+      // The connection dies; a reconnect is coming. The sender belonged to
+      // that connection and can only reject now, so holding it would make
+      // send() fail through the whole gap — exactly when the queue should be
+      // absorbing writes.
+      h.connectionLost()
+      expect(client.connected).toBe(false)
+      const pending = client.send('during-gap')
+      expect(h.sent).toEqual([])
+      h.reconnect()
+      await pending
+      expect(h.sent).toEqual(['during-gap'])
     })
 
     it('rejects a queued send whose flush fails, without re-queueing', async () => {

@@ -114,7 +114,7 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     }
     this.#iterated = true
 
-    const { onOpen, onReconnect, onClose } = this.#options
+    const { onOpen, onReconnect, onError, onClose } = this.#options
     const iterator = this.#websocketFn(this.#url, {
       ...this.#options,
       onOpen: (sender) => {
@@ -124,6 +124,15 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       onReconnect: (sender) => {
         this.#onConnect(sender)
         invokeHook(onReconnect, sender)
+      },
+      onError: (error, reconnect) => {
+        // A connection ended. Drop the sender: it belonged to that connection
+        // and can only reject now, so holding it would make `send()` fail
+        // through the whole reconnect gap — exactly when the queue should be
+        // absorbing writes — and make `connected` lie. A reconnect hands over
+        // a fresh one.
+        this.#sender = undefined
+        invokeHook(onError, error, reconnect)
       },
       onClose: (detail) => {
         this.#onTerminal()
