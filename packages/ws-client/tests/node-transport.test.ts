@@ -6,7 +6,7 @@ import {
   HeartbeatTimeoutError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
-import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
+import type { MessageOf } from '../src/message-channel.js'
 import { createTransport } from '../src/transport/node-transport.js'
 import type { Sender, Transport } from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
@@ -229,8 +229,7 @@ describe(createTransport, () => {
     await drain(transport)
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
-    const [detail]: [CloseEventDetail] = onClose.mock.calls[0]
-    expect(detail).toEqual({
+    expect(onClose).toHaveBeenCalledWith({
       code: CloseCode.Policy,
       reason: 'nope',
       wasClean: false,

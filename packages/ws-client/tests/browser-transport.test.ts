@@ -7,7 +7,7 @@ import {
   SocketError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
-import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
+import type { MessageOf } from '../src/message-channel.js'
 import {
   type WebSocketCtor,
   createTransport,
@@ -223,8 +223,7 @@ describe(createTransport, () => {
     assert(error instanceof SocketError)
     expect(socket.closeCalls).toHaveLength(1)
     expect(onClose).toHaveBeenCalledTimes(1)
-    const [detail]: [CloseEventDetail] = onClose.mock.calls[0]
-    expect(detail).toEqual({
+    expect(onClose).toHaveBeenCalledWith({
       code: CloseCode.Abnormal,
       reason: '',
       wasClean: false,
@@ -324,12 +323,11 @@ describe(createTransport, () => {
     await drain(transport)
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
-    const [detail]: [CloseEventDetail] = onClose.mock.calls[0]
     // Per the WHATWG spec, `wasClean` reflects whether the closing
     // handshake completed properly, not whether the code was 1000 — a
     // completed handshake with a non-Normal code is still "clean" in that
     // sense, unlike Node's own `ws` library which conflates the two.
-    expect(detail).toEqual({
+    expect(onClose).toHaveBeenCalledWith({
       code: CloseCode.Policy,
       reason: 'nope',
       wasClean: true,
