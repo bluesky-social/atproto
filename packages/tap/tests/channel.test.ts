@@ -269,6 +269,65 @@ describe('TapChannel', () => {
     })
   })
 
+  describe('ack delivery', () => {
+    it('retries an ack whose first hand-off fails', async () => {
+      // The channel no longer keeps a FIFO ack buffer of its own. Instead the
+      // client's send queue absorbs an ack issued while disconnected, and
+      // re-calling send() after a failed flush is what makes that
+      // retry-until-sent. That retry is safe because Tap acks are per-event,
+      // idempotent and order-insensitive (verified against the server's
+      // Outbox.AckEvent, which guards on existence and deletes per id).
+      //
+      // Driven here by failing the first send outright, which is the reachable
+      // way to exercise the retry: a handler runs synchronously with delivery,
+      // so it cannot normally observe a disconnected client.
+      await using server = await createWebSocketServer()
+      const { port } = server.address() as AddressInfo
+
+      const receivedAcks: number[] = []
+      server.on('connection', (socket) => {
+        socket.send(JSON.stringify(createRecordEvent(7)))
+        socket.on('message', (data) => {
+          const msg = JSON.parse(data.toString())
+          if (msg.type === 'ack') {
+            receivedAcks.push(msg.id)
+            socket.close()
+          }
+        })
+      })
+
+      const reportedErrors: Error[] = []
+      const handler: TapHandler = {
+        onEvent: async (_evt, opts) => {
+          await opts.ack()
+        },
+        onError: (err) => reportedErrors.push(err),
+      }
+
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
+
+      // Fail exactly the first hand-off, then let the retry through.
+      const client = channel['ws'] as { send: (d: string) => Promise<void> }
+      const realSend = client.send.bind(client)
+      let failed = false
+      client.send = (data: string) => {
+        if (!failed) {
+          failed = true
+          return Promise.reject(new Error('hand-off failed'))
+        }
+        return realSend(data)
+      }
+
+      await channel.start()
+
+      // The ack still arrived, and the transient failure was reported rather
+      // than swallowed.
+      expect(receivedAcks).toEqual([7])
+      expect(reportedErrors).toHaveLength(1)
+      expect(reportedErrors[0].message).toContain('failed to send ack')
+    })
+  })
+
   describe('multiple events', () => {
     it('processes multiple events in sequence', async () => {
       await using server = await createWebSocketServer()

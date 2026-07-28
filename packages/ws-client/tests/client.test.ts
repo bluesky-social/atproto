@@ -63,10 +63,12 @@ function harness() {
     },
     open: () => options.onOpen?.(sender),
     reconnect: () => options.onReconnect?.(sender),
-    // A connection ended but a retry is coming — what the generator reports
-    // between a failure and the next open.
-    connectionLost: () =>
-      options.onError?.(new Error('connection lost'), { attempt: 0 }),
+    // The per-connection edge the generator reports the moment a socket dies,
+    // before (and independently of) any onError for the same event.
+    connectionLost: () => {
+      options.onDisconnect?.()
+      options.onError?.(new Error('connection lost'), { attempt: 0 })
+    },
     close: () => {
       ended = true
       notify?.()
