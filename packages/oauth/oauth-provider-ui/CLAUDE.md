@@ -135,8 +135,11 @@ The short version:
 - body copy in `<p>`, page/section headings in the tag the test names
   (`h2`/`h3`), identifiers and radio labels in `<span>`, code samples in `<code>`
 - dialog content keeps `role="dialog"` and a `button[type="submit"]`
-- shadcn's `CardDescription`, `AlertDescription` and `DialogDescription` render
-  `<div>`, so wrap asserted copy in an explicit `<p>`
+- `CardDescription` and `AlertDescription` render `<div>`, so wrap asserted copy
+  in an explicit `<p>`. **`DialogDescription` does not** — Base UI's
+  `Dialog.Description` is already a `<p>`, and wrapping it produced `<p><p>`,
+  which React reports as invalid nesting. Check the primitive's rendered element
+  before adding a wrapper rather than assuming they match.
 
 Dialogs must cap their height (`DialogShell` does): Base UI's `DialogContent` is
 `fixed` with no height limit, and a tall dialog on a short viewport puts its

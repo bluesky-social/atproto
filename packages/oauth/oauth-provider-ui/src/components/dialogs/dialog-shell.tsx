@@ -69,11 +69,12 @@ export function DialogShell({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && (
-            // @NOTE DialogDescription is a <div> upstream; body copy goes in an
-            // explicit <p> so unqualified ensureTextVisibility calls match.
-            <DialogDescription>
-              <p>{description}</p>
-            </DialogDescription>
+            // @NOTE No explicit <p> wrapper here, unlike CardDescription and
+            // AlertDescription: Base UI's Dialog.Description already renders a
+            // <p>, so wrapping produced `<p><p>` — invalid nesting that React
+            // reports as a hydration error. The e2e's unqualified
+            // ensureTextVisibility calls match this <p> directly.
+            <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>
 
