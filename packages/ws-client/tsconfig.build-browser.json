@@ -1,0 +1,10 @@
+{
+  // Browser-only transport: compiled against the DOM lib, no Node.js types.
+  "extends": ["../../tsconfig/browser.tsconfig.json"],
+  "include": ["./src/transport/browser-transport.ts"],
+  "references": [{ "path": "./tsconfig.build-core.json" }],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
+}
