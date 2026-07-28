@@ -119,7 +119,7 @@ msgstr "Kontoidentifierare"
 msgid "Account name"
 msgstr "Kontonamn"
 
-#: src/components/identity/account-menu.tsx:50
+#: src/components/identity/account-menu.tsx:92
 msgid "Account overview"
 msgstr "Kontoöversikt"
 
@@ -128,7 +128,7 @@ msgstr "Kontoöversikt"
 msgid "Account reactivated"
 msgstr "Konto återaktiverat"
 
-#: src/components/identity/account-menu.tsx:36
+#: src/components/identity/account-menu.tsx:60
 msgid "Account selector"
 msgstr "Kontoväljare"
 
@@ -144,8 +144,8 @@ msgstr "Lägg till följande post i din domäns DNS-konfiguration."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/verify-email-dialog.tsx:73
-#: src/components/update-password-dialog.tsx:76
+#: src/components/verify-email-dialog.tsx:84
+#: src/components/update-password-dialog.tsx:86
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "Har du redan en kod?"
@@ -155,7 +155,7 @@ msgid "An application on your device"
 msgstr "En applikation på din enhet"
 
 #: src/lib/notification-message.ts:30
-#: src/components/error-view.tsx:31
+#: src/components/error-view.tsx:41
 msgid "An error occurred"
 msgstr "Ett fel uppstod"
 
@@ -167,7 +167,7 @@ msgstr "Ett oväntat fel uppstod. Försök igen."
 msgid "An unknown error occurred"
 msgstr "Ett okänt fel uppstod"
 
-#: src/components/sign-in-picker.tsx:76
+#: src/components/sign-in-picker.tsx:88
 msgid "Another account"
 msgstr "Annat konto"
 
@@ -187,7 +187,7 @@ msgstr "Vilken tjänst som helst"
 msgid "Apps"
 msgstr "Appar"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:59
+#: src/pages/account/(authenticated)/apps/page.tsx:78
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för att titta efter notiser eller synkronisera data) även när du själv inte använder dem aktivt. Det är en normal företeelse som också påverkar tidsangivelserna för ”senaste aktivitet” ovan."
 
@@ -195,7 +195,7 @@ msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för at
 msgid "Are you really, really sure?"
 msgstr "Är du verkligen, verkligen säker?"
 
-#: src/components/authenticate-welcome-view.tsx:19
+#: src/components/authenticate-welcome-view.tsx:26
 msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "Autentisera"
@@ -213,12 +213,12 @@ msgid "Authorize"
 msgstr "Auktorisera"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:115
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Auktoriserades {0}"
 
-#: src/components/sign-in-picker.tsx:96
+#: src/components/sign-in-picker.tsx:112
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 msgid "Back"
@@ -258,13 +258,13 @@ msgstr "Anrop"
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:200
-#: src/components/authenticate-welcome-view.tsx:57
+#: src/components/delete-account-dialog.tsx:210
+#: src/components/authenticate-welcome-view.tsx:59
 #: src/components/forms/form-shell.tsx:70
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:107
+#: src/pages/account/(authenticated)/devices/page.tsx:135
 msgid "Cannot remove current device"
 msgstr "Det går inte att ta bort den enhet som du använder just nu"
 
@@ -306,7 +306,7 @@ msgstr "Titta efter verifieringskoden i din inkorg."
 msgid "Check your inbox."
 msgstr "Titta i din inkorg."
 
-#: src/components/update-handle-dialog.tsx:58
+#: src/components/update-handle-dialog.tsx:74
 msgid "Choose a new default username."
 msgstr "Välj ett nytt användarnamn med standarddomän"
 
@@ -328,10 +328,6 @@ msgstr "Klicka här om ingenting händer"
 #: src/components/ui/dialog.tsx:117
 msgid "Close"
 msgstr "Stäng"
-
-#: src/components/identity/account-menu.tsx:83
-msgid "Close account selector"
-msgstr "Stäng kontoväljaren"
 
 #: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
@@ -356,12 +352,11 @@ msgstr "Bekräftelsekod"
 msgid "Confirmation email sent"
 msgstr "Ett e-postmeddelande för bekräftelse har skickats"
 
-#: src/cookie-error-page.tsx:61
+#: src/cookie-error-page.tsx:62
 msgid "Continue"
 msgstr "Fortsätt"
 
 #: src/cookie-error-page.tsx:36
-#: src/cookie-error-page.tsx:49
 msgid "Cookie Error"
 msgstr "Cookie-fel"
 
@@ -377,7 +372,7 @@ msgstr "Kopiera till urklipp"
 msgid "Create"
 msgstr "Skapa"
 
-#: src/components/authenticate-welcome-view.tsx:38
+#: src/components/authenticate-welcome-view.tsx:40
 msgid "Create a new account"
 msgstr "Skapa ett nytt konto"
 
@@ -393,12 +388,12 @@ msgstr "Anpassade domäner stöds inte"
 msgid "Data"
 msgstr "Data"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/pages/account/(authenticated)/manage/page.tsx:215
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Inaktivera konto"
 
-#: src/components/identity/account-avatar.tsx:72
+#: src/components/identity/account-avatar.tsx:75
 msgid "Deactivated account"
 msgstr "Inaktiverat konto"
 
@@ -406,7 +401,7 @@ msgstr "Inaktiverat konto"
 msgid "Delete"
 msgstr "Radera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/pages/account/(authenticated)/manage/page.tsx:242
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Radera konto"
@@ -424,7 +419,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:162
 msgid "Details"
 msgstr "Detaljer"
 
@@ -440,12 +435,12 @@ msgstr "Har du inte fått någon kod? <0>Klicka här för att skicka en ny.</0>"
 msgid "DNS"
 msgstr "DNS"
 
-#: src/components/update-handle-dialog.tsx:143
+#: src/components/update-handle-dialog.tsx:164
 msgid "e.g. <0>alice.com</0>"
 msgstr "t.ex. <0>alice.com</0>"
 
 #. placeholder {0}: domains[0]
-#: src/components/update-handle-dialog.tsx:132
+#: src/components/update-handle-dialog.tsx:154
 msgid "e.g. <0>alice{0}</0>"
 msgstr "t.ex <0>alice{0}</0>"
 
@@ -454,7 +449,7 @@ msgstr "t.ex <0>alice{0}</0>"
 msgid "Email"
 msgstr "E-post"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:151
 #: src/components/reset-password-request-form.tsx:56
 #: src/components/reset-password-request-form.tsx:58
 #: src/components/forms/fields/email-field.tsx:20
@@ -543,8 +538,8 @@ msgstr "Det gick inte att inaktivera kontot"
 msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:35
+#: src/pages/account/(authenticated)/devices/page.tsx:46
+#: src/pages/account/(authenticated)/apps/page.tsx:45
 msgid "Failed to load connected apps"
 msgstr "Det gick inte att läsa in anslutna appar"
 
@@ -678,11 +673,11 @@ msgstr "Om du har tillgång till DNS-inställningarna för din domän (t.ex. via
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr "Om du har åtkomst till din domäns webbutrymme (t.ex. via FTP)"
 
-#: src/components/update-handle-dialog.tsx:109
+#: src/components/update-handle-dialog.tsx:125
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Om du har en egen domän kan du använda den som användarnamn. På så sätt kan du själv verifiera din identitet. <0>Läs mer här.</0>"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:126
+#: src/pages/account/(authenticated)/manage/page.tsx:142
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Om du uppdaterar din e-postadress kommer tvåfaktorsautentisering via e-post att inaktiveras (om det är aktiverat)."
 
@@ -694,7 +689,7 @@ msgstr "Om du vill ändra ditt användarnamn eller din e-postadress måste du g�
 msgid "Interface language selector"
 msgstr "Val av gränssnittsspråk"
 
-#: src/components/forms/fields/handle-field.tsx:282
+#: src/components/forms/fields/handle-field.tsx:288
 msgid "Invalid"
 msgstr "Ogiltigt"
 
@@ -707,12 +702,12 @@ msgstr "Ogiltigt användarnamn"
 msgid "Invite code"
 msgstr "Inbjudningskod"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:69
+#: src/pages/account/(authenticated)/apps/page.tsx:88
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Det verkar som att du inte har använt det här kontot för att logga in på någon app ännu."
 
 #. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx:51
+#: src/cookie-error-page.tsx:53
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på ”Fortsätt” för att försöka igen. Om felet kvarstår, kontrollera att dina sekretessinställningar tillåter cookies för webbplatsen ”{0}”."
 
@@ -720,12 +715,12 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 msgid "just now"
 msgstr "nyss"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:124
+#: src/pages/account/(authenticated)/apps/page.tsx:147
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Senaste aktivitet: <0/>"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:94
+#: src/pages/account/(authenticated)/devices/page.tsx:117
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Sågs senast {lastUsedAgo}"
@@ -739,11 +734,12 @@ msgstr "Senare"
 msgid "Let's get your password reset!"
 msgstr "Låt oss få ditt lösenord återställt!"
 
-#: src/components/layouts/app-shell.tsx:31
+#: src/components/layouts/auth-shell.tsx:77
+#: src/components/layouts/account-shell.tsx:117
 msgid "Logo"
 msgstr "Logga"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:65
+#: src/pages/account/(authenticated)/devices/page.tsx:84
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Det ser ut som att du inte är inloggad på någon annan enhet."
 
@@ -807,7 +803,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Namn"
 
-#: src/components/layouts/account-shell.tsx:40
+#: src/components/layouts/account-shell.tsx:48
 msgid "Navigation"
 msgstr ""
 
@@ -834,7 +830,7 @@ msgstr "OK"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Endast bokstäver, siffror och bindestreck"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:167
+#: src/pages/account/(authenticated)/manage/page.tsx:183
 #: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:85
@@ -855,7 +851,6 @@ msgstr "Återställningen av lösenordet lyckades"
 msgid "Password strength"
 msgstr "Lösenordsstyrka"
 
-#: src/components/utils/password-strength-meter.tsx:45
 #: src/components/feedback/password-strength.tsx:45
 msgid "Password strength indicator"
 msgstr "Indikator för lösenordsstyrka"
@@ -885,7 +880,7 @@ msgstr "Utföra åtgärder för din räkning"
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Utföra autentiserade åtgärder gentemot <0>vilken tjänst som helst</0> för din räkning"
 
-#: src/components/authenticate-welcome-view.tsx:27
+#: src/components/authenticate-welcome-view.tsx:31
 msgid "Please authenticate to continue"
 msgstr "Autentisera för att fortsätta"
 
@@ -940,7 +935,7 @@ msgstr "Publicera ändringar"
 msgid "Reactivate"
 msgstr "Återaktivera"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/pages/account/(authenticated)/manage/page.tsx:202
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Återaktivera konto"
@@ -982,8 +977,8 @@ msgstr "Återställ lösenord"
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/pages/account/(authenticated)/devices/page.tsx:42
+#: src/pages/account/(authenticated)/apps/page.tsx:41
 #: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "Försök igen"
@@ -1006,7 +1001,7 @@ msgstr "Säkerhetskod"
 msgid "Security step required"
 msgstr "Säkerhetskontroll"
 
-#: src/components/identity/account-menu.tsx:69
+#: src/components/identity/account-menu.tsx:124
 msgid "Select another account"
 msgstr "Välj ett annat konto"
 
@@ -1018,7 +1013,7 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr "Välj ett befintligt konto"
 
-#: src/components/delete-account-dialog.tsx:192
+#: src/components/delete-account-dialog.tsx:201
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
 
@@ -1032,36 +1027,36 @@ msgid "Sign in"
 msgstr "Logga in"
 
 #: src/components/sign-in-form.tsx:96
-#: src/components/authenticate-welcome-view.tsx:48
+#: src/components/authenticate-welcome-view.tsx:50
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Logga in"
 
 #. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
-#: src/components/sign-in-picker.tsx:58
+#: src/components/sign-in-picker.tsx:65
 msgid "Sign in as {0}"
 msgstr "Logga in som {0}"
 
-#: src/components/sign-in-picker.tsx:45
+#: src/components/sign-in-picker.tsx:52
 msgid "Sign in as..."
 msgstr "Logga in som…"
 
-#: src/components/sign-in-picker.tsx:67
+#: src/components/sign-in-picker.tsx:79
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:110
+#: src/pages/account/(authenticated)/devices/page.tsx:139
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/components/identity/account-menu.tsx:60
+#: src/components/identity/account-menu.tsx:136
 msgid "Sign out"
 msgstr "Logga ut"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:90
+#: src/components/sign-in-picker.tsx:123
 msgid "Sign up"
 msgstr "Registrera dig"
 
@@ -1169,7 +1164,7 @@ msgstr "Användarnamnet är ogiltigt"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. Kom tillbaka när du vill."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:43
+#: src/pages/account/(authenticated)/apps/page.tsx:53
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
 
@@ -1248,7 +1243,7 @@ msgstr "Behörighet saknas"
 msgid "Unexpected server response"
 msgstr "Oväntat svar från server"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:89
+#: src/pages/account/(authenticated)/devices/page.tsx:109
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Okänd användaragent"
@@ -1262,13 +1257,13 @@ msgstr "Ändra"
 msgid "Update your email"
 msgstr "Uppdatera din e-postadress"
 
-#: src/components/update-handle-dialog.tsx:57
-#: src/components/update-handle-dialog.tsx:81
-#: src/components/update-handle-dialog.tsx:107
+#: src/components/update-handle-dialog.tsx:73
+#: src/components/update-handle-dialog.tsx:97
+#: src/components/update-handle-dialog.tsx:123
 msgid "Update your username"
 msgstr "Uppdatera ditt användarnamn"
 
-#: src/components/update-handle-dialog.tsx:83
+#: src/components/update-handle-dialog.tsx:99
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr "Uppdatera ditt användarnamn till ett domännamn som du äger för att själv verifiera din identitet."
 
@@ -1280,15 +1275,15 @@ msgstr "Uppladdning av filer"
 msgid "URL"
 msgstr "URL"
 
-#: src/components/update-handle-dialog.tsx:130
+#: src/components/update-handle-dialog.tsx:152
 msgid "Use a default username"
 msgstr "Använd ett användarnamn med standarddomän"
 
-#: src/components/update-handle-dialog.tsx:141
+#: src/components/update-handle-dialog.tsx:162
 msgid "Use a domain name I own"
 msgstr "Använd ett domännamn jag äger"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:249
+#: src/pages/account/(authenticated)/manage/page.tsx:265
 msgid "Username"
 msgstr "Användarnamn"
 
@@ -1300,7 +1295,7 @@ msgstr "Användarnamn eller e-postadress"
 msgid "Username updated"
 msgstr "Användarnamn uppdaterat"
 
-#: src/components/forms/fields/handle-field.tsx:280
+#: src/components/forms/fields/handle-field.tsx:286
 msgid "Valid"
 msgstr "Giltigt"
 
@@ -1325,11 +1320,11 @@ msgstr "Verifieringsmetod"
 msgid "Verification successful!"
 msgstr "Verifieringen lyckades!"
 
-#: src/components/update-handle-dialog.tsx:92
+#: src/components/update-handle-dialog.tsx:108
 msgid "Verify and Save"
 msgstr "Verifiera och spara"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/pages/account/(authenticated)/manage/page.tsx:102
 #: src/components/update-email-dialog.tsx:232
 msgctxt "verify email"
 msgid "Verify now"
@@ -1368,7 +1363,7 @@ msgstr "Vi är glada över att ha dig med oss!"
 msgid "Weak"
 msgstr "Svagt"
 
-#: src/components/authenticate-welcome-view.tsx:24
+#: src/components/authenticate-welcome-view.tsx:30
 msgid "Welcome"
 msgstr "Välkommen"
 
@@ -1376,7 +1371,7 @@ msgstr "Välkommen"
 msgid "Welcome back!"
 msgstr "Välkommen tillbaka!"
 
-#: src/pages/account/(authenticated)/page.tsx:33
+#: src/pages/account/(authenticated)/page.tsx:107
 msgid "What does this mean?"
 msgstr "Vad innebär det?"
 
@@ -1408,7 +1403,7 @@ msgstr "igår"
 msgid "You are being redirected..."
 msgstr "Du omdirigeras…"
 
-#: src/components/delete-account-dialog.tsx:204
+#: src/components/delete-account-dialog.tsx:215
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Om du vill kan du <0>tillfälligt inaktivera</0> ditt konto istället. Det gör att din profil samt dina inlägg, flöden och listor slutar att synas för andra Bluesky-användare. Du kan återaktivera ditt konto när som helst genom att logga in."
 
@@ -1457,7 +1452,7 @@ msgstr "Ditt konto är för närvarande inaktiverat."
 msgid "Your account is now deactivated."
 msgstr "Ditt konto är nu inaktiverat."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:44
+#: src/pages/account/(authenticated)/devices/page.tsx:54
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten för ditt konto har äventyrats, logga ut från alla enheter, byt lösenord och kontrollera dina anslutna appar."
 
@@ -1465,7 +1460,7 @@ msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten fö
 msgid "Your account is visible again."
 msgstr "Ditt konto är synligt igen."
 
-#: src/pages/account/(authenticated)/page.tsx:26
+#: src/pages/account/(authenticated)/page.tsx:94
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Ditt Atmosphere-konto ligger hos <0/>."
 
@@ -1481,12 +1476,12 @@ msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifier
 msgid "Your email address has been verified."
 msgstr "Din e-postadress har verifierats."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:91
+#: src/pages/account/(authenticated)/manage/page.tsx:107
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/fields/handle-field.tsx:232
+#: src/components/forms/fields/handle-field.tsx:238
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"
 

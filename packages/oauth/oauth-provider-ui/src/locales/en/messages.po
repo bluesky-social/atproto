@@ -119,7 +119,7 @@ msgstr "Account identifier"
 msgid "Account name"
 msgstr "Account name"
 
-#: src/components/identity/account-menu.tsx:50
+#: src/components/identity/account-menu.tsx:92
 msgid "Account overview"
 msgstr "Account overview"
 
@@ -128,7 +128,7 @@ msgstr "Account overview"
 msgid "Account reactivated"
 msgstr "Account reactivated"
 
-#: src/components/identity/account-menu.tsx:36
+#: src/components/identity/account-menu.tsx:60
 msgid "Account selector"
 msgstr "Account selector"
 
@@ -144,8 +144,8 @@ msgstr "Add the following record to your domain's DNS configuration."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/verify-email-dialog.tsx:73
-#: src/components/update-password-dialog.tsx:76
+#: src/components/verify-email-dialog.tsx:84
+#: src/components/update-password-dialog.tsx:86
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "Already have a code?"
@@ -155,7 +155,7 @@ msgid "An application on your device"
 msgstr "An application on your device"
 
 #: src/lib/notification-message.ts:30
-#: src/components/error-view.tsx:31
+#: src/components/error-view.tsx:41
 msgid "An error occurred"
 msgstr "An error occurred"
 
@@ -167,7 +167,7 @@ msgstr "An unexpected error occurred. Please try again."
 msgid "An unknown error occurred"
 msgstr "An unknown error occurred"
 
-#: src/components/sign-in-picker.tsx:76
+#: src/components/sign-in-picker.tsx:88
 msgid "Another account"
 msgstr "Another account"
 
@@ -187,7 +187,7 @@ msgstr "Any service"
 msgid "Apps"
 msgstr "Apps"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:59
+#: src/pages/account/(authenticated)/apps/page.tsx:78
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 
@@ -195,7 +195,7 @@ msgstr "Apps may access your account in the background (to check notifications, 
 msgid "Are you really, really sure?"
 msgstr "Are you really, really sure?"
 
-#: src/components/authenticate-welcome-view.tsx:19
+#: src/components/authenticate-welcome-view.tsx:26
 msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "Authenticate"
@@ -213,12 +213,12 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:115
+#: src/pages/account/(authenticated)/apps/page.tsx:138
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
 
-#: src/components/sign-in-picker.tsx:96
+#: src/components/sign-in-picker.tsx:112
 #: src/components/forms/sign-up-wizard.tsx:118
 #: src/components/forms/form-shell.tsx:73
 msgid "Back"
@@ -258,13 +258,13 @@ msgstr "Call"
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:200
-#: src/components/authenticate-welcome-view.tsx:57
+#: src/components/delete-account-dialog.tsx:210
+#: src/components/authenticate-welcome-view.tsx:59
 #: src/components/forms/form-shell.tsx:70
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:107
+#: src/pages/account/(authenticated)/devices/page.tsx:135
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
@@ -306,7 +306,7 @@ msgstr "Check your inbox for the verification code."
 msgid "Check your inbox."
 msgstr "Check your inbox."
 
-#: src/components/update-handle-dialog.tsx:58
+#: src/components/update-handle-dialog.tsx:74
 msgid "Choose a new default username."
 msgstr "Choose a new default username."
 
@@ -328,10 +328,6 @@ msgstr "Click here if nothing happens"
 #: src/components/ui/dialog.tsx:117
 msgid "Close"
 msgstr "Close"
-
-#: src/components/identity/account-menu.tsx:83
-msgid "Close account selector"
-msgstr "Close account selector"
 
 #: src/components/feedback/error-details.tsx:43
 msgctxt "Error"
@@ -356,12 +352,11 @@ msgstr "Confirmation code"
 msgid "Confirmation email sent"
 msgstr "Confirmation email sent"
 
-#: src/cookie-error-page.tsx:61
+#: src/cookie-error-page.tsx:62
 msgid "Continue"
 msgstr "Continue"
 
 #: src/cookie-error-page.tsx:36
-#: src/cookie-error-page.tsx:49
 msgid "Cookie Error"
 msgstr "Cookie Error"
 
@@ -377,7 +372,7 @@ msgstr "Copy to clipboard"
 msgid "Create"
 msgstr "Create"
 
-#: src/components/authenticate-welcome-view.tsx:38
+#: src/components/authenticate-welcome-view.tsx:40
 msgid "Create a new account"
 msgstr "Create a new account"
 
@@ -393,12 +388,12 @@ msgstr "Custom domains are not supported"
 msgid "Data"
 msgstr "Data"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:199
+#: src/pages/account/(authenticated)/manage/page.tsx:215
 #: src/components/deactivate-account-dialog.tsx:22
 msgid "Deactivate account"
 msgstr "Deactivate account"
 
-#: src/components/identity/account-avatar.tsx:72
+#: src/components/identity/account-avatar.tsx:75
 msgid "Deactivated account"
 msgstr "Deactivated account"
 
@@ -406,7 +401,7 @@ msgstr "Deactivated account"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:226
+#: src/pages/account/(authenticated)/manage/page.tsx:242
 #: src/components/delete-account-dialog.tsx:76
 msgid "Delete account"
 msgstr "Delete account"
@@ -424,7 +419,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Deny access"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:162
 msgid "Details"
 msgstr "Details"
 
@@ -440,12 +435,12 @@ msgstr "Didn't receive a code? <0>Click here to resend.</0>"
 msgid "DNS"
 msgstr "DNS"
 
-#: src/components/update-handle-dialog.tsx:143
+#: src/components/update-handle-dialog.tsx:164
 msgid "e.g. <0>alice.com</0>"
 msgstr "e.g. <0>alice.com</0>"
 
 #. placeholder {0}: domains[0]
-#: src/components/update-handle-dialog.tsx:132
+#: src/components/update-handle-dialog.tsx:154
 msgid "e.g. <0>alice{0}</0>"
 msgstr "e.g. <0>alice{0}</0>"
 
@@ -454,7 +449,7 @@ msgstr "e.g. <0>alice{0}</0>"
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:135
+#: src/pages/account/(authenticated)/manage/page.tsx:151
 #: src/components/reset-password-request-form.tsx:56
 #: src/components/reset-password-request-form.tsx:58
 #: src/components/forms/fields/email-field.tsx:20
@@ -543,8 +538,8 @@ msgstr "Failed to deactivate account"
 msgid "Failed to delete account"
 msgstr "Failed to delete account"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:35
+#: src/pages/account/(authenticated)/devices/page.tsx:46
+#: src/pages/account/(authenticated)/apps/page.tsx:45
 msgid "Failed to load connected apps"
 msgstr "Failed to load connected apps"
 
@@ -678,11 +673,11 @@ msgstr "If you have access to your domain's DNS configuration panel (e.g. via yo
 msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 msgstr "If you have access to your domain's web hosting configuration (e.g. via FTP)"
 
-#: src/components/update-handle-dialog.tsx:109
+#: src/components/update-handle-dialog.tsx:125
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:126
+#: src/pages/account/(authenticated)/manage/page.tsx:142
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "If you update your email address, email 2FA (if enabled) will be disabled."
 
@@ -694,7 +689,7 @@ msgstr "If you're trying to change your handle or email, do so before you deacti
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/forms/fields/handle-field.tsx:282
+#: src/components/forms/fields/handle-field.tsx:288
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -707,12 +702,12 @@ msgstr "Invalid Handle"
 msgid "Invite code"
 msgstr "Invite code"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:69
+#: src/pages/account/(authenticated)/apps/page.tsx:88
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
 
 #. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx:51
+#: src/cookie-error-page.tsx:53
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 
@@ -720,12 +715,12 @@ msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" 
 msgid "just now"
 msgstr "just now"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:124
+#: src/pages/account/(authenticated)/apps/page.tsx:147
 msgctxt "OAuthApp"
 msgid "Last accessed <0/>"
 msgstr "Last accessed <0/>"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:94
+#: src/pages/account/(authenticated)/devices/page.tsx:117
 msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Last seen {lastUsedAgo}"
@@ -739,11 +734,12 @@ msgstr "Later"
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
-#: src/components/layouts/app-shell.tsx:31
+#: src/components/layouts/auth-shell.tsx:77
+#: src/components/layouts/account-shell.tsx:117
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:65
+#: src/pages/account/(authenticated)/devices/page.tsx:84
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
@@ -807,7 +803,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/layouts/account-shell.tsx:40
+#: src/components/layouts/account-shell.tsx:48
 msgid "Navigation"
 msgstr "Navigation"
 
@@ -834,7 +830,7 @@ msgstr "Okay"
 msgid "Only letters, numbers, and hyphens"
 msgstr "Only letters, numbers, and hyphens"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:167
+#: src/pages/account/(authenticated)/manage/page.tsx:183
 #: src/components/sign-up-credentials-form.tsx:117
 #: src/components/sign-in-form.tsx:178
 #: src/components/delete-account-confirm-form.tsx:85
@@ -855,7 +851,6 @@ msgstr "Password reset successful"
 msgid "Password strength"
 msgstr "Password strength"
 
-#: src/components/utils/password-strength-meter.tsx:45
 #: src/components/feedback/password-strength.tsx:45
 msgid "Password strength indicator"
 msgstr "Password strength indicator"
@@ -885,7 +880,7 @@ msgstr "Perform actions on your behalf"
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Perform authenticated actions towards <0>any service</0> on your behalf"
 
-#: src/components/authenticate-welcome-view.tsx:27
+#: src/components/authenticate-welcome-view.tsx:31
 msgid "Please authenticate to continue"
 msgstr "Please authenticate to continue"
 
@@ -940,7 +935,7 @@ msgstr "Publish changes"
 msgid "Reactivate"
 msgstr "Reactivate"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:186
+#: src/pages/account/(authenticated)/manage/page.tsx:202
 #: src/components/reactivate-account-dialog.tsx:22
 msgid "Reactivate account"
 msgstr "Reactivate account"
@@ -982,8 +977,8 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/pages/account/(authenticated)/devices/page.tsx:42
+#: src/pages/account/(authenticated)/apps/page.tsx:41
 #: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "Retry"
@@ -1006,7 +1001,7 @@ msgstr "Security code"
 msgid "Security step required"
 msgstr "Security step required"
 
-#: src/components/identity/account-menu.tsx:69
+#: src/components/identity/account-menu.tsx:124
 msgid "Select another account"
 msgstr "Select another account"
 
@@ -1018,7 +1013,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/components/delete-account-dialog.tsx:192
+#: src/components/delete-account-dialog.tsx:201
 msgid "Send email"
 msgstr "Send email"
 
@@ -1032,36 +1027,36 @@ msgid "Sign in"
 msgstr "Sign in"
 
 #: src/components/sign-in-form.tsx:96
-#: src/components/authenticate-welcome-view.tsx:48
+#: src/components/authenticate-welcome-view.tsx:50
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Sign in"
 
 #. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
-#: src/components/sign-in-picker.tsx:58
+#: src/components/sign-in-picker.tsx:65
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"
 
-#: src/components/sign-in-picker.tsx:45
+#: src/components/sign-in-picker.tsx:52
 msgid "Sign in as..."
 msgstr "Sign in as..."
 
-#: src/components/sign-in-picker.tsx:67
+#: src/components/sign-in-picker.tsx:79
 msgid "Sign in to an account that is not listed"
 msgstr "Sign in to an account that is not listed"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:110
+#: src/pages/account/(authenticated)/devices/page.tsx:139
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
 
-#: src/components/identity/account-menu.tsx:60
+#: src/components/identity/account-menu.tsx:136
 msgid "Sign out"
 msgstr "Sign out"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:90
+#: src/components/sign-in-picker.tsx:123
 msgid "Sign up"
 msgstr "Sign up"
 
@@ -1169,7 +1164,7 @@ msgstr "The username is invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "There is no time limit for account deactivation, come back any time."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:43
+#: src/pages/account/(authenticated)/apps/page.tsx:53
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
@@ -1248,7 +1243,7 @@ msgstr "Unauthorized"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:89
+#: src/pages/account/(authenticated)/devices/page.tsx:109
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
@@ -1262,13 +1257,13 @@ msgstr "Update"
 msgid "Update your email"
 msgstr "Update your email"
 
-#: src/components/update-handle-dialog.tsx:57
-#: src/components/update-handle-dialog.tsx:81
-#: src/components/update-handle-dialog.tsx:107
+#: src/components/update-handle-dialog.tsx:73
+#: src/components/update-handle-dialog.tsx:97
+#: src/components/update-handle-dialog.tsx:123
 msgid "Update your username"
 msgstr "Update your username"
 
-#: src/components/update-handle-dialog.tsx:83
+#: src/components/update-handle-dialog.tsx:99
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr "Update your username to a domain name you own to self-verify your identity."
 
@@ -1280,15 +1275,15 @@ msgstr "Upload files"
 msgid "URL"
 msgstr "URL"
 
-#: src/components/update-handle-dialog.tsx:130
+#: src/components/update-handle-dialog.tsx:152
 msgid "Use a default username"
 msgstr "Use a default username"
 
-#: src/components/update-handle-dialog.tsx:141
+#: src/components/update-handle-dialog.tsx:162
 msgid "Use a domain name I own"
 msgstr "Use a domain name I own"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:249
+#: src/pages/account/(authenticated)/manage/page.tsx:265
 msgid "Username"
 msgstr "Username"
 
@@ -1300,7 +1295,7 @@ msgstr "Username or email address"
 msgid "Username updated"
 msgstr "Username updated"
 
-#: src/components/forms/fields/handle-field.tsx:280
+#: src/components/forms/fields/handle-field.tsx:286
 msgid "Valid"
 msgstr "Valid"
 
@@ -1325,11 +1320,11 @@ msgstr "Verification method"
 msgid "Verification successful!"
 msgstr "Verification successful!"
 
-#: src/components/update-handle-dialog.tsx:92
+#: src/components/update-handle-dialog.tsx:108
 msgid "Verify and Save"
 msgstr "Verify and Save"
 
-#: src/pages/account/(authenticated)/manage/page.tsx:86
+#: src/pages/account/(authenticated)/manage/page.tsx:102
 #: src/components/update-email-dialog.tsx:232
 msgctxt "verify email"
 msgid "Verify now"
@@ -1368,7 +1363,7 @@ msgstr "We're so excited to have you join us!"
 msgid "Weak"
 msgstr "Weak"
 
-#: src/components/authenticate-welcome-view.tsx:24
+#: src/components/authenticate-welcome-view.tsx:30
 msgid "Welcome"
 msgstr "Welcome"
 
@@ -1376,7 +1371,7 @@ msgstr "Welcome"
 msgid "Welcome back!"
 msgstr "Welcome back!"
 
-#: src/pages/account/(authenticated)/page.tsx:33
+#: src/pages/account/(authenticated)/page.tsx:107
 msgid "What does this mean?"
 msgstr "What does this mean?"
 
@@ -1408,7 +1403,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/delete-account-dialog.tsx:204
+#: src/components/delete-account-dialog.tsx:215
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 
@@ -1457,7 +1452,7 @@ msgstr "Your account is currently deactivated."
 msgid "Your account is now deactivated."
 msgstr "Your account is now deactivated."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:44
+#: src/pages/account/(authenticated)/devices/page.tsx:54
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
@@ -1465,7 +1460,7 @@ msgstr "Your account is signed in on the devices listed below. If your account w
 msgid "Your account is visible again."
 msgstr "Your account is visible again."
 
-#: src/pages/account/(authenticated)/page.tsx:26
+#: src/pages/account/(authenticated)/page.tsx:94
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Your Atmosphere account is hosted by <0/>."
 
@@ -1481,12 +1476,12 @@ msgstr "Your email address has been successfully updated and needs to be verifie
 msgid "Your email address has been verified."
 msgstr "Your email address has been verified."
 
-#: src/pages/account/(authenticated)/manage/page.tsx:91
+#: src/pages/account/(authenticated)/manage/page.tsx:107
 msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/fields/handle-field.tsx:232
+#: src/components/forms/fields/handle-field.tsx:238
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
