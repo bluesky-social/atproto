@@ -10,6 +10,8 @@ import { VerificationService } from '../verification/service.js'
  */
 const getHttpStatus = (err: unknown): number | null => {
   if (!(err instanceof Error)) return null
+  // Attempt to parse this error
+  // https://github.com/websockets/ws/blob/a3214d31b63acee8e31065be9f5ce3dd89203055/lib/websocket.js#L891
   const match = err.message.match(/^Unexpected server response: (\d{3})$/)
   return match ? parseInt(match[1], 10) : null
 }
