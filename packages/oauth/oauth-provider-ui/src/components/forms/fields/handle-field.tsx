@@ -212,7 +212,13 @@ function HandleFieldInner({
               }}
             >
               <SelectTrigger size="sm" aria-label={t`Select domain`}>
-                <SelectValue />
+                {/* @NOTE Base UI's `Select.Value` renders the raw `value` and
+                  needs a function to map it to a label — unlike Radix's, which
+                  echoed the selected item's own content. The value here is the
+                  domain's index, so without this the trigger read "0". */}
+                <SelectValue>
+                  {(value) => domains[Number(value)] ?? null}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {domains.map((d, idx) => (
