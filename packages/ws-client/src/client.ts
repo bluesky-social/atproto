@@ -157,7 +157,10 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
     // draining — a stop is a loss of interest; drop, don't deliver. For a
     // never-pulled iterator this resolves without running the body —
     // correctly no terminal, there was no lifecycle. Fire-and-forget:
-    // completion is observed via #done, not this promise.
+    // completion is observed via #done, not this promise. NB: this swallows
+    // the generator's outcome (a resumed generator reports to its resumer) —
+    // the iterator wrapper in [Symbol.asyncIterator] re-delivers an abnormal
+    // stop cause to the consumer's next pull.
     void this.#iterator?.return(undefined).catch(() => {})
   }
 
@@ -339,7 +342,31 @@ export class WebSocketClientBase<M extends DataMode = 'auto'>
       )
     }
     this.#iterated = true
-    return (this.#iterator = this.#iterate())
+    const iterator = (this.#iterator = this.#iterate())
+    // Wrap the generator rather than handing it out raw: when a stop's nudge
+    // (#stop's iterator.return()) resumes the generator, the generator's
+    // outcome is delivered to the nudge — not to the consumer, whose next
+    // pull would see a clean `done` even for an abort. Mirror the
+    // connection's stored-terminal behavior instead: once the generator has
+    // completed, a pull rejects with an abnormal stop cause (an abort's
+    // reason, a fatal error) rather than reporting a clean end.
+    return {
+      next: async () => {
+        const result = await iterator.next()
+        if (
+          result.done &&
+          stopSignal.aborted &&
+          stopSignal.reason !== STOPPED_CLEANLY
+        ) {
+          throw stopSignal.reason
+        }
+        return result
+      },
+      return: async (value?: unknown) => {
+        // Consumer break/return: a deliberate, clean end — never re-thrown.
+        return iterator.return(value as never)
+      },
+    }
   }
 
   async *#iterate(): AsyncGenerator<MessageOf<M>, void, unknown> {

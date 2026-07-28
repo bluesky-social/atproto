@@ -576,6 +576,29 @@ describe('WebSocketClientBase', () => {
     expect(() => makeClient({ signal: ac.signal })).toThrow('pre-aborted')
   })
 
+  it('abort from inside the for-await body still rejects the iterator with the reason', async () => {
+    // The consumer aborts between pulls (no next() in flight): the stop's
+    // internal generator wind-down must not surface as a clean end — the
+    // consumer's next pull rejects with the abort reason.
+    const ac = new AbortController()
+    const { ws, mocks } = makeClient({ signal: ac.signal })
+    let error: unknown
+    const consume = (async () => {
+      try {
+        for await (const msg of ws) {
+          if (msg === 'one') ac.abort(new Error('Oops!'))
+        }
+      } catch (err) {
+        error = err
+      }
+    })()
+    await tick()
+    mocks[0].emitOpen()
+    mocks[0].emitMessage('one')
+    await consume
+    expect(error).toEqual(new Error('Oops!'))
+  })
+
   it('signal abort ends the loop and fires one final onClose', async () => {
     const ac = new AbortController()
     const closes: CloseEventDetail[] = []
