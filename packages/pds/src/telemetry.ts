@@ -19,7 +19,7 @@ import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runtime-node'
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
-import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node'
+import { NodeSDK } from '@opentelemetry/sdk-node'
 import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 
@@ -64,25 +64,35 @@ if (otelEnabled) {
   if (!metricsConfigured) process.env.OTEL_METRICS_EXPORTER = 'none'
   if (!logsConfigured) process.env.OTEL_LOGS_EXPORTER = 'none'
 
-  register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
+  try {
+    register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
-  const { shutdown } = startNodeSDKClass({
-    // @NOTE We use getResourceDetectors from
-    // @opentelemetry/auto-instrumentations-node (instead of the default from
-    // @opentelemetry/sdk-node) because it supports the "container" resource
-    // detector, which is not included in the default NodeSDK resource
-    // detectors.
-    resourceDetectors: getResourceDetectors(),
-    instrumentations: getInstrumentations(),
-  })
+    const sdk = new NodeSDK({
+      // @NOTE We use getResourceDetectors from
+      // @opentelemetry/auto-instrumentations-node (instead of the default from
+      // @opentelemetry/sdk-node) because it supports the "container" resource
+      // detector, which is not included in the default NodeSDK resource
+      // detectors.
+      resourceDetectors: getResourceDetectors(),
+      instrumentations: getInstrumentations(),
+    })
 
-  // @NOTE The PDS will destroy all the resources it owns when it shuts down
-  // (SIGINT/SIGTERM), and does not explicitly call process.exit(). This will
-  // cause NodeJS to trigger the "beforeExit" event (see
-  // https://nodejs.org/api/process.html#event-beforeexit), allowing us to
-  // shutdown the OpenTelemetry SDK and flush any telemetry before the process
-  // exits because of the event loop being empty.
-  process.once('beforeExit', shutdown)
+    sdk.start()
+
+    // @NOTE The PDS will destroy all the resources it owns when it shuts down
+    // (SIGINT/SIGTERM), and does not explicitly call process.exit(). This will
+    // cause NodeJS to trigger the "beforeExit" event (see
+    // https://nodejs.org/api/process.html#event-beforeexit), allowing us to
+    // shutdown the OpenTelemetry SDK and flush any telemetry before the process
+    // exits because of the event loop being empty.
+    process.once('beforeExit', () => {
+      sdk.shutdown().catch((err) => {
+        diag.error('Error terminating OpenTelemetry SDK', err)
+      })
+    })
+  } catch (err) {
+    diag.error('Error initializing OpenTelemetry SDK', err)
+  }
 }
 
 function getInstrumentations(): Instrumentation[] {
@@ -178,43 +188,6 @@ function isSignalConfigured(signal: 'TRACES' | 'METRICS' | 'LOGS'): boolean {
     !!getStringFromEnv(`OTEL_EXPORTER_OTLP_${signal}_ENDPOINT`) ||
     !!getStringFromEnv('OTEL_EXPORTER_OTLP_ENDPOINT')
   )
-}
-
-/**
- * Wrapper that exposes an api similar to {@link startNodeSDK}, but uses the
- * {@link NodeSDK} class instead.
- *
- * {@link NodeSDK} and {@link startNodeSDK} have similar, though slightly
- * different behaviors. For example, {@link NodeSDK} does not support loading
- * configuration from a file (OTEL_CONFIG_FILE), while {@link startNodeSDK} does
- * not support creating an HTTP prometheus exporter.
- */
-function startNodeSDKClass(configuration?: Partial<NodeSDKConfiguration>): {
-  shutdown: () => Promise<void>
-} {
-  try {
-    const sdk = new NodeSDK(configuration)
-
-    sdk.start()
-
-    const shutdown = async () => {
-      try {
-        await sdk.shutdown()
-      } catch (err) {
-        diag.error('Error terminating OpenTelemetry SDK', err)
-      }
-    }
-
-    return { shutdown }
-  } catch (err) {
-    diag.error(
-      'Error initializing OpenTelemetry SDK. Your application is not instrumented and will not produce telemetry',
-      err,
-    )
-
-    // Mock handler
-    return { shutdown: async () => {} }
-  }
 }
 
 // @NOTE This should become obsolete once we have dedicated
