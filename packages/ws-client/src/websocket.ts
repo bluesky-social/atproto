@@ -194,8 +194,16 @@ export function createWebSocket(
         // terminal awaits it so `onClose` fires with the transport's own detail
         // — one source of truth — and only once the connection has actually
         // finished, rather than racing the socket's asynchronous close event.
+        //
+        // Both of these are per-attempt and must be cleared here rather than
+        // only written on success: a detail left over from an earlier
+        // connection would be reported as this stream's ending, and an
+        // `awaitClose` armed for a transport that never got constructed would
+        // never settle, stalling the terminal for the full grace period.
+        lastDetail = undefined
+        awaitClose = undefined
         let reportClosed!: () => void
-        awaitClose = new Promise<void>((resolve) => {
+        const closeReported = new Promise<void>((resolve) => {
           reportClosed = resolve
         })
         const invalidateSender = () => {
@@ -244,6 +252,9 @@ export function createWebSocket(
               if (wasLive && opened) invokeHook(options.onDisconnect)
             },
           })
+          // Construction succeeded, so a close event is now possible: from here
+          // the terminal may wait for it.
+          awaitClose = closeReported
 
           // A transport reports a failure by rejecting, and an orderly close by
           // completing — the ordinary iterator contract. A close therefore

@@ -447,6 +447,70 @@ describe(createWebSocket, () => {
     })
   })
 
+  describe('per-attempt state', () => {
+    it('fails fast when the transport cannot be constructed', async () => {
+      // The transports fail loudly at construction on purpose (a malformed url,
+      // browser `headers`, no global WebSocket). Nothing was ever wired to
+      // report a close on that path, so the terminal must not sit waiting for
+      // one — a caller's most likely misconfiguration should surface at once.
+      const boom = new SocketError(new Error('cannot construct'))
+      const createTransport = (() => {
+        throw boom
+      }) as unknown as TransportFactory
+      const websocket = createWebSocket(createTransport)
+      const started = Date.now()
+      await expect(
+        drain(websocket('ws://x', { shouldReconnect: false })),
+      ).rejects.toBe(boom)
+      // Generous bound: what matters is that it isn't the full close grace.
+      expect(Date.now() - started).toBeLessThan(250)
+    })
+
+    it('does not report an earlier connection detail as the stream ending', async () => {
+      // A detail belongs to the attempt that produced it. If a later dial fails
+      // before it ever connects, the stream did not end with the previous
+      // connection's close — reporting that would be a lie about the outcome.
+      let attempt = 0
+      const dialFailure = new SocketError(new Error('dial refused'))
+      const createTransport = ((options) => {
+        if (attempt++ > 0) throw dialFailure
+        const transport: Transport<'auto'> = {
+          async send() {},
+          async *[Symbol.asyncIterator]() {
+            options.onOpen(transport)
+            yield 'from the first connection'
+            const detail = {
+              code: CloseCode.GoingAway,
+              reason: 'bye',
+              wasClean: true,
+            }
+            options.onClose(detail)
+            throw new CloseError(detail.code, detail.reason, detail.wasClean)
+          },
+        }
+        return transport
+      }) as TransportFactory
+
+      const onClose = vi.fn()
+      const websocket = createWebSocket(createTransport)
+      await expect(
+        drain(
+          websocket('ws://x', {
+            ...noBackoff,
+            onClose,
+            shouldReconnect: (_error, n) => n < 1,
+          }),
+        ),
+      ).rejects.toBe(dialFailure)
+      // Not { code: 1001, reason: 'bye' } from the connection before it.
+      expect(onClose).toHaveBeenCalledWith({
+        code: CloseCode.NoStatus,
+        reason: '',
+        wasClean: false,
+      })
+    })
+  })
+
   it('resets the backoff after a successful open', async () => {
     const { createTransport } = scripted([
       { messages: [], end: 'error', error: new SocketError(new Error('1')) },
